@@ -2,6 +2,9 @@ let sessions = [];
 let allTopics = new Set();
 let allServices = new Set();
 let topicChoice, serviceChoice;
+let pagination;
+let currentFilteredSessions = [];
+const itemsPerPage = 10;
 
 async function loadSessions() {
     const response = await fetch('sessions.json');
@@ -13,6 +16,7 @@ async function loadSessions() {
     });
 
     populateFilters();
+    currentFilteredSessions = sessions;
     renderSessions(sessions);
 }
 
@@ -65,15 +69,20 @@ function populateFilters() {
     document.getElementById('searchBox').addEventListener('input', filterSessions);
 }
 
-function renderSessions(filteredSessions) {
+function renderSessions(filteredSessions, page = 1) {
     const container = document.getElementById('sessionList');
     container.innerHTML = '';
-    
-    filteredSessions.forEach(session => {
+
+    // Calculate pagination
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedSessions = filteredSessions.slice(startIndex, endIndex);
+
+    paginatedSessions.forEach(session => {
         const card = document.createElement('div');
         card.className = 'session-card';
         card.onclick = () => window.location.href = `session.html?code=${session.session_code}`;
-        
+
         card.innerHTML = `
             <div class="code">${session.session_code}</div>
             <h2>${session.title_cn}</h2>
@@ -83,9 +92,12 @@ function renderSessions(filteredSessions) {
                 ${session.attributes.services.slice(0, 3).map(s => `<span class="tag">${s}</span>`).join('')}
             </div>
         `;
-        
+
         container.appendChild(card);
     });
+
+    // Update pagination
+    updatePagination(filteredSessions.length, page);
 }
 
 function filterSessions() {
@@ -108,7 +120,37 @@ function filterSessions() {
         return matchSearch && matchTopic && matchService;
     });
 
-    renderSessions(filtered);
+    currentFilteredSessions = filtered;
+    renderSessions(filtered, 1);
+}
+
+function initPagination() {
+    const container = document.getElementById('pagination');
+    pagination = new tui.Pagination(container, {
+        totalItems: 0,
+        itemsPerPage: itemsPerPage,
+        visiblePages: 5,
+        page: 1,
+        centerAlign: true,
+        firstItemClassName: 'tui-first-child',
+        lastItemClassName: 'tui-last-child'
+    });
+
+    pagination.on('afterMove', function(event) {
+        renderSessions(currentFilteredSessions, event.page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+
+function updatePagination(totalItems, currentPage = 1) {
+    if (!pagination) {
+        initPagination();
+    }
+
+    pagination.reset(totalItems);
+    if (currentPage !== pagination.getCurrentPage()) {
+        pagination.movePageTo(currentPage);
+    }
 }
 
 loadSessions();
