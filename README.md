@@ -21,7 +21,7 @@ pip install -r requirements.txt
 2. Ensure Kiro CLI is installed and configured
 
 3. Export YouTube cookies to `cookies.txt` in Netscape format
-   - Use a browser extension like "Get cookies.txt LOCALLY" 
+   - Use a browser extension like "Get cookies.txt LOCALLY"
    - Place the file in the project root directory
 
 ## Usage
@@ -53,7 +53,7 @@ Follow the prompts to publish to your GitHub repository.
 3. Set Source to: `main` branch, `/docs` folder
 4. Save
 
-Your site will be available at: `https://<username>.github.io/<repo-name>/`
+Your site will be available at: `https://yubingjiaocn.github.io/riv2025-sessions/`
 
 ## Project Structure
 
