@@ -69,7 +69,7 @@ function populateFilters() {
     document.getElementById('searchBox').addEventListener('input', filterSessions);
 }
 
-function renderSessions(filteredSessions, page = 1) {
+function renderSessions(filteredSessions, page = 1, updatePaginationControl = true) {
     const container = document.getElementById('sessionList');
     container.innerHTML = '';
 
@@ -96,8 +96,10 @@ function renderSessions(filteredSessions, page = 1) {
         container.appendChild(card);
     });
 
-    // Update pagination
-    updatePagination(filteredSessions.length, page);
+    // Update pagination only when needed (not during afterMove event)
+    if (updatePaginationControl) {
+        updatePagination(filteredSessions.length);
+    }
 }
 
 function filterSessions() {
@@ -137,20 +139,17 @@ function initPagination() {
     });
 
     pagination.on('afterMove', function(event) {
-        renderSessions(currentFilteredSessions, event.page);
+        renderSessions(currentFilteredSessions, event.page, false);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 }
 
-function updatePagination(totalItems, currentPage = 1) {
+function updatePagination(totalItems) {
     if (!pagination) {
         initPagination();
     }
 
     pagination.reset(totalItems);
-    if (currentPage !== pagination.getCurrentPage()) {
-        pagination.movePageTo(currentPage);
-    }
 }
 
 loadSessions();
