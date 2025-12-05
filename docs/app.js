@@ -8,7 +8,16 @@ const itemsPerPage = 10;
 
 async function loadSessions() {
     const response = await fetch('sessions.json');
-    sessions = await response.json();
+    const data = await response.json();
+
+    // Extract metadata and sessions
+    if (data.metadata) {
+        displayMetadata(data.metadata);
+        sessions = data.sessions;
+    } else {
+        // Backward compatibility: if no metadata, assume old format
+        sessions = data;
+    }
 
     sessions.forEach(s => {
         if (s.attributes.topic) allTopics.add(s.attributes.topic);
@@ -18,6 +27,25 @@ async function loadSessions() {
     populateFilters();
     currentFilteredSessions = sessions;
     renderSessions(sessions);
+}
+
+function displayMetadata(metadata) {
+    // Display sessions count
+    const sessionsCountEl = document.getElementById('sessionsCount');
+    sessionsCountEl.textContent = `共 ${metadata.sessions_count} 场会议`;
+
+    // Display last updated time
+    const lastUpdatedEl = document.getElementById('lastUpdated');
+    const updateDate = new Date(metadata.last_updated);
+    const formattedDate = updateDate.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Shanghai'
+    });
+    lastUpdatedEl.textContent = `最后更新: ${formattedDate}`;
 }
 
 function populateFilters() {

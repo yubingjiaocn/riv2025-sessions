@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 import json
+import logging
 import os
 import subprocess
 import urllib.parse
 import yt_dlp
 import requests
+
+# Configure logging with timestamps
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 PLAYLIST_URL = "https://www.youtube.com/playlist?list=PL2yQDdvlhXf9gdFFBcDPUHAJS7kkIkIet"
 CATALOG_API = "https://catalog.awsevents.com/api/search"
@@ -67,7 +76,7 @@ def get_subtitles(video_url):
                     return f.read()
                     
         except Exception as e:
-            print(f"    Error fetching subtitles: {e}")
+            logger.error(f"    Error fetching subtitles: {e}")
     
     return None
 
@@ -88,55 +97,55 @@ def generate_summary(subtitles):
 # Test with first video
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-print("Fetching playlist...")
+logger.info("Fetching playlist...")
 ydl_opts = {'extract_flat': True, 'quiet': True}
 
 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
     playlist_info = ydl.extract_info(PLAYLIST_URL, download=False)
     videos = playlist_info['entries']
 
-print(f"Found {len(videos)} videos\n")
+logger.info(f"Found {len(videos)} videos")
 
 video = videos[0]
 video_url = f"https://www.youtube.com/watch?v={video['id']}"
 title = video['title']
 
-print(f"Processing: {title}")
+logger.info(f"Processing: {title}")
 
 # Search catalog
-print("  Searching catalog...")
+logger.info("  Searching catalog...")
 session_data = search_session(title)
 if not session_data:
-    print("  ✗ No catalog data found")
+    logger.error("  ✗ No catalog data found")
     exit(1)
 
 session_code = session_data.get("code", "UNKNOWN")
-print(f"  Found session: {session_code}")
+logger.info(f"  Found session: {session_code}")
 
 # Translate
-print("  Translating title...")
+logger.info("  Translating title...")
 title_cn = translate_text(title)
-print(f"  Title (CN): {title_cn}")
+logger.info(f"  Title (CN): {title_cn}")
 
 abstract = session_data.get("abstract", "")[:200]  # Limit for testing
 if abstract:
-    print("  Translating abstract...")
+    logger.info("  Translating abstract...")
     abstract_cn = translate_text(abstract)
-    print(f"  Abstract (CN): {abstract_cn[:100]}...")
+    logger.info(f"  Abstract (CN): {abstract_cn[:100]}...")
 else:
     abstract_cn = ""
 
 # Get subtitles
-print("  Fetching subtitles...")
+logger.info("  Fetching subtitles...")
 subtitles = get_subtitles(video_url)
 if subtitles:
-    print(f"  Got {len(subtitles)} characters of subtitles")
-    
-    print("  Generating summary (this may take a minute)...")
-    summary = generate_summary(subtitles)
-    print(f"  Summary length: {len(summary)} characters")
-    print(f"  Summary preview: {summary[:200]}...")
-else:
-    print("  ✗ No subtitles available")
+    logger.info(f"  Got {len(subtitles)} characters of subtitles")
 
-print("\n✓ Full pipeline test completed successfully!")
+    logger.info("  Generating summary (this may take a minute)...")
+    summary = generate_summary(subtitles)
+    logger.info(f"  Summary length: {len(summary)} characters")
+    logger.info(f"  Summary preview: {summary[:200]}...")
+else:
+    logger.warning("  ✗ No subtitles available")
+
+logger.info("✓ Full pipeline test completed successfully!")

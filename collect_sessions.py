@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 import json
+import logging
 import os
 import subprocess
 import urllib.parse
 import yt_dlp
 import requests
+
+# Configure logging with timestamps
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 PLAYLISTS = [
     "https://www.youtube.com/playlist?list=PL2yQDdvlhXf9gdFFBcDPUHAJS7kkIkIet",
@@ -94,7 +103,7 @@ def get_subtitles(video_url):
                     return f.read()
 
         except Exception as e:
-            print(f"    Error fetching subtitles: {e}")
+            logger.error(f"    Error fetching subtitles: {e}")
 
     return None
 
@@ -142,37 +151,37 @@ def main():
 
     # Fetch videos from playlists
     for playlist_url in PLAYLISTS:
-        print(f"Fetching playlist: {playlist_url}")
+        logger.info(f"Fetching playlist: {playlist_url}")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             playlist_info = ydl.extract_info(playlist_url, download=False)
             videos = playlist_info['entries']
             all_videos.extend(videos)
-            print(f"  Found {len(videos)} videos")
+            logger.info(f"  Found {len(videos)} videos")
 
     # Fetch individual videos
     if INDIVIDUAL_VIDEOS:
-        print(f"\nFetching {len(INDIVIDUAL_VIDEOS)} individual videos...")
+        logger.info(f"Fetching {len(INDIVIDUAL_VIDEOS)} individual videos...")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             for video_url in INDIVIDUAL_VIDEOS:
                 try:
                     video_info = ydl.extract_info(video_url, download=False)
                     all_videos.append(video_info)
-                    print(f"  Added: {video_info.get('title', 'Unknown')}")
+                    logger.info(f"  Added: {video_info.get('title', 'Unknown')}")
                 except Exception as e:
-                    print(f"  Error fetching {video_url}: {e}")
+                    logger.error(f"  Error fetching {video_url}: {e}")
 
-    print(f"\nProcessing {len(all_videos)} total videos...")
+    logger.info(f"Processing {len(all_videos)} total videos...")
 
     for video in all_videos:
         try:
             video_url = f"https://www.youtube.com/watch?v={video['id']}"
             title = video['title']
-            print(f"\nProcessing: {title}")
+            logger.info(f"Processing: {title}")
 
             # Search catalog
             session_data = search_session(title)
             if not session_data:
-                print(f"  ⚠ No catalog data found for: {title}")
+                logger.warning(f"  ⚠ No catalog data found for: {title}")
                 continue
 
             session_code = session_data.get("code", "UNKNOWN")
@@ -180,13 +189,13 @@ def main():
 
             # Skip if session already exists
             if os.path.exists(os.path.join(session_dir, "metadata.json")):
-                print(f"  ⏭ Skipping {session_code} (already exists)")
+                logger.info(f"  ⏭ Skipping {session_code} (already exists)")
                 continue
 
             os.makedirs(session_dir, exist_ok=True)
 
             # Translate title and abstract
-            print(f"  Translating...")
+            logger.info(f"  Translating...")
             title_cn = translate_text(title)
             abstract = session_data.get("abstract", "")
             abstract_cn = translate_text(abstract) if abstract else ""
@@ -237,22 +246,22 @@ def main():
                 json.dump(metadata, f, ensure_ascii=False, indent=2)
 
             # Get subtitles and generate summary
-            print(f"  Fetching subtitles...")
+            logger.info(f"  Fetching subtitles...")
             subtitles = get_subtitles(video_url)
 
             if subtitles:
-                print(f"  Generating summary...")
+                logger.info(f"  Generating summary...")
                 summary = generate_summary(subtitles)
 
                 with open(os.path.join(session_dir, "summary.md"), "w", encoding="utf-8") as f:
                     f.write(summary)
 
-                print(f"  ✓ Completed: {session_code}")
+                logger.info(f"  ✓ Completed: {session_code}")
             else:
-                print(f"  ⚠ No subtitles available for: {session_code}")
+                logger.warning(f"  ⚠ No subtitles available for: {session_code}")
 
         except Exception as e:
-            print(f"  ✗ Error processing {video.get('title', 'unknown')}: {e}")
+            logger.error(f"  ✗ Error processing {video.get('title', 'unknown')}: {e}")
             continue
 
 if __name__ == "__main__":
