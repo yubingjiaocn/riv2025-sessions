@@ -3,8 +3,8 @@ async function loadSession() {
     const code = params.get('code');
     
     const response = await fetch('sessions.json');
-    const sessions = await response.json();
-    const session = sessions.find(s => s.session_code === code);
+    const data = await response.json();
+    const session = data.sessions.find(s => s.session_code === code);
     
     if (!session) {
         document.body.innerHTML = '<p>Session not found</p>';
