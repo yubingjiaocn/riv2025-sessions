@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "=== Installing dependencies ==="
-pip install -r requirements.txt
+source .venv/bin/activate
 
 echo ""
 echo "=== Collecting session data ==="
@@ -14,4 +13,7 @@ python3 generate_website_data.py
 
 echo ""
 echo "=== Setup complete! ==="
-echo "To publish to GitHub, run: bash publish_to_github.sh"
+bash publish_to_github.sh
+
+echo ""
+echo "=== Push complete! ==="
