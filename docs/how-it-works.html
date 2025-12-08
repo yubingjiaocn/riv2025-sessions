@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作原理 - AWS re:Invent 2025 Sessions</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html">← 返回首页</a>
+        <h1>工作原理</h1>
+    </header>
+
+    <main>
+        <div class="session-detail">
+            <section>
+                <h2>项目简介</h2>
+                <p>本项目是一个自动化系统，用于从 YouTube 获取 AWS re:Invent 2025 的会议视频，并提供中文翻译和总结服务。通过自动化流程，我们为中文用户提供便捷的会议内容浏览和学习体验。</p>
+            </section>
+
+            <section>
+                <h2>自动化工作流程</h2>
+                <p>系统通过以下步骤自动处理会议内容：</p>
+
+                <h3>1. 获取视频信息</h3>
+                <p>系统从指定的 YouTube 播放列表中自动抓取所有 AWS re:Invent 2025 会议视频的基本信息，包括视频 ID、标题、发布时间等元数据。</p>
+
+                <h3>2. 搜索会议详情</h3>
+                <p>使用视频信息在 AWS Events 官方目录中搜索对应的会议详细信息，包括会议代码、完整标题、摘要、主题分类、涉及的 AWS 服务等结构化数据。</p>
+
+                <h3>3. 内容翻译</h3>
+                <p>通过 Kiro CLI 工具调用生成式 AI 模型，将会议标题和摘要从英文翻译成简体中文，确保中文用户能够快速理解会议内容。</p>
+
+                <h3>4. 字幕提取与摘要生成</h3>
+                <p>从 YouTube 视频中提取英文字幕，并使用 AI 模型对字幕内容进行分析和总结，生成结构化的中文会议摘要，帮助用户在观看视频前了解核心内容。</p>
+
+                <h3>5. 网站生成与发布</h3>
+                <p>将所有处理后的数据生成静态网站文件，包括会议列表页、详情页和搜索过滤功能，并自动发布到 GitHub Pages，使内容能够被公开访问。</p>
+            </section>
+
+            <section>
+                <h2>技术栈</h2>
+                <ul>
+                    <li><strong>数据采集：</strong>Python + yt-dlp (YouTube 视频下载工具)</li>
+                    <li><strong>AI 翻译与摘要：</strong>Kiro CLI + 生成式 AI 模型</li>
+                    <li><strong>前端框架：</strong>原生 JavaScript + HTML5 + CSS3</li>
+                    <li><strong>UI 组件：</strong>Choices.js (多选过滤器)、Toast UI Pagination (分页)</li>
+                    <li><strong>托管平台：</strong>GitHub Pages</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>数据结构</h2>
+                <p>项目采用以下目录结构存储数据：</p>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+sessions/              # 会议数据目录
+└── &lt;SESSION_CODE&gt;/   # 每个会议一个子目录
+    ├── metadata.json  # 会议元数据（标题、摘要、分类等）
+    └── summary.md     # AI 生成的会议总结
+
+docs/                  # 静态网站文件
+├── index.html         # 会议列表主页
+├── session.html       # 会议详情页模板
+├── how-it-works.html  # 工作原理说明页
+├── style.css          # 样式文件
+├── app.js             # 主页交互逻辑
+├── session.js         # 详情页交互逻辑
+├── sessions.json      # 会议数据索引
+└── sessions/          # 会议数据副本（用于网站访问）
+                </pre>
+            </section>
+
+            <section>
+                <h2>程序化访问（API）</h2>
+                <p>本网站提供多种数据访问方式，方便第三方 AI 代理、自动化工具或其他应用程序直接获取会议数据。所有数据均以 JSON 和 Markdown 格式公开，支持通过 HTTP GET 请求直接访问。</p>
+
+                <h3>1. 会议列表索引</h3>
+                <p>获取所有会议的汇总信息，包括标题、摘要、分类和视频链接。</p>
+                <p><strong>URL：</strong><code>https://yubingjiaocn.github.io/riv2025-sessions/sessions.json</code></p>
+                <p><strong>数据结构：</strong></p>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem;">
+{
+  "metadata": {
+    "last_updated": "2025-12-08T02:58:33.321563+00:00",
+    "sessions_count": 868
+  },
+  "sessions": [
+    {
+      "title": "会议英文标题",
+      "title_cn": "会议中文标题",
+      "abstract": "会议英文摘要",
+      "abstract_cn": "会议中文摘要",
+      "presenter": [
+        {
+          "name": "演讲者姓名",
+          "title": "职位",
+          "company": "公司"
+        }
+      ],
+      "attributes": {
+        "topic": "主题分类",
+        "area_of_interest": ["兴趣领域"],
+        "services": ["AWS服务"],
+        "type": "会议类型"
+      },
+      "video_url": "https://www.youtube.com/watch?v=...",
+      "session_code": "会议代码",
+      "summary": true
+    }
+  ]
+}
+                </pre>
+
+                <h3>2. 单个会议元数据</h3>
+                <p>获取特定会议的详细元数据信息。</p>
+                <p><strong>URL 格式：</strong><code>https://yubingjiaocn.github.io/riv2025-sessions/sessions/&lt;SESSION_CODE&gt;/metadata.json</code></p>
+                <p><strong>示例：</strong><code>https://yubingjiaocn.github.io/riv2025-sessions/sessions/AIM102-S/metadata.json</code></p>
+                <p><strong>数据结构：</strong></p>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem;">
+{
+  "title": "会议英文标题",
+  "title_cn": "会议中文标题",
+  "abstract": "会议英文摘要",
+  "abstract_cn": "会议中文摘要",
+  "presenter": [演讲者列表],
+  "attributes": {
+    "topic": "主题分类",
+    "area_of_interest": ["兴趣领域"],
+    "services": ["AWS服务"],
+    "type": "会议类型"
+  },
+  "video_url": "YouTube视频链接",
+  "session_code": "会议代码"
+}
+                </pre>
+
+                <h3>3. 会议摘要内容</h3>
+                <p>获取 AI 生成的会议详细摘要（Markdown 格式）。</p>
+                <p><strong>URL 格式：</strong><code>https://yubingjiaocn.github.io/riv2025-sessions/sessions/&lt;SESSION_CODE&gt;/summary.md</code></p>
+                <p><strong>示例：</strong><code>https://yubingjiaocn.github.io/riv2025-sessions/sessions/AIM102-S/summary.md</code></p>
+                <p><strong>内容格式：</strong>Markdown 文本，包含会议概述、详细时间线、关键要点等结构化内容。</p>
+
+                <h3>4. 代码示例</h3>
+                <p>以下是使用不同编程语言访问数据的示例：</p>
+
+                <h4>Python 示例</h4>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem;">
+import requests
+
+# 获取所有会议列表
+response = requests.get('https://yubingjiaocn.github.io/riv2025-sessions/sessions.json')
+data = response.json()
+print(f"总会议数: {data['metadata']['sessions_count']}")
+
+# 获取特定会议元数据
+session_code = 'AIM102-S'
+metadata_url = f'https://yubingjiaocn.github.io/riv2025-sessions/sessions/{session_code}/metadata.json'
+metadata = requests.get(metadata_url).json()
+print(f"会议标题: {metadata['title_cn']}")
+
+# 获取会议摘要
+summary_url = f'https://yubingjiaocn.github.io/riv2025-sessions/sessions/{session_code}/summary.md'
+summary = requests.get(summary_url).text
+print(summary[:200])  # 打印前200个字符
+                </pre>
+
+                <h4>JavaScript 示例</h4>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem;">
+// 使用 Fetch API 获取会议列表
+fetch('https://yubingjiaocn.github.io/riv2025-sessions/sessions.json')
+  .then(response => response.json())
+  .then(data => {
+    console.log(`总会议数: ${data.metadata.sessions_count}`);
+
+    // 获取第一个会议的详细信息
+    const sessionCode = data.sessions[0].session_code;
+    return fetch(`https://yubingjiaocn.github.io/riv2025-sessions/sessions/${sessionCode}/metadata.json`);
+  })
+  .then(response => response.json())
+  .then(metadata => {
+    console.log(`会议标题: ${metadata.title_cn}`);
+  });
+                </pre>
+
+                <h4>cURL 示例</h4>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem;">
+# 获取会议列表
+curl https://yubingjiaocn.github.io/riv2025-sessions/sessions.json
+
+# 获取特定会议元数据
+curl https://yubingjiaocn.github.io/riv2025-sessions/sessions/AIM102-S/metadata.json
+
+# 获取会议摘要
+curl https://yubingjiaocn.github.io/riv2025-sessions/sessions/AIM102-S/summary.md
+                </pre>
+
+                <h3>5. 使用场景</h3>
+                <ul>
+                    <li><strong>AI 代理集成：</strong>让 AI 助手直接查询和分析 AWS re:Invent 2025 会议内容</li>
+                    <li><strong>自动化工具：</strong>构建自动监控、通知或数据分析工具</li>
+                    <li><strong>数据分析：</strong>对会议主题、服务、演讲者等进行统计分析</li>
+                    <li><strong>个性化应用：</strong>基于这些数据构建定制化的会议推荐或搜索工具</li>
+                    <li><strong>内容聚合：</strong>将会议数据整合到其他平台或系统中</li>
+                </ul>
+
+                <h3>6. 注意事项</h3>
+                <ul>
+                    <li>所有数据通过 GitHub Pages 托管，采用标准 HTTP/HTTPS 协议，无需认证</li>
+                    <li>建议实施合理的缓存策略，避免频繁请求</li>
+                    <li>数据会定期更新，请参考 <code>sessions.json</code> 中的 <code>last_updated</code> 字段</li>
+                    <li>如果某个会议的 <code>summary</code> 字段为 <code>false</code>，表示该会议的摘要文件可能不可用</li>
+                    <li>请遵守 GitHub Pages 的使用条款和合理使用原则</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>开源与贡献</h2>
+                <p>本项目完全开源，代码托管在 GitHub 上。欢迎提交 Issue 反馈问题，或通过 Pull Request 贡献代码改进。</p>
+                <p>源代码仓库：<a href="https://github.com/yubingjiaocn/riv2025-sessions/" target="_blank" rel="noopener noreferrer">https://github.com/yubingjiaocn/riv2025-sessions/</a></p>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>相关链接</h4>
+                <p>
+                    <a href="index.html">会议列表</a> |
+                    <a href="how-it-works.html">工作原理</a> |
+                    <a href="https://github.com/yubingjiaocn/riv2025-sessions/" target="_blank" rel="noopener noreferrer">GitHub 仓库</a> |
+                    <a href="https://reinvent.awsevents.com/" target="_blank" rel="noopener noreferrer">AWS re:Invent 2025 官网</a>
+                </p>
+            </div>
+
+            <div class="footer-section">
+                <h4>许可证</h4>
+                <p>本项目采用开源许可证发布，详情请参阅源代码仓库中的 LICENSE 文件。</p>
+            </div>
+
+            <div class="footer-disclaimer">
+                <strong>生成式AI使用声明：</strong>本网站的部分内容（包括但不限于翻译和摘要）由生成式人工智能工具辅助生成。虽然我们努力确保内容的准确性，但AI生成的内容可能存在错误或不准确之处。建议您参考官方 AWS re:Invent 资料以获取最准确的信息。对于因使用本网站AI生成内容而产生的任何问题，我们不承担责任。
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
