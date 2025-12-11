@@ -1,0 +1,3601 @@
+1
+00:00:00,936 --> 00:00:03,990
+(audience applauds)
+
+2
+00:00:03,990 --> 00:00:05,340
+- Good afternoon, everyone.
+
+3
+00:00:06,270 --> 00:00:07,653
+So let me tell you a story.
+
+4
+00:00:09,180 --> 00:00:11,793
+We've all just now finished Thanksgiving.
+
+5
+00:00:13,050 --> 00:00:15,330
+You remember that evening after,
+
+6
+00:00:15,330 --> 00:00:19,870
+you're crawling into bed full
+of Turkey stuffing and stuffed
+
+7
+00:00:20,730 --> 00:00:24,693
+and falling asleep, absolutely cashed out.
+
+8
+00:00:25,590 --> 00:00:27,360
+And there's that little buzz that starts
+
+9
+00:00:27,360 --> 00:00:29,820
+to, like, wake you from sleep.
+
+10
+00:00:29,820 --> 00:00:32,550
+And it gets louder and it
+gets louder and it's an alarm
+
+11
+00:00:32,550 --> 00:00:34,800
+and you wake up and you look at your phone
+
+12
+00:00:34,800 --> 00:00:39,000
+and it's a page and it says,
+"Engineering response needed."
+
+13
+00:00:39,000 --> 00:00:41,973
+It's 2:00 AM. How many of you
+guys have been there before?
+
+14
+00:00:44,040 --> 00:00:45,180
+Same.
+
+15
+00:00:45,180 --> 00:00:48,330
+So you think about this,
+
+16
+00:00:48,330 --> 00:00:51,120
+there's a customer that
+called that, right?
+
+17
+00:00:51,120 --> 00:00:52,473
+Latencies doubled.
+
+18
+00:00:54,000 --> 00:00:55,623
+Their requests are dropped.
+
+19
+00:00:57,720 --> 00:00:59,553
+And the customer is furious.
+
+20
+00:01:00,450 --> 00:01:04,170
+And now you're online, sleep deprived,
+
+21
+00:01:04,170 --> 00:01:07,113
+desperately trying to figure
+out what happened and why.
+
+22
+00:01:07,980 --> 00:01:09,780
+We've all been there
+
+23
+00:01:09,780 --> 00:01:12,030
+or have enough experience
+to know about that.
+
+24
+00:01:14,760 --> 00:01:19,110
+We're gonna talk about the
+groggy engineer today. (chuckles)
+
+25
+00:01:19,110 --> 00:01:22,200
+And we're gonna talk about
+finding the noisy neighbor
+
+26
+00:01:22,200 --> 00:01:24,963
+customer performance patterns at scale.
+
+27
+00:01:26,220 --> 00:01:30,840
+I'm Nick Hefty, I've been at
+Zendesk seven and a half years
+
+28
+00:01:30,840 --> 00:01:33,810
+and I've worked in the customer support
+
+29
+00:01:33,810 --> 00:01:35,220
+portion of the company
+
+30
+00:01:35,220 --> 00:01:37,710
+and moved over to software engineering.
+
+31
+00:01:37,710 --> 00:01:40,150
+So I've kind of got a
+unique bridge between
+
+32
+00:01:41,806 --> 00:01:44,460
+being the one that calls that incident
+
+33
+00:01:44,460 --> 00:01:48,810
+and now occasionally one
+that jumps on those incidents
+
+34
+00:01:48,810 --> 00:01:50,793
+to try to help see what's going on.
+
+35
+00:01:51,630 --> 00:01:54,180
+And I'm gonna talk
+through a little bit today
+
+36
+00:01:54,180 --> 00:01:59,180
+about how Zendesk's journey
+through observability
+
+37
+00:01:59,520 --> 00:02:03,600
+has found a way that we
+can give the engineers
+
+38
+00:02:03,600 --> 00:02:04,983
+a little bit more rest.
+
+39
+00:02:06,300 --> 00:02:09,120
+So I'm gonna step away
+from that for a second.
+
+40
+00:02:09,120 --> 00:02:10,650
+We are at re:Invent.
+
+41
+00:02:10,650 --> 00:02:13,140
+Let me briefly tell you
+
+42
+00:02:13,140 --> 00:02:15,390
+about some of the AWS stuff we have
+
+43
+00:02:15,390 --> 00:02:17,373
+just as I go through all of this.
+
+44
+00:02:18,840 --> 00:02:20,760
+We're an Aurora shop.
+
+45
+00:02:20,760 --> 00:02:25,170
+We use ElastiCache, EC2 instances,
+
+46
+00:02:25,170 --> 00:02:26,733
+a potted infrastructure,
+
+47
+00:02:28,290 --> 00:02:29,820
+and we heavily leverage AWS.
+
+48
+00:02:29,820 --> 00:02:31,020
+We are an AWS partner
+
+49
+00:02:31,020 --> 00:02:33,720
+and we really, really do
+like working with them.
+
+50
+00:02:33,720 --> 00:02:34,553
+They're fantastic.
+
+51
+00:02:34,553 --> 00:02:37,263
+We moved from self-hosted to AWS,
+
+52
+00:02:38,430 --> 00:02:41,220
+a big reason being scalability,
+
+53
+00:02:41,220 --> 00:02:42,653
+and they're very good for that.
+
+54
+00:02:44,160 --> 00:02:48,123
+But we've got hundreds of
+thousands of customers.
+
+55
+00:02:50,010 --> 00:02:51,753
+That leads to challenges.
+
+56
+00:02:54,300 --> 00:02:56,220
+How many of you have an infrastructure map
+
+57
+00:02:56,220 --> 00:02:59,313
+that looks like that? (chuckles)
+
+58
+00:03:00,960 --> 00:03:02,490
+High cardinality.
+
+59
+00:03:02,490 --> 00:03:03,570
+Because we have so many,
+
+60
+00:03:03,570 --> 00:03:06,360
+oh, back up, cardinality,
+
+61
+00:03:06,360 --> 00:03:08,430
+a whole bunch of stuff at the same level.
+
+62
+00:03:08,430 --> 00:03:11,100
+High cardinality being
+a lot of those things
+
+63
+00:03:11,100 --> 00:03:14,160
+at that same level that
+you're trying to look at.
+
+64
+00:03:14,160 --> 00:03:16,290
+Just so that we're all caught up.
+
+65
+00:03:16,290 --> 00:03:17,580
+We have high cardinality
+
+66
+00:03:17,580 --> 00:03:20,100
+and we struggle with
+that from time to time.
+
+67
+00:03:20,100 --> 00:03:23,970
+We're trying to look at
+parts of an infrastructure
+
+68
+00:03:23,970 --> 00:03:28,140
+that a small subset of
+customers are interacting with
+
+69
+00:03:28,140 --> 00:03:30,720
+and we need to be able to figure out
+
+70
+00:03:30,720 --> 00:03:33,450
+when one of those goes sideways,
+
+71
+00:03:33,450 --> 00:03:36,060
+what we can do to help the customer
+
+72
+00:03:36,060 --> 00:03:37,560
+and protect those other customers
+
+73
+00:03:37,560 --> 00:03:38,910
+on a shared infrastructure.
+
+74
+00:03:39,840 --> 00:03:42,490
+And solving a problem for high cardinality
+
+75
+00:03:44,940 --> 00:03:47,220
+comes with a bunch of other challenges,
+
+76
+00:03:47,220 --> 00:03:49,410
+cost being one of them.
+
+77
+00:03:49,410 --> 00:03:54,410
+So, it's extremely high level. (chuckles)
+
+78
+00:03:54,840 --> 00:03:58,980
+Kubernetes infrastructure for us.
+
+79
+00:03:58,980 --> 00:04:02,610
+And we need
+
+80
+00:04:02,610 --> 00:04:05,670
+to balance out those loads
+across our infrastructure
+
+81
+00:04:05,670 --> 00:04:07,720
+for all of those customers on our shards.
+
+82
+00:04:09,960 --> 00:04:14,960
+So when you're thinking about
+managing for high cardinality,
+
+83
+00:04:16,080 --> 00:04:18,300
+I promise I will get back to
+the noisy neighbor in a minute,
+
+84
+00:04:18,300 --> 00:04:19,773
+but I gotta set the stage,
+
+85
+00:04:21,870 --> 00:04:23,790
+balancing for that,
+
+86
+00:04:23,790 --> 00:04:26,620
+you need to look at what things
+
+87
+00:04:27,540 --> 00:04:30,300
+it explodes along with
+
+88
+00:04:30,300 --> 00:04:32,160
+those hundreds of thousands of customers.
+
+89
+00:04:32,160 --> 00:04:35,340
+So how can you mitigate
+some of this retention?
+
+90
+00:04:35,340 --> 00:04:37,773
+How long you retain what you're seeing,
+
+91
+00:04:39,300 --> 00:04:42,030
+how much you sample of all of that, right?
+
+92
+00:04:42,030 --> 00:04:44,850
+Is it a process that you
+really need to see a lot of,
+
+93
+00:04:44,850 --> 00:04:47,100
+or is it just something that
+you want to track over time
+
+94
+00:04:47,100 --> 00:04:47,950
+and is 1% enough?
+
+95
+00:04:51,780 --> 00:04:53,550
+And data sensitivity,
+
+96
+00:04:53,550 --> 00:04:55,920
+is this something that's a security risk?
+
+97
+00:04:55,920 --> 00:04:57,750
+You need to capture all of it?
+
+98
+00:04:57,750 --> 00:04:59,940
+Is this something that is a process,
+
+99
+00:04:59,940 --> 00:05:02,490
+again, you need to track over time?
+
+100
+00:05:02,490 --> 00:05:07,110
+And so we've all been in a situation
+
+101
+00:05:07,110 --> 00:05:07,943
+similar to this
+
+102
+00:05:07,943 --> 00:05:11,040
+where you're balancing
+cost and observability.
+
+103
+00:05:11,040 --> 00:05:14,130
+It's kind of a big teeter-totter, right?
+
+104
+00:05:14,130 --> 00:05:17,730
+And the more you engage with it,
+
+105
+00:05:17,730 --> 00:05:20,190
+sometimes the scarier it is.
+
+106
+00:05:20,190 --> 00:05:22,500
+I'm hoping I can tell you a little bit
+
+107
+00:05:22,500 --> 00:05:23,880
+of our journey through that
+
+108
+00:05:23,880 --> 00:05:26,480
+and make it a little bit
+less scary and frustrating.
+
+109
+00:05:27,450 --> 00:05:30,870
+A wise engineer learns
+from their own mistakes.
+
+110
+00:05:30,870 --> 00:05:32,940
+It takes a fool not to learn
+from the mistakes of others.
+
+111
+00:05:32,940 --> 00:05:35,565
+Hopefully I can tell
+you some of my mistakes
+
+112
+00:05:35,565 --> 00:05:37,170
+(chuckles) and you can take those away
+
+113
+00:05:37,170 --> 00:05:39,123
+so you don't make them yourself.
+
+114
+00:05:40,800 --> 00:05:44,370
+So one more piece of
+things to set the stage.
+
+115
+00:05:44,370 --> 00:05:45,620
+What is a noisy neighbor?
+
+116
+00:05:47,520 --> 00:05:51,480
+Max did a great job of
+describing this initially,
+
+117
+00:05:51,480 --> 00:05:53,400
+but I'm gonna use an apartment complex
+
+118
+00:05:53,400 --> 00:05:55,890
+kind of descriptor here
+
+119
+00:05:55,890 --> 00:05:58,320
+and we'll talk through it
+a little in that sense.
+
+120
+00:05:58,320 --> 00:06:02,790
+So a noisy neighbor
+is, just like Max said,
+
+121
+00:06:02,790 --> 00:06:05,070
+the hotel neighbor, the upstairs neighbor
+
+122
+00:06:05,070 --> 00:06:07,530
+that's causing noise,
+keeping you from sleep,
+
+123
+00:06:07,530 --> 00:06:09,540
+we will come back to sleep a couple times,
+
+124
+00:06:09,540 --> 00:06:11,073
+but keeping you from sleep.
+
+125
+00:06:12,600 --> 00:06:15,630
+And they're affecting everybody
+else that's around them.
+
+126
+00:06:15,630 --> 00:06:18,473
+That apartment complex is a
+shared piece of infrastructure.
+
+127
+00:06:19,500 --> 00:06:22,920
+It's the thing that everybody is using
+
+128
+00:06:22,920 --> 00:06:25,983
+and one person is messing
+it up for everybody else.
+
+129
+00:06:30,510 --> 00:06:31,910
+Back to our groggy engineer.
+
+130
+00:06:33,480 --> 00:06:34,833
+Jump into that incident.
+
+131
+00:06:37,710 --> 00:06:39,453
+And this is what you see.
+
+132
+00:06:40,470 --> 00:06:42,320
+This is the customer traffic pattern.
+
+133
+00:06:44,010 --> 00:06:46,410
+Yeah, it doesn't tell you
+a lot, does it? (laughs)
+
+134
+00:06:46,410 --> 00:06:48,030
+It's pretty straightforward
+
+135
+00:06:48,030 --> 00:06:49,830
+that they're hitting an end point.
+
+136
+00:06:49,830 --> 00:06:51,580
+Well, we kind of knew that already.
+
+137
+00:06:52,440 --> 00:06:57,440
+But a lot of times, this is
+how observability starts.
+
+138
+00:06:57,510 --> 00:07:00,270
+You don't know what you need to see
+
+139
+00:07:00,270 --> 00:07:03,450
+until you suddenly need to see it.
+
+140
+00:07:03,450 --> 00:07:06,900
+And the worst time to
+suddenly need to see it
+
+141
+00:07:06,900 --> 00:07:09,660
+is your under-caffeinated brain
+
+142
+00:07:09,660 --> 00:07:11,403
+woken up from a deep sleep.
+
+143
+00:07:12,360 --> 00:07:13,960
+It's worst time to troubleshoot.
+
+144
+00:07:16,050 --> 00:07:18,810
+So we started to solve that
+
+145
+00:07:18,810 --> 00:07:20,673
+by tagging across our tenants.
+
+146
+00:07:22,230 --> 00:07:23,340
+Tenants.
+
+147
+00:07:23,340 --> 00:07:26,790
+Go back to the analogy I
+used of apartment complex,
+
+148
+00:07:26,790 --> 00:07:29,820
+tenants are the buildings,
+
+149
+00:07:29,820 --> 00:07:31,320
+the people in those buildings.
+
+150
+00:07:32,370 --> 00:07:37,050
+And if we're just showing
+that previous image
+
+151
+00:07:37,050 --> 00:07:39,330
+of just that one part of the call,
+
+152
+00:07:39,330 --> 00:07:43,113
+I have no idea where
+resources are being starved.
+
+153
+00:07:44,250 --> 00:07:46,650
+I have no idea where
+traffic is coming from
+
+154
+00:07:46,650 --> 00:07:48,990
+to be able to see why the
+customer's having the problem
+
+155
+00:07:48,990 --> 00:07:50,550
+that they're having.
+
+156
+00:07:50,550 --> 00:07:53,670
+But if I start early on by tagging
+
+157
+00:07:53,670 --> 00:07:55,080
+some of that infrastructure,
+
+158
+00:07:55,080 --> 00:07:56,610
+when I wake up in the morning
+
+159
+00:07:56,610 --> 00:07:58,950
+or get woken up in the morning,
+
+160
+00:07:58,950 --> 00:08:00,330
+I now can see something like this.
+
+161
+00:08:00,330 --> 00:08:02,523
+This is APM traces from Datadog,
+
+162
+00:08:03,660 --> 00:08:07,410
+and they helped
+
+163
+00:08:07,410 --> 00:08:10,230
+develop tracing alongside Zendesk,
+
+164
+00:08:10,230 --> 00:08:12,330
+was for a lot of use cases we had.
+
+165
+00:08:12,330 --> 00:08:13,830
+It's fantastic.
+
+166
+00:08:13,830 --> 00:08:16,140
+But it allows us to tag every
+step of that infrastructure.
+
+167
+00:08:16,140 --> 00:08:17,580
+Same call.
+
+168
+00:08:17,580 --> 00:08:19,443
+Look at all what I can see.
+
+169
+00:08:20,280 --> 00:08:21,813
+So much more.
+
+170
+00:08:23,460 --> 00:08:26,670
+So let me talk you through
+a process that we use
+
+171
+00:08:26,670 --> 00:08:28,260
+to try to go through this,
+
+172
+00:08:28,260 --> 00:08:31,710
+to try to iterate on
+what I just showed you.
+
+173
+00:08:31,710 --> 00:08:33,330
+Now, adding tags to tenants,
+
+174
+00:08:33,330 --> 00:08:36,273
+but that's not the only way
+to see more information.
+
+175
+00:08:37,680 --> 00:08:40,140
+The first part is recognize.
+
+176
+00:08:40,140 --> 00:08:43,110
+What do you see or need to see?
+
+177
+00:08:43,110 --> 00:08:45,753
+Do I need to see hot partitions?
+
+178
+00:08:46,830 --> 00:08:49,203
+Do I need to watch our backlogs?
+
+179
+00:08:50,580 --> 00:08:53,043
+Do I need to see latency spikes?
+
+180
+00:08:54,750 --> 00:08:57,033
+So we can do that in
+multiple different ways.
+
+181
+00:08:58,920 --> 00:09:01,290
+We can look at APM,
+
+182
+00:09:01,290 --> 00:09:04,240
+that application performance
+monitoring I mentioned before.
+
+183
+00:09:05,400 --> 00:09:07,450
+But we can also look at things like logs,
+
+184
+00:09:08,400 --> 00:09:10,912
+infrastructure monitoring and metrics.
+
+185
+00:09:10,912 --> 00:09:11,853
+Excuse me.
+
+186
+00:09:13,080 --> 00:09:14,970
+All of that allows us
+
+187
+00:09:14,970 --> 00:09:17,220
+to use different vehicles
+
+188
+00:09:17,220 --> 00:09:20,853
+to recognize the thing
+that's causing the problem.
+
+189
+00:09:24,390 --> 00:09:25,380
+Now, we need to examine that.
+
+190
+00:09:25,380 --> 00:09:28,350
+So, great, woke up in the morning,
+
+191
+00:09:28,350 --> 00:09:30,390
+had to solve the incident,
+
+192
+00:09:30,390 --> 00:09:32,910
+couldn't see what I wanted to see.
+
+193
+00:09:32,910 --> 00:09:34,320
+Okay, what did I need to see?
+
+194
+00:09:34,320 --> 00:09:35,550
+Recognize what you needed to see.
+
+195
+00:09:35,550 --> 00:09:36,383
+Now, let's examine that.
+
+196
+00:09:36,383 --> 00:09:40,353
+Let's figure out how
+to be able to see that.
+
+197
+00:09:41,670 --> 00:09:43,140
+Do we need to see top tenants?
+
+198
+00:09:43,140 --> 00:09:44,400
+Do we need to tag those tenants
+
+199
+00:09:44,400 --> 00:09:46,170
+like I showed initially?
+
+200
+00:09:46,170 --> 00:09:47,880
+Is one of the issues that cardinality
+
+201
+00:09:47,880 --> 00:09:50,720
+that we're running into at that level.
+
+202
+00:09:50,720 --> 00:09:53,100
+Do we have a bunch of
+microservices, you know,
+
+203
+00:09:53,100 --> 00:09:54,600
+hundreds and hundreds of microservices
+
+204
+00:09:54,600 --> 00:09:56,790
+now we have exploded cardinality there?
+
+205
+00:09:56,790 --> 00:09:59,610
+Is that where you need to see something?
+
+206
+00:09:59,610 --> 00:10:01,893
+Or is it slow database queries?
+
+207
+00:10:04,590 --> 00:10:07,680
+And again, we can see that
+through the same setup,
+
+208
+00:10:07,680 --> 00:10:10,023
+traces, infrastructure monitoring metrics.
+
+209
+00:10:11,760 --> 00:10:15,202
+So we're looking at the
+thing you need to see,
+
+210
+00:10:15,202 --> 00:10:17,652
+you need to recognize it,
+you need to examine it.
+
+211
+00:10:18,570 --> 00:10:21,420
+Okay, now, once you get all
+of that information together,
+
+212
+00:10:21,420 --> 00:10:22,683
+what do you do with it?
+
+213
+00:10:23,760 --> 00:10:26,520
+So this is like in that retro
+
+214
+00:10:26,520 --> 00:10:28,170
+that you have after the incident.
+
+215
+00:10:30,000 --> 00:10:34,260
+Once you say, "Was it caused
+by a bug escaped defect
+
+216
+00:10:34,260 --> 00:10:37,620
+or was it caused because
+we couldn't see it
+
+217
+00:10:37,620 --> 00:10:38,820
+so we couldn't fix it,
+
+218
+00:10:38,820 --> 00:10:40,440
+we couldn't get there in advance
+
+219
+00:10:40,440 --> 00:10:42,570
+of the customer sending us in a ticket
+
+220
+00:10:42,570 --> 00:10:46,070
+and saying, 'Hey, something's messed up.'"
+
+221
+00:10:47,880 --> 00:10:51,630
+This is the part that in an incident,
+
+222
+00:10:51,630 --> 00:10:53,760
+retro can get skipped,
+
+223
+00:10:53,760 --> 00:10:55,320
+can just be a line item, right?
+
+224
+00:10:55,320 --> 00:10:57,180
+It can be a, "We couldn't see it.
+
+225
+00:10:57,180 --> 00:10:58,077
+Assign the Jira."
+
+226
+00:10:59,160 --> 00:11:02,640
+Let's talk about not just can you see it,
+
+227
+00:11:02,640 --> 00:11:06,257
+but once we see it, what do we do with it?
+
+228
+00:11:06,257 --> 00:11:10,110
+(chuckles) If that alert
+fires and you get woken up,
+
+229
+00:11:10,110 --> 00:11:13,923
+if there's no discussion on
+what to do with that alert,
+
+230
+00:11:15,480 --> 00:11:17,370
+you're still back in
+the same problem, right?
+
+231
+00:11:17,370 --> 00:11:20,340
+You're still tired, you're still confused.
+
+232
+00:11:20,340 --> 00:11:22,260
+So you might as well talk
+about it in the retro
+
+233
+00:11:22,260 --> 00:11:23,910
+when you're awake and caffeinated
+
+234
+00:11:25,380 --> 00:11:28,380
+than in an incident in the
+morning when that customer's mad.
+
+235
+00:11:31,290 --> 00:11:34,230
+So shaping is where you start
+
+236
+00:11:34,230 --> 00:11:36,000
+to leverage long-term thinking.
+
+237
+00:11:36,000 --> 00:11:39,990
+So in this case, a dashboard
+is what these are from,
+
+238
+00:11:39,990 --> 00:11:44,013
+but there are ways to see
+a limit versus traffic.
+
+239
+00:11:45,360 --> 00:11:47,760
+So I know what's happening,
+
+240
+00:11:47,760 --> 00:11:51,183
+I can boil down to who's doing it,
+
+241
+00:11:52,020 --> 00:11:55,650
+and now I can see what it's running into.
+
+242
+00:11:55,650 --> 00:11:57,480
+So okay, let's say a customer
+
+243
+00:11:57,480 --> 00:12:01,200
+is frustrated and that's their traces.
+
+244
+00:12:01,200 --> 00:12:02,460
+Okay?
+
+245
+00:12:02,460 --> 00:12:03,960
+Theoretically, it could
+raise a limit a little bit
+
+246
+00:12:03,960 --> 00:12:04,793
+and give them some more.
+
+247
+00:12:04,793 --> 00:12:06,180
+Or you could look at that
+
+248
+00:12:06,180 --> 00:12:08,640
+and go, "Well, they're hitting
+an endpoint or a rate limit
+
+249
+00:12:08,640 --> 00:12:09,630
+that they really shouldn't be.
+
+250
+00:12:09,630 --> 00:12:10,980
+Maybe they have a runaway integration
+
+251
+00:12:10,980 --> 00:12:12,690
+that limits doing what
+it's supposed to be doing.
+
+252
+00:12:12,690 --> 00:12:15,360
+It's protecting them from more issues.
+
+253
+00:12:15,360 --> 00:12:17,410
+Do we need to lower the limit even more?"
+
+254
+00:12:19,080 --> 00:12:20,520
+And the last is test.
+
+255
+00:12:20,520 --> 00:12:24,030
+So this is outside of now that
+retro that I talked about.
+
+256
+00:12:24,030 --> 00:12:27,330
+This is during, I don't know,
+
+257
+00:12:27,330 --> 00:12:32,330
+let's say a cleanup of your
+backlog once a quarter.
+
+258
+00:12:32,910 --> 00:12:35,580
+Maybe once a month if
+you wanna be proactive.
+
+259
+00:12:35,580 --> 00:12:36,543
+Is it working?
+
+260
+00:12:38,190 --> 00:12:40,020
+Are all those limits that I put in place,
+
+261
+00:12:40,020 --> 00:12:43,560
+not limits, sorry, all those
+alerts that I put in place
+
+262
+00:12:43,560 --> 00:12:47,790
+or all the ways that I
+now just spent money,
+
+263
+00:12:47,790 --> 00:12:51,483
+right, to see stuff, is it working?
+
+264
+00:12:53,130 --> 00:12:55,680
+Are these alerts going off
+and they're meaningless?
+
+265
+00:12:56,580 --> 00:12:58,530
+Who's got a Slack channel
+that's got a lot of alerts
+
+266
+00:12:58,530 --> 00:13:00,150
+that are meaningless?
+
+267
+00:13:00,150 --> 00:13:02,430
+It happens to all the time
+
+268
+00:13:02,430 --> 00:13:04,863
+if you don't iterate upon that process.
+
+269
+00:13:05,730 --> 00:13:08,850
+And it does take time, I get that,
+
+270
+00:13:08,850 --> 00:13:12,360
+and I'm sure all of us are
+strapped for our own time.
+
+271
+00:13:12,360 --> 00:13:16,500
+But this is a way to keep costs down
+
+272
+00:13:16,500 --> 00:13:17,647
+is by going back and going,
+
+273
+00:13:17,647 --> 00:13:19,870
+"Well, we decided to ingest
+
+274
+00:13:20,850 --> 00:13:23,187
+100% of the logs for this service."
+
+275
+00:13:24,360 --> 00:13:27,423
+Well, did we actually need all of them?
+
+276
+00:13:28,440 --> 00:13:31,410
+Does it never fire? (chuckles)
+
+277
+00:13:31,410 --> 00:13:34,800
+Well, then maybe let's not
+ingest 100% of the logs.
+
+278
+00:13:34,800 --> 00:13:38,163
+Let's take a step back
+and change our ingest.
+
+279
+00:13:40,020 --> 00:13:41,610
+And we look at these things
+
+280
+00:13:41,610 --> 00:13:44,460
+through service-level
+objectives or scorecards.
+
+281
+00:13:44,460 --> 00:13:46,200
+We go back and go, "What's our uptime?
+
+282
+00:13:46,200 --> 00:13:47,160
+Are we actually doing this?
+
+283
+00:13:47,160 --> 00:13:48,630
+Are we looking at the right stuff
+
+284
+00:13:48,630 --> 00:13:51,360
+so that we're engaging in the right places
+
+285
+00:13:51,360 --> 00:13:54,167
+and that we're preventing the
+right things from happening?"
+
+286
+00:13:56,220 --> 00:13:57,540
+REST.
+
+287
+00:13:57,540 --> 00:13:59,610
+See, told you I'd get there.
+
+288
+00:13:59,610 --> 00:14:02,400
+Recognize, what's the
+issue and who's impacted?
+
+289
+00:14:02,400 --> 00:14:05,100
+Examine, how do we see it?
+
+290
+00:14:05,100 --> 00:14:07,230
+shape, what do we do?
+
+291
+00:14:07,230 --> 00:14:09,210
+And then test, did it work?
+
+292
+00:14:09,210 --> 00:14:11,070
+And again, this is iterative.
+
+293
+00:14:11,070 --> 00:14:13,590
+So don't just do this once
+and then walk away from it.
+
+294
+00:14:13,590 --> 00:14:15,030
+This is something that can be continually
+
+295
+00:14:15,030 --> 00:14:16,680
+a part of a conversation
+that you're having
+
+296
+00:14:16,680 --> 00:14:19,480
+with your engineers during incidents
+
+297
+00:14:20,520 --> 00:14:25,050
+so that you can not only
+help your customers,
+
+298
+00:14:25,050 --> 00:14:28,530
+but what I'll get to in a
+second is keep cost down,
+
+299
+00:14:28,530 --> 00:14:29,580
+'cause that's a pretty important thing
+
+300
+00:14:29,580 --> 00:14:30,480
+for companies nowadays.
+
+301
+00:14:30,480 --> 00:14:32,070
+I mean, I know companies all the time,
+
+302
+00:14:32,070 --> 00:14:36,040
+but cost is is vector that
+
+303
+00:14:38,250 --> 00:14:39,750
+if you only talk about it
+
+304
+00:14:39,750 --> 00:14:44,750
+when a contract comes up for
+renewal or every fiscal year,
+
+305
+00:14:45,030 --> 00:14:47,070
+it's blindsiding, right?
+
+306
+00:14:47,070 --> 00:14:50,070
+I mean, who's been in
+meetings with, you know,
+
+307
+00:14:50,070 --> 00:14:51,667
+your finance team where they're like,
+
+308
+00:14:51,667 --> 00:14:55,767
+"Uh, you spent too much on
+logs again, could you not?"
+
+309
+00:14:57,030 --> 00:14:59,580
+It's frustrating because now you're, like,
+
+310
+00:14:59,580 --> 00:15:04,580
+scrambling to get back to
+a place that's sustainable.
+
+311
+00:15:05,220 --> 00:15:08,430
+But if you're continually having
+conversations around that,
+
+312
+00:15:08,430 --> 00:15:10,830
+you're not stuck in those
+conversations once a year
+
+313
+00:15:10,830 --> 00:15:13,580
+or once every three years or
+whatever it ends up being.
+
+314
+00:15:15,240 --> 00:15:16,230
+We have this conversation
+
+315
+00:15:16,230 --> 00:15:17,940
+a lot more frequently than we used to.
+
+316
+00:15:17,940 --> 00:15:20,100
+We've been able to drive
+down certain things
+
+317
+00:15:20,100 --> 00:15:22,290
+like query performance.
+
+318
+00:15:22,290 --> 00:15:25,890
+That's directly related to
+infrastructure cost, right?
+
+319
+00:15:25,890 --> 00:15:28,530
+Queries perform better.
+You lose less compute.
+
+320
+00:15:28,530 --> 00:15:29,363
+Save money.
+
+321
+00:15:31,380 --> 00:15:32,880
+Active datasets, same deal,
+
+322
+00:15:32,880 --> 00:15:37,590
+less to index means less
+infrastructure cost.
+
+323
+00:15:37,590 --> 00:15:39,790
+You can move it to a
+colder tier of storage.
+
+324
+00:15:40,860 --> 00:15:42,693
+But again, this is cost as a vector.
+
+325
+00:15:43,950 --> 00:15:48,663
+So you can do it, you can keep costs flat.
+
+326
+00:15:50,220 --> 00:15:54,063
+But it's a level of engagement that,
+
+327
+00:15:56,400 --> 00:15:59,040
+I don't wanna say it gets
+lost, that's not fair,
+
+328
+00:15:59,040 --> 00:16:02,560
+but it's a level of engagement
+that we didn't always do
+
+329
+00:16:03,990 --> 00:16:06,930
+in an iterative process
+like we should have.
+
+330
+00:16:06,930 --> 00:16:09,930
+I've 100% had conversations
+
+331
+00:16:09,930 --> 00:16:12,060
+where a budget conversation comes up
+
+332
+00:16:12,060 --> 00:16:14,097
+and they're like, "You need how much?"
+
+333
+00:16:15,870 --> 00:16:18,540
+And that's a bad conversation to have
+
+334
+00:16:18,540 --> 00:16:20,100
+for everybody in the room.
+
+335
+00:16:20,100 --> 00:16:22,230
+There's executives who
+are trying to balance
+
+336
+00:16:22,230 --> 00:16:24,450
+being able to let the
+engineers see what they need to
+
+337
+00:16:24,450 --> 00:16:25,980
+to be able to do their job,
+
+338
+00:16:25,980 --> 00:16:28,147
+and there's a finance person
+on the other end going,
+
+339
+00:16:28,147 --> 00:16:31,107
+"Well, but the industry standard is this."
+
+340
+00:16:33,360 --> 00:16:36,630
+But if, as an engineer,
+
+341
+00:16:36,630 --> 00:16:41,630
+you're engaged with a process
+that iterates upon that,
+
+342
+00:16:42,450 --> 00:16:47,197
+that has conversation around not just,
+
+343
+00:16:47,197 --> 00:16:50,407
+"We need to see this," but,
+
+344
+00:16:50,407 --> 00:16:52,770
+"We need to see this,
+
+345
+00:16:52,770 --> 00:16:54,777
+here's how we should go about it."
+
+346
+00:16:58,230 --> 00:17:01,080
+We've managed that over the last few years
+
+347
+00:17:01,080 --> 00:17:05,550
+and it's really transformed
+how we respond to incidents.
+
+348
+00:17:05,550 --> 00:17:09,420
+But how we continue to work through
+
+349
+00:17:09,420 --> 00:17:11,460
+new and emerging challenges
+
+350
+00:17:11,460 --> 00:17:14,280
+is because it's now a part of our DNA
+
+351
+00:17:14,280 --> 00:17:17,790
+because we have those
+conversations continually.
+
+352
+00:17:17,790 --> 00:17:19,500
+Nobody's blindsided.
+
+353
+00:17:19,500 --> 00:17:21,480
+You're not waiting in
+fear for the next time
+
+354
+00:17:21,480 --> 00:17:22,950
+you have that financial conversation
+
+355
+00:17:22,950 --> 00:17:25,200
+and that your observability
+is gonna go away.
+
+356
+00:17:27,180 --> 00:17:31,980
+So let me talk a bunch
+more about how we did that.
+
+357
+00:17:31,980 --> 00:17:33,630
+So hopefully I've set
+the stage a little bit.
+
+358
+00:17:33,630 --> 00:17:34,680
+I've talked about the problem
+
+359
+00:17:34,680 --> 00:17:37,800
+that we have kind of all experienced.
+
+360
+00:17:37,800 --> 00:17:41,310
+but it's a clever acronym.
+
+361
+00:17:41,310 --> 00:17:44,250
+It's not necessarily actionable.
+
+362
+00:17:44,250 --> 00:17:46,170
+Let's talk about the actions
+that go along with it.
+
+363
+00:17:46,170 --> 00:17:50,670
+So logs, this is kind of
+where most people start,
+
+364
+00:17:50,670 --> 00:17:51,630
+most places start.
+
+365
+00:17:51,630 --> 00:17:54,030
+I think Zendesk started here as well.
+
+366
+00:17:54,030 --> 00:17:55,980
+Big, verbose logs.
+
+367
+00:17:55,980 --> 00:17:58,950
+Big, whack ton of JSON information, right?
+
+368
+00:17:58,950 --> 00:17:59,940
+Stuck in there
+
+369
+00:17:59,940 --> 00:18:03,660
+and then maybe formatted
+depending on the UI you're using.
+
+370
+00:18:03,660 --> 00:18:05,220
+Datadog's UI formats are pretty well.
+
+371
+00:18:05,220 --> 00:18:08,493
+But they're big.
+
+372
+00:18:09,567 --> 00:18:11,317
+(chuckling) They're very expensive.
+
+373
+00:18:12,390 --> 00:18:14,880
+And do they actually give you
+
+374
+00:18:14,880 --> 00:18:16,880
+the information that you're looking for?
+
+375
+00:18:18,210 --> 00:18:19,743
+I mean, I was an advocate,
+
+376
+00:18:20,700 --> 00:18:22,713
+customer support at Zendesk Advocacy,
+
+377
+00:18:24,060 --> 00:18:26,670
+and I've looked at our
+logs plenty of times.
+
+378
+00:18:26,670 --> 00:18:28,140
+I still look at our logs.
+
+379
+00:18:28,140 --> 00:18:31,713
+They're useful, but I don't
+need every one of them.
+
+380
+00:18:32,970 --> 00:18:37,710
+I don't really care about
+the successful request
+
+381
+00:18:37,710 --> 00:18:42,213
+that somebody sent to get
+a help center article.
+
+382
+00:18:43,260 --> 00:18:46,143
+It worked! Not really relevant to me.
+
+383
+00:18:47,610 --> 00:18:50,243
+And we have audit trails if
+we really need something.
+
+384
+00:18:51,450 --> 00:18:52,770
+Why would I record that?
+
+385
+00:18:52,770 --> 00:18:54,903
+Why would I even ingest that information?
+
+386
+00:18:57,270 --> 00:18:59,580
+It's a conversation worth having.
+
+387
+00:18:59,580 --> 00:19:01,530
+And again, part of that REST
+
+388
+00:19:01,530 --> 00:19:03,540
+is having that conversation,
+
+389
+00:19:03,540 --> 00:19:06,000
+testing, do you really
+need that information?
+
+390
+00:19:06,000 --> 00:19:09,210
+You probably care more about
+the 422 the customer's getting
+
+391
+00:19:09,210 --> 00:19:11,850
+because they're sending
+you garbage payloads.
+
+392
+00:19:11,850 --> 00:19:14,640
+That's an issue that not
+only customer support
+
+393
+00:19:14,640 --> 00:19:15,930
+can help resolve,
+
+394
+00:19:15,930 --> 00:19:19,650
+but it also could potentially
+down the line cause incidents.
+
+395
+00:19:19,650 --> 00:19:22,060
+So you're managing things
+
+396
+00:19:23,100 --> 00:19:26,220
+like your ingest and your index pipeline.
+
+397
+00:19:26,220 --> 00:19:28,800
+Do we need to intake it?
+How much does that cost?
+
+398
+00:19:28,800 --> 00:19:31,050
+Do we need to index it?
+How much does that cost?
+
+399
+00:19:31,050 --> 00:19:33,540
+10%, 20%? Just the errors?
+
+400
+00:19:33,540 --> 00:19:35,640
+Again, it's different per company,
+
+401
+00:19:35,640 --> 00:19:37,110
+but if you don't have that conversation,
+
+402
+00:19:37,110 --> 00:19:39,270
+you just ship everything in
+
+403
+00:19:39,270 --> 00:19:42,635
+and you've got hundreds
+of thousands of customers,
+
+404
+00:19:42,635 --> 00:19:43,818
+there's a lot of data,
+
+405
+00:19:43,818 --> 00:19:46,290
+and there's a lot of data you don't need.
+
+406
+00:19:46,290 --> 00:19:47,283
+The next is APM.
+
+407
+00:19:50,940 --> 00:19:55,020
+It's less expensive
+tier, but you can tag it.
+
+408
+00:19:55,020 --> 00:19:57,210
+I showed you that graph
+way back in the beginning,
+
+409
+00:19:57,210 --> 00:19:59,580
+that flame graph where it
+had all of the little pieces
+
+410
+00:19:59,580 --> 00:20:03,033
+of the puzzle that were
+happening on the call.
+
+411
+00:20:04,140 --> 00:20:07,420
+And this is where you can get at
+
+412
+00:20:08,790 --> 00:20:09,783
+traffic over time.
+
+413
+00:20:10,710 --> 00:20:12,450
+So let's say,
+
+414
+00:20:12,450 --> 00:20:15,840
+back to my example for
+grabbing a help center article,
+
+415
+00:20:15,840 --> 00:20:18,510
+customer goes to help
+center, gets an article,
+
+416
+00:20:18,510 --> 00:20:21,033
+retrieves it from the
+database, perfect, 200.
+
+417
+00:20:22,200 --> 00:20:27,153
+Well, let's say they do
+that 100,000 times a day.
+
+418
+00:20:28,140 --> 00:20:31,110
+Do we need all 100,000 of those,
+
+419
+00:20:31,110 --> 00:20:32,433
+or do I need 10% of those?
+
+420
+00:20:35,040 --> 00:20:38,460
+Again, your workflows are gonna vary,
+
+421
+00:20:38,460 --> 00:20:41,317
+but having that conversation
+means you can go,
+
+422
+00:20:41,317 --> 00:20:45,867
+"Oh, well maybe we do
+only need 10% of that."
+
+423
+00:20:48,450 --> 00:20:51,750
+Now, you can still see what's
+happening to the customer.
+
+424
+00:20:51,750 --> 00:20:53,220
+They suddenly have a flood of requests
+
+425
+00:20:53,220 --> 00:20:54,470
+and you're called online.
+
+426
+00:20:56,130 --> 00:20:57,180
+You can still see it.
+
+427
+00:20:58,020 --> 00:20:59,700
+You don't see every single call,
+
+428
+00:20:59,700 --> 00:21:01,140
+but that every single
+call wasn't important,
+
+429
+00:21:01,140 --> 00:21:03,030
+'cause we discussed that
+
+430
+00:21:03,030 --> 00:21:06,363
+in our testing part of REST.
+
+431
+00:21:11,760 --> 00:21:13,200
+The next is metrics.
+
+432
+00:21:13,200 --> 00:21:17,940
+So if I care
+
+433
+00:21:17,940 --> 00:21:21,420
+about all of the things
+within my infrastructure
+
+434
+00:21:21,420 --> 00:21:23,070
+that are happening to,
+
+435
+00:21:23,070 --> 00:21:24,693
+let's say my EC2 instance,
+
+436
+00:21:25,530 --> 00:21:28,473
+one of my clusters, just for an example,
+
+437
+00:21:30,600 --> 00:21:34,260
+I don't need to see all
+the customer information
+
+438
+00:21:34,260 --> 00:21:37,810
+to determine which one of
+my hundreds of clusters
+
+439
+00:21:38,880 --> 00:21:40,743
+have high CPU load.
+
+440
+00:21:42,810 --> 00:21:43,643
+It's metric.
+
+441
+00:21:45,570 --> 00:21:47,160
+I can drill down into that.
+
+442
+00:21:47,160 --> 00:21:48,930
+I can decide that we need to do that
+
+443
+00:21:48,930 --> 00:21:51,730
+if we don't have the visibility
+when something comes up.
+
+444
+00:21:52,950 --> 00:21:57,950
+But I don't need to plan for that.
+
+445
+00:21:58,080 --> 00:22:00,060
+I just need to plan for seeing
+
+446
+00:22:00,060 --> 00:22:01,290
+infrastructure on a high level.
+
+447
+00:22:01,290 --> 00:22:04,140
+That's perfect for what
+metrics are used for.
+
+448
+00:22:04,140 --> 00:22:06,240
+Again, a less expensive
+way to still be able
+
+449
+00:22:06,240 --> 00:22:08,700
+to see the things you need
+when you're in that incident
+
+450
+00:22:08,700 --> 00:22:10,953
+and very frustrated.
+
+451
+00:22:14,430 --> 00:22:15,690
+And I've talked about this
+
+452
+00:22:15,690 --> 00:22:19,090
+kind of throughout this whole
+index and ingest strategy
+
+453
+00:22:20,070 --> 00:22:22,020
+is cost lenses
+
+454
+00:22:22,020 --> 00:22:23,970
+and keeping that a part
+of the conversation
+
+455
+00:22:23,970 --> 00:22:25,023
+as you move forward.
+
+456
+00:22:28,530 --> 00:22:30,380
+It's kind of uncomfortable, isn't it,
+
+457
+00:22:31,500 --> 00:22:33,750
+when you have those
+conversations internally?
+
+458
+00:22:35,190 --> 00:22:38,340
+I'm not usually very comfortable
+in finance conversations.
+
+459
+00:22:38,340 --> 00:22:39,453
+I'd rather avoid them.
+
+460
+00:22:40,380 --> 00:22:42,420
+Just give me a problem to solve
+
+461
+00:22:42,420 --> 00:22:44,463
+and I'm perfectly happy.
+
+462
+00:22:45,840 --> 00:22:50,193
+But if I can't see what I
+need to see in the problem,
+
+463
+00:22:51,150 --> 00:22:52,503
+then solving the problem,
+
+464
+00:22:53,429 --> 00:22:55,983
+it is not just frustrating,
+it's almost impossible.
+
+465
+00:22:58,140 --> 00:23:01,020
+So I've had to learn over time
+
+466
+00:23:01,020 --> 00:23:02,760
+that it's okay to have
+those conversations.
+
+467
+00:23:02,760 --> 00:23:04,920
+It's okay to ask those questions.
+
+468
+00:23:04,920 --> 00:23:07,470
+And again, every
+organization is different,
+
+469
+00:23:07,470 --> 00:23:11,640
+but developing that level
+
+470
+00:23:11,640 --> 00:23:15,280
+of openness within your organization
+
+471
+00:23:16,350 --> 00:23:18,783
+leads to huge dividends.
+
+472
+00:23:19,710 --> 00:23:21,660
+I mean, again, I showed you the evidence
+
+473
+00:23:21,660 --> 00:23:23,013
+of it a few slides ago.
+
+474
+00:23:25,020 --> 00:23:28,290
+There's no finance person
+that is happier when they see
+
+475
+00:23:28,290 --> 00:23:31,260
+big flat line straight across for cost,
+
+476
+00:23:31,260 --> 00:23:33,840
+as long as that's underneath
+the barrier that they set.
+
+477
+00:23:33,840 --> 00:23:35,850
+If it's over, then different problem.
+
+478
+00:23:35,850 --> 00:23:39,480
+But if you're having those conversations,
+
+479
+00:23:39,480 --> 00:23:40,680
+it's a lot less awkward.
+
+480
+00:23:42,780 --> 00:23:43,713
+So.
+
+481
+00:23:47,370 --> 00:23:48,720
+Need a quick drink.
+
+482
+00:23:48,720 --> 00:23:50,883
+It's a desert out here, quite literally.
+
+483
+00:23:56,550 --> 00:23:58,053
+So this is what we saw,
+
+484
+00:23:59,400 --> 00:24:01,470
+after, again, I said I've been at Zendesk
+
+485
+00:24:01,470 --> 00:24:03,330
+seven and a half years.
+
+486
+00:24:03,330 --> 00:24:06,180
+This isn't something
+that happened overnight.
+
+487
+00:24:06,180 --> 00:24:09,930
+I'm showing this in a, what we saw now,
+
+488
+00:24:09,930 --> 00:24:13,200
+knowing all of the struggles
+that we had getting up to here,
+
+489
+00:24:13,200 --> 00:24:15,150
+and I'll go into detail a little bit more
+
+490
+00:24:15,150 --> 00:24:16,410
+about those pitfalls in a minute.
+
+491
+00:24:16,410 --> 00:24:20,940
+But we saw a much faster response time.
+
+492
+00:24:20,940 --> 00:24:22,320
+Being able to get online,
+
+493
+00:24:22,320 --> 00:24:24,180
+to jump in an incident,
+to see what's going on,
+
+494
+00:24:24,180 --> 00:24:25,710
+to have the alert fire to know exactly
+
+495
+00:24:25,710 --> 00:24:27,810
+what you're supposed to do with that alert
+
+496
+00:24:29,520 --> 00:24:31,293
+means a huge difference.
+
+497
+00:24:32,760 --> 00:24:37,440
+And because we can see
+where that silly person
+
+498
+00:24:37,440 --> 00:24:39,750
+with the really loud stereo,
+
+499
+00:24:39,750 --> 00:24:41,853
+we know that they're in 21B,
+
+500
+00:24:44,010 --> 00:24:46,350
+we can put guardrails on them
+
+501
+00:24:46,350 --> 00:24:48,150
+to stop them affecting everybody else.
+
+502
+00:24:48,150 --> 00:24:48,990
+Soundproof the wall,
+
+503
+00:24:48,990 --> 00:24:50,700
+whatever you want to use for that analogy.
+
+504
+00:24:50,700 --> 00:24:51,843
+Or kick 'em out.
+
+505
+00:24:54,870 --> 00:24:56,730
+But we're also able to do things
+
+506
+00:24:56,730 --> 00:24:59,618
+that are on a much larger
+infrastructure level
+
+507
+00:24:59,618 --> 00:25:03,450
+that by paying close attention
+
+508
+00:25:03,450 --> 00:25:06,510
+to being able to see
+
+509
+00:25:06,510 --> 00:25:09,540
+really granular parts
+of our infrastructure
+
+510
+00:25:09,540 --> 00:25:10,863
+on the customer level,
+
+511
+00:25:12,090 --> 00:25:15,390
+we can rightsize things
+like our cloud resources.
+
+512
+00:25:15,390 --> 00:25:18,120
+We can keep consistent EC2 instances
+
+513
+00:25:18,120 --> 00:25:19,983
+across our entire infrastructure,
+
+514
+00:25:21,240 --> 00:25:25,710
+and we can align our observability costs,
+
+515
+00:25:25,710 --> 00:25:29,010
+ingestion costs are aligned to the value
+
+516
+00:25:29,010 --> 00:25:33,243
+that they provide internally
+and to our customers directly.
+
+517
+00:25:36,390 --> 00:25:37,620
+Speaking of customers,
+
+518
+00:25:37,620 --> 00:25:39,930
+we also have measurably happier customers.
+
+519
+00:25:39,930 --> 00:25:41,940
+Not every customer is happy,
+
+520
+00:25:41,940 --> 00:25:44,250
+that is the reality of the world,
+
+521
+00:25:44,250 --> 00:25:46,770
+but they are measurably happier
+
+522
+00:25:46,770 --> 00:25:49,800
+because we're responding to their issues
+
+523
+00:25:49,800 --> 00:25:53,673
+and getting them meaningful
+information much faster.
+
+524
+00:25:55,020 --> 00:25:57,210
+I mean, we've all been on the
+other end of incidents, right?
+
+525
+00:25:57,210 --> 00:26:00,480
+Like, we all of our
+companies own or purchased
+
+526
+00:26:00,480 --> 00:26:02,220
+a piece of software from somebody else
+
+527
+00:26:02,220 --> 00:26:04,290
+and it's had an incident
+
+528
+00:26:04,290 --> 00:26:06,600
+and when it's the, "We're working on it
+
+529
+00:26:06,600 --> 00:26:07,950
+and we'll get back to you,"
+
+530
+00:26:08,850 --> 00:26:10,740
+30 minutes after they've been down,
+
+531
+00:26:10,740 --> 00:26:13,593
+is mind-bogglingly frustrating.
+
+532
+00:26:15,360 --> 00:26:18,870
+But if that company can see
+better about what's going on,
+
+533
+00:26:18,870 --> 00:26:20,970
+they can be like, "Hey,
+
+534
+00:26:20,970 --> 00:26:23,730
+this part of our infrastructure
+is having an issue.
+
+535
+00:26:23,730 --> 00:26:25,110
+Our engineers are working on it.
+
+536
+00:26:25,110 --> 00:26:26,100
+We'll get back to you soon."
+
+537
+00:26:26,100 --> 00:26:27,210
+It makes me feel so much better,
+
+538
+00:26:27,210 --> 00:26:29,812
+even though they've
+still not done anything,
+
+539
+00:26:29,812 --> 00:26:31,260
+(chuckles) I still feel better
+
+540
+00:26:31,260 --> 00:26:33,603
+about it having that information.
+
+541
+00:26:35,130 --> 00:26:36,933
+So let me talk about the issues.
+
+542
+00:26:39,960 --> 00:26:44,130
+Don't do freeform tags. (chuckles)
+
+543
+00:26:44,130 --> 00:26:47,490
+Having any level of governance
+
+544
+00:26:47,490 --> 00:26:51,270
+over how you do observability internally
+
+545
+00:26:51,270 --> 00:26:56,190
+matters a huge amount for cost.
+
+546
+00:26:56,190 --> 00:26:58,320
+If everybody can just
+put in what they want,
+
+547
+00:26:58,320 --> 00:27:00,210
+it can be the new teleteam
+
+548
+00:27:00,210 --> 00:27:03,120
+can be putting in for cookies
+
+549
+00:27:03,120 --> 00:27:05,820
+and the other team who's carrots
+
+550
+00:27:05,820 --> 00:27:07,080
+is looking at cookies as well,
+
+551
+00:27:07,080 --> 00:27:09,243
+but they called it cookies four,
+
+552
+00:27:10,620 --> 00:27:13,110
+it doesn't do anything.
+
+553
+00:27:13,110 --> 00:27:14,640
+You're looking at the same thing.
+
+554
+00:27:14,640 --> 00:27:16,260
+But because you tagged
+it two different things,
+
+555
+00:27:16,260 --> 00:27:17,810
+now you're looking at it twice.
+
+556
+00:27:19,110 --> 00:27:22,980
+And more frustratingly
+for the finance portion,
+
+557
+00:27:22,980 --> 00:27:24,513
+you're paying for it twice.
+
+558
+00:27:26,550 --> 00:27:27,633
+Might have done that.
+
+559
+00:27:28,470 --> 00:27:29,700
+It sucks.
+
+560
+00:27:29,700 --> 00:27:34,700
+And it's even worse to
+untangle once it happens,
+
+561
+00:27:35,763 --> 00:27:40,200
+because if they're not
+tagged consistently,
+
+562
+00:27:40,200 --> 00:27:44,733
+then how do you know that cookie
+four is the same as cookie?
+
+563
+00:27:45,930 --> 00:27:47,280
+You've gotta get those teams together,
+
+564
+00:27:47,280 --> 00:27:49,020
+you gotta have a bunch of meetings,
+
+565
+00:27:49,020 --> 00:27:49,950
+and you gotta talk about it some more,
+
+566
+00:27:49,950 --> 00:27:52,650
+and then you gotta put a test in play.
+
+567
+00:27:52,650 --> 00:27:54,990
+You've all been there, I
+don't need to go through it.
+
+568
+00:27:54,990 --> 00:27:57,630
+But, leads to high cost.
+
+569
+00:27:57,630 --> 00:28:02,280
+And the even trickier thing
+
+570
+00:28:02,280 --> 00:28:05,523
+is because it explodes cardinality,
+
+571
+00:28:06,630 --> 00:28:09,213
+it gives you a false sense of cardinality.
+
+572
+00:28:10,530 --> 00:28:12,060
+So it makes it look
+
+573
+00:28:12,060 --> 00:28:16,170
+like you need a lot more
+observability on one layer
+
+574
+00:28:16,170 --> 00:28:17,583
+than you actually do,
+
+575
+00:28:18,450 --> 00:28:22,980
+because from the outside,
+from, like, an SRE perspective,
+
+576
+00:28:22,980 --> 00:28:27,120
+my job, it looks like it's all different
+
+577
+00:28:27,120 --> 00:28:29,340
+and you don't know any
+different just on the surface.
+
+578
+00:28:29,340 --> 00:28:30,640
+You gotta dig pretty deep.
+
+579
+00:28:34,800 --> 00:28:37,830
+So I said before
+
+580
+00:28:37,830 --> 00:28:39,660
+I was in customer support.
+
+581
+00:28:39,660 --> 00:28:44,130
+I loved catchall (laughs) logging.
+
+582
+00:28:44,130 --> 00:28:47,910
+It was an audit log and an
+engineering log all in one place.
+
+583
+00:28:47,910 --> 00:28:49,743
+It is fricking expensive,
+
+584
+00:28:50,970 --> 00:28:54,993
+and to be honest, not
+actually really worth it.
+
+585
+00:28:56,970 --> 00:28:58,770
+I'm sure there are workflows
+out there that it is,
+
+586
+00:28:58,770 --> 00:29:00,030
+by the way.
+
+587
+00:29:00,030 --> 00:29:01,653
+For us it wasn't worth it.
+
+588
+00:29:03,630 --> 00:29:05,730
+And it means you're, like I said before,
+
+589
+00:29:05,730 --> 00:29:06,930
+in the freeform tags,
+
+590
+00:29:06,930 --> 00:29:08,880
+you're doubling, tripling,
+
+591
+00:29:08,880 --> 00:29:11,520
+quadrupling what you're recording,
+
+592
+00:29:11,520 --> 00:29:13,740
+'cause if you have now this
+information in multiple places,
+
+593
+00:29:13,740 --> 00:29:16,710
+like you have it in logs
+and then you have it in APM
+
+594
+00:29:16,710 --> 00:29:18,240
+and you built a metric around it
+
+595
+00:29:18,240 --> 00:29:21,990
+and you stuck your email
+logs in, like, an S3 bucket,
+
+596
+00:29:21,990 --> 00:29:24,363
+well now you've paid for it four times,
+
+597
+00:29:25,680 --> 00:29:27,390
+and that's useless.
+
+598
+00:29:27,390 --> 00:29:31,320
+So having some governance
+
+599
+00:29:31,320 --> 00:29:35,260
+or some conversation around
+how that stuff is used
+
+600
+00:29:37,560 --> 00:29:42,330
+keeps those index and
+ingest levels correct.
+
+601
+00:29:42,330 --> 00:29:47,103
+So you can ingest a lot of
+logs, depends on the platform,
+
+602
+00:29:47,970 --> 00:29:49,770
+or depends on the observability
+of platform you're using,
+
+603
+00:29:49,770 --> 00:29:53,130
+but you can sometimes ingest logs,
+
+604
+00:29:53,130 --> 00:29:55,500
+costs very, very little,
+
+605
+00:29:55,500 --> 00:29:57,503
+'cause you're not spending any index time.
+
+606
+00:29:58,560 --> 00:30:01,750
+And that's a good way to
+balance those two things out
+
+607
+00:30:03,030 --> 00:30:04,930
+is while I'm only indexing
+
+608
+00:30:05,970 --> 00:30:07,920
+the 400 range errors and
+the 500 range errors,
+
+609
+00:30:07,920 --> 00:30:10,830
+and okay, for this one customer
+
+610
+00:30:10,830 --> 00:30:12,840
+who's had issues on this endpoint before,
+
+611
+00:30:12,840 --> 00:30:14,670
+I'm indexing those,
+
+612
+00:30:14,670 --> 00:30:15,630
+but the rest I'm ingesting.
+
+613
+00:30:15,630 --> 00:30:18,213
+I can go back and rehydrate if I need to,
+
+614
+00:30:19,230 --> 00:30:21,180
+but I'm not spending that cost upfront.
+
+615
+00:30:25,410 --> 00:30:28,830
+By the way, when that
+went away for advocacy,
+
+616
+00:30:28,830 --> 00:30:30,333
+I was not happy.
+
+617
+00:30:31,230 --> 00:30:34,050
+But in the end,
+
+618
+00:30:34,050 --> 00:30:35,160
+it did really work out.
+
+619
+00:30:35,160 --> 00:30:37,050
+So there are some decisions you make
+
+620
+00:30:37,050 --> 00:30:39,090
+that will ruffle people's feathers.
+
+621
+00:30:39,090 --> 00:30:41,850
+That's the reality of
+change for some people.
+
+622
+00:30:41,850 --> 00:30:45,030
+It's different and it's
+a new thing to learn,
+
+623
+00:30:45,030 --> 00:30:47,520
+but it will be okay in the end.
+
+624
+00:30:47,520 --> 00:30:49,200
+As I said, having that conversation
+
+625
+00:30:49,200 --> 00:30:51,180
+and making sure that's a part of your DNA
+
+626
+00:30:51,180 --> 00:30:52,650
+at a certain point,
+
+627
+00:30:52,650 --> 00:30:56,310
+that really helped soften the blow here
+
+628
+00:30:56,310 --> 00:30:59,640
+across all of our customer support teams,
+
+629
+00:30:59,640 --> 00:31:03,263
+is being like, "Hey, cost
+matters to our company.
+
+630
+00:31:03,263 --> 00:31:05,880
+(chuckling) We're here to
+make money, not burn it,
+
+631
+00:31:05,880 --> 00:31:07,980
+and this is why we're doing that."
+
+632
+00:31:07,980 --> 00:31:10,530
+And that really did change the narrative
+
+633
+00:31:10,530 --> 00:31:11,913
+in a very meaningful way.
+
+634
+00:31:15,000 --> 00:31:18,660
+This one is hard, especially
+for a big company,
+
+635
+00:31:18,660 --> 00:31:19,953
+but no owner map.
+
+636
+00:31:21,120 --> 00:31:22,890
+If I don't know
+
+637
+00:31:22,890 --> 00:31:27,033
+who is pumping all these logs in,
+
+638
+00:31:27,870 --> 00:31:32,677
+then whose desk do I sit at to go,
+
+639
+00:31:32,677 --> 00:31:34,317
+"Hey, could you not?"
+
+640
+00:31:36,030 --> 00:31:39,250
+Because if you just nuke
+'em from outer space,
+
+641
+00:31:39,250 --> 00:31:41,370
+(chuckling) you will find
+out really quick who it is,
+
+642
+00:31:41,370 --> 00:31:42,203
+what the problem is.
+
+643
+00:31:42,203 --> 00:31:44,190
+Again, you're gonna find out at 2:00 AM
+
+644
+00:31:44,190 --> 00:31:46,200
+when they jumped on for that incident.
+
+645
+00:31:46,200 --> 00:31:48,120
+And that leads
+
+646
+00:31:48,120 --> 00:31:49,980
+to customer frustration
+and all these other things,
+
+647
+00:31:49,980 --> 00:31:52,680
+and, (sighs) again,
+
+648
+00:31:52,680 --> 00:31:54,240
+we've gone through all
+that chain of events.
+
+649
+00:31:54,240 --> 00:31:56,370
+But having a service map,
+
+650
+00:31:56,370 --> 00:31:58,380
+having ownership over your service map
+
+651
+00:31:58,380 --> 00:32:01,420
+and making sure it's
+continually up to date
+
+652
+00:32:02,550 --> 00:32:07,550
+is an extremely hard task,
+
+653
+00:32:08,910 --> 00:32:11,310
+but one of the more valuable tasks
+
+654
+00:32:11,310 --> 00:32:16,260
+that I have ever seen a company undertake.
+
+655
+00:32:16,260 --> 00:32:18,270
+I cannot tell you how nice it is
+
+656
+00:32:18,270 --> 00:32:20,070
+to be able to be in an incident,
+
+657
+00:32:20,070 --> 00:32:22,627
+look at a set of logs and go,
+
+658
+00:32:22,627 --> 00:32:27,207
+"I need to page this
+team, under a minute."
+
+659
+00:32:28,950 --> 00:32:30,690
+There is no better feeling.
+
+660
+00:32:30,690 --> 00:32:34,350
+The worst feeling is when
+you've paged 15 teams
+
+661
+00:32:34,350 --> 00:32:37,650
+and they're all in this Zoom
+meeting yelling at each other
+
+662
+00:32:37,650 --> 00:32:40,563
+because you paged 15 wrong teams.
+
+663
+00:32:42,570 --> 00:32:43,833
+Now, everybody's off.
+
+664
+00:32:44,820 --> 00:32:48,300
+So again, hard
+
+665
+00:32:48,300 --> 00:32:50,493
+but extremely worth it in the end.
+
+666
+00:32:51,660 --> 00:32:54,060
+This last one, I alluded to it earlier,
+
+667
+00:32:54,060 --> 00:32:54,990
+but that Slack channel
+
+668
+00:32:54,990 --> 00:32:57,300
+where it's all these warnings and alerts
+
+669
+00:32:57,300 --> 00:33:00,240
+and nobody's reacting to any of them
+
+670
+00:33:00,240 --> 00:33:01,380
+because it's the same alert
+
+671
+00:33:01,380 --> 00:33:04,927
+that's been firing for
+the last three weeks.
+
+672
+00:33:04,927 --> 00:33:09,600
+(sighs) Signal to noise
+really matters in alerting,
+
+673
+00:33:09,600 --> 00:33:13,893
+and curating your alerts routinely,
+
+674
+00:33:16,830 --> 00:33:19,200
+I know, not all teams have time for that.
+
+675
+00:33:19,200 --> 00:33:22,680
+There's deadlines for
+releases and there's deploys
+
+676
+00:33:22,680 --> 00:33:25,650
+and there's customer bugs
+and all of these things.
+
+677
+00:33:25,650 --> 00:33:27,300
+I do get it.
+
+678
+00:33:27,300 --> 00:33:28,800
+I know this is kind of idealized
+
+679
+00:33:28,800 --> 00:33:31,950
+and doesn't always take
+into account the real world,
+
+680
+00:33:31,950 --> 00:33:32,783
+but
+
+681
+00:33:36,854 --> 00:33:39,210
+it leads to a level of alert fatigue
+
+682
+00:33:39,210 --> 00:33:42,903
+that isn't just an issue for incidents.
+
+683
+00:33:44,966 --> 00:33:46,830
+It's that if everything's critical,
+
+684
+00:33:46,830 --> 00:33:47,820
+nothing's critical, right?
+
+685
+00:33:47,820 --> 00:33:50,370
+I mean, I think we've all heard
+that phrase at some point.
+
+686
+00:33:50,370 --> 00:33:51,900
+It it ends up being that.
+
+687
+00:33:51,900 --> 00:33:54,780
+It's not that you're
+just ignoring the alerts
+
+688
+00:33:54,780 --> 00:33:55,803
+that are flapping.
+
+689
+00:33:56,790 --> 00:34:00,210
+You start to ignore other
+things that are also alerts
+
+690
+00:34:00,210 --> 00:34:01,597
+because in your head you're like,
+
+691
+00:34:01,597 --> 00:34:04,200
+"Well, I see this ping every five minutes
+
+692
+00:34:04,200 --> 00:34:05,613
+and it's pointless.
+
+693
+00:34:06,480 --> 00:34:08,190
+So now, other things might be pointless."
+
+694
+00:34:08,190 --> 00:34:11,520
+So it ends up like kind of
+ballooning into an attitude
+
+695
+00:34:11,520 --> 00:34:14,823
+that changing the direction
+of that ship can be difficult.
+
+696
+00:34:16,860 --> 00:34:18,330
+It ends up with issues ignored.
+
+697
+00:34:18,330 --> 00:34:21,663
+And again, back to my
+customer experience days,
+
+698
+00:34:22,898 --> 00:34:24,570
+(chuckling) customers get really mad
+
+699
+00:34:24,570 --> 00:34:26,640
+when you ignore their issue.
+
+700
+00:34:26,640 --> 00:34:29,790
+And it's hard for an executive,
+
+701
+00:34:29,790 --> 00:34:32,820
+say big customer had an issue
+they had to write in about,
+
+702
+00:34:32,820 --> 00:34:34,440
+you had a flapping alert
+
+703
+00:34:34,440 --> 00:34:35,970
+that told you about this issue,
+
+704
+00:34:35,970 --> 00:34:39,240
+but you ignored it because
+it's always been flapping
+
+705
+00:34:39,240 --> 00:34:43,200
+or it was buried in
+another flapping alert.
+
+706
+00:34:43,200 --> 00:34:45,850
+It's a really hard thing to
+talk to a customer about.
+
+707
+00:34:46,860 --> 00:34:47,693
+It just is.
+
+708
+00:34:47,693 --> 00:34:51,690
+"Hey, we actually saw it two hours before,
+
+709
+00:34:51,690 --> 00:34:53,250
+but we can ignore it."
+
+710
+00:34:53,250 --> 00:34:57,330
+So that one's a hard one to curate
+
+711
+00:34:57,330 --> 00:34:59,700
+and I know it's hard to
+make time to do that,
+
+712
+00:34:59,700 --> 00:35:01,713
+but it's another one that's really like,
+
+713
+00:35:02,820 --> 00:35:04,230
+it has a lot of cascading issues
+
+714
+00:35:04,230 --> 00:35:06,730
+other than just what it
+seems like on the surface.
+
+715
+00:35:09,240 --> 00:35:13,440
+So you're all gonna leave here
+
+716
+00:35:13,440 --> 00:35:15,633
+in 20 minutes or so.
+
+717
+00:35:17,760 --> 00:35:19,950
+I want you to take away a couple things
+
+718
+00:35:19,950 --> 00:35:21,960
+because I did say a lot of things,
+
+719
+00:35:21,960 --> 00:35:23,640
+I showed up a lot of slides,
+
+720
+00:35:23,640 --> 00:35:28,560
+but I'd really love for you
+to take away some of this
+
+721
+00:35:28,560 --> 00:35:31,320
+so you don't end up in some
+of the pitfalls that we did.
+
+722
+00:35:31,320 --> 00:35:33,495
+They were frustrating,
+we've come out of them,
+
+723
+00:35:33,495 --> 00:35:34,695
+but they're frustrating.
+
+724
+00:35:35,970 --> 00:35:39,000
+So start with a tag
+before a fancy dashboard.
+
+725
+00:35:39,000 --> 00:35:42,690
+Figure out how you're
+gonna record all this stuff
+
+726
+00:35:42,690 --> 00:35:44,220
+and stick to a standard.
+
+727
+00:35:44,220 --> 00:35:45,840
+Having a dashboard is nice,
+
+728
+00:35:45,840 --> 00:35:49,440
+but if you have no, like, rules,
+
+729
+00:35:49,440 --> 00:35:53,313
+no governance over those tags
+that inform that dashboard,
+
+730
+00:35:54,540 --> 00:35:56,730
+you're doing style over substance
+
+731
+00:35:56,730 --> 00:35:57,663
+and that just,
+
+732
+00:35:59,940 --> 00:36:01,113
+it burns down quickly.
+
+733
+00:36:02,220 --> 00:36:06,840
+Invest early in per-tenant
+KPI and heat maps.
+
+734
+00:36:06,840 --> 00:36:09,480
+I know that's really big
+wording for a takeaway,
+
+735
+00:36:09,480 --> 00:36:14,040
+but if you're not talking
+
+736
+00:36:14,040 --> 00:36:17,283
+about performance on your tenants,
+
+737
+00:36:20,190 --> 00:36:23,580
+then you're gonna run into a scenario
+
+738
+00:36:23,580 --> 00:36:28,580
+where you can't focus resources
+
+739
+00:36:28,890 --> 00:36:31,620
+in an area appropriately.
+
+740
+00:36:31,620 --> 00:36:33,810
+You're gonna be kind of flailing.
+
+741
+00:36:33,810 --> 00:36:36,240
+And if you spend time early on,
+
+742
+00:36:36,240 --> 00:36:39,120
+this whole slide is
+kind of about governance
+
+743
+00:36:39,120 --> 00:36:40,923
+and, like, company culture.
+
+744
+00:36:42,060 --> 00:36:44,970
+If you are investing in this early,
+
+745
+00:36:44,970 --> 00:36:46,893
+SLOs saying, "Hey,
+
+746
+00:36:47,790 --> 00:36:48,750
+my tickets endpoint,
+
+747
+00:36:48,750 --> 00:36:51,200
+they should be created in
+three seconds or less."
+
+748
+00:36:52,560 --> 00:36:53,403
+Great.
+
+749
+00:36:54,750 --> 00:36:58,260
+Set an alert, set an SLO,
+
+750
+00:36:58,260 --> 00:37:01,023
+when it doesn't happen, talk about it,
+
+751
+00:37:02,760 --> 00:37:07,200
+because if you don't, you
+end up hiding problems
+
+752
+00:37:07,200 --> 00:37:09,800
+because you're never looking
+for them to begin with.
+
+753
+00:37:11,700 --> 00:37:13,600
+Treat cost as a first-class dimension.
+
+754
+00:37:14,820 --> 00:37:16,710
+I'm sure you're tired of me hearing,
+
+755
+00:37:16,710 --> 00:37:19,413
+or tired of me saying, you hearing,
+
+756
+00:37:20,610 --> 00:37:23,670
+the word cost over and over
+and over and over again.
+
+757
+00:37:23,670 --> 00:37:24,770
+I get it. It gets old.
+
+758
+00:37:25,800 --> 00:37:29,223
+But without a culture
+that is accepting of that,
+
+759
+00:37:33,120 --> 00:37:38,120
+it causes so many other issues,
+
+760
+00:37:38,280 --> 00:37:39,810
+like, I talked about that flapping alert,
+
+761
+00:37:39,810 --> 00:37:41,250
+like, it caused other cascading
+
+762
+00:37:41,250 --> 00:37:43,830
+and issues that kind
+of go alongside of it.
+
+763
+00:37:43,830 --> 00:37:46,050
+Being afraid to talk about cost
+
+764
+00:37:46,050 --> 00:37:47,580
+can mean you are afraid to talk
+
+765
+00:37:47,580 --> 00:37:49,440
+about other big changes at the company
+
+766
+00:37:49,440 --> 00:37:51,480
+or big governances at the company.
+
+767
+00:37:51,480 --> 00:37:56,013
+Cost is a dimension for every
+single company at some point.
+
+768
+00:37:57,090 --> 00:38:02,090
+And if teams internally aren't
+comfortable talking about it,
+
+769
+00:38:02,940 --> 00:38:05,010
+how can you drive profitability?
+
+770
+00:38:05,010 --> 00:38:08,070
+How can you drive sustainability?
+
+771
+00:38:08,070 --> 00:38:09,470
+If everybody's scared of it,
+
+772
+00:38:10,920 --> 00:38:12,213
+it's really hard to do.
+
+773
+00:38:13,110 --> 00:38:16,110
+And the last is bake in context.
+
+774
+00:38:16,110 --> 00:38:19,741
+Essentially, fix your metadata.
+
+775
+00:38:19,741 --> 00:38:24,741
+(chuckles) If it's not
+there, you can't see it.
+
+776
+00:38:26,910 --> 00:38:30,423
+And that goes back to the
+REST that I talked about.
+
+777
+00:38:31,800 --> 00:38:34,800
+Iterating on a process,
+whatever you want to call it,
+
+778
+00:38:34,800 --> 00:38:38,250
+I called it REST because
+I get sleep deprived
+
+779
+00:38:38,250 --> 00:38:41,133
+and a groggy engineer needs rest.
+
+780
+00:38:42,330 --> 00:38:45,420
+But you can use whatever
+mnemonic you want to use
+
+781
+00:38:45,420 --> 00:38:49,440
+or whatever process that works
+within your company structure
+
+782
+00:38:49,440 --> 00:38:51,030
+to go through the process
+
+783
+00:38:51,030 --> 00:38:54,633
+and make it just a thing that you do.
+
+784
+00:38:55,687 --> 00:38:58,410
+"We are going to do REST today.
+
+785
+00:38:58,410 --> 00:38:59,460
+That's what we're gonna do."
+
+786
+00:38:59,460 --> 00:39:01,800
+Great. Everybody goes through and does it.
+
+787
+00:39:01,800 --> 00:39:02,900
+It's a great exercise.
+
+788
+00:39:04,020 --> 00:39:08,760
+But if you don't do that to
+then bake in that tenant context
+
+789
+00:39:08,760 --> 00:39:11,730
+to then have it available
+when that incident is called,
+
+790
+00:39:11,730 --> 00:39:14,733
+you're always reacting and
+you're not being proactive.
+
+791
+00:39:15,750 --> 00:39:18,930
+And the thing customers love the most
+
+792
+00:39:18,930 --> 00:39:22,503
+is when you're ahead of the
+issue before they even see it.
+
+793
+00:39:27,270 --> 00:39:29,103
+This is where you want to be, right?
+
+794
+00:39:30,150 --> 00:39:34,170
+Latency decreased, requests retained.
+
+795
+00:39:34,170 --> 00:39:35,910
+You want customers happy.
+
+796
+00:39:35,910 --> 00:39:37,830
+All of this that I just talked about
+
+797
+00:39:37,830 --> 00:39:39,723
+is all trying to drive those things.
+
+798
+00:39:41,310 --> 00:39:44,403
+Customers are how we make our money,
+
+799
+00:39:45,750 --> 00:39:48,750
+and if they're pissed,
+they're gonna leave.
+
+800
+00:39:48,750 --> 00:39:50,580
+They're not gonna pay.
+
+801
+00:39:50,580 --> 00:39:51,990
+You're not gonna have a business.
+
+802
+00:39:51,990 --> 00:39:55,320
+So keeping customer context in mind
+
+803
+00:39:55,320 --> 00:39:59,100
+while it drives all of your
+other observability decisions
+
+804
+00:39:59,100 --> 00:40:00,900
+is a really healthy balance to have.
+
+805
+00:40:01,830 --> 00:40:03,690
+Not saying it's easy.
+
+806
+00:40:03,690 --> 00:40:05,670
+But hopefully some of those
+things are good takeaways
+
+807
+00:40:05,670 --> 00:40:07,350
+that you can use
+
+808
+00:40:07,350 --> 00:40:11,790
+to try to help drive those
+conversations internally.
+
+809
+00:40:11,790 --> 00:40:14,040
+I know it's high and it's conceptual,
+
+810
+00:40:14,040 --> 00:40:18,363
+but I'm happy to give more
+information around that.
+
+811
+00:40:19,260 --> 00:40:22,800
+I really appreciate you
+all listening to me today
+
+812
+00:40:22,800 --> 00:40:24,120
+talk about this stuff.
+
+813
+00:40:24,120 --> 00:40:26,340
+Customer experience is
+very near and dear to me.
+
+814
+00:40:26,340 --> 00:40:28,320
+It's a problem that always exists
+
+815
+00:40:28,320 --> 00:40:31,270
+and it's always there to solve
+and I like solving problems.
+
+816
+00:40:33,000 --> 00:40:34,530
+I'm gonna open it up for
+questions in a second.
+
+817
+00:40:34,530 --> 00:40:36,360
+If you have any that you want to ask
+
+818
+00:40:36,360 --> 00:40:39,030
+to the group, feel free.
+
+819
+00:40:39,030 --> 00:40:41,550
+But if you want to come to me afterwards
+
+820
+00:40:41,550 --> 00:40:43,590
+and don't want to talk in a big group,
+
+821
+00:40:43,590 --> 00:40:44,730
+I know not everybody's comfortable
+
+822
+00:40:44,730 --> 00:40:46,740
+with huge groups, feel free.
+
+823
+00:40:46,740 --> 00:40:49,410
+I'm more than happy to answer
+any questions you might have
+
+824
+00:40:49,410 --> 00:40:51,513
+or if you need details on what we did.
+
+825
+00:40:53,580 --> 00:40:57,780
+I do want to give a huge, huge
+thank you to Max from Datadog
+
+826
+00:40:57,780 --> 00:41:00,120
+who helped prepare this presentation
+
+827
+00:41:00,120 --> 00:41:03,360
+and to Zendesk as a whole
+for giving me opportunity
+
+828
+00:41:03,360 --> 00:41:06,510
+to speak to everybody here today.
+
+829
+00:41:06,510 --> 00:41:08,940
+They are at booth 165.
+
+830
+00:41:08,940 --> 00:41:10,168
+There's my pitch.
+
+831
+00:41:10,168 --> 00:41:14,250
+(laughs) But yeah, I
+appreciate all your time today.
+
+832
+00:41:14,250 --> 00:41:15,743
+Thank you so much.
+
+833
+00:41:15,743 --> 00:41:18,743
+(audience applauds)
+

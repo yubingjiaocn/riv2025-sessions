@@ -1,0 +1,1278 @@
+1
+00:00:00,330 --> 00:00:01,320
+- Hey guys, welcome.
+
+2
+00:00:01,320 --> 00:00:03,540
+Thank you for joining this session,
+
+3
+00:00:03,540 --> 00:00:07,650
+and we are gonna spend the
+next roughly 15 minutes
+
+4
+00:00:07,650 --> 00:00:09,270
+talking about Karpenter
+
+5
+00:00:09,270 --> 00:00:11,340
+and its great features
+
+6
+00:00:11,340 --> 00:00:15,150
+that will actually help
+you achieve cost efficiency
+
+7
+00:00:15,150 --> 00:00:18,243
+and make your setup
+really adaptive at scale.
+
+8
+00:00:19,358 --> 00:00:20,820
+So before we start,
+
+9
+00:00:20,820 --> 00:00:23,370
+I would actually want to
+ask you a quick question.
+
+10
+00:00:23,370 --> 00:00:24,450
+How much of you guys
+
+11
+00:00:24,450 --> 00:00:27,063
+are using Karpenter today in production?
+
+12
+00:00:28,410 --> 00:00:29,400
+Perfect, amazing.
+
+13
+00:00:29,400 --> 00:00:30,780
+And keep your hands up
+
+14
+00:00:30,780 --> 00:00:33,483
+those who use it for
+managing Spot Instances.
+
+15
+00:00:35,070 --> 00:00:36,150
+Amazing, perfect.
+
+16
+00:00:36,150 --> 00:00:37,500
+Thank you for sharing.
+
+17
+00:00:37,500 --> 00:00:38,910
+So, my name is Alexey,
+
+18
+00:00:38,910 --> 00:00:41,070
+I'm a Co-Founder and CTO at Zesty,
+
+19
+00:00:41,070 --> 00:00:45,120
+where we are focusing on
+making cloud really efficient.
+
+20
+00:00:45,120 --> 00:00:48,900
+And I hope you will actually
+be able to take some
+
+21
+00:00:48,900 --> 00:00:53,160
+actual and practical tips
+from this presentation
+
+22
+00:00:53,160 --> 00:00:55,260
+that you can implement this in your setup.
+
+23
+00:00:56,430 --> 00:00:57,263
+Let's dive in.
+
+24
+00:00:58,650 --> 00:01:02,910
+So, when actually it comes
+to stability and performance,
+
+25
+00:01:02,910 --> 00:01:05,070
+it's really easy to solve the problem
+
+26
+00:01:05,070 --> 00:01:08,370
+by just throwing money
+at the problem, right?
+
+27
+00:01:08,370 --> 00:01:10,590
+We can always take the biggest,
+
+28
+00:01:10,590 --> 00:01:12,990
+the most powerful instances out there
+
+29
+00:01:12,990 --> 00:01:16,983
+and just get an amazing
+performance at a terrible cost.
+
+30
+00:01:18,060 --> 00:01:20,670
+On the other hand, if
+we squeeze the budget
+
+31
+00:01:20,670 --> 00:01:23,850
+and we scale down to
+the bare, bare minimum
+
+32
+00:01:23,850 --> 00:01:24,683
+and you know,
+
+33
+00:01:24,683 --> 00:01:28,050
+and suddenly efficient
+becomes unavailable.
+
+34
+00:01:28,050 --> 00:01:31,620
+So as DevOps engineers
+and platform engineers,
+
+35
+00:01:31,620 --> 00:01:34,200
+our goal is to find a sweet spot.
+
+36
+00:01:34,200 --> 00:01:38,010
+Our goal is to run complex
+production workloads,
+
+37
+00:01:38,010 --> 00:01:41,280
+they're demanding for resources,
+
+38
+00:01:41,280 --> 00:01:44,010
+give them just the right infrastructure
+
+39
+00:01:44,010 --> 00:01:47,940
+and it shouldn't be over-provisioned
+or under-provisioned.
+
+40
+00:01:47,940 --> 00:01:51,210
+And this is a tough
+balance to strike, right?
+
+41
+00:01:51,210 --> 00:01:53,100
+And especially in Kubernetes,
+
+42
+00:01:53,100 --> 00:01:57,930
+it always means tuning the
+configuration to stay efficient,
+
+43
+00:01:57,930 --> 00:01:59,823
+and it's easier said than done.
+
+44
+00:02:00,930 --> 00:02:03,120
+So, let's dive in.
+
+45
+00:02:03,120 --> 00:02:06,870
+Basically one of the best
+features in Karpenter,
+
+46
+00:02:06,870 --> 00:02:11,610
+it's very powerful called
+consolidation policies.
+
+47
+00:02:11,610 --> 00:02:12,630
+What it actually does,
+
+48
+00:02:12,630 --> 00:02:16,200
+it takes and monitors your nodes
+
+49
+00:02:16,200 --> 00:02:18,780
+and looking for underutilized nodes
+
+50
+00:02:18,780 --> 00:02:22,590
+and actually checking if it
+can safely terminate them
+
+51
+00:02:22,590 --> 00:02:23,790
+to save costs
+
+52
+00:02:23,790 --> 00:02:27,660
+and move the containers somewhere else.
+
+53
+00:02:27,660 --> 00:02:31,800
+Now, while this sounds
+appealing and sounds great,
+
+54
+00:02:31,800 --> 00:02:35,310
+there are some guardrails
+
+55
+00:02:35,310 --> 00:02:37,080
+and fine tunings to this behavior
+
+56
+00:02:37,080 --> 00:02:39,480
+you wanna have in your setup.
+
+57
+00:02:39,480 --> 00:02:41,970
+Number one is using what's called PDB,
+
+58
+00:02:41,970 --> 00:02:44,310
+or pod disruption budgets,
+
+59
+00:02:44,310 --> 00:02:45,730
+it actually controls
+
+60
+00:02:47,250 --> 00:02:51,510
+and making sure that
+not all of your replicas
+
+61
+00:02:51,510 --> 00:02:54,000
+are being consolidated at the same time.
+
+62
+00:02:54,000 --> 00:02:55,860
+You wanna make sure that you control
+
+63
+00:02:55,860 --> 00:02:58,890
+how much replicas Karpenter can interrupt
+
+64
+00:02:58,890 --> 00:03:02,670
+at any given moment to keep
+your setup safe, right?
+
+65
+00:03:02,670 --> 00:03:06,660
+Another thing is consolidation delays.
+
+66
+00:03:06,660 --> 00:03:10,290
+You can always configure
+how long Karpenter will wait
+
+67
+00:03:10,290 --> 00:03:15,290
+until it actually goes
+and terminate nodes.
+
+68
+00:03:15,660 --> 00:03:17,430
+And you're setting this
+
+69
+00:03:17,430 --> 00:03:20,460
+in order for prevent
+Karpenter from doing this
+
+70
+00:03:20,460 --> 00:03:22,980
+during short-term dips in usage,
+
+71
+00:03:22,980 --> 00:03:25,511
+so it's not gonna go crazy
+
+72
+00:03:25,511 --> 00:03:27,780
+and interrupt your containers.
+
+73
+00:03:27,780 --> 00:03:31,050
+So by actually implementing
+those controls,
+
+74
+00:03:31,050 --> 00:03:35,970
+you can avoid consolidation
+during your peak,
+
+75
+00:03:35,970 --> 00:03:37,380
+peak traffic hours.
+
+76
+00:03:37,380 --> 00:03:39,917
+And you can see an
+example configuration here
+
+77
+00:03:39,917 --> 00:03:41,433
+of how to set this up.
+
+78
+00:03:43,020 --> 00:03:44,850
+Okay, another important strategy
+
+79
+00:03:44,850 --> 00:03:49,290
+is to choose the right
+instances for your pool.
+
+80
+00:03:49,290 --> 00:03:52,110
+So it's not just about what's available,
+
+81
+00:03:52,110 --> 00:03:54,330
+it's about giving the Karpenter
+
+82
+00:03:54,330 --> 00:03:56,880
+the right amount of flexibility
+
+83
+00:03:56,880 --> 00:04:01,880
+and give him a set of broader choice.
+
+84
+00:04:02,490 --> 00:04:06,330
+So you definitely want
+to have diversification
+
+85
+00:04:06,330 --> 00:04:09,660
+because Karpenter actually balances
+
+86
+00:04:09,660 --> 00:04:11,790
+between cost and availability
+
+87
+00:04:11,790 --> 00:04:13,710
+and trying to find the instance
+
+88
+00:04:13,710 --> 00:04:18,450
+that delivers the best
+performance at lowest cost.
+
+89
+00:04:18,450 --> 00:04:22,620
+So in theory, the more
+instance types and sizes
+
+90
+00:04:22,620 --> 00:04:26,520
+you give Karpenter across
+different families,
+
+91
+00:04:26,520 --> 00:04:28,320
+generations and sizes,
+
+92
+00:04:28,320 --> 00:04:32,670
+so in theory, it can find a better fit,
+
+93
+00:04:32,670 --> 00:04:37,670
+but you always wanna
+avoid extremes, right?
+
+94
+00:04:37,830 --> 00:04:41,910
+You don't want to include
+instances that are too small
+
+95
+00:04:41,910 --> 00:04:43,470
+because small instances
+
+96
+00:04:43,470 --> 00:04:45,810
+are causing a lot of network overhead,
+
+97
+00:04:45,810 --> 00:04:48,690
+they actually adding more complexity
+
+98
+00:04:48,690 --> 00:04:51,600
+to scheduling and monitoring.
+
+99
+00:04:51,600 --> 00:04:53,940
+So in this example,
+
+100
+00:04:53,940 --> 00:04:57,000
+we are actually cutting
+out all the tiny flavors,
+
+101
+00:04:57,000 --> 00:04:57,833
+for example.
+
+102
+00:04:58,680 --> 00:05:02,040
+But also you don't want
+to have too large nodes
+
+103
+00:05:02,040 --> 00:05:06,060
+because we spoke about
+consolidation earlier,
+
+104
+00:05:06,060 --> 00:05:08,040
+and basically large nodes
+
+105
+00:05:08,040 --> 00:05:12,330
+that are not fully utilized
+is a waste of money, right,
+
+106
+00:05:12,330 --> 00:05:15,000
+and making the consolidation
+less efficient.
+
+107
+00:05:15,000 --> 00:05:16,500
+So to summarize,
+
+108
+00:05:16,500 --> 00:05:21,450
+basically all we wanna do is
+constantly monitor the behavior
+
+109
+00:05:21,450 --> 00:05:23,970
+of our cluster,
+
+110
+00:05:23,970 --> 00:05:28,490
+and it's up to us to define
+what's too small or too big
+
+111
+00:05:28,490 --> 00:05:30,213
+in our exact case.
+
+112
+00:05:31,234 --> 00:05:34,590
+Another factor that is
+constantly overlooked
+
+113
+00:05:34,590 --> 00:05:36,600
+is DaemonSets.
+
+114
+00:05:36,600 --> 00:05:39,240
+Basically those are containers
+
+115
+00:05:39,240 --> 00:05:41,280
+that are running for system services
+
+116
+00:05:41,280 --> 00:05:45,090
+like monitoring, logging and telemetry
+
+117
+00:05:45,090 --> 00:05:47,610
+and all of the system stuff
+
+118
+00:05:47,610 --> 00:05:49,860
+and running per each node.
+
+119
+00:05:49,860 --> 00:05:52,290
+So when we have larger nodes,
+
+120
+00:05:52,290 --> 00:05:56,040
+we have small overhead of DaemonSets.
+
+121
+00:05:56,040 --> 00:05:59,310
+And on the opposite, if
+have a lot of small nodes,
+
+122
+00:05:59,310 --> 00:06:03,780
+it means we have a large
+overhead of DaemonSets,
+
+123
+00:06:03,780 --> 00:06:06,570
+and actually this is consuming resources.
+
+124
+00:06:06,570 --> 00:06:08,730
+And especially if we're using any software
+
+125
+00:06:08,730 --> 00:06:10,920
+that is licensed per node,
+
+126
+00:06:10,920 --> 00:06:14,250
+this can actually silently
+inflate your costs,
+
+127
+00:06:14,250 --> 00:06:16,503
+so take this also as a consideration.
+
+128
+00:06:17,610 --> 00:06:18,960
+So, let's be honest,
+
+129
+00:06:18,960 --> 00:06:22,710
+talking about cost savings
+without mentioning Spot Instances
+
+130
+00:06:22,710 --> 00:06:24,720
+probably is not the right thing.
+
+131
+00:06:24,720 --> 00:06:27,390
+And the good news is that Karpenter
+
+132
+00:06:27,390 --> 00:06:30,480
+makes management of Spot
+Instances really easy.
+
+133
+00:06:30,480 --> 00:06:34,080
+You just need to allow Spot
+Instances in your NodePool
+
+134
+00:06:34,080 --> 00:06:36,870
+and Karpenter will just take it further,
+
+135
+00:06:36,870 --> 00:06:40,800
+it will automatically identify Spots
+
+136
+00:06:40,800 --> 00:06:43,650
+with best price and availability,
+
+137
+00:06:43,650 --> 00:06:44,760
+take this into account
+
+138
+00:06:44,760 --> 00:06:47,490
+and choose the right machines
+
+139
+00:06:47,490 --> 00:06:49,800
+and also take care if they're interrupted
+
+140
+00:06:49,800 --> 00:06:51,960
+so pods can move somewhere else
+
+141
+00:06:51,960 --> 00:06:55,320
+and basically provide cost savings.
+
+142
+00:06:55,320 --> 00:06:58,710
+While this is sounds good,
+
+143
+00:06:58,710 --> 00:07:01,170
+so let's think where this can fit, right,
+
+144
+00:07:01,170 --> 00:07:03,600
+where we can use Spot Instances.
+
+145
+00:07:03,600 --> 00:07:05,100
+And if you ask me,
+
+146
+00:07:05,100 --> 00:07:06,720
+I think everywhere,
+
+147
+00:07:06,720 --> 00:07:09,840
+every workload that can
+tolerate for interrupts,
+
+148
+00:07:09,840 --> 00:07:13,440
+whether it's a web server
+behind load balancer,
+
+149
+00:07:13,440 --> 00:07:16,230
+whether it's a stateless microservice,
+
+150
+00:07:16,230 --> 00:07:18,270
+batch jobs, your dev,
+
+151
+00:07:18,270 --> 00:07:20,850
+your staging environments,
+
+152
+00:07:20,850 --> 00:07:24,930
+all of them can recover
+quickly from Spot interruptions
+
+153
+00:07:24,930 --> 00:07:27,810
+and you can leverage
+this for cost savings.
+
+154
+00:07:27,810 --> 00:07:31,660
+So, the best practice here
+is actually to configure
+
+155
+00:07:32,610 --> 00:07:35,910
+Spot Instances with a
+failover to on-demand.
+
+156
+00:07:35,910 --> 00:07:38,850
+And you can see an example
+configuration here.
+
+157
+00:07:38,850 --> 00:07:40,053
+This actually will,
+
+158
+00:07:40,890 --> 00:07:43,440
+Karpenter in this case will
+actually try to provision
+
+159
+00:07:43,440 --> 00:07:45,750
+a Spot Instance for cost savings,
+
+160
+00:07:45,750 --> 00:07:47,310
+and if there is no capacity
+
+161
+00:07:47,310 --> 00:07:50,160
+will transparently move you to on-demand.
+
+162
+00:07:50,160 --> 00:07:53,820
+So it's a good idea to create
+two separate node pools
+
+163
+00:07:53,820 --> 00:07:55,590
+for Spots and on-demand.
+
+164
+00:07:55,590 --> 00:07:57,603
+So you can actually use,
+
+165
+00:07:58,770 --> 00:08:01,740
+you can use node affinity
+in your deployments
+
+166
+00:08:01,740 --> 00:08:04,650
+to configure how much you put to Spot
+
+167
+00:08:04,650 --> 00:08:08,160
+and how much you keep
+on-demand for safety.
+
+168
+00:08:08,160 --> 00:08:13,160
+And finally, you always need
+to keep an eye on fallbacks.
+
+169
+00:08:13,740 --> 00:08:15,540
+If you have too much fallbacks
+
+170
+00:08:15,540 --> 00:08:18,270
+and you are falling to
+on-demand frequently,
+
+171
+00:08:18,270 --> 00:08:20,850
+and we spoke about choosing
+the right instances,
+
+172
+00:08:20,850 --> 00:08:21,750
+maybe in this case,
+
+173
+00:08:21,750 --> 00:08:24,240
+you want to give Karpenter
+much broader selection
+
+174
+00:08:24,240 --> 00:08:27,300
+because you can use instances
+
+175
+00:08:27,300 --> 00:08:28,980
+that may be not the perfect fit,
+
+176
+00:08:28,980 --> 00:08:31,830
+but still providing
+more than 60% discount,
+
+177
+00:08:31,830 --> 00:08:33,573
+so it's the right thing to do.
+
+178
+00:08:34,410 --> 00:08:37,950
+Another strategy would be
+using Graviton instances.
+
+179
+00:08:37,950 --> 00:08:38,910
+As you probably know,
+
+180
+00:08:38,910 --> 00:08:42,540
+Graviton provides at
+least the same performance
+
+181
+00:08:42,540 --> 00:08:45,990
+or even better for a lower price.
+
+182
+00:08:45,990 --> 00:08:48,540
+And most of the modern applications
+
+183
+00:08:48,540 --> 00:08:53,070
+are able to run on ARM
+architectures with no code change.
+
+184
+00:08:53,070 --> 00:08:54,660
+The only investment you have here
+
+185
+00:08:54,660 --> 00:08:58,380
+is to make sure that
+during your CI process
+
+186
+00:08:58,380 --> 00:09:02,760
+you are building your
+dockers both for ARM and x86,
+
+187
+00:09:02,760 --> 00:09:05,790
+and you have both versions
+
+188
+00:09:05,790 --> 00:09:07,620
+of the container in your registry.
+
+189
+00:09:07,620 --> 00:09:09,960
+And Kubernetes will
+automatically pick the right one
+
+190
+00:09:09,960 --> 00:09:12,938
+depends on the node that
+this workload is running.
+
+191
+00:09:12,938 --> 00:09:14,100
+- [Audience member] Okay, no.
+
+192
+00:09:14,100 --> 00:09:18,450
+- Another thing is actually
+it's the last tip for today,
+
+193
+00:09:18,450 --> 00:09:21,240
+and please use this with caution,
+
+194
+00:09:21,240 --> 00:09:23,190
+not for production,
+
+195
+00:09:23,190 --> 00:09:25,890
+but it can really save some costs.
+
+196
+00:09:25,890 --> 00:09:27,390
+As you probably know,
+
+197
+00:09:27,390 --> 00:09:31,290
+cross-availability zone
+traffic is very expensive,
+
+198
+00:09:31,290 --> 00:09:35,070
+so for non-production
+environment what you can do
+
+199
+00:09:35,070 --> 00:09:37,710
+is actually you can limit your node pool
+
+200
+00:09:37,710 --> 00:09:39,540
+to a specific AZ,
+
+201
+00:09:39,540 --> 00:09:43,890
+and it basically means that
+you can enforce data locality
+
+202
+00:09:43,890 --> 00:09:46,050
+at the infrastructure level.
+
+203
+00:09:46,050 --> 00:09:48,840
+So, it's actually going
+to reduce significantly
+
+204
+00:09:48,840 --> 00:09:51,030
+the cost of networking.
+
+205
+00:09:51,030 --> 00:09:53,970
+But again, it's not something
+you can do in production,
+
+206
+00:09:53,970 --> 00:09:57,000
+I don't recommend putting
+this stuff in production.
+
+207
+00:09:57,000 --> 00:09:58,740
+But as you can see here in this example,
+
+208
+00:09:58,740 --> 00:10:01,530
+we can also configure a failover,
+
+209
+00:10:01,530 --> 00:10:05,040
+basically use weights and affinity rules
+
+210
+00:10:05,040 --> 00:10:07,800
+to make sure if there
+is a failure of a zone,
+
+211
+00:10:07,800 --> 00:10:10,923
+we can actually go and
+utilize another one.
+
+212
+00:10:12,180 --> 00:10:17,180
+Okay, so when we spoke about
+all of this best practices
+
+213
+00:10:17,310 --> 00:10:21,027
+and the big question
+comes up, "Are we done?"
+
+214
+00:10:22,200 --> 00:10:24,270
+And the answer is not really.
+
+215
+00:10:24,270 --> 00:10:28,440
+Basically there is still a
+lot of challenges to solve,
+
+216
+00:10:28,440 --> 00:10:30,483
+and let's mention them.
+
+217
+00:10:31,320 --> 00:10:33,780
+Kubernetes gives us a lot of metrics,
+
+218
+00:10:33,780 --> 00:10:37,980
+and it's really hard to
+connect them down to costs
+
+219
+00:10:37,980 --> 00:10:40,410
+in order to identify inefficiencies.
+
+220
+00:10:40,410 --> 00:10:43,920
+So especially when we
+operate large environments
+
+221
+00:10:43,920 --> 00:10:45,780
+with multiple clusters.
+
+222
+00:10:45,780 --> 00:10:49,590
+So, we talked about Karpenter a lot,
+
+223
+00:10:49,590 --> 00:10:53,220
+and even if Karpenter
+makes instant decisions
+
+224
+00:10:53,220 --> 00:10:55,293
+and it's working pretty amazing,
+
+225
+00:10:56,670 --> 00:10:59,130
+it doesn't mean that the
+underlying infrastructure
+
+226
+00:10:59,130 --> 00:11:02,400
+can keep up because it
+takes a lot of time,
+
+227
+00:11:02,400 --> 00:11:06,180
+it's about couple of minutes
+for the infrastructure
+
+228
+00:11:06,180 --> 00:11:08,283
+to be ready to serve our containers.
+
+229
+00:11:09,150 --> 00:11:12,300
+And obviously, there are
+still operational complexity
+
+230
+00:11:12,300 --> 00:11:15,000
+to make sure we constantly modify
+
+231
+00:11:15,000 --> 00:11:18,960
+and adjust our setup to make
+it truly, truly efficient.
+
+232
+00:11:18,960 --> 00:11:21,810
+So basically the question is,
+
+233
+00:11:21,810 --> 00:11:24,690
+can you afford your teams
+to be constantly invested
+
+234
+00:11:24,690 --> 00:11:29,221
+into making sure your environment
+is configured properly?
+
+235
+00:11:29,221 --> 00:11:31,800
+At the end of the day,
+in large environments,
+
+236
+00:11:31,800 --> 00:11:35,400
+we actually need a continuous automation,
+
+237
+00:11:35,400 --> 00:11:39,810
+something that will provide
+us the ability to be focused
+
+238
+00:11:39,810 --> 00:11:42,300
+on building rather than optimizing.
+
+239
+00:11:42,300 --> 00:11:43,800
+And this is exactly where tools
+
+240
+00:11:43,800 --> 00:11:46,830
+and platforms actually come to assist.
+
+241
+00:11:46,830 --> 00:11:51,120
+So at Zesty, we developed a
+Kubernetes optimization platform
+
+242
+00:11:51,120 --> 00:11:54,690
+that helps closing those gaps.
+
+243
+00:11:54,690 --> 00:11:56,013
+Our platform makes,
+
+244
+00:11:57,900 --> 00:12:00,270
+actually provides you
+with the deep visibility
+
+245
+00:12:00,270 --> 00:12:03,360
+into all of your clusters and containers,
+
+246
+00:12:03,360 --> 00:12:06,600
+both from usage and
+utilization perspective
+
+247
+00:12:06,600 --> 00:12:10,380
+and making it very easy to
+identify inefficiencies.
+
+248
+00:12:10,380 --> 00:12:12,270
+It uses predictive models
+
+249
+00:12:12,270 --> 00:12:16,050
+to make scaling decisions
+far more efficient.
+
+250
+00:12:16,050 --> 00:12:18,330
+We execute optimizations
+
+251
+00:12:18,330 --> 00:12:20,100
+actions automatically on your behalf,
+
+252
+00:12:20,100 --> 00:12:22,830
+so again, your teams can focus on building
+
+253
+00:12:22,830 --> 00:12:24,063
+and not optimizing.
+
+254
+00:12:25,290 --> 00:12:29,070
+So our platform automatically
+resize workloads,
+
+255
+00:12:29,070 --> 00:12:31,590
+both vertically and horizontally,
+
+256
+00:12:31,590 --> 00:12:34,170
+based on workload's behavior.
+
+257
+00:12:34,170 --> 00:12:36,810
+It covers not just CPU and memory
+
+258
+00:12:36,810 --> 00:12:40,707
+but also persistent volumes
+for stateful workloads
+
+259
+00:12:40,707 --> 00:12:44,310
+that are requiring a local storage.
+
+260
+00:12:44,310 --> 00:12:46,830
+Zesty automatically distributes,
+
+261
+00:12:46,830 --> 00:12:47,940
+and by the way, we're calling this
+
+262
+00:12:47,940 --> 00:12:49,380
+a resource optimization layer
+
+263
+00:12:49,380 --> 00:12:53,220
+that actually goes and
+doing active right sizing.
+
+264
+00:12:53,220 --> 00:12:56,850
+And also we are navigating
+
+265
+00:12:56,850 --> 00:13:00,600
+and distributing workloads
+between Spot Instances
+
+266
+00:13:00,600 --> 00:13:05,160
+and saving plans to reduce
+the expensive on-demand costs.
+
+267
+00:13:05,160 --> 00:13:07,170
+With our fast scale technology,
+
+268
+00:13:07,170 --> 00:13:11,160
+basically we maintain a
+fleet of hibernated nodes
+
+269
+00:13:11,160 --> 00:13:12,660
+that are pre-cached
+
+270
+00:13:12,660 --> 00:13:15,240
+and have all of your
+containers and stuff ready
+
+271
+00:13:15,240 --> 00:13:17,340
+to kick in, in 30 seconds.
+
+272
+00:13:17,340 --> 00:13:21,030
+And basically this allows
+us an instant recovery
+
+273
+00:13:21,030 --> 00:13:23,220
+from Spot Instance failures
+
+274
+00:13:23,220 --> 00:13:26,430
+so we can move more
+workloads to utilize Spots
+
+275
+00:13:26,430 --> 00:13:28,920
+without the risk of being interrupted
+
+276
+00:13:28,920 --> 00:13:31,440
+or having no capacity,
+
+277
+00:13:31,440 --> 00:13:34,200
+so we call it the financial
+optimization layer.
+
+278
+00:13:34,200 --> 00:13:36,690
+And basically Zesty is the
+only platform out there
+
+279
+00:13:36,690 --> 00:13:39,330
+that combines both resource optimization
+
+280
+00:13:39,330 --> 00:13:42,270
+and cloud financial optimization practices
+
+281
+00:13:42,270 --> 00:13:47,270
+to provide at least 70% cost
+savings for your clusters.
+
+282
+00:13:47,430 --> 00:13:48,750
+And if you guys wanna learn more
+
+283
+00:13:48,750 --> 00:13:50,640
+and hear exactly how we can help
+
+284
+00:13:50,640 --> 00:13:52,290
+companies achieve efficiency,
+
+285
+00:13:52,290 --> 00:13:55,620
+our booth is actually located
+right here to my right,
+
+286
+00:13:55,620 --> 00:14:00,510
+so feel free to come say
+hi and ask questions.
+
+287
+00:14:00,510 --> 00:14:01,343
+Thank you so much,
+
+288
+00:14:01,343 --> 00:14:05,280
+and have a good convention ahead.
+
+289
+00:14:05,280 --> 00:14:06,113
+Thank you.
+
+290
+00:14:06,113 --> 00:14:07,193
+(audience applauding)
+

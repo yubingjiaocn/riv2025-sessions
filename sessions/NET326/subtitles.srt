@@ -1,0 +1,5724 @@
+1
+00:00:00,150 --> 00:00:05,150
+- So I'm sure today and
+in the next few days,
+
+2
+00:00:05,340 --> 00:00:07,740
+you'll learn about new capabilities,
+
+3
+00:00:07,740 --> 00:00:11,523
+which is allow you to build
+and scale applications in AWS.
+
+4
+00:00:12,480 --> 00:00:14,370
+But remember, that's the
+first part of your job.
+
+5
+00:00:14,370 --> 00:00:17,520
+The second part of the job
+is to secure this application
+
+6
+00:00:17,520 --> 00:00:19,173
+and protect these applications.
+
+7
+00:00:20,010 --> 00:00:22,530
+So today, we're going to talk about
+
+8
+00:00:22,530 --> 00:00:26,700
+how to build secure
+perimeter protection on AWS.
+
+9
+00:00:26,700 --> 00:00:29,627
+I'm Shovan Das and I'm a Product Manager
+
+10
+00:00:29,627 --> 00:00:31,110
+in AWS networking team.
+
+11
+00:00:31,110 --> 00:00:34,590
+I lead the area of Zero
+Trust Networking and WAN.
+
+12
+00:00:34,590 --> 00:00:36,900
+And with me, I have Megha Kande.
+
+13
+00:00:36,900 --> 00:00:38,460
+She leads the CloudFront team
+
+14
+00:00:38,460 --> 00:00:40,590
+and she will talk about edge security.
+
+15
+00:00:40,590 --> 00:00:43,590
+And with me, I also have Sohaib Tahir,
+
+16
+00:00:43,590 --> 00:00:45,690
+who is a Principal Solution Architect.
+
+17
+00:00:45,690 --> 00:00:47,130
+And he will give a cool demo
+
+18
+00:00:47,130 --> 00:00:50,580
+of how to build end-to-end
+perimeter protection
+
+19
+00:00:50,580 --> 00:00:53,040
+using GenAI and Kiro CLIs.
+
+20
+00:00:53,040 --> 00:00:54,940
+So I'm pretty excited about that demo.
+
+21
+00:00:57,030 --> 00:00:59,850
+So today, we'll talk
+broadly what security means
+
+22
+00:00:59,850 --> 00:01:01,650
+for an application on AWS,
+
+23
+00:01:01,650 --> 00:01:03,690
+what's the perimeter protection needs.
+
+24
+00:01:03,690 --> 00:01:07,440
+Then we'll go into perimeter
+protection at the edge.
+
+25
+00:01:07,440 --> 00:01:10,770
+Then we'll talk about traffic
+inspection within the network.
+
+26
+00:01:10,770 --> 00:01:14,340
+And then finally, we'll talk
+about giving end users access
+
+27
+00:01:14,340 --> 00:01:17,400
+to those application and
+resources hosted on AWS.
+
+28
+00:01:17,400 --> 00:01:20,223
+And then we'll wrap up with
+a cool demo like I talked.
+
+29
+00:01:22,560 --> 00:01:26,490
+So most of our customers, they
+have two kinds of application
+
+30
+00:01:26,490 --> 00:01:28,650
+or resources hosted on AWS.
+
+31
+00:01:28,650 --> 00:01:30,990
+The first is public application.
+
+32
+00:01:30,990 --> 00:01:33,450
+So think of it, your retail website.
+
+33
+00:01:33,450 --> 00:01:36,450
+Any user can access
+that, your API gateway.
+
+34
+00:01:36,450 --> 00:01:38,670
+Anybody can use those API gateway
+
+35
+00:01:38,670 --> 00:01:40,440
+and connect to your applications.
+
+36
+00:01:40,440 --> 00:01:42,330
+And you need to protect those.
+
+37
+00:01:42,330 --> 00:01:44,580
+But also you have private applications.
+
+38
+00:01:44,580 --> 00:01:47,760
+For example, you have your
+HR system running in AWS,
+
+39
+00:01:47,760 --> 00:01:49,760
+your financial dashboard running in AWS.
+
+40
+00:01:50,764 --> 00:01:52,140
+Your employees, your workforce,
+
+41
+00:01:52,140 --> 00:01:53,490
+your contractor access those.
+
+42
+00:01:53,490 --> 00:01:55,170
+These are private applications.
+
+43
+00:01:55,170 --> 00:01:59,460
+Not only that, you have all
+these applications run on EC2,
+
+44
+00:01:59,460 --> 00:02:02,340
+containers, RDS instances.
+
+45
+00:02:02,340 --> 00:02:04,860
+Your end engineers, developers, analysts,
+
+46
+00:02:04,860 --> 00:02:06,510
+they access those instances.
+
+47
+00:02:06,510 --> 00:02:09,810
+They are doing SSH for their daily jobs.
+
+48
+00:02:09,810 --> 00:02:12,360
+So at the end of the
+day, you need to protect
+
+49
+00:02:12,360 --> 00:02:15,180
+the applications, the data
+in those applications,
+
+50
+00:02:15,180 --> 00:02:17,463
+and provide a robust perimeter protection.
+
+51
+00:02:18,720 --> 00:02:20,850
+And when I think of building a perimeter,
+
+52
+00:02:20,850 --> 00:02:24,150
+I think of four traffic directions.
+
+53
+00:02:24,150 --> 00:02:25,710
+First is the internet ingress.
+
+54
+00:02:25,710 --> 00:02:28,860
+That's where your users
+connect via the internet,
+
+55
+00:02:28,860 --> 00:02:32,640
+but malicious actor, DDoS,
+bad actors can sneak in.
+
+56
+00:02:32,640 --> 00:02:34,710
+So you need to protect that angle.
+
+57
+00:02:34,710 --> 00:02:39,420
+Then your applications are also
+connecting to the internet,
+
+58
+00:02:39,420 --> 00:02:42,690
+like GitHub downloading content,
+
+59
+00:02:42,690 --> 00:02:46,680
+or they're uploading some
+code patching, those things.
+
+60
+00:02:46,680 --> 00:02:48,240
+So you need to ensure they are going
+
+61
+00:02:48,240 --> 00:02:50,220
+and accessing the authorized website.
+
+62
+00:02:50,220 --> 00:02:52,890
+They are putting in the
+data that is compliant
+
+63
+00:02:52,890 --> 00:02:54,393
+based on organizational needs.
+
+64
+00:02:55,530 --> 00:02:57,720
+And the third direction
+is your applications
+
+65
+00:02:57,720 --> 00:02:59,820
+are also talking to other applications.
+
+66
+00:02:59,820 --> 00:03:02,460
+So you need to ensure that
+only the right applications
+
+67
+00:03:02,460 --> 00:03:03,960
+are talking to the right application.
+
+68
+00:03:03,960 --> 00:03:06,210
+That's to prevent lateral movement.
+
+69
+00:03:06,210 --> 00:03:08,490
+Let's say somebody sneaks
+into one of your applications,
+
+70
+00:03:08,490 --> 00:03:10,170
+and then from that application they jump
+
+71
+00:03:10,170 --> 00:03:12,303
+into some other application, right?
+
+72
+00:03:13,650 --> 00:03:18,300
+And the final direction is
+your employees, your workforce.
+
+73
+00:03:18,300 --> 00:03:20,880
+They're also accessing
+to get their jobs done.
+
+74
+00:03:20,880 --> 00:03:24,180
+And you want to ensure
+that only the right users,
+
+75
+00:03:24,180 --> 00:03:26,220
+the users with the right privilege,
+
+76
+00:03:26,220 --> 00:03:28,983
+are accessing the application
+on the nearby basis.
+
+77
+00:03:29,850 --> 00:03:30,840
+Once you have done those,
+
+78
+00:03:30,840 --> 00:03:32,740
+you have built a perimeter protection.
+
+79
+00:03:33,720 --> 00:03:36,090
+So what we'll do today in this session,
+
+80
+00:03:36,090 --> 00:03:40,140
+we'll talk about a fictitious
+customer SecureShop.
+
+81
+00:03:40,140 --> 00:03:42,150
+And they have two kinds of applications.
+
+82
+00:03:42,150 --> 00:03:45,420
+One is the retail website, secureshop.com.
+
+83
+00:03:45,420 --> 00:03:49,230
+And then they have a private
+application, financecode.com.
+
+84
+00:03:49,230 --> 00:03:51,630
+These applications are hosted in AWS.
+
+85
+00:03:51,630 --> 00:03:53,940
+So they are hosted in VPC.
+
+86
+00:03:53,940 --> 00:03:58,940
+Their application is spread
+across multiple VPCs.
+
+87
+00:03:59,640 --> 00:04:01,890
+So they are connected via TGW.
+
+88
+00:04:01,890 --> 00:04:04,680
+And our customer, secureshop.com,
+
+89
+00:04:04,680 --> 00:04:06,900
+to provide better performance,
+content acceleration,
+
+90
+00:04:06,900 --> 00:04:09,030
+and caching, is also using CloudFront
+
+91
+00:04:09,030 --> 00:04:11,820
+for that public-facing websites.
+
+92
+00:04:11,820 --> 00:04:15,240
+And they also have applications
+and employee in on-prem.
+
+93
+00:04:15,240 --> 00:04:19,230
+Those employees and
+applications are also accessing
+
+94
+00:04:19,230 --> 00:04:21,183
+to the transit gateway to the VPCs.
+
+95
+00:04:22,620 --> 00:04:25,890
+So first, they will do
+the perimeter protection
+
+96
+00:04:25,890 --> 00:04:29,910
+against DDoS and other attacks
+from the internet ingress.
+
+97
+00:04:29,910 --> 00:04:33,390
+Then they will protect
+all the traffic directions
+
+98
+00:04:33,390 --> 00:04:36,270
+coming from internet to their application.
+
+99
+00:04:36,270 --> 00:04:40,980
+Then they will protect the
+east-west traffic between VPCs.
+
+100
+00:04:40,980 --> 00:04:42,837
+And finally, they will protect the traffic
+
+101
+00:04:42,837 --> 00:04:45,300
+and inspect the traffic
+coming from on-prem
+
+102
+00:04:45,300 --> 00:04:47,700
+and give end users the access.
+
+103
+00:04:47,700 --> 00:04:49,500
+And once they complete all these things,
+
+104
+00:04:49,500 --> 00:04:51,180
+and we will talk more about that,
+
+105
+00:04:51,180 --> 00:04:54,420
+so then they will have the
+complete perimeter protection.
+
+106
+00:04:54,420 --> 00:04:56,130
+And the rest of the session will focus on
+
+107
+00:04:56,130 --> 00:04:57,870
+how to protect all this traffic direction,
+
+108
+00:04:57,870 --> 00:05:00,390
+all these different
+ingress and egress points.
+
+109
+00:05:00,390 --> 00:05:02,280
+So now I will hand it over to Megha,
+
+110
+00:05:02,280 --> 00:05:03,960
+who will talk more about CloudFront
+
+111
+00:05:03,960 --> 00:05:05,613
+and security at the edge.
+
+112
+00:05:08,730 --> 00:05:09,880
+- Thank you, Shovan.
+
+113
+00:05:10,800 --> 00:05:13,860
+Hi, all. Just checking if
+you can hear me all right.
+
+114
+00:05:13,860 --> 00:05:15,240
+Thank you.
+
+115
+00:05:15,240 --> 00:05:18,693
+How many of you are
+familiar with CloudFront?
+
+116
+00:05:20,310 --> 00:05:21,780
+Well, that's a fair bit.
+
+117
+00:05:21,780 --> 00:05:24,420
+And as you know,
+
+118
+00:05:24,420 --> 00:05:29,047
+CloudFront is the content
+delivery network for AWS.
+
+119
+00:05:30,360 --> 00:05:31,800
+It is a reverse proxy.
+
+120
+00:05:31,800 --> 00:05:35,100
+And when you think about CDN,
+content delivery network,
+
+121
+00:05:35,100 --> 00:05:36,690
+you often think about performance.
+
+122
+00:05:36,690 --> 00:05:39,333
+You think about acceleration,
+caching at the edge.
+
+123
+00:05:40,290 --> 00:05:42,780
+But CloudFront also
+plays an important role
+
+124
+00:05:42,780 --> 00:05:46,800
+in protecting your applications
+from large-scale attacks,
+
+125
+00:05:46,800 --> 00:05:48,660
+DDoS attacks, and such.
+
+126
+00:05:48,660 --> 00:05:51,720
+And that is what I want to
+talk about in this session.
+
+127
+00:05:51,720 --> 00:05:52,860
+My name is Megha Kande.
+
+128
+00:05:52,860 --> 00:05:54,990
+I lead the CloudFront
+product management team.
+
+129
+00:05:54,990 --> 00:05:56,820
+And let's jump into this.
+
+130
+00:05:56,820 --> 00:06:01,820
+So let's think about the customer
+
+131
+00:06:01,890 --> 00:06:05,010
+that Shovan talked about, SecureShop.
+
+132
+00:06:05,010 --> 00:06:06,540
+They have an application.
+
+133
+00:06:06,540 --> 00:06:09,510
+The application has some
+public-facing resources.
+
+134
+00:06:09,510 --> 00:06:13,170
+and those resources take
+in a bunch of traffic
+
+135
+00:06:13,170 --> 00:06:14,400
+from the Internet.
+
+136
+00:06:14,400 --> 00:06:16,590
+Now let's look at the
+anatomy of this traffic
+
+137
+00:06:16,590 --> 00:06:20,763
+that may be coming to the
+SecureShop applications.
+
+138
+00:06:22,500 --> 00:06:26,490
+Over half of this traffic is bots today.
+
+139
+00:06:26,490 --> 00:06:30,450
+And we know that this bot
+volume is growing every day
+
+140
+00:06:30,450 --> 00:06:33,363
+with more agentic bots coming forth.
+
+141
+00:06:34,260 --> 00:06:36,570
+This is top of mind for SecureShop
+
+142
+00:06:36,570 --> 00:06:40,890
+because not all bot traffic
+drives business growth,
+
+143
+00:06:40,890 --> 00:06:44,880
+but all bot traffic drives
+infrastructure cost.
+
+144
+00:06:44,880 --> 00:06:48,720
+So this is something that
+SecureShop wants to monitor,
+
+145
+00:06:48,720 --> 00:06:50,670
+control pretty closely.
+
+146
+00:06:50,670 --> 00:06:55,670
+Second thing that's top
+of mind for SecureShop
+
+147
+00:06:55,710 --> 00:06:59,400
+is the growing volume of DDoS attacks.
+
+148
+00:06:59,400 --> 00:07:02,280
+So we know that every year,
+
+149
+00:07:02,280 --> 00:07:05,730
+the volume of DDoS grows
+pretty significantly.
+
+150
+00:07:05,730 --> 00:07:10,730
+In the last two years, DDoS
+attack volumes have grown 400%.
+
+151
+00:07:10,920 --> 00:07:13,050
+What does this mean for an application?
+
+152
+00:07:13,050 --> 00:07:17,250
+Like when you think about
+a 20-plus TBPS attack
+
+153
+00:07:17,250 --> 00:07:19,800
+that is hitting a
+particular cloud provider,
+
+154
+00:07:19,800 --> 00:07:22,680
+you have to be concerned
+about the availability
+
+155
+00:07:22,680 --> 00:07:24,510
+and resiliency of your own application.
+
+156
+00:07:24,510 --> 00:07:26,400
+So that's top of mind.
+
+157
+00:07:26,400 --> 00:07:30,630
+And then finally, SecureShop
+is an e-commerce application.
+
+158
+00:07:30,630 --> 00:07:31,860
+There are some common threats
+
+159
+00:07:31,860 --> 00:07:33,660
+they have to worry about all the time,
+
+160
+00:07:33,660 --> 00:07:37,200
+like is somebody creating
+a fraudulent account?
+
+161
+00:07:37,200 --> 00:07:40,080
+Is a legitimate customer
+account being taken over?
+
+162
+00:07:40,080 --> 00:07:42,300
+Is there some malicious
+script, cross-site script
+
+163
+00:07:42,300 --> 00:07:43,800
+that is coming to their application
+
+164
+00:07:43,800 --> 00:07:45,780
+that may expose customer data
+
+165
+00:07:45,780 --> 00:07:47,820
+and make them lose customer trust?
+
+166
+00:07:47,820 --> 00:07:51,990
+All of these things are
+top of mind for SecureShop
+
+167
+00:07:51,990 --> 00:07:55,650
+and they want an application security tool
+
+168
+00:07:55,650 --> 00:07:59,730
+that has the scale to prevent the attacks,
+
+169
+00:07:59,730 --> 00:08:03,630
+has the coverage to prevent
+different types of attacks
+
+170
+00:08:03,630 --> 00:08:05,070
+and it's easy to use.
+
+171
+00:08:05,070 --> 00:08:09,450
+Not every application
+builder is a security expert
+
+172
+00:08:09,450 --> 00:08:11,790
+and there's no need for them to be so.
+
+173
+00:08:11,790 --> 00:08:13,653
+So how do we solve for this?
+
+174
+00:08:15,060 --> 00:08:19,653
+This is where the AWS
+Edge and CloudFront help.
+
+175
+00:08:20,910 --> 00:08:23,220
+It starts with scale.
+
+176
+00:08:23,220 --> 00:08:28,220
+CloudFront is deployed at
+the edge of the AWS network.
+
+177
+00:08:28,800 --> 00:08:32,670
+We have 750 different points of presence.
+
+178
+00:08:32,670 --> 00:08:35,670
+These are racks of
+servers that are deployed
+
+179
+00:08:35,670 --> 00:08:40,670
+across 750 different
+locations in 100 plus cities,
+
+180
+00:08:43,950 --> 00:08:45,600
+in 50 plus countries.
+
+181
+00:08:45,600 --> 00:08:49,350
+So this is a pretty widespread surface
+
+182
+00:08:49,350 --> 00:08:53,160
+that can absorb incoming
+requests and diffuse it.
+
+183
+00:08:53,160 --> 00:08:55,530
+So essentially when there
+is a large volume of traffic
+
+184
+00:08:55,530 --> 00:08:56,547
+that comes into CloudFront,
+
+185
+00:08:56,547 --> 00:08:58,860
+one of the basic things
+that CloudFront does
+
+186
+00:08:58,860 --> 00:09:01,890
+is spreads the traffic
+across its edge pubs.
+
+187
+00:09:01,890 --> 00:09:04,440
+Now, on each of those PoPs,
+
+188
+00:09:04,440 --> 00:09:06,780
+on the same server as CloudFront,
+
+189
+00:09:06,780 --> 00:09:10,770
+you have the AWS web
+application firewall running.
+
+190
+00:09:10,770 --> 00:09:14,190
+So, web application firewall can then take
+
+191
+00:09:14,190 --> 00:09:17,340
+that diffused traffic and figure out
+
+192
+00:09:17,340 --> 00:09:18,780
+whether this is legitimate traffic
+
+193
+00:09:18,780 --> 00:09:21,960
+that should access the application
+or it should be blocked.
+
+194
+00:09:21,960 --> 00:09:23,970
+And along with this, at the edge,
+
+195
+00:09:23,970 --> 00:09:28,290
+you also have the Layer 3/Layer 4 shield
+
+196
+00:09:28,290 --> 00:09:32,760
+that prevents Layer
+3/Layer 4 DDoS attacks.
+
+197
+00:09:32,760 --> 00:09:35,610
+So this is the scale.
+
+198
+00:09:35,610 --> 00:09:39,877
+And when you think about
+the edge services for AWS,
+
+199
+00:09:41,040 --> 00:09:43,890
+you have CloudFront, you have AWS WAF,
+
+200
+00:09:43,890 --> 00:09:46,440
+you have Shield that are running
+
+201
+00:09:46,440 --> 00:09:48,990
+on this scaled-out infrastructure
+
+202
+00:09:48,990 --> 00:09:51,420
+that is sitting in front
+of your applications.
+
+203
+00:09:51,420 --> 00:09:54,900
+This application could be an
+ALB endpoint in the region.
+
+204
+00:09:54,900 --> 00:09:58,080
+It can be an on-prem
+application that is running
+
+205
+00:09:58,080 --> 00:09:59,673
+in your own data centers,
+
+206
+00:10:01,110 --> 00:10:04,020
+though the edge services
+provide that layer of protection
+
+207
+00:10:04,020 --> 00:10:05,520
+to your services.
+
+208
+00:10:05,520 --> 00:10:07,620
+But functionally, what goes on here,
+
+209
+00:10:07,620 --> 00:10:09,270
+let's take a deeper look at that.
+
+210
+00:10:11,670 --> 00:10:14,940
+The edge services take
+in all the traffic coming
+
+211
+00:10:14,940 --> 00:10:16,530
+from Internet to your applications.
+
+212
+00:10:16,530 --> 00:10:19,200
+This could be legitimate customer traffic.
+
+213
+00:10:19,200 --> 00:10:21,390
+This could be malicious attack traffic.
+
+214
+00:10:21,390 --> 00:10:25,890
+And the first thing that
+happens is a network connection
+
+215
+00:10:25,890 --> 00:10:30,450
+is established, which is
+monitored by the AWS Shield.
+
+216
+00:10:30,450 --> 00:10:33,240
+So when this network connection
+is being established,
+
+217
+00:10:33,240 --> 00:10:35,880
+the first thing that
+Shield does is it examines
+
+218
+00:10:35,880 --> 00:10:40,830
+the IP addresses that a
+certain request is coming from.
+
+219
+00:10:40,830 --> 00:10:44,490
+And AWS constantly maintains
+
+220
+00:10:44,490 --> 00:10:47,490
+a list of malicious IP addresses,
+
+221
+00:10:47,490 --> 00:10:50,430
+looking at all the
+traffic that comes to AWS.
+
+222
+00:10:50,430 --> 00:10:53,973
+It's a list of known
+offenders, which have,
+
+223
+00:10:55,170 --> 00:11:00,090
+according to our databases,
+our data, launched an attack.
+
+224
+00:11:00,090 --> 00:11:04,557
+In addition to this, there are
+also honeypots that AWS has.
+
+225
+00:11:04,557 --> 00:11:07,050
+Shovan will talk about
+that a little bit later
+
+226
+00:11:07,050 --> 00:11:08,220
+in this session.
+
+227
+00:11:08,220 --> 00:11:11,820
+And this known offender's IP list,
+
+228
+00:11:11,820 --> 00:11:16,020
+if a request is seen coming
+from this set of IPs,
+
+229
+00:11:16,020 --> 00:11:19,023
+it is blocked at the edge by the shield.
+
+230
+00:11:21,244 --> 00:11:23,190
+So that's first layer.
+
+231
+00:11:23,190 --> 00:11:26,430
+But then also, at this
+stage, at the network layer,
+
+232
+00:11:26,430 --> 00:11:28,590
+you're setting up a TCP connection,
+
+233
+00:11:28,590 --> 00:11:31,380
+which are subject to SYN flood attacks.
+
+234
+00:11:31,380 --> 00:11:33,030
+Shield protects against that.
+
+235
+00:11:33,030 --> 00:11:35,850
+And it also examines every packet
+
+236
+00:11:35,850 --> 00:11:39,030
+that is going through the
+network layer to make sure
+
+237
+00:11:39,030 --> 00:11:40,710
+that it is not corrupt,
+
+238
+00:11:40,710 --> 00:11:43,290
+it is configured correctly
+using technologies
+
+239
+00:11:43,290 --> 00:11:45,060
+such as checksums, simple things.
+
+240
+00:11:45,060 --> 00:11:46,890
+But they all come together to make sure
+
+241
+00:11:46,890 --> 00:11:49,533
+that your network layer
+connection is protected.
+
+242
+00:11:50,880 --> 00:11:54,450
+Once the network
+connection is established,
+
+243
+00:11:54,450 --> 00:11:58,680
+CloudFront then starts to
+terminate the TLS connection
+
+244
+00:11:58,680 --> 00:12:03,180
+at the edge and it sets
+up a HTTP connection.
+
+245
+00:12:03,180 --> 00:12:06,450
+Now, for setting up TLS, CloudFront,
+
+246
+00:12:06,450 --> 00:12:09,480
+working with our security team within AWS,
+
+247
+00:12:09,480 --> 00:12:12,750
+provides a set of advanced ciphers
+
+248
+00:12:12,750 --> 00:12:15,720
+that you can configure
+for your TLS handshakes.
+
+249
+00:12:15,720 --> 00:12:17,460
+Recently, we also launched support
+
+250
+00:12:17,460 --> 00:12:21,720
+for post-content compute-enabled keys.
+
+251
+00:12:21,720 --> 00:12:26,190
+And this makes sure that
+the keys that you use
+
+252
+00:12:26,190 --> 00:12:29,580
+in your TLS handshake
+cannot be harvested now
+
+253
+00:12:29,580 --> 00:12:32,613
+and then reused later
+for account takeover.
+
+254
+00:12:33,720 --> 00:12:35,640
+So TLS Handshake is one thing.
+
+255
+00:12:35,640 --> 00:12:38,850
+And then like another capability
+that we launched recently
+
+256
+00:12:38,850 --> 00:12:42,750
+is Mutual TLS with client applications.
+
+257
+00:12:42,750 --> 00:12:46,530
+Mutual TLS is a technology
+
+258
+00:12:46,530 --> 00:12:48,540
+that has been around for some time.
+
+259
+00:12:48,540 --> 00:12:49,410
+With CloudFront,
+
+260
+00:12:49,410 --> 00:12:52,980
+now you can have a completely
+managed version of it
+
+261
+00:12:52,980 --> 00:12:54,100
+where you can control
+
+262
+00:12:55,200 --> 00:12:58,470
+and create a trust store on CloudFront,
+
+263
+00:12:58,470 --> 00:13:00,420
+issue certificates to your clients,
+
+264
+00:13:00,420 --> 00:13:03,900
+and then make sure that the
+TLS handshake establishes
+
+265
+00:13:03,900 --> 00:13:06,000
+a two-way auth between CloudFront
+
+266
+00:13:06,000 --> 00:13:07,500
+and your client applications.
+
+267
+00:13:07,500 --> 00:13:09,420
+So if SecureShop, for example,
+
+268
+00:13:09,420 --> 00:13:11,670
+has a point of sale somewhere,
+
+269
+00:13:11,670 --> 00:13:14,910
+that machine can authenticate
+itself to CloudFront
+
+270
+00:13:14,910 --> 00:13:18,540
+before all the data is
+then sent over the machine
+
+271
+00:13:18,540 --> 00:13:20,613
+and a transaction is then enabled.
+
+272
+00:13:22,012 --> 00:13:26,220
+So this is like setting
+up of an HTTP session.
+
+273
+00:13:26,220 --> 00:13:29,520
+Once this is done, now
+your application is open
+
+274
+00:13:29,520 --> 00:13:31,140
+to talk to a client.
+
+275
+00:13:31,140 --> 00:13:34,500
+And once that happens,
+there is, of course,
+
+276
+00:13:34,500 --> 00:13:38,040
+a new attack surface
+where incoming requests
+
+277
+00:13:38,040 --> 00:13:39,120
+could be malicious.
+
+278
+00:13:39,120 --> 00:13:43,110
+And this is where AWS WAF steps in,
+
+279
+00:13:43,110 --> 00:13:47,220
+which gives you a set of
+configurable rules to make sure
+
+280
+00:13:47,220 --> 00:13:50,280
+that the requests that are
+coming to your application
+
+281
+00:13:50,280 --> 00:13:51,990
+are legitimate, are the requests
+
+282
+00:13:51,990 --> 00:13:54,510
+that you want your application to take.
+
+283
+00:13:54,510 --> 00:13:59,510
+So this could include
+things like your rate limit,
+
+284
+00:13:59,610 --> 00:14:02,430
+how many requests can
+come to your application.
+
+285
+00:14:02,430 --> 00:14:04,320
+You can look at bot prevention.
+
+286
+00:14:04,320 --> 00:14:08,220
+You can look at DDoS
+management at Layer 7.
+
+287
+00:14:08,220 --> 00:14:12,090
+So this is about how you
+establish connections,
+
+288
+00:14:12,090 --> 00:14:16,320
+how you examine requests
+coming into the AWS Edge,
+
+289
+00:14:16,320 --> 00:14:19,170
+but then there is also a
+connection that is established
+
+290
+00:14:19,170 --> 00:14:21,720
+between CloudFront and your application
+
+291
+00:14:21,720 --> 00:14:24,120
+that is running in AWS Data Center.
+
+292
+00:14:24,120 --> 00:14:27,363
+And we pay a lot of
+attention to that connection.
+
+293
+00:14:29,490 --> 00:14:33,450
+And because ultimately, like
+if your application endpoint
+
+294
+00:14:33,450 --> 00:14:36,480
+in the region is exposed to the Internet,
+
+295
+00:14:36,480 --> 00:14:39,240
+that could be another
+attack surface as well.
+
+296
+00:14:39,240 --> 00:14:41,700
+Of course, you can
+configure WAF and Shield
+
+297
+00:14:41,700 --> 00:14:44,490
+on the application in the region.
+
+298
+00:14:44,490 --> 00:14:49,170
+But CloudFront also allows
+you to limit the requests
+
+299
+00:14:49,170 --> 00:14:51,210
+that are hitting the application,
+
+300
+00:14:51,210 --> 00:14:53,370
+that are served by the application,
+
+301
+00:14:53,370 --> 00:14:56,550
+such that those requests
+are coming from CloudFront.
+
+302
+00:14:56,550 --> 00:14:59,820
+So that authentication mechanism exists.
+
+303
+00:14:59,820 --> 00:15:03,840
+One of the auth mechanisms
+that we built way back
+
+304
+00:15:03,840 --> 00:15:07,740
+when we launched CloudFront,
+now like 17 years back,
+
+305
+00:15:07,740 --> 00:15:12,740
+was an auth token that
+CloudFront sends a signature
+
+306
+00:15:14,640 --> 00:15:15,990
+to S3 buckets.
+
+307
+00:15:15,990 --> 00:15:18,510
+But recently, in the last year,
+
+308
+00:15:18,510 --> 00:15:23,510
+we've also developed a
+way to connect to an ALB,
+
+309
+00:15:23,520 --> 00:15:25,470
+a network load balancer,
+
+310
+00:15:25,470 --> 00:15:28,740
+or EC2 instances that are in private VPCs.
+
+311
+00:15:28,740 --> 00:15:33,270
+So if you have a way to
+shield your application
+
+312
+00:15:33,270 --> 00:15:35,850
+from internet and expose
+it only to connections
+
+313
+00:15:35,850 --> 00:15:39,330
+from CloudFront, you are
+removing another attack surface
+
+314
+00:15:39,330 --> 00:15:40,860
+from your applications.
+
+315
+00:15:40,860 --> 00:15:43,650
+So this is all the
+different like, you know,
+
+316
+00:15:43,650 --> 00:15:48,420
+layers of security that
+services at the edge provide
+
+317
+00:15:48,420 --> 00:15:50,040
+for your application protection.
+
+318
+00:15:50,040 --> 00:15:51,420
+But this is a lot.
+
+319
+00:15:51,420 --> 00:15:54,900
+So one of the things
+that's top of mind for us
+
+320
+00:15:54,900 --> 00:15:58,140
+is also to make sure
+that it's easy to use.
+
+321
+00:15:58,140 --> 00:16:00,810
+These configurations are easy to apply.
+
+322
+00:16:00,810 --> 00:16:05,810
+And here, the first thing
+that AWS offers with AWS WAF
+
+323
+00:16:07,740 --> 00:16:09,990
+is a set of managed rules.
+
+324
+00:16:09,990 --> 00:16:12,930
+These managed rules
+are constantly curated,
+
+325
+00:16:12,930 --> 00:16:15,720
+so you don't have to worry about
+different types of attacks,
+
+326
+00:16:15,720 --> 00:16:17,910
+but you get a package
+rule that you can apply
+
+327
+00:16:17,910 --> 00:16:20,550
+to your application pretty quickly.
+
+328
+00:16:20,550 --> 00:16:21,990
+First type of rule,
+
+329
+00:16:21,990 --> 00:16:24,000
+I'll walk through a
+few examples over here.
+
+330
+00:16:24,000 --> 00:16:25,260
+There are many more,
+
+331
+00:16:25,260 --> 00:16:29,373
+but to SecureShop, that is
+an E-commerce application,
+
+332
+00:16:30,420 --> 00:16:32,070
+there are a few that are pertinent.
+
+333
+00:16:32,070 --> 00:16:35,520
+The first one is a set
+of just baseline rules.
+
+334
+00:16:35,520 --> 00:16:37,110
+So an example here would be
+
+335
+00:16:37,110 --> 00:16:41,160
+like there are top 10 security risks
+
+336
+00:16:41,160 --> 00:16:44,730
+that are identified by the OWASP standard.
+
+337
+00:16:44,730 --> 00:16:48,030
+And we have a managed rule that constantly
+
+338
+00:16:48,030 --> 00:16:52,110
+has protection against all of those risks.
+
+339
+00:16:52,110 --> 00:16:54,900
+Another example of a basic
+rule would be that like,
+
+340
+00:16:54,900 --> 00:16:57,150
+hey, is my incoming request well-formed?
+
+341
+00:16:57,150 --> 00:16:58,713
+Is my URI correct?
+
+342
+00:16:59,880 --> 00:17:01,410
+All of those things can be applied through
+
+343
+00:17:01,410 --> 00:17:02,970
+a simple basic rule.
+
+344
+00:17:02,970 --> 00:17:06,480
+Second is a set of
+managed bot control rules
+
+345
+00:17:06,480 --> 00:17:07,710
+that CloudFront offers.
+
+346
+00:17:07,710 --> 00:17:10,920
+Here, you can configure a common bot rule
+
+347
+00:17:10,920 --> 00:17:14,520
+which just checks that an incoming request
+
+348
+00:17:14,520 --> 00:17:18,090
+is actually from either a legit user
+
+349
+00:17:18,090 --> 00:17:20,790
+or from a set of verified bots.
+
+350
+00:17:20,790 --> 00:17:24,360
+Or you can have a very
+targeted bot rule set
+
+351
+00:17:24,360 --> 00:17:26,640
+to your application.
+
+352
+00:17:26,640 --> 00:17:29,850
+For example, in this case,
+for an E-commerce application,
+
+353
+00:17:29,850 --> 00:17:32,400
+there can be cart-stuffing bots,
+
+354
+00:17:32,400 --> 00:17:36,030
+which can be prevented from
+accessing your application
+
+355
+00:17:36,030 --> 00:17:37,833
+using targeted bot rule set.
+
+356
+00:17:39,367 --> 00:17:42,240
+Other rule sets that are available
+
+357
+00:17:42,240 --> 00:17:45,120
+are DDoS protection rules.
+
+358
+00:17:45,120 --> 00:17:46,920
+I'll talk about this
+in a little more detail
+
+359
+00:17:46,920 --> 00:17:50,520
+because we made some changes
+that are interesting over here.
+
+360
+00:17:50,520 --> 00:17:54,330
+And also rules that prevent account fraud,
+
+361
+00:17:54,330 --> 00:17:57,000
+account takeover, and such.
+
+362
+00:17:57,000 --> 00:18:01,767
+So with these set of managed
+rules, AWS WAF makes sure
+
+363
+00:18:03,240 --> 00:18:06,750
+that you have basic
+security configurations
+
+364
+00:18:06,750 --> 00:18:09,960
+that are available and easily applied.
+
+365
+00:18:09,960 --> 00:18:13,530
+So I talked about the DDoS managed rule.
+
+366
+00:18:13,530 --> 00:18:15,480
+Let's look into this
+because this has evolved
+
+367
+00:18:15,480 --> 00:18:18,990
+as DDoS attacks have evolved
+over the last few years.
+
+368
+00:18:18,990 --> 00:18:22,180
+We've been working on this,
+and we recently launched
+
+369
+00:18:23,589 --> 00:18:27,730
+a Layer 7 DDoS protection
+managed rule in AWS WAF.
+
+370
+00:18:28,830 --> 00:18:30,720
+This rule is faster.
+
+371
+00:18:30,720 --> 00:18:33,180
+It acts within a few seconds
+
+372
+00:18:33,180 --> 00:18:35,760
+versus it used to take a
+few minutes in the past.
+
+373
+00:18:35,760 --> 00:18:37,083
+It's more accurate.
+
+374
+00:18:38,040 --> 00:18:42,390
+It has less false positives as compared
+
+375
+00:18:42,390 --> 00:18:43,980
+to the previous rule set
+
+376
+00:18:43,980 --> 00:18:48,120
+because it integrates a lot
+of signals from AWS MadBot.
+
+377
+00:18:48,120 --> 00:18:50,820
+Again, like Shovan will talk
+a little more about that.
+
+378
+00:18:52,140 --> 00:18:57,120
+And also, it allows you
+more granular control on
+
+379
+00:18:57,120 --> 00:18:58,920
+when the rule is applied.
+
+380
+00:18:58,920 --> 00:19:02,850
+So when we say granular control,
+what does that mean, right?
+
+381
+00:19:02,850 --> 00:19:07,290
+So firstly, it lets you
+set configurations like,
+
+382
+00:19:07,290 --> 00:19:10,170
+do you want to examine every request?
+
+383
+00:19:10,170 --> 00:19:13,500
+Or do you want to only challenge requests
+
+384
+00:19:13,500 --> 00:19:16,680
+that have suspicious DDoS indicators
+
+385
+00:19:16,680 --> 00:19:18,153
+as predicted by the rule?
+
+386
+00:19:19,020 --> 00:19:21,900
+So it's efficiency versus coverage.
+
+387
+00:19:21,900 --> 00:19:25,410
+It also allows you to
+configure certain parameters
+
+388
+00:19:25,410 --> 00:19:27,780
+like if you want to exclude
+certain IP addresses
+
+389
+00:19:27,780 --> 00:19:29,220
+because they are trusted.
+
+390
+00:19:29,220 --> 00:19:34,220
+If you want to include certain
+more vulnerable URI patterns,
+
+391
+00:19:34,530 --> 00:19:36,120
+those things can be configured
+
+392
+00:19:36,120 --> 00:19:38,700
+and then you can configure your action.
+
+393
+00:19:38,700 --> 00:19:43,470
+So you can say that like hey,
+if this is a DDoS request
+
+394
+00:19:43,470 --> 00:19:48,350
+I want to actually challenge
+this versus block this.
+
+395
+00:19:48,350 --> 00:19:51,300
+So you can have those settings
+and you can pick and choose.
+
+396
+00:19:53,010 --> 00:19:55,080
+Anything that is blocked or examined
+
+397
+00:19:55,080 --> 00:19:57,390
+is logged using CloudWatch.
+
+398
+00:19:57,390 --> 00:20:01,920
+And this new DDoS Layer
+7 rule is available
+
+399
+00:20:01,920 --> 00:20:03,570
+with Shield Advanced.
+
+400
+00:20:03,570 --> 00:20:06,334
+Shield Advanced is a bundled product.
+
+401
+00:20:06,334 --> 00:20:09,660
+It's a subscription-based
+product that we have.
+
+402
+00:20:09,660 --> 00:20:14,660
+And with Shield Advanced,
+you have 50 billion requests
+
+403
+00:20:14,910 --> 00:20:18,690
+that can be examined using
+the Layer 7 DDoS protection.
+
+404
+00:20:18,690 --> 00:20:23,690
+So this is one of the things
+that we introduced this year.
+
+405
+00:20:23,850 --> 00:20:27,900
+The other factor is
+security for your origins
+
+406
+00:20:27,900 --> 00:20:30,990
+that are running in private VPCs.
+
+407
+00:20:30,990 --> 00:20:32,220
+I talked about this briefly,
+
+408
+00:20:32,220 --> 00:20:34,203
+but I wanted to double-click into this.
+
+409
+00:20:35,970 --> 00:20:38,850
+So imagine that there is an application.
+
+410
+00:20:38,850 --> 00:20:40,290
+So in case of SecureShop,
+
+411
+00:20:40,290 --> 00:20:45,183
+they have their homepage
+along with the login,
+
+412
+00:20:46,080 --> 00:20:50,340
+the sign-in page that they
+are running on EC2 instances
+
+413
+00:20:50,340 --> 00:20:52,080
+in a region, and it is fronted
+
+414
+00:20:52,080 --> 00:20:54,840
+by an application load balancer.
+
+415
+00:20:54,840 --> 00:20:57,330
+Now, they want to make
+sure that this homepage
+
+416
+00:20:57,330 --> 00:20:59,550
+is not exposed on the internet.
+
+417
+00:20:59,550 --> 00:21:01,770
+It doesn't have a public IP,
+
+418
+00:21:01,770 --> 00:21:03,300
+but at the same point of time,
+
+419
+00:21:03,300 --> 00:21:05,430
+they want to make sure that this is fast
+
+420
+00:21:05,430 --> 00:21:10,330
+and it can reach the global
+customers for SecureShop
+
+421
+00:21:11,490 --> 00:21:13,830
+with as low latency as possible.
+
+422
+00:21:13,830 --> 00:21:17,940
+So now with the support
+for private origins,
+
+423
+00:21:17,940 --> 00:21:19,953
+VPC origins within CloudFront,
+
+424
+00:21:21,492 --> 00:21:23,910
+SecureShop can go to
+the CloudFront console
+
+425
+00:21:23,910 --> 00:21:28,530
+and they can quickly configure
+a VPC origin connection
+
+426
+00:21:28,530 --> 00:21:30,060
+using CloudFront.
+
+427
+00:21:30,060 --> 00:21:33,780
+What happens behind the
+scene is CloudFront sets up
+
+428
+00:21:33,780 --> 00:21:38,700
+a parallel VPC, and it
+connects the CloudFront VPC
+
+429
+00:21:38,700 --> 00:21:43,700
+with the customer's VPC
+using a VPC to VPC NAT.
+
+430
+00:21:46,200 --> 00:21:47,940
+All of this is done behind the scenes,
+
+431
+00:21:47,940 --> 00:21:51,033
+completely managed by CloudFront
+with no additional costs.
+
+432
+00:21:51,990 --> 00:21:53,820
+And then the CloudFront distribution
+
+433
+00:21:53,820 --> 00:21:55,320
+is configured on top of this.
+
+434
+00:21:55,320 --> 00:22:00,320
+So now, your application is
+not exposed on the internet.
+
+435
+00:22:01,230 --> 00:22:03,630
+It can only be accessed by CloudFront
+
+436
+00:22:03,630 --> 00:22:07,050
+over a private ENI connection.
+
+437
+00:22:07,050 --> 00:22:10,260
+And you have removed
+another layer of attack
+
+438
+00:22:10,260 --> 00:22:11,880
+from your applications.
+
+439
+00:22:11,880 --> 00:22:15,840
+So these are a few things to recap,
+
+440
+00:22:15,840 --> 00:22:19,140
+like using the edge
+services, using CloudFront,
+
+441
+00:22:19,140 --> 00:22:21,933
+using AWS WAF, using Shield.
+
+442
+00:22:23,910 --> 00:22:26,760
+The AWS Edge Services are able to provide
+
+443
+00:22:26,760 --> 00:22:30,723
+a suite of tools to
+customers that are scalable,
+
+444
+00:22:31,710 --> 00:22:33,330
+that have the complete coverage
+
+445
+00:22:33,330 --> 00:22:36,330
+to protect against
+different forms of attacks,
+
+446
+00:22:36,330 --> 00:22:38,343
+and are easy to configure.
+
+447
+00:22:39,210 --> 00:22:42,240
+I would now hand it over to Sohaib,
+
+448
+00:22:42,240 --> 00:22:43,830
+who is going to show us a cool demo
+
+449
+00:22:43,830 --> 00:22:45,750
+on how easily you can set this up.
+
+450
+00:22:45,750 --> 00:22:47,297
+Thank you.
+- Thanks, Megha.
+
+451
+00:22:48,840 --> 00:22:49,800
+Good evening, everyone.
+
+452
+00:22:49,800 --> 00:22:50,910
+So Megha talked about
+
+453
+00:22:50,910 --> 00:22:53,970
+a lot of cool Edge
+Services security features.
+
+454
+00:22:53,970 --> 00:22:55,470
+So in this demo, we are going to deploy
+
+455
+00:22:55,470 --> 00:22:57,240
+some of those security features
+
+456
+00:22:57,240 --> 00:23:00,270
+using our AI service called Kiro CLI.
+
+457
+00:23:00,270 --> 00:23:02,880
+How many people have used QCLI?
+
+458
+00:23:02,880 --> 00:23:04,260
+Okay, we have a few people.
+
+459
+00:23:04,260 --> 00:23:07,620
+So Kiro CLI is basically
+used to be called QCLI.
+
+460
+00:23:07,620 --> 00:23:09,417
+And now it's Kiro CLI.
+
+461
+00:23:09,417 --> 00:23:10,710
+It's an AI agent that can reside
+
+462
+00:23:10,710 --> 00:23:11,970
+in your command line terminal,
+
+463
+00:23:11,970 --> 00:23:14,700
+and then you can use it with
+natural language prompts
+
+464
+00:23:14,700 --> 00:23:19,500
+to interact with your AWS resources.
+
+465
+00:23:19,500 --> 00:23:23,820
+So in this demo, we are
+deploying a retail application
+
+466
+00:23:23,820 --> 00:23:25,080
+for SecureShop from scratch,
+
+467
+00:23:25,080 --> 00:23:28,440
+but you can use Kiro to deploy
+these edge security features
+
+468
+00:23:28,440 --> 00:23:30,750
+on your existing applications as well.
+
+469
+00:23:30,750 --> 00:23:32,670
+So let's look into our demo architecture.
+
+470
+00:23:32,670 --> 00:23:34,680
+So we have a fairly
+simple architecture here.
+
+471
+00:23:34,680 --> 00:23:37,950
+We have a static retail SecureShop website
+
+472
+00:23:37,950 --> 00:23:40,020
+hosted on Amazon S3.
+
+473
+00:23:40,020 --> 00:23:41,880
+It's called Amazon S3 Origin.
+
+474
+00:23:41,880 --> 00:23:44,580
+And then our goal here
+is to implement caching
+
+475
+00:23:44,580 --> 00:23:45,900
+and some of the security protections,
+
+476
+00:23:45,900 --> 00:23:47,997
+such as, you know, protection
+against DDoS attacks,
+
+477
+00:23:47,997 --> 00:23:51,780
+SQL injection, cross-site
+scripting, and so on.
+
+478
+00:23:51,780 --> 00:23:54,240
+We also want to enforce
+only HTTPS connections
+
+479
+00:23:54,240 --> 00:23:55,770
+to our application.
+
+480
+00:23:55,770 --> 00:23:57,920
+This is internet-facing, so
+we only want internet users
+
+481
+00:23:57,920 --> 00:24:00,660
+to be able to use encrypted connection.
+
+482
+00:24:00,660 --> 00:24:04,350
+And then we also want to
+enable origin access control
+
+483
+00:24:04,350 --> 00:24:06,900
+to make sure that the only
+authenticated requests
+
+484
+00:24:06,900 --> 00:24:09,870
+are coming from CloudFront
+to the Amazon S3 origin.
+
+485
+00:24:09,870 --> 00:24:12,820
+And then finally, we also want
+to implement some WAF rules.
+
+486
+00:24:14,190 --> 00:24:16,710
+So what I did, I basically started
+
+487
+00:24:16,710 --> 00:24:18,150
+with a very simple prompt with Kiro.
+
+488
+00:24:18,150 --> 00:24:21,360
+So I basically told Kiro to deploy
+
+489
+00:24:21,360 --> 00:24:24,810
+this retail web application
+in my AWS account.
+
+490
+00:24:24,810 --> 00:24:26,640
+And then Kiro knows the best practices,
+
+491
+00:24:26,640 --> 00:24:29,100
+security best practices,
+AWS best practices.
+
+492
+00:24:29,100 --> 00:24:31,050
+So you can actually interact with Kiro,
+
+493
+00:24:31,050 --> 00:24:33,150
+and you can ask, hey, this
+is my type of application,
+
+494
+00:24:33,150 --> 00:24:35,160
+and I want to deploy
+security best practices.
+
+495
+00:24:35,160 --> 00:24:36,720
+So it will deploy all those rules.
+
+496
+00:24:36,720 --> 00:24:38,670
+So I did that, I gave a prompt.
+
+497
+00:24:38,670 --> 00:24:40,860
+My initial prompt, you
+can scan the QR code.
+
+498
+00:24:40,860 --> 00:24:42,210
+You can take a look at it.
+
+499
+00:24:42,210 --> 00:24:43,230
+Kiro came up with a plan,
+
+500
+00:24:43,230 --> 00:24:45,360
+deployed the application on S3 bucket,
+
+501
+00:24:45,360 --> 00:24:47,010
+and then config the
+CloudFront distribution
+
+502
+00:24:47,010 --> 00:24:50,190
+along with the WAF rules
+to protect my application
+
+503
+00:24:50,190 --> 00:24:51,930
+against these threats.
+
+504
+00:24:51,930 --> 00:24:54,540
+And I had to do some
+back and forth prompts,
+
+505
+00:24:54,540 --> 00:24:55,410
+I will say this.
+
+506
+00:24:55,410 --> 00:24:57,090
+You have to sometimes break larger prompts
+
+507
+00:24:57,090 --> 00:24:57,923
+into smaller prompts
+
+508
+00:24:57,923 --> 00:25:00,270
+so that the AI is kind of more narrow
+
+509
+00:25:00,270 --> 00:25:02,700
+in terms of the API calls it's making,
+
+510
+00:25:02,700 --> 00:25:03,840
+the resources looking into.
+
+511
+00:25:03,840 --> 00:25:05,520
+So I did some of that.
+
+512
+00:25:05,520 --> 00:25:08,790
+And once I did that,
+Kiro was able to kind of,
+
+513
+00:25:08,790 --> 00:25:10,680
+you know, come up with this final output
+
+514
+00:25:10,680 --> 00:25:13,950
+where I have my application
+hosted on CloudFront.
+
+515
+00:25:13,950 --> 00:25:16,200
+I'm using the CloudFront
+DNS provided name here.
+
+516
+00:25:16,200 --> 00:25:18,600
+You can also use your
+own DNS using Graph 53.
+
+517
+00:25:18,600 --> 00:25:19,530
+This is a demo.
+
+518
+00:25:19,530 --> 00:25:22,500
+So CloudFront DNS is enough.
+
+519
+00:25:22,500 --> 00:25:24,420
+You can see that there's an S3 bucket
+
+520
+00:25:24,420 --> 00:25:27,990
+where my retail static page was hosted.
+
+521
+00:25:27,990 --> 00:25:29,880
+And then Kiro has enabled
+
+522
+00:25:29,880 --> 00:25:33,840
+a bunch of web application
+firewall rules out of the box,
+
+523
+00:25:33,840 --> 00:25:36,630
+like for example, SQL
+injection managed rule,
+
+524
+00:25:36,630 --> 00:25:38,310
+cross-site scripting.
+
+525
+00:25:38,310 --> 00:25:39,960
+And then it also deployed
+rate limiting rule
+
+526
+00:25:39,960 --> 00:25:41,760
+that can also help you absorb
+
+527
+00:25:41,760 --> 00:25:43,470
+a lot of traffic and DDoS attacks.
+
+528
+00:25:43,470 --> 00:25:44,520
+It did that.
+
+529
+00:25:44,520 --> 00:25:45,353
+So, you know,
+
+530
+00:25:45,353 --> 00:25:47,610
+anytime there is more than
+200 requests per five minute,
+
+531
+00:25:47,610 --> 00:25:50,190
+it will basically block
+those additional requests.
+
+532
+00:25:50,190 --> 00:25:52,590
+And then finally, it's also
+deployed geo-blocking rule
+
+533
+00:25:52,590 --> 00:25:55,740
+to only allow requests
+from US in this scenario.
+
+534
+00:25:55,740 --> 00:25:57,450
+And then it's also
+looking for bad requests
+
+535
+00:25:57,450 --> 00:25:59,220
+in my HTTP headers.
+
+536
+00:25:59,220 --> 00:26:01,200
+And I'm also shipping
+the logs into CloudWatch.
+
+537
+00:26:01,200 --> 00:26:02,580
+That's, again, one of the best practices.
+
+538
+00:26:02,580 --> 00:26:03,840
+So Kiro implemented that as well
+
+539
+00:26:03,840 --> 00:26:06,480
+so that I can look into the log data
+
+540
+00:26:06,480 --> 00:26:08,460
+for troubleshooting purposes
+and also understanding
+
+541
+00:26:08,460 --> 00:26:13,170
+my traffic patterns to adopt
+my or to adapt my WAF rules.
+
+542
+00:26:13,170 --> 00:26:16,290
+So this is what our final
+retail website looks like
+
+543
+00:26:16,290 --> 00:26:19,530
+for SecureShop with some product catalog.
+
+544
+00:26:19,530 --> 00:26:21,240
+Users can log into it.
+
+545
+00:26:21,240 --> 00:26:24,960
+I also kind of, you know, ask
+Kiro to add some demo traffic
+
+546
+00:26:24,960 --> 00:26:27,660
+or give me option to
+generate some demo traffic.
+
+547
+00:26:27,660 --> 00:26:28,830
+So it added these buttons.
+
+548
+00:26:28,830 --> 00:26:30,930
+So once I did that, I was able to generate
+
+549
+00:26:30,930 --> 00:26:35,930
+and simulate some attacks on
+my publicly available website.
+
+550
+00:26:36,510 --> 00:26:38,550
+So looking at some of the metrics,
+
+551
+00:26:38,550 --> 00:26:41,340
+you can see that I was able to generate
+
+552
+00:26:41,340 --> 00:26:42,974
+around 1,400 requests.
+
+553
+00:26:42,974 --> 00:26:44,640
+51 of those were blocked.
+
+554
+00:26:44,640 --> 00:26:46,230
+You can also see some of the top attacks.
+
+555
+00:26:46,230 --> 00:26:47,790
+These metrics are available
+in the CloudFront,
+
+556
+00:26:47,790 --> 00:26:48,690
+so if you're using CloudFront,
+
+557
+00:26:48,690 --> 00:26:50,580
+you can just quickly
+go and look into these.
+
+558
+00:26:50,580 --> 00:26:51,780
+And then you can also see, finally,
+
+559
+00:26:51,780 --> 00:26:54,870
+that I'm only receiving
+requests from the U.S.
+
+560
+00:26:54,870 --> 00:26:57,120
+because I have a
+geoblocking filter going on.
+
+561
+00:26:58,230 --> 00:27:00,690
+And these are the list of managed rules,
+
+562
+00:27:00,690 --> 00:27:03,030
+and custom rules that Kiro
+deployed behind the scene
+
+563
+00:27:03,030 --> 00:27:04,380
+to achieve these protections.
+
+564
+00:27:04,380 --> 00:27:06,030
+So I have some managed rules.
+
+565
+00:27:06,030 --> 00:27:07,467
+Megha talked about some
+of these, for example,
+
+566
+00:27:07,467 --> 00:27:09,360
+the SQL injection rule,
+
+567
+00:27:09,360 --> 00:27:12,060
+the known bad input rule, and others.
+
+568
+00:27:12,060 --> 00:27:13,800
+And then I also have custom rules,
+
+569
+00:27:13,800 --> 00:27:17,040
+which is the rate limit
+rule and the geo block rule.
+
+570
+00:27:17,040 --> 00:27:21,930
+So by using Kiro and some
+of the security protection
+
+571
+00:27:21,930 --> 00:27:23,550
+and features that Megha talked about,
+
+572
+00:27:23,550 --> 00:27:26,250
+we are able to secure this
+SecureShop retail website.
+
+573
+00:27:26,250 --> 00:27:28,890
+As you can see on this
+screen, it's a secure website
+
+574
+00:27:28,890 --> 00:27:31,620
+only supporting the HTTPS connections.
+
+575
+00:27:31,620 --> 00:27:33,072
+We have WAF policy,
+
+576
+00:27:33,072 --> 00:27:36,030
+which has all the different
+rules that we talked about.
+
+577
+00:27:36,030 --> 00:27:37,770
+We configured a protocol policy
+
+578
+00:27:37,770 --> 00:27:41,190
+that is redirecting all the
+HTTP traffic into HTTPS,
+
+579
+00:27:41,190 --> 00:27:43,620
+a very simple configuration that Kiro did.
+
+580
+00:27:43,620 --> 00:27:45,720
+And then finally, we have
+origin access control
+
+581
+00:27:45,720 --> 00:27:48,090
+enabled on Amazon S3 origin
+
+582
+00:27:48,090 --> 00:27:50,130
+to only allow authenticated requests
+
+583
+00:27:50,130 --> 00:27:52,293
+from CloudFront to our S3 bucket.
+
+584
+00:27:53,370 --> 00:27:56,250
+So this kind of brings us
+towards the end of the demo.
+
+585
+00:27:56,250 --> 00:27:58,080
+You can deploy all of this
+through console as well,
+
+586
+00:27:58,080 --> 00:28:01,140
+but now you have options
+to use AI services.
+
+587
+00:28:01,140 --> 00:28:02,670
+If you want to learn more
+about how you can use
+
+588
+00:28:02,670 --> 00:28:04,050
+some of our other AI services
+
+589
+00:28:04,050 --> 00:28:05,610
+for deploying secure applications
+
+590
+00:28:05,610 --> 00:28:06,930
+or any of our other networking
+
+591
+00:28:06,930 --> 00:28:09,480
+and content delivery services,
+you can scan QR code.
+
+592
+00:28:09,480 --> 00:28:12,540
+There's a blog on this page or this slide,
+
+593
+00:28:12,540 --> 00:28:15,180
+and there's also a Twitch
+video that you can watch.
+
+594
+00:28:15,180 --> 00:28:16,950
+And today, we also launched an AI agent
+
+595
+00:28:16,950 --> 00:28:19,110
+for security in preview.
+
+596
+00:28:19,110 --> 00:28:22,290
+So if you're a security expert
+
+597
+00:28:22,290 --> 00:28:24,150
+and you want to use AI for that purpose,
+
+598
+00:28:24,150 --> 00:28:25,290
+you can also look into that.
+
+599
+00:28:25,290 --> 00:28:26,910
+With that, I will hand it over to Shovan
+
+600
+00:28:26,910 --> 00:28:29,973
+for walking us through
+network traffic inspection.
+
+601
+00:28:33,990 --> 00:28:34,823
+- Thanks.
+
+602
+00:28:34,823 --> 00:28:35,656
+Great demo.
+
+603
+00:28:36,510 --> 00:28:39,480
+You touched upon two of my favorite things
+
+604
+00:28:39,480 --> 00:28:40,800
+and simplifying customers' life.
+
+605
+00:28:40,800 --> 00:28:44,640
+First, use GenAI, Kiro, to
+build and test environment,
+
+606
+00:28:44,640 --> 00:28:47,460
+and then the second one was managed rules.
+
+607
+00:28:47,460 --> 00:28:48,990
+And I will talk more about managed rules
+
+608
+00:28:48,990 --> 00:28:50,740
+in the context of network firewall.
+
+609
+00:28:51,660 --> 00:28:53,010
+So in the previous section,
+
+610
+00:28:53,010 --> 00:28:57,030
+you saw how we can use CloudFront
+and Edge Security product
+
+611
+00:28:57,030 --> 00:28:58,803
+to protect your internet ingress.
+
+612
+00:28:59,700 --> 00:29:02,910
+Now the customers have
+traffic within the network.
+
+613
+00:29:02,910 --> 00:29:04,740
+For example, they have
+the east-west traffic,
+
+614
+00:29:04,740 --> 00:29:07,590
+traffic coming from one
+VPC going to another VPC.
+
+615
+00:29:07,590 --> 00:29:08,730
+They have north-south traffic,
+
+616
+00:29:08,730 --> 00:29:11,190
+traffic going from a VPC to the internet.
+
+617
+00:29:11,190 --> 00:29:14,550
+So how can we use network
+firewall to protect this,
+
+618
+00:29:14,550 --> 00:29:17,550
+both internet egress
+as well as the traffic
+
+619
+00:29:17,550 --> 00:29:19,500
+between application, east-west traffic?
+
+620
+00:29:20,850 --> 00:29:23,760
+So that's where network
+firewall comes into picture.
+
+621
+00:29:23,760 --> 00:29:26,760
+And SecureShop is getting popular.
+
+622
+00:29:26,760 --> 00:29:29,640
+It has more users around the world.
+
+623
+00:29:29,640 --> 00:29:30,990
+It has more traffic now.
+
+624
+00:29:30,990 --> 00:29:32,190
+It has more employees.
+
+625
+00:29:32,190 --> 00:29:34,023
+So there is also east-west traffic.
+
+626
+00:29:35,760 --> 00:29:38,417
+And from network firewall perspective,
+
+627
+00:29:38,417 --> 00:29:39,750
+it's a managed service.
+
+628
+00:29:39,750 --> 00:29:42,060
+So no matter how much your traffic grows,
+
+629
+00:29:42,060 --> 00:29:45,420
+you don't have to do any
+infrastructure management.
+
+630
+00:29:45,420 --> 00:29:47,400
+Network firewall will
+scale behind the scene
+
+631
+00:29:47,400 --> 00:29:49,380
+and handle all your traffic patterns.
+
+632
+00:29:49,380 --> 00:29:53,640
+And Network Firewall gives
+essentially three things to you.
+
+633
+00:29:53,640 --> 00:29:55,350
+First, it is based on Suricata.
+
+634
+00:29:55,350 --> 00:29:56,850
+So you can use Suricata rules.
+
+635
+00:29:56,850 --> 00:30:00,270
+You can write Suricata rules
+to inspect your traffic.
+
+636
+00:30:00,270 --> 00:30:02,130
+You can write stateful rules.
+
+637
+00:30:02,130 --> 00:30:04,110
+For example, you can say that, hey,
+
+638
+00:30:04,110 --> 00:30:06,150
+I just want encrypted traffic,
+
+639
+00:30:06,150 --> 00:30:09,840
+HTTPS traffic from my egress VPCs.
+
+640
+00:30:09,840 --> 00:30:13,890
+Then you can use it to
+do protocol checking,
+
+641
+00:30:13,890 --> 00:30:16,380
+all those layer three inspections.
+
+642
+00:30:16,380 --> 00:30:18,813
+It essentially behaves
+like an IDS and IPS.
+
+643
+00:30:19,740 --> 00:30:21,510
+Then it also provides you logs.
+
+644
+00:30:21,510 --> 00:30:24,150
+You can use it to monitor
+how your traffic pattern is,
+
+645
+00:30:24,150 --> 00:30:27,000
+how your network firewall is behaving.
+
+646
+00:30:27,000 --> 00:30:29,490
+You can use it for audit purposes,
+
+647
+00:30:29,490 --> 00:30:32,193
+troubleshooting purposes,
+or for compliance checks.
+
+648
+00:30:34,350 --> 00:30:36,300
+From SecureShop perspective,
+
+649
+00:30:36,300 --> 00:30:38,250
+they have traffic between VPCs,
+
+650
+00:30:38,250 --> 00:30:40,740
+traffic coming from Internet,
+going to the Internet,
+
+651
+00:30:40,740 --> 00:30:42,090
+and from on-prem.
+
+652
+00:30:42,090 --> 00:30:45,900
+And all this traffic comes
+to the VPC through gateways.
+
+653
+00:30:45,900 --> 00:30:48,930
+A network firewall can
+act as a bump in the wire.
+
+654
+00:30:48,930 --> 00:30:53,100
+It is integrated with all
+the AWS gateways natively.
+
+655
+00:30:53,100 --> 00:30:56,100
+For example, it is integrated
+with transit gateway.
+
+656
+00:30:56,100 --> 00:30:58,110
+You can use it as a bump in a wire.
+
+657
+00:30:58,110 --> 00:31:01,093
+You can use it for all traffic
+going in and out of IGW
+
+658
+00:31:02,138 --> 00:31:04,740
+or traffic coming from
+your on-frame through DX
+
+659
+00:31:04,740 --> 00:31:06,483
+or through VPNs.
+
+660
+00:31:07,740 --> 00:31:11,730
+Not only that, you can also
+drop a firewall endpoint
+
+661
+00:31:11,730 --> 00:31:14,280
+in your subnet and traffic
+going from the subnet
+
+662
+00:31:14,280 --> 00:31:15,930
+will go to the network firewall endpoint.
+
+663
+00:31:15,930 --> 00:31:16,890
+It will get inspected
+
+664
+00:31:16,890 --> 00:31:18,720
+and then it will go to other subnets
+
+665
+00:31:18,720 --> 00:31:20,463
+or the internet gateway.
+
+666
+00:31:22,620 --> 00:31:25,140
+And when it comes to manageability,
+
+667
+00:31:25,140 --> 00:31:27,030
+network firewalls,
+
+668
+00:31:27,030 --> 00:31:31,650
+it is integrated with AWS Firewall Manager
+
+669
+00:31:31,650 --> 00:31:34,380
+and your AWS organization.
+
+670
+00:31:34,380 --> 00:31:35,850
+We already saw that
+
+671
+00:31:35,850 --> 00:31:37,620
+there are many different traffic patterns
+
+672
+00:31:37,620 --> 00:31:40,050
+SecureShop is using,
+east-west and north-south.
+
+673
+00:31:40,050 --> 00:31:42,894
+So they have multiple firewall endpoints.
+
+674
+00:31:42,894 --> 00:31:46,770
+(coughs) not only that they
+have different environments,
+
+675
+00:31:46,770 --> 00:31:51,360
+staging, prod, development,
+QA, so at the end of the day,
+
+676
+00:31:51,360 --> 00:31:53,100
+these are all different AWS accounts
+
+677
+00:31:53,100 --> 00:31:54,600
+and if you're a security admin
+
+678
+00:31:54,600 --> 00:31:56,880
+you're managing multiple endpoints
+
+679
+00:31:56,880 --> 00:31:58,110
+multiple accounts,
+
+680
+00:31:58,110 --> 00:31:59,610
+but you want a single pane of glass
+
+681
+00:31:59,610 --> 00:32:01,800
+where you want to manage
+all your rules and policies
+
+682
+00:32:01,800 --> 00:32:03,600
+for all your network firewalls
+
+683
+00:32:03,600 --> 00:32:06,000
+and firewall manager provides you that
+
+684
+00:32:06,000 --> 00:32:08,013
+through AWS organization integration.
+
+685
+00:32:09,210 --> 00:32:14,210
+And when we come to logging
+firewall provides logs in S3,
+
+686
+00:32:15,180 --> 00:32:18,510
+Kinesis Firehose, and CloudWatch logs.
+
+687
+00:32:18,510 --> 00:32:19,980
+You can export these logs
+
+688
+00:32:19,980 --> 00:32:22,170
+and send it to your analytics provider.
+
+689
+00:32:22,170 --> 00:32:23,730
+They will analyze the traffic pattern
+
+690
+00:32:23,730 --> 00:32:25,080
+and give you analytics.
+
+691
+00:32:25,080 --> 00:32:28,320
+For example, you can see
+which rule was enacted,
+
+692
+00:32:28,320 --> 00:32:29,550
+where the traffic was coming,
+
+693
+00:32:29,550 --> 00:32:30,840
+what traffic is getting blocked,
+
+694
+00:32:30,840 --> 00:32:33,750
+and you can use all this insight
+
+695
+00:32:33,750 --> 00:32:37,323
+to write more fine-grained
+policies or rules in this case.
+
+696
+00:32:39,330 --> 00:32:41,070
+Many of the times customers tell me that,
+
+697
+00:32:41,070 --> 00:32:44,670
+hey, Shovan, if I know a thread vector,
+
+698
+00:32:44,670 --> 00:32:46,080
+I can write a Suricata rule.
+
+699
+00:32:46,080 --> 00:32:47,850
+But what about I don't
+know a thread vector?
+
+700
+00:32:47,850 --> 00:32:49,020
+It's an emerging thread vector.
+
+701
+00:32:49,020 --> 00:32:50,310
+So what can I do?
+
+702
+00:32:50,310 --> 00:32:52,983
+So that's when the managed
+rule comes into picture.
+
+703
+00:32:53,970 --> 00:32:57,870
+We have a group of
+honeypots we call madpots.
+
+704
+00:32:57,870 --> 00:33:00,120
+They continuously detect the Internet.
+
+705
+00:33:00,120 --> 00:33:01,830
+They analyze all the threats.
+
+706
+00:33:01,830 --> 00:33:03,720
+And they create a managed rule for you.
+
+707
+00:33:03,720 --> 00:33:05,790
+They constantly update the managed rules.
+
+708
+00:33:05,790 --> 00:33:07,800
+And you can use those managed rules
+
+709
+00:33:07,800 --> 00:33:09,300
+on your network firewall.
+
+710
+00:33:09,300 --> 00:33:11,850
+we use this MadPot or our Honeypot network
+
+711
+00:33:11,850 --> 00:33:13,140
+to protect Amazon.com
+
+712
+00:33:13,140 --> 00:33:15,780
+and we provide the same
+infrastructure to our customers
+
+713
+00:33:15,780 --> 00:33:18,280
+and through that, you can write
+
+714
+00:33:19,200 --> 00:33:21,930
+or you can use those active threat defense
+
+715
+00:33:21,930 --> 00:33:23,010
+to protect your application
+
+716
+00:33:23,010 --> 00:33:24,540
+so that way you are protected against
+
+717
+00:33:24,540 --> 00:33:25,790
+all the emerging threats.
+
+718
+00:33:27,180 --> 00:33:31,740
+What's unique about our
+Honeypot network is its scale
+
+719
+00:33:31,740 --> 00:33:34,590
+so we have a global footprint
+
+720
+00:33:34,590 --> 00:33:36,180
+and just like CloudFront and WAF
+
+721
+00:33:36,180 --> 00:33:38,460
+it's deployed across our global footprint
+
+722
+00:33:38,460 --> 00:33:42,000
+So we have tens and thousands of sensors.
+
+723
+00:33:42,000 --> 00:33:45,640
+These sensors, they mimic
+your TCP application,
+
+724
+00:33:45,640 --> 00:33:48,450
+telnet, SSH, and your HTTP application.
+
+725
+00:33:48,450 --> 00:33:50,760
+They behave like your human clients,
+
+726
+00:33:50,760 --> 00:33:53,160
+and they try to act like a decoy.
+
+727
+00:33:53,160 --> 00:33:57,690
+And the network understands
+the signature patterns,
+
+728
+00:33:59,490 --> 00:34:00,930
+then updates the rule,
+
+729
+00:34:00,930 --> 00:34:02,850
+and through that you get the protection.
+
+730
+00:34:02,850 --> 00:34:04,980
+And at our scale, in a given day,
+
+731
+00:34:04,980 --> 00:34:08,790
+we analyze more than 100
+million signature patterns
+
+732
+00:34:08,790 --> 00:34:11,460
+and keep on constantly
+updating these firewall rules.
+
+733
+00:34:11,460 --> 00:34:13,860
+So you get the same scale
+and benefit out of it.
+
+734
+00:34:15,660 --> 00:34:17,220
+So in the beginning,
+
+735
+00:34:17,220 --> 00:34:19,770
+we talked that there are four
+directions you should protect.
+
+736
+00:34:19,770 --> 00:34:22,500
+So we covered the three directions.
+
+737
+00:34:22,500 --> 00:34:25,470
+Now the fourth direction is human access
+
+738
+00:34:25,470 --> 00:34:28,113
+or your employee access
+to this application.
+
+739
+00:34:28,980 --> 00:34:30,660
+And here we will cover that.
+
+740
+00:34:30,660 --> 00:34:32,220
+And when we talk about human access,
+
+741
+00:34:32,220 --> 00:34:34,560
+so there are two different use cases.
+
+742
+00:34:34,560 --> 00:34:36,750
+The first is most of our employees,
+
+743
+00:34:36,750 --> 00:34:38,880
+they interact with the
+application through a browser.
+
+744
+00:34:38,880 --> 00:34:42,510
+So these are your
+contractors, your HR people,
+
+745
+00:34:42,510 --> 00:34:44,810
+and they don't do SSH.
+
+746
+00:34:44,810 --> 00:34:47,300
+So for them, a browser is fine.
+
+747
+00:34:47,300 --> 00:34:50,100
+But you have your engineers
+who actually want to go
+
+748
+00:34:50,100 --> 00:34:52,920
+and telnet SSH into your instances
+
+749
+00:34:52,920 --> 00:34:54,360
+and do maintenance and patching.
+
+750
+00:34:54,360 --> 00:34:55,260
+So they're two different,
+
+751
+00:34:55,260 --> 00:34:57,260
+and we'll talk about both the use cases.
+
+752
+00:34:58,560 --> 00:35:01,680
+Before you do that, what happens is that
+
+753
+00:35:01,680 --> 00:35:05,940
+most of our customers
+access AWS network resources
+
+754
+00:35:05,940 --> 00:35:07,590
+in three different patterns.
+
+755
+00:35:07,590 --> 00:35:10,943
+First is their VPN into
+your on-prem network.
+
+756
+00:35:10,943 --> 00:35:13,080
+Through the on-prem network,
+
+757
+00:35:13,080 --> 00:35:16,050
+they will connect through
+DX or side-to-side VPN
+
+758
+00:35:16,050 --> 00:35:17,430
+to AWS resources.
+
+759
+00:35:17,430 --> 00:35:19,290
+So in this case, the access management
+
+760
+00:35:19,290 --> 00:35:20,850
+is provided by your on-prem provider,
+
+761
+00:35:20,850 --> 00:35:24,330
+and then we provide the
+pipe back to the AWS.
+
+762
+00:35:24,330 --> 00:35:26,460
+But you can use, like we
+talked in the previous section,
+
+763
+00:35:26,460 --> 00:35:28,530
+you can use network firewall
+to inspect the traffic
+
+764
+00:35:28,530 --> 00:35:31,293
+coming into AWS through DX or VPNs.
+
+765
+00:35:32,130 --> 00:35:33,300
+Many times customers say that,
+
+766
+00:35:33,300 --> 00:35:35,280
+hey, why should I even go to my on-prem?
+
+767
+00:35:35,280 --> 00:35:37,080
+Why should I manage infrastructure?
+
+768
+00:35:37,080 --> 00:35:39,450
+Can I directly VPN into my AWS network?
+
+769
+00:35:39,450 --> 00:35:42,060
+So for that, we provide client VPN.
+
+770
+00:35:42,060 --> 00:35:43,620
+Then there are a certain set of customers
+
+771
+00:35:43,620 --> 00:35:44,730
+who are saying that, hey,
+
+772
+00:35:44,730 --> 00:35:46,740
+most of my employees are using browsers.
+
+773
+00:35:46,740 --> 00:35:49,770
+So can I provide them an ease
+of use, standard browser,
+
+774
+00:35:49,770 --> 00:35:53,580
+internet-based access, just
+like any public applications?
+
+775
+00:35:53,580 --> 00:35:56,340
+And on top of it, from
+a security perspective,
+
+776
+00:35:56,340 --> 00:35:58,080
+I want a better security posture.
+
+777
+00:35:58,080 --> 00:35:59,490
+I want more granular controls.
+
+778
+00:35:59,490 --> 00:36:01,350
+I want to use identity device posture
+
+779
+00:36:01,350 --> 00:36:03,960
+to provide per application-based access.
+
+780
+00:36:03,960 --> 00:36:06,870
+So for that, we have
+built AWS verified access.
+
+781
+00:36:06,870 --> 00:36:08,610
+Essentially, they're
+asking for zero trust,
+
+782
+00:36:08,610 --> 00:36:11,010
+and we are providing them
+the zero trust access.
+
+783
+00:36:12,270 --> 00:36:14,493
+So let's first jump into Client VPN.
+
+784
+00:36:15,360 --> 00:36:18,090
+In Client VPN, the user
+will need a client.
+
+785
+00:36:18,090 --> 00:36:19,380
+So we provide a client.
+
+786
+00:36:19,380 --> 00:36:21,630
+They deploy it on their laptops.
+
+787
+00:36:21,630 --> 00:36:22,800
+And then from that laptops,
+
+788
+00:36:22,800 --> 00:36:24,540
+they connect to the Client VPN endpoint,
+
+789
+00:36:24,540 --> 00:36:26,670
+which is running in AWS region.
+
+790
+00:36:26,670 --> 00:36:29,070
+And once the user is authenticated,
+
+791
+00:36:29,070 --> 00:36:30,870
+then they can access all the resources
+
+792
+00:36:30,870 --> 00:36:35,730
+in your network in the AWS.
+
+793
+00:36:35,730 --> 00:36:39,180
+Let's talk about how we
+authenticate the user in client VPN.
+
+794
+00:36:39,180 --> 00:36:40,920
+So, we have three authentication patterns,
+
+795
+00:36:40,920 --> 00:36:42,930
+and based on your flexibility, your needs,
+
+796
+00:36:42,930 --> 00:36:44,370
+you can choose one of them.
+
+797
+00:36:44,370 --> 00:36:46,440
+First is a certificate-based
+authentication.
+
+798
+00:36:46,440 --> 00:36:49,050
+You can put a certificate
+on your user's device,
+
+799
+00:36:49,050 --> 00:36:50,100
+and using the certificate,
+
+800
+00:36:50,100 --> 00:36:51,712
+they authenticate it to client VPN,
+
+801
+00:36:51,712 --> 00:36:53,130
+and then they access your network.
+
+802
+00:36:53,130 --> 00:36:55,230
+The second is active directive.
+
+803
+00:36:55,230 --> 00:36:56,880
+Many of our customers
+use Active Directory,
+
+804
+00:36:56,880 --> 00:36:59,550
+so we support Active
+Directory-based integration.
+
+805
+00:36:59,550 --> 00:37:01,621
+Let's say you are using
+an identity provider
+
+806
+00:37:01,621 --> 00:37:03,840
+like Okta or Ping who supports SAML
+
+807
+00:37:03,840 --> 00:37:06,420
+so you can use SAML based
+authentication as well,
+
+808
+00:37:06,420 --> 00:37:08,010
+and based on this authentication
+
+809
+00:37:08,010 --> 00:37:11,070
+the user gets access to the network.
+
+810
+00:37:11,070 --> 00:37:12,570
+And you can write granular policy
+
+811
+00:37:12,570 --> 00:37:15,150
+you can restrict the user access
+
+812
+00:37:15,150 --> 00:37:16,410
+to a subset of your network
+
+813
+00:37:16,410 --> 00:37:17,820
+or to a segment of your network.
+
+814
+00:37:17,820 --> 00:37:22,820
+So in this case, I am restricting
+the user to a slash 32
+
+815
+00:37:22,950 --> 00:37:26,103
+and the user is belonging to
+the engineering department.
+
+816
+00:37:27,120 --> 00:37:28,650
+And many times customers say that, hey,
+
+817
+00:37:28,650 --> 00:37:30,240
+can I use device posture?
+
+818
+00:37:30,240 --> 00:37:33,120
+So we provide a Lambda connection handler,
+
+819
+00:37:33,120 --> 00:37:36,060
+and you can write custom rules
+in the connection handler,
+
+820
+00:37:36,060 --> 00:37:38,520
+and we will run both the
+identity-based authentication
+
+821
+00:37:38,520 --> 00:37:41,010
+and device posture check
+through this connection handler,
+
+822
+00:37:41,010 --> 00:37:45,120
+and if both allow, then the
+user get access to the network.
+
+823
+00:37:45,120 --> 00:37:48,300
+In this case, SecureShop
+is using OS versions.
+
+824
+00:37:48,300 --> 00:37:50,160
+They're using the client version.
+
+825
+00:37:50,160 --> 00:37:52,530
+They're checking the device
+posture, and based on that,
+
+826
+00:37:52,530 --> 00:37:54,630
+the user is getting access to the network.
+
+827
+00:37:55,890 --> 00:37:56,847
+And many times, customers ask,
+
+828
+00:37:56,847 --> 00:37:59,220
+"Hey Shovan, can I use client VPN
+
+829
+00:37:59,220 --> 00:38:01,860
+to provide access to
+my on-prem resources?"
+
+830
+00:38:01,860 --> 00:38:04,260
+So I don't want to
+maintain two VPN solutions,
+
+831
+00:38:04,260 --> 00:38:07,440
+or I can provide them
+access to other clouds.
+
+832
+00:38:07,440 --> 00:38:11,070
+So what happens is that your
+users will get authenticated
+
+833
+00:38:11,070 --> 00:38:12,690
+at the client VPN endpoint,
+
+834
+00:38:12,690 --> 00:38:15,000
+and then through DXO site-to-site,
+
+835
+00:38:15,000 --> 00:38:16,710
+that request will go back to your on-prem.
+
+836
+00:38:16,710 --> 00:38:19,410
+So based on that, you can
+have on-prem-based access.
+
+837
+00:38:19,410 --> 00:38:22,500
+And we just launched DX
+multi-cloud connector,
+
+838
+00:38:22,500 --> 00:38:25,290
+so with that, you can also
+provide access to other clouds.
+
+839
+00:38:25,290 --> 00:38:27,240
+So in a nutshell,
+
+840
+00:38:27,240 --> 00:38:30,120
+the client VPN can give
+you access not only to AWS,
+
+841
+00:38:30,120 --> 00:38:31,983
+but other resources outside of AWS.
+
+842
+00:38:34,950 --> 00:38:38,640
+Now let's talk about Zero
+Trust Verified Access, or AVA.
+
+843
+00:38:38,640 --> 00:38:39,633
+We call it AVA.
+
+844
+00:38:40,590 --> 00:38:43,770
+And AVA is built on AWS
+Zero Trust principles.
+
+845
+00:38:43,770 --> 00:38:44,970
+So let's talk about that.
+
+846
+00:38:44,970 --> 00:38:47,280
+Because Zero Trust can
+mean different things
+
+847
+00:38:47,280 --> 00:38:48,240
+to different folks.
+
+848
+00:38:48,240 --> 00:38:50,760
+So it's important to understand
+what is our perspective
+
+849
+00:38:50,760 --> 00:38:52,920
+and how we define Zero Trust.
+
+850
+00:38:52,920 --> 00:38:56,103
+From our perspective, zero
+trust is essentially two things.
+
+851
+00:38:56,940 --> 00:39:01,290
+First, we say that apart
+from network location,
+
+852
+00:39:01,290 --> 00:39:04,680
+you should use non-network-based signals
+
+853
+00:39:04,680 --> 00:39:08,640
+to provide access to a
+resource or to a network.
+
+854
+00:39:08,640 --> 00:39:10,200
+So in case of SecureShop,
+
+855
+00:39:10,200 --> 00:39:13,800
+they can use identity-based
+as a non-networking signal.
+
+856
+00:39:13,800 --> 00:39:16,170
+They can also use device posture.
+
+857
+00:39:16,170 --> 00:39:17,580
+The more signals you use,
+
+858
+00:39:17,580 --> 00:39:21,000
+the better the trust
+authentication mechanism
+
+859
+00:39:21,000 --> 00:39:24,780
+becomes better your
+security posture becomes.
+
+860
+00:39:24,780 --> 00:39:27,870
+The second thing is
+continuous verification.
+
+861
+00:39:27,870 --> 00:39:29,223
+So let's take an example.
+
+862
+00:39:30,090 --> 00:39:32,643
+If user wants to access application one,
+
+863
+00:39:34,050 --> 00:39:37,710
+zero trust principle says
+that check device posture,
+
+864
+00:39:37,710 --> 00:39:39,660
+check identity, run your policy,
+
+865
+00:39:39,660 --> 00:39:41,670
+and then give access to application one.
+
+866
+00:39:41,670 --> 00:39:42,720
+Moments later,
+
+867
+00:39:42,720 --> 00:39:45,513
+if the same user wants to
+access application two,
+
+868
+00:39:46,440 --> 00:39:49,080
+then pull in the same trust signals,
+
+869
+00:39:49,080 --> 00:39:50,100
+identity and posture,
+
+870
+00:39:50,100 --> 00:39:53,040
+because something might have
+changed in that brief moment.
+
+871
+00:39:53,040 --> 00:39:55,230
+Application two might have
+a different set of policies,
+
+872
+00:39:55,230 --> 00:39:56,130
+so run this policy
+
+873
+00:39:56,130 --> 00:39:58,580
+and then give the user
+access to application two.
+
+874
+00:39:59,700 --> 00:40:03,300
+So these are the two pillars
+of our zero trust principles.
+
+875
+00:40:03,300 --> 00:40:05,910
+And we built AWS verified access
+
+876
+00:40:05,910 --> 00:40:07,410
+based on these two principles.
+
+877
+00:40:08,289 --> 00:40:12,393
+(coughs) So from AWS verified
+access is a reverse proxy.
+
+878
+00:40:13,500 --> 00:40:17,670
+All the HTTP requests come
+to AWS verified access.
+
+879
+00:40:17,670 --> 00:40:19,830
+It terminates the request.
+
+880
+00:40:19,830 --> 00:40:23,700
+Then it pulls down the claims
+from your identity provider,
+
+881
+00:40:23,700 --> 00:40:25,080
+your device management provider,
+
+882
+00:40:25,080 --> 00:40:27,660
+and we have standard-based integration.
+
+883
+00:40:27,660 --> 00:40:30,030
+Essentially, what we want is that
+
+884
+00:40:30,030 --> 00:40:34,230
+you shouldn't change your
+identity provider or device MDMs
+
+885
+00:40:34,230 --> 00:40:36,900
+for the sake of moving to
+zero trust architecture.
+
+886
+00:40:36,900 --> 00:40:39,480
+So you can still continue
+with your IT investment
+
+887
+00:40:39,480 --> 00:40:42,663
+and use AWS verified access
+to provide zero trust access.
+
+888
+00:40:44,280 --> 00:40:47,430
+Then we pull the signals,
+run the policies.
+
+889
+00:40:47,430 --> 00:40:49,050
+If the policy allow,
+
+890
+00:40:49,050 --> 00:40:51,723
+we connect the user's
+request back to your VPC.
+
+891
+00:40:53,010 --> 00:40:56,219
+And a customer might
+have hundreds of VPCs,
+
+892
+00:40:56,219 --> 00:40:58,590
+thousands of applications.
+
+893
+00:40:58,590 --> 00:40:59,850
+From an administrative perspective,
+
+894
+00:40:59,850 --> 00:41:02,970
+you just need one single
+AWS verified access,
+
+895
+00:41:02,970 --> 00:41:05,790
+and we will connect it on the backend
+
+896
+00:41:05,790 --> 00:41:08,610
+to your application or to
+your VPC or to your ALB,
+
+897
+00:41:08,610 --> 00:41:10,260
+wherever the application is running.
+
+898
+00:41:10,260 --> 00:41:11,700
+So we do the backend stitching.
+
+899
+00:41:11,700 --> 00:41:13,860
+We provide the
+point-to-point connectivity.
+
+900
+00:41:13,860 --> 00:41:15,330
+Unlike some of the other solutions
+
+901
+00:41:15,330 --> 00:41:18,240
+which requires you to use
+connectors or publishers,
+
+902
+00:41:18,240 --> 00:41:20,550
+so here you don't have
+to do all those things.
+
+903
+00:41:20,550 --> 00:41:22,770
+From a security perspective,
+you just write policies
+
+904
+00:41:22,770 --> 00:41:25,320
+and grant access, and we
+take care of the plumbing.
+
+905
+00:41:27,480 --> 00:41:28,860
+So we talked about the partners.
+
+906
+00:41:28,860 --> 00:41:32,700
+These are the partners from
+identity space, MDM space,
+
+907
+00:41:32,700 --> 00:41:34,980
+and they are partners
+who consume our logs,
+
+908
+00:41:34,980 --> 00:41:36,870
+give you analytics.
+
+909
+00:41:36,870 --> 00:41:40,470
+If your identity provider
+or MDM is not there,
+
+910
+00:41:40,470 --> 00:41:41,910
+their logo is not there, let us know.
+
+911
+00:41:41,910 --> 00:41:44,131
+We will work with them and get them here.
+
+912
+00:41:44,131 --> 00:41:46,055
+So we have a standard-based integration,
+
+913
+00:41:46,055 --> 00:41:48,455
+and we can work with them
+to get them onboarded.
+
+914
+00:41:50,220 --> 00:41:52,803
+So let's talk about a few capabilities.
+
+915
+00:41:54,000 --> 00:41:58,710
+One is that first, AVA
+provides an internet endpoint
+
+916
+00:41:58,710 --> 00:42:01,050
+to your private application.
+
+917
+00:42:01,050 --> 00:42:02,610
+So in that sense,
+
+918
+00:42:02,610 --> 00:42:05,790
+it is exposed to the
+internet-based threats.
+
+919
+00:42:05,790 --> 00:42:07,950
+So the first thing you need to build
+
+920
+00:42:07,950 --> 00:42:10,140
+is a security perimeter.
+
+921
+00:42:10,140 --> 00:42:12,540
+So we provide WAF integrations,
+
+922
+00:42:12,540 --> 00:42:15,480
+and all the things Megha
+and Sohaib talked about,
+
+923
+00:42:15,480 --> 00:42:17,790
+for example, DDoS, SQL injections,
+
+924
+00:42:17,790 --> 00:42:19,380
+cross-site scripting bots,
+
+925
+00:42:19,380 --> 00:42:22,140
+all those things are provided on AVA.
+
+926
+00:42:22,140 --> 00:42:23,880
+You first filter the traffic,
+
+927
+00:42:23,880 --> 00:42:25,980
+provide the broad network perimeter,
+
+928
+00:42:25,980 --> 00:42:28,500
+then use AVA's identity
+and device management
+
+929
+00:42:28,500 --> 00:42:29,610
+based zero trust access
+
+930
+00:42:29,610 --> 00:42:32,643
+and then provide user
+into your applications.
+
+931
+00:42:36,000 --> 00:42:36,900
+And then the final,
+
+932
+00:42:36,900 --> 00:42:38,940
+the second thing I want to touch is
+
+933
+00:42:38,940 --> 00:42:40,980
+AVA also provides you rich logs.
+
+934
+00:42:40,980 --> 00:42:43,470
+you can, in the enhanced logging mode,
+
+935
+00:42:43,470 --> 00:42:46,440
+you can dump all your claims.
+
+936
+00:42:46,440 --> 00:42:50,940
+And later on, you can use
+those claims to write policies.
+
+937
+00:42:50,940 --> 00:42:52,710
+You can write policies, tweak policies,
+
+938
+00:42:52,710 --> 00:42:53,910
+simulate the policies,
+
+939
+00:42:53,910 --> 00:42:55,830
+see what's the effect of those policies,
+
+940
+00:42:55,830 --> 00:42:57,390
+and then check those in.
+
+941
+00:42:57,390 --> 00:42:59,820
+Many of my customers have said that
+
+942
+00:42:59,820 --> 00:43:03,420
+using this advanced logging
+and the policy editor,
+
+943
+00:43:03,420 --> 00:43:05,220
+they have cut down the policy writing time
+
+944
+00:43:05,220 --> 00:43:07,050
+from days to a few hours.
+
+945
+00:43:07,050 --> 00:43:09,570
+So it's quite powerful and quite useful,
+
+946
+00:43:09,570 --> 00:43:11,850
+and Sohaib will talk more about that.
+
+947
+00:43:11,850 --> 00:43:14,883
+So having said that, now I
+will give it back to Sohaib.
+
+948
+00:43:16,650 --> 00:43:19,440
+Before moving that, one other thing,
+
+949
+00:43:19,440 --> 00:43:22,260
+one common question is that
+when should I use client VPN
+
+950
+00:43:22,260 --> 00:43:24,160
+and when should I use verified access?
+
+951
+00:43:25,110 --> 00:43:28,800
+And the answer is that
+based on a use case,
+
+952
+00:43:28,800 --> 00:43:29,970
+you will use both.
+
+953
+00:43:29,970 --> 00:43:32,370
+To provide network access, use client VPN.
+
+954
+00:43:32,370 --> 00:43:34,740
+It gives the SSH and Telnet another access
+
+955
+00:43:34,740 --> 00:43:36,240
+to your engineers.
+
+956
+00:43:36,240 --> 00:43:39,810
+And for your employees who
+need HTTP-based access,
+
+957
+00:43:39,810 --> 00:43:41,940
+use AWS Verified Access.
+
+958
+00:43:41,940 --> 00:43:44,010
+It will give you the granular access
+
+959
+00:43:44,010 --> 00:43:46,173
+based on device poster and identity.
+
+960
+00:43:47,124 --> 00:43:48,840
+All right, Sohaib, take on
+
+961
+00:43:48,840 --> 00:43:52,440
+and give us the next set of demos.
+
+962
+00:43:52,440 --> 00:43:53,460
+- Thanks, Shovan.
+
+963
+00:43:53,460 --> 00:43:55,950
+So Shovan talked about
+a lot of cool features
+
+964
+00:43:55,950 --> 00:43:57,750
+of Amazon Verified Access,
+
+965
+00:43:57,750 --> 00:44:01,920
+and let's apply some of them
+to a real-world use case.
+
+966
+00:44:01,920 --> 00:44:03,780
+So going back to our SecureShop customers,
+
+967
+00:44:03,780 --> 00:44:05,490
+so they also have an internal application,
+
+968
+00:44:05,490 --> 00:44:06,323
+financial application,
+
+969
+00:44:06,323 --> 00:44:08,160
+we are calling it FinanceCore application.
+
+970
+00:44:08,160 --> 00:44:10,360
+So in this demo, we are going to apply
+
+971
+00:44:11,550 --> 00:44:13,200
+some of the AVA security features
+
+972
+00:44:13,200 --> 00:44:14,730
+to this FinanceCore application
+
+973
+00:44:14,730 --> 00:44:17,583
+to provide secure remote
+access for internal users.
+
+974
+00:44:19,890 --> 00:44:24,690
+So in our demo
+architecture, we have a user
+
+975
+00:44:24,690 --> 00:44:28,080
+that browses a domain hosted on Route 53.
+
+976
+00:44:28,080 --> 00:44:31,200
+This is called financecore.secureshop.com.
+
+977
+00:44:31,200 --> 00:44:34,680
+You can see name this to our
+verified access endpoint.
+
+978
+00:44:34,680 --> 00:44:37,320
+And then on verified access endpoint,
+
+979
+00:44:37,320 --> 00:44:38,460
+we have configured a bunch of things.
+
+980
+00:44:38,460 --> 00:44:42,150
+So we have WAF rules through
+AWS Managed WAF rules,
+
+981
+00:44:42,150 --> 00:44:45,690
+which can provide protection
+against the bot control,
+
+982
+00:44:45,690 --> 00:44:48,190
+the common threat such as
+SQL injection and so on.
+
+983
+00:44:49,140 --> 00:44:51,840
+The verified access also
+requires a user to authenticate
+
+984
+00:44:51,840 --> 00:44:53,220
+against IAM Identity Center.
+
+985
+00:44:53,220 --> 00:44:54,840
+This is our trust provider.
+
+986
+00:44:54,840 --> 00:44:56,880
+You can also use a device trust provider
+
+987
+00:44:56,880 --> 00:44:58,860
+in addition to this,
+like Shovan talked about.
+
+988
+00:44:58,860 --> 00:44:59,730
+But for demo purposes,
+
+989
+00:44:59,730 --> 00:45:02,580
+we are only using the IAM Identity Center
+
+990
+00:45:02,580 --> 00:45:04,200
+as a trust provider.
+
+991
+00:45:04,200 --> 00:45:06,690
+And then once the user is
+authenticated successfully,
+
+992
+00:45:06,690 --> 00:45:09,900
+they're able to navigate or browse
+
+993
+00:45:09,900 --> 00:45:11,160
+to this FinanceCore application
+
+994
+00:45:11,160 --> 00:45:12,633
+running behind a private ALB.
+
+995
+00:45:14,070 --> 00:45:16,440
+We also have the FinanceCore application
+
+996
+00:45:16,440 --> 00:45:18,000
+also have to go out to internet,
+
+997
+00:45:18,000 --> 00:45:21,570
+download security patches,
+maybe talk to third-party APIs.
+
+998
+00:45:21,570 --> 00:45:23,910
+So it also needs that
+outbound internet egress.
+
+999
+00:45:23,910 --> 00:45:25,830
+So we also want to protect that parameter.
+
+1000
+00:45:25,830 --> 00:45:28,920
+So we are also deploying
+AWS Network Firewall
+
+1001
+00:45:28,920 --> 00:45:30,993
+to protect that egress traffic as well.
+
+1002
+00:45:32,310 --> 00:45:34,890
+And then finally, we are shipping the logs
+
+1003
+00:45:34,890 --> 00:45:39,600
+from WAF, from verified access,
+and from network firewall
+
+1004
+00:45:39,600 --> 00:45:42,000
+into CloudWatch, so that we can use them
+
+1005
+00:45:42,000 --> 00:45:44,640
+for troubleshooting, for
+analyzing our access patterns,
+
+1006
+00:45:44,640 --> 00:45:46,980
+and for also auditability purposes.
+
+1007
+00:45:46,980 --> 00:45:51,183
+So, with this, I will actually
+switch to a live demo.
+
+1008
+00:45:55,200 --> 00:45:58,383
+Give me a second, let
+me log into my machine.
+
+1009
+00:46:00,390 --> 00:46:02,913
+Hopefully, the demo gods are kind today.
+
+1010
+00:46:05,010 --> 00:46:08,100
+Okay, so again, I use Kiro to deploy
+
+1011
+00:46:08,100 --> 00:46:10,320
+all of this architecture
+that I showed you.
+
+1012
+00:46:10,320 --> 00:46:13,173
+So let's first navigate into
+our FinanceCore application.
+
+1013
+00:46:16,200 --> 00:46:18,960
+So when I try to navigate
+to FinanceCore application,
+
+1014
+00:46:18,960 --> 00:46:22,800
+it basically redirects
+me to log into my account
+
+1015
+00:46:22,800 --> 00:46:24,000
+using IAM Identity Center,
+
+1016
+00:46:24,000 --> 00:46:25,560
+like I showed in the architecture.
+
+1017
+00:46:25,560 --> 00:46:26,733
+So I'll do that here.
+
+1018
+00:46:28,260 --> 00:46:29,613
+Give it my password.
+
+1019
+00:46:46,750 --> 00:46:49,100
+Okay, I'm able to remember
+my password finally.
+
+1020
+00:46:50,100 --> 00:46:53,610
+So, now I'm actually browsing to this ALB
+
+1021
+00:46:53,610 --> 00:46:55,110
+that is behind the verified access.
+
+1022
+00:46:55,110 --> 00:46:57,270
+Now, this is my FinanceCore dashboard.
+
+1023
+00:46:57,270 --> 00:47:00,150
+You can see this is like
+a financial application
+
+1024
+00:47:00,150 --> 00:47:02,250
+for internal employees who are looking for
+
+1025
+00:47:02,250 --> 00:47:04,020
+like revenue numbers and things like that.
+
+1026
+00:47:04,020 --> 00:47:06,660
+You can see, you know, I'm
+running this in US East one.
+
+1027
+00:47:06,660 --> 00:47:09,049
+This is my EC2 instance for
+the FinanceCore application.
+
+1028
+00:47:09,049 --> 00:47:10,800
+And this is all behind the verified access
+
+1029
+00:47:10,800 --> 00:47:12,390
+like I showed you previously.
+
+1030
+00:47:12,390 --> 00:47:15,870
+So let's look into what is
+going on behind the scene.
+
+1031
+00:47:15,870 --> 00:47:18,980
+So I want to look into
+the verified access.
+
+1032
+00:47:18,980 --> 00:47:21,090
+So verified access is in the VPC console.
+
+1033
+00:47:21,090 --> 00:47:24,970
+So I will navigate towards our VPC console
+
+1034
+00:47:26,490 --> 00:47:31,490
+and then go to verified
+access, which is this.
+
+1035
+00:47:31,680 --> 00:47:32,700
+So this is my re:Invent demo.
+
+1036
+00:47:32,700 --> 00:47:34,320
+Let me make it a little bigger.
+
+1037
+00:47:34,320 --> 00:47:35,730
+So if I select this,
+
+1038
+00:47:35,730 --> 00:47:37,590
+you can see this is like
+the general information
+
+1039
+00:47:37,590 --> 00:47:39,030
+about my verified access instance.
+
+1040
+00:47:39,030 --> 00:47:41,850
+And then I have a finance app group
+
+1041
+00:47:41,850 --> 00:47:44,670
+so that I can apply the group policy
+
+1042
+00:47:44,670 --> 00:47:48,183
+to only allow access for
+my users from that group.
+
+1043
+00:47:49,020 --> 00:47:50,190
+This is my trust provider.
+
+1044
+00:47:50,190 --> 00:47:51,900
+Like I said, I am using
+the IAM Identity Center
+
+1045
+00:47:51,900 --> 00:47:52,733
+as a trust provider.
+
+1046
+00:47:52,733 --> 00:47:54,240
+you can also attach, for example,
+
+1047
+00:47:54,240 --> 00:47:56,730
+a device, a trust provider like this.
+
+1048
+00:47:56,730 --> 00:47:59,130
+I'm not going to do that in this demo.
+
+1049
+00:47:59,130 --> 00:48:00,840
+I have also the logging going on
+
+1050
+00:48:00,840 --> 00:48:02,070
+like I talked about to CloudWatch
+
+1051
+00:48:02,070 --> 00:48:03,750
+and I'm also passing the detail logs.
+
+1052
+00:48:03,750 --> 00:48:07,020
+So I'm also passing the trust
+context into the CloudWatch
+
+1053
+00:48:07,020 --> 00:48:11,490
+that I can use as part
+of the policy tests.
+
+1054
+00:48:11,490 --> 00:48:16,020
+And then finally, I have a
+WAF policy or WebACL assigned
+
+1055
+00:48:16,020 --> 00:48:16,853
+to the verified access.
+
+1056
+00:48:16,853 --> 00:48:19,050
+I'll come back to it later
+to look into the rules.
+
+1057
+00:48:19,050 --> 00:48:20,673
+Well, let's first look into the,
+
+1058
+00:48:22,200 --> 00:48:23,550
+there's a feature within verified access,
+
+1059
+00:48:23,550 --> 00:48:25,050
+it's called launch policy assistant.
+
+1060
+00:48:25,050 --> 00:48:30,050
+So, in order to, you know,
+fine tune your policies
+
+1061
+00:48:30,840 --> 00:48:32,610
+and make sure that your
+policies are working
+
+1062
+00:48:32,610 --> 00:48:35,280
+the way they should, you
+can use this feature.
+
+1063
+00:48:35,280 --> 00:48:38,853
+So, I can actually use my
+email address in this scenario.
+
+1064
+00:48:44,400 --> 00:48:46,110
+I select my endpoint.
+
+1065
+00:48:46,110 --> 00:48:47,490
+In actual production environment,
+
+1066
+00:48:47,490 --> 00:48:48,420
+you may have different endpoints.
+
+1067
+00:48:48,420 --> 00:48:51,030
+you may have an endpoint for
+prod, non-prod, and so on.
+
+1068
+00:48:51,030 --> 00:48:53,250
+I only have one because I
+have a demo environment.
+
+1069
+00:48:53,250 --> 00:48:55,950
+And then I'm going to use
+my last authorization result
+
+1070
+00:48:57,446 --> 00:49:01,080
+to apply this policy or change the policy.
+
+1071
+00:49:01,080 --> 00:49:02,480
+It takes a little bit while.
+
+1072
+00:49:14,958 --> 00:49:15,791
+Okay.
+
+1073
+00:49:15,791 --> 00:49:17,700
+So you can see that AVA
+
+1074
+00:49:17,700 --> 00:49:20,190
+was able to actually extract trust context
+
+1075
+00:49:20,190 --> 00:49:21,300
+from my trust provider.
+
+1076
+00:49:21,300 --> 00:49:22,740
+In this case, IAM identity center.
+
+1077
+00:49:22,740 --> 00:49:24,690
+This is all the information
+that was passed by
+
+1078
+00:49:24,690 --> 00:49:27,090
+the IAM identity center to AVA.
+
+1079
+00:49:27,090 --> 00:49:28,770
+You can see it has my email address,
+
+1080
+00:49:28,770 --> 00:49:31,620
+my host name, my IP address.
+
+1081
+00:49:31,620 --> 00:49:34,860
+The one that I'm interested in
+is the group, which is this.
+
+1082
+00:49:34,860 --> 00:49:37,590
+So right now, I have a
+pretty open group policy,
+
+1083
+00:49:37,590 --> 00:49:39,810
+which is allowing access
+to any authenticated user.
+
+1084
+00:49:39,810 --> 00:49:43,560
+I want to narrow it down
+to this finance group.
+
+1085
+00:49:43,560 --> 00:49:46,470
+So I only want the people who
+are part of the finance group
+
+1086
+00:49:46,470 --> 00:49:49,170
+to be able to access this application.
+
+1087
+00:49:49,170 --> 00:49:51,120
+So what I do, I can change the policy.
+
+1088
+00:49:51,120 --> 00:49:53,880
+I actually pre-created the policy.
+
+1089
+00:49:53,880 --> 00:49:58,440
+Again, I use Kiro for
+generating this policy as well.
+
+1090
+00:49:58,440 --> 00:50:00,570
+So you can see I am
+just using the group ID,
+
+1091
+00:50:00,570 --> 00:50:03,063
+which is this, which matches this,
+
+1092
+00:50:04,110 --> 00:50:05,580
+to narrow down this policy.
+
+1093
+00:50:05,580 --> 00:50:08,550
+And I want to test this policy
+to make sure that it works.
+
+1094
+00:50:08,550 --> 00:50:09,600
+It seems like it works.
+
+1095
+00:50:09,600 --> 00:50:10,770
+So I hit next,
+
+1096
+00:50:10,770 --> 00:50:12,720
+and then I can simply apply this policy
+
+1097
+00:50:12,720 --> 00:50:15,333
+to my Amazon verified access instance.
+
+1098
+00:50:16,710 --> 00:50:19,260
+Okay, so that was the
+launch policy assistant,
+
+1099
+00:50:19,260 --> 00:50:20,550
+so you can use it for troubleshooting
+
+1100
+00:50:20,550 --> 00:50:22,410
+and for fine-tuning your policy.
+
+1101
+00:50:22,410 --> 00:50:24,600
+The other thing I'm going
+to talk about is WAF.
+
+1102
+00:50:24,600 --> 00:50:27,300
+So I have also deployed the
+WAF, again, through Kiro.
+
+1103
+00:50:27,300 --> 00:50:30,723
+So I'm going to actually
+jump on Kiro, which is this.
+
+1104
+00:50:31,680 --> 00:50:33,600
+So I preloaded the context
+
+1105
+00:50:33,600 --> 00:50:35,710
+for my FinanceCore application into Kiro
+
+1106
+00:50:36,720 --> 00:50:40,140
+in order for us to interact
+with this architecture.
+
+1107
+00:50:40,140 --> 00:50:45,140
+So I'll say, show me WAF
+rules on FinanceCore.
+
+1108
+00:50:50,070 --> 00:50:50,970
+And I will say this.
+
+1109
+00:50:50,970 --> 00:50:53,130
+You have to name your
+resources really, really well
+
+1110
+00:50:53,130 --> 00:50:54,810
+because this is a large language model.
+
+1111
+00:50:54,810 --> 00:50:56,550
+So the better your naming convention is,
+
+1112
+00:50:56,550 --> 00:51:01,110
+it is going to perform better
+in response to your prompts.
+
+1113
+00:51:01,110 --> 00:51:03,000
+Something to keep in mind.
+
+1114
+00:51:03,000 --> 00:51:05,430
+So you can see that I ran
+this prompt right away.
+
+1115
+00:51:05,430 --> 00:51:07,290
+It's returned some rules to me.
+
+1116
+00:51:07,290 --> 00:51:08,403
+And I can ask it.
+
+1117
+00:51:09,960 --> 00:51:11,670
+Before I do that, let me
+show you in the console.
+
+1118
+00:51:11,670 --> 00:51:13,950
+So I have the same rules over here.
+
+1119
+00:51:13,950 --> 00:51:17,460
+But you can see that when Kiro responded
+
+1120
+00:51:17,460 --> 00:51:20,370
+to the same request, it
+ran some describe calls.
+
+1121
+00:51:20,370 --> 00:51:21,960
+And it showed me the rules,
+
+1122
+00:51:21,960 --> 00:51:23,760
+but it's also telling me
+what the rule is doing.
+
+1123
+00:51:23,760 --> 00:51:25,140
+Very brief summary.
+
+1124
+00:51:25,140 --> 00:51:26,433
+So it has that knowledge.
+
+1125
+00:51:27,480 --> 00:51:29,580
+And if you're not ready to use Kiro
+
+1126
+00:51:29,580 --> 00:51:31,020
+for deploying production applications
+
+1127
+00:51:31,020 --> 00:51:32,520
+or making changes to your resources,
+
+1128
+00:51:32,520 --> 00:51:34,740
+you can still use it for
+network discovery like this.
+
+1129
+00:51:34,740 --> 00:51:35,883
+Very safe use case.
+
+1130
+00:51:37,230 --> 00:51:42,230
+So I would like, what other WAF rules
+
+1131
+00:51:43,140 --> 00:51:48,093
+I should deploy for this
+financial application?
+
+1132
+00:51:50,460 --> 00:51:51,720
+Like I said, it has the knowledge,
+
+1133
+00:51:51,720 --> 00:51:53,550
+so it knows the security best practices,
+
+1134
+00:51:53,550 --> 00:51:55,920
+it knows AWS has security
+best practices as well,
+
+1135
+00:51:55,920 --> 00:51:57,360
+are well-architected frameworks,
+
+1136
+00:51:57,360 --> 00:51:59,460
+so it is suggesting me some options.
+
+1137
+00:51:59,460 --> 00:52:01,080
+So I'm going to say,
+
+1138
+00:52:01,080 --> 00:52:02,910
+so you can see it gave me
+a lot of different rules.
+
+1139
+00:52:02,910 --> 00:52:04,380
+I'm not going to go through all of them,
+
+1140
+00:52:04,380 --> 00:52:05,610
+but I'm going to pick the first one,
+
+1141
+00:52:05,610 --> 00:52:08,703
+and I'm going to say add
+this first managed rule.
+
+1142
+00:52:13,560 --> 00:52:17,100
+So this is more like I'm making changes
+
+1143
+00:52:17,100 --> 00:52:17,933
+to the resources key,
+
+1144
+00:52:17,933 --> 00:52:19,800
+so it takes a little bit more time.
+
+1145
+00:52:19,800 --> 00:52:21,123
+So while this is going on,
+
+1146
+00:52:22,200 --> 00:52:25,710
+I'm going to jump on my console again,
+
+1147
+00:52:25,710 --> 00:52:27,270
+and you can see it was able to do it.
+
+1148
+00:52:27,270 --> 00:52:28,560
+If I refresh my page,
+
+1149
+00:52:28,560 --> 00:52:30,150
+I should be able to see that rule.
+
+1150
+00:52:30,150 --> 00:52:33,270
+You can see that this was a rule I added,
+
+1151
+00:52:33,270 --> 00:52:36,570
+SQL injection rule set,
+which is exactly like this.
+
+1152
+00:52:36,570 --> 00:52:37,920
+So you can see, like, with a few prompts,
+
+1153
+00:52:37,920 --> 00:52:39,450
+I'm able to make changes to my resources
+
+1154
+00:52:39,450 --> 00:52:41,550
+and apply some additional
+security protections
+
+1155
+00:52:41,550 --> 00:52:43,743
+for this internal financial application.
+
+1156
+00:52:45,360 --> 00:52:48,300
+Okay, so the other thing I
+had was network firewall.
+
+1157
+00:52:48,300 --> 00:52:51,060
+So I also want to use...
+
+1158
+00:52:51,060 --> 00:52:52,890
+I also want to show you
+how the network firewall
+
+1159
+00:52:52,890 --> 00:52:53,730
+is working in this scenario.
+
+1160
+00:52:53,730 --> 00:52:55,620
+So I want to see the route table
+
+1161
+00:52:55,620 --> 00:52:56,990
+because I'm passing all of my traffic
+
+1162
+00:52:56,990 --> 00:52:58,320
+to the network firewall endpoint.
+
+1163
+00:52:58,320 --> 00:53:03,267
+So show me the FinanceCore
+VPC route table,
+
+1164
+00:53:10,170 --> 00:53:12,663
+ignore unused route.
+
+1165
+00:53:18,510 --> 00:53:21,003
+Show me in Cisco format.
+
+1166
+00:53:22,650 --> 00:53:23,483
+Just for fun.
+
+1167
+00:53:26,970 --> 00:53:28,650
+So again, this is again a discovery call.
+
+1168
+00:53:28,650 --> 00:53:30,870
+So I'm learning about the routes in my VPC
+
+1169
+00:53:30,870 --> 00:53:32,070
+for this FinanceCore application.
+
+1170
+00:53:32,070 --> 00:53:34,440
+So it's running a bunch
+of the describe calls
+
+1171
+00:53:34,440 --> 00:53:35,610
+behind the scene.
+
+1172
+00:53:35,610 --> 00:53:37,170
+And you can see that it started to kind of
+
+1173
+00:53:37,170 --> 00:53:38,820
+spit out the route table I have in place.
+
+1174
+00:53:38,820 --> 00:53:42,990
+So you can see that I have
+a route table associated
+
+1175
+00:53:42,990 --> 00:53:45,305
+to my finance for application.
+
+1176
+00:53:45,305 --> 00:53:47,550
+These subnets, so it's
+sending all the traffic
+
+1177
+00:53:47,550 --> 00:53:50,430
+to the VPC endpoint, which is
+the network firewall endpoint,
+
+1178
+00:53:50,430 --> 00:53:51,723
+which is this right here.
+
+1179
+00:53:52,560 --> 00:53:56,250
+And then I have firewall subnets
+where my network firewall
+
+1180
+00:53:56,250 --> 00:53:57,150
+is actually deployed.
+
+1181
+00:53:57,150 --> 00:53:58,560
+So that subnet has a route
+
+1182
+00:53:58,560 --> 00:54:00,510
+to the internet gateway, rightly so.
+
+1183
+00:54:00,510 --> 00:54:04,260
+And then I also have
+a route table assigned
+
+1184
+00:54:04,260 --> 00:54:06,150
+to internet gateway for the return traffic
+
+1185
+00:54:06,150 --> 00:54:07,590
+to go through the
+network firewall as well.
+
+1186
+00:54:07,590 --> 00:54:09,870
+So you can see that I
+also have routing set up
+
+1187
+00:54:09,870 --> 00:54:11,040
+for that as well.
+
+1188
+00:54:11,040 --> 00:54:16,040
+And if I say, show me the
+traffic flow in both sides,
+
+1189
+00:54:18,780 --> 00:54:22,293
+so Kiro will be able to find
+that as well for me in a bit.
+
+1190
+00:54:23,160 --> 00:54:24,570
+So you can see that, you
+know, it's showing me
+
+1191
+00:54:24,570 --> 00:54:27,990
+how the traffic from Internet user
+
+1192
+00:54:27,990 --> 00:54:30,780
+will basically interact with
+this FinanceCore application.
+
+1193
+00:54:30,780 --> 00:54:31,980
+I'm not going to go through everything,
+
+1194
+00:54:31,980 --> 00:54:34,200
+but you can see it's
+identifying everything,
+
+1195
+00:54:34,200 --> 00:54:37,170
+like the WAF rules, the
+network firewall rules,
+
+1196
+00:54:37,170 --> 00:54:38,280
+the routing, everything,
+
+1197
+00:54:38,280 --> 00:54:40,580
+and it's showing me both
+inbound and outbound.
+
+1198
+00:54:42,240 --> 00:54:44,973
+Again, a very quick way
+to verify your setup.
+
+1199
+00:54:47,310 --> 00:54:50,100
+So now I want to go to network firewall
+
+1200
+00:54:50,100 --> 00:54:55,100
+to show you some of the rules
+in place in the console.
+
+1201
+00:54:55,170 --> 00:54:57,120
+Network firewall is also
+part of the VPC console,
+
+1202
+00:54:57,120 --> 00:54:59,460
+so I'll quickly jump into that.
+
+1203
+00:54:59,460 --> 00:55:01,620
+So this is my network
+firewall FinanceCore,
+
+1204
+00:55:01,620 --> 00:55:04,860
+and I have a bunch of different
+things configured here.
+
+1205
+00:55:04,860 --> 00:55:07,230
+The one that we are going to look into
+
+1206
+00:55:07,230 --> 00:55:09,093
+is the policy, which is this.
+
+1207
+00:55:10,950 --> 00:55:13,870
+And I have configured
+a bunch of custom rule
+
+1208
+00:55:14,880 --> 00:55:17,550
+and AWS managed rule
+that Shovan talked about.
+
+1209
+00:55:17,550 --> 00:55:19,350
+So the AWS managed rule I've enabled here
+
+1210
+00:55:19,350 --> 00:55:23,220
+are protecting me against
+known malware domains.
+
+1211
+00:55:23,220 --> 00:55:24,840
+And then the custom
+rule that I've created,
+
+1212
+00:55:24,840 --> 00:55:26,010
+again, using Kiro,
+
+1213
+00:55:26,010 --> 00:55:29,250
+is making sure that I can only send
+
+1214
+00:55:29,250 --> 00:55:31,680
+encrypted traffic out to the internet.
+
+1215
+00:55:31,680 --> 00:55:35,610
+So I'm blocking any traffic
+going on port 80, HTTP traffic.
+
+1216
+00:55:35,610 --> 00:55:39,150
+I'm also blocking any
+traffic going out on port 22.
+
+1217
+00:55:39,150 --> 00:55:40,410
+Because this is a financial application,
+
+1218
+00:55:40,410 --> 00:55:42,240
+it should not be making any SSH connection
+
+1219
+00:55:42,240 --> 00:55:43,073
+out to the internet.
+
+1220
+00:55:43,073 --> 00:55:45,993
+So it's blocking all of these
+kind of traffic patterns.
+
+1221
+00:55:46,860 --> 00:55:50,130
+And let's test these things.
+
+1222
+00:55:50,130 --> 00:55:52,383
+So I'm going to go to my EC2 console.
+
+1223
+00:55:54,840 --> 00:55:57,930
+I have my FinanceCore application
+running in the subnet.
+
+1224
+00:55:57,930 --> 00:56:01,113
+So if I connect to it
+using the private IP,
+
+1225
+00:56:04,830 --> 00:56:07,353
+and I have copied some
+commands so I can run them.
+
+1226
+00:56:08,651 --> 00:56:09,484
+So the first thing I'm going to do
+
+1227
+00:56:09,484 --> 00:56:11,490
+is I'm going to curl Amazon.com and HTTP.
+
+1228
+00:56:11,490 --> 00:56:13,290
+This should be blocked.
+
+1229
+00:56:13,290 --> 00:56:14,130
+And as you can see,
+
+1230
+00:56:14,130 --> 00:56:16,920
+this was blocked by the network firewall.
+
+1231
+00:56:16,920 --> 00:56:20,010
+And then if I try to curl
+HTTPS, it should work.
+
+1232
+00:56:20,010 --> 00:56:21,450
+You can see this worked.
+
+1233
+00:56:21,450 --> 00:56:23,040
+And then finally, if I try to connect
+
+1234
+00:56:23,040 --> 00:56:24,360
+to a known malware domain,
+
+1235
+00:56:24,360 --> 00:56:26,630
+it should also be blocked based
+on my network firewall rule.
+
+1236
+00:56:26,630 --> 00:56:28,580
+So you can see that also happened here.
+
+1237
+00:56:29,520 --> 00:56:32,830
+So with that, that kind of brings us
+
+1238
+00:56:34,290 --> 00:56:35,123
+towards the end of the demo.
+
+1239
+00:56:35,123 --> 00:56:38,070
+You can also use, it might
+take a little bit more time.
+
+1240
+00:56:38,070 --> 00:56:39,670
+Let me see how much time I have.
+
+1241
+00:56:39,670 --> 00:56:42,750
+Okay, so you can also run other queries
+
+1242
+00:56:42,750 --> 00:56:46,920
+to, for example, show you the
+blocked traffic in the logs.
+
+1243
+00:56:46,920 --> 00:56:49,590
+So Kiro can actually go and
+make those describe calls
+
+1244
+00:56:49,590 --> 00:56:51,720
+against my CloudWatch log group
+
+1245
+00:56:51,720 --> 00:56:53,190
+and show me those entries as well
+
+1246
+00:56:53,190 --> 00:56:56,103
+in a summarize, easily consumable fashion.
+
+1247
+00:56:59,160 --> 00:57:00,510
+It takes a little bit.
+
+1248
+00:57:00,510 --> 00:57:03,720
+You can see now it started
+showing me some of those data,
+
+1249
+00:57:03,720 --> 00:57:07,020
+what IP addresses were allowed,
+what attempts were blocked.
+
+1250
+00:57:07,020 --> 00:57:08,310
+There's a lot of data I'm
+not going to go through,
+
+1251
+00:57:08,310 --> 00:57:10,920
+but just to show you that
+it can consume the log data
+
+1252
+00:57:10,920 --> 00:57:13,260
+and give you summarized output.
+
+1253
+00:57:13,260 --> 00:57:16,383
+So with that, this was the console demo.
+
+1254
+00:57:18,360 --> 00:57:21,840
+So coming back to our slide deck,
+
+1255
+00:57:21,840 --> 00:57:23,370
+so we covered a lot of
+ground in this session.
+
+1256
+00:57:23,370 --> 00:57:24,900
+We talked about different AWS services
+
+1257
+00:57:24,900 --> 00:57:27,150
+that you can use for building
+robust parameter protection
+
+1258
+00:57:27,150 --> 00:57:28,290
+and zero trust.
+
+1259
+00:57:28,290 --> 00:57:29,520
+So let's apply all of those things
+
+1260
+00:57:29,520 --> 00:57:30,900
+that we learned along this session
+
+1261
+00:57:30,900 --> 00:57:33,183
+to our SecureShop enterprise architecture.
+
+1262
+00:57:34,290 --> 00:57:36,908
+So the first thing SecureShop want to do,
+
+1263
+00:57:36,908 --> 00:57:38,490
+we want to protect our
+internal applications.
+
+1264
+00:57:38,490 --> 00:57:41,370
+So we deploy Amazon verified
+access with identity
+
+1265
+00:57:41,370 --> 00:57:43,950
+and device trust provider integrations.
+
+1266
+00:57:43,950 --> 00:57:46,140
+Then we enable web application firewall
+
+1267
+00:57:46,140 --> 00:57:47,970
+on both CloudFront and verified access
+
+1268
+00:57:47,970 --> 00:57:50,010
+to protect both our
+public facing applications
+
+1269
+00:57:50,010 --> 00:57:51,630
+like the retail application we showed
+
+1270
+00:57:51,630 --> 00:57:53,820
+and our internal applications
+like the financial application
+
+1271
+00:57:53,820 --> 00:57:55,743
+against the common threats.
+
+1272
+00:57:56,850 --> 00:58:01,850
+We then deploy network
+firewall to inspect north-south
+
+1273
+00:58:02,370 --> 00:58:03,600
+and east-west traffic.
+
+1274
+00:58:03,600 --> 00:58:05,790
+So north-south traffic
+is the traffic coming
+
+1275
+00:58:05,790 --> 00:58:07,710
+from internet towards our application,
+
+1276
+00:58:07,710 --> 00:58:10,797
+and also from on-premises over
+the DX to our application.
+
+1277
+00:58:10,797 --> 00:58:12,270
+And also east-west traffic
+
+1278
+00:58:12,270 --> 00:58:14,700
+that is flowing between,
+let's say, prod to non-prod,
+
+1279
+00:58:14,700 --> 00:58:16,860
+one application to a
+different application residing
+
+1280
+00:58:16,860 --> 00:58:17,970
+across different VPCs.
+
+1281
+00:58:17,970 --> 00:58:19,980
+So you're using network firewall
+
+1282
+00:58:19,980 --> 00:58:21,870
+to protect against all of those
+
+1283
+00:58:21,870 --> 00:58:23,940
+or inspect all of that traffic pattern.
+
+1284
+00:58:23,940 --> 00:58:25,817
+And then lastly, we filter
+
+1285
+00:58:25,817 --> 00:58:28,920
+and we inspect internet-bound
+traffic, outbound traffic
+
+1286
+00:58:28,920 --> 00:58:30,600
+using AWS Network Firewall.
+
+1287
+00:58:30,600 --> 00:58:33,720
+And optionally, we can also
+enable Route 53 DNS Firewall
+
+1288
+00:58:33,720 --> 00:58:36,120
+for that DNS protection
+
+1289
+00:58:36,120 --> 00:58:38,790
+for egress traffic protection as well.
+
+1290
+00:58:38,790 --> 00:58:42,960
+So all of this help us create
+a secure network parameter
+
+1291
+00:58:42,960 --> 00:58:45,783
+for Secure Shop Enterprise customer.
+
+1292
+00:58:47,070 --> 00:58:49,560
+So this brings us towards
+the end of our session.
+
+1293
+00:58:49,560 --> 00:58:51,090
+thanks for joining us
+
+1294
+00:58:51,090 --> 00:58:53,610
+please take a moment to
+take the session survey
+
+1295
+00:58:53,610 --> 00:58:54,870
+in the mobile app
+
+1296
+00:58:54,870 --> 00:58:58,740
+and that can help us
+improve our future sessions.
+
+1297
+00:58:58,740 --> 00:59:01,530
+Enjoy the rest of the
+re:Invent and keep reinventing
+
+1298
+00:59:01,530 --> 00:59:03,360
+and if you have any questions
+we are going to be in the back
+
+1299
+00:59:03,360 --> 00:59:05,403
+so please come chat with us, thank you.
+

@@ -1,93 +1,61 @@
-# AWS re:Invent 2025 - 使用 .NET 构建 AI 应用程序
+# AWS re:Invent 2025：使用AI构建.NET应用程序
 
 ## 会议概述
 
-本次技术分享会由 AWS 的两位工程师主讲，重点介绍如何使用 .NET 技术栈构建 AI 应用程序。会议原本计划讨论 Semantic Kernel，但由于 Microsoft 推出了新的 Agent Framework 来取代 Semantic Kernel，因此内容进行了调整，涵盖了两个框架以及它们与 AWS 服务的集成。
+本次技术分享由AWS首席开发者倡导者AM Grobelny和Amazon首席工程师Nicki共同主讲，重点介绍了如何使用AI技术构建.NET应用程序。会议涵盖了从传统的Semantic Kernel到微软最新的Agent Framework的演进，以及AWS AgentCore等基础设施服务的使用。
 
-演讲者首先明确了 Agentic AI 的核心定义：一个在循环中运行的 LLM（大语言模型），能够调用工具来执行额外的工作。这是构建 AI 代理的哲学基础，而不仅仅是技术实现。会议展示了多个实际应用场景，包括会议记录总结、个性化推荐、客户支持聊天机器人等。
+演讲者强调了当前AI开发领域的快速变化，特别是微软从Semantic Kernel向Agent Framework的转变。由于Agent Framework仍处于预览阶段，所有演示代码都具有实验性质。会议通过理论讲解和实际代码演示相结合的方式，展示了如何在AWS基础设施上部署和运行.NET AI应用程序，包括使用Amazon Bedrock、AgentCore Runtime、Gateway和Code Interpreter等服务。
 
-技术栈方面，会议详细介绍了 Microsoft 的工具（Microsoft.Extensions.AI、Semantic Kernel、Agent Framework）和 AWS 的服务（Amazon Bedrock、Agent Core）。特别强调了 Agent Framework 目前仍处于预览阶段，尚未原生支持 AWS 服务，演讲者呼吁社区提供反馈以推动集成开发。会议还深入讲解了 AWS Agent Core 的三个核心组件：Runtime（运行时容器服务）、Gateway（MCP 服务器管理）和 Code Interpreter（隔离代码执行环境）。
+## 详细时间线与关键要点
 
-## 详细时间轴
+### 0:00-5:00 开场介绍
+- 演讲者自我介绍：AM Grobelny（AWS首席开发者倡导者）和Nicki（Amazon首席工程师）
+- 会议主题转变：原计划讲解Semantic Kernel，但微软推出了Agent Framework
+- 重要警告：所有代码都处于预览/实验阶段，不建议用于生产环境
 
-### 开场与背景介绍
-- **00:00:00** - 会议开始，介绍主题：使用 .NET 构建 AI 应用程序
-- **00:00:15** - 说明原计划讲解 Semantic Kernel，但 Microsoft 已转向 Agent Framework
-- **00:00:45** - 演讲者自我介绍：AM（AWS 首席开发者倡导者）和 Nikki（Amazon 首席工程师）
-- **00:01:30** - 强调所有演示代码都是实验性的，因为 Agent Framework 仍在预览阶段
+### 5:00-10:00 AI代理概念解释
+- 引用AWS杰出工程师Mark Brooker的定义：代理是存在于循环中的LLM，能够调用工具执行额外工作
+- AI代理的两个核心要素：循环机制和工具调用能力
+- 实际应用场景：会议记录总结、个性化推荐、客户支持聊天机器人
 
-### Agentic AI 概念
-- **00:02:00** - 引用 Mark Brooker 对 Agent 的定义：在循环中运行的 LLM，能够调用工具
-- **00:02:45** - 讨论实际应用场景：会议记录总结、个性化、支持聊天机器人
-- **00:03:30** - 会议内容分为两大类：Microsoft 工具和 AWS 工具及其交集
+### 10:00-15:00 Microsoft Extensions AI基础
+- 介绍Microsoft Extensions AI作为抽象层的重要性
+- 展示最基本的聊天客户端代码示例
+- 强调抽象层在快速发展的AI领域中的价值
 
-### Microsoft.Extensions.AI
-- **00:04:00** - 介绍 Microsoft.Extensions.AI 作为抽象层的作用
-- **00:04:30** - 展示第一个代码示例：使用抽象 chat client 的基本实现
-- **00:05:00** - 说明该库简化了不同 AI 提供商的集成
+### 15:00-25:00 Semantic Kernel框架详解
+- Semantic Kernel的核心组件：插件、AI模型、钩子和过滤器
+- 插件用于函数调用和工具集成
+- 钩子提供中间件功能，过滤器提供权限控制
+- 代码演示：使用Bedrock的基本Semantic Kernel实现
+- 与传统JavaScript Ajax开发的类比
 
-### Semantic Kernel
-- **00:05:30** - 介绍 Semantic Kernel 框架及其组成部分
-- **00:06:00** - 讲解 Plugins（插件/工具调用）、AI Models（AI 模型）、Hooks 和 Filters（中间件）
-- **00:07:00** - 展示 Semantic Kernel 代码示例，包含约 10 行代码
-- **00:07:45** - 说明 Semantic Kernel 原生支持 Amazon Bedrock
+### 25:00-35:00 Microsoft Agent Framework介绍
+- Agent Framework作为Semantic Kernel的继任者
+- 代码更简洁，功能更直观
+- 目前缺乏对AWS服务的原生支持
+- 呼吁社区贡献和反馈，推动AWS集成开发
 
-### Microsoft Agent Framework
-- **00:08:30** - 介绍 Agent Framework 作为 Semantic Kernel 的继任者
-- **00:09:00** - 强调 Agent Framework 目前没有原生 AWS 支持
-- **00:09:30** - 呼吁社区通过 GitHub 提供反馈和贡献
-- **00:10:15** - 展示 Agent Framework 代码示例，比 Semantic Kernel 更简洁
-- **00:11:00** - 讨论 Agent Framework 的功能：工具调用、循环、内存、多轮对话
-- **00:11:45** - 指出 Agent Framework 使用标准接口（IChatClient），不是原生 Bedrock 集成
+### 35:00-40:00 AWS工具生态系统
+- 介绍Bedrock MEAI（Microsoft Extensions AI）包
+- Amazon Bedrock服务概述：为应用开发者提供完全托管的模型
+- AgentCore服务组件：Runtime、Gateway、Memory、Identity、Code Interpreter、Browser Tool
 
-### AWS 工具介绍
-- **00:12:30** - 开始介绍 AWS 工具，重点是基础设施层面
-- **00:13:00** - 介绍 Bedrock.ME.AI 包（AWS 对 Microsoft.Extensions.AI 的实现）
-- **00:13:45** - 展示使用 Bedrock.ME.AI 的代码示例
-- **00:14:30** - 说明该包提供 embedding generator 和 image generator
+### 40:00-50:00 AgentCore深度解析
+- **Runtime**：基于Firecracker的容器化服务，提供会话隔离和自动扩展
+- **Gateway**：将REST API转换为MCP服务器，无需手动构建
+- **Code Interpreter**：隔离沙箱环境，支持Python、JavaScript、TypeScript代码执行
 
-### Amazon Bedrock
-- **00:15:00** - 介绍 Amazon Bedrock 作为完全托管的 AI 模型服务
-- **00:15:30** - 对比 SageMaker（训练模型）和 Bedrock（直接使用预训练模型）
-- **00:16:00** - 说明 Bedrock 面向应用开发者，提供 Anthropic、Amazon Nova 等模型
+### 50:00-59:00 实际项目演示
+- 展示占星术代理应用，包含UI界面和后端服务
+- 对比Semantic Kernel和Agent Framework的实现差异
+- Semantic Kernel版本：仅支持每日占星，使用直接API调用
+- Agent Framework版本：通过MCP服务器支持每日、每周、每月占星
+- 演示AgentCore Runtime的部署和调用方式
+- 容器必须运行在8080端口，实现/ping和/invocations端点
 
-### Agent Core 概述
-- **00:16:30** - 介绍 Agent Core 作为无服务器基础设施
-- **00:17:00** - 列举 Agent Core 组件：Runtime、Gateway、Memory、Observability、Identity、Code Interpreter、Browser Tool
-- **00:18:00** - 说明本次演示将重点展示 Runtime、Gateway 和 Code Interpreter
-
-### Agent Core Runtime
-- **00:18:30** - 详细介绍 Runtime：基于 Firecracker 的隔离微虚拟机
-- **00:19:00** - 说明 Runtime 需要实现两个端点：/ping 和 /invocations
-- **00:19:45** - 解释调用流程：UI → invoke-agent SDK → Runtime /invocations
-- **00:20:30** - 展示 Runtime 架构图：ARM 容器、ECR、会话隔离
-- **00:21:15** - 讨论 Runtime 的优势：自动扩展、会话隔离
-
-### Agent Core Gateway
-- **00:22:00** - 介绍 Gateway 作为 MCP 服务器的简化方案
-- **00:22:30** - 说明只需 REST API 和 OpenAPI 规范即可创建 MCP 服务器
-- **00:23:00** - 展示 Gateway 可以管理多个 MCP 服务器和 API 密钥
-- **00:23:45** - 说明支持 API 端点和 Lambda 函数作为目标
-
-### Agent Core Code Interpreter
-- **00:24:30** - 介绍 Code Interpreter：隔离沙箱中运行代码
-- **00:25:00** - 举例：LLM 读取 CSV 文件并计算统计数据
-- **00:25:45** - 说明 Code Interpreter 是独立容器，无出站互联网访问
-- **00:26:30** - 支持 Python、JavaScript、TypeScript
-- **00:27:00** - 可以包含文件（如 CSV）并使用 Python 统计库
-- **00:27:45** - 讨论何时使用 Code Interpreter vs 自定义工具
-
-### 代码演示开始
-- **00:28:30** - 开始实际代码演示
-- **00:29:00** - 第一个演示：使用 Bedrock.ME.AI 的基本示例
-- **00:29:30** - 展示代码：实例化 Bedrock 客户端，发送提示"is this thing on"
-- **00:30:00** - 运行演示，成功获得响应
-
-### Semantic Kernel 演示
-- **00:30:45** - 开始 Semantic Kernel 演示
-- **00:31:00** - 展示添加日期插件的代码（LLM 无法自己判断时间）
-- **00:31:45** - 说明插件为 LLM 提供额外工具
-- **00:32:15** - 介绍 Kernel 类作为 Semantic Kernel 的核心
-- **00:32:45** - 建议在 Web 服务中使用 transient service 模式
-
-注：字幕在此处截断，完整演示内容未包含在提供的文本中
+### 技术要点总结
+- 所有代码均为实验性质，不适用于生产环境
+- Python工具链相比.NET更成熟，需要社区贡献改进.NET支持
+- 提供了完整的GitHub代码库供学习参考
+- 强调了会话管理、凭证获取等实现细节的重要性

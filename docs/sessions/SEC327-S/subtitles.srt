@@ -1,0 +1,5364 @@
+1
+00:00:00,259 --> 00:00:02,490
+Welcome, uh, to detection engineering
+
+2
+00:00:02,490 --> 00:00:05,099
+at scale building high fidelity security
+
+3
+00:00:05,099 --> 00:00:05,669
+operations.
+
+4
+00:00:08,429 --> 00:00:10,478
+Uh, I'm Andrew Krug, and, uh, I have
+
+5
+00:00:10,478 --> 00:00:12,618
+the privilege of leading the security advocacy
+
+6
+00:00:12,618 --> 00:00:14,679
+and research team at DataDog. We're
+
+7
+00:00:14,679 --> 00:00:17,298
+the team that, uh, writes Dataog security labs
+
+8
+00:00:17,638 --> 00:00:19,940
+and the, uh, state of, uh,
+
+9
+00:00:19,958 --> 00:00:22,079
+insert thing here, uh, research studies
+
+10
+00:00:22,079 --> 00:00:23,239
+if you're familiar with those,
+
+11
+00:00:23,679 --> 00:00:26,039
+and I'm joined today by a fantastic
+
+12
+00:00:26,039 --> 00:00:28,179
+co-presenter from one of our customers.
+
+13
+00:00:28,789 --> 00:00:31,199
+Hi everybody, uh, my name is Nathan. Uh,
+
+14
+00:00:31,469 --> 00:00:33,810
+I am a senior security engineer at Riot Games.
+
+15
+00:00:34,179 --> 00:00:36,429
+Um, I have 6 years of experience in
+
+16
+00:00:36,429 --> 00:00:38,509
+security. Uh, been at Riot for about 4
+
+17
+00:00:38,509 --> 00:00:39,908
+years, and then before that, you know,
+
+18
+00:00:40,298 --> 00:00:42,408
+had 22 other years in 2 other companies.
+
+19
+00:00:42,950 --> 00:00:44,990
+Um, before that I was actually a software dev,
+
+20
+00:00:45,548 --> 00:00:46,228
+uh, Riot,
+
+21
+00:00:46,509 --> 00:00:48,509
+you know, I'm on the security operations team where we
+
+22
+00:00:48,509 --> 00:00:50,384
+basically do. All the blue team stuff
+
+23
+00:00:50,685 --> 00:00:53,043
+that you can think of, you know, threat hunting, section
+
+24
+00:00:53,043 --> 00:00:53,865
+engineering,
+
+25
+00:00:54,125 --> 00:00:56,243
+uh, threat intel, forensics, incident response,
+
+26
+00:00:56,283 --> 00:00:58,043
+and I can keep going, yada yada yada,
+
+27
+00:00:58,314 --> 00:01:00,625
+um, personally, you know, I love building tools
+
+28
+00:01:00,715 --> 00:01:02,743
+which make our life easier. It's probably the
+
+29
+00:01:03,005 --> 00:01:04,305
+software dev and me a little bit.
+
+30
+00:01:04,644 --> 00:01:06,903
+And outside of work, I have 3 cats
+
+31
+00:01:06,903 --> 00:01:08,954
+and a fun fact is I used to coach professional
+
+32
+00:01:08,954 --> 00:01:09,745
+Overwatch.
+
+33
+00:01:10,549 --> 00:01:11,079
+Thank you, Andrew.
+
+34
+00:01:12,400 --> 00:01:15,040
+Great, so, uh, before we get into this, just
+
+35
+00:01:15,040 --> 00:01:16,980
+super curious, how many folks
+
+36
+00:01:17,239 --> 00:01:19,579
+do we have that are in security roles
+
+37
+00:01:19,579 --> 00:01:21,778
+in the room today? Like your primary job
+
+38
+00:01:21,778 --> 00:01:23,138
+is security.
+
+39
+00:01:23,918 --> 00:01:25,969
+And how many Dataog customers do we
+
+40
+00:01:25,969 --> 00:01:27,980
+have in the room today? You're already using DataDog.
+
+41
+00:01:28,049 --> 00:01:29,230
+All right, cool,
+
+42
+00:01:29,609 --> 00:01:30,510
+thank you so much.
+
+43
+00:01:31,250 --> 00:01:33,379
+So we're, we're here today to talk about
+
+44
+00:01:33,379 --> 00:01:35,448
+detection engineering and
+
+45
+00:01:35,448 --> 00:01:37,569
+put simply, detection engineering
+
+46
+00:01:37,569 --> 00:01:39,709
+is the act of writing detections
+
+47
+00:01:40,239 --> 00:01:42,269
+to find threats
+
+48
+00:01:42,528 --> 00:01:43,808
+and misconfigurations.
+
+49
+00:01:44,629 --> 00:01:46,909
+Today we're gonna talk to you about detection
+
+50
+00:01:46,909 --> 00:01:49,150
+engineering as it relates to detection
+
+51
+00:01:49,150 --> 00:01:51,829
+as code, which is the act of applying
+
+52
+00:01:51,829 --> 00:01:53,829
+SDLC principles to authoring
+
+53
+00:01:53,829 --> 00:01:54,849
+detections.
+
+54
+00:01:55,308 --> 00:01:56,388
+Getting this right
+
+55
+00:01:56,668 --> 00:01:58,750
+a very high percentage of the time if
+
+56
+00:01:58,750 --> 00:01:59,888
+you practice this
+
+57
+00:02:00,189 --> 00:02:02,189
+can be incredibly challenging, so
+
+58
+00:02:02,189 --> 00:02:04,469
+we're gonna share a little bit of advice on
+
+59
+00:02:04,469 --> 00:02:06,469
+some best practices here and what's worked
+
+60
+00:02:06,469 --> 00:02:07,650
+really well for Riot.
+
+61
+00:02:08,969 --> 00:02:11,058
+But first let's just kind of examine a little bit
+
+62
+00:02:11,058 --> 00:02:13,360
+of the problem space that we're working in here
+
+63
+00:02:13,618 --> 00:02:15,819
+and we're trying to solve with this detection as
+
+64
+00:02:15,819 --> 00:02:17,000
+code approach and that's
+
+65
+00:02:17,500 --> 00:02:19,580
+that really we're all dealing with tons and
+
+66
+00:02:19,580 --> 00:02:21,689
+tons of logs and the slide says logs as
+
+67
+00:02:21,689 --> 00:02:23,939
+infinite as stars in the night sky
+
+68
+00:02:23,939 --> 00:02:26,258
+because that is generally
+
+69
+00:02:26,258 --> 00:02:28,580
+representative of the number of systems that you could
+
+70
+00:02:28,580 --> 00:02:30,618
+potentially be ingesting logs from
+
+71
+00:02:30,618 --> 00:02:32,399
+in your environment today, so.
+
+72
+00:02:33,020 --> 00:02:35,058
+Obviously like you were all building
+
+73
+00:02:35,058 --> 00:02:36,240
+on AWS,
+
+74
+00:02:36,659 --> 00:02:38,679
+which means that you have at least
+
+75
+00:02:38,960 --> 00:02:40,979
+4 logs probably uh
+
+76
+00:02:40,979 --> 00:02:43,020
+in your environment and then tons and
+
+77
+00:02:43,020 --> 00:02:45,319
+tons beyond that but everybody has like kind of these
+
+78
+00:02:45,580 --> 00:02:47,580
+staple logs that we're all dealing with
+
+79
+00:02:47,580 --> 00:02:49,118
+like AWS cloud trail
+
+80
+00:02:49,740 --> 00:02:52,270
+workload security logs from your endpoints,
+
+81
+00:02:52,899 --> 00:02:55,129
+network contacts coming from things like BPC
+
+82
+00:02:55,129 --> 00:02:55,899
+flow logs,
+
+83
+00:02:56,219 --> 00:02:58,778
+and now with AI platforms,
+
+84
+00:02:58,788 --> 00:03:00,919
+tons and tons of logs coming from things like.
+
+85
+00:03:01,360 --> 00:03:03,838
+Uh, agentic workflows and platforms
+
+86
+00:03:03,838 --> 00:03:04,659
+like Bedrock.
+
+87
+00:03:07,508 --> 00:03:09,990
+So our goal at the end of the day, which
+
+88
+00:03:09,990 --> 00:03:12,110
+sometimes we have to remind ourselves of
+
+89
+00:03:12,110 --> 00:03:14,349
+when we're looking at all this data, is that
+
+90
+00:03:14,349 --> 00:03:16,808
+we just want to detect when bad stuff happens.
+
+91
+00:03:17,520 --> 00:03:18,659
+And that should be in a way
+
+92
+00:03:19,240 --> 00:03:21,479
+that is contextual and
+
+93
+00:03:21,479 --> 00:03:22,179
+actionable.
+
+94
+00:03:24,919 --> 00:03:27,000
+So if you're not familiar with kind of the detection
+
+95
+00:03:27,000 --> 00:03:29,710
+development life cycle, uh, this is, um,
+
+96
+00:03:29,719 --> 00:03:31,800
+the go to detection development life
+
+97
+00:03:31,800 --> 00:03:33,258
+cycle by hater dost,
+
+98
+00:03:33,599 --> 00:03:35,599
+um, it kind of details a few of
+
+99
+00:03:35,599 --> 00:03:37,679
+the phases that that folks go through whether
+
+100
+00:03:37,679 --> 00:03:39,719
+they're using a software development life
+
+101
+00:03:39,719 --> 00:03:41,719
+cycle approach or just manually building
+
+102
+00:03:41,719 --> 00:03:42,669
+detections at all.
+
+103
+00:03:43,000 --> 00:03:45,159
+You kind of go through the requirements gathering phase like
+
+104
+00:03:45,159 --> 00:03:47,240
+what is the thing that I want to detect and
+
+105
+00:03:47,240 --> 00:03:48,580
+basically for that
+
+106
+00:03:48,960 --> 00:03:51,038
+when do I set it at a high enough severity that
+
+107
+00:03:51,038 --> 00:03:53,080
+I wanna do something like wake somebody
+
+108
+00:03:53,080 --> 00:03:55,409
+up. Then we design that detection,
+
+109
+00:03:55,740 --> 00:03:56,610
+we develop it,
+
+110
+00:03:56,899 --> 00:03:58,979
+and where this kind of falls apart most of the
+
+111
+00:03:58,979 --> 00:04:01,219
+time is in testing and
+
+112
+00:04:01,219 --> 00:04:03,719
+development. So how do we reliably know
+
+113
+00:04:03,979 --> 00:04:05,838
+for an event that should never take place
+
+114
+00:04:06,379 --> 00:04:08,460
+in our business that that alert is going
+
+115
+00:04:08,460 --> 00:04:10,919
+to fire when we need it most
+
+116
+00:04:11,139 --> 00:04:12,740
+and how do we do that on an ongoing basis?
+
+117
+00:04:13,145 --> 00:04:15,314
+And then as the application stack evolves
+
+118
+00:04:15,314 --> 00:04:16,975
+as the threat space evolves,
+
+119
+00:04:17,233 --> 00:04:19,295
+at what point do we decide
+
+120
+00:04:19,295 --> 00:04:21,504
+to actually retire that detection because
+
+121
+00:04:21,514 --> 00:04:22,934
+it's no longer relevant. So
+
+122
+00:04:23,233 --> 00:04:23,774
+that's where
+
+123
+00:04:24,153 --> 00:04:26,254
+SDLC can be really, really helpful
+
+124
+00:04:26,423 --> 00:04:28,423
+and so we're gonna, we're gonna highlight a little bit of that
+
+125
+00:04:28,423 --> 00:04:29,653
+when we get into
+
+126
+00:04:30,074 --> 00:04:31,754
+the hands on portion of the session.
+
+127
+00:04:33,649 --> 00:04:35,699
+If you are doing manual detection
+
+128
+00:04:35,699 --> 00:04:37,829
+engineering and just curious how many people are just like
+
+129
+00:04:37,829 --> 00:04:39,858
+building alerts in the in the SIM that
+
+130
+00:04:39,858 --> 00:04:40,939
+you're in today if you wanna
+
+131
+00:04:41,379 --> 00:04:43,420
+raise hands, yeah, quite a, quite a few
+
+132
+00:04:43,420 --> 00:04:45,459
+folks, uh, building alerts manually. So
+
+133
+00:04:45,459 --> 00:04:47,079
+if you, if you're doing that,
+
+134
+00:04:47,559 --> 00:04:49,778
+you are familiar with some of the challenges that
+
+135
+00:04:49,778 --> 00:04:52,019
+come from anything that is effectively click
+
+136
+00:04:52,019 --> 00:04:54,540
+ops. We have a lack of version control and audit
+
+137
+00:04:54,540 --> 00:04:56,819
+history. We have siloed development
+
+138
+00:04:56,819 --> 00:04:58,858
+in users that have access, so
+
+139
+00:04:58,858 --> 00:05:00,920
+sometimes we don't even have shared visibility across
+
+140
+00:05:00,920 --> 00:05:02,199
+the entire organization.
+
+141
+00:05:02,579 --> 00:05:04,639
+We have inconsistent quality for those
+
+142
+00:05:04,639 --> 00:05:07,139
+and output and then they become increasingly
+
+143
+00:05:07,139 --> 00:05:09,259
+difficult to manage at scale, so the
+
+144
+00:05:09,259 --> 00:05:11,619
+more detections you have, the
+
+145
+00:05:11,619 --> 00:05:13,480
+broader this problem kind of becomes
+
+146
+00:05:13,819 --> 00:05:15,439
+so long as you're doing it manually.
+
+147
+00:05:17,730 --> 00:05:19,858
+So in order to address some of those
+
+148
+00:05:19,858 --> 00:05:20,459
+challenges,
+
+149
+00:05:20,819 --> 00:05:23,028
+security engineers began to apply
+
+150
+00:05:23,028 --> 00:05:24,369
+SDLC principles.
+
+151
+00:05:24,699 --> 00:05:26,819
+This is no surprise because we're really just taking the
+
+152
+00:05:26,819 --> 00:05:29,059
+things that we've learned from like DevOps,
+
+153
+00:05:29,259 --> 00:05:31,259
+Devsecops factory patterns, and we're
+
+154
+00:05:31,259 --> 00:05:33,420
+applying them to writing detections
+
+155
+00:05:33,420 --> 00:05:34,939
+and managing the life cycle of those.
+
+156
+00:05:36,028 --> 00:05:38,189
+So for all of these things we're going
+
+157
+00:05:38,189 --> 00:05:40,189
+to introduce things like version control
+
+158
+00:05:40,189 --> 00:05:41,170
+and peer review.
+
+159
+00:05:41,869 --> 00:05:43,869
+Obviously in order to do that, the SIM
+
+160
+00:05:43,869 --> 00:05:45,970
+that you're using behind the scenes has to have some
+
+161
+00:05:45,970 --> 00:05:48,028
+kind of mature API in order
+
+162
+00:05:48,028 --> 00:05:49,379
+for you to interact with that.
+
+163
+00:05:49,778 --> 00:05:51,769
+We're gonna talk about testing and validation
+
+164
+00:05:52,149 --> 00:05:53,290
+and like for some
+
+165
+00:05:53,910 --> 00:05:55,910
+complex incidents, the validation of
+
+166
+00:05:55,910 --> 00:05:58,149
+specific type of types of alerts might involve
+
+167
+00:05:58,149 --> 00:06:00,250
+very long windows of time, so we're gonna give
+
+168
+00:06:00,250 --> 00:06:01,108
+some advice on.
+
+169
+00:06:01,559 --> 00:06:04,139
+Just like how do you backtest
+
+170
+00:06:04,519 --> 00:06:06,639
+uh those those rules against historic
+
+171
+00:06:06,639 --> 00:06:09,119
+data, then we put those in CICD
+
+172
+00:06:09,119 --> 00:06:11,220
+we make sure that they're syntactically valid
+
+173
+00:06:11,639 --> 00:06:13,720
+and then uh another big concept here
+
+174
+00:06:13,720 --> 00:06:16,160
+that we're gonna discuss is reusability and modularity
+
+175
+00:06:16,160 --> 00:06:18,278
+because you might be detecting the same things
+
+176
+00:06:18,278 --> 00:06:19,579
+in a number of systems
+
+177
+00:06:19,838 --> 00:06:20,420
+just with
+
+178
+00:06:20,838 --> 00:06:22,838
+one minor change so the more that you can
+
+179
+00:06:22,838 --> 00:06:24,000
+modularize that,
+
+180
+00:06:24,319 --> 00:06:26,369
+uh, obviously the, uh, the fewer
+
+181
+00:06:26,369 --> 00:06:28,559
+potential errors you're going to have in that code.
+
+182
+00:06:30,259 --> 00:06:32,290
+So the goal of a detection engineer
+
+183
+00:06:32,509 --> 00:06:34,528
+is really to write a perfectly
+
+184
+00:06:34,750 --> 00:06:36,790
+accurate detection, and we'll get into like
+
+185
+00:06:36,790 --> 00:06:38,910
+what I mean when I say perfectly accurate here in
+
+186
+00:06:38,910 --> 00:06:39,548
+just a second.
+
+187
+00:06:40,970 --> 00:06:42,670
+But in practice
+
+188
+00:06:43,009 --> 00:06:45,088
+this is almost unachievable
+
+189
+00:06:45,088 --> 00:06:47,129
+100% of the time, so that's
+
+190
+00:06:47,129 --> 00:06:48,829
+something that we have to accept
+
+191
+00:06:49,199 --> 00:06:51,488
+going into it that we need to adopt
+
+192
+00:06:51,488 --> 00:06:53,329
+almost a good enough for now mindset.
+
+193
+00:06:54,970 --> 00:06:57,290
+So some terminology here, uh, that you should be familiar
+
+194
+00:06:57,290 --> 00:06:59,569
+with if you're in this space is that we have this
+
+195
+00:06:59,569 --> 00:07:01,108
+notion of perfect recall,
+
+196
+00:07:01,509 --> 00:07:03,790
+uh, in detection engineering, and that means
+
+197
+00:07:03,889 --> 00:07:06,149
+that the system identifies 100%
+
+198
+00:07:06,238 --> 00:07:08,290
+of actual malicious events with
+
+199
+00:07:08,290 --> 00:07:10,410
+zero false negatives, and that sounds
+
+200
+00:07:10,410 --> 00:07:12,649
+pretty cool in, in, uh, in
+
+201
+00:07:12,649 --> 00:07:14,769
+theory, but in practice this is
+
+202
+00:07:14,769 --> 00:07:16,790
+one of the most challenging things to do
+
+203
+00:07:17,009 --> 00:07:18,269
+in detection engineering.
+
+204
+00:07:20,040 --> 00:07:21,588
+Then we have perfect precision,
+
+205
+00:07:22,009 --> 00:07:23,309
+so that means that
+
+206
+00:07:23,730 --> 00:07:25,730
+we can detect a bunch of things, we group them
+
+207
+00:07:25,730 --> 00:07:27,588
+into a basket, and then we throw out
+
+208
+00:07:28,048 --> 00:07:30,170
+the false positives to increase the
+
+209
+00:07:30,170 --> 00:07:30,790
+fidelity
+
+210
+00:07:31,048 --> 00:07:33,309
+of that detection so it only fires
+
+211
+00:07:33,309 --> 00:07:35,528
+when a genuine malicious event has
+
+212
+00:07:35,528 --> 00:07:37,790
+occurred and if you're following the AI space,
+
+213
+00:07:37,889 --> 00:07:40,278
+this is where LLMs are really,
+
+214
+00:07:40,290 --> 00:07:41,588
+really helpful for folks.
+
+215
+00:07:43,850 --> 00:07:45,889
+And the reality is that most people are writing rules
+
+216
+00:07:45,889 --> 00:07:47,910
+that we are somewhere in this middle ground,
+
+217
+00:07:48,488 --> 00:07:50,949
+um, because we want to detect
+
+218
+00:07:50,949 --> 00:07:53,069
+a an amount of time that's meaningful
+
+219
+00:07:53,069 --> 00:07:55,170
+with some confidence and we're actually most of
+
+220
+00:07:55,170 --> 00:07:55,790
+the time
+
+221
+00:07:56,170 --> 00:07:58,410
+pretty OK with a low rate of false
+
+222
+00:07:58,410 --> 00:07:59,059
+positives,
+
+223
+00:07:59,329 --> 00:08:01,608
+but if we have too many false positives, that's
+
+224
+00:08:01,608 --> 00:08:03,689
+where we get into the noise problem
+
+225
+00:08:03,689 --> 00:08:05,750
+and people start to lose confidence
+
+226
+00:08:05,750 --> 00:08:06,928
+in the detection system.
+
+227
+00:08:09,209 --> 00:08:11,329
+So the reality is we're always making trade-offs
+
+228
+00:08:11,329 --> 00:08:13,358
+and I, I, I can't think of a better
+
+229
+00:08:13,358 --> 00:08:15,588
+analogy than this one here where, what
+
+230
+00:08:15,850 --> 00:08:17,928
+you could think of maximizing recall
+
+231
+00:08:18,290 --> 00:08:20,290
+as a smoke detector analogy where you want
+
+232
+00:08:20,290 --> 00:08:22,369
+it to go off, you're kind of OK with some false
+
+233
+00:08:22,369 --> 00:08:24,569
+positives because the consequences of it not
+
+234
+00:08:24,569 --> 00:08:25,389
+going off
+
+235
+00:08:26,000 --> 00:08:27,230
+are maximum risk
+
+236
+00:08:27,649 --> 00:08:29,809
+and then in the case when you're writing an alert that wants more
+
+237
+00:08:29,809 --> 00:08:32,090
+precision, you can think of something like a spam
+
+238
+00:08:32,090 --> 00:08:33,469
+filter where we actually
+
+239
+00:08:33,808 --> 00:08:35,969
+wanna avoid false positives almost
+
+240
+00:08:35,969 --> 00:08:36,908
+all of the time
+
+241
+00:08:37,168 --> 00:08:38,469
+because somebody might miss a message.
+
+242
+00:08:40,750 --> 00:08:42,950
+So we need to find the middle
+
+243
+00:08:42,950 --> 00:08:45,070
+ground, which means understanding
+
+244
+00:08:45,070 --> 00:08:46,739
+for the thing that we're trying to detect
+
+245
+00:08:47,229 --> 00:08:49,330
+what is our tolerance for false positives.
+
+246
+00:08:50,369 --> 00:08:52,529
+How do we, how can we use historical
+
+247
+00:08:52,529 --> 00:08:54,700
+data to gauge how that rule will
+
+248
+00:08:54,859 --> 00:08:56,940
+will perform and then further tune it
+
+249
+00:08:56,940 --> 00:08:58,538
+to reduce the false positive rate?
+
+250
+00:08:59,048 --> 00:09:01,590
+We need to continuously monitor the rule performance
+
+251
+00:09:01,849 --> 00:09:03,908
+for false positives and see how that's
+
+252
+00:09:04,129 --> 00:09:06,250
+trending in real life once we
+
+253
+00:09:06,250 --> 00:09:07,899
+move it into the production SI environment.
+
+254
+00:09:09,109 --> 00:09:11,269
+And then we need to determine the impact of tuning
+
+255
+00:09:11,269 --> 00:09:11,808
+that rule
+
+256
+00:09:12,259 --> 00:09:14,428
+over time because like maybe the log sources
+
+257
+00:09:14,428 --> 00:09:16,629
+change, maybe the nature of our
+
+258
+00:09:16,629 --> 00:09:18,928
+application changes, maybe there's another security control
+
+259
+00:09:18,928 --> 00:09:21,269
+that does something like reduces the volume
+
+260
+00:09:21,269 --> 00:09:22,830
+of events coming into that thing.
+
+261
+00:09:23,389 --> 00:09:25,668
+So now I'm gonna hand it over to
+
+262
+00:09:25,668 --> 00:09:27,869
+uh Nathan from Riot to talk a little
+
+263
+00:09:27,869 --> 00:09:30,029
+bit about how they have leveraged
+
+264
+00:09:30,029 --> 00:09:32,190
+the Data Dog cloudsim to build a
+
+265
+00:09:32,190 --> 00:09:34,009
+detection as code platform.
+
+266
+00:09:34,308 --> 00:09:34,908
+Thank you, Andrew.
+
+267
+00:09:36,639 --> 00:09:37,320
+OK,
+
+268
+00:09:37,639 --> 00:09:38,200
+so.
+
+269
+00:09:39,099 --> 00:09:41,440
+We're today we're gonna talk about 3 different challenges.
+
+270
+00:09:41,538 --> 00:09:42,158
+Um,
+
+271
+00:09:42,619 --> 00:09:44,700
+first one we're gonna talk about is sort of relates to what Andrew
+
+272
+00:09:44,700 --> 00:09:45,678
+was talking about earlier,
+
+273
+00:09:46,080 --> 00:09:48,139
+uh, about like logs as the infinite
+
+274
+00:09:48,139 --> 00:09:49,239
+sky, right?
+
+275
+00:09:49,500 --> 00:09:50,119
+Um,
+
+276
+00:09:50,619 --> 00:09:52,859
+these are challenges that we've sort of dealt with and sort of
+
+277
+00:09:52,859 --> 00:09:55,139
+solutions that we've come up with for them. So the first one, right,
+
+278
+00:09:55,460 --> 00:09:57,658
+is if we log too much, right, that's obviously
+
+279
+00:09:57,658 --> 00:09:59,759
+gonna cost a lot of money and it's gonna break the bank,
+
+280
+00:10:00,139 --> 00:10:02,389
+but if we log too little, then we
+
+281
+00:10:02,389 --> 00:10:04,500
+lose signal because we can't write detections
+
+282
+00:10:04,500 --> 00:10:05,739
+because we don't have the logs we need.
+
+283
+00:10:06,129 --> 00:10:08,229
+So, how do we find this perfect ground
+
+284
+00:10:08,229 --> 00:10:09,599
+of being able to log
+
+285
+00:10:10,168 --> 00:10:10,788
+everything we want
+
+286
+00:10:11,369 --> 00:10:13,408
+and also being able to sort of like filter what we don't
+
+287
+00:10:13,408 --> 00:10:14,570
+need, but maybe still keep it.
+
+288
+00:10:16,538 --> 00:10:17,399
+So, this is where
+
+289
+00:10:17,779 --> 00:10:20,200
+this sort of comes into play, SIM optimization.
+
+290
+00:10:21,109 --> 00:10:22,158
+Uh, we had this
+
+291
+00:10:22,548 --> 00:10:24,590
+problem. This is sort of the 6 points we have for sort
+
+292
+00:10:24,590 --> 00:10:27,009
+of what we want criteria for trying to solve this.
+
+293
+00:10:27,349 --> 00:10:29,090
+So the first one is we wanted to filter early
+
+294
+00:10:29,548 --> 00:10:31,548
+and save big. So we want to be able to filter before
+
+295
+00:10:31,548 --> 00:10:33,109
+stuff actually goes into our SIM.
+
+296
+00:10:33,590 --> 00:10:35,379
+We want to be able to adapt on the fly,
+
+297
+00:10:35,710 --> 00:10:37,509
+and we want to be able to normalize for clarity.
+
+298
+00:10:38,210 --> 00:10:39,269
+We want to stay resilient,
+
+299
+00:10:39,808 --> 00:10:42,048
+we want to scale with confidence, and we want to enforce
+
+300
+00:10:42,048 --> 00:10:42,739
+data hygiene.
+
+301
+00:10:43,139 --> 00:10:45,210
+So I'm gonna go into a few of these in a little bit more depth,
+
+302
+00:10:45,379 --> 00:10:47,288
+right? So filter early, save big.
+
+303
+00:10:48,109 --> 00:10:49,609
+Why does this matter? Well,
+
+304
+00:10:50,469 --> 00:10:51,590
+When people send us logs,
+
+305
+00:10:51,918 --> 00:10:53,139
+sometimes they mess up.
+
+306
+00:10:53,479 --> 00:10:55,739
+And what I mean by mess up, they send us
+
+307
+00:10:56,158 --> 00:10:57,399
+way too much.
+
+308
+00:10:57,759 --> 00:10:59,840
+And then what ends up happening is our SIM
+
+309
+00:11:00,119 --> 00:11:02,158
+explodes in the sense of like, we're ingesting a
+
+310
+00:11:02,158 --> 00:11:02,788
+lot of data,
+
+311
+00:11:03,119 --> 00:11:05,259
+we're indexing a lot of data and that costs a lot of money,
+
+312
+00:11:05,389 --> 00:11:06,219
+and that's not good.
+
+313
+00:11:06,519 --> 00:11:08,989
+So, we need a way to be able to filter data
+
+314
+00:11:08,989 --> 00:11:10,119
+before it actually gets into our SIM.
+
+315
+00:11:11,340 --> 00:11:13,609
+Um, adapt on the fly, scale with confidence,
+
+316
+00:11:13,899 --> 00:11:16,029
+right? This sort of goes in hand with what I just mentioned, right?
+
+317
+00:11:16,178 --> 00:11:18,178
+We need to be able to, if people do send us
+
+318
+00:11:18,178 --> 00:11:20,489
+a lot of data, we don't want our like infrastructure
+
+319
+00:11:20,489 --> 00:11:22,279
+to break, we wanna be able to scale,
+
+320
+00:11:22,820 --> 00:11:24,979
+OK? So we'll, in a minute, we'll look at
+
+321
+00:11:24,979 --> 00:11:27,460
+sort of a infrastructure diagram of
+
+322
+00:11:27,460 --> 00:11:29,460
+everything is sort of built on AWS native service
+
+323
+00:11:29,519 --> 00:11:30,279
+services.
+
+324
+00:11:30,538 --> 00:11:32,678
+Um, it was actually built by a coworker
+
+325
+00:11:32,820 --> 00:11:35,099
+on a team, uh, called Nathan Martini. Um,
+
+326
+00:11:35,178 --> 00:11:37,219
+I'm one of the engineers that helps maintain it.
+
+327
+00:11:38,129 --> 00:11:40,529
+Um, and the last thing I want to sort of talk about is enforced
+
+328
+00:11:40,529 --> 00:11:41,210
+data hygiene.
+
+329
+00:11:41,609 --> 00:11:43,399
+So, what I mean by this is that
+
+330
+00:11:44,009 --> 00:11:46,048
+sometimes we want to make sure that we're getting these log sources,
+
+331
+00:11:46,090 --> 00:11:48,129
+we put important tags, right? So we care
+
+332
+00:11:48,129 --> 00:11:50,279
+about maybe like environment. So we want maybe to know
+
+333
+00:11:50,279 --> 00:11:51,330
+if the log source is
+
+334
+00:11:51,729 --> 00:11:54,070
+prod, Dev, or something else,
+
+335
+00:11:54,288 --> 00:11:56,408
+or we maybe wanna know about a log source owner, so
+
+336
+00:11:56,408 --> 00:11:58,450
+that if something happens to that log source, we actually know
+
+337
+00:11:58,450 --> 00:11:59,428
+who we need to contact
+
+338
+00:11:59,729 --> 00:12:01,428
+to, you know, figure out what's going wrong.
+
+339
+00:12:02,129 --> 00:12:04,210
+So, let's sort of jump ahead. Let's look at this infrastructure
+
+340
+00:12:04,210 --> 00:12:04,769
+diagram.
+
+341
+00:12:05,428 --> 00:12:07,509
+Um, so what I wanna call out first is sort of
+
+342
+00:12:07,509 --> 00:12:09,619
+top left. You can see public, uh,
+
+343
+00:12:09,830 --> 00:12:11,070
+collector, private collector.
+
+344
+00:12:11,389 --> 00:12:13,359
+So this is where sort of the journey starts, right?
+
+345
+00:12:13,710 --> 00:12:16,029
+Uh, we have situations where we have third party,
+
+346
+00:12:16,109 --> 00:12:18,190
+uh, vendors, tools that
+
+347
+00:12:18,190 --> 00:12:19,190
+wanna send us logs.
+
+348
+00:12:19,629 --> 00:12:21,788
+We also have situations where we have internal teams that wanna
+
+349
+00:12:21,788 --> 00:12:23,928
+send us logs. You can probably think of, you know.
+
+350
+00:12:24,099 --> 00:12:26,129
+Our our networking team that want to send us pan
+
+351
+00:12:26,129 --> 00:12:28,178
+traffic and pan threat logs so
+
+352
+00:12:28,178 --> 00:12:30,259
+we need to be able to have collectors that work
+
+353
+00:12:30,259 --> 00:12:32,288
+for both public and private, um,
+
+354
+00:12:32,298 --> 00:12:34,379
+so teams would basically send it there. Uh, we have
+
+355
+00:12:34,379 --> 00:12:36,418
+specific ports for a different type of log
+
+356
+00:12:36,418 --> 00:12:38,469
+sources, um, it just helps keep things a little
+
+357
+00:12:38,469 --> 00:12:40,690
+bit organized and then behind that
+
+358
+00:12:40,820 --> 00:12:42,719
+is essentially an auto scaling group,
+
+359
+00:12:43,058 --> 00:12:44,298
+uh, that is running vector.
+
+360
+00:12:44,989 --> 00:12:47,219
+So if you're not familiar with Vector, Vector is an open
+
+361
+00:12:47,219 --> 00:12:49,379
+source log shipper with transformation
+
+362
+00:12:49,379 --> 00:12:50,759
+functions written in Rust,
+
+363
+00:12:51,099 --> 00:12:53,099
+Rust. Uh, this is actually by
+
+364
+00:12:53,099 --> 00:12:55,158
+Data Dog. Um, I really, really
+
+365
+00:12:55,158 --> 00:12:55,700
+like it.
+
+366
+00:12:55,969 --> 00:12:58,019
+Um, so after anyway, logs
+
+367
+00:12:58,019 --> 00:13:00,178
+get sent to Autoscale and Groupon Vector. It
+
+368
+00:13:00,178 --> 00:13:02,158
+then goes to Kafka, right, for back pressure.
+
+369
+00:13:02,418 --> 00:13:04,538
+And then from there, it goes to ECS container
+
+370
+00:13:04,538 --> 00:13:06,739
+service that's also running Vector. However, with
+
+371
+00:13:06,739 --> 00:13:07,369
+this one,
+
+372
+00:13:07,658 --> 00:13:09,690
+what's happening here is this is where we're actually gonna be doing a lot of
+
+373
+00:13:09,690 --> 00:13:10,340
+our filtering.
+
+374
+00:13:10,788 --> 00:13:12,849
+So this is where we might say, hey, like,
+
+375
+00:13:12,989 --> 00:13:15,149
+you are blasting us with data, and we need a
+
+376
+00:13:15,149 --> 00:13:17,149
+quick way to like, you know, stop that
+
+377
+00:13:17,149 --> 00:13:18,129
+thing from blasting us.
+
+378
+00:13:18,469 --> 00:13:20,548
+We're gonna be able to make a change here and be able to drop
+
+379
+00:13:20,548 --> 00:13:22,808
+data. Or here we might be able to add some tags.
+
+380
+00:13:23,058 --> 00:13:24,340
+Um, then from here,
+
+381
+00:13:24,629 --> 00:13:25,729
+stuff goes to DataDog,
+
+382
+00:13:26,029 --> 00:13:28,389
+then from Dataog goes to our store Ts,
+
+383
+00:13:28,509 --> 00:13:30,590
+then from there, goes to Jira, and then
+
+384
+00:13:30,590 --> 00:13:32,719
+eventually Slack, cause we all love Slack, you
+
+385
+00:13:32,719 --> 00:13:33,729
+know, Slack opps is a great thing.
+
+386
+00:13:34,428 --> 00:13:36,469
+Um, one more thing before I move on from
+
+387
+00:13:36,469 --> 00:13:38,570
+the slide I want to talk about is
+
+388
+00:13:38,750 --> 00:13:41,048
+sort of like what Andrew's talking about, right, with,
+
+389
+00:13:41,109 --> 00:13:43,330
+you know, CICD infrastructures code,
+
+390
+00:13:43,658 --> 00:13:45,788
+uh, PRs, uh, when
+
+391
+00:13:45,788 --> 00:13:47,788
+Nathan Martini designed this, one of the really cool
+
+392
+00:13:47,788 --> 00:13:49,820
+things he added was that a GitHub
+
+393
+00:13:49,820 --> 00:13:51,869
+repo that basically stores our vector
+
+394
+00:13:51,869 --> 00:13:52,928
+configuration files.
+
+395
+00:13:53,349 --> 00:13:55,384
+So. So whenever we want to make an update to
+
+396
+00:13:55,384 --> 00:13:57,543
+our vector configs, all we have to do is
+
+397
+00:13:57,543 --> 00:13:58,085
+literally
+
+398
+00:13:58,465 --> 00:14:00,585
+make a new branch, make a PR with, you
+
+399
+00:14:00,585 --> 00:14:01,364
+know, with the file,
+
+400
+00:14:01,984 --> 00:14:04,024
+put it to the branch of like the, uh, with
+
+401
+00:14:04,024 --> 00:14:06,215
+the environments staging prod, and push it.
+
+402
+00:14:06,504 --> 00:14:08,945
+And then we even have monitors and whatnot set up in Dataog
+
+403
+00:14:08,945 --> 00:14:09,644
+to actually see
+
+404
+00:14:09,984 --> 00:14:12,043
+if stuff actually got pushed successfully
+
+405
+00:14:12,183 --> 00:14:12,825
+and whatnot.
+
+406
+00:14:13,649 --> 00:14:15,168
+So, let's sort of
+
+407
+00:14:15,450 --> 00:14:17,489
+go a little bit more into vector, right? So we talked
+
+408
+00:14:17,489 --> 00:14:18,639
+a little bit about what it is.
+
+409
+00:14:19,009 --> 00:14:21,489
+Uh, let's sort of look at an example of what a vector configuration
+
+410
+00:14:21,489 --> 00:14:22,009
+looks like.
+
+411
+00:14:22,570 --> 00:14:24,649
+So, how I like to sort of describe vector,
+
+412
+00:14:24,690 --> 00:14:26,690
+if you're not familiar with it, is there's like 3
+
+413
+00:14:26,690 --> 00:14:27,548
+main things in it.
+
+414
+00:14:27,849 --> 00:14:28,969
+There is the source,
+
+415
+00:14:29,229 --> 00:14:31,570
+right, where you're sort of getting data from. There's
+
+416
+00:14:31,570 --> 00:14:32,428
+transforms,
+
+417
+00:14:32,769 --> 00:14:34,349
+and then there's a sync where you're gonna send data.
+
+418
+00:14:34,769 --> 00:14:36,229
+Pretty straightforward, I feel like.
+
+419
+00:14:36,558 --> 00:14:38,808
+Uh, so, this example we're looking at right over here, uh,
+
+420
+00:14:38,889 --> 00:14:40,928
+let's sort of pretend that vector is running on that
+
+421
+00:14:40,928 --> 00:14:42,849
+laptop right over there doing the presentation.
+
+422
+00:14:43,210 --> 00:14:45,139
+Uh, let's pretend it. You're running as a service
+
+423
+00:14:45,440 --> 00:14:47,639
+or Docker or whatever you would like to run it as,
+
+424
+00:14:48,009 --> 00:14:50,158
+uh, if we look at this example here, it's saying source
+
+425
+00:14:50,158 --> 00:14:52,298
+is Windows event logs and specifically
+
+426
+00:14:52,298 --> 00:14:53,489
+grabbing security logs.
+
+427
+00:14:53,840 --> 00:14:55,908
+Cool, so it's grabbing security logs. What is it doing with
+
+428
+00:14:55,908 --> 00:14:57,590
+it? Well, let's look at transforms.
+
+429
+00:14:57,960 --> 00:15:00,308
+So what it's doing now is is actually adding a field
+
+430
+00:15:00,308 --> 00:15:02,460
+called log source owner, which value
+
+431
+00:15:02,460 --> 00:15:02,969
+security team.
+
+432
+00:15:03,298 --> 00:15:05,599
+Cool, as I talked about before, tagging data.
+
+433
+00:15:06,389 --> 00:15:08,509
+Next, what it's doing is sync, which
+
+434
+00:15:08,509 --> 00:15:09,788
+in this case, it's sending it to Datao.
+
+435
+00:15:10,349 --> 00:15:12,408
+So it's like a very relatively simple example.
+
+436
+00:15:12,658 --> 00:15:13,250
+Um,
+
+437
+00:15:13,710 --> 00:15:15,250
+next, let's sort of like think about
+
+438
+00:15:15,548 --> 00:15:17,710
+how we'd want to do something with maybe S3 data.
+
+439
+00:15:18,119 --> 00:15:20,379
+So, let's look at an example with cloud trail logs,
+
+440
+00:15:20,548 --> 00:15:22,629
+right? Most people have cloud trail logs,
+
+441
+00:15:22,668 --> 00:15:24,750
+they send it to an S3 bucket, and they wanna do stuff with
+
+442
+00:15:24,750 --> 00:15:26,788
+it. So in this example, a little bit more
+
+443
+00:15:26,788 --> 00:15:27,769
+complicated for a source.
+
+444
+00:15:28,200 --> 00:15:30,090
+We have AWSS 3 as a type,
+
+445
+00:15:30,428 --> 00:15:31,288
+we have a bucket,
+
+446
+00:15:31,668 --> 00:15:32,750
+we have a region.
+
+447
+00:15:33,269 --> 00:15:35,609
+And then we have file prefix and then obviously,
+
+448
+00:15:35,629 --> 00:15:37,168
+you know, codec JSON and whatnot.
+
+449
+00:15:37,428 --> 00:15:39,279
+So we're grabbing our S3 data from the bucket.
+
+450
+00:15:39,629 --> 00:15:41,739
+We're then doing another transform. However, in
+
+451
+00:15:41,739 --> 00:15:44,099
+this situation, we're actually doing a delete on
+
+452
+00:15:44,099 --> 00:15:45,109
+an event version.
+
+453
+00:15:45,399 --> 00:15:47,428
+And this is honestly just an example to sort
+
+454
+00:15:47,428 --> 00:15:49,788
+of highlight that, you know, we can do transforms
+
+455
+00:15:49,788 --> 00:15:50,744
+like. I talked about earlier,
+
+456
+00:15:51,125 --> 00:15:53,125
+where if we want to delete fields, let's delete
+
+457
+00:15:53,125 --> 00:15:53,683
+it, right?
+
+458
+00:15:54,043 --> 00:15:55,625
+Certain log sources sometimes
+
+459
+00:15:56,754 --> 00:15:58,844
+come in with fields that are quite big,
+
+460
+00:15:59,004 --> 00:16:01,085
+not useful, and honestly, we just don't need
+
+461
+00:16:01,085 --> 00:16:03,254
+it. So why even ingest it, right?
+
+462
+00:16:03,404 --> 00:16:05,524
+If it's not gonna be useful in our detections, why would
+
+463
+00:16:05,524 --> 00:16:06,585
+we want to keep it?
+
+464
+00:16:07,479 --> 00:16:09,779
+And not even detections, incident response, or even threat hunting.
+
+465
+00:16:10,200 --> 00:16:12,269
+And lastly, like the, like the previous
+
+466
+00:16:12,269 --> 00:16:12,830
+slide,
+
+467
+00:16:13,158 --> 00:16:14,298
+sink going to data dog.
+
+468
+00:16:14,558 --> 00:16:16,558
+So hopefully from these two slides you sort of got an example
+
+469
+00:16:16,558 --> 00:16:18,599
+of what vector sort of looks like. Um,
+
+470
+00:16:18,719 --> 00:16:20,719
+I will be honest, our vector configurations a little
+
+471
+00:16:20,719 --> 00:16:23,298
+bit more complicated. We probably have a few more sources,
+
+472
+00:16:23,509 --> 00:16:24,619
+um, and
+
+473
+00:16:25,158 --> 00:16:27,158
+maybe one or two more sinks, but it should give
+
+474
+00:16:27,158 --> 00:16:27,719
+you a good idea.
+
+475
+00:16:28,408 --> 00:16:30,739
+So now, let's look at a summary of what
+
+476
+00:16:30,739 --> 00:16:31,719
+we sort of just covered.
+
+477
+00:16:32,460 --> 00:16:34,019
+So, in summary, right,
+
+478
+00:16:34,379 --> 00:16:36,080
+we built something that is built for speed.
+
+479
+00:16:36,619 --> 00:16:38,658
+We wanted to collect all our data, and
+
+480
+00:16:38,658 --> 00:16:39,779
+we wanted to be able to send
+
+481
+00:16:40,099 --> 00:16:42,460
+anywhere. So, an example in that infrastructure diagram
+
+482
+00:16:42,460 --> 00:16:44,279
+where we saw that ECS it's sending a data doc.
+
+483
+00:16:44,538 --> 00:16:46,580
+Realistically, we could take that and send it
+
+484
+00:16:46,580 --> 00:16:48,440
+anywhere. We saw in the end with the vector configuration,
+
+485
+00:16:48,859 --> 00:16:51,048
+the sync's there, so we could point that other places.
+
+486
+00:16:51,340 --> 00:16:53,500
+This allows us to be flexible, which is honestly
+
+487
+00:16:53,500 --> 00:16:54,139
+invaluable.
+
+488
+00:16:55,090 --> 00:16:57,168
+Next, we, we can filter out the edge, which we
+
+489
+00:16:57,168 --> 00:16:57,788
+talked about.
+
+490
+00:16:58,210 --> 00:17:00,288
+We wanna be able to enrich on the fly. We saw examples of
+
+491
+00:17:00,288 --> 00:17:02,399
+being able to add tags
+
+492
+00:17:02,399 --> 00:17:04,650
+to log sources or fields to log sources, as
+
+493
+00:17:04,650 --> 00:17:05,630
+well as delete stuff.
+
+494
+00:17:06,250 --> 00:17:07,509
+And then we wanna be able to stay in control,
+
+495
+00:17:07,769 --> 00:17:09,828
+which is our infrastructures code, our PR,
+
+496
+00:17:10,289 --> 00:17:12,449
+um, being able to PR stuff, and it's flexible by
+
+497
+00:17:12,449 --> 00:17:14,939
+design. So,
+
+498
+00:17:15,259 --> 00:17:17,259
+what's the next problem, right? So we've talked about
+
+499
+00:17:17,259 --> 00:17:19,598
+this whole thing of like, log ingestion,
+
+500
+00:17:20,098 --> 00:17:22,160
+right? Now, the question is, are we gonna actually,
+
+501
+00:17:22,219 --> 00:17:24,299
+all this data that's going to DataDog, are we actually
+
+502
+00:17:24,299 --> 00:17:25,719
+going to ingest it all
+
+503
+00:17:25,979 --> 00:17:27,170
+or index it all?
+
+504
+00:17:27,500 --> 00:17:29,078
+How did, how is that gonna work,
+
+505
+00:17:29,578 --> 00:17:31,640
+right? So, the answer is,
+
+506
+00:17:31,719 --> 00:17:33,118
+right, it's gonna depend.
+
+507
+00:17:33,400 --> 00:17:35,559
+And I'll give you an example of a blog source
+
+508
+00:17:35,559 --> 00:17:38,000
+like Pan traffic, right? That's a pretty noisy,
+
+509
+00:17:38,400 --> 00:17:39,118
+like log source.
+
+510
+00:17:39,640 --> 00:17:41,719
+Do I need that for detection engineering? Do
+
+511
+00:17:41,719 --> 00:17:43,719
+I need that for rat hunting? Do
+
+512
+00:17:43,719 --> 00:17:44,920
+I need it for incident response?
+
+513
+00:17:45,199 --> 00:17:47,358
+Well, probably may not need it for detection
+
+514
+00:17:47,358 --> 00:17:49,400
+engineering. So then, do I actually
+
+515
+00:17:49,400 --> 00:17:50,618
+need to index it?
+
+516
+00:17:50,969 --> 00:17:53,199
+But if an incident happens and I need to look at my pan traffic
+
+517
+00:17:53,199 --> 00:17:55,400
+logs, I might need to look at it later.
+
+518
+00:17:55,789 --> 00:17:57,029
+So how can I handle this?
+
+519
+00:17:57,469 --> 00:17:59,989
+And this is where sort of storage and rehydration
+
+520
+00:17:59,989 --> 00:18:00,709
+come into effect.
+
+521
+00:18:02,009 --> 00:18:04,160
+So, what is storage and rehydration, right?
+
+522
+00:18:04,309 --> 00:18:06,130
+Storage, you can even call it archiving if you want.
+
+523
+00:18:06,489 --> 00:18:07,640
+But in very simple terms,
+
+524
+00:18:08,049 --> 00:18:10,160
+right? Basically, what's happening here is we're grabbing
+
+525
+00:18:10,160 --> 00:18:10,828
+a log source,
+
+526
+00:18:11,130 --> 00:18:12,489
+and we're just gonna send it to SS 3 bucket.
+
+527
+00:18:13,410 --> 00:18:15,068
+And then from there, when we want the data,
+
+528
+00:18:15,568 --> 00:18:17,289
+we're gonna rehydrate it from an S3 bucket.
+
+529
+00:18:18,150 --> 00:18:20,430
+So now let's say we're looking at our pan traffic logs
+
+530
+00:18:20,430 --> 00:18:22,328
+and we're like, OK, cool, we got these.
+
+531
+00:18:22,709 --> 00:18:24,828
+Let's ingest them. Let's not index them
+
+532
+00:18:24,828 --> 00:18:27,019
+because it's expensive. When we have a threat
+
+533
+00:18:27,019 --> 00:18:29,229
+hunt that we want to do or we have an incident
+
+534
+00:18:29,229 --> 00:18:31,229
+so that we need to look into things, then we'll
+
+535
+00:18:31,229 --> 00:18:32,608
+go in and we'll actually
+
+536
+00:18:32,868 --> 00:18:34,910
+pull it back from that estuary bucket that we archived it to.
+
+537
+00:18:36,549 --> 00:18:38,640
+So, let's look at a deeper example of what this sort of looks
+
+538
+00:18:38,640 --> 00:18:39,338
+like in the GUI.
+
+539
+00:18:39,670 --> 00:18:41,709
+Uh, I honestly really like Tatter Dog's GUI. I think
+
+540
+00:18:41,709 --> 00:18:43,088
+it's, uh, done pretty well.
+
+541
+00:18:43,390 --> 00:18:45,420
+Uh, so, in the very top right, uh,
+
+542
+00:18:45,509 --> 00:18:47,049
+top right, we can set an archive name,
+
+543
+00:18:47,420 --> 00:18:49,670
+we can specify the filter based off a query
+
+544
+00:18:49,670 --> 00:18:50,729
+of what we actually wanna send.
+
+545
+00:18:51,229 --> 00:18:53,309
+What's nice about this part is that we can actually
+
+546
+00:18:53,309 --> 00:18:55,430
+be very fine tuned on what we want. We're not just sending
+
+547
+00:18:55,430 --> 00:18:57,709
+a log source, we can go and do a sub of that log
+
+548
+00:18:57,709 --> 00:18:59,368
+source. For this example right over here,
+
+549
+00:18:59,750 --> 00:19:01,828
+we're looking at pan firewall, but then
+
+550
+00:19:01,828 --> 00:19:03,949
+we're particularly choosing type Global Protect AKA
+
+551
+00:19:03,949 --> 00:19:06,180
+VPN logs, which realistically,
+
+552
+00:19:06,309 --> 00:19:08,509
+you'd probably index, but for compliance reasons,
+
+553
+00:19:08,549 --> 00:19:10,789
+you probably need to keep your VPN logs for,
+
+554
+00:19:10,900 --> 00:19:11,848
+you know, a long time.
+
+555
+00:19:12,630 --> 00:19:14,660
+Next, we look at our archive types. So you probably
+
+556
+00:19:14,660 --> 00:19:16,259
+set up an IM role for AWS.
+
+557
+00:19:16,660 --> 00:19:18,930
+You then look to, you know, set up an AWS account, S3
+
+558
+00:19:18,930 --> 00:19:21,000
+bucket, path, you know, choose your storage type.
+
+559
+00:19:21,338 --> 00:19:23,348
+Cool. So now we got a little
+
+560
+00:19:23,348 --> 00:19:25,818
+understanding of like how we're storing these logs,
+
+561
+00:19:26,150 --> 00:19:27,809
+let's sort of look at like a sample use case.
+
+562
+00:19:28,838 --> 00:19:31,180
+So, this is a rough use case. Um,
+
+563
+00:19:31,759 --> 00:19:32,739
+so, let's say we've got
+
+564
+00:19:33,000 --> 00:19:35,000
+questionable activity from ex-user. Let's pretend that
+
+565
+00:19:35,000 --> 00:19:36,380
+ex user is me. Let's say that I'm
+
+566
+00:19:36,640 --> 00:19:38,500
+malicious or I'm doing weird things.
+
+567
+00:19:38,799 --> 00:19:40,719
+Um, and we need to backtrack, you know,
+
+568
+00:19:41,000 --> 00:19:42,739
+who, what IP address I had,
+
+569
+00:19:43,118 --> 00:19:45,118
+uh, you know, for my VPN sessions cause
+
+570
+00:19:45,118 --> 00:19:47,180
+I'm working remote, and we need to figure out what I was doing,
+
+571
+00:19:47,479 --> 00:19:48,439
+and then like, you know,
+
+572
+00:19:48,880 --> 00:19:50,019
+was I allowed to do that,
+
+573
+00:19:50,279 --> 00:19:52,559
+right? And so in this case, let's say I needed to rehydrate
+
+574
+00:19:52,559 --> 00:19:53,838
+logs to be able to do this.
+
+575
+00:19:54,160 --> 00:19:55,779
+So let's look at what that would look like in rehydration.
+
+576
+00:19:57,118 --> 00:19:59,598
+So, on the right side again, we can see the rehydration
+
+577
+00:19:59,598 --> 00:20:01,640
+gooey. So in this situation, you can
+
+578
+00:20:01,640 --> 00:20:04,019
+see on the very top, what we're going to do is we're going to rehydrate
+
+579
+00:20:04,358 --> 00:20:05,219
+a time period.
+
+580
+00:20:05,479 --> 00:20:07,759
+So if I know that, you know, I was doing some weird
+
+581
+00:20:07,759 --> 00:20:10,059
+stuff, maybe 232 days ago,
+
+582
+00:20:10,559 --> 00:20:12,118
+right? I'm going to focus on that time period.
+
+583
+00:20:12,969 --> 00:20:14,750
+Next, we're gonna choose the archive name,
+
+584
+00:20:15,049 --> 00:20:17,068
+and then we're gonna choose the actual query,
+
+585
+00:20:17,289 --> 00:20:19,328
+right? So this is the part, these
+
+586
+00:20:19,328 --> 00:20:21,328
+two things I want to talk about a little bit more,
+
+587
+00:20:21,769 --> 00:20:23,229
+the time period and the query.
+
+588
+00:20:23,759 --> 00:20:25,838
+Normally, when you do rehydration, the biggest problem
+
+589
+00:20:25,838 --> 00:20:27,118
+is it takes a lot of time.
+
+590
+00:20:27,439 --> 00:20:29,598
+Uh, I've done rehydrations on other, other tools and
+
+591
+00:20:29,598 --> 00:20:31,799
+products, and it's taken me probably 5 to 10
+
+592
+00:20:31,799 --> 00:20:33,239
+hours. If we have an incident,
+
+593
+00:20:33,549 --> 00:20:35,759
+5 to 10 hours is a long time,
+
+594
+00:20:35,920 --> 00:20:37,229
+that's a problem, right?
+
+595
+00:20:37,598 --> 00:20:39,640
+So, what's nice about this with the time
+
+596
+00:20:39,640 --> 00:20:41,799
+frame and the query is I can now
+
+597
+00:20:41,799 --> 00:20:43,000
+shorten that, right? Why?
+
+598
+00:20:43,443 --> 00:20:45,584
+Because if I know the time period I want, that's gonna reduce
+
+599
+00:20:45,584 --> 00:20:47,555
+the amount of logs I want to rehydrate.
+
+600
+00:20:47,844 --> 00:20:49,844
+On top of that, if I know that I'm only looking at
+
+601
+00:20:49,844 --> 00:20:51,884
+me, I can do something like at
+
+602
+00:20:51,884 --> 00:20:54,505
+user.name and pitch iconi at ridegames.com
+
+603
+00:20:54,723 --> 00:20:56,884
+and only get my logs. So now, again, we're
+
+604
+00:20:56,884 --> 00:20:59,114
+going from getting a bunch of VPN logs,
+
+605
+00:20:59,243 --> 00:21:01,535
+right? I'm short, I'm shortening it by a time frame,
+
+606
+00:21:01,555 --> 00:21:02,545
+and then also the user.
+
+607
+00:21:02,844 --> 00:21:04,844
+So this generally will take maybe like 5 to 10
+
+608
+00:21:04,844 --> 00:21:07,084
+minutes. That's a lot more reasonable in an incident
+
+609
+00:21:07,084 --> 00:21:08,943
+scenario incident response scenario.
+
+610
+00:21:10,509 --> 00:21:12,309
+So, what's another option, right,
+
+611
+00:21:12,588 --> 00:21:13,430
+instead of rehydration?
+
+612
+00:21:14,818 --> 00:21:17,039
+Uh, Andrew, would you like to talk about archive search?
+
+613
+00:21:18,209 --> 00:21:19,229
+Yeah, thanks. Uh,
+
+614
+00:21:20,000 --> 00:21:22,618
+sometimes you don't want to rehydrate
+
+615
+00:21:22,618 --> 00:21:24,630
+all of the logs in an
+
+616
+00:21:24,630 --> 00:21:26,759
+investigation back into an index just
+
+617
+00:21:26,759 --> 00:21:27,818
+to be able to see
+
+618
+00:21:28,078 --> 00:21:30,078
+if the needle even exists
+
+619
+00:21:30,078 --> 00:21:32,199
+inside the haystack, and I think this is one of the most
+
+620
+00:21:32,199 --> 00:21:33,420
+challenging things
+
+621
+00:21:33,680 --> 00:21:35,959
+in managing a logs platform is as a business
+
+622
+00:21:35,959 --> 00:21:38,039
+you're constantly having to balance the trade-off
+
+623
+00:21:38,039 --> 00:21:39,029
+of cost.
+
+624
+00:21:39,400 --> 00:21:41,430
+What do I keep in the hot index? What do
+
+625
+00:21:41,430 --> 00:21:43,439
+I keep in an S3 bucket? What do I send
+
+626
+00:21:43,439 --> 00:21:45,439
+to something like flex logs or a colder
+
+627
+00:21:45,439 --> 00:21:47,598
+storage to optimize further
+
+628
+00:21:47,598 --> 00:21:49,779
+so. Dataog archive search
+
+629
+00:21:49,779 --> 00:21:51,818
+is a new feature which allows
+
+630
+00:21:51,818 --> 00:21:53,818
+you to run a search query
+
+631
+00:21:54,108 --> 00:21:56,180
+off of data that lives in a platform like
+
+632
+00:21:56,180 --> 00:21:57,000
+S3.
+
+633
+00:21:57,318 --> 00:21:59,479
+And that's really, really cool for threat hunting
+
+634
+00:21:59,479 --> 00:22:01,559
+or forensics or incident response because
+
+635
+00:22:01,559 --> 00:22:02,618
+all of a sudden now
+
+636
+00:22:02,959 --> 00:22:05,239
+we can do an investigation on that slightly
+
+637
+00:22:05,239 --> 00:22:07,358
+colder storage that is much less
+
+638
+00:22:07,358 --> 00:22:08,059
+expensive
+
+639
+00:22:08,358 --> 00:22:10,479
+and then we can see if it's worth it to pull those logs
+
+640
+00:22:10,479 --> 00:22:12,559
+back in or rehydrate the logs
+
+641
+00:22:12,559 --> 00:22:14,939
+to go a little bit deeper. So archive search
+
+642
+00:22:15,199 --> 00:22:17,199
+is a net new feature that's available. Uh,
+
+643
+00:22:17,279 --> 00:22:18,769
+the docs are linked there in the slide.
+
+644
+00:22:19,519 --> 00:22:20,250
+Thank you, Andrew.
+
+645
+00:22:20,848 --> 00:22:22,890
+So, let's talk about challenge number 2, right? So we
+
+646
+00:22:22,890 --> 00:22:25,088
+just talked about like blogging, we talked a lot
+
+647
+00:22:25,088 --> 00:22:27,469
+about ingestion and dealing with like indexing
+
+648
+00:22:27,469 --> 00:22:28,328
+and ingestion.
+
+649
+00:22:28,650 --> 00:22:30,689
+But the reason why we want to start with that is because
+
+650
+00:22:30,689 --> 00:22:32,769
+detections are written on logs. But now let's
+
+651
+00:22:32,769 --> 00:22:34,930
+sort of get into more of the core issue of why we're here, right?
+
+652
+00:22:35,009 --> 00:22:37,140
+Detection is code. And Andrew did a really good
+
+653
+00:22:37,140 --> 00:22:38,189
+job in the introduction,
+
+654
+00:22:38,529 --> 00:22:40,868
+uh, sort of talking about what detection is code is.
+
+655
+00:22:41,289 --> 00:22:43,338
+So, as the challenge says, right, detection
+
+656
+00:22:43,338 --> 00:22:45,769
+quality doesn't come from more rules, it comes from a better
+
+657
+00:22:45,769 --> 00:22:47,390
+process. So,
+
+658
+00:22:47,989 --> 00:22:50,068
+Before I go into this a little bit more,
+
+659
+00:22:50,209 --> 00:22:50,729
+um,
+
+660
+00:22:51,009 --> 00:22:53,009
+I wanna state that when Riot started using
+
+661
+00:22:53,009 --> 00:22:55,289
+DataDog, we didn't really do detection
+
+662
+00:22:55,289 --> 00:22:55,858
+as code.
+
+663
+00:22:56,130 --> 00:22:57,818
+We were building rules in the GUI,
+
+664
+00:22:58,088 --> 00:23:00,209
+and I'll be honest, I really, really
+
+665
+00:23:00,209 --> 00:23:02,209
+still like the GUI, and we'll see why and when
+
+666
+00:23:02,209 --> 00:23:04,209
+we built our processes, that we still sort of use
+
+667
+00:23:04,209 --> 00:23:05,430
+the GUOUI and we sort of like
+
+668
+00:23:05,689 --> 00:23:07,608
+found an interesting way to do detection as code still.
+
+669
+00:23:08,130 --> 00:23:10,328
+So, let's do a quick summary again of just what detection
+
+670
+00:23:10,328 --> 00:23:12,568
+of code is, um, the core principles
+
+671
+00:23:12,568 --> 00:23:13,868
+being version control,
+
+672
+00:23:14,250 --> 00:23:16,449
+automated testing, collaboration and review,
+
+673
+00:23:16,489 --> 00:23:17,568
+and automation CICD.
+
+674
+00:23:18,078 --> 00:23:20,430
+So, I wanna talk a little bit more about
+
+675
+00:23:20,430 --> 00:23:22,118
+the collaboration and review.
+
+676
+00:23:23,719 --> 00:23:25,890
+One of the biggest issues with just not doing detection
+
+677
+00:23:25,890 --> 00:23:28,640
+as code, in my opinion, is simply typos.
+
+678
+00:23:28,890 --> 00:23:30,890
+Typos, testings, people
+
+679
+00:23:30,890 --> 00:23:33,318
+just making mistakes because, you know, that happens.
+
+680
+00:23:33,489 --> 00:23:35,608
+I have definitely written detections that I
+
+681
+00:23:35,608 --> 00:23:37,890
+thought worked, but I mistyped something.
+
+682
+00:23:38,039 --> 00:23:40,269
+I put, I maybe sent detection to the wrong notification,
+
+683
+00:23:40,529 --> 00:23:42,828
+maybe it was going to dead. It should go to prod and
+
+684
+00:23:42,828 --> 00:23:44,858
+that type of mistake can honestly be pretty critical,
+
+685
+00:23:45,029 --> 00:23:47,068
+right? If I was running a detection, uh, that
+
+686
+00:23:47,068 --> 00:23:49,189
+I knew for some malicious traffic that could happen in the future
+
+687
+00:23:49,189 --> 00:23:50,930
+and all of a sudden that detection will not work anymore,
+
+688
+00:23:51,309 --> 00:23:51,969
+that's a problem.
+
+689
+00:23:52,309 --> 00:23:54,469
+So this is where that collaboration and review part really comes
+
+690
+00:23:54,469 --> 00:23:56,509
+into effect with the whole GitHub, with the whole
+
+691
+00:23:56,509 --> 00:23:58,789
+GitHub part, with the PRs, right,
+
+692
+00:23:59,108 --> 00:23:59,670
+and reviewing.
+
+693
+00:24:00,509 --> 00:24:02,670
+Next part is the automation testing or automated
+
+694
+00:24:02,670 --> 00:24:04,709
+testing. In a little bit, uh, in a
+
+695
+00:24:04,709 --> 00:24:07,068
+second, we're gonna see sort of a demo of, you know, our whole
+
+696
+00:24:07,068 --> 00:24:09,150
+process, and we'll talk a little bit about how,
+
+697
+00:24:09,209 --> 00:24:11,309
+what this automated thing looks like. We're gonna
+
+698
+00:24:11,309 --> 00:24:13,420
+see sort of, you know, some basic Python scripts
+
+699
+00:24:13,420 --> 00:24:15,750
+being run to basically doing some simple validations
+
+700
+00:24:15,750 --> 00:24:18,250
+to make sure these rules are up to our standards
+
+701
+00:24:18,390 --> 00:24:20,430
+in terms of things that it should have, such as
+
+702
+00:24:20,430 --> 00:24:22,338
+maybe like minor techniques and tactics,
+
+703
+00:24:22,699 --> 00:24:24,750
+environment tax, um, make sure the
+
+704
+00:24:24,750 --> 00:24:26,828
+rule name makes sense, and other small
+
+705
+00:24:26,828 --> 00:24:28,910
+things like that as well as the rule is actually valid
+
+706
+00:24:28,910 --> 00:24:30,920
+itself. So without further
+
+707
+00:24:30,920 --> 00:24:32,529
+ado, let's sort of get straight into it.
+
+708
+00:24:32,848 --> 00:24:34,969
+Um, we're going to talk about how we
+
+709
+00:24:34,969 --> 00:24:35,979
+create a rule.
+
+710
+00:24:36,410 --> 00:24:38,318
+So right now, we're in the Data Dog GUI.
+
+711
+00:24:39,009 --> 00:24:41,160
+We are going to go straight, and
+
+712
+00:24:41,160 --> 00:24:42,809
+we're going to go straight and look to create a rule.
+
+713
+00:24:45,118 --> 00:24:47,180
+So right now, we can see that all the rules that
+
+714
+00:24:47,180 --> 00:24:49,420
+are enabled are, there's nothing there. There's nothing.
+
+715
+00:24:49,939 --> 00:24:51,380
+So we went first, we're gonna enable one,
+
+716
+00:24:51,660 --> 00:24:53,699
+we're going to focus on a threshold rule. There's a bunch
+
+717
+00:24:53,699 --> 00:24:55,420
+of different types, but we're going to keep it simple.
+
+718
+00:24:56,368 --> 00:24:58,368
+We're gonna go and we're gonna focus on a role. We're gonna
+
+719
+00:24:58,368 --> 00:25:00,559
+look at cloud trail, right, where AWS reinvent,
+
+720
+00:25:00,699 --> 00:25:02,949
+gotta do cloud trail. We're gonna focus on
+
+721
+00:25:02,949 --> 00:25:05,250
+uh stop logging. So, cause that's
+
+722
+00:25:05,250 --> 00:25:07,229
+would be weird. People shouldn't be stopping logs.
+
+723
+00:25:07,529 --> 00:25:09,368
+And then we're gonna group by an account ID.
+
+724
+00:25:11,108 --> 00:25:13,229
+Next thing I want to talk about is that preview matching
+
+725
+00:25:13,229 --> 00:25:15,309
+logs. So this is a right
+
+726
+00:25:15,309 --> 00:25:17,630
+on the bottom, that's a very helpful thing that basically
+
+727
+00:25:17,630 --> 00:25:19,630
+will allow us to do some testing on
+
+728
+00:25:19,630 --> 00:25:22,049
+basically if things exist for that query.
+
+729
+00:25:22,269 --> 00:25:23,509
+And one of the reasons why I like the GUI.
+
+730
+00:25:24,068 --> 00:25:26,189
+The next thing is we're going to define our rule condition and say
+
+731
+00:25:26,189 --> 00:25:28,348
+like, you know, if, if anything hits
+
+732
+00:25:28,348 --> 00:25:29,848
+or greater than 0, then alert,
+
+733
+00:25:30,390 --> 00:25:31,989
+then we're gonna add a rule name.
+
+734
+00:25:32,739 --> 00:25:33,799
+And we're gonna add a description
+
+735
+00:25:34,969 --> 00:25:37,059
+The other thing I wanted to mention as well, is
+
+736
+00:25:37,059 --> 00:25:37,939
+at the very bottom,
+
+737
+00:25:38,219 --> 00:25:40,479
+right after this is done, we're going to start adding tags.
+
+738
+00:25:40,900 --> 00:25:42,979
+So this is part of that part where
+
+739
+00:25:42,979 --> 00:25:44,180
+it's good practice, right?
+
+740
+00:25:44,539 --> 00:25:46,630
+When you're security operations, you probably want to start
+
+741
+00:25:46,630 --> 00:25:48,279
+using minor tactics and techniques.
+
+742
+00:25:48,539 --> 00:25:50,680
+And that's good for tracking purposes to see where your general
+
+743
+00:25:50,680 --> 00:25:52,459
+uh your general coverage is.
+
+744
+00:25:53,309 --> 00:25:55,348
+So we're gonna be looking to add both of those.
+
+745
+00:25:55,549 --> 00:25:56,729
+We'll also be looking to add
+
+746
+00:25:57,229 --> 00:25:59,368
+um my uh environment tag as well.
+
+747
+00:26:02,489 --> 00:26:04,529
+It'll take 1 2nd. My typing is
+
+748
+00:26:04,529 --> 00:26:05,949
+unfortunately a little slow.
+
+749
+00:26:07,809 --> 00:26:09,848
+But while it's happening, the other thing on the bottom, you can
+
+750
+00:26:09,848 --> 00:26:11,338
+see is create suppression.
+
+751
+00:26:11,618 --> 00:26:13,900
+And I'm not going to go into this today, but we've actually also
+
+752
+00:26:13,900 --> 00:26:15,719
+CICD our suppressions as well.
+
+753
+00:26:16,019 --> 00:26:18,180
+And that's a really helpful thing too, because we've basically
+
+754
+00:26:18,180 --> 00:26:20,170
+linked suppressions to detections.
+
+755
+00:26:20,500 --> 00:26:22,689
+And again, when you see a little bit,
+
+756
+00:26:22,848 --> 00:26:24,118
+and when we go to the next slide,
+
+757
+00:26:24,660 --> 00:26:27,000
+everything's in an IDE and everything is just managed.
+
+758
+00:26:27,380 --> 00:26:29,410
+But what's nice about this approach so far is that we're
+
+759
+00:26:29,410 --> 00:26:30,729
+literally in the GUI.
+
+760
+00:26:31,289 --> 00:26:32,709
+And when we're done
+
+761
+00:26:33,049 --> 00:26:35,430
+with our tagging, basically, what we look to do
+
+762
+00:26:35,529 --> 00:26:37,229
+is we look to actually export the rule.
+
+763
+00:26:37,779 --> 00:26:38,949
+So we go to the top right.
+
+764
+00:26:40,068 --> 00:26:41,068
+In a second,
+
+765
+00:26:41,509 --> 00:26:42,539
+that's suppressions.
+
+766
+00:26:45,039 --> 00:26:47,118
+So we'll go to the top right, we'll look to export it, that
+
+767
+00:26:47,118 --> 00:26:49,219
+grabs us JSON. And the big important
+
+768
+00:26:49,219 --> 00:26:51,279
+part here is we're actually, you're
+
+769
+00:26:51,279 --> 00:26:52,559
+gonna not save the rule.
+
+770
+00:26:52,868 --> 00:26:54,219
+We're gonna cancel.
+
+771
+00:26:54,680 --> 00:26:56,949
+OK. So now, we, we've got the rule in JSON.
+
+772
+00:26:57,229 --> 00:26:59,279
+Let's look at how we're actually gonna go about deploying it.
+
+773
+00:27:01,299 --> 00:27:02,848
+So now we're, we're in our IDE.
+
+774
+00:27:03,259 --> 00:27:05,140
+Uh, you can see there's a folder called cloud trail.
+
+775
+00:27:05,459 --> 00:27:07,539
+Uh, in a second, I'm gonna basically drag the rule
+
+776
+00:27:07,539 --> 00:27:09,660
+in. I've named it a little nicer because
+
+777
+00:27:09,660 --> 00:27:11,078
+the name was a little not great.
+
+778
+00:27:11,578 --> 00:27:13,719
+Um, so there we go, we got our rule.
+
+779
+00:27:14,459 --> 00:27:15,779
+We're gonna open it up.
+
+780
+00:27:17,328 --> 00:27:19,699
+Oh, look at that JSON, very nice. It's
+
+781
+00:27:19,699 --> 00:27:21,769
+got all the configurations that I just set up in the GUI.
+
+782
+00:27:22,088 --> 00:27:24,170
+I don't have to worry about it at all. It's all there.
+
+783
+00:27:24,969 --> 00:27:27,049
+So now what I want to look to do is actually look to
+
+784
+00:27:27,049 --> 00:27:27,910
+deploy this rule
+
+785
+00:27:28,309 --> 00:27:29,729
+through the RCICD process.
+
+786
+00:27:30,019 --> 00:27:32,088
+So we're gonna do Python, manage PY,
+
+787
+00:27:32,489 --> 00:27:34,608
+we're going to do a validate. So this is where our validation
+
+788
+00:27:34,608 --> 00:27:36,650
+comes into effect, right? Where we're looking
+
+789
+00:27:36,650 --> 00:27:38,729
+to see, you know, if there's any issues. A note
+
+790
+00:27:38,729 --> 00:27:40,068
+right off the bat, we have an error.
+
+791
+00:27:40,410 --> 00:27:42,529
+It's saying that we don't have a CICD tag.
+
+792
+00:27:43,130 --> 00:27:45,449
+So right away, I'm going to make a CICD tag. Now,
+
+793
+00:27:45,568 --> 00:27:46,608
+what is a CIC tag?
+
+794
+00:27:46,969 --> 00:27:49,130
+This is basically a tag that we use to link
+
+795
+00:27:49,130 --> 00:27:51,368
+our, our rules that are in our Gup repo,
+
+796
+00:27:51,449 --> 00:27:53,489
+or disk, basically to what's in Data Dog. We
+
+797
+00:27:53,489 --> 00:27:55,519
+have to have some state, right? So this tag
+
+798
+00:27:55,519 --> 00:27:56,910
+is the one that helps us control that.
+
+799
+00:27:57,979 --> 00:28:00,299
+Next, we're gonna look, we got, we got our ID.
+
+800
+00:28:00,699 --> 00:28:02,660
+Let's go straight and let's look to deploy it.
+
+801
+00:28:03,848 --> 00:28:06,009
+So we're looking to deploy detections. So now you can see
+
+802
+00:28:06,009 --> 00:28:07,250
+it's reading local disk,
+
+803
+00:28:07,529 --> 00:28:08,358
+looking at the JSON.
+
+804
+00:28:09,539 --> 00:28:11,689
+Great, it's looking good. Oh, great, it's creating
+
+805
+00:28:11,689 --> 00:28:13,000
+a rule. So now,
+
+806
+00:28:13,380 --> 00:28:14,180
+should have created a rule.
+
+807
+00:28:14,479 --> 00:28:16,279
+Let's swap back to the GUI,
+
+808
+00:28:17,180 --> 00:28:19,250
+uh, in a second. Let's do a quick refresh. So
+
+809
+00:28:19,250 --> 00:28:20,390
+right now we can see there's nothing there.
+
+810
+00:28:20,699 --> 00:28:21,959
+So let's do a refresh.
+
+811
+00:28:22,939 --> 00:28:25,059
+And we should see the new rule in a
+
+812
+00:28:25,059 --> 00:28:27,219
+second. And there it is.
+
+813
+00:28:27,469 --> 00:28:28,750
+Wow, very cool.
+
+814
+00:28:29,029 --> 00:28:31,068
+So, let's look at the tags. It's interesting. So
+
+815
+00:28:31,068 --> 00:28:33,180
+we got the CICD tag, we see a CICD
+
+816
+00:28:33,180 --> 00:28:34,410
+hashtag, that's interesting.
+
+817
+00:28:34,828 --> 00:28:37,098
+And then we see the environment, we see a managed stack ops.
+
+818
+00:28:37,348 --> 00:28:39,390
+Managed stuck ops tag is very important. We'll talk about this in
+
+819
+00:28:39,390 --> 00:28:41,709
+a bit. But the CICD hash is also
+
+820
+00:28:41,709 --> 00:28:43,789
+important. This is how we're able to actually tell when
+
+821
+00:28:43,789 --> 00:28:45,630
+we update rules, which we're gonna see in a second.
+
+822
+00:28:46,180 --> 00:28:48,578
+So now that we've created a rule, let's talk about updating,
+
+823
+00:28:48,779 --> 00:28:51,029
+right? Let's just do a really simple example of updating.
+
+824
+00:28:51,088 --> 00:28:52,650
+Let's just add updated to the rule name.
+
+825
+00:28:52,939 --> 00:28:55,059
+But what's going to happen here when we do this, right?
+
+826
+00:28:55,338 --> 00:28:57,410
+That CICD hash, that tag that we added,
+
+827
+00:28:57,660 --> 00:28:59,900
+the logic is quite simple if you think about it. We're
+
+828
+00:28:59,900 --> 00:29:02,299
+just going to compare what's on the local versus what's in Dataog.
+
+829
+00:29:02,368 --> 00:29:04,500
+If there's a new CICD hash, right? Or
+
+830
+00:29:04,500 --> 00:29:06,549
+there's a difference in hashes, then obviously you have a different
+
+831
+00:29:06,549 --> 00:29:08,000
+rule. So then you're going to update it.
+
+832
+00:29:08,299 --> 00:29:10,420
+It's not pretty straightforward. And that's
+
+833
+00:29:10,420 --> 00:29:12,489
+sort of how we wanted to design this and make it as easy as
+
+834
+00:29:12,489 --> 00:29:13,039
+possible.
+
+835
+00:29:13,618 --> 00:29:14,818
+So we're going to do a validation.
+
+836
+00:29:15,529 --> 00:29:16,509
+Looks like it's good.
+
+837
+00:29:17,170 --> 00:29:18,250
+Let's go straight and deploy it.
+
+838
+00:29:19,509 --> 00:29:20,608
+So now we're looking to deploy.
+
+839
+00:29:21,430 --> 00:29:22,650
+It's taken a second to read,
+
+840
+00:29:22,910 --> 00:29:24,489
+and then now, note, right over there,
+
+841
+00:29:24,828 --> 00:29:25,588
+says updating.
+
+842
+00:29:26,779 --> 00:29:28,900
+Cool. So now let's go and make sure in the gooey that
+
+843
+00:29:28,900 --> 00:29:30,039
+it actually reflects this.
+
+844
+00:29:30,989 --> 00:29:33,068
+So there we go, we see it's there. Let's
+
+845
+00:29:33,068 --> 00:29:33,858
+do a quick refresh.
+
+846
+00:29:37,709 --> 00:29:39,750
+And there we can you see the title right over there
+
+847
+00:29:39,750 --> 00:29:40,920
+it says updated.
+
+848
+00:29:41,229 --> 00:29:42,880
+Nice. It's exactly what we want.
+
+849
+00:29:43,150 --> 00:29:44,519
+So now we've been able to create a rule,
+
+850
+00:29:44,949 --> 00:29:45,509
+update a rule,
+
+851
+00:29:45,828 --> 00:29:46,920
+but what about deleting?
+
+852
+00:29:47,309 --> 00:29:49,469
+Now we don't want the rule. Let's say it's a bad rule for some reason. How
+
+853
+00:29:49,469 --> 00:29:51,549
+do we go about that? Well, this is a really simple
+
+854
+00:29:51,549 --> 00:29:53,549
+one. If we wanna delete it, let's
+
+855
+00:29:53,549 --> 00:29:54,670
+just delete the file.
+
+856
+00:29:55,420 --> 00:29:57,459
+So what we're gonna do is go over here in our
+
+857
+00:29:57,459 --> 00:29:58,769
+ID and delete it.
+
+858
+00:29:59,818 --> 00:30:01,818
+Now, one thing I want to clarify, right, if I'm doing all this
+
+859
+00:30:01,818 --> 00:30:02,469
+in the IDE,
+
+860
+00:30:02,779 --> 00:30:04,890
+right? Normally, this is done, a
+
+861
+00:30:04,890 --> 00:30:07,500
+lot of the commands that are happening here are done through CICD
+
+862
+00:30:07,500 --> 00:30:09,799
+you know what I mean, what I mean by that is it's done through GitOps,
+
+863
+00:30:09,809 --> 00:30:11,868
+Jenkins. I'm just doing it through in CLI
+
+864
+00:30:11,868 --> 00:30:13,838
+right now because it's a bit faster and easier to show.
+
+865
+00:30:14,618 --> 00:30:16,000
+So anyway, we're deleting the file.
+
+866
+00:30:16,459 --> 00:30:17,719
+We can see that it got deleted.
+
+867
+00:30:18,838 --> 00:30:20,920
+Let's now go back and let's see
+
+868
+00:30:20,920 --> 00:30:21,818
+what this looks like.
+
+869
+00:30:23,588 --> 00:30:25,608
+Yeah, the rule's there. Let's refresh.
+
+870
+00:30:26,068 --> 00:30:27,029
+Quick refresh,
+
+871
+00:30:27,430 --> 00:30:29,539
+and the rule is gone.
+
+872
+00:30:29,750 --> 00:30:31,930
+Awesome. So now we're sort of seeing
+
+873
+00:30:31,930 --> 00:30:34,000
+again, or how we create rules, how
+
+874
+00:30:34,000 --> 00:30:35,670
+we update rules, and how we delete it.
+
+875
+00:30:36,130 --> 00:30:38,150
+So let's talk a little bit more about
+
+876
+00:30:38,650 --> 00:30:41,029
+how we actually try and enforce this.
+
+877
+00:30:42,279 --> 00:30:43,489
+So what, what do I mean by this?
+
+878
+00:30:44,368 --> 00:30:44,989
+So,
+
+879
+00:30:45,449 --> 00:30:47,449
+cause the fact of the matter is, if you notice, the
+
+880
+00:30:47,449 --> 00:30:49,529
+GUI, someone by mistake could
+
+881
+00:30:49,529 --> 00:30:50,848
+press save.
+
+882
+00:30:51,289 --> 00:30:52,039
+Mistakes happen.
+
+883
+00:30:52,368 --> 00:30:54,549
+There's also situations where out of the box rules
+
+884
+00:30:54,930 --> 00:30:56,439
+turn on and they're auto enabled.
+
+885
+00:30:56,729 --> 00:30:58,769
+If that happens, what happens to our CICD state? Now
+
+886
+00:30:58,769 --> 00:31:00,549
+we're gonna have rules that are enabled that
+
+887
+00:31:00,920 --> 00:31:02,469
+we don't actually like
+
+888
+00:31:02,779 --> 00:31:04,930
+want, right? Like, we're, we're not ready
+
+889
+00:31:04,930 --> 00:31:07,068
+to turn them on, or they're just mistakes.
+
+890
+00:31:07,410 --> 00:31:09,489
+So we built a very simple automation, uh, which
+
+891
+00:31:09,489 --> 00:31:11,489
+basically goes and pulls all the rules that are enabled
+
+892
+00:31:11,489 --> 00:31:12,299
+in DataDog.
+
+893
+00:31:12,670 --> 00:31:14,250
+It then checks those tags,
+
+894
+00:31:14,549 --> 00:31:16,568
+and it looks for that managed secops tag that I
+
+895
+00:31:16,568 --> 00:31:17,199
+talked about.
+
+896
+00:31:17,519 --> 00:31:19,549
+That tag is added if a rule
+
+897
+00:31:19,549 --> 00:31:21,509
+gets deployed through our CICD process.
+
+898
+00:31:22,618 --> 00:31:24,670
+If it finds a rule that is enabled
+
+899
+00:31:24,670 --> 00:31:25,799
+that does not have that tag,
+
+900
+00:31:26,150 --> 00:31:28,328
+then it basically notifies us through Slack
+
+901
+00:31:28,588 --> 00:31:30,229
+and it auto turns that rule off.
+
+902
+00:31:30,670 --> 00:31:32,828
+So this is a good way for us to make sure that our state
+
+903
+00:31:32,828 --> 00:31:35,108
+is, you know, always working. It's always
+
+904
+00:31:35,108 --> 00:31:36,769
+exactly what we want and what we expect.
+
+905
+00:31:37,390 --> 00:31:38,250
+However, now.
+
+906
+00:31:39,078 --> 00:31:40,750
+Let's say we have a security incident.
+
+907
+00:31:41,328 --> 00:31:43,449
+Are you telling me that during a security incident, we're
+
+908
+00:31:43,449 --> 00:31:46,068
+gonna have to go through that whole CICD process to make a detection?
+
+909
+00:31:46,608 --> 00:31:48,848
+Uh, I don't know how I feel about that, right? That
+
+910
+00:31:48,848 --> 00:31:51,078
+doesn't sound that great, doesn't sound fun.
+
+911
+00:31:51,410 --> 00:31:53,449
+Realistically, honestly, it wasn't that bad, but like
+
+912
+00:31:53,449 --> 00:31:55,489
+when you're in a security incident, you want to be able to do things fast,
+
+913
+00:31:55,608 --> 00:31:56,309
+right, and quick.
+
+914
+00:31:56,848 --> 00:31:58,880
+So how can we deal with this
+
+915
+00:31:58,880 --> 00:31:59,920
+situation? Well,
+
+916
+00:32:00,410 --> 00:32:01,969
+let's, we're gonna sort of hack the system.
+
+917
+00:32:02,430 --> 00:32:04,430
+What you're gonna do, right, in a break glass situation,
+
+918
+00:32:04,660 --> 00:32:06,689
+security, and you really need to make a rule and you don't want
+
+919
+00:32:06,689 --> 00:32:08,380
+to go through the CICD process,
+
+920
+00:32:08,750 --> 00:32:10,828
+you're gonna make the rule just like we saw initially
+
+921
+00:32:10,828 --> 00:32:12,910
+in the GUI. However, you're gonna manually add
+
+922
+00:32:12,910 --> 00:32:14,930
+the tag and manage suck-offs.
+
+923
+00:32:15,269 --> 00:32:17,430
+This way, the automation that we built will
+
+924
+00:32:17,430 --> 00:32:18,469
+not turn it off.
+
+925
+00:32:19,229 --> 00:32:21,309
+And obviously, you know, we know this is a hack and
+
+926
+00:32:21,309 --> 00:32:23,630
+there's a little bit of like, you know, trust,
+
+927
+00:32:23,750 --> 00:32:25,828
+right, in the analysts to not abuse this.
+
+928
+00:32:26,108 --> 00:32:28,348
+And that's something that we're OK with, right? We're building
+
+929
+00:32:28,348 --> 00:32:29,930
+this for us, we trust
+
+930
+00:32:30,420 --> 00:32:32,769
+ourselves, right? And to know to not abuse this.
+
+931
+00:32:33,068 --> 00:32:35,289
+And when the incident's done, we're just gonna go,
+
+932
+00:32:35,630 --> 00:32:36,979
+go to the rule, export the JSON,
+
+933
+00:32:37,709 --> 00:32:40,130
+do the things we did the IDE and then boom,
+
+934
+00:32:40,309 --> 00:32:41,029
+and we should be good.
+
+935
+00:32:42,439 --> 00:32:44,479
+So, now that we talked a little bit about this, like
+
+936
+00:32:44,479 --> 00:32:46,598
+rules, let's talk a little bit about out of the box rules and
+
+937
+00:32:46,598 --> 00:32:47,900
+how we sort of handle these outright.
+
+938
+00:32:49,959 --> 00:32:52,098
+So, out of the box rules are great.
+
+939
+00:32:52,229 --> 00:32:54,519
+And I really do think that's important. And I want to clarify
+
+940
+00:32:54,519 --> 00:32:56,500
+this a little bit more before I talk about this flow chart.
+
+941
+00:32:56,789 --> 00:32:57,338
+Um,
+
+942
+00:32:58,920 --> 00:33:00,519
+When, when we look at rules, right,
+
+943
+00:33:00,920 --> 00:33:02,059
+we want to make sure that
+
+944
+00:33:02,318 --> 00:33:04,358
+they work for our environment. And what I mean by that is if I
+
+945
+00:33:04,358 --> 00:33:06,630
+turn off turn on an out of box rule,
+
+946
+00:33:06,799 --> 00:33:08,309
+I don't know if it's going to be loud or not.
+
+947
+00:33:08,640 --> 00:33:10,019
+So it has to go through a process,
+
+948
+00:33:10,598 --> 00:33:12,789
+right? And this is what sort of what this process looks
+
+949
+00:33:12,789 --> 00:33:14,640
+like. What, basically,
+
+950
+00:33:14,959 --> 00:33:17,160
+what we'll do is we'll grab, grab
+
+951
+00:33:17,160 --> 00:33:17,779
+our rules.
+
+952
+00:33:18,189 --> 00:33:19,449
+And then we'll basically
+
+953
+00:33:19,709 --> 00:33:21,900
+test them. We'll grab the queries, we'll, uh,
+
+954
+00:33:21,989 --> 00:33:22,509
+we'll do that.
+
+955
+00:33:22,789 --> 00:33:24,789
+Something in the future we're actually looking to do is actually use
+
+956
+00:33:24,789 --> 00:33:27,229
+a historical engine Data Dog has and build an automation
+
+957
+00:33:27,430 --> 00:33:29,660
+that basically will go and grab all the out of the box
+
+958
+00:33:29,660 --> 00:33:31,750
+rules that we care about that are disabled and
+
+959
+00:33:31,750 --> 00:33:33,809
+run a query and check the last 90 days
+
+960
+00:33:33,809 --> 00:33:35,949
+and see the hits. And then based off that, we already
+
+961
+00:33:35,949 --> 00:33:37,949
+know with confidence certain rules. Oh, this is hitting
+
+962
+00:33:37,949 --> 00:33:40,068
+0 in 90 days. It's an interesting rule. We
+
+963
+00:33:40,068 --> 00:33:41,608
+can probably just turn this on right away,
+
+964
+00:33:42,029 --> 00:33:43,969
+right? So that's part of that evaluation rule.
+
+965
+00:33:44,469 --> 00:33:46,868
+And then from there, it's about, it's either enabled or disabled.
+
+966
+00:33:47,689 --> 00:33:50,098
+One other thing I forgot to mention a little bit earlier,
+
+967
+00:33:50,410 --> 00:33:52,318
+but in the previous automation that we had,
+
+968
+00:33:52,608 --> 00:33:54,608
+where we were actually going and,
+
+969
+00:33:54,848 --> 00:33:56,969
+you know, disabling rules, when we disable
+
+970
+00:33:56,969 --> 00:33:57,509
+a rule,
+
+971
+00:33:57,799 --> 00:33:59,848
+we actually send that rule information
+
+972
+00:33:59,848 --> 00:34:00,650
+to a spreadsheet.
+
+973
+00:34:01,108 --> 00:34:03,500
+And that spreadsheet keeps track of all the rules we've disabled.
+
+974
+00:34:03,789 --> 00:34:05,868
+Why? Well, we have monthly syncs
+
+975
+00:34:05,868 --> 00:34:08,070
+where we basically go through those rules and
+
+976
+00:34:08,070 --> 00:34:09,989
+discuss as a team, hey, is this rule important?
+
+977
+00:34:10,269 --> 00:34:12,349
+Oh, it is. Oh, this rule of query makes a lot
+
+978
+00:34:12,349 --> 00:34:12,989
+of sense.
+
+979
+00:34:13,389 --> 00:34:15,619
+Let's just look to turn this on. Oh, this
+
+980
+00:34:15,619 --> 00:34:17,829
+rule makes a lot of sense. They've already done the hard work for that query
+
+981
+00:34:17,829 --> 00:34:19,909
+logic. We just need to tune it a little bit and add a few
+
+982
+00:34:19,909 --> 00:34:21,590
+fields to make it work for us. Let's do that.
+
+983
+00:34:22,088 --> 00:34:22,849
+OK, so,
+
+984
+00:34:23,329 --> 00:34:25,329
+hopefully that makes sense. Let's, uh, go a little bit
+
+985
+00:34:25,329 --> 00:34:27,329
+more into it, right? So, in summary,
+
+986
+00:34:27,407 --> 00:34:29,617
+the challenge of out of the box rules, right? Alert
+
+987
+00:34:29,617 --> 00:34:31,568
+fatigue, normalization, mismatches,
+
+988
+00:34:31,849 --> 00:34:32,717
+coverage gaps,
+
+989
+00:34:33,009 --> 00:34:34,048
+maintenance and life cycle.
+
+990
+00:34:34,978 --> 00:34:35,978
+But, right,
+
+991
+00:34:36,378 --> 00:34:38,619
+like I said, they have a lot of value, and I don't want to diminish
+
+992
+00:34:38,619 --> 00:34:40,659
+that. A lot of the out of the box rules
+
+993
+00:34:40,659 --> 00:34:43,119
+that we've, a lot of the rules we actually have in DataDog
+
+994
+00:34:43,449 --> 00:34:45,789
+are out of the box rules that we've taken and just straight up enabled,
+
+995
+00:34:45,860 --> 00:34:47,539
+or we've added some slight addition stuff.
+
+996
+00:34:48,820 --> 00:34:50,860
+So the biggest thing is you need to pair it with
+
+997
+00:34:50,860 --> 00:34:51,889
+an activation plan.
+
+998
+00:34:53,889 --> 00:34:56,050
+OK, so now we've talked about detection
+
+999
+00:34:56,050 --> 00:34:56,708
+as code,
+
+1000
+00:34:57,050 --> 00:34:58,708
+talked about a lot about logs.
+
+1001
+00:34:59,458 --> 00:35:01,469
+Let's talk about my 3rd probably
+
+1002
+00:35:01,469 --> 00:35:02,938
+favorite topic or challenge,
+
+1003
+00:35:03,349 --> 00:35:05,389
+which is behavioral detections.
+
+1004
+00:35:06,119 --> 00:35:08,228
+And I'll be honest, like detections and building
+
+1005
+00:35:08,228 --> 00:35:10,280
+detections themselves probably could be its own
+
+1006
+00:35:10,280 --> 00:35:12,398
+big talk, right? But I
+
+1007
+00:35:12,398 --> 00:35:14,438
+wanted to do a bunch of small little things because it makes it more
+
+1008
+00:35:14,438 --> 00:35:16,260
+fun and hopefully you're learning a bit.
+
+1009
+00:35:16,599 --> 00:35:18,800
+So behavioral detections, you know, they're
+
+1010
+00:35:18,800 --> 00:35:20,360
+good, but they're noisy,
+
+1011
+00:35:20,639 --> 00:35:22,639
+right? Uh, let's talk a little bit about
+
+1012
+00:35:22,639 --> 00:35:23,519
+this a little bit more.
+
+1013
+00:35:24,340 --> 00:35:26,539
+So here's a fun picture, right? It's
+
+1014
+00:35:26,539 --> 00:35:28,469
+a behavioral analyst, you're observing behavior,
+
+1015
+00:35:28,820 --> 00:35:30,320
+but is it true or is it not?
+
+1016
+00:35:31,570 --> 00:35:33,728
+So let's look at an example of OCTA,
+
+1017
+00:35:34,090 --> 00:35:36,550
+right? If you're familiar with Octa logs, OCTA
+
+1018
+00:35:36,550 --> 00:35:38,989
+actually has inbuilt behavior logic.
+
+1019
+00:35:39,648 --> 00:35:41,760
+So it literally will tell you, you know, if someone's
+
+1020
+00:35:41,760 --> 00:35:43,889
+doing stuff, is that person in a new city,
+
+1021
+00:35:44,159 --> 00:35:44,708
+new country,
+
+1022
+00:35:45,289 --> 00:35:47,610
+new device, new geolocation, IP
+
+1023
+00:35:47,610 --> 00:35:49,648
+state, you know, velocity, and then it gives you a risk
+
+1024
+00:35:49,648 --> 00:35:52,039
+level, oh, a risk level. We, we love severity,
+
+1025
+00:35:52,329 --> 00:35:54,110
+right? And then it tells you, you know, what's going on.
+
+1026
+00:35:54,728 --> 00:35:57,070
+So, we, you know, want to test this out.
+
+1027
+00:35:57,208 --> 00:35:59,280
+Uh, we made it around basically stuff that our
+
+1028
+00:35:59,280 --> 00:36:00,750
+risk levels around higher critical.
+
+1029
+00:36:01,090 --> 00:36:02,590
+And we made a
+
+1030
+00:36:02,849 --> 00:36:03,570
+rule off this.
+
+1031
+00:36:04,389 --> 00:36:06,708
+And this rule basically says that
+
+1032
+00:36:06,708 --> 00:36:08,949
+in 1 week, we will get 22 detections
+
+1033
+00:36:08,949 --> 00:36:11,050
+for this. That basically
+
+1034
+00:36:11,050 --> 00:36:13,070
+equivalents to 3 alerts a day.
+
+1035
+00:36:13,449 --> 00:36:15,489
+And realistically, honestly, if it just happened like 1
+
+1036
+00:36:15,489 --> 00:36:17,570
+day, it probably wouldn't be that bad. But as it keeps,
+
+1037
+00:36:17,610 --> 00:36:19,750
+if you, the next day starts, you're like, oh, the alerts
+
+1038
+00:36:19,750 --> 00:36:21,889
+are happening again. Oh, the next day happens, the alerts
+
+1039
+00:36:21,889 --> 00:36:24,208
+happening again, you're gonna get start to get really annoyed,
+
+1040
+00:36:24,369 --> 00:36:26,478
+right, by the same alerts that just keep popping up and popping
+
+1041
+00:36:26,478 --> 00:36:27,228
+up, popping up.
+
+1042
+00:36:28,099 --> 00:36:29,539
+So this is sort of the problem, right?
+
+1043
+00:36:29,978 --> 00:36:32,090
+The, the issue though, and it sort of leads into
+
+1044
+00:36:32,090 --> 00:36:33,688
+the next one source I want to talk about,
+
+1045
+00:36:33,978 --> 00:36:35,159
+which is guard duty.
+
+1046
+00:36:36,079 --> 00:36:37,938
+So, guard duty
+
+1047
+00:36:38,519 --> 00:36:39,409
+can be really noisy.
+
+1048
+00:36:39,719 --> 00:36:41,228
+But I'll say a big, big thought.
+
+1049
+00:36:42,340 --> 00:36:44,619
+If you, let's say I have his first example right over there, unusual
+
+1050
+00:36:44,619 --> 00:36:47,099
+IM policy creation, 72 hits, right?
+
+1051
+00:36:47,978 --> 00:36:50,340
+If one of those is a true positive, and
+
+1052
+00:36:50,340 --> 00:36:51,280
+that is an incident,
+
+1053
+00:36:51,739 --> 00:36:52,918
+you need to know about that,
+
+1054
+00:36:53,349 --> 00:36:55,539
+right? You can't ignore that. But are they, are
+
+1055
+00:36:55,539 --> 00:36:57,579
+you going to tell like analysts like me to like
+
+1056
+00:36:57,579 --> 00:36:59,050
+triage 72 alerts?
+
+1057
+00:37:00,050 --> 00:37:02,128
+Probably not, right? That, that's like we
+
+1058
+00:37:02,128 --> 00:37:04,250
+need to find some way of dealing
+
+1059
+00:37:04,250 --> 00:37:06,409
+with this so that we can still actually get
+
+1060
+00:37:06,409 --> 00:37:08,530
+that signal but find a way to fine tune.
+
+1061
+00:37:08,570 --> 00:37:10,648
+And obviously, you could do fine tune like you, you could
+
+1062
+00:37:10,648 --> 00:37:12,878
+do a lot of like things where you grab the detection,
+
+1063
+00:37:13,128 --> 00:37:15,250
+you know, you maybe change severity and some stuff like
+
+1064
+00:37:15,250 --> 00:37:17,300
+that, um, but we came up
+
+1065
+00:37:17,300 --> 00:37:18,668
+with a solution that I think is
+
+1066
+00:37:19,010 --> 00:37:21,228
+sort of interesting, um, and that's what we're gonna get into
+
+1067
+00:37:21,228 --> 00:37:24,119
+right now. So,
+
+1068
+00:37:24,329 --> 00:37:26,570
+next thing, we're gonna talk about observing behavior,
+
+1069
+00:37:26,929 --> 00:37:29,128
+notes the third hand on the notebook
+
+1070
+00:37:29,128 --> 00:37:29,750
+right there.
+
+1071
+00:37:31,489 --> 00:37:33,648
+So, let's look at our signal
+
+1072
+00:37:33,648 --> 00:37:34,550
+explorer.
+
+1073
+00:37:35,250 --> 00:37:37,090
+So, in exactly
+
+1074
+00:37:37,878 --> 00:37:38,489
+Uh,
+
+1075
+00:37:38,869 --> 00:37:40,570
+one day we have
+
+1076
+00:37:40,909 --> 00:37:43,289
+499 signals.
+
+1077
+00:37:44,090 --> 00:37:46,128
+That's weird. I just told you that we don't
+
+1078
+00:37:46,128 --> 00:37:48,309
+want to have a lot of signals. Why do we have
+
+1079
+00:37:48,648 --> 00:37:50,929
+499 signals in one day? That's
+
+1080
+00:37:50,929 --> 00:37:53,090
+crazy. But if you actually look a little bit
+
+1081
+00:37:53,090 --> 00:37:55,329
+more at the color of those little bars, you'll
+
+1082
+00:37:55,329 --> 00:37:57,079
+see a lot of that is gray,
+
+1083
+00:37:57,409 --> 00:37:58,648
+right? Like a lot is gray.
+
+1084
+00:37:59,378 --> 00:38:01,398
+Um, so what's actually happening here
+
+1085
+00:38:01,659 --> 00:38:04,070
+is we evaluate our behavioral detections
+
+1086
+00:38:04,070 --> 00:38:05,688
+that we see that might be noisy,
+
+1087
+00:38:06,019 --> 00:38:08,059
+and the ones we think that are high
+
+1088
+00:38:08,059 --> 00:38:10,139
+fidelity or valuable or we can fine tune,
+
+1089
+00:38:10,260 --> 00:38:11,378
+we'll, we'll keep them.
+
+1090
+00:38:11,938 --> 00:38:14,010
+But there are certain ones that are really noisy,
+
+1091
+00:38:14,300 --> 00:38:16,449
+but we still want to keep that for some type
+
+1092
+00:38:16,449 --> 00:38:18,739
+of correlation. So we'll turn those rules
+
+1093
+00:38:18,739 --> 00:38:19,800
+to info alerts.
+
+1094
+00:38:21,079 --> 00:38:23,119
+So let's sort of see what's going to happen here with when we turn
+
+1095
+00:38:23,119 --> 00:38:24,840
+those into info, info alerts.
+
+1096
+00:38:25,840 --> 00:38:27,840
+So, before I get into this, I sort
+
+1097
+00:38:27,840 --> 00:38:29,840
+of want to talk about something a little important
+
+1098
+00:38:29,840 --> 00:38:31,369
+about alerts and detection.
+
+1099
+00:38:31,918 --> 00:38:34,039
+Generally, any alert has a
+
+1100
+00:38:34,039 --> 00:38:36,239
+few fields, right? They have
+
+1101
+00:38:36,239 --> 00:38:38,398
+IP address, they have host name,
+
+1102
+00:38:38,800 --> 00:38:40,159
+they have username,
+
+1103
+00:38:40,438 --> 00:38:42,760
+they could have a user email, they could have an AWS principal,
+
+1104
+00:38:42,878 --> 00:38:45,059
+right? And those are really, that's
+
+1105
+00:38:45,059 --> 00:38:47,059
+really important because you can use those fields to
+
+1106
+00:38:47,059 --> 00:38:49,300
+correlate across other log sources or other
+
+1107
+00:38:49,300 --> 00:38:50,148
+alerts,
+
+1108
+00:38:50,418 --> 00:38:52,030
+emphasis on other alerts.
+
+1109
+00:38:52,519 --> 00:38:54,579
+So let's, now let's like sort of look at the diagram on the
+
+1110
+00:38:54,579 --> 00:38:56,878
+right. Uh, let's say we get an alert,
+
+1111
+00:38:57,019 --> 00:38:58,878
+uh, from Data Dog. It's like a medium,
+
+1112
+00:38:59,418 --> 00:39:00,809
+which is, you know, uh, medium alert,
+
+1113
+00:39:01,179 --> 00:39:03,119
+cool, cool. It's an octo potential brute force
+
+1114
+00:39:03,489 --> 00:39:05,530
+and to be honest, like, that's also couldn't be
+
+1115
+00:39:05,530 --> 00:39:07,539
+a noisy alert, right? Like people forget their
+
+1116
+00:39:07,539 --> 00:39:08,639
+passwords, right? And they
+
+1117
+00:39:08,898 --> 00:39:11,139
+go, go in a lot, then all of a sudden they, you know, they
+
+1118
+00:39:11,139 --> 00:39:13,519
+remember. So let's say we grab that alert.
+
+1119
+00:39:13,889 --> 00:39:15,929
+It goes, then, you know, alert triggers, it
+
+1120
+00:39:15,929 --> 00:39:16,909
+goes to our store tool.
+
+1121
+00:39:17,489 --> 00:39:19,878
+We then say, OK, that alert had a username.
+
+1122
+00:39:20,128 --> 00:39:22,179
+So user.name, let's say and pitch iconie.
+
+1123
+00:39:22,769 --> 00:39:24,849
+We're gonna instantly do an API call to that
+
+1124
+00:39:24,849 --> 00:39:26,969
+signal explorer that you just saw, like a slide
+
+1125
+00:39:26,969 --> 00:39:29,208
+ago. And we're literally gonna let the query
+
+1126
+00:39:29,208 --> 00:39:31,429
+that we're gonna hit is basically user.name
+
+1127
+00:39:31,429 --> 00:39:33,478
+and pitch iconie at Riot Games. Are there any hits
+
+1128
+00:39:33,478 --> 00:39:35,869
+for that? If there are,
+
+1129
+00:39:36,188 --> 00:39:36,780
+OK,
+
+1130
+00:39:37,280 --> 00:39:39,760
+maybe we look to change this to a high severity.
+
+1131
+00:39:40,559 --> 00:39:42,599
+Right? if there aren't, maybe we
+
+1132
+00:39:42,599 --> 00:39:44,719
+look to keep it as medium or auto close, and
+
+1133
+00:39:44,719 --> 00:39:46,059
+we can sort of make that decision.
+
+1134
+00:39:46,478 --> 00:39:48,639
+So this is sort of how we're actually using behavior
+
+1135
+00:39:48,639 --> 00:39:50,760
+detections or anomaly detections that
+
+1136
+00:39:50,760 --> 00:39:51,478
+are noisy,
+
+1137
+00:39:51,760 --> 00:39:53,458
+but we're still able to cross correlate it
+
+1138
+00:39:53,719 --> 00:39:54,639
+and get value out of them.
+
+1139
+00:39:55,958 --> 00:39:57,958
+So let's sort of like take this and like up at one
+
+1140
+00:39:57,958 --> 00:40:00,648
+more level. So,
+
+1141
+00:40:00,659 --> 00:40:01,679
+let's put it all together.
+
+1142
+00:40:02,300 --> 00:40:03,090
+So, now,
+
+1143
+00:40:03,378 --> 00:40:04,699
+same, same exact detection, right?
+
+1144
+00:40:05,340 --> 00:40:06,929
+Uh, octa potential brute force.
+
+1145
+00:40:07,219 --> 00:40:09,260
+However, now we're gonna look at multiple different type of fields
+
+1146
+00:40:09,260 --> 00:40:10,139
+we can correlate.
+
+1147
+00:40:10,510 --> 00:40:12,719
+Or let's look at, look at user agent, let's look at IP
+
+1148
+00:40:12,719 --> 00:40:13,949
+address, let's look at user name,
+
+1149
+00:40:14,500 --> 00:40:16,500
+right? And then we're gonna take those and cross correlate
+
+1150
+00:40:16,500 --> 00:40:17,840
+that with other alerts,
+
+1151
+00:40:18,340 --> 00:40:20,019
+with other threat intel,
+
+1152
+00:40:20,300 --> 00:40:21,969
+with check authentication,
+
+1153
+00:40:22,340 --> 00:40:24,340
+and then combine that logic, and then from there, we can decide if we
+
+1154
+00:40:24,340 --> 00:40:26,260
+want to alert, not alert, change severity.
+
+1155
+00:40:27,199 --> 00:40:27,860
+Cool, this is great.
+
+1156
+00:40:28,559 --> 00:40:30,599
+However, there's one thing I haven't talked about, and I feel like I
+
+1157
+00:40:30,599 --> 00:40:32,329
+have to talk about it because everyone's talking about it.
+
+1158
+00:40:32,639 --> 00:40:33,469
+And the thing is AI,
+
+1159
+00:40:33,958 --> 00:40:36,070
+right? AAI is a thing, I think we're all aware of that.
+
+1160
+00:40:36,398 --> 00:40:38,438
+And the answer is a lot of this flow chart
+
+1161
+00:40:38,438 --> 00:40:40,438
+that I'm showing you right now, honestly, could be done by
+
+1162
+00:40:40,438 --> 00:40:42,679
+AI. Like that whole correlation
+
+1163
+00:40:42,679 --> 00:40:44,679
+with the user agent IP user hitting check
+
+1164
+00:40:44,679 --> 00:40:47,320
+alerts, uh, check threat intel, check authentication.
+
+1165
+00:40:47,519 --> 00:40:49,559
+AI can do all that for you, very simple AI agent.
+
+1166
+00:40:49,878 --> 00:40:50,938
+To combine logic,
+
+1167
+00:40:51,360 --> 00:40:53,438
+you might want to like AI output what you
+
+1168
+00:40:53,438 --> 00:40:55,559
+want, and then you make the decision on, you know, what,
+
+1169
+00:40:55,639 --> 00:40:56,340
+what you choose to do.
+
+1170
+00:40:56,769 --> 00:40:57,349
+Um,
+
+1171
+00:40:57,610 --> 00:40:59,648
+but what I really want to clarify that's really important, and I want
+
+1172
+00:40:59,648 --> 00:41:00,869
+you to make sure you understand is
+
+1173
+00:41:01,208 --> 00:41:03,250
+you still have to tell the AI what to do.
+
+1174
+00:41:03,369 --> 00:41:05,449
+You have to still know that, hey, we, we
+
+1175
+00:41:05,449 --> 00:41:08,010
+have to have this idea that AI checking other alerts
+
+1176
+00:41:08,010 --> 00:41:09,320
+and looking at these fields.
+
+1177
+00:41:09,610 --> 00:41:11,760
+You need to tell the AI to look, go to virus to. You
+
+1178
+00:41:11,760 --> 00:41:14,090
+need to tell like the AI to check authentication to be specific
+
+1179
+00:41:14,090 --> 00:41:16,168
+about that. So, you still have to have those
+
+1180
+00:41:16,168 --> 00:41:17,429
+fundamentals, right?
+
+1181
+00:41:18,010 --> 00:41:19,728
+And then from there, you can do some cool stuff with it.
+
+1182
+00:41:21,610 --> 00:41:23,860
+Awesome. Well, that, uh, I
+
+1183
+00:41:23,860 --> 00:41:25,938
+hope you enjoyed, uh, 3 different things I talked
+
+1184
+00:41:25,938 --> 00:41:27,619
+about. I'm gonna pass it back to Andrew.
+
+1185
+00:41:30,438 --> 00:41:30,958
+Thanks.
+
+1186
+00:41:34,208 --> 00:41:36,429
+A super cool implementation of
+
+1187
+00:41:36,610 --> 00:41:38,969
+what the world can be like when everything has
+
+1188
+00:41:38,969 --> 00:41:40,269
+excellent API support.
+
+1189
+00:41:41,869 --> 00:41:44,349
+So let's talk about the next phase of detection
+
+1190
+00:41:44,349 --> 00:41:46,500
+engineering because after all this is reinvent and we kinda
+
+1191
+00:41:46,500 --> 00:41:48,789
+wanna be a little bit future forward
+
+1192
+00:41:49,030 --> 00:41:51,090
+and we wanna look at how technology
+
+1193
+00:41:51,090 --> 00:41:53,188
+is evolving to help
+
+1194
+00:41:53,188 --> 00:41:55,110
+make these kind of jobs easier.
+
+1195
+00:41:57,369 --> 00:41:58,398
+So the first big
+
+1196
+00:41:59,099 --> 00:42:01,659
+kind of revolution in the detection
+
+1197
+00:42:01,659 --> 00:42:04,128
+engineering industry is the OCSF
+
+1198
+00:42:04,128 --> 00:42:07,019
+framework. I don't know if anybody has heard of OCSF
+
+1199
+00:42:07,019 --> 00:42:07,820
+before today,
+
+1200
+00:42:08,300 --> 00:42:10,599
+but it is the best effort I've seen
+
+1201
+00:42:10,599 --> 00:42:13,378
+in my career to normalize logs
+
+1202
+00:42:13,378 --> 00:42:14,699
+prior to ingest.
+
+1203
+00:42:15,260 --> 00:42:17,780
+So with companies like DataDog and AWS
+
+1204
+00:42:17,780 --> 00:42:19,860
+leading the charge, this has gained a ton
+
+1205
+00:42:19,860 --> 00:42:20,519
+of traction
+
+1206
+00:42:20,938 --> 00:42:21,780
+across the industry.
+
+1207
+00:42:22,188 --> 00:42:24,510
+The biggest benefit of OCSF
+
+1208
+00:42:24,510 --> 00:42:26,590
+is because logs are coming in in
+
+1209
+00:42:26,590 --> 00:42:29,128
+a standard format with standard attributes
+
+1210
+00:42:29,628 --> 00:42:31,668
+all of a sudden the opportunities
+
+1211
+00:42:31,668 --> 00:42:34,199
+for uh low computationally
+
+1212
+00:42:34,199 --> 00:42:36,260
+intensive operations to correlate
+
+1213
+00:42:36,260 --> 00:42:36,889
+events
+
+1214
+00:42:37,349 --> 00:42:39,590
+become much broader. So like imagine for example
+
+1215
+00:42:39,590 --> 00:42:41,590
+that you had to write an account takeover
+
+1216
+00:42:41,590 --> 00:42:43,610
+rule. In the old world
+
+1217
+00:42:43,610 --> 00:42:45,809
+we would write that account takeover rule for every
+
+1218
+00:42:45,809 --> 00:42:46,469
+platform
+
+1219
+00:42:46,969 --> 00:42:48,449
+that we were ingesting logs from.
+
+1220
+00:42:48,809 --> 00:42:49,969
+With OCSF
+
+1221
+00:42:50,289 --> 00:42:52,648
+we can write a single account takeover
+
+1222
+00:42:52,648 --> 00:42:54,849
+rule that covers every platform that
+
+1223
+00:42:54,849 --> 00:42:56,329
+ships logs with OCSF.
+
+1224
+00:42:59,769 --> 00:43:01,378
+Nathan mentioned as well
+
+1225
+00:43:02,039 --> 00:43:04,039
+that Riot uses uh the
+
+1226
+00:43:04,039 --> 00:43:05,820
+open source log router Vector.
+
+1227
+00:43:06,398 --> 00:43:08,699
+Well, Vector has a a cousin
+
+1228
+00:43:08,750 --> 00:43:11,039
+in the Data Dog product and that's called observability
+
+1229
+00:43:11,039 --> 00:43:12,949
+pipelines, and that's a part of Dataog
+
+1230
+00:43:13,438 --> 00:43:15,898
+that can do everything that Vector does and
+
+1231
+00:43:16,079 --> 00:43:17,619
+some more on top of that.
+
+1232
+00:43:18,360 --> 00:43:20,648
+Uh, this week at Amazon Reinvent
+
+1233
+00:43:20,648 --> 00:43:21,668
+we launched,
+
+1234
+00:43:22,168 --> 00:43:24,309
+uh, the OCSF processor
+
+1235
+00:43:24,409 --> 00:43:26,688
+for observability pipelines, so
+
+1236
+00:43:26,949 --> 00:43:28,969
+that's generally available today, and you can use it
+
+1237
+00:43:28,969 --> 00:43:31,110
+to take logs and transform them
+
+1238
+00:43:31,449 --> 00:43:32,409
+to OCSF,
+
+1239
+00:43:32,929 --> 00:43:35,128
+which is a supported, uh, storage format
+
+1240
+00:43:35,128 --> 00:43:37,090
+in the cloudsI platform today.
+
+1241
+00:43:38,820 --> 00:43:41,510
+So don't miss checking out observability pipelines
+
+1242
+00:43:41,860 --> 00:43:44,340
+and uh obviously if you want a DIY
+
+1243
+00:43:44,340 --> 00:43:46,418
+uh vector is an option too,
+
+1244
+00:43:46,500 --> 00:43:49,079
+uh, open source log router agent,
+
+1245
+00:43:49,099 --> 00:43:51,079
+um, that can also do transformations.
+
+1246
+00:43:53,610 --> 00:43:56,139
+So The next
+
+1247
+00:43:56,139 --> 00:43:58,179
+cool thing on top of that is the
+
+1248
+00:43:58,179 --> 00:44:00,260
+explosion of detection methods,
+
+1249
+00:44:00,510 --> 00:44:02,360
+right? So if, if you look at this
+
+1250
+00:44:02,938 --> 00:44:04,978
+screen, um, uh, up here,
+
+1251
+00:44:05,139 --> 00:44:07,300
+Data Dog supports a ton of different detection
+
+1252
+00:44:07,300 --> 00:44:07,958
+methods
+
+1253
+00:44:08,648 --> 00:44:10,820
+including signal correlations, anomaly
+
+1254
+00:44:10,820 --> 00:44:12,699
+windows, and some of those behavior,
+
+1255
+00:44:12,978 --> 00:44:15,010
+uh, based detections that we talked about like
+
+1256
+00:44:15,010 --> 00:44:17,090
+impossible travel or as I like to call it,
+
+1257
+00:44:17,099 --> 00:44:18,619
+you flew faster than Superman.
+
+1258
+00:44:22,628 --> 00:44:24,918
+You may have also seen our announcement this week that
+
+1259
+00:44:24,918 --> 00:44:26,800
+uh Bits AI SRE
+
+1260
+00:44:27,159 --> 00:44:29,438
+is generally available. Well, Bits AI
+
+1261
+00:44:29,438 --> 00:44:31,519
+also has a partner, and
+
+1262
+00:44:31,519 --> 00:44:33,458
+that is Bits AI security analyst.
+
+1263
+00:44:34,139 --> 00:44:36,239
+Um, it's designed to automate and accelerate
+
+1264
+00:44:36,239 --> 00:44:38,250
+the work of human security analysts,
+
+1265
+00:44:38,500 --> 00:44:40,648
+so it primarily focus on, focuses on
+
+1266
+00:44:40,648 --> 00:44:42,938
+managing and investigating alerts in the cloud
+
+1267
+00:44:42,938 --> 00:44:45,340
+SIM. You can integrate it with automation
+
+1268
+00:44:45,340 --> 00:44:47,378
+and orchestration, so as mentioned,
+
+1269
+00:44:47,500 --> 00:44:49,679
+you could pair that with, uh, something like
+
+1270
+00:44:49,938 --> 00:44:52,019
+Data Dog App Builder to, to carry
+
+1271
+00:44:52,019 --> 00:44:54,128
+out operations like doing a deeper
+
+1272
+00:44:54,128 --> 00:44:55,849
+investigation or a session invalidation,
+
+1273
+00:44:56,179 --> 00:44:58,260
+and it works in tandem with other agents in the
+
+1274
+00:44:58,260 --> 00:44:59,199
+Bits AI family.
+
+1275
+00:45:00,628 --> 00:45:02,659
+So you can check that out uh in preview there
+
+1276
+00:45:02,659 --> 00:45:03,679
+at the link on screen.
+
+1277
+00:45:04,719 --> 00:45:07,079
+So to wrap here, uh, the key takeaways
+
+1278
+00:45:07,079 --> 00:45:09,280
+are that detection is code is
+
+1279
+00:45:09,280 --> 00:45:11,918
+absolutely essential if you're building detections
+
+1280
+00:45:11,918 --> 00:45:13,958
+today, especially for platforms like the
+
+1281
+00:45:13,958 --> 00:45:15,019
+AWS cloud.
+
+1282
+00:45:15,639 --> 00:45:16,780
+Your data pipeline
+
+1283
+00:45:17,079 --> 00:45:19,110
+is absolutely everything, so like so
+
+1284
+00:45:19,110 --> 00:45:21,300
+many things today, data quality,
+
+1285
+00:45:21,478 --> 00:45:22,139
+data quality,
+
+1286
+00:45:22,438 --> 00:45:23,199
+data quality.
+
+1287
+00:45:24,010 --> 00:45:26,250
+That's gonna just like really drive down your your
+
+1288
+00:45:26,250 --> 00:45:28,668
+false positives and increase the precision
+
+1289
+00:45:28,668 --> 00:45:29,909
+in your detections
+
+1290
+00:45:30,369 --> 00:45:32,570
+and then follow process
+
+1291
+00:45:32,579 --> 00:45:35,010
+process process if you took nothing away from the section on how riots
+
+1292
+00:45:35,010 --> 00:45:37,530
+implemented this, it's that they have a very strong
+
+1293
+00:45:37,530 --> 00:45:39,188
+process that acknowledges
+
+1294
+00:45:39,449 --> 00:45:41,250
+some exceptions but large.
+
+1295
+00:45:41,563 --> 00:45:44,083
+It's driving people down that paved
+
+1296
+00:45:44,083 --> 00:45:45,635
+road for deploying detections
+
+1297
+00:45:45,974 --> 00:45:48,215
+and then embrace open standards as well so
+
+1298
+00:45:48,494 --> 00:45:50,514
+you know let's keep the momentum going with OCSF
+
+1299
+00:45:50,514 --> 00:45:52,574
+if you're working with a vendor or partner that doesn't
+
+1300
+00:45:52,574 --> 00:45:54,014
+yet support OCSF
+
+1301
+00:45:54,333 --> 00:45:56,414
+that's a great thing to ask for or a
+
+1302
+00:45:56,414 --> 00:45:58,414
+first issue to file on an open source
+
+1303
+00:45:58,414 --> 00:46:01,019
+project. So
+
+1304
+00:46:01,019 --> 00:46:03,099
+we started the session by saying the goal of
+
+1305
+00:46:03,099 --> 00:46:05,099
+detection engineers is to write
+
+1306
+00:46:05,099 --> 00:46:06,800
+perfectly accurate detections.
+
+1307
+00:46:08,329 --> 00:46:09,398
+With all this,
+
+1308
+00:46:09,699 --> 00:46:12,219
+it is mostly achievable.
+
+1309
+00:46:14,329 --> 00:46:16,418
+So if you uh if you have a cell phone and you wanna
+
+1310
+00:46:16,418 --> 00:46:18,659
+take a picture of a single slide from the presentation,
+
+1311
+00:46:18,780 --> 00:46:20,239
+this is the single slide
+
+1312
+00:46:20,539 --> 00:46:22,539
+to take a picture of because it links out to a
+
+1313
+00:46:22,539 --> 00:46:24,780
+micro site with literally every single
+
+1314
+00:46:24,780 --> 00:46:27,099
+link to everything that you saw in the presentation
+
+1315
+00:46:27,378 --> 00:46:29,500
+as well as ways to reach both of us
+
+1316
+00:46:29,500 --> 00:46:30,418
+after the session.
+
+1317
+00:46:31,878 --> 00:46:33,958
+And uh before we take questions though,
+
+1318
+00:46:34,280 --> 00:46:36,360
+I do wanna mention I think one of the most
+
+1319
+00:46:36,360 --> 00:46:38,438
+challenging things when you're just
+
+1320
+00:46:38,438 --> 00:46:40,719
+getting started as a company is
+
+1321
+00:46:40,719 --> 00:46:43,039
+believing the tools like this can be
+
+1322
+00:46:43,039 --> 00:46:45,438
+accessible to you at your earliest
+
+1323
+00:46:45,438 --> 00:46:47,519
+stage and so I do wanna mention a new
+
+1324
+00:46:47,519 --> 00:46:49,550
+program. From DataDog called DataDog
+
+1325
+00:46:49,550 --> 00:46:51,648
+for Startups, uh, which gives
+
+1326
+00:46:51,909 --> 00:46:54,530
+DataDog Pro or up to $100,000
+
+1327
+00:46:54,530 --> 00:46:56,579
+in credits, uh, during the first year.
+
+1328
+00:46:56,668 --> 00:46:57,570
+So if you're in that
+
+1329
+00:46:57,969 --> 00:47:00,030
+Series A or early startup
+
+1330
+00:47:00,030 --> 00:47:02,228
+stage, definitely check out the
+
+1331
+00:47:02,228 --> 00:47:04,429
+DDFS or Data Dog for Startups program.
+
+1332
+00:47:06,478 --> 00:47:08,949
+And then if you're interested in our other reinvent launches
+
+1333
+00:47:08,949 --> 00:47:11,039
+or you wanna check out uh the deep dives on
+
+1334
+00:47:11,039 --> 00:47:12,878
+things like the OCSF processor
+
+1335
+00:47:13,159 --> 00:47:15,179
+that's available at this link as well.
+
+1336
+00:47:16,849 --> 00:47:19,128
+And with that we will go ahead and take
+
+1337
+00:47:19,128 --> 00:47:21,208
+uh any questions from the room, but I
+
+1338
+00:47:21,208 --> 00:47:23,239
+do wanna thank you for being here
+
+1339
+00:47:23,239 --> 00:47:25,250
+with us today and I wanna thank our uh great
+
+1340
+00:47:25,250 --> 00:47:27,369
+customer speaker Nathan from Riot for
+
+1341
+00:47:27,369 --> 00:47:29,289
+giving an excellent demo.
+

@@ -1,0 +1,5461 @@
+1
+00:00:00,030 --> 00:00:01,350
+- Okay, good afternoon, everyone.
+
+2
+00:00:01,350 --> 00:00:02,520
+Welcome to the session.
+
+3
+00:00:02,520 --> 00:00:05,550
+This is NET 403, Hybrid
+Connectivity at Scale,
+
+4
+00:00:05,550 --> 00:00:07,860
+a Deep Dive into Direct Connect.
+
+5
+00:00:07,860 --> 00:00:10,660
+So thank you all for
+coming to the session.
+
+6
+00:00:10,660 --> 00:00:13,260
+I wanted to start out with
+a very simple question
+
+7
+00:00:13,260 --> 00:00:16,020
+to all of you, which
+is what was on my mind
+
+8
+00:00:16,020 --> 00:00:17,820
+when I joined AWS a number of years ago,
+
+9
+00:00:17,820 --> 00:00:20,137
+when someone said, "Hey, can
+you talk to some customers
+
+10
+00:00:20,137 --> 00:00:21,597
+"about Direct Connect?"
+
+11
+00:00:21,597 --> 00:00:25,020
+And my thought was, "How hard can it be?"
+
+12
+00:00:25,020 --> 00:00:27,330
+It's just VLANs, we just
+need to know a little bit
+
+13
+00:00:27,330 --> 00:00:31,950
+about 802.1Q, bit of
+trunking, that sort of thing.
+
+14
+00:00:31,950 --> 00:00:34,770
+Little bit of BGP, need
+to know about AS numbers,
+
+15
+00:00:34,770 --> 00:00:36,570
+that sort of thing, configuring filters
+
+16
+00:00:36,570 --> 00:00:39,180
+and prefix lists on routers.
+
+17
+00:00:39,180 --> 00:00:41,040
+Of course, the AWS side of things,
+
+18
+00:00:41,040 --> 00:00:43,710
+we need to configure
+things in the console,
+
+19
+00:00:43,710 --> 00:00:45,510
+and of course, the piece of equipment,
+
+20
+00:00:45,510 --> 00:00:46,800
+the router on the other end of it.
+
+21
+00:00:46,800 --> 00:00:48,843
+So how hard could it really be?
+
+22
+00:00:50,220 --> 00:00:52,140
+Now, something I wanted
+to get out of the way.
+
+23
+00:00:52,140 --> 00:00:53,430
+My name is Steve Seymour.
+
+24
+00:00:53,430 --> 00:00:55,260
+I'm the worldwide tech lead for networking
+
+25
+00:00:55,260 --> 00:00:57,870
+and solutions architecture at AWS.
+
+26
+00:00:57,870 --> 00:01:01,110
+I spoke about Direct Connect back in 2016,
+
+27
+00:01:01,110 --> 00:01:02,160
+and one of the things that I
+
+28
+00:01:02,160 --> 00:01:03,980
+just wanted to remind people of
+
+29
+00:01:03,980 --> 00:01:06,180
+was, as you can probably
+tell from my accent,
+
+30
+00:01:06,180 --> 00:01:08,640
+I'm from the UK, we say roots,
+
+31
+00:01:08,640 --> 00:01:11,310
+and I did explain that back then.
+
+32
+00:01:11,310 --> 00:01:14,640
+It didn't quite sink in, so
+I had to go the next year,
+
+33
+00:01:14,640 --> 00:01:17,580
+tried again to explain
+what a router really is,
+
+34
+00:01:17,580 --> 00:01:19,260
+and this year, I've kind of given up,
+
+35
+00:01:19,260 --> 00:01:21,393
+so I asked someone else to join me.
+
+36
+00:01:22,360 --> 00:01:24,540
+- So I'm Josh Dean, I'm a product manager
+
+37
+00:01:24,540 --> 00:01:26,040
+on the Direct Connect team.
+
+38
+00:01:26,040 --> 00:01:30,240
+I was also born in the
+UK, so I was a router guy,
+
+39
+00:01:30,240 --> 00:01:33,693
+but now I'm a router
+guy, so I'm a convert.
+
+40
+00:01:34,710 --> 00:01:36,840
+- So hopefully between us,
+we've got people covered,
+
+41
+00:01:36,840 --> 00:01:39,540
+whichever one you prefer.
+
+42
+00:01:39,540 --> 00:01:43,350
+So another question,
+who's used Direct Connect?
+
+43
+00:01:43,350 --> 00:01:44,790
+Okay, a fair few of you.
+
+44
+00:01:44,790 --> 00:01:47,490
+There's one or two that
+didn't put their hands up,
+
+45
+00:01:47,490 --> 00:01:49,260
+but I wanted to maybe give
+you a bit of history here,
+
+46
+00:01:49,260 --> 00:01:51,540
+because at re:Invent back in 2014,
+
+47
+00:01:51,540 --> 00:01:54,510
+we actually used Direct
+Connect here at the conference.
+
+48
+00:01:54,510 --> 00:01:56,190
+We used it for a couple of demos,
+
+49
+00:01:56,190 --> 00:01:58,300
+a couple of launches
+that we did that year,
+
+50
+00:01:58,300 --> 00:02:00,870
+and if you came to re:Invent
+the following year,
+
+51
+00:02:00,870 --> 00:02:03,930
+and came in 2015, it
+was actually being used
+
+52
+00:02:03,930 --> 00:02:05,670
+to deliver most of the event network.
+
+53
+00:02:05,670 --> 00:02:09,810
+So if you went to anything on AWS in 2015,
+
+54
+00:02:09,810 --> 00:02:11,820
+you would have been using Direct Connect,
+
+55
+00:02:11,820 --> 00:02:13,980
+and perhaps unsurprisingly, this year,
+
+56
+00:02:13,980 --> 00:02:16,380
+Direct Connect is a key part
+of the network infrastructure
+
+57
+00:02:16,380 --> 00:02:18,240
+that we deploy here for re:Invent,
+
+58
+00:02:18,240 --> 00:02:19,960
+and it's been that way for
+the last couple of years.
+
+59
+00:02:19,960 --> 00:02:22,620
+So actually, if you've used
+the Wi-Fi here at re:Invent,
+
+60
+00:02:22,620 --> 00:02:25,590
+and accessed anything
+at all that is on AWS,
+
+61
+00:02:25,590 --> 00:02:26,970
+you have used Direct Connect.
+
+62
+00:02:26,970 --> 00:02:29,133
+So perhaps that's
+everyone now in the room?
+
+63
+00:02:30,390 --> 00:02:32,790
+Okay, so let's get started,
+
+64
+00:02:32,790 --> 00:02:34,590
+and obviously, when I
+say how hard can it be,
+
+65
+00:02:34,590 --> 00:02:36,990
+there is quite a bit
+more to Direct Connect,
+
+66
+00:02:36,990 --> 00:02:38,940
+and we're gonna walk you
+through in this session
+
+67
+00:02:38,940 --> 00:02:41,100
+everything from physical infrastructure,
+
+68
+00:02:41,100 --> 00:02:43,410
+so looking at Direct Connect locations,
+
+69
+00:02:43,410 --> 00:02:45,720
+looking at the different
+interfaces that we have,
+
+70
+00:02:45,720 --> 00:02:47,490
+how to organize cross-connects,
+
+71
+00:02:47,490 --> 00:02:49,590
+where partners fit into things.
+
+72
+00:02:49,590 --> 00:02:51,510
+We're gonna look at the
+logical infrastructure,
+
+73
+00:02:51,510 --> 00:02:53,640
+the various types of virtual interfaces,
+
+74
+00:02:53,640 --> 00:02:55,380
+and of course, we can't avoid BGP,
+
+75
+00:02:55,380 --> 00:02:57,450
+it's gonna be part of this session.
+
+76
+00:02:57,450 --> 00:02:58,950
+And then the other end of this,
+
+77
+00:02:58,950 --> 00:03:02,010
+the cloud infrastructure, the
+AWS side of it, of course.
+
+78
+00:03:02,010 --> 00:03:03,873
+So that's the plan for this session.
+
+79
+00:03:05,220 --> 00:03:07,050
+So what is Direct Connect?
+
+80
+00:03:07,050 --> 00:03:09,030
+Well, it is a physical connection
+
+81
+00:03:09,030 --> 00:03:12,837
+between your infrastructure
+and the AWS infrastructure.
+
+82
+00:03:12,837 --> 00:03:14,400
+And I say physical connection
+
+83
+00:03:14,400 --> 00:03:16,800
+because it does involve cross-connects,
+
+84
+00:03:16,800 --> 00:03:19,410
+connecting pieces of
+fiber between equipment
+
+85
+00:03:19,410 --> 00:03:22,110
+to enable traffic to flow
+from your infrastructure
+
+86
+00:03:22,110 --> 00:03:25,443
+into the AWS backbone
+and into our regions.
+
+87
+00:03:26,640 --> 00:03:29,790
+Originally, it supported
+a couple of connections,
+
+88
+00:03:29,790 --> 00:03:34,290
+perhaps in a location to
+one region, perhaps one VPC,
+
+89
+00:03:34,290 --> 00:03:36,360
+but Direct Connect has
+evolved a lot over the years
+
+90
+00:03:36,360 --> 00:03:37,920
+that I've been talking about it.
+
+91
+00:03:37,920 --> 00:03:39,990
+So Direct Connect now
+supports connectivity
+
+92
+00:03:39,990 --> 00:03:42,690
+to multiple regions using
+Direct Connect gateway,
+
+93
+00:03:42,690 --> 00:03:45,330
+and of course, multiple VPCs as a result.
+
+94
+00:03:45,330 --> 00:03:47,520
+And it also supports now
+connecting into things
+
+95
+00:03:47,520 --> 00:03:50,280
+like Cloud WAN, transit
+gateways, et cetera.
+
+96
+00:03:50,280 --> 00:03:52,380
+So Direct Connect has evolved over time,
+
+97
+00:03:52,380 --> 00:03:53,730
+as you would expect.
+
+98
+00:03:53,730 --> 00:03:55,500
+But we're gonna go right
+back to the beginning
+
+99
+00:03:55,500 --> 00:03:59,010
+in terms of establishing
+these connections.
+
+100
+00:03:59,010 --> 00:04:00,693
+So that physical connectivity.
+
+101
+00:04:01,820 --> 00:04:04,050
+When you're establishing your first
+
+102
+00:04:04,050 --> 00:04:05,280
+Direct Connect with AWS,
+
+103
+00:04:05,280 --> 00:04:07,410
+one of the first
+decisions you need to make
+
+104
+00:04:07,410 --> 00:04:09,480
+is where are you going to do it?
+
+105
+00:04:09,480 --> 00:04:10,350
+So as I like to say,
+
+106
+00:04:10,350 --> 00:04:12,980
+it's a location, location,
+location discussion.
+
+107
+00:04:12,980 --> 00:04:14,960
+You need to go look on our website
+
+108
+00:04:14,960 --> 00:04:16,860
+and look at the different locations
+
+109
+00:04:16,860 --> 00:04:18,870
+that we have around the
+world for Direct Connect.
+
+110
+00:04:18,870 --> 00:04:20,680
+These are locations where
+we have infrastructure
+
+111
+00:04:20,680 --> 00:04:23,640
+and we can provide ports
+for you to connect to.
+
+112
+00:04:23,640 --> 00:04:25,680
+When you look at that
+table on our website,
+
+113
+00:04:25,680 --> 00:04:27,570
+we list out the locations,
+
+114
+00:04:27,570 --> 00:04:30,060
+we list out what is called
+the associated region,
+
+115
+00:04:30,060 --> 00:04:31,380
+and the set of features available
+
+116
+00:04:31,380 --> 00:04:33,330
+at that particular location.
+
+117
+00:04:33,330 --> 00:04:36,150
+So if you wanted a particular
+amount of bandwidth,
+
+118
+00:04:36,150 --> 00:04:39,060
+you can look down that
+table and recognize,
+
+119
+00:04:39,060 --> 00:04:40,650
+hey, this particular location,
+
+120
+00:04:40,650 --> 00:04:42,660
+it supports the bandwidth that I need.
+
+121
+00:04:42,660 --> 00:04:47,130
+And we support one gig, 10 gig,
+100 gig, and 400 gig ports.
+
+122
+00:04:47,130 --> 00:04:50,220
+Not all locations have all of
+those different bandwidths,
+
+123
+00:04:50,220 --> 00:04:52,820
+so check the list for which
+one makes sense for you.
+
+124
+00:04:53,700 --> 00:04:55,410
+You're also gonna be
+making a decision there
+
+125
+00:04:55,410 --> 00:04:57,270
+based on where your infrastructure is.
+
+126
+00:04:57,270 --> 00:04:59,850
+And it might be that you have
+your network infrastructure
+
+127
+00:04:59,850 --> 00:05:01,410
+already in one of those locations,
+
+128
+00:05:01,410 --> 00:05:03,990
+which makes the choice really quite easy.
+
+129
+00:05:03,990 --> 00:05:05,070
+If, however, you're connecting
+
+130
+00:05:05,070 --> 00:05:08,280
+to some on-premises infrastructure
+or another data center,
+
+131
+00:05:08,280 --> 00:05:10,230
+then you'd be choosing the
+Direct Connect locations
+
+132
+00:05:10,230 --> 00:05:12,840
+that are closer physically
+to that data center,
+
+133
+00:05:12,840 --> 00:05:15,060
+because you're gonna have
+to order the connectivity
+
+134
+00:05:15,060 --> 00:05:18,033
+from our Direct Connect
+location to your infrastructure.
+
+135
+00:05:19,140 --> 00:05:22,200
+Now, creating a connection
+is really quite simple.
+
+136
+00:05:22,200 --> 00:05:25,020
+Give it a name, choose the
+location from that list.
+
+137
+00:05:25,020 --> 00:05:26,430
+There is an option at the bottom there
+
+138
+00:05:26,430 --> 00:05:29,400
+which says you would like
+a MACSEC-enabled port.
+
+139
+00:05:29,400 --> 00:05:31,890
+And I'm gonna talk about that
+a little bit more later on,
+
+140
+00:05:31,890 --> 00:05:33,760
+but that's also listed in that table,
+
+141
+00:05:33,760 --> 00:05:37,080
+which locations support MACSEC.
+
+142
+00:05:37,080 --> 00:05:38,393
+So if you plan to use MACSEC,
+
+143
+00:05:38,393 --> 00:05:40,320
+this is the time you make that decision.
+
+144
+00:05:40,320 --> 00:05:42,210
+It's not something you change later on.
+
+145
+00:05:42,210 --> 00:05:44,370
+If you would like a port
+that is capable of MACSEC,
+
+146
+00:05:44,370 --> 00:05:47,520
+so encryption, choose it when you order
+
+147
+00:05:47,520 --> 00:05:49,830
+the connection at the beginning.
+
+148
+00:05:49,830 --> 00:05:51,840
+You're gonna notice
+throughout the slides here
+
+149
+00:05:51,840 --> 00:05:54,720
+that we have these boxes
+down in the bottom corner.
+
+150
+00:05:54,720 --> 00:05:56,400
+These are just to call
+out some of the quotas
+
+151
+00:05:56,400 --> 00:05:58,470
+that we have around Direct Connect.
+
+152
+00:05:58,470 --> 00:06:01,620
+Many of these you can just
+request an increase for.
+
+153
+00:06:01,620 --> 00:06:05,070
+But in this example, it's 10 connections
+
+154
+00:06:05,070 --> 00:06:06,380
+per location per region.
+
+155
+00:06:06,380 --> 00:06:07,860
+That's your starting point
+
+156
+00:06:07,860 --> 00:06:09,903
+for ordering Direct Connect connections.
+
+157
+00:06:10,950 --> 00:06:12,870
+Okay, so we've ordered our connection.
+
+158
+00:06:12,870 --> 00:06:14,640
+We've clicked through on the console.
+
+159
+00:06:14,640 --> 00:06:16,260
+Well, the next step, surely,
+
+160
+00:06:16,260 --> 00:06:18,000
+we just need to get ourselves connected.
+
+161
+00:06:18,000 --> 00:06:19,623
+We just plug in, don't we?
+
+162
+00:06:20,460 --> 00:06:21,750
+Well, the photo that I'm showing you here,
+
+163
+00:06:21,750 --> 00:06:23,820
+this is an example of a meet-me room.
+
+164
+00:06:23,820 --> 00:06:26,070
+So this is Equinix TY2.
+
+165
+00:06:26,070 --> 00:06:28,230
+And as you can see, it's
+full of a lot of fiber,
+
+166
+00:06:28,230 --> 00:06:29,790
+a lot of ports.
+
+167
+00:06:29,790 --> 00:06:33,570
+This is actually a very,
+very tidy, neat meet-me room.
+
+168
+00:06:33,570 --> 00:06:36,480
+And this is where your port from AWS
+
+169
+00:06:36,480 --> 00:06:38,910
+is presented for you to consume.
+
+170
+00:06:38,910 --> 00:06:40,560
+So when you order that connection,
+
+171
+00:06:40,560 --> 00:06:43,620
+we then issue something called an LOA CFA.
+
+172
+00:06:43,620 --> 00:06:45,720
+So an LOA is a letter of authorization.
+
+173
+00:06:45,720 --> 00:06:49,620
+It is your permission to
+plug into a particular port.
+
+174
+00:06:49,620 --> 00:06:52,290
+And CFA is the Connecting
+Facility Assignment.
+
+175
+00:06:52,290 --> 00:06:54,870
+It's basically where is that port.
+
+176
+00:06:54,870 --> 00:06:56,910
+So this document contains
+everything you need
+
+177
+00:06:56,910 --> 00:06:58,140
+to be able to plug into that
+
+178
+00:06:58,140 --> 00:06:59,740
+Direct Connect port on our side.
+
+179
+00:07:00,660 --> 00:07:02,610
+It's gonna contain other information,
+
+180
+00:07:02,610 --> 00:07:04,320
+such as the connector type.
+
+181
+00:07:04,320 --> 00:07:07,590
+So LC connector is
+typically what we would see.
+
+182
+00:07:07,590 --> 00:07:09,150
+It's a single-mode connection.
+
+183
+00:07:09,150 --> 00:07:10,620
+The different standards that are required
+
+184
+00:07:10,620 --> 00:07:13,260
+for the different
+bandwidths for our ports.
+
+185
+00:07:13,260 --> 00:07:15,270
+So you've got all that information.
+
+186
+00:07:15,270 --> 00:07:19,020
+So surely now, you just plug in, yeah?
+
+187
+00:07:19,020 --> 00:07:20,790
+No, that's not quite how it goes.
+
+188
+00:07:20,790 --> 00:07:24,360
+Because in reality, you
+personally, as a customer,
+
+189
+00:07:24,360 --> 00:07:26,910
+probably do not have access
+to that meet-me room.
+
+190
+00:07:26,910 --> 00:07:28,470
+So in reality, you're gonna have to work
+
+191
+00:07:28,470 --> 00:07:30,040
+with the co-location provider now
+
+192
+00:07:30,040 --> 00:07:32,360
+to arrange for something
+called a cross-connect
+
+193
+00:07:32,360 --> 00:07:35,190
+between that port that we've allocated
+
+194
+00:07:35,190 --> 00:07:36,483
+and your infrastructure.
+
+195
+00:07:37,500 --> 00:07:40,110
+So when we think about getting connected,
+
+196
+00:07:40,110 --> 00:07:43,410
+unfortunately, there have to
+be multiple people involved
+
+197
+00:07:43,410 --> 00:07:45,090
+in making this connection.
+
+198
+00:07:45,090 --> 00:07:48,210
+It's not something that you
+can own totally yourself.
+
+199
+00:07:48,210 --> 00:07:51,060
+There's always gonna be at
+least three parties involved.
+
+200
+00:07:51,060 --> 00:07:52,950
+There's obviously AWS on one side,
+
+201
+00:07:52,950 --> 00:07:54,690
+providing the Direct Connect port.
+
+202
+00:07:54,690 --> 00:07:57,240
+There's your side of
+things, your infrastructure.
+
+203
+00:07:57,240 --> 00:07:59,360
+And in the middle, we've got
+this co-location provider
+
+204
+00:07:59,360 --> 00:08:01,710
+that needs to make the cross-connect.
+
+205
+00:08:01,710 --> 00:08:03,750
+The reality also is,
+though, if you're connecting
+
+206
+00:08:03,750 --> 00:08:05,370
+to a facility that is outside
+
+207
+00:08:05,370 --> 00:08:07,800
+of that particular co-location facility,
+
+208
+00:08:07,800 --> 00:08:09,360
+then you're probably gonna have to work
+
+209
+00:08:09,360 --> 00:08:11,970
+with some sort of telco partner, carrier,
+
+210
+00:08:11,970 --> 00:08:14,850
+maybe even a separate last-mile provider.
+
+211
+00:08:14,850 --> 00:08:16,980
+And unfortunately, all
+of the people involved
+
+212
+00:08:16,980 --> 00:08:19,260
+probably have their own processes,
+
+213
+00:08:19,260 --> 00:08:21,270
+their own ways of doing testing.
+
+214
+00:08:21,270 --> 00:08:22,800
+And I'll come onto this later on,
+
+215
+00:08:22,800 --> 00:08:25,290
+perhaps their own polarity on their ports
+
+216
+00:08:25,290 --> 00:08:27,300
+causes some interesting challenges.
+
+217
+00:08:27,300 --> 00:08:29,820
+So I've been doing this
+for quite a few years.
+
+218
+00:08:29,820 --> 00:08:31,950
+I've worked on a bunch
+of customer projects
+
+219
+00:08:31,950 --> 00:08:34,230
+and internal projects
+involving Direct Connect,
+
+220
+00:08:34,230 --> 00:08:36,630
+and I thought I'd just
+share a couple of tips
+
+221
+00:08:36,630 --> 00:08:38,700
+from my experiences.
+
+222
+00:08:38,700 --> 00:08:40,530
+And the first one is, I would say,
+
+223
+00:08:40,530 --> 00:08:43,290
+always draw out a really simple diagram
+
+224
+00:08:43,290 --> 00:08:46,080
+of what you're trying to
+achieve with Direct Connect.
+
+225
+00:08:46,080 --> 00:08:49,080
+Put AWS on one side, put your
+infrastructure on the other,
+
+226
+00:08:49,080 --> 00:08:52,410
+and then work out all of the
+pieces involved in the middle.
+
+227
+00:08:52,410 --> 00:08:54,780
+Doesn't have to be fancy,
+just a very simple diagram
+
+228
+00:08:54,780 --> 00:08:56,130
+that shows all the locations,
+
+229
+00:08:56,130 --> 00:08:58,140
+perhaps all the devices
+that you're aware of
+
+230
+00:08:58,140 --> 00:09:00,570
+that these connections
+are gonna go through.
+
+231
+00:09:00,570 --> 00:09:03,750
+On that diagram, identify
+who owns each component,
+
+232
+00:09:03,750 --> 00:09:05,910
+because they will all
+have different owners.
+
+233
+00:09:05,910 --> 00:09:08,820
+And then every port ID,
+every circuit number,
+
+234
+00:09:08,820 --> 00:09:10,410
+everything you see written in an email
+
+235
+00:09:10,410 --> 00:09:12,360
+or said to you over the phone,
+
+236
+00:09:12,360 --> 00:09:13,800
+just add it onto that diagram.
+
+237
+00:09:13,800 --> 00:09:15,240
+And this will become your reference
+
+238
+00:09:15,240 --> 00:09:18,420
+for everything to do with that
+particular Direct Connect.
+
+239
+00:09:18,420 --> 00:09:20,280
+I also find it quite useful
+just to note on there
+
+240
+00:09:20,280 --> 00:09:21,600
+things like support details,
+
+241
+00:09:21,600 --> 00:09:23,580
+contact details for the people involved,
+
+242
+00:09:23,580 --> 00:09:24,600
+because this, as I say,
+
+243
+00:09:24,600 --> 00:09:27,560
+just becomes your
+reference going forwards.
+
+244
+00:09:27,560 --> 00:09:30,600
+So how do we put all the
+pieces together here?
+
+245
+00:09:30,600 --> 00:09:32,970
+So what I wanted to start
+with was the example
+
+246
+00:09:32,970 --> 00:09:35,550
+where you've got infrastructure
+in your own facility,
+
+247
+00:09:35,550 --> 00:09:37,080
+perhaps your own data center.
+
+248
+00:09:37,080 --> 00:09:38,970
+It's not within the
+Direct Connect location,
+
+249
+00:09:38,970 --> 00:09:42,600
+so in my example earlier,
+the Equinix TY2 facility.
+
+250
+00:09:42,600 --> 00:09:44,400
+And we want to establish this connection
+
+251
+00:09:44,400 --> 00:09:46,890
+from an AWS Direct Connect port
+
+252
+00:09:46,890 --> 00:09:49,590
+all the way through to your equipment.
+
+253
+00:09:49,590 --> 00:09:51,990
+Now it'd be really nice if you
+could just fire off an email
+
+254
+00:09:51,990 --> 00:09:55,087
+that says, "Hey, partner, could
+you just make this happen?
+
+255
+00:09:55,087 --> 00:09:58,087
+"Here's the LOA from
+AWS, here's my equipment.
+
+256
+00:09:58,087 --> 00:10:01,260
+"Could you just connect the two together?"
+
+257
+00:10:01,260 --> 00:10:03,120
+I'm not gonna lie, there are some cases
+
+258
+00:10:03,120 --> 00:10:04,200
+where you can do that.
+
+259
+00:10:04,200 --> 00:10:06,450
+There are some excellent partners
+
+260
+00:10:06,450 --> 00:10:09,930
+who have all of the ability
+to deliver this end-to-end.
+
+261
+00:10:09,930 --> 00:10:11,580
+But unfortunately, the reality is
+
+262
+00:10:11,580 --> 00:10:14,880
+there are usually many
+more components involved.
+
+263
+00:10:14,880 --> 00:10:16,650
+But let's stick with
+the example for a moment
+
+264
+00:10:16,650 --> 00:10:19,380
+where we've asked a partner to deliver it,
+
+265
+00:10:19,380 --> 00:10:21,360
+and in which case, they simply build
+
+266
+00:10:21,360 --> 00:10:22,260
+all these connections.
+
+267
+00:10:22,260 --> 00:10:24,390
+So perhaps they arrange the last mile
+
+268
+00:10:24,390 --> 00:10:27,300
+from your data center
+to a point of presence
+
+269
+00:10:27,300 --> 00:10:30,030
+in your city for their infrastructure.
+
+270
+00:10:30,030 --> 00:10:32,340
+Maybe then they configure
+across the backbone
+
+271
+00:10:32,340 --> 00:10:35,670
+that they have over their
+optical network into a location,
+
+272
+00:10:35,670 --> 00:10:37,500
+and they arrange it all, fantastic.
+
+273
+00:10:37,500 --> 00:10:41,283
+They plug it in, ports come
+up on your router, happy days.
+
+274
+00:10:42,870 --> 00:10:45,150
+As I say, the reality is
+a little bit different.
+
+275
+00:10:45,150 --> 00:10:47,580
+Now, the infrastructure I mentioned there
+
+276
+00:10:47,580 --> 00:10:49,860
+is in place typically, so there will be
+
+277
+00:10:49,860 --> 00:10:51,540
+points of presence in your city.
+
+278
+00:10:51,540 --> 00:10:52,800
+There will be infrastructure in
+
+279
+00:10:52,800 --> 00:10:54,210
+these co-location facilities
+
+280
+00:10:54,210 --> 00:10:56,910
+from the various telcos and carriers.
+
+281
+00:10:56,910 --> 00:10:59,790
+Also, there is the meet-me
+room infrastructure
+
+282
+00:10:59,790 --> 00:11:01,920
+that I mentioned a moment ago.
+
+283
+00:11:01,920 --> 00:11:04,470
+AWS's equipment is already pre-cabled
+
+284
+00:11:04,470 --> 00:11:07,230
+from our devices directly
+into that meet-me room,
+
+285
+00:11:07,230 --> 00:11:09,450
+into what you saw in the photo earlier on.
+
+286
+00:11:09,450 --> 00:11:11,790
+And the chances are
+that the large carriers
+
+287
+00:11:11,790 --> 00:11:13,120
+and telcos in these facilities
+
+288
+00:11:13,120 --> 00:11:16,530
+are also pre-cabled to the meet-me room.
+
+289
+00:11:16,530 --> 00:11:18,690
+So what that means is we
+still have a few gaps,
+
+290
+00:11:18,690 --> 00:11:21,570
+but it's not quite as bad
+as I showed a moment ago.
+
+291
+00:11:21,570 --> 00:11:24,030
+But to make all these connections happen,
+
+292
+00:11:24,030 --> 00:11:25,530
+you can imagine there's gonna be
+
+293
+00:11:25,530 --> 00:11:27,480
+a lot of communication going on.
+
+294
+00:11:27,480 --> 00:11:30,240
+There's gonna be the
+request from the owner
+
+295
+00:11:30,240 --> 00:11:32,610
+of the telecoms equipment to request
+
+296
+00:11:32,610 --> 00:11:34,440
+the cross-connect in the first place.
+
+297
+00:11:34,440 --> 00:11:36,150
+There's gonna be provisioning of ports
+
+298
+00:11:36,150 --> 00:11:38,340
+and circuits across the infrastructure.
+
+299
+00:11:38,340 --> 00:11:39,780
+There's probably gonna be some ordering
+
+300
+00:11:39,780 --> 00:11:41,940
+of running fiber across a town.
+
+301
+00:11:41,940 --> 00:11:44,520
+There might even be
+involvement of logistics
+
+302
+00:11:44,520 --> 00:11:46,470
+to dig up the road to run fiber.
+
+303
+00:11:46,470 --> 00:11:48,940
+All sorts of things could be involved.
+
+304
+00:11:48,940 --> 00:11:50,250
+But when it comes down to it,
+
+305
+00:11:50,250 --> 00:11:52,320
+if you break down that simple diagram
+
+306
+00:11:52,320 --> 00:11:54,510
+and do it in stages, the first piece
+
+307
+00:11:54,510 --> 00:11:56,550
+is that cross-connect in the meet-me room.
+
+308
+00:11:56,550 --> 00:11:59,060
+So in this case, the telco has had to ask
+
+309
+00:11:59,060 --> 00:12:02,610
+Equinix in our example to
+make that cross-connect.
+
+310
+00:12:02,610 --> 00:12:05,160
+The telco has then had to
+make physical connections
+
+311
+00:12:05,160 --> 00:12:07,830
+between patch panels in their
+rack and their equipment,
+
+312
+00:12:07,830 --> 00:12:10,080
+configure circuits over their network,
+
+313
+00:12:10,080 --> 00:12:12,210
+deliver it to your local city,
+
+314
+00:12:12,210 --> 00:12:14,460
+perhaps dig up some streets,
+
+315
+00:12:14,460 --> 00:12:16,110
+and then deliver it into your location
+
+316
+00:12:16,110 --> 00:12:18,560
+presented on a port ready
+to go into your router.
+
+317
+00:12:19,720 --> 00:12:22,020
+And at that point, we
+might have a connection.
+
+318
+00:12:23,460 --> 00:12:27,120
+The other variation on
+this is if you are located
+
+319
+00:12:27,120 --> 00:12:29,790
+inside that co-location facility already.
+
+320
+00:12:29,790 --> 00:12:31,950
+Now if you're in there, things
+are clearly a lot simpler.
+
+321
+00:12:31,950 --> 00:12:34,740
+You don't have any of that
+external telecoms work to do.
+
+322
+00:12:34,740 --> 00:12:37,350
+So you'll have your rack, your equipment.
+
+323
+00:12:37,350 --> 00:12:40,470
+Chances are you're also
+pre-cabled to the meet-me room.
+
+324
+00:12:40,470 --> 00:12:42,030
+If you're not familiar
+with that experience,
+
+325
+00:12:42,030 --> 00:12:43,530
+typically the first time you order
+
+326
+00:12:43,530 --> 00:12:46,020
+any sort of cross-connect
+in many of these facilities,
+
+327
+00:12:46,020 --> 00:12:47,700
+they will install a whole set of fiber
+
+328
+00:12:47,700 --> 00:12:49,890
+between your rack and the meet-me room.
+
+329
+00:12:49,890 --> 00:12:52,770
+And what that means is you
+can now interact directly
+
+330
+00:12:52,770 --> 00:12:54,420
+with that location provider.
+
+331
+00:12:54,420 --> 00:12:56,640
+So it really is as simple
+as then sending the email
+
+332
+00:12:56,640 --> 00:12:59,040
+that says, "Please can you
+make this cross-connect?"
+
+333
+00:12:59,040 --> 00:13:00,300
+And of course, it might not be an email.
+
+334
+00:13:00,300 --> 00:13:01,920
+Different providers use portals.
+
+335
+00:13:01,920 --> 00:13:03,630
+You might upload the details,
+
+336
+00:13:03,630 --> 00:13:06,030
+provide the document we
+give you as evidence.
+
+337
+00:13:06,030 --> 00:13:08,880
+But effectively, you just
+order that cross-connect
+
+338
+00:13:08,880 --> 00:13:09,713
+and it's done.
+
+339
+00:13:10,590 --> 00:13:12,360
+I've said cross-connect a couple of times.
+
+340
+00:13:12,360 --> 00:13:14,620
+A cross-connect really
+is just a piece of fiber
+
+341
+00:13:14,620 --> 00:13:16,620
+being plugged into one port on one side
+
+342
+00:13:16,620 --> 00:13:18,300
+and another port on the other.
+
+343
+00:13:18,300 --> 00:13:19,500
+There's nothing more to it.
+
+344
+00:13:19,500 --> 00:13:21,840
+I regularly get asked, "What
+is this cross-connect thing?"
+
+345
+00:13:21,840 --> 00:13:23,130
+And it's very simple.
+
+346
+00:13:23,130 --> 00:13:24,483
+It's just a piece of fiber.
+
+347
+00:13:26,550 --> 00:13:29,160
+So at that point, our connection comes up
+
+348
+00:13:29,160 --> 00:13:32,400
+and hopefully the thing
+you see in the AWS console
+
+349
+00:13:32,400 --> 00:13:34,500
+is that your port goes from being down
+
+350
+00:13:34,500 --> 00:13:36,150
+to now showing as available.
+
+351
+00:13:36,150 --> 00:13:38,490
+The link comes up on your router.
+
+352
+00:13:38,490 --> 00:13:40,140
+We're in a good place.
+
+353
+00:13:40,140 --> 00:13:41,370
+But let's just go and verify
+
+354
+00:13:41,370 --> 00:13:43,500
+that everything is as we expect.
+
+355
+00:13:43,500 --> 00:13:46,260
+So we have CloudWatch
+monitoring for Direct Connect.
+
+356
+00:13:46,260 --> 00:13:47,733
+There's a whole bunch of the metrics
+
+357
+00:13:47,733 --> 00:13:49,290
+that you would expect to see there,
+
+358
+00:13:49,290 --> 00:13:50,940
+bandwidth usage, et cetera.
+
+359
+00:13:50,940 --> 00:13:52,290
+But I wanted to just draw your attention
+
+360
+00:13:52,290 --> 00:13:53,760
+to the connection state,
+
+361
+00:13:53,760 --> 00:13:55,650
+which is a very simple
+metric you can look at
+
+362
+00:13:55,650 --> 00:13:58,830
+that indicates, is the
+connection up or down?
+
+363
+00:13:58,830 --> 00:14:00,150
+If it's one, it's up.
+
+364
+00:14:00,150 --> 00:14:02,100
+Anything else, it's down.
+
+365
+00:14:02,100 --> 00:14:04,440
+The other interesting ones to look at here
+
+366
+00:14:04,440 --> 00:14:07,170
+are the light levels, particularly the RX,
+
+367
+00:14:07,170 --> 00:14:08,910
+so the receive light level.
+
+368
+00:14:08,910 --> 00:14:10,080
+And you can see on there,
+
+369
+00:14:10,080 --> 00:14:14,550
+I've made a note of the ranges
+that are considered good.
+
+370
+00:14:14,550 --> 00:14:18,330
+Effectively, if you
+get down to neg 12 DBM,
+
+371
+00:14:18,330 --> 00:14:20,820
+you're okay, but you could be better.
+
+372
+00:14:20,820 --> 00:14:22,230
+Start getting beyond that,
+
+373
+00:14:22,230 --> 00:14:24,390
+this connection probably isn't coming up.
+
+374
+00:14:24,390 --> 00:14:25,363
+And the reason I'm mentioning this
+
+375
+00:14:25,363 --> 00:14:27,600
+is you can have a situation where
+
+376
+00:14:27,600 --> 00:14:29,400
+everything is plugged in and connected,
+
+377
+00:14:29,400 --> 00:14:31,050
+but you haven't got a link yet.
+
+378
+00:14:31,050 --> 00:14:32,760
+And it's good to come and
+have a look in the console
+
+379
+00:14:32,760 --> 00:14:34,740
+and actually see what the light level is
+
+380
+00:14:34,740 --> 00:14:37,260
+because it may well all be
+connected absolutely fine,
+
+381
+00:14:37,260 --> 00:14:39,180
+but you might have some
+dirty fiber somewhere
+
+382
+00:14:39,180 --> 00:14:40,710
+that wasn't cleaned when it was connected
+
+383
+00:14:40,710 --> 00:14:43,920
+or something like that
+that's attenuating the light
+
+384
+00:14:43,920 --> 00:14:46,680
+that means we've not got
+enough signal getting through.
+
+385
+00:14:46,680 --> 00:14:49,323
+So always go take a look
+at the CloudWatch metrics.
+
+386
+00:14:51,240 --> 00:14:53,010
+Everything I've been talking about so far
+
+387
+00:14:53,010 --> 00:14:55,800
+is what we refer to as
+a dedicated connection.
+
+388
+00:14:55,800 --> 00:14:57,180
+And it's exactly what it sounds like.
+
+389
+00:14:57,180 --> 00:14:59,820
+This is a dedicated port
+on a piece of AWS equipment
+
+390
+00:14:59,820 --> 00:15:01,260
+that is assigned to you.
+
+391
+00:15:01,260 --> 00:15:04,260
+You requested it and
+we allocated it to you.
+
+392
+00:15:04,260 --> 00:15:06,180
+You get full use of that port
+
+393
+00:15:06,180 --> 00:15:08,300
+and the bandwidth available on it.
+
+394
+00:15:08,300 --> 00:15:10,920
+It will support multiple
+virtual interfaces,
+
+395
+00:15:10,920 --> 00:15:13,320
+which we're gonna explain a
+little bit more in a moment,
+
+396
+00:15:13,320 --> 00:15:16,260
+but that's effectively
+multiple VLANs and BGP sessions
+
+397
+00:15:16,260 --> 00:15:18,900
+because you're in control of
+everything about that port.
+
+398
+00:15:18,900 --> 00:15:20,840
+Fundamentally, it is physical connectivity
+
+399
+00:15:20,840 --> 00:15:24,000
+that you're responsible
+for to get to the port
+
+400
+00:15:24,000 --> 00:15:25,400
+that we've allocated to you.
+
+401
+00:15:26,250 --> 00:15:28,860
+Hosted connections are
+a little bit different.
+
+402
+00:15:28,860 --> 00:15:31,290
+What happens here is
+we allocate connections
+
+403
+00:15:31,290 --> 00:15:33,330
+to one of our Direct Connect partners,
+
+404
+00:15:33,330 --> 00:15:35,160
+and we actually call them
+interconnects at that point.
+
+405
+00:15:35,160 --> 00:15:37,050
+You may see that term around.
+
+406
+00:15:37,050 --> 00:15:39,540
+And our partners have
+already then taken care
+
+407
+00:15:39,540 --> 00:15:41,400
+of all that physical connectivity
+
+408
+00:15:41,400 --> 00:15:44,130
+between their infrastructure and ours.
+
+409
+00:15:44,130 --> 00:15:46,890
+What they then do is allocate
+smaller amounts of bandwidth
+
+410
+00:15:46,890 --> 00:15:49,650
+on that connectivity to
+you and provide it to you
+
+411
+00:15:49,650 --> 00:15:52,080
+perhaps over an existing fabric or service
+
+412
+00:15:52,080 --> 00:15:54,483
+they might have with you as a customer.
+
+413
+00:15:55,350 --> 00:15:58,800
+In that case, our partners can
+increase their connectivity
+
+414
+00:15:58,800 --> 00:16:01,110
+with us by combining connections together.
+
+415
+00:16:01,110 --> 00:16:03,150
+They can create lags just like you can,
+
+416
+00:16:03,150 --> 00:16:05,220
+and we'll explain that in a moment.
+
+417
+00:16:05,220 --> 00:16:06,900
+But they can increase that capacity,
+
+418
+00:16:06,900 --> 00:16:09,180
+but we don't let partners
+oversubscribe those ports.
+
+419
+00:16:09,180 --> 00:16:11,580
+So as they allocate bandwidth to you,
+
+420
+00:16:11,580 --> 00:16:13,260
+that bandwidth is passed on to you,
+
+421
+00:16:13,260 --> 00:16:15,240
+and they have to expand their connectivity
+
+422
+00:16:15,240 --> 00:16:16,760
+with us over time.
+
+423
+00:16:16,760 --> 00:16:18,620
+The thing about hosted connection is
+
+424
+00:16:18,620 --> 00:16:20,820
+you can only have one virtual interface
+
+425
+00:16:20,820 --> 00:16:22,470
+per hosted connection.
+
+426
+00:16:22,470 --> 00:16:24,000
+So it's quite common for our customers
+
+427
+00:16:24,000 --> 00:16:25,860
+to have multiple hosted connections
+
+428
+00:16:25,860 --> 00:16:27,930
+if they need them for different workloads,
+
+429
+00:16:27,930 --> 00:16:30,450
+perhaps some for virtual private gateways
+
+430
+00:16:30,450 --> 00:16:32,500
+and some for transit gateways, et cetera.
+
+431
+00:16:33,480 --> 00:16:36,870
+I mentioned their lags,
+link aggregation groups.
+
+432
+00:16:36,870 --> 00:16:38,700
+So what a link aggregation group is,
+
+433
+00:16:38,700 --> 00:16:41,660
+is it allows you to combine
+multiple physical connections
+
+434
+00:16:41,660 --> 00:16:45,210
+into one single thing that is treated
+
+435
+00:16:45,210 --> 00:16:47,160
+as a dedicated connection.
+
+436
+00:16:47,160 --> 00:16:50,550
+So you might combine together
+four 10 gig connections.
+
+437
+00:16:50,550 --> 00:16:53,220
+So you have a resulting
+40 gig of capacity there,
+
+438
+00:16:53,220 --> 00:16:54,930
+but you treat it as a single connection
+
+439
+00:16:54,930 --> 00:16:56,880
+when you're configuring
+virtual interfaces,
+
+440
+00:16:56,880 --> 00:16:58,260
+et cetera, on it.
+
+441
+00:16:58,260 --> 00:16:59,940
+We'll then do flow hashing of the traffic
+
+442
+00:16:59,940 --> 00:17:01,500
+across those connections,
+
+443
+00:17:01,500 --> 00:17:05,190
+and you can configure on the
+AWS side and your equipment,
+
+444
+00:17:05,190 --> 00:17:06,063
+what is the appropriate point
+
+445
+00:17:06,063 --> 00:17:09,420
+that you would rather shut
+down that set of connections
+
+446
+00:17:09,420 --> 00:17:12,120
+if you lose capacity
+versus maintaining it.
+
+447
+00:17:12,120 --> 00:17:14,520
+So you might have 40 gig of connectivity
+
+448
+00:17:14,520 --> 00:17:16,260
+and you decide that you really need
+
+449
+00:17:16,260 --> 00:17:18,960
+to always have 20 gig available.
+
+450
+00:17:18,960 --> 00:17:21,390
+So if one of those other
+connections is impacted,
+
+451
+00:17:21,390 --> 00:17:24,660
+you're down to 30 gig,
+that's fine, keep the lag up.
+
+452
+00:17:24,660 --> 00:17:27,030
+But if we drop down to 20 gig or below,
+
+453
+00:17:27,030 --> 00:17:28,410
+perhaps we then shut it down.
+
+454
+00:17:28,410 --> 00:17:30,240
+And that's configured
+as the minimum number
+
+455
+00:17:30,240 --> 00:17:31,743
+of interfaces on a lag.
+
+456
+00:17:33,150 --> 00:17:36,090
+So we're in a fairly
+good place at this point.
+
+457
+00:17:36,090 --> 00:17:39,810
+We've assumed everything's
+working, but what if it doesn't?
+
+458
+00:17:39,810 --> 00:17:41,430
+And what I thought I'd do is just talk you
+
+459
+00:17:41,430 --> 00:17:42,840
+through a couple of situations
+
+460
+00:17:42,840 --> 00:17:44,280
+that we hear about all the time,
+
+461
+00:17:44,280 --> 00:17:47,100
+and our support engineers end
+up discussing with customers.
+
+462
+00:17:47,100 --> 00:17:49,260
+So I wanted to just give you
+maybe a bit of an insight
+
+463
+00:17:49,260 --> 00:17:51,633
+into two things that
+we hear very regularly.
+
+464
+00:17:52,650 --> 00:17:54,960
+And that other phrase
+is, "Roll the fiber,"
+
+465
+00:17:54,960 --> 00:17:57,087
+or "I'm gonna put a loop on that."
+
+466
+00:17:58,440 --> 00:17:59,640
+I see a few people nodding here.
+
+467
+00:17:59,640 --> 00:18:01,680
+Maybe you've heard that or experienced it.
+
+468
+00:18:01,680 --> 00:18:02,910
+For those of you that have not worked
+
+469
+00:18:02,910 --> 00:18:04,490
+with physical fiber equipment,
+
+470
+00:18:04,490 --> 00:18:06,720
+at the bottom there we've
+got what's called an SFP,
+
+471
+00:18:06,720 --> 00:18:08,880
+a small form factor pluggable module.
+
+472
+00:18:08,880 --> 00:18:12,420
+And on the right-hand side
+we have some duplex fiber
+
+473
+00:18:12,420 --> 00:18:14,550
+with LC connectors on the end of it.
+
+474
+00:18:14,550 --> 00:18:17,400
+And the module at the
+bottom is what is sitting
+
+475
+00:18:17,400 --> 00:18:19,320
+in those various pieces
+of network equipment
+
+476
+00:18:19,320 --> 00:18:21,090
+on each end of this connection.
+
+477
+00:18:21,090 --> 00:18:21,930
+And you might be able to see
+
+478
+00:18:21,930 --> 00:18:23,160
+in very small writing on there,
+
+479
+00:18:23,160 --> 00:18:25,140
+it's marked TX and RX.
+
+480
+00:18:25,140 --> 00:18:27,510
+So that's transmit and receive.
+
+481
+00:18:27,510 --> 00:18:29,640
+So what happens there on the transmit side
+
+482
+00:18:29,640 --> 00:18:31,400
+is there is a laser inside that module
+
+483
+00:18:31,400 --> 00:18:34,040
+that is firing the light out of it.
+
+484
+00:18:34,040 --> 00:18:35,160
+And when it gets to the other end,
+
+485
+00:18:35,160 --> 00:18:36,630
+it needs to go into the receive side
+
+486
+00:18:36,630 --> 00:18:38,460
+of the other connection.
+
+487
+00:18:38,460 --> 00:18:41,190
+So just to illustrate
+that point a little bit,
+
+488
+00:18:41,190 --> 00:18:43,470
+this would be just two
+devices next to each other
+
+489
+00:18:43,470 --> 00:18:45,510
+with a single duplex fiber cable
+
+490
+00:18:45,510 --> 00:18:47,040
+that you would just plug in.
+
+491
+00:18:47,040 --> 00:18:47,940
+This is what would happen.
+
+492
+00:18:47,940 --> 00:18:51,390
+Transmit would be connected
+to receive and vice versa.
+
+493
+00:18:51,390 --> 00:18:52,290
+We'd all be having a good day.
+
+494
+00:18:52,290 --> 00:18:54,540
+Packets would be flowing, no problem.
+
+495
+00:18:54,540 --> 00:18:56,030
+But when you put this
+in the context of a code
+
+496
+00:18:56,030 --> 00:18:59,610
+or location facility, we've
+now introduced a meet-me room.
+
+497
+00:18:59,610 --> 00:19:01,860
+Now, there are no actual standards
+
+498
+00:19:01,860 --> 00:19:04,200
+for how to do this kind of cabling.
+
+499
+00:19:04,200 --> 00:19:06,360
+There's some, I guess, best practices
+
+500
+00:19:06,360 --> 00:19:07,650
+that have been adopted in terms
+
+501
+00:19:07,650 --> 00:19:09,870
+of where you cross over those pairs.
+
+502
+00:19:09,870 --> 00:19:12,960
+So typically between your
+rack and the meet-me room,
+
+503
+00:19:12,960 --> 00:19:14,910
+the fiber will have been crossed over.
+
+504
+00:19:14,910 --> 00:19:17,730
+And if we take that simple
+example on the screen there,
+
+505
+00:19:17,730 --> 00:19:19,410
+you've got two sides of a connection here,
+
+506
+00:19:19,410 --> 00:19:20,580
+a single meet-me room.
+
+507
+00:19:20,580 --> 00:19:22,350
+The fibers have been crossed on one side,
+
+508
+00:19:22,350 --> 00:19:23,640
+crossed on the other.
+
+509
+00:19:23,640 --> 00:19:25,890
+The patch in the middle
+is just a simple fiber
+
+510
+00:19:25,890 --> 00:19:27,660
+between those ports.
+
+511
+00:19:27,660 --> 00:19:29,010
+That unravels quite nicely,
+
+512
+00:19:29,010 --> 00:19:30,660
+and you end up with transmit to receive
+
+513
+00:19:30,660 --> 00:19:31,680
+and vice versa again.
+
+514
+00:19:31,680 --> 00:19:32,513
+All good.
+
+515
+00:19:33,600 --> 00:19:34,560
+The other variation, though,
+
+516
+00:19:34,560 --> 00:19:37,110
+is when you start adding
+in multiple meet-me rooms,
+
+517
+00:19:37,110 --> 00:19:40,020
+other providers, other
+pieces of equipment,
+
+518
+00:19:40,020 --> 00:19:41,940
+and before you know it,
+you've got a situation
+
+519
+00:19:41,940 --> 00:19:44,670
+where these fibers have
+been crossed multiple times.
+
+520
+00:19:44,670 --> 00:19:47,700
+So when you hear the
+phrase roll the fiber,
+
+521
+00:19:47,700 --> 00:19:49,350
+what they literally mean is swap,
+
+522
+00:19:49,350 --> 00:19:50,823
+transmit, and receive around.
+
+523
+00:19:51,660 --> 00:19:54,240
+I've lost track of the number
+of times I've visited racks
+
+524
+00:19:54,240 --> 00:19:55,380
+where I've seen the little clips
+
+525
+00:19:55,380 --> 00:19:57,390
+on an LC fiber connector broken off
+
+526
+00:19:57,390 --> 00:19:59,370
+so that the fibers can be swapped around.
+
+527
+00:19:59,370 --> 00:20:01,440
+It's a very, very common thing.
+
+528
+00:20:01,440 --> 00:20:03,390
+I wish it was totally
+standardized everywhere,
+
+529
+00:20:03,390 --> 00:20:04,500
+but unfortunately it's not.
+
+530
+00:20:04,500 --> 00:20:06,570
+So that's what that means if you hear that
+
+531
+00:20:06,570 --> 00:20:09,020
+when you're debugging a connection.
+
+532
+00:20:09,020 --> 00:20:12,000
+The other phrase is putting a loop on it.
+
+533
+00:20:12,000 --> 00:20:13,890
+So what I'm showing you here, very simply,
+
+534
+00:20:13,890 --> 00:20:15,540
+again, these are just two SFPs,
+
+535
+00:20:15,540 --> 00:20:18,540
+two devices that are
+connected via a meet-me room,
+
+536
+00:20:18,540 --> 00:20:20,610
+and perhaps the connection
+isn't coming up.
+
+537
+00:20:20,610 --> 00:20:22,050
+And what we wanna do here is identify
+
+538
+00:20:22,050 --> 00:20:23,280
+where's the potential problem.
+
+539
+00:20:23,280 --> 00:20:24,690
+Do we have some broken fiber?
+
+540
+00:20:24,690 --> 00:20:26,160
+What's the issue?
+
+541
+00:20:26,160 --> 00:20:28,320
+So what will happen here
+is you'll hear someone say,
+
+542
+00:20:28,320 --> 00:20:29,820
+I'm gonna put a loop on that connection
+
+543
+00:20:29,820 --> 00:20:33,663
+facing towards AWS or
+facing towards this carrier.
+
+544
+00:20:34,620 --> 00:20:36,210
+What that means is in that meet-me room,
+
+545
+00:20:36,210 --> 00:20:37,860
+they might unplug that fiber,
+
+546
+00:20:37,860 --> 00:20:39,600
+that cross-connect that we had,
+
+547
+00:20:39,600 --> 00:20:42,000
+and quite simply, they will
+just loop the two together
+
+548
+00:20:42,000 --> 00:20:43,620
+on one side.
+
+549
+00:20:43,620 --> 00:20:47,040
+So on the AWS side, our
+laser is firing light out.
+
+550
+00:20:47,040 --> 00:20:48,720
+It gets to that port in the meet-me room.
+
+551
+00:20:48,720 --> 00:20:51,810
+It gets turned right back
+around, sent back to AWS.
+
+552
+00:20:51,810 --> 00:20:53,520
+And now, in those CloudWatch metrics,
+
+553
+00:20:53,520 --> 00:20:56,430
+you would see light level being received.
+
+554
+00:20:56,430 --> 00:20:57,720
+It's not always true that the connection
+
+555
+00:20:57,720 --> 00:20:58,560
+would come up as such,
+
+556
+00:20:58,560 --> 00:21:00,990
+but you can see that
+that loop has been made.
+
+557
+00:21:00,990 --> 00:21:02,730
+And even better, you
+could see the transition
+
+558
+00:21:02,730 --> 00:21:05,760
+where there was no loop
+at all, no light flowing.
+
+559
+00:21:05,760 --> 00:21:06,660
+You loop it, it's good.
+
+560
+00:21:06,660 --> 00:21:09,300
+So now you know the path from AWS
+
+561
+00:21:09,300 --> 00:21:11,220
+to the meet-me room is good.
+
+562
+00:21:11,220 --> 00:21:13,200
+The same could be done on the
+other side with the carrier,
+
+563
+00:21:13,200 --> 00:21:14,640
+and it could be done at various places
+
+564
+00:21:14,640 --> 00:21:16,260
+all the way down the path
+
+565
+00:21:16,260 --> 00:21:19,050
+to troubleshoot a problem like this.
+
+566
+00:21:19,050 --> 00:21:21,920
+So they're the two phrases
+you're likely to hear.
+
+567
+00:21:21,920 --> 00:21:23,220
+I thought I would share it with you,
+
+568
+00:21:23,220 --> 00:21:25,230
+because as I say, our support organization
+
+569
+00:21:25,230 --> 00:21:27,840
+work with customers
+regularly on these things.
+
+570
+00:21:27,840 --> 00:21:29,790
+And quite often, we find customers
+
+571
+00:21:29,790 --> 00:21:33,270
+don't necessarily understand
+these concepts, which I get.
+
+572
+00:21:33,270 --> 00:21:35,463
+So hopefully, this clarifies that process.
+
+573
+00:21:37,290 --> 00:21:38,550
+The last thing I wanted to talk about
+
+574
+00:21:38,550 --> 00:21:41,250
+in terms of physical
+connectivity is MACSEC.
+
+575
+00:21:41,250 --> 00:21:44,010
+So MACSEC is enabled at the port level,
+
+576
+00:21:44,010 --> 00:21:45,150
+as I mentioned earlier.
+
+577
+00:21:45,150 --> 00:21:46,320
+When you request your port,
+
+578
+00:21:46,320 --> 00:21:47,520
+you check that box at the bottom,
+
+579
+00:21:47,520 --> 00:21:50,940
+and if it's available for that
+bandwidth at that location,
+
+580
+00:21:50,940 --> 00:21:53,370
+it's now available for you to consume.
+
+581
+00:21:53,370 --> 00:21:57,600
+MACSEC encrypts the traffic
+between two Layer 2 devices.
+
+582
+00:21:57,600 --> 00:21:59,370
+So if you've got a piece of equipment
+
+583
+00:21:59,370 --> 00:22:00,750
+in that co-location facility,
+
+584
+00:22:00,750 --> 00:22:03,240
+and you connect them together
+via the cross-connects,
+
+585
+00:22:03,240 --> 00:22:04,350
+no problem.
+
+586
+00:22:04,350 --> 00:22:06,300
+If you're connecting outside that facility
+
+587
+00:22:06,300 --> 00:22:07,890
+to perhaps your data center,
+
+588
+00:22:07,890 --> 00:22:09,300
+as long as your carrier is passing
+
+589
+00:22:09,300 --> 00:22:11,130
+through all the Layer 2 traffic,
+
+590
+00:22:11,130 --> 00:22:12,900
+then you can establish a MACSEC connection
+
+591
+00:22:12,900 --> 00:22:15,200
+between those two devices.
+
+592
+00:22:15,200 --> 00:22:17,700
+Once that traffic gets into AWS,
+
+593
+00:22:17,700 --> 00:22:19,110
+we encrypt all of the traffic
+
+594
+00:22:19,110 --> 00:22:21,330
+between AWS-secured facilities.
+
+595
+00:22:21,330 --> 00:22:23,460
+So that MACSEC session
+is between your device
+
+596
+00:22:23,460 --> 00:22:26,013
+and the Direct Connect
+device in that location.
+
+597
+00:22:27,140 --> 00:22:31,110
+The keys for this session
+are generated by you.
+
+598
+00:22:31,110 --> 00:22:34,860
+They're stored inside KMS,
+sorry, in Secrets Manager,
+
+599
+00:22:34,860 --> 00:22:38,700
+and you can then rotate these
+if you need to over time.
+
+600
+00:22:38,700 --> 00:22:40,920
+You have a choice when you
+configure MACSEC as well
+
+601
+00:22:40,920 --> 00:22:43,200
+in terms of what you want
+to do with the encryption.
+
+602
+00:22:43,200 --> 00:22:44,850
+So you can choose no encryption,
+
+603
+00:22:44,850 --> 00:22:46,530
+maybe that's your starting point.
+
+604
+00:22:46,530 --> 00:22:47,730
+If this was part of a plan
+
+605
+00:22:47,730 --> 00:22:49,650
+that you were gonna
+enable MACSEC later on,
+
+606
+00:22:49,650 --> 00:22:52,020
+you'd set it to no encrypt.
+
+607
+00:22:52,020 --> 00:22:53,820
+There's also then should encrypt,
+
+608
+00:22:53,820 --> 00:22:56,370
+where the two devices
+will try and establish
+
+609
+00:22:56,370 --> 00:22:57,780
+an encrypted connection between them,
+
+610
+00:22:57,780 --> 00:23:00,240
+your device to ours, but if it fails,
+
+611
+00:23:00,240 --> 00:23:01,920
+the connection will still come up.
+
+612
+00:23:01,920 --> 00:23:03,690
+So that's quite a common stage to go to
+
+613
+00:23:03,690 --> 00:23:06,000
+as you're rolling out MACSEC connectivity.
+
+614
+00:23:06,000 --> 00:23:08,100
+You enable it, you set
+it to should connect.
+
+615
+00:23:08,100 --> 00:23:09,780
+That now effectively lets you test it
+
+616
+00:23:09,780 --> 00:23:10,640
+because if you get it right,
+
+617
+00:23:10,640 --> 00:23:13,260
+the connection will come up
+and you'll see it encrypted.
+
+618
+00:23:13,260 --> 00:23:16,140
+If it doesn't work, you haven't
+interrupted the connection.
+
+619
+00:23:16,140 --> 00:23:17,910
+And then the final one is must encrypt,
+
+620
+00:23:17,910 --> 00:23:19,500
+which is exactly what it sounds like.
+
+621
+00:23:19,500 --> 00:23:21,360
+If we can't establish the encryption
+
+622
+00:23:21,360 --> 00:23:22,280
+between the two devices
+
+623
+00:23:22,280 --> 00:23:23,880
+the connection will stay down
+
+624
+00:23:23,880 --> 00:23:26,880
+and all your virtual interfaces
+will be down as well.
+
+625
+00:23:26,880 --> 00:23:28,440
+So talking of virtual interfaces,
+
+626
+00:23:28,440 --> 00:23:31,193
+I'm gonna hand over to Josh
+to talk about those with you.
+
+627
+00:23:32,280 --> 00:23:33,713
+- All right, thank you, Steve.
+
+628
+00:23:34,950 --> 00:23:38,610
+Yeah, so just taking a look at
+the virtual interfaces here,
+
+629
+00:23:38,610 --> 00:23:40,710
+just really quick, just to level set,
+
+630
+00:23:40,710 --> 00:23:43,560
+Steve kind of alluded to
+it, but virtual interface,
+
+631
+00:23:43,560 --> 00:23:46,260
+that's the VLAN and the BGP, right?
+
+632
+00:23:46,260 --> 00:23:49,920
+I know you kind of like talk
+down about BGP, but I like it.
+
+633
+00:23:49,920 --> 00:23:52,530
+So we have three main types
+
+634
+00:23:52,530 --> 00:23:54,150
+and I'm gonna go into
+some details on them.
+
+635
+00:23:54,150 --> 00:23:55,830
+So don't panic.
+
+636
+00:23:55,830 --> 00:23:57,660
+Public, private and transit.
+
+637
+00:23:57,660 --> 00:24:02,220
+So public is for connecting
+to public AWS endpoints,
+
+638
+00:24:02,220 --> 00:24:03,810
+S3, that sort of thing.
+
+639
+00:24:03,810 --> 00:24:06,030
+Private for getting to VPCs.
+
+640
+00:24:06,030 --> 00:24:08,160
+Transit for getting to transit
+gateways and cloud ones
+
+641
+00:24:08,160 --> 00:24:09,760
+and then to VPCs.
+
+642
+00:24:09,760 --> 00:24:11,760
+And then we also have the concept
+
+643
+00:24:11,760 --> 00:24:13,980
+of a hosted virtual interface,
+
+644
+00:24:13,980 --> 00:24:16,560
+not to be confused with
+the hosted connection.
+
+645
+00:24:16,560 --> 00:24:19,920
+This is a virtual interface owned
+
+646
+00:24:19,920 --> 00:24:22,500
+by another account's connection.
+
+647
+00:24:22,500 --> 00:24:25,290
+They configure all the
+BGP and all of that stuff
+
+648
+00:24:25,290 --> 00:24:28,380
+and then you attach it
+to your VPC, essentially.
+
+649
+00:24:28,380 --> 00:24:30,270
+So sometimes that's like
+an infrastructure account
+
+650
+00:24:30,270 --> 00:24:31,103
+or something like that.
+
+651
+00:24:31,103 --> 00:24:33,180
+(inhales)
+
+652
+00:24:33,180 --> 00:24:36,220
+So we'll start with
+public virtual interfaces.
+
+653
+00:24:36,220 --> 00:24:38,820
+I'm not gonna go into
+super detail on these
+
+654
+00:24:38,820 --> 00:24:40,290
+'cause I'm kind of hoping you know
+
+655
+00:24:40,290 --> 00:24:43,140
+at least some level of
+understanding about these,
+
+656
+00:24:43,140 --> 00:24:44,880
+but public virtual interface,
+
+657
+00:24:44,880 --> 00:24:47,733
+these are, as I said,
+connects you to any region.
+
+658
+00:24:48,750 --> 00:24:51,780
+These are, you use public IPs for peering.
+
+659
+00:24:51,780 --> 00:24:55,110
+We have some ability to scope these down.
+
+660
+00:24:55,110 --> 00:24:57,520
+I'll explain that a little later on.
+
+661
+00:24:57,520 --> 00:25:01,830
+But essentially what it is is
+your own personal connection
+
+662
+00:25:01,830 --> 00:25:03,130
+to the public side of AWS.
+
+663
+00:25:06,570 --> 00:25:09,120
+To talk about private virtual interfaces,
+
+664
+00:25:09,120 --> 00:25:11,640
+we have to kind of go back in time first.
+
+665
+00:25:11,640 --> 00:25:14,160
+We have to go before 2017,
+
+666
+00:25:14,160 --> 00:25:16,060
+which feels like the way back machine.
+
+667
+00:25:17,250 --> 00:25:21,570
+Back then, Direct Connect was
+kind of a regional service.
+
+668
+00:25:21,570 --> 00:25:26,190
+So what you had was your
+Direct Connect was in a region
+
+669
+00:25:26,190 --> 00:25:27,660
+and you could connect to your VPCs
+
+670
+00:25:27,660 --> 00:25:28,910
+that were in that region.
+
+671
+00:25:29,790 --> 00:25:32,790
+So in my example here, I have US East 1
+
+672
+00:25:32,790 --> 00:25:35,130
+and I have my VPC in US East 1
+
+673
+00:25:35,130 --> 00:25:37,473
+and my connection is in US East 1.
+
+674
+00:25:38,550 --> 00:25:40,620
+I can still connect to multiple VPCs,
+
+675
+00:25:40,620 --> 00:25:43,800
+but one VPC per virtual interface.
+
+676
+00:25:43,800 --> 00:25:45,840
+And this is where that concept
+
+677
+00:25:45,840 --> 00:25:47,460
+of an associated region comes in,
+
+678
+00:25:47,460 --> 00:25:48,480
+which you may have seen if you've
+
+679
+00:25:48,480 --> 00:25:50,190
+used Direct Connect at all
+
+680
+00:25:50,190 --> 00:25:52,990
+because you can still
+use this architecture.
+
+681
+00:25:52,990 --> 00:25:57,990
+Then we kind of moved on a little bit
+
+682
+00:25:59,460 --> 00:26:03,800
+to this architecture using
+Direct Connect Gateway.
+
+683
+00:26:03,800 --> 00:26:06,660
+So these are still private
+virtual interfaces,
+
+684
+00:26:06,660 --> 00:26:10,110
+but what these do, what
+Direct Connect Gateway does
+
+685
+00:26:10,110 --> 00:26:12,600
+is allows you to bring all
+your private virtual interfaces
+
+686
+00:26:12,600 --> 00:26:15,630
+into one Direct Connect Gateway.
+
+687
+00:26:15,630 --> 00:26:17,140
+Those can be global from anywhere
+
+688
+00:26:17,140 --> 00:26:20,940
+and you can then attach
+your VPCs anywhere as well.
+
+689
+00:26:20,940 --> 00:26:23,910
+So you can go kind of
+from anywhere to anywhere.
+
+690
+00:26:23,910 --> 00:26:27,693
+I mean, from on-prem
+to VPC, VPC to on-prem.
+
+691
+00:26:30,530 --> 00:26:32,430
+Then we started to get into the sort of
+
+692
+00:26:32,430 --> 00:26:34,893
+the transit gateway Cloud WAN world.
+
+693
+00:26:36,210 --> 00:26:38,760
+You've probably come
+across those services.
+
+694
+00:26:38,760 --> 00:26:40,740
+So we introduced transit
+virtual interfaces,
+
+695
+00:26:40,740 --> 00:26:44,070
+those very similar, similar idea.
+
+696
+00:26:44,070 --> 00:26:45,780
+You connect to regionally,
+
+697
+00:26:45,780 --> 00:26:47,910
+you can connect to transit gateways,
+
+698
+00:26:47,910 --> 00:26:51,730
+Cloud WANs in different
+regions, add those on.
+
+699
+00:26:51,730 --> 00:26:53,340
+One thing to note there,
+
+700
+00:26:53,340 --> 00:26:55,140
+you cannot mix and match there.
+
+701
+00:26:55,140 --> 00:26:58,560
+You can't add VGWs and TGWs
+
+702
+00:26:58,560 --> 00:27:00,390
+and you can't add transit
+VIFs and private VIFs
+
+703
+00:27:00,390 --> 00:27:02,010
+to the same ones.
+
+704
+00:27:02,010 --> 00:27:03,860
+Just something to keep in mind there.
+
+705
+00:27:05,910 --> 00:27:08,910
+And then just one other thing
+I wanted to point out here,
+
+706
+00:27:08,910 --> 00:27:12,453
+not necessarily a VIF type,
+but kind of a setting on a VIF,
+
+707
+00:27:13,560 --> 00:27:15,300
+private or transit VIF at least,
+
+708
+00:27:15,300 --> 00:27:16,980
+is something called site link.
+
+709
+00:27:16,980 --> 00:27:21,360
+This allows you to take your
+traffic from one DX location
+
+710
+00:27:21,360 --> 00:27:25,230
+to another DX location,
+ride the AWS backbone.
+
+711
+00:27:25,230 --> 00:27:27,600
+The nice thing is, and
+you can see I created
+
+712
+00:27:27,600 --> 00:27:29,190
+a lovely little GIF.
+
+713
+00:27:29,190 --> 00:27:30,930
+You can just click the button
+
+714
+00:27:30,930 --> 00:27:32,250
+and you'll start seeing the route show
+
+715
+00:27:32,250 --> 00:27:33,083
+up on the other side.
+
+716
+00:27:33,083 --> 00:27:35,790
+So you can kind of use
+it as needed, right?
+
+717
+00:27:35,790 --> 00:27:37,883
+You don't even have to
+keep it on all the time.
+
+718
+00:27:42,120 --> 00:27:44,310
+So taking a quick look at monitoring,
+
+719
+00:27:44,310 --> 00:27:45,570
+these are sort of building on the things
+
+720
+00:27:45,570 --> 00:27:46,800
+that Steve talked about before,
+
+721
+00:27:46,800 --> 00:27:50,190
+but for virtual interfaces,
+
+722
+00:27:50,190 --> 00:27:53,570
+we also have the bits per
+second, ingress, egress,
+
+723
+00:27:53,570 --> 00:27:55,950
+and packets per second,
+so just give you the idea
+
+724
+00:27:55,950 --> 00:27:58,830
+of what traffic is going
+over those connections.
+
+725
+00:27:58,830 --> 00:28:00,810
+And then we also have an
+offering under CloudWatch
+
+726
+00:28:00,810 --> 00:28:03,810
+called CloudWatch Network
+Synthetic Monitor.
+
+727
+00:28:03,810 --> 00:28:05,490
+That's actually sending real traffic.
+
+728
+00:28:05,490 --> 00:28:09,570
+So you configure an
+endpoint in your subnets
+
+729
+00:28:09,570 --> 00:28:12,720
+and you configure, you
+give us an endpoint on-prem
+
+730
+00:28:12,720 --> 00:28:15,693
+and we send ICMP or TCP
+traffic, you choose,
+
+731
+00:28:16,560 --> 00:28:19,140
+and we return roundtrip time and
+
+732
+00:28:19,140 --> 00:28:20,640
+packet loss metrics to you.
+
+733
+00:28:20,640 --> 00:28:23,160
+There's also a network
+health indicator metric
+
+734
+00:28:23,160 --> 00:28:24,300
+that comes back.
+
+735
+00:28:24,300 --> 00:28:25,230
+What that is,
+
+736
+00:28:25,230 --> 00:28:27,390
+it's us looking at all
+of our internal metrics
+
+737
+00:28:27,390 --> 00:28:29,940
+for everything from the subnet all the way
+
+738
+00:28:29,940 --> 00:28:32,700
+to the direct connect endpoint
+that you're connected to,
+
+739
+00:28:32,700 --> 00:28:34,320
+just to give you kind of a quick look
+
+740
+00:28:34,320 --> 00:28:36,840
+if you're having a network issue to say,
+
+741
+00:28:36,840 --> 00:28:38,850
+oh, that's definitely an AWS problem,
+
+742
+00:28:38,850 --> 00:28:40,320
+I can go yell at them,
+
+743
+00:28:40,320 --> 00:28:42,873
+or I need to go investigate my network.
+
+744
+00:28:46,320 --> 00:28:48,750
+And so to troubleshooting
+virtual interfaces,
+
+745
+00:28:48,750 --> 00:28:53,750
+so again, layer one, you should be fine
+
+746
+00:28:54,750 --> 00:28:57,690
+'cause you've been through
+Steve's presentation,
+
+747
+00:28:57,690 --> 00:28:59,730
+but again, that's kind of the first thing.
+
+748
+00:28:59,730 --> 00:29:00,870
+If your layer one's not up,
+
+749
+00:29:00,870 --> 00:29:02,870
+you're not gonna get any further, right?
+
+750
+00:29:03,990 --> 00:29:06,510
+The next thing to check if
+your VIF's not coming up
+
+751
+00:29:06,510 --> 00:29:09,780
+is layer two, so making
+sure your VLAN tags
+
+752
+00:29:09,780 --> 00:29:11,550
+match on both sides.
+
+753
+00:29:11,550 --> 00:29:13,680
+The other thing we see pretty commonly,
+
+754
+00:29:13,680 --> 00:29:16,610
+especially when you start adding
+in partners and providers,
+
+755
+00:29:16,610 --> 00:29:20,010
+they love to use these
+encapsulation technologies.
+
+756
+00:29:20,010 --> 00:29:22,470
+Again, totally fine, no problem,
+
+757
+00:29:22,470 --> 00:29:25,560
+but we need to make sure
+once they are facing,
+
+758
+00:29:25,560 --> 00:29:27,750
+like the port facing AWS,
+those are stripped off
+
+759
+00:29:27,750 --> 00:29:30,200
+and it's just the VLAN of
+your virtual interface.
+
+760
+00:29:32,070 --> 00:29:35,250
+Then once you get up another layer,
+
+761
+00:29:35,250 --> 00:29:39,090
+you're into sort of BGP layer
+three sort of issues, right?
+
+762
+00:29:39,090 --> 00:29:44,090
+So you can kind of see it
+goes two different ways.
+
+763
+00:29:44,910 --> 00:29:48,480
+If you're seeing in your BGP logs,
+
+764
+00:29:48,480 --> 00:29:52,020
+stuff getting stuck in
+idle, connect active,
+
+765
+00:29:52,020 --> 00:29:54,900
+it's probably a network
+connectivity problem.
+
+766
+00:29:54,900 --> 00:29:56,370
+If you're getting over that,
+
+767
+00:29:56,370 --> 00:29:58,713
+you're getting into
+open sent, open confirm,
+
+768
+00:29:59,550 --> 00:30:01,893
+it's a BGP parameter
+problem more than likely.
+
+769
+00:30:06,090 --> 00:30:09,840
+Okay, so I wanna talk a
+little bit about routing
+
+770
+00:30:09,840 --> 00:30:12,963
+because there's a lot to it.
+
+771
+00:30:15,030 --> 00:30:16,530
+First thing I wanted to bring up here,
+
+772
+00:30:16,530 --> 00:30:18,690
+just kind of as I'm thinking about it,
+
+773
+00:30:18,690 --> 00:30:19,890
+as I was thinking about this,
+
+774
+00:30:19,890 --> 00:30:23,220
+there are the limits and some limits
+
+775
+00:30:23,220 --> 00:30:24,270
+are more important than others
+
+776
+00:30:24,270 --> 00:30:26,670
+and they kind of come
+in at different places.
+
+777
+00:30:26,670 --> 00:30:28,260
+So on the screen,
+
+778
+00:30:28,260 --> 00:30:30,540
+I've got virtual interfaces per connection
+
+779
+00:30:30,540 --> 00:30:32,630
+and transit virtual
+interfaces per connection.
+
+780
+00:30:32,630 --> 00:30:34,560
+Those are super important,
+
+781
+00:30:34,560 --> 00:30:36,270
+but those only really matter
+
+782
+00:30:36,270 --> 00:30:38,583
+when you're architecting
+your network, right?
+
+783
+00:30:39,420 --> 00:30:42,930
+The next two routes per peer,
+
+784
+00:30:42,930 --> 00:30:44,550
+those can take down your network
+
+785
+00:30:44,550 --> 00:30:45,810
+or take down your direct connect
+
+786
+00:30:45,810 --> 00:30:48,480
+if you exceed them at any point.
+
+787
+00:30:48,480 --> 00:30:50,130
+So you really wanna kind of make sure
+
+788
+00:30:50,130 --> 00:30:52,257
+you have a good
+understanding of your routes
+
+789
+00:30:52,257 --> 00:30:54,330
+and are summarizing and making sure
+
+790
+00:30:54,330 --> 00:30:56,730
+you're kind of keeping
+those under control.
+
+791
+00:30:56,730 --> 00:30:59,823
+So I'll give you some ideas
+on how you can do that.
+
+792
+00:31:01,230 --> 00:31:06,150
+First of all, here's an example
+of like a route filtering.
+
+793
+00:31:06,150 --> 00:31:09,420
+So here I'm filtering
+just for a couple of /24s,
+
+794
+00:31:09,420 --> 00:31:12,420
+applying those as a route map to my peer,
+
+795
+00:31:12,420 --> 00:31:14,283
+sending just those routes to AWS.
+
+796
+00:31:17,760 --> 00:31:21,900
+Another option here is
+using summarization.
+
+797
+00:31:21,900 --> 00:31:24,210
+So I'm using this
+aggregate address command.
+
+798
+00:31:24,210 --> 00:31:26,580
+So basically what it's
+saying is I've got those 24s,
+
+799
+00:31:26,580 --> 00:31:30,273
+ignore those, send a
+/16, only the summary.
+
+800
+00:31:31,360 --> 00:31:32,790
+And then at the bottom,
+
+801
+00:31:32,790 --> 00:31:36,120
+I'm injecting a default route
+using default originate.
+
+802
+00:31:36,120 --> 00:31:39,540
+The idea there being just
+send a default route to AWS
+
+803
+00:31:39,540 --> 00:31:42,450
+and then use the VPC route
+tables, TGW route tables,
+
+804
+00:31:42,450 --> 00:31:43,620
+that sort of thing to control
+
+805
+00:31:43,620 --> 00:31:45,723
+exactly which traffic you're sending.
+
+806
+00:31:50,740 --> 00:31:54,180
+Okay, how do you configure the routing?
+
+807
+00:31:54,180 --> 00:31:57,030
+Active, passive, passive,
+no, active, active,
+
+808
+00:31:57,030 --> 00:31:57,863
+that sort of thing, right?
+
+809
+00:31:57,863 --> 00:31:59,520
+That's kind of the next step.
+
+810
+00:31:59,520 --> 00:32:02,130
+This is the mnemonic
+device I was always taught.
+
+811
+00:32:02,130 --> 00:32:05,370
+So I hope some of you have used that too.
+
+812
+00:32:05,370 --> 00:32:07,200
+Still don't understand
+why there's two oranges.
+
+813
+00:32:07,200 --> 00:32:08,880
+I find that super confusing,
+
+814
+00:32:08,880 --> 00:32:11,190
+but I've never used origin or origin type
+
+815
+00:32:11,190 --> 00:32:13,413
+to decide a route, so it's fine.
+
+816
+00:32:14,640 --> 00:32:18,210
+Okay, so here's an example.
+
+817
+00:32:18,210 --> 00:32:20,070
+I've got an Ashburn, Virginia,
+
+818
+00:32:20,070 --> 00:32:22,840
+direct connect to New York direct connect.
+
+819
+00:32:22,840 --> 00:32:26,760
+My VPC is in US East 1, my
+data center's in Virginia.
+
+820
+00:32:26,760 --> 00:32:31,560
+I wanna prefer the Ashburn direct connect.
+
+821
+00:32:31,560 --> 00:32:32,460
+So how can I do that?
+
+822
+00:32:32,460 --> 00:32:34,890
+Well, one way is AS
+path per pending, right?
+
+823
+00:32:34,890 --> 00:32:37,050
+That's pretty common in the industry,
+
+824
+00:32:37,050 --> 00:32:39,100
+very common way to do it.
+
+825
+00:32:39,100 --> 00:32:41,130
+The other way that we could do it with AWS
+
+826
+00:32:41,130 --> 00:32:43,443
+is using local preference communities.
+
+827
+00:32:44,670 --> 00:32:46,710
+So we have this set of communities
+
+828
+00:32:46,710 --> 00:32:48,390
+that allow you to influence AWS's
+
+829
+00:32:48,390 --> 00:32:50,070
+local preference, essentially.
+
+830
+00:32:50,070 --> 00:32:53,400
+Then obviously you wanna also
+apply the same metric locally
+
+831
+00:32:53,400 --> 00:32:55,140
+onto the routes you're receiving from us
+
+832
+00:32:55,140 --> 00:32:57,040
+just to kind of keep things symmetric.
+
+833
+00:33:05,690 --> 00:33:07,020
+And just so you can kind of see
+
+834
+00:33:07,020 --> 00:33:09,180
+what those routes would look like,
+
+835
+00:33:09,180 --> 00:33:11,730
+the top two routes are
+the preferred routes,
+
+836
+00:33:11,730 --> 00:33:13,350
+the shorter AS path,
+
+837
+00:33:13,350 --> 00:33:16,113
+and the higher local preference community.
+
+838
+00:33:19,410 --> 00:33:21,450
+All right, what if you
+bought all this bandwidth
+
+839
+00:33:21,450 --> 00:33:23,010
+and you wanna use it all?
+
+840
+00:33:23,010 --> 00:33:23,970
+Why not?
+
+841
+00:33:23,970 --> 00:33:25,230
+You wanna go active active.
+
+842
+00:33:25,230 --> 00:33:29,130
+I've got two connections now
+in that same data center.
+
+843
+00:33:29,130 --> 00:33:31,200
+How can I utilize everything?
+
+844
+00:33:31,200 --> 00:33:32,760
+Well, I could just use
+
+845
+00:33:32,760 --> 00:33:36,000
+the same local preference
+communities on both.
+
+846
+00:33:36,000 --> 00:33:38,760
+Technically could also
+use the same AS path.
+
+847
+00:33:38,760 --> 00:33:41,220
+I personally like to use the
+local preference communities
+
+848
+00:33:41,220 --> 00:33:42,480
+because I feel like it,
+
+849
+00:33:42,480 --> 00:33:46,920
+since it's higher up the list
+of like the decision tree,
+
+850
+00:33:46,920 --> 00:33:50,010
+it makes me feel a
+little more comfortable.
+
+851
+00:33:50,010 --> 00:33:52,440
+But you could also do this
+with AS path per pending.
+
+852
+00:33:52,440 --> 00:33:55,680
+But local preference is my choice.
+
+853
+00:33:55,680 --> 00:33:58,080
+But this way we'll ECMP
+traffic across both.
+
+854
+00:33:58,080 --> 00:34:01,410
+So obviously advise you would
+do the same on your side,
+
+855
+00:34:01,410 --> 00:34:03,150
+but that way we're splitting traffic
+
+856
+00:34:03,150 --> 00:34:04,503
+across both connections.
+
+857
+00:34:08,610 --> 00:34:10,680
+So for resiliency purposes,
+
+858
+00:34:10,680 --> 00:34:13,290
+maybe now I'm going back
+to my two data center
+
+859
+00:34:13,290 --> 00:34:14,820
+or I'm adding a second data center.
+
+860
+00:34:14,820 --> 00:34:16,713
+Now I have a data center in New York,
+
+861
+00:34:17,820 --> 00:34:20,640
+but my data center is still in Virginia.
+
+862
+00:34:20,640 --> 00:34:23,820
+I probably don't wanna
+ECMP across everything
+
+863
+00:34:23,820 --> 00:34:26,430
+because I'm gonna have
+some weird latency problems
+
+864
+00:34:26,430 --> 00:34:28,470
+and things are gonna start
+arriving out of order
+
+865
+00:34:28,470 --> 00:34:30,060
+and that sort of thing, right?
+
+866
+00:34:30,060 --> 00:34:31,350
+So in that case, generally,
+
+867
+00:34:31,350 --> 00:34:33,330
+I'm gonna apply my local
+preference communities
+
+868
+00:34:33,330 --> 00:34:35,700
+on the closest.
+
+869
+00:34:35,700 --> 00:34:37,410
+So that would be, well, I would pick one,
+
+870
+00:34:37,410 --> 00:34:40,050
+but I would pick my aspirin
+since that's the closest
+
+871
+00:34:40,050 --> 00:34:41,880
+and then kind of a lower priority
+
+872
+00:34:41,880 --> 00:34:44,160
+on the New York data center.
+
+873
+00:34:44,160 --> 00:34:45,750
+Then obviously if things fail,
+
+874
+00:34:45,750 --> 00:34:48,150
+we can ECMP on the other
+one, everything's fine.
+
+875
+00:34:50,070 --> 00:34:53,490
+Now, I've never really
+come across a network
+
+876
+00:34:53,490 --> 00:34:55,143
+that's that super clean.
+
+877
+00:34:56,190 --> 00:34:58,500
+They're usually a little
+messier than that.
+
+878
+00:34:58,500 --> 00:34:59,820
+And obviously we only have three
+
+879
+00:34:59,820 --> 00:35:01,470
+local preference communities.
+
+880
+00:35:01,470 --> 00:35:04,740
+So what do you do if you
+have four routes or more
+
+881
+00:35:04,740 --> 00:35:06,420
+or four different paths
+
+882
+00:35:06,420 --> 00:35:09,123
+and you wanna go one,
+two, three, four in order?
+
+883
+00:35:10,220 --> 00:35:12,180
+Well, for that sort of use case,
+
+884
+00:35:12,180 --> 00:35:14,220
+what I would do, what I recommend,
+
+885
+00:35:14,220 --> 00:35:16,240
+just equal out the local
+preferences everywhere
+
+886
+00:35:16,240 --> 00:35:17,640
+and then use AS-Passive.
+
+887
+00:35:17,640 --> 00:35:22,260
+So you can kind of get,
+you can get super granular.
+
+888
+00:35:22,260 --> 00:35:25,380
+You could go more than
+four obviously with this.
+
+889
+00:35:25,380 --> 00:35:27,243
+But that's how I would handle it.
+
+890
+00:35:30,810 --> 00:35:33,570
+Okay, just on public VIFs for a minute.
+
+891
+00:35:33,570 --> 00:35:35,850
+I kind of mentioned
+these a little bit ago.
+
+892
+00:35:35,850 --> 00:35:38,340
+The scoping communities that we have,
+
+893
+00:35:38,340 --> 00:35:42,030
+these allow you to filter
+the routes from AWS
+
+894
+00:35:42,030 --> 00:35:43,920
+that you receive, the public routes,
+
+895
+00:35:43,920 --> 00:35:48,720
+and only accept routes for
+either the local region,
+
+896
+00:35:48,720 --> 00:35:52,050
+the local continent, or
+accept everything globally.
+
+897
+00:35:52,050 --> 00:35:54,000
+Likewise, you can tell AWS,
+
+898
+00:35:54,000 --> 00:35:57,420
+I only want you to advertise my route
+
+899
+00:35:57,420 --> 00:36:00,780
+into the local region,
+the local continent,
+
+900
+00:36:00,780 --> 00:36:02,080
+or you can do it globally.
+
+901
+00:36:05,050 --> 00:36:06,630
+The other thing to note,
+
+902
+00:36:06,630 --> 00:36:08,990
+if you advertise the
+same route with an ISP
+
+903
+00:36:08,990 --> 00:36:11,340
+and over Direct Connect,
+
+904
+00:36:11,340 --> 00:36:12,530
+we're gonna prefer Direct Connect
+
+905
+00:36:12,530 --> 00:36:14,790
+unless you advertise
+something more specific
+
+906
+00:36:14,790 --> 00:36:15,940
+or something like that.
+
+907
+00:36:17,490 --> 00:36:20,190
+We don't apply local
+preference communities here.
+
+908
+00:36:20,190 --> 00:36:21,450
+Those don't apply.
+
+909
+00:36:21,450 --> 00:36:23,670
+You can use the AS-Path for Pending
+
+910
+00:36:23,670 --> 00:36:26,010
+as long as you are using a public ASN.
+
+911
+00:36:26,010 --> 00:36:27,660
+So if you use a private ASN,
+
+912
+00:36:27,660 --> 00:36:28,920
+you're just gonna strip it off
+
+913
+00:36:28,920 --> 00:36:31,230
+and use a public one internally.
+
+914
+00:36:31,230 --> 00:36:34,770
+And then ECMP, it gets
+a little bit sketchier
+
+915
+00:36:34,770 --> 00:36:36,510
+with public VIFs to be honest.
+
+916
+00:36:36,510 --> 00:36:39,930
+And I would generally just
+say within the same location,
+
+917
+00:36:39,930 --> 00:36:42,680
+you can do ECMP as long as
+everything else is the same.
+
+918
+00:36:46,560 --> 00:36:48,330
+And so just a couple things.
+
+919
+00:36:48,330 --> 00:36:49,260
+To take a look at,
+
+920
+00:36:49,260 --> 00:36:52,260
+these are what the routes
+look like coming from AWS.
+
+921
+00:36:52,260 --> 00:36:55,410
+First of all, you'll notice
+that we apply an ASN.
+
+922
+00:36:55,410 --> 00:36:58,773
+We do a bit of prepending
+and we apply the no export.
+
+923
+00:36:59,610 --> 00:37:02,000
+That's really just to protect us from,
+
+924
+00:37:02,000 --> 00:37:05,790
+if you were to leak the routes
+out to an ISP or something,
+
+925
+00:37:05,790 --> 00:37:08,040
+obviously your ISP should stop you.
+
+926
+00:37:08,040 --> 00:37:09,300
+But just in case they didn't,
+
+927
+00:37:09,300 --> 00:37:11,150
+we've got a little bit of protection.
+
+928
+00:37:12,060 --> 00:37:14,220
+I've seen customers
+strip off the no export,
+
+929
+00:37:14,220 --> 00:37:16,170
+advertise them internally,
+that sort of thing.
+
+930
+00:37:16,170 --> 00:37:17,520
+That's totally fine.
+
+931
+00:37:17,520 --> 00:37:20,313
+It's just kind of a little
+accidental protection.
+
+932
+00:37:23,280 --> 00:37:26,550
+And then you'll see at the
+bottom there, the 8100,
+
+933
+00:37:26,550 --> 00:37:28,890
+that's just saying that
+this route originated
+
+934
+00:37:28,890 --> 00:37:30,360
+from that region,
+
+935
+00:37:30,360 --> 00:37:32,513
+from the region that my
+direct connect is in.
+
+936
+00:37:35,760 --> 00:37:36,593
+Okay.
+
+937
+00:37:38,180 --> 00:37:41,820
+So, a bit of failover testing, right?
+
+938
+00:37:41,820 --> 00:37:44,910
+Super important, once
+you get your setup going,
+
+939
+00:37:44,910 --> 00:37:47,970
+you're gonna have maintenance,
+things are gonna happen.
+
+940
+00:37:47,970 --> 00:37:50,220
+Somewhere along that big,
+long, complicated chain
+
+941
+00:37:50,220 --> 00:37:53,910
+of partners and providers,
+something's gonna go down.
+
+942
+00:37:53,910 --> 00:37:56,490
+So, you wanna know that you're good.
+
+943
+00:37:56,490 --> 00:37:58,290
+So, you can do that any number of ways.
+
+944
+00:37:58,290 --> 00:38:00,260
+We do have a little failover testing tool,
+
+945
+00:38:00,260 --> 00:38:02,970
+which lets you bring down BGP.
+
+946
+00:38:02,970 --> 00:38:07,020
+You can set a time for
+that, up to 72 hours,
+
+947
+00:38:07,020 --> 00:38:08,190
+which seems like a lot,
+
+948
+00:38:08,190 --> 00:38:11,460
+but you could set it to
+be down for 72 hours.
+
+949
+00:38:11,460 --> 00:38:14,610
+If it all goes wrong,
+thankfully you can cancel it.
+
+950
+00:38:14,610 --> 00:38:15,443
+That's good.
+
+951
+00:38:17,550 --> 00:38:19,920
+And then just a note on our SLA as well,
+
+952
+00:38:19,920 --> 00:38:21,000
+that we have for direct connect.
+
+953
+00:38:21,000 --> 00:38:23,940
+So, we have three models for our SLA.
+
+954
+00:38:23,940 --> 00:38:26,580
+First one is a single
+connection deployment,
+
+955
+00:38:26,580 --> 00:38:27,690
+pretty much is what it says.
+
+956
+00:38:27,690 --> 00:38:28,890
+You have one connection.
+
+957
+00:38:29,790 --> 00:38:32,820
+The next one is a
+high-resilient, multi-site,
+
+958
+00:38:32,820 --> 00:38:34,233
+non-redundant connection.
+
+959
+00:38:34,233 --> 00:38:36,450
+It's a mouthful, but what
+it means, essentially,
+
+960
+00:38:36,450 --> 00:38:39,090
+is that you're at two locations,
+
+961
+00:38:39,090 --> 00:38:41,940
+but you only have a single
+connection at those locations.
+
+962
+00:38:43,280 --> 00:38:46,710
+And then finally, we have
+the maximum resiliency,
+
+963
+00:38:46,710 --> 00:38:48,390
+multi-site redundant deployment,
+
+964
+00:38:48,390 --> 00:38:51,200
+which is at least four connections,
+
+965
+00:38:51,200 --> 00:38:54,360
+two at each site, and on
+two different devices,
+
+966
+00:38:54,360 --> 00:38:56,280
+two different AWS devices.
+
+967
+00:38:56,280 --> 00:38:58,800
+So, those are for your maximum,
+
+968
+00:38:58,800 --> 00:39:01,803
+can't-have-downtime, super workloads.
+
+969
+00:39:06,870 --> 00:39:09,360
+And then just expanding on,
+
+970
+00:39:09,360 --> 00:39:11,700
+so Steve mentioned
+MACSec a little bit ago.
+
+971
+00:39:11,700 --> 00:39:13,110
+There's another option that we see
+
+972
+00:39:13,110 --> 00:39:15,690
+with encryption over direct connect,
+
+973
+00:39:15,690 --> 00:39:16,923
+and that's using IPsec.
+
+974
+00:39:18,500 --> 00:39:20,490
+In that case, direct connect becomes
+
+975
+00:39:20,490 --> 00:39:22,800
+kind of like the transport underneath,
+
+976
+00:39:22,800 --> 00:39:25,470
+and then you apply your
+IPsec tunnel over the top,
+
+977
+00:39:25,470 --> 00:39:27,993
+from VGW to your own firewall or router.
+
+978
+00:39:29,250 --> 00:39:32,400
+You can do this with
+public or private IPs.
+
+979
+00:39:32,400 --> 00:39:34,650
+It used to be kind of problematic
+
+980
+00:39:34,650 --> 00:39:37,380
+because you'd be limited
+to the tunnel size
+
+981
+00:39:37,380 --> 00:39:39,780
+of like 1.25 gigs per tunnel.
+
+982
+00:39:39,780 --> 00:39:42,060
+They recently upped that
+to five gigs per tunnel,
+
+983
+00:39:42,060 --> 00:39:43,560
+so that actually really helps.
+
+984
+00:39:44,610 --> 00:39:46,960
+So, this becomes a bit
+more of a viable option.
+
+985
+00:39:49,830 --> 00:39:50,663
+Okay.
+
+986
+00:39:52,380 --> 00:39:54,183
+On the subject of performance,
+
+987
+00:39:56,310 --> 00:39:58,680
+just keep in mind as well,
+
+988
+00:39:58,680 --> 00:40:00,720
+you can send as much bandwidth
+
+989
+00:40:00,720 --> 00:40:02,493
+as your EC2 instance can handle.
+
+990
+00:40:03,540 --> 00:40:04,890
+That's totally fine.
+
+991
+00:40:04,890 --> 00:40:07,290
+But keep in mind, if you're
+doing benchmark testing
+
+992
+00:40:07,290 --> 00:40:11,520
+or something like that,
+that a single flow,
+
+993
+00:40:11,520 --> 00:40:13,830
+like if you do an IPerf
+or something like that,
+
+994
+00:40:13,830 --> 00:40:15,660
+a single flow, you can only get five gigs.
+
+995
+00:40:15,660 --> 00:40:18,870
+So, make sure you're
+spreading it out a little bit.
+
+996
+00:40:18,870 --> 00:40:20,550
+And then just make sure you make the most
+
+997
+00:40:20,550 --> 00:40:21,450
+of your connections.
+
+998
+00:40:21,450 --> 00:40:23,040
+So, if you can support jumbo frames
+
+999
+00:40:23,040 --> 00:40:25,890
+on private and transit VIFs, do that.
+
+1000
+00:40:25,890 --> 00:40:27,300
+Because you'll get the most out of it.
+
+1001
+00:40:27,300 --> 00:40:28,920
+Public VIFs, we only support 1500,
+
+1002
+00:40:28,920 --> 00:40:31,710
+but you still get the idea.
+
+1003
+00:40:31,710 --> 00:40:33,410
+And a pretty good blog post there.
+
+1004
+00:40:34,290 --> 00:40:35,790
+If you take a look at that, some good tips
+
+1005
+00:40:35,790 --> 00:40:37,530
+on how to improve your performance,
+
+1006
+00:40:37,530 --> 00:40:38,930
+make sure you're doing good.
+
+1007
+00:40:40,560 --> 00:40:42,870
+Okay, Steve.
+
+1008
+00:40:42,870 --> 00:40:43,703
+- Brilliant.
+
+1009
+00:40:44,580 --> 00:40:47,640
+Okay, so we've got our
+connection up and running.
+
+1010
+00:40:47,640 --> 00:40:49,500
+We probably wanna understand how much
+
+1011
+00:40:49,500 --> 00:40:51,030
+this is going to cost.
+
+1012
+00:40:51,030 --> 00:40:53,370
+And this is a question that
+comes up quite regularly
+
+1013
+00:40:53,370 --> 00:40:54,870
+in customer discussions that I have.
+
+1014
+00:40:54,870 --> 00:40:57,270
+So, what I thought I would
+do is just put together
+
+1015
+00:40:57,270 --> 00:40:59,880
+a couple of examples so you
+can consider the components
+
+1016
+00:40:59,880 --> 00:41:01,710
+that are involved when you're working at
+
+1017
+00:41:01,710 --> 00:41:04,350
+how much does Direct Connect cost you.
+
+1018
+00:41:04,350 --> 00:41:07,330
+So, in our example, we're gonna have
+
+1019
+00:41:08,850 --> 00:41:10,980
+a very simple setup to start with.
+
+1020
+00:41:10,980 --> 00:41:13,890
+So, we have our EC2
+instance running in a VPC.
+
+1021
+00:41:13,890 --> 00:41:16,800
+In this example, it's in US West 2.
+
+1022
+00:41:16,800 --> 00:41:18,570
+We have a Direct Connect location,
+
+1023
+00:41:18,570 --> 00:41:20,970
+which I've chosen for it to be in London.
+
+1024
+00:41:20,970 --> 00:41:24,690
+And I have my customer
+location on-premises.
+
+1025
+00:41:24,690 --> 00:41:25,980
+This is how they're connected together.
+
+1026
+00:41:25,980 --> 00:41:28,590
+Obviously, this is a non-redundant setup,
+
+1027
+00:41:28,590 --> 00:41:31,140
+thinking back to what Josh
+was telling you about.
+
+1028
+00:41:31,140 --> 00:41:32,640
+So, what do we need to consider?
+
+1029
+00:41:32,640 --> 00:41:35,310
+When you're looking at pricing of anything
+
+1030
+00:41:35,310 --> 00:41:37,980
+to do with data transfer inside AWS,
+
+1031
+00:41:37,980 --> 00:41:40,260
+you need to consider
+it in both directions.
+
+1032
+00:41:40,260 --> 00:41:42,450
+So, in the first instance,
+we're gonna consider
+
+1033
+00:41:42,450 --> 00:41:47,450
+data transfer between AWS going
+towards a customer network.
+
+1034
+00:41:48,000 --> 00:41:49,390
+What are the costs that
+we need to consider
+
+1035
+00:41:49,390 --> 00:41:51,900
+in this particular scenario?
+
+1036
+00:41:51,900 --> 00:41:53,430
+Well, perhaps the most obvious one
+
+1037
+00:41:53,430 --> 00:41:55,680
+is the Direct Connect port itself.
+
+1038
+00:41:55,680 --> 00:41:58,290
+So, there is a charge for
+the Direct Connect port.
+
+1039
+00:41:58,290 --> 00:42:00,660
+It's charged per hour, and it's charged
+
+1040
+00:42:00,660 --> 00:42:03,750
+from when the connection
+comes up for the first time,
+
+1041
+00:42:03,750 --> 00:42:05,850
+or 90 days have elapsed from the point
+
+1042
+00:42:05,850 --> 00:42:07,500
+that you ordered the connection.
+
+1043
+00:42:07,500 --> 00:42:09,150
+We recognize that when you click order,
+
+1044
+00:42:09,150 --> 00:42:11,040
+it's very unlikely that
+you're gonna be able
+
+1045
+00:42:11,040 --> 00:42:13,230
+to plug in immediately
+and benefit from that.
+
+1046
+00:42:13,230 --> 00:42:14,520
+There's gonna be time involved
+
+1047
+00:42:14,520 --> 00:42:16,630
+to arrange all those
+cross-connects, those circuits,
+
+1048
+00:42:16,630 --> 00:42:18,690
+everything I talked about earlier on.
+
+1049
+00:42:18,690 --> 00:42:20,910
+But once that connection
+comes up and is stable,
+
+1050
+00:42:20,910 --> 00:42:24,390
+we'll start billing at an
+hourly rate for that port.
+
+1051
+00:42:24,390 --> 00:42:25,650
+And you'll get that charge now
+
+1052
+00:42:25,650 --> 00:42:28,020
+until you completely delete that port.
+
+1053
+00:42:28,020 --> 00:42:29,460
+So, that's an important thing to remember,
+
+1054
+00:42:29,460 --> 00:42:31,920
+and it's consistent through
+each of the architectures
+
+1055
+00:42:31,920 --> 00:42:32,870
+I'm gonna show you.
+
+1056
+00:42:34,050 --> 00:42:36,930
+The next piece is the data transfer itself
+
+1057
+00:42:36,930 --> 00:42:39,300
+from the EC2 instance,
+
+1058
+00:42:39,300 --> 00:42:42,240
+leaving AWS going towards
+your infrastructure.
+
+1059
+00:42:42,240 --> 00:42:44,130
+And when you look at our pricing pages,
+
+1060
+00:42:44,130 --> 00:42:45,360
+that's where you see the wording
+
+1061
+00:42:45,360 --> 00:42:49,620
+data transfer from AWS
+region or local zone.
+
+1062
+00:42:49,620 --> 00:42:52,740
+And it's charged per gigabyte transferred.
+
+1063
+00:42:52,740 --> 00:42:55,500
+The way this works is you go
+and look at the pricing table,
+
+1064
+00:42:55,500 --> 00:42:58,590
+you identify where is
+the traffic coming from.
+
+1065
+00:42:58,590 --> 00:43:02,370
+So, in this case, from the
+continuous US, for example,
+
+1066
+00:43:02,370 --> 00:43:04,590
+and it's going to Europe.
+
+1067
+00:43:04,590 --> 00:43:07,290
+You can then work out how
+much that's going to cost you
+
+1068
+00:43:07,290 --> 00:43:09,120
+per gigabyte transferred.
+
+1069
+00:43:09,120 --> 00:43:10,170
+So, the table for that is
+
+1070
+00:43:10,170 --> 00:43:11,820
+on the Direct Connect pricing page.
+
+1071
+00:43:11,820 --> 00:43:13,770
+In fact, that's where you
+can find all of the answers
+
+1072
+00:43:13,770 --> 00:43:15,870
+for these examples.
+
+1073
+00:43:15,870 --> 00:43:17,640
+So, this is, as I say, a simple setup
+
+1074
+00:43:17,640 --> 00:43:21,210
+with Direct Connect gateway
+and a virtual private gateway.
+
+1075
+00:43:21,210 --> 00:43:25,050
+What about data transfer into
+AWS in this architecture?
+
+1076
+00:43:25,050 --> 00:43:26,430
+Well, in this case,
+
+1077
+00:43:26,430 --> 00:43:28,380
+we still have the Direct Connect port fee.
+
+1078
+00:43:28,380 --> 00:43:31,310
+Obviously, it's not being
+charged twice in this situation,
+
+1079
+00:43:31,310 --> 00:43:33,900
+but that's still a constant.
+
+1080
+00:43:33,900 --> 00:43:36,450
+But for data transfer
+in, in this situation,
+
+1081
+00:43:36,450 --> 00:43:38,610
+where we're going via a
+virtual private gateway,
+
+1082
+00:43:38,610 --> 00:43:41,910
+we don't charge you for
+any data transfer inbound
+
+1083
+00:43:41,910 --> 00:43:42,903
+in this scenario.
+
+1084
+00:43:45,420 --> 00:43:47,010
+Let's look at a variation of that.
+
+1085
+00:43:47,010 --> 00:43:48,840
+What about with Transit Gateway?
+
+1086
+00:43:48,840 --> 00:43:50,430
+So, we still got our
+Direct Connect gateway.
+
+1087
+00:43:50,430 --> 00:43:52,950
+We've now got, though, the
+Transit Gateway on that path,
+
+1088
+00:43:52,950 --> 00:43:55,260
+and perhaps you've got
+many hundreds or thousands
+
+1089
+00:43:55,260 --> 00:43:58,140
+of VPCs connected to that Transit Gateway.
+
+1090
+00:43:58,140 --> 00:43:59,520
+So, once again, let's look at it
+
+1091
+00:43:59,520 --> 00:44:01,110
+from the perspective of data transfer
+
+1092
+00:44:01,110 --> 00:44:04,200
+out from AWS to your infrastructure.
+
+1093
+00:44:04,200 --> 00:44:06,480
+We have good old port hour charge there.
+
+1094
+00:44:06,480 --> 00:44:07,580
+That's still the same.
+
+1095
+00:44:08,850 --> 00:44:11,190
+We also have the data transfer charge.
+
+1096
+00:44:11,190 --> 00:44:12,810
+That's still the same as well.
+
+1097
+00:44:12,810 --> 00:44:13,890
+No difference there.
+
+1098
+00:44:13,890 --> 00:44:17,430
+We're moving data across
+the AWS infrastructure.
+
+1099
+00:44:17,430 --> 00:44:19,440
+But the addition of the Transit Gateway
+
+1100
+00:44:19,440 --> 00:44:21,050
+does mean that we now have to consider
+
+1101
+00:44:21,050 --> 00:44:23,220
+a per hour attachment charge,
+
+1102
+00:44:23,220 --> 00:44:24,450
+and we've got two attachments,
+
+1103
+00:44:24,450 --> 00:44:27,990
+one towards Direct Connect,
+one towards the VPC,
+
+1104
+00:44:27,990 --> 00:44:29,910
+and then we have a data processing charge
+
+1105
+00:44:29,910 --> 00:44:31,920
+for the Transit Gateway.
+
+1106
+00:44:31,920 --> 00:44:33,840
+So, in this scenario,
+they're the components
+
+1107
+00:44:33,840 --> 00:44:35,550
+you would add together to calculate
+
+1108
+00:44:35,550 --> 00:44:38,300
+how much this particular
+workload would be costing you.
+
+1109
+00:44:39,420 --> 00:44:41,130
+Let's look at it from
+the other perspective,
+
+1110
+00:44:41,130 --> 00:44:43,980
+data transfer into AWS
+with this architecture.
+
+1111
+00:44:43,980 --> 00:44:45,120
+Still got the same components,
+
+1112
+00:44:45,120 --> 00:44:46,350
+Transit Gateway sitting there.
+
+1113
+00:44:46,350 --> 00:44:49,443
+So, our old friend, the port
+hour charge, still there.
+
+1114
+00:44:50,460 --> 00:44:55,050
+Data transfer coming into AWS,
+there's no charge for that,
+
+1115
+00:44:55,050 --> 00:44:58,710
+but we do still have the
+Transit Gateway on that path.
+
+1116
+00:44:58,710 --> 00:45:01,500
+So, what that means is we still
+have the attachment charge,
+
+1117
+00:45:01,500 --> 00:45:03,270
+and again, this is not
+being charged twice.
+
+1118
+00:45:03,270 --> 00:45:06,300
+It's the same attachments we
+talked about a moment ago,
+
+1119
+00:45:06,300 --> 00:45:08,340
+and there is the data processing charge
+
+1120
+00:45:08,340 --> 00:45:09,480
+for the traffic that is moving
+
+1121
+00:45:09,480 --> 00:45:11,043
+through that Transit Gateway.
+
+1122
+00:45:12,060 --> 00:45:13,590
+So, I mention both of these scenarios
+
+1123
+00:45:13,590 --> 00:45:15,060
+because you could have a scenario
+
+1124
+00:45:15,060 --> 00:45:16,920
+where it's useful to use
+
+1125
+00:45:16,920 --> 00:45:18,590
+the Virtual Private Gateway architecture
+
+1126
+00:45:18,590 --> 00:45:20,430
+for certain workloads,
+
+1127
+00:45:20,430 --> 00:45:21,780
+and perhaps the Transit Gateway
+
+1128
+00:45:21,780 --> 00:45:24,543
+or Cloud WAN-based
+architecture for another.
+
+1129
+00:45:26,430 --> 00:45:27,720
+Josh mentioned SiteLink,
+
+1130
+00:45:27,720 --> 00:45:32,040
+so I wanted to just cover off
+how we bill for that as well.
+
+1131
+00:45:32,040 --> 00:45:33,420
+In this situation, I've added
+
+1132
+00:45:33,420 --> 00:45:35,580
+another Direct Connect location in.
+
+1133
+00:45:35,580 --> 00:45:36,780
+It's here in Las Vegas,
+
+1134
+00:45:36,780 --> 00:45:38,290
+and therefore I now have expanded
+
+1135
+00:45:38,290 --> 00:45:41,970
+to have a US office for this organization.
+
+1136
+00:45:41,970 --> 00:45:43,560
+The EC2 infrastructure's still there.
+
+1137
+00:45:43,560 --> 00:45:45,780
+I've grayed it out because
+the billing for that
+
+1138
+00:45:45,780 --> 00:45:48,300
+is exactly what I've been
+talking about so far.
+
+1139
+00:45:48,300 --> 00:45:49,133
+But for SiteLink,
+
+1140
+00:45:49,133 --> 00:45:51,450
+there's a couple of
+other things to consider.
+
+1141
+00:45:51,450 --> 00:45:53,550
+When you create the virtual interfaces
+
+1142
+00:45:53,550 --> 00:45:56,010
+that you're going to use for SiteLink,
+
+1143
+00:45:56,010 --> 00:45:58,980
+you're gonna attach those
+to a Direct Connect gateway.
+
+1144
+00:45:58,980 --> 00:46:00,510
+We've still got the port hour charges.
+
+1145
+00:46:00,510 --> 00:46:01,740
+They're still there.
+
+1146
+00:46:01,740 --> 00:46:03,420
+We create the virtual interfaces,
+
+1147
+00:46:03,420 --> 00:46:06,710
+and we check that box
+that Josh showed you.
+
+1148
+00:46:06,710 --> 00:46:09,090
+At that point, we've now enabled SiteLink,
+
+1149
+00:46:09,090 --> 00:46:11,470
+and there is a charge for
+enabling that capability
+
+1150
+00:46:11,470 --> 00:46:13,923
+on each of those virtual interfaces.
+
+1151
+00:46:15,300 --> 00:46:16,133
+Once you've done that,
+
+1152
+00:46:16,133 --> 00:46:17,490
+the traffic is now able to flow
+
+1153
+00:46:17,490 --> 00:46:21,210
+between my UK office location
+and my US office location,
+
+1154
+00:46:21,210 --> 00:46:23,520
+going through the Direct
+Connect infrastructure.
+
+1155
+00:46:23,520 --> 00:46:25,770
+And to work out how much that costs,
+
+1156
+00:46:25,770 --> 00:46:28,260
+you need to now go and look up on a table
+
+1157
+00:46:28,260 --> 00:46:29,770
+that we have on the
+Direct Connect website.
+
+1158
+00:46:29,770 --> 00:46:34,020
+So for traffic flowing
+from the UK to the US,
+
+1159
+00:46:34,020 --> 00:46:35,270
+you would go and look up in the table
+
+1160
+00:46:35,270 --> 00:46:38,990
+and identify this traffic is
+coming from Europe to the US,
+
+1161
+00:46:38,990 --> 00:46:42,120
+and then vice versa,
+traffic the other way,
+
+1162
+00:46:42,120 --> 00:46:44,550
+you'd go and look up the
+table in the other direction.
+
+1163
+00:46:44,550 --> 00:46:46,200
+And as you can see in this example,
+
+1164
+00:46:46,200 --> 00:46:48,300
+it's actually the same charge here,
+
+1165
+00:46:48,300 --> 00:46:49,800
+but that's how you calculate
+
+1166
+00:46:49,800 --> 00:46:52,053
+the pricing involved for SiteLink.
+
+1167
+00:46:57,090 --> 00:47:00,540
+Okay, now there's a few
+components involved in there,
+
+1168
+00:47:00,540 --> 00:47:01,680
+and I wanted to share something
+
+1169
+00:47:01,680 --> 00:47:03,990
+that we published a few months back,
+
+1170
+00:47:03,990 --> 00:47:07,710
+which was the open source
+networking focused calculator.
+
+1171
+00:47:07,710 --> 00:47:09,720
+We have the AWS pricing calculator,
+
+1172
+00:47:09,720 --> 00:47:11,670
+I'm sure you've all seen that.
+
+1173
+00:47:11,670 --> 00:47:14,040
+But we actually have this
+tool that we put out there
+
+1174
+00:47:14,040 --> 00:47:15,920
+for you to be able to
+deploy and use yourselves
+
+1175
+00:47:15,920 --> 00:47:20,160
+to help calculate anything
+to do with networking on AWS.
+
+1176
+00:47:20,160 --> 00:47:22,260
+It pulls from our pricing APIs.
+
+1177
+00:47:22,260 --> 00:47:23,550
+And I just wanted to mention it,
+
+1178
+00:47:23,550 --> 00:47:25,170
+there's a blog post all about it.
+
+1179
+00:47:25,170 --> 00:47:26,370
+So if you're trying to calculate
+
+1180
+00:47:26,370 --> 00:47:28,500
+how much these architectures
+cost in advance,
+
+1181
+00:47:28,500 --> 00:47:32,550
+you may want to deploy the
+pricing calculator tool
+
+1182
+00:47:32,550 --> 00:47:33,900
+that we've published there.
+
+1183
+00:47:39,330 --> 00:47:42,290
+- So you may have seen
+over the last few days,
+
+1184
+00:47:42,290 --> 00:47:44,610
+we announced this new capability
+
+1185
+00:47:44,610 --> 00:47:46,950
+called AWS Interconnect Multicloud
+
+1186
+00:47:46,950 --> 00:47:48,900
+in partnership with Google and Preview.
+
+1187
+00:47:50,220 --> 00:47:52,410
+I just wanted to spend
+a quick second on it.
+
+1188
+00:47:52,410 --> 00:47:54,693
+I think it's super cool, personally.
+
+1189
+00:47:55,670 --> 00:47:59,670
+What it does is allows you
+to kind of create capacity
+
+1190
+00:47:59,670 --> 00:48:03,030
+to another cloud, to GCP in this case.
+
+1191
+00:48:03,030 --> 00:48:05,130
+What we're doing is building in
+
+1192
+00:48:05,130 --> 00:48:06,900
+our maximum resiliency model.
+
+1193
+00:48:06,900 --> 00:48:08,880
+So the four-wide connectivity
+
+1194
+00:48:08,880 --> 00:48:10,860
+that I was talking about before,
+
+1195
+00:48:10,860 --> 00:48:12,840
+it's all pre-cabled, it's all pre-built.
+
+1196
+00:48:12,840 --> 00:48:14,370
+All you have to do is go and say,
+
+1197
+00:48:14,370 --> 00:48:18,510
+I want one gig, I want 50
+megs, whatever you want.
+
+1198
+00:48:18,510 --> 00:48:22,503
+And you can get that from us
+through this new offering.
+
+1199
+00:48:23,700 --> 00:48:26,940
+So GCP for now, I think Rob Kennedy said
+
+1200
+00:48:26,940 --> 00:48:28,320
+in his innovation talk today,
+
+1201
+00:48:28,320 --> 00:48:33,320
+first half 26 for Azure to
+be added to this as well.
+
+1202
+00:48:33,510 --> 00:48:35,700
+And there was a talk earlier today,
+
+1203
+00:48:35,700 --> 00:48:36,870
+so unfortunately you missed that,
+
+1204
+00:48:36,870 --> 00:48:40,650
+but a deep dive onto this,
+I think it was NET205.
+
+1205
+00:48:40,650 --> 00:48:42,600
+- Five, it was, yeah.
+
+1206
+00:48:42,600 --> 00:48:44,340
+- So if you wanna go
+look that up on YouTube,
+
+1207
+00:48:44,340 --> 00:48:46,800
+probably in the next day
+or so, it'll pop up there
+
+1208
+00:48:46,800 --> 00:48:49,713
+if you wanna get more information on that.
+
+1209
+00:48:53,730 --> 00:48:55,440
+All right, and just to wrap up,
+
+1210
+00:48:55,440 --> 00:48:58,190
+some things that we want you
+to take away and remember.
+
+1211
+00:49:00,060 --> 00:49:03,570
+So first of all, just going
+all your way through the layers
+
+1212
+00:49:03,570 --> 00:49:05,610
+as you configure and troubleshoot,
+
+1213
+00:49:05,610 --> 00:49:07,983
+start layer one and kind
+of work your way up.
+
+1214
+00:49:09,540 --> 00:49:11,613
+Using the right VIF for the right job.
+
+1215
+00:49:12,450 --> 00:49:14,190
+A lot of times you can't use the wrong VIF
+
+1216
+00:49:14,190 --> 00:49:17,140
+for the wrong job, but it is
+good to kind of consider that.
+
+1217
+00:49:18,060 --> 00:49:21,000
+Getting a good idea of what
+you're gonna do with BGP.
+
+1218
+00:49:21,000 --> 00:49:23,490
+Are you gonna need to
+do some summarization?
+
+1219
+00:49:23,490 --> 00:49:26,790
+What do you need to do
+with the communities?
+
+1220
+00:49:26,790 --> 00:49:28,860
+Like, do you need to
+configure active, active,
+
+1221
+00:49:28,860 --> 00:49:31,110
+active, passive, what
+are you thinking there?
+
+1222
+00:49:32,630 --> 00:49:35,460
+You wanna design for resilience, right?
+
+1223
+00:49:35,460 --> 00:49:37,830
+So again, as you're building,
+
+1224
+00:49:37,830 --> 00:49:41,220
+are you trying to meet a
+particular sort of SLA?
+
+1225
+00:49:41,220 --> 00:49:44,580
+Is this a high available
+workload or is it a,
+
+1226
+00:49:44,580 --> 00:49:46,280
+I'm just testing and I don't care.
+
+1227
+00:49:47,400 --> 00:49:49,410
+And then obviously test and test and test
+
+1228
+00:49:49,410 --> 00:49:51,860
+and make sure everything
+fails over as it should.
+
+1229
+00:49:53,190 --> 00:49:55,020
+Understand how to calculate your costs.
+
+1230
+00:49:55,020 --> 00:49:58,020
+I think that solution,
+the open source solution
+
+1231
+00:49:58,020 --> 00:50:00,450
+is a really great way to do that.
+
+1232
+00:50:00,450 --> 00:50:02,040
+Or you can go watch this on YouTube
+
+1233
+00:50:02,040 --> 00:50:05,190
+and rewind and watch the
+last five minutes again.
+
+1234
+00:50:05,190 --> 00:50:07,620
+And then just embracing your capabilities.
+
+1235
+00:50:07,620 --> 00:50:09,180
+So if you're using Direct Connect,
+
+1236
+00:50:09,180 --> 00:50:12,180
+Direct Collider VGWs, try
+out Direct Connect Gateway.
+
+1237
+00:50:12,180 --> 00:50:14,640
+It's super easy, doesn't add any cost,
+
+1238
+00:50:14,640 --> 00:50:15,810
+doesn't add any latency,
+
+1239
+00:50:15,810 --> 00:50:18,570
+and really just kind of
+expands your portfolio.
+
+1240
+00:50:18,570 --> 00:50:21,130
+Try out Transit Gateways,
+try out SiteLink,
+
+1241
+00:50:21,130 --> 00:50:24,903
+try out Cloud WAN, try out InterConnect.
+
+1242
+00:50:27,110 --> 00:50:28,833
+Yeah, thank you very much.
+

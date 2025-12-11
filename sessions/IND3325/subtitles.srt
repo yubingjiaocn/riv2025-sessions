@@ -1,0 +1,5775 @@
+1
+00:00:00,090 --> 00:00:01,350
+- So good morning,
+
+2
+00:00:01,350 --> 00:00:05,730
+and welcome to IND 3325
+Zero-Downtime at Scale:
+
+3
+00:00:05,730 --> 00:00:09,813
+Migrating Peacock's Global
+Streaming to Amazon EKS.
+
+4
+00:00:10,710 --> 00:00:12,000
+So my name's Ian.
+
+5
+00:00:12,000 --> 00:00:15,000
+I'm an AWS Principal Solution Architect.
+
+6
+00:00:15,000 --> 00:00:18,330
+And joining me here today
+from NBCUniversal/Sky,
+
+7
+00:00:18,330 --> 00:00:21,333
+Director of Global
+Platform Engineering, Mans,
+
+8
+00:00:22,470 --> 00:00:25,170
+NBCUniversal/Sky Head of
+Platform Infrastructure,
+
+9
+00:00:25,170 --> 00:00:29,160
+Pete, and my colleague
+here from AWS, Manish,
+
+10
+00:00:29,160 --> 00:00:31,740
+Senior Head Technical Account Manager.
+
+11
+00:00:31,740 --> 00:00:33,870
+So I don't know if you've
+worked in technology
+
+12
+00:00:33,870 --> 00:00:37,350
+for maybe a few weeks, a
+few months, a few years,
+
+13
+00:00:37,350 --> 00:00:41,513
+but I think you'll realize that
+migrating anything at scale
+
+14
+00:00:41,513 --> 00:00:45,420
+to like Kubernetes clusters
+at scale to Amazon EKS
+
+15
+00:00:45,420 --> 00:00:47,730
+doesn't come without its challenges.
+
+16
+00:00:47,730 --> 00:00:49,470
+So after a short reel,
+
+17
+00:00:49,470 --> 00:00:50,790
+I'll hand you over to Mans
+
+18
+00:00:50,790 --> 00:00:53,370
+to talk to you about how Global Streaming
+
+19
+00:00:53,370 --> 00:00:55,290
+were able to achieve this.
+
+20
+00:00:59,740 --> 00:01:02,653
+♪ Get out of (indistinct) ♪
+
+21
+00:01:02,653 --> 00:01:05,562
+- [Announcer] The NBA
+is streaming on Peacock.
+
+22
+00:01:05,562 --> 00:01:08,760
+140 games, Peacock NBA Monday,
+
+23
+00:01:08,760 --> 00:01:10,320
+Coast 2 Coast Tuesday,
+
+24
+00:01:10,320 --> 00:01:11,823
+and one every 2026.
+
+25
+00:01:12,882 --> 00:01:14,670
+♪ (indistinct) to see this ♪
+
+26
+00:01:14,670 --> 00:01:17,902
+- [Announcer] Plus all new ways
+to see more than the score.
+
+27
+00:01:17,902 --> 00:01:19,830
+♪ You know I got the score ♪
+
+28
+00:01:19,830 --> 00:01:22,185
+- [Announcer] From the
+court to the culture,
+
+29
+00:01:22,185 --> 00:01:24,257
+the NBA is on Peacock.
+
+30
+00:01:24,257 --> 00:01:29,257
+♪ (indistinct) get out
+of the (indistinct) ♪
+
+31
+00:01:31,140 --> 00:01:32,910
+- Thank you, everyone. Thank you, Ian.
+
+32
+00:01:32,910 --> 00:01:35,520
+So first, great to be here in Vegas.
+
+33
+00:01:35,520 --> 00:01:36,600
+Just wanted to welcome everyone,
+
+34
+00:01:36,600 --> 00:01:37,860
+especially on behalf of AWS,
+
+35
+00:01:37,860 --> 00:01:41,550
+but also Pete and I from
+NBCUniversal and Sky.
+
+36
+00:01:41,550 --> 00:01:44,490
+So I'm gonna give you all
+just a very high level view
+
+37
+00:01:44,490 --> 00:01:46,710
+about what we call Global
+Streaming Technology,
+
+38
+00:01:46,710 --> 00:01:48,690
+which is essentially an engineering team
+
+39
+00:01:48,690 --> 00:01:50,880
+that spans across,
+effectively, two companies.
+
+40
+00:01:50,880 --> 00:01:53,520
+So that's NBCUniversal and Sky.
+
+41
+00:01:53,520 --> 00:01:56,190
+So just to give you a little
+bit more kind of context.
+
+42
+00:01:56,190 --> 00:02:00,142
+So currently, we have over
+40 million customers here
+
+43
+00:02:00,142 --> 00:02:02,592
+for Peacock, which hopefully
+everyone's aware of,
+
+44
+00:02:03,480 --> 00:02:04,313
+that's in the US.
+
+45
+00:02:04,313 --> 00:02:07,800
+But we also have other propositions
+in Europe and in Africa,
+
+46
+00:02:07,800 --> 00:02:09,900
+which I'll talk about in a second.
+
+47
+00:02:09,900 --> 00:02:11,400
+So we consider ourselves,
+
+48
+00:02:11,400 --> 00:02:12,750
+obviously Prime might disagree with us,
+
+49
+00:02:12,750 --> 00:02:14,940
+but we consider ourselves
+one of the leaders
+
+50
+00:02:14,940 --> 00:02:18,810
+in live sports here in the
+US but also across Europe.
+
+51
+00:02:18,810 --> 00:02:20,550
+And hopefully, most of you sports fans
+
+52
+00:02:20,550 --> 00:02:22,200
+will know we've got,
+obviously, got major deals
+
+53
+00:02:22,200 --> 00:02:24,330
+with the NBA, NFL, Premier League,
+
+54
+00:02:24,330 --> 00:02:26,403
+and recently announced the MLB.
+
+55
+00:02:27,750 --> 00:02:29,250
+One of our biggest events we had,
+
+56
+00:02:29,250 --> 00:02:30,510
+I think it was a year and a half ago,
+
+57
+00:02:30,510 --> 00:02:32,550
+and that was a wild card game
+
+58
+00:02:32,550 --> 00:02:36,510
+where we accounted for over
+30% of the US bandwidth,
+
+59
+00:02:36,510 --> 00:02:37,910
+which is a huge achievement.
+
+60
+00:02:39,360 --> 00:02:41,730
+A little bit more about GS in
+terms of where we're based.
+
+61
+00:02:41,730 --> 00:02:45,120
+So we've got kind of engineers
+based here in the US,
+
+62
+00:02:45,120 --> 00:02:49,290
+in the UK, also across Czech
+Republic, Portugal, and India.
+
+63
+00:02:49,290 --> 00:02:52,023
+So we are a truly global team.
+
+64
+00:02:53,760 --> 00:02:55,020
+So just talk a little bit
+
+65
+00:02:55,020 --> 00:02:57,630
+about our kind of
+infrastructure and our stacks.
+
+66
+00:02:57,630 --> 00:03:01,560
+So multi-tenancy is absolutely
+core to the way we work,
+
+67
+00:03:01,560 --> 00:03:03,390
+and that's not just from an
+infrastructure perspective,
+
+68
+00:03:03,390 --> 00:03:04,890
+but also from a front end.
+
+69
+00:03:04,890 --> 00:03:07,470
+So if you look at the
+diagram on the right,
+
+70
+00:03:07,470 --> 00:03:11,010
+we cover four propositions
+using a single codebase,
+
+71
+00:03:11,010 --> 00:03:12,360
+both from a front-end perspective
+
+72
+00:03:12,360 --> 00:03:13,560
+but also from an infrastructure,
+
+73
+00:03:13,560 --> 00:03:15,840
+which Pete will go through in a second.
+
+74
+00:03:15,840 --> 00:03:17,700
+So from left to right, we have Peacock,
+
+75
+00:03:17,700 --> 00:03:19,500
+here in the US, we have SkyShowtime,
+
+76
+00:03:19,500 --> 00:03:22,740
+which is a joint venture
+between ourselves and Paramount,
+
+77
+00:03:22,740 --> 00:03:24,360
+mostly in Europe.
+
+78
+00:03:24,360 --> 00:03:26,460
+We've got Showmax, which
+is another joint venture
+
+79
+00:03:26,460 --> 00:03:30,060
+between us and MultiChoice in Africa.
+
+80
+00:03:30,060 --> 00:03:32,610
+And then finally, we have
+the NOW, the WOW brand,
+
+81
+00:03:32,610 --> 00:03:36,840
+which is a streaming service
+in Italy, Germany, UK,
+
+82
+00:03:36,840 --> 00:03:39,120
+Austria, and Republic of Ireland.
+
+83
+00:03:39,120 --> 00:03:39,953
+So as you can see,
+
+84
+00:03:39,953 --> 00:03:42,060
+we have one single codebase
+from our front-end as I said,
+
+85
+00:03:42,060 --> 00:03:43,500
+but we also, the key for us
+
+86
+00:03:43,500 --> 00:03:46,320
+is a homogenous infrastructure
+layer that, again,
+
+87
+00:03:46,320 --> 00:03:48,570
+covers all of those
+different propositions,
+
+88
+00:03:48,570 --> 00:03:50,770
+whatever regions we are
+in around the world.
+
+89
+00:03:51,750 --> 00:03:53,190
+For us, because of scale,
+
+90
+00:03:53,190 --> 00:03:55,380
+we really wanna maintain consistency
+
+91
+00:03:55,380 --> 00:03:57,450
+across all of our development teams,
+
+92
+00:03:57,450 --> 00:03:59,730
+and that's really important for us.
+
+93
+00:03:59,730 --> 00:04:00,990
+The reason, the main reason for that
+
+94
+00:04:00,990 --> 00:04:03,060
+is how fast we want to move.
+
+95
+00:04:03,060 --> 00:04:05,310
+And as I said, we have
+one central platform team,
+
+96
+00:04:05,310 --> 00:04:07,470
+which Pete, to my right, manages,
+
+97
+00:04:07,470 --> 00:04:09,320
+which he'll talk through in a second.
+
+98
+00:04:10,590 --> 00:04:11,790
+So the problem statement
+
+99
+00:04:11,790 --> 00:04:13,440
+and what we're here to talk about.
+
+100
+00:04:13,440 --> 00:04:15,480
+So if you look at the left,
+
+101
+00:04:15,480 --> 00:04:18,090
+the platform team or the
+platform engineering team,
+
+102
+00:04:18,090 --> 00:04:21,000
+right now, we spend around 70% of our time
+
+103
+00:04:21,000 --> 00:04:23,742
+on what we consider kind
+of development tasks,
+
+104
+00:04:23,742 --> 00:04:27,180
+and over 30%, which is kind of BAU toil.
+
+105
+00:04:27,180 --> 00:04:29,640
+So an example could be
+a Kubernetes upgrade,
+
+106
+00:04:29,640 --> 00:04:31,890
+a security patch, the
+ones we all love to do.
+
+107
+00:04:32,850 --> 00:04:35,880
+And what we want to do is
+obviously bring that down.
+
+108
+00:04:35,880 --> 00:04:37,110
+If you look to the right,
+
+109
+00:04:37,110 --> 00:04:40,410
+because it's such a uber,
+multi-tenant Kubernetes cluster,
+
+110
+00:04:40,410 --> 00:04:42,120
+we have hundreds of
+different development teams
+
+111
+00:04:42,120 --> 00:04:43,950
+across multiple time zones.
+
+112
+00:04:43,950 --> 00:04:45,600
+And if you look at the graph,
+
+113
+00:04:45,600 --> 00:04:47,850
+the number of deployments we do day to day
+
+114
+00:04:47,850 --> 00:04:49,170
+is only just growing.
+
+115
+00:04:49,170 --> 00:04:50,430
+So the key for us is,
+
+116
+00:04:50,430 --> 00:04:52,530
+how do we free up more engineering time
+
+117
+00:04:52,530 --> 00:04:55,260
+for Pete and his team from
+a development perspective?
+
+118
+00:04:55,260 --> 00:04:56,093
+But at the same time,
+
+119
+00:04:56,093 --> 00:04:59,490
+what we cannot do is disrupt
+our development teams,
+
+120
+00:04:59,490 --> 00:05:01,410
+especially when talking about, you know,
+
+121
+00:05:01,410 --> 00:05:02,670
+thousands and thousands of, obviously,
+
+122
+00:05:02,670 --> 00:05:04,050
+different names, spaces, and components
+
+123
+00:05:04,050 --> 00:05:06,660
+that are running absolutely
+critical services
+
+124
+00:05:06,660 --> 00:05:08,410
+for those propositions I mentioned.
+
+125
+00:05:09,570 --> 00:05:11,280
+So I'm now gonna hand you over to Pete
+
+126
+00:05:11,280 --> 00:05:13,050
+who's gonna talk about
+the migration strategy
+
+127
+00:05:13,050 --> 00:05:14,950
+and the planning and how we got there.
+
+128
+00:05:17,730 --> 00:05:19,170
+- Perfect. Thanks, Mans.
+
+129
+00:05:19,170 --> 00:05:23,130
+So platform engineering is the
+cornerstone of infrastructure
+
+130
+00:05:23,130 --> 00:05:24,183
+for Global Streaming.
+
+131
+00:05:25,230 --> 00:05:28,650
+And we really focus on
+trying to take away the work
+
+132
+00:05:28,650 --> 00:05:31,410
+that engineering teams
+ultimately don't need to do
+
+133
+00:05:31,410 --> 00:05:34,740
+or, in often cases,
+don't really want to do.
+
+134
+00:05:34,740 --> 00:05:36,810
+So we really want to focus on pulling
+
+135
+00:05:36,810 --> 00:05:38,460
+a lot of that heavy lifting away from them
+
+136
+00:05:38,460 --> 00:05:41,310
+so that we can do that for
+those engineering teams.
+
+137
+00:05:41,310 --> 00:05:44,160
+So I look after the platform
+engineering department
+
+138
+00:05:44,160 --> 00:05:45,450
+across Global Streaming.
+
+139
+00:05:45,450 --> 00:05:46,920
+So really, what we're focusing on doing
+
+140
+00:05:46,920 --> 00:05:50,340
+is doing that heavy lifting
+for the engineering teams.
+
+141
+00:05:50,340 --> 00:05:53,220
+So what I now want to
+do is sort of focus on
+
+142
+00:05:53,220 --> 00:05:56,790
+four key principles that
+we have as a department,
+
+143
+00:05:56,790 --> 00:06:00,633
+and link that to how we
+approach the EKS migration.
+
+144
+00:06:01,650 --> 00:06:05,310
+So the first principle,
+engineers are our customers.
+
+145
+00:06:05,310 --> 00:06:07,200
+So what we really try and do,
+
+146
+00:06:07,200 --> 00:06:09,450
+and this is really one
+of the key methodologies
+
+147
+00:06:09,450 --> 00:06:10,410
+of platform engineering is,
+
+148
+00:06:10,410 --> 00:06:13,500
+is we want to internally market ourselves.
+
+149
+00:06:13,500 --> 00:06:16,470
+Engineering teams should actually
+want to use our products.
+
+150
+00:06:16,470 --> 00:06:18,720
+It shouldn't just be a case of
+they have to use our products
+
+151
+00:06:18,720 --> 00:06:22,140
+because they happen to be
+plugged into our platform.
+
+152
+00:06:22,140 --> 00:06:25,590
+The second, protect the
+customer interfaces.
+
+153
+00:06:25,590 --> 00:06:27,630
+So we have an obligation to limit
+
+154
+00:06:27,630 --> 00:06:30,270
+the number of changes that
+we make on our platform
+
+155
+00:06:30,270 --> 00:06:32,730
+because we can't just
+suddenly make a change
+
+156
+00:06:32,730 --> 00:06:35,580
+to an important interface that many,
+
+157
+00:06:35,580 --> 00:06:37,020
+if not hundreds or thousands,
+
+158
+00:06:37,020 --> 00:06:39,000
+of developers are plugged into.
+
+159
+00:06:39,000 --> 00:06:40,620
+We suddenly make a change to that
+
+160
+00:06:40,620 --> 00:06:43,050
+purely because there's
+a technical evolution.
+
+161
+00:06:43,050 --> 00:06:45,150
+We should be focusing on moving slowly
+
+162
+00:06:45,150 --> 00:06:46,650
+in terms of interfaces,
+
+163
+00:06:46,650 --> 00:06:48,570
+but rapidly advancing our technology
+
+164
+00:06:48,570 --> 00:06:50,170
+that we're using under the hood.
+
+165
+00:06:51,060 --> 00:06:54,270
+Third, deliver capabilities,
+not technology.
+
+166
+00:06:54,270 --> 00:06:57,210
+So this is really doubling
+down on that aspect.
+
+167
+00:06:57,210 --> 00:07:00,270
+We don't simply want
+to deliver a technology
+
+168
+00:07:00,270 --> 00:07:02,730
+that may be the latest greatest tech
+
+169
+00:07:02,730 --> 00:07:04,740
+that might come out of the industry.
+
+170
+00:07:04,740 --> 00:07:07,680
+We want to really
+understand how our customer,
+
+171
+00:07:07,680 --> 00:07:09,990
+and when I say customer, in my case,
+
+172
+00:07:09,990 --> 00:07:11,367
+that means development teams
+
+173
+00:07:11,367 --> 00:07:13,800
+are going to use those products.
+
+174
+00:07:13,800 --> 00:07:15,450
+So we want to work backwards
+
+175
+00:07:15,450 --> 00:07:17,400
+from how we think they're going to use it,
+
+176
+00:07:17,400 --> 00:07:19,470
+and then we leverage the
+technology under the hood
+
+177
+00:07:19,470 --> 00:07:20,880
+to offer that.
+
+178
+00:07:20,880 --> 00:07:23,100
+And finally, reliable by design.
+
+179
+00:07:23,100 --> 00:07:25,380
+So as Mans already said,
+
+180
+00:07:25,380 --> 00:07:28,620
+we support market leading
+streaming services globally.
+
+181
+00:07:28,620 --> 00:07:31,713
+So even a few seconds of
+downtime just isn't acceptable.
+
+182
+00:07:32,790 --> 00:07:35,493
+So taking those four key principles in,
+
+183
+00:07:35,493 --> 00:07:36,600
+and I want to sort of explain to you
+
+184
+00:07:36,600 --> 00:07:39,513
+how we approached the
+EKS migration project.
+
+185
+00:07:41,190 --> 00:07:44,010
+So before I delve into
+it, you might be thinking,
+
+186
+00:07:44,010 --> 00:07:47,913
+why are we talking about
+an EKS migration in 2025?
+
+187
+00:07:49,290 --> 00:07:51,840
+And I'm gonna give you a bit
+of history as to why that is.
+
+188
+00:07:51,840 --> 00:07:53,553
+But before I jump into that,
+
+189
+00:07:54,660 --> 00:07:58,050
+when we were first looking at EKS,
+
+190
+00:07:58,050 --> 00:08:00,600
+we could have really taken
+two traditional paths.
+
+191
+00:08:00,600 --> 00:08:02,190
+We could have either said,
+
+192
+00:08:02,190 --> 00:08:04,890
+look, this is a significant change,
+
+193
+00:08:04,890 --> 00:08:07,890
+we're gonna build a brand
+new version of our platform,
+
+194
+00:08:07,890 --> 00:08:09,000
+and we're then gonna ask
+
+195
+00:08:09,000 --> 00:08:10,710
+all of those development
+teams to shift over.
+
+196
+00:08:10,710 --> 00:08:12,690
+That's not really doing the heavy lifting.
+
+197
+00:08:12,690 --> 00:08:14,640
+Alternatively, we could
+have said, you know what?
+
+198
+00:08:14,640 --> 00:08:18,420
+Our platform's working,
+let's just leave it as is,
+
+199
+00:08:18,420 --> 00:08:20,640
+and let's hope everything
+continues to work.
+
+200
+00:08:20,640 --> 00:08:22,800
+We were really tasked to
+do something in the middle,
+
+201
+00:08:22,800 --> 00:08:25,020
+which was quite daunting for us as a team.
+
+202
+00:08:25,020 --> 00:08:26,280
+It was pretty scary.
+
+203
+00:08:26,280 --> 00:08:28,290
+But I'm gonna run through
+how we approached that
+
+204
+00:08:28,290 --> 00:08:31,320
+and some of the lessons
+learned that we had.
+
+205
+00:08:31,320 --> 00:08:33,170
+So just to give you a bit of history.
+
+206
+00:08:34,050 --> 00:08:37,380
+So we started using Kubernetes
+right at the inception.
+
+207
+00:08:37,380 --> 00:08:39,600
+So this is pre-V1 Kubernetes.
+
+208
+00:08:39,600 --> 00:08:42,563
+So back in sort of 2014, 2015.
+
+209
+00:08:43,470 --> 00:08:44,520
+We as a department,
+
+210
+00:08:44,520 --> 00:08:46,230
+and we were quite a
+small team at this point,
+
+211
+00:08:46,230 --> 00:08:47,940
+we were exposed to a lot of bugs,
+
+212
+00:08:47,940 --> 00:08:50,040
+a lot of issues in Kubernetes
+
+213
+00:08:50,040 --> 00:08:52,080
+that we were really sort of contributing
+
+214
+00:08:52,080 --> 00:08:54,840
+back to the community
+and Kubernetes codebase,
+
+215
+00:08:54,840 --> 00:08:56,820
+and we learnt fast.
+
+216
+00:08:56,820 --> 00:08:58,980
+But one of the key takeaways that we took
+
+217
+00:08:58,980 --> 00:09:02,010
+from that really early
+adoption of Kubernetes
+
+218
+00:09:02,010 --> 00:09:03,990
+was the controller pattern,
+
+219
+00:09:03,990 --> 00:09:06,900
+and understanding the value
+of eventual consistency
+
+220
+00:09:06,900 --> 00:09:11,430
+and being able to declaratively
+define what state you want
+
+221
+00:09:11,430 --> 00:09:12,600
+and have controllers that will
+
+222
+00:09:12,600 --> 00:09:14,850
+continually validate that state.
+
+223
+00:09:14,850 --> 00:09:15,960
+So I could go in,
+
+224
+00:09:15,960 --> 00:09:18,930
+I could change the environment
+that I'm deploying to,
+
+225
+00:09:18,930 --> 00:09:21,720
+and we'd have controllers that
+would then go and reset that.
+
+226
+00:09:21,720 --> 00:09:24,030
+It's quite different to sort
+of things like Terraform
+
+227
+00:09:24,030 --> 00:09:25,530
+where you would sort of do a one shot.
+
+228
+00:09:25,530 --> 00:09:28,560
+This is something that we
+continually want to validate.
+
+229
+00:09:28,560 --> 00:09:30,737
+So that's something that
+was really embedded early on
+
+230
+00:09:30,737 --> 00:09:32,460
+in our development of Kubernetes.
+
+231
+00:09:32,460 --> 00:09:36,690
+But we were given quite an
+extensive period of many years
+
+232
+00:09:36,690 --> 00:09:37,950
+of being able to really refine
+
+233
+00:09:37,950 --> 00:09:40,150
+and hone in our
+understanding of Kubernetes.
+
+234
+00:09:41,370 --> 00:09:44,850
+EKS was then launched in 2017, 2018.
+
+235
+00:09:44,850 --> 00:09:46,110
+But that was an issue for us.
+
+236
+00:09:46,110 --> 00:09:48,620
+We would've wanted to
+immediately pivot to EKS
+
+237
+00:09:48,620 --> 00:09:50,100
+at that point.
+
+238
+00:09:50,100 --> 00:09:52,260
+However, Peacock came along,
+
+239
+00:09:52,260 --> 00:09:55,170
+and kind of changed the
+game a little bit for us.
+
+240
+00:09:55,170 --> 00:09:57,100
+Our scale shifted from
+
+241
+00:09:58,080 --> 00:10:01,590
+a small user base within
+things like NOW proposition
+
+242
+00:10:01,590 --> 00:10:04,470
+and Sky Go over to Peacock in the US.
+
+243
+00:10:04,470 --> 00:10:06,780
+We were increasing orders of magnitude
+
+244
+00:10:06,780 --> 00:10:08,760
+on the number of customers,
+the number of developers,
+
+245
+00:10:08,760 --> 00:10:11,910
+the number, the amount of
+focus that we had on us
+
+246
+00:10:11,910 --> 00:10:13,503
+as a platform engineering team.
+
+247
+00:10:15,420 --> 00:10:17,610
+So over the succeeding few years,
+
+248
+00:10:17,610 --> 00:10:20,160
+we then really tried as much as we could
+
+249
+00:10:20,160 --> 00:10:21,960
+to focus on the EKS development.
+
+250
+00:10:21,960 --> 00:10:24,060
+And thankfully, at the end of 2024,
+
+251
+00:10:24,060 --> 00:10:28,170
+we actually launched our first
+EKS-based streaming platform,
+
+252
+00:10:28,170 --> 00:10:30,540
+which was Showmax, which
+is one of the propositions
+
+253
+00:10:30,540 --> 00:10:33,150
+that Mans spoke about earlier.
+
+254
+00:10:33,150 --> 00:10:35,550
+But what we then needed to
+do is look backwards and go,
+
+255
+00:10:35,550 --> 00:10:38,190
+how do we now take our platform
+
+256
+00:10:38,190 --> 00:10:40,530
+that we've honed and built
+over the last 10 years
+
+257
+00:10:40,530 --> 00:10:44,040
+and, fundamentally, a lot of
+significant streaming platforms
+
+258
+00:10:44,040 --> 00:10:45,330
+are now integrated with,
+
+259
+00:10:45,330 --> 00:10:48,573
+how do we now take that
+and move it to EKS?
+
+260
+00:10:49,860 --> 00:10:51,330
+So just to give you a bit more detail
+
+261
+00:10:51,330 --> 00:10:55,233
+as to what happened for us
+throughout that same time period.
+
+262
+00:10:56,160 --> 00:10:58,980
+So you can see on this graph here,
+
+263
+00:10:58,980 --> 00:11:03,060
+we had a a few years of
+fairly comfortable growth.
+
+264
+00:11:03,060 --> 00:11:03,893
+It was great.
+
+265
+00:11:03,893 --> 00:11:06,720
+We were able to really
+lean into our testing,
+
+266
+00:11:06,720 --> 00:11:07,553
+our automation.
+
+267
+00:11:07,553 --> 00:11:09,240
+We were able to really hone in
+
+268
+00:11:09,240 --> 00:11:11,880
+on ensuring that our Kubernetes platform
+
+269
+00:11:11,880 --> 00:11:13,050
+was reliable and stable.
+
+270
+00:11:13,050 --> 00:11:15,540
+And I think we really fulfilled on that.
+
+271
+00:11:15,540 --> 00:11:19,830
+But you can see just after
+that EKS platform was released,
+
+272
+00:11:19,830 --> 00:11:22,503
+we then had a surge in
+usage on our platform.
+
+273
+00:11:24,330 --> 00:11:26,403
+So how do we approach this?
+
+274
+00:11:28,140 --> 00:11:30,150
+This is essentially what we ended up with.
+
+275
+00:11:30,150 --> 00:11:32,523
+So this is what we were tasked to migrate
+
+276
+00:11:32,523 --> 00:11:34,710
+at a really high level.
+
+277
+00:11:34,710 --> 00:11:37,680
+So I'm sure anyone who's
+done sort of Kubernetes
+
+278
+00:11:37,680 --> 00:11:41,190
+the hard way will have seen
+a similar pattern as this.
+
+279
+00:11:41,190 --> 00:11:43,200
+You'd use things like Terraform,
+
+280
+00:11:43,200 --> 00:11:47,680
+Ansible built on top of the AWS API, EC2,
+
+281
+00:11:47,680 --> 00:11:50,100
+NLBs, ELBs, all that other good stuff.
+
+282
+00:11:50,100 --> 00:11:53,190
+So I think we had a
+pretty mature platform,
+
+283
+00:11:53,190 --> 00:11:54,510
+but it wasn't managed.
+
+284
+00:11:54,510 --> 00:11:57,630
+This was very, very much self-managed,
+
+285
+00:11:57,630 --> 00:11:58,863
+doing it the hard way.
+
+286
+00:11:59,910 --> 00:12:03,750
+We also had a number of engineering teams
+
+287
+00:12:03,750 --> 00:12:05,130
+and a huge amount of business units.
+
+288
+00:12:05,130 --> 00:12:08,460
+So we had over a thousand
+developers consuming our platform.
+
+289
+00:12:08,460 --> 00:12:10,080
+We had hundreds of business units.
+
+290
+00:12:10,080 --> 00:12:12,150
+These are all disparate business units,
+
+291
+00:12:12,150 --> 00:12:15,300
+different organizations,
+different ways of working,
+
+292
+00:12:15,300 --> 00:12:16,590
+different management structures.
+
+293
+00:12:16,590 --> 00:12:20,580
+So there's not sort of one
+single individual or strategy
+
+294
+00:12:20,580 --> 00:12:22,290
+that we could say we're gonna now
+
+295
+00:12:22,290 --> 00:12:24,390
+suddenly shift over to EKS.
+
+296
+00:12:24,390 --> 00:12:28,830
+This is a significantly diverse
+set of individuals and teams
+
+297
+00:12:28,830 --> 00:12:30,900
+that were using our platform.
+
+298
+00:12:30,900 --> 00:12:34,140
+But the key part is 1,600 apps.
+
+299
+00:12:34,140 --> 00:12:36,360
+This is really what we
+wanted to drill into.
+
+300
+00:12:36,360 --> 00:12:38,460
+'Cause this is, from the tech perspective,
+
+301
+00:12:38,460 --> 00:12:41,250
+let's ignore the sort of business side.
+
+302
+00:12:41,250 --> 00:12:43,110
+Let's ignore the team side.
+
+303
+00:12:43,110 --> 00:12:45,900
+We just needed to move 1,600 apps
+
+304
+00:12:45,900 --> 00:12:49,713
+from doing it the hard
+way Kubernetes to EKS.
+
+305
+00:12:51,600 --> 00:12:54,360
+So let's take the sort
+of simplistic approach.
+
+306
+00:12:54,360 --> 00:12:58,350
+So going back to that initial,
+you've got the two options.
+
+307
+00:12:58,350 --> 00:13:01,980
+You either build fresh and
+then ask everyone to move,
+
+308
+00:13:01,980 --> 00:13:04,350
+or you leave the status quo.
+
+309
+00:13:04,350 --> 00:13:06,450
+We were never gonna leave the status quo.
+
+310
+00:13:06,450 --> 00:13:09,180
+We knew we needed to evolve the platform.
+
+311
+00:13:09,180 --> 00:13:12,960
+So let's maybe hone in
+on that first option.
+
+312
+00:13:12,960 --> 00:13:15,840
+So if we were to build a
+new platform based on EKS
+
+313
+00:13:15,840 --> 00:13:19,950
+and we took, let's say, an
+average of two weeks per app,
+
+314
+00:13:19,950 --> 00:13:22,440
+which is probably some
+apps significantly longer,
+
+315
+00:13:22,440 --> 00:13:24,060
+probably a few less,
+
+316
+00:13:24,060 --> 00:13:26,580
+but let's just assume it's two weeks,
+
+317
+00:13:26,580 --> 00:13:30,690
+that that would give you
+61 full-time engineers
+
+318
+00:13:30,690 --> 00:13:33,240
+working on that for a whole year.
+
+319
+00:13:33,240 --> 00:13:35,970
+That's a significant investment.
+
+320
+00:13:35,970 --> 00:13:37,440
+And when we really take a step back
+
+321
+00:13:37,440 --> 00:13:39,690
+for the engineering teams,
+
+322
+00:13:39,690 --> 00:13:41,190
+they don't really care, right?
+
+323
+00:13:42,030 --> 00:13:43,890
+It's really the platform engineering team
+
+324
+00:13:43,890 --> 00:13:45,720
+that wants to move to EKS.
+
+325
+00:13:45,720 --> 00:13:47,670
+It's less the development teams.
+
+326
+00:13:47,670 --> 00:13:51,780
+They really just wanna focus
+on developing their apps,
+
+327
+00:13:51,780 --> 00:13:53,850
+building their apps,
+releasing new features.
+
+328
+00:13:53,850 --> 00:13:56,880
+They don't want to be
+focusing on moving to EKS.
+
+329
+00:13:56,880 --> 00:13:58,410
+Going back to what Mans was talking about
+
+330
+00:13:58,410 --> 00:14:00,060
+on that left-hand side,
+
+331
+00:14:00,060 --> 00:14:03,990
+it was my team that was feeling
+the pinch of self-managed.
+
+332
+00:14:03,990 --> 00:14:06,120
+We saw the increasing level of BAU,
+
+333
+00:14:06,120 --> 00:14:08,970
+but we were thinking about
+shifting that responsibility
+
+334
+00:14:08,970 --> 00:14:10,440
+onto development teams.
+
+335
+00:14:10,440 --> 00:14:14,070
+This isn't doing the heavy
+lifting, so let's remove that.
+
+336
+00:14:14,070 --> 00:14:15,903
+That's not really an option for us.
+
+337
+00:14:18,510 --> 00:14:21,660
+So these were the five
+objectives that we laid out,
+
+338
+00:14:21,660 --> 00:14:24,360
+and this links back to
+those four principles
+
+339
+00:14:24,360 --> 00:14:25,810
+that we have as a department.
+
+340
+00:14:27,039 --> 00:14:30,690
+So the first objective, no
+action for development teams.
+
+341
+00:14:30,690 --> 00:14:32,430
+We offer interfaces,
+
+342
+00:14:32,430 --> 00:14:35,250
+and it's a pretty extensible interface,
+
+343
+00:14:35,250 --> 00:14:36,260
+and it's a mature interface.
+
+344
+00:14:36,260 --> 00:14:39,153
+In this case, kube control
+and the Kubernetes API.
+
+345
+00:14:40,260 --> 00:14:41,610
+That doesn't need to change,
+
+346
+00:14:41,610 --> 00:14:43,080
+that's how they deploy their app.
+
+347
+00:14:43,080 --> 00:14:44,673
+We should keep that consistent.
+
+348
+00:14:45,630 --> 00:14:48,420
+Two, migration must be done live.
+
+349
+00:14:48,420 --> 00:14:49,710
+We don't have periods
+
+350
+00:14:49,710 --> 00:14:52,410
+where we can just simply switch
+off our streaming platform.
+
+351
+00:14:52,410 --> 00:14:53,700
+People always want to stream
+
+352
+00:14:53,700 --> 00:14:55,563
+their favorite shows and live events.
+
+353
+00:14:56,610 --> 00:14:58,920
+Three, zero downtime.
+
+354
+00:14:58,920 --> 00:15:00,510
+So as with our principles,
+
+355
+00:15:00,510 --> 00:15:03,363
+even a few seconds downtime
+just isn't acceptable.
+
+356
+00:15:04,740 --> 00:15:07,923
+Four, less than 12 months to complete.
+
+357
+00:15:08,850 --> 00:15:11,760
+So this was really something
+that was largely driven
+
+358
+00:15:11,760 --> 00:15:14,250
+by us as a platform engineering team.
+
+359
+00:15:14,250 --> 00:15:16,170
+We weren't really given the timeline.
+
+360
+00:15:16,170 --> 00:15:18,120
+'Cause ultimately, from
+Mans's perspective,
+
+361
+00:15:18,120 --> 00:15:21,000
+he was happy enough with self-managed,
+
+362
+00:15:21,000 --> 00:15:23,190
+wasn't massively happy
+with the increasing burden
+
+363
+00:15:23,190 --> 00:15:25,020
+of the operational overhead,
+
+364
+00:15:25,020 --> 00:15:28,530
+but we, as a team, felt
+that we were being held back
+
+365
+00:15:28,530 --> 00:15:30,630
+in being able to evolve our platform.
+
+366
+00:15:30,630 --> 00:15:32,850
+So we were hearing about Karpenter,
+
+367
+00:15:32,850 --> 00:15:35,640
+and all of these additional
+add-ons and auto mode,
+
+368
+00:15:35,640 --> 00:15:39,120
+and all these features
+that we couldn't utilize.
+
+369
+00:15:39,120 --> 00:15:41,700
+And we were seeing the
+industry constantly evolve,
+
+370
+00:15:41,700 --> 00:15:44,160
+if not rapidly moving forward.
+
+371
+00:15:44,160 --> 00:15:45,690
+And we weren't able to leverage that
+
+372
+00:15:45,690 --> 00:15:47,370
+and offer that to the business.
+
+373
+00:15:47,370 --> 00:15:49,680
+So we internally said,
+12 months, full stop,
+
+374
+00:15:49,680 --> 00:15:52,113
+let's move to EKS and
+let's make it happen.
+
+375
+00:15:53,730 --> 00:15:56,850
+And lastly, and this is really
+the gold standard for us.
+
+376
+00:15:56,850 --> 00:15:59,103
+Teams shouldn't even know it's happened.
+
+377
+00:16:00,060 --> 00:16:01,440
+So this is the gold standard.
+
+378
+00:16:01,440 --> 00:16:04,440
+We want to revolutionize our technology
+
+379
+00:16:04,440 --> 00:16:07,500
+whilst keeping our capability consistent.
+
+380
+00:16:07,500 --> 00:16:11,163
+We want to be in and out
+without anyone even knowing.
+
+381
+00:16:13,320 --> 00:16:14,153
+So I'm now gonna hand over to Ian
+
+382
+00:16:14,153 --> 00:16:15,900
+who's gonna talk about the partnership
+
+383
+00:16:15,900 --> 00:16:18,600
+that we had with AWS to make this happen.
+
+384
+00:16:18,600 --> 00:16:19,623
+- Yeah, thanks Pete.
+
+385
+00:16:22,740 --> 00:16:25,410
+Okay, so as an AWS solution architect,
+
+386
+00:16:25,410 --> 00:16:28,320
+it's really my responsibility
+to help the customer
+
+387
+00:16:28,320 --> 00:16:30,063
+with complex migration planning.
+
+388
+00:16:30,900 --> 00:16:33,420
+And I think over the last eight years,
+
+389
+00:16:33,420 --> 00:16:37,710
+we've really been able to
+build sort of confidence
+
+390
+00:16:37,710 --> 00:16:41,700
+that we can help the customer
+to achieve their outcomes.
+
+391
+00:16:41,700 --> 00:16:43,800
+So every day, we talk about Kubernetes,
+
+392
+00:16:43,800 --> 00:16:47,220
+every day, we're talking about
+AWS services and features,
+
+393
+00:16:47,220 --> 00:16:48,810
+but for this, it was a
+little bit different.
+
+394
+00:16:48,810 --> 00:16:50,970
+I mean, we needed to
+talk about the tooling
+
+395
+00:16:50,970 --> 00:16:52,680
+as well as the services
+
+396
+00:16:52,680 --> 00:16:55,440
+that would help with
+the migration process.
+
+397
+00:16:55,440 --> 00:16:56,640
+So we were able to do this,
+
+398
+00:16:56,640 --> 00:16:57,810
+but also we were able to talk
+
+399
+00:16:57,810 --> 00:17:00,000
+about proven architectural patterns
+
+400
+00:17:00,000 --> 00:17:01,680
+that would help the customer.
+
+401
+00:17:01,680 --> 00:17:03,030
+And we've taken that right across
+
+402
+00:17:03,030 --> 00:17:05,190
+a different sort of set of industries
+
+403
+00:17:05,190 --> 00:17:09,660
+of how customers have approached
+large scale migration.
+
+404
+00:17:09,660 --> 00:17:10,560
+I mean this was really good.
+
+405
+00:17:10,560 --> 00:17:12,030
+So we were then able to bring
+
+406
+00:17:12,030 --> 00:17:15,300
+some of our solution
+architect specialists,
+
+407
+00:17:15,300 --> 00:17:18,180
+some of our service teams
+in to validate the approach,
+
+408
+00:17:18,180 --> 00:17:21,360
+to validate the migration plan.
+
+409
+00:17:21,360 --> 00:17:22,680
+And I think that was really useful.
+
+410
+00:17:22,680 --> 00:17:25,530
+So it's all of the right
+experts at the right time
+
+411
+00:17:25,530 --> 00:17:28,680
+that were really able
+to help the customer.
+
+412
+00:17:28,680 --> 00:17:32,250
+And actually, right from
+the delivery of Peacock,
+
+413
+00:17:32,250 --> 00:17:35,940
+we'd always worked with the
+AWS well-architected framework.
+
+414
+00:17:35,940 --> 00:17:36,960
+And that had been really useful.
+
+415
+00:17:36,960 --> 00:17:39,540
+Not just as a sort of simple checklist,
+
+416
+00:17:39,540 --> 00:17:40,740
+but actually a way for the customer
+
+417
+00:17:40,740 --> 00:17:43,260
+to validate the existing architecture,
+
+418
+00:17:43,260 --> 00:17:44,640
+but to really look into the future,
+
+419
+00:17:44,640 --> 00:17:46,350
+look around the corner a little bit,
+
+420
+00:17:46,350 --> 00:17:47,730
+and perhaps look at scale,
+
+421
+00:17:47,730 --> 00:17:50,190
+to look at redundancy,
+resiliency, reliability,
+
+422
+00:17:50,190 --> 00:17:52,833
+and, of course, cost
+is a big part of this.
+
+423
+00:17:53,970 --> 00:17:54,990
+But having done all of this,
+
+424
+00:17:54,990 --> 00:17:56,280
+we were able to help the customer
+
+425
+00:17:56,280 --> 00:17:58,170
+to just validate the approach,
+
+426
+00:17:58,170 --> 00:18:01,170
+to feel comfortable that
+they were able to migrate.
+
+427
+00:18:01,170 --> 00:18:03,540
+So when they were actually
+ready to make the decision
+
+428
+00:18:03,540 --> 00:18:06,780
+to migrate to Amazon EKS,
+
+429
+00:18:06,780 --> 00:18:08,730
+I mean we felt like we
+had all the relationships
+
+430
+00:18:08,730 --> 00:18:09,960
+across the business.
+
+431
+00:18:09,960 --> 00:18:12,840
+We felt that we had the
+relationships with AWS.
+
+432
+00:18:12,840 --> 00:18:14,820
+So like when they were good to go,
+
+433
+00:18:14,820 --> 00:18:18,813
+we were ready to really step
+up and help the migration.
+
+434
+00:18:19,800 --> 00:18:21,870
+So then if we move into
+the migration phase,
+
+435
+00:18:21,870 --> 00:18:24,570
+we really started to
+double down on the tooling
+
+436
+00:18:24,570 --> 00:18:27,900
+and also the AWS services.
+
+437
+00:18:27,900 --> 00:18:30,720
+And then we spent a long time really
+
+438
+00:18:30,720 --> 00:18:33,240
+just completely validating the approach.
+
+439
+00:18:33,240 --> 00:18:34,950
+And actually, Pete and his team
+
+440
+00:18:34,950 --> 00:18:37,530
+built out a six-stage migration process.
+
+441
+00:18:37,530 --> 00:18:40,330
+And I think what was really
+great about this is actually
+
+442
+00:18:41,520 --> 00:18:43,980
+they ensured that every single step
+
+443
+00:18:43,980 --> 00:18:45,960
+kind of like moved it
+forward and validated
+
+444
+00:18:45,960 --> 00:18:48,300
+and tested everything they needed to do.
+
+445
+00:18:48,300 --> 00:18:50,160
+But if you've worked in
+technology for a long time,
+
+446
+00:18:50,160 --> 00:18:52,980
+you realize that actually
+being able to step backwards
+
+447
+00:18:52,980 --> 00:18:56,400
+and restore operational
+state is absolutely critical.
+
+448
+00:18:56,400 --> 00:18:59,340
+So it's great when things go well,
+
+449
+00:18:59,340 --> 00:19:01,890
+but also, you want to plan
+to restore operational state
+
+450
+00:19:01,890 --> 00:19:02,723
+when they don't.
+
+451
+00:19:02,723 --> 00:19:04,290
+So we really started to double down
+
+452
+00:19:04,290 --> 00:19:07,924
+on some of the key services
+like Velero with Amazon S3
+
+453
+00:19:07,924 --> 00:19:10,710
+for handling the Kubernetes
+backup and restore.
+
+454
+00:19:10,710 --> 00:19:14,880
+And Amazon EKS for now managing
+the Kubernetes clusters,
+
+455
+00:19:14,880 --> 00:19:18,810
+Kafka for processing
+messages, Route 53 for DNS.
+
+456
+00:19:18,810 --> 00:19:22,020
+I think what was really
+critical was observability.
+
+457
+00:19:22,020 --> 00:19:23,400
+So for the customer to observe
+
+458
+00:19:23,400 --> 00:19:25,680
+the existing Kubernetes infrastructure,
+
+459
+00:19:25,680 --> 00:19:29,220
+but also to observe the
+transition to Amazon EKS,
+
+460
+00:19:29,220 --> 00:19:32,190
+just to ensure that, as
+the transition was moving,
+
+461
+00:19:32,190 --> 00:19:33,303
+it was migrating across,
+
+462
+00:19:33,303 --> 00:19:35,310
+that the customers were
+having the experience
+
+463
+00:19:35,310 --> 00:19:36,600
+that they should be.
+
+464
+00:19:36,600 --> 00:19:38,220
+And actually, we'll come onto this later
+
+465
+00:19:38,220 --> 00:19:39,120
+in the presentation.
+
+466
+00:19:39,120 --> 00:19:42,570
+Manish will cover AWS enterprise's support
+
+467
+00:19:42,570 --> 00:19:45,810
+in underpinning the migration.
+
+468
+00:19:45,810 --> 00:19:48,780
+And, but now, I'll hand
+you back to Pete to discuss
+
+469
+00:19:48,780 --> 00:19:51,633
+how Global Streaming went
+through the migration process.
+
+470
+00:19:52,620 --> 00:19:53,453
+Thanks, Pete.
+
+471
+00:19:56,536 --> 00:19:57,369
+- Thanks, Ian.
+
+472
+00:19:57,369 --> 00:20:00,240
+So I'm now gonna go into a bit more detail
+
+473
+00:20:00,240 --> 00:20:02,373
+as to how we did the migration.
+
+474
+00:20:04,500 --> 00:20:05,850
+So this is really a view
+
+475
+00:20:05,850 --> 00:20:09,690
+of a slightly more
+detailed pictorial diagram
+
+476
+00:20:09,690 --> 00:20:13,350
+of that Ansible, Terraform
+cluster that we started with.
+
+477
+00:20:13,350 --> 00:20:17,640
+So again, it probably looks
+similar to a lot of customers
+
+478
+00:20:17,640 --> 00:20:20,010
+who are using self-manager or even EKS.
+
+479
+00:20:20,010 --> 00:20:21,960
+So in this diagram we've got
+
+480
+00:20:21,960 --> 00:20:25,740
+our different integration
+points into Kubernetes.
+
+481
+00:20:25,740 --> 00:20:27,780
+That's our CI/CD tooling.
+
+482
+00:20:27,780 --> 00:20:32,100
+That's gonna be a developer Kube Cuddle,
+
+483
+00:20:32,100 --> 00:20:33,690
+all of our CDNs,
+
+484
+00:20:33,690 --> 00:20:34,800
+and any third parties
+
+485
+00:20:34,800 --> 00:20:36,840
+that are integrating into the platform.
+
+486
+00:20:36,840 --> 00:20:41,840
+But the important part is
+that we control that route in.
+
+487
+00:20:42,240 --> 00:20:45,000
+That's key for how we did this migration.
+
+488
+00:20:45,000 --> 00:20:47,100
+And also key was the fact
+
+489
+00:20:47,100 --> 00:20:49,770
+we had quite an opinionated platform
+
+490
+00:20:49,770 --> 00:20:52,500
+and how applications
+deployed into the cluster.
+
+491
+00:20:52,500 --> 00:20:54,060
+Again, that was a really key part
+
+492
+00:20:54,060 --> 00:20:57,270
+in having this be a possibility
+
+493
+00:20:57,270 --> 00:20:59,133
+for how we did this migration.
+
+494
+00:21:00,690 --> 00:21:04,470
+So the first step for us
+was fairly self-explanatory.
+
+495
+00:21:04,470 --> 00:21:07,800
+So spin up that new EKS cluster.
+
+496
+00:21:07,800 --> 00:21:10,920
+This is in the new, in the same VPC,
+
+497
+00:21:10,920 --> 00:21:12,450
+same egress NAT,
+
+498
+00:21:12,450 --> 00:21:14,820
+so that any traffic
+coming out of this cluster
+
+499
+00:21:14,820 --> 00:21:18,480
+looks and presents as if it's
+the same self-managed cluster.
+
+500
+00:21:18,480 --> 00:21:20,550
+And that sort of simplifies
+things like firewalling
+
+501
+00:21:20,550 --> 00:21:22,113
+and fun stuff like that.
+
+502
+00:21:23,550 --> 00:21:25,803
+Create a new Route 53 zone.
+
+503
+00:21:27,030 --> 00:21:30,840
+And this applications can
+still present themselves
+
+504
+00:21:30,840 --> 00:21:34,860
+as the same Layer 7
+route into the cluster.
+
+505
+00:21:34,860 --> 00:21:38,190
+But the important part here
+is we didn't want to delegate
+
+506
+00:21:38,190 --> 00:21:41,193
+that zone via the parent zone.
+
+507
+00:21:43,650 --> 00:21:44,730
+Step two.
+
+508
+00:21:44,730 --> 00:21:46,467
+And as in, touched on,
+
+509
+00:21:46,467 --> 00:21:49,380
+and this was something that
+we worked closely with AWS on
+
+510
+00:21:49,380 --> 00:21:51,090
+because we really wanted to know,
+
+511
+00:21:51,090 --> 00:21:54,780
+surely other customers have
+done a similar migration.
+
+512
+00:21:54,780 --> 00:21:56,640
+'Cause it can't be that
+unheard of, of moving
+
+513
+00:21:56,640 --> 00:21:59,923
+from turnkey, do-it-yourself
+Kubernetes to EKS.
+
+514
+00:21:59,923 --> 00:22:02,910
+And Velero was the defacto
+choice for doing this.
+
+515
+00:22:02,910 --> 00:22:06,210
+But again, it's a technology,
+not really a capability.
+
+516
+00:22:06,210 --> 00:22:09,434
+We needed to build a lot
+of automation around it.
+
+517
+00:22:09,434 --> 00:22:11,190
+But the first phase was
+to really shift across
+
+518
+00:22:11,190 --> 00:22:12,300
+those core services.
+
+519
+00:22:12,300 --> 00:22:15,810
+So that's things like
+CoreDNS, Ingress monitoring.
+
+520
+00:22:15,810 --> 00:22:18,510
+I wish we had EKS add-ons for this,
+
+521
+00:22:18,510 --> 00:22:20,760
+but we had to do a lot
+of hand-cranking here.
+
+522
+00:22:22,230 --> 00:22:23,730
+And then the next stage was
+
+523
+00:22:23,730 --> 00:22:25,920
+to shift over the application workloads.
+
+524
+00:22:25,920 --> 00:22:30,270
+And this is where we started
+to step a little bit further
+
+525
+00:22:30,270 --> 00:22:33,000
+into the application team space.
+
+526
+00:22:33,000 --> 00:22:35,010
+Previously, we would've always said
+
+527
+00:22:35,010 --> 00:22:36,660
+anything at the namespace level
+
+528
+00:22:36,660 --> 00:22:38,940
+is for the development teams to manage.
+
+529
+00:22:38,940 --> 00:22:40,590
+We, as a platform engineering team,
+
+530
+00:22:40,590 --> 00:22:42,390
+that is not our responsibility.
+
+531
+00:22:42,390 --> 00:22:45,060
+That is the development
+team's responsibility.
+
+532
+00:22:45,060 --> 00:22:46,380
+But this is where we really needed
+
+533
+00:22:46,380 --> 00:22:49,140
+to question that for this migration.
+
+534
+00:22:49,140 --> 00:22:52,590
+At this point, we stepped
+into the application space.
+
+535
+00:22:52,590 --> 00:22:55,260
+We had to do a lot of
+understanding in that space.
+
+536
+00:22:55,260 --> 00:22:57,780
+We needed to understand every application.
+
+537
+00:22:57,780 --> 00:22:59,840
+I'll go into a bit of detail later on
+
+538
+00:22:59,840 --> 00:23:01,920
+on some of the more complex applications
+
+539
+00:23:01,920 --> 00:23:03,270
+we needed to migrate.
+
+540
+00:23:03,270 --> 00:23:05,100
+But we needed to really understand that
+
+541
+00:23:05,100 --> 00:23:06,540
+and then shift it across.
+
+542
+00:23:06,540 --> 00:23:09,240
+Because we are, suddenly,
+as part of this migration,
+
+543
+00:23:09,240 --> 00:23:11,430
+taking on a lot of accountability
+
+544
+00:23:11,430 --> 00:23:12,900
+in terms of the reliability
+
+545
+00:23:12,900 --> 00:23:14,793
+and availability of those services.
+
+546
+00:23:17,190 --> 00:23:19,980
+And then step four is delegate DNS.
+
+547
+00:23:19,980 --> 00:23:21,870
+So this migration that we performed
+
+548
+00:23:21,870 --> 00:23:23,700
+was a big bang migration.
+
+549
+00:23:23,700 --> 00:23:26,070
+It was something that
+we had to do full stack.
+
+550
+00:23:26,070 --> 00:23:28,140
+We could not do service by service
+
+551
+00:23:28,140 --> 00:23:31,770
+because a lot of our architecture
+is based on things like
+
+552
+00:23:31,770 --> 00:23:34,650
+Kubernetes Service Discovery
+and service routing.
+
+553
+00:23:34,650 --> 00:23:36,960
+So it means we couldn't
+just shift over one app
+
+554
+00:23:36,960 --> 00:23:38,640
+because any downstream apps
+
+555
+00:23:38,640 --> 00:23:40,740
+may still not be up in that new cluster.
+
+556
+00:23:40,740 --> 00:23:42,810
+So we needed to see the full stack
+
+557
+00:23:42,810 --> 00:23:44,193
+in that cluster move over.
+
+558
+00:23:45,570 --> 00:23:47,580
+And then lastly, and
+probably the easy bit,
+
+559
+00:23:47,580 --> 00:23:49,830
+and the very satisfying bit for sure,
+
+560
+00:23:49,830 --> 00:23:51,360
+was to get rid of the old cluster.
+
+561
+00:23:51,360 --> 00:23:55,050
+These are clusters dating back to 2014,
+
+562
+00:23:55,050 --> 00:23:56,550
+which really was testament to the team
+
+563
+00:23:56,550 --> 00:23:59,400
+that we were able to
+continually upgrade patch,
+
+564
+00:23:59,400 --> 00:24:01,320
+and actually take tech from 2014
+
+565
+00:24:01,320 --> 00:24:04,530
+and make it relevant for 2023, 2024,
+
+566
+00:24:04,530 --> 00:24:05,580
+which is when we were doing this.
+
+567
+00:24:05,580 --> 00:24:08,310
+But yeah, it was sad
+to see some of them go,
+
+568
+00:24:08,310 --> 00:24:11,240
+but ultimately, it was
+better for the future,
+
+569
+00:24:11,240 --> 00:24:14,463
+and we were able to leverage
+a lot more out of EKS now.
+
+570
+00:24:15,390 --> 00:24:19,260
+So I'm gonna go into that
+six stage migration process
+
+571
+00:24:19,260 --> 00:24:20,710
+that Ian touched on
+
+572
+00:24:21,840 --> 00:24:24,480
+because what was key for us
+
+573
+00:24:24,480 --> 00:24:27,960
+is to really lean on automation
+
+574
+00:24:27,960 --> 00:24:30,630
+and controllers to do this migration.
+
+575
+00:24:30,630 --> 00:24:32,940
+We could not rely on humans sitting there
+
+576
+00:24:32,940 --> 00:24:36,120
+manually moving apps from
+one side to the other
+
+577
+00:24:36,120 --> 00:24:37,500
+at the scale we were running at.
+
+578
+00:24:37,500 --> 00:24:38,640
+It just wouldn't be safe,
+
+579
+00:24:38,640 --> 00:24:40,593
+and it also wouldn't take us 12 months.
+
+580
+00:24:42,870 --> 00:24:45,120
+So the first step was
+pre-flight validation.
+
+581
+00:24:45,120 --> 00:24:46,950
+So this is really where we look at things
+
+582
+00:24:46,950 --> 00:24:49,650
+like Route 53 zone TTLs.
+
+583
+00:24:49,650 --> 00:24:52,440
+We wanted to massively reduce those TTLs
+
+584
+00:24:52,440 --> 00:24:54,180
+to give us more flexibility
+
+585
+00:24:54,180 --> 00:24:55,980
+in being able to flick over
+
+586
+00:24:55,980 --> 00:24:57,870
+to the new region or new cluster.
+
+587
+00:24:57,870 --> 00:25:00,720
+And then if anything does go
+wrong, we can pull it back.
+
+588
+00:25:00,720 --> 00:25:03,090
+But this was something
+we did weeks in advance
+
+589
+00:25:03,090 --> 00:25:07,773
+to ensure that all clients
+have that new, fresh TTL set.
+
+590
+00:25:10,080 --> 00:25:12,390
+Next was building the EKS cluster.
+
+591
+00:25:12,390 --> 00:25:14,250
+So alongside all of the clusters,
+
+592
+00:25:14,250 --> 00:25:17,580
+we also deployed a dedicated
+end-to-end test suite
+
+593
+00:25:17,580 --> 00:25:19,890
+that we developed as
+part of this migration.
+
+594
+00:25:19,890 --> 00:25:22,440
+I'll go into a bit of
+detail in a moment on that.
+
+595
+00:25:22,440 --> 00:25:24,540
+And also, all of the Velero mechanics.
+
+596
+00:25:24,540 --> 00:25:26,220
+So the plugging in with S3,
+
+597
+00:25:26,220 --> 00:25:28,710
+and all of the other stuff
+that we needed to set up
+
+598
+00:25:28,710 --> 00:25:32,553
+in both the self-managed
+clusters and the EKS clusters.
+
+599
+00:25:35,234 --> 00:25:36,067
+At this point,
+
+600
+00:25:36,067 --> 00:25:39,390
+we're now ready to start
+taking a snapshot using Velero
+
+601
+00:25:39,390 --> 00:25:42,000
+of that self-managed cluster.
+
+602
+00:25:42,000 --> 00:25:43,530
+But we obviously need to stop
+
+603
+00:25:43,530 --> 00:25:47,040
+any incoming changes into the cluster.
+
+604
+00:25:47,040 --> 00:25:50,220
+Thankfully, because we have a
+fairly opinionated platform,
+
+605
+00:25:50,220 --> 00:25:52,860
+we were able to centrally
+disable pipelines
+
+606
+00:25:52,860 --> 00:25:54,690
+across all of our development teams
+
+607
+00:25:54,690 --> 00:25:57,900
+to essentially stop
+them making any changes.
+
+608
+00:25:57,900 --> 00:26:01,500
+That would then allow us to
+take that snapshot into Velero
+
+609
+00:26:01,500 --> 00:26:03,030
+and start the migration.
+
+610
+00:26:03,030 --> 00:26:04,170
+This is really the first time
+
+611
+00:26:04,170 --> 00:26:08,460
+that developers might have been
+aware of something going on,
+
+612
+00:26:08,460 --> 00:26:10,080
+but you'll be surprised
+
+613
+00:26:10,080 --> 00:26:12,180
+as to the amount of
+messages we actually got.
+
+614
+00:26:12,180 --> 00:26:13,350
+It was fairly minimal.
+
+615
+00:26:13,350 --> 00:26:15,923
+People weren't really aware
+that this was happening.
+
+616
+00:26:18,030 --> 00:26:19,500
+Now, we've got the big stuff,
+
+617
+00:26:19,500 --> 00:26:21,030
+this is where it's really
+starting to kick off.
+
+618
+00:26:21,030 --> 00:26:23,097
+So this is where we did
+that workload migration,
+
+619
+00:26:23,097 --> 00:26:25,920
+and we decided to do a 50-50 scale up.
+
+620
+00:26:25,920 --> 00:26:28,860
+So this allowed us to
+scale down our self-managed
+
+621
+00:26:28,860 --> 00:26:31,470
+and up on EKS, partly for cost,
+
+622
+00:26:31,470 --> 00:26:34,890
+but also we want to ensure
+that there are certain issues
+
+623
+00:26:34,890 --> 00:26:38,490
+that may arise by having two
+larger scaled applications,
+
+624
+00:26:38,490 --> 00:26:40,650
+talking to some of the persistence layers.
+
+625
+00:26:40,650 --> 00:26:42,650
+Again, I'll talk about that in a second.
+
+626
+00:26:44,490 --> 00:26:45,323
+Stage five.
+
+627
+00:26:45,323 --> 00:26:47,460
+So this is really where we start to see
+
+628
+00:26:47,460 --> 00:26:50,070
+traffic moving over to the new clusters.
+
+629
+00:26:50,070 --> 00:26:52,140
+So this is where we do
+the zone delegation,
+
+630
+00:26:52,140 --> 00:26:55,710
+and then we bring that EKS
+cluster fully up to 100%,
+
+631
+00:26:55,710 --> 00:26:57,910
+and we bring the
+self-managed clusters down.
+
+632
+00:26:59,130 --> 00:27:01,233
+And lastly, we re-enable the pipelines.
+
+633
+00:27:02,130 --> 00:27:03,960
+So this stage process,
+
+634
+00:27:03,960 --> 00:27:06,600
+so really from stages three to six,
+
+635
+00:27:06,600 --> 00:27:08,160
+which is really where development teams
+
+636
+00:27:08,160 --> 00:27:10,260
+may be aware that something is happening.
+
+637
+00:27:10,260 --> 00:27:12,720
+This is something that will
+happen in a matter of hours.
+
+638
+00:27:12,720 --> 00:27:16,290
+This is single-day
+activities that will be done
+
+639
+00:27:16,290 --> 00:27:17,670
+so that we can do it quite quickly.
+
+640
+00:27:17,670 --> 00:27:19,260
+We want to be able to take snapshots,
+
+641
+00:27:19,260 --> 00:27:21,420
+and we don't want to be blocking teams
+
+642
+00:27:21,420 --> 00:27:23,070
+from making development changes.
+
+643
+00:27:23,070 --> 00:27:25,530
+Because as Mans said at the beginning,
+
+644
+00:27:25,530 --> 00:27:28,080
+there are a significant
+amount of deployments
+
+645
+00:27:28,080 --> 00:27:30,690
+and changes continually
+going into production.
+
+646
+00:27:30,690 --> 00:27:32,700
+We couldn't afford to
+take down the environments
+
+647
+00:27:32,700 --> 00:27:33,533
+for too long.
+
+648
+00:27:36,060 --> 00:27:39,480
+So I'm now gonna drill into two key areas
+
+649
+00:27:39,480 --> 00:27:42,060
+that I think were absolutely critical
+
+650
+00:27:42,060 --> 00:27:44,160
+for the success of this project.
+
+651
+00:27:44,160 --> 00:27:46,323
+So the first is our test suite.
+
+652
+00:27:48,540 --> 00:27:51,210
+So this is really the makeup
+
+653
+00:27:51,210 --> 00:27:53,310
+of the different aspects of testing
+
+654
+00:27:53,310 --> 00:27:55,440
+that we had across our migration.
+
+655
+00:27:55,440 --> 00:27:58,500
+And some of these test
+suites remain even today
+
+656
+00:27:58,500 --> 00:28:00,570
+and we leave in the environments.
+
+657
+00:28:00,570 --> 00:28:01,890
+But I'm gonna step through a few of them
+
+658
+00:28:01,890 --> 00:28:04,650
+just to give you an a sense as
+to what we were focusing on,
+
+659
+00:28:04,650 --> 00:28:07,110
+some of the key performance indicators
+
+660
+00:28:07,110 --> 00:28:09,810
+that we wanted to drill into
+as part of the migration.
+
+661
+00:28:10,830 --> 00:28:14,070
+So the first is around
+synthetic load testing.
+
+662
+00:28:14,070 --> 00:28:17,880
+So we want to continually
+know what is the latency,
+
+663
+00:28:17,880 --> 00:28:22,500
+what is the availability at a P99, P99.5
+
+664
+00:28:22,500 --> 00:28:24,900
+across the entire platform at load.
+
+665
+00:28:24,900 --> 00:28:26,760
+This isn't a functional test,
+
+666
+00:28:26,760 --> 00:28:30,060
+this is continually injecting
+load into our platform
+
+667
+00:28:30,060 --> 00:28:32,430
+so that we have very reliable data
+
+668
+00:28:32,430 --> 00:28:35,100
+to tell us if there's
+something wrong on the client.
+
+669
+00:28:35,100 --> 00:28:38,460
+But also, you'll notice this
+is a service that we own
+
+670
+00:28:38,460 --> 00:28:39,960
+as a platform engineering team.
+
+671
+00:28:39,960 --> 00:28:42,780
+So we also have reliable
+data on the server side.
+
+672
+00:28:42,780 --> 00:28:45,990
+So we manage the entire
+journey from request,
+
+673
+00:28:45,990 --> 00:28:47,463
+all the way down to response.
+
+674
+00:28:49,560 --> 00:28:51,210
+Two, zone validation.
+
+675
+00:28:51,210 --> 00:28:54,990
+So I already touched on earlier around
+
+676
+00:28:54,990 --> 00:28:58,230
+the fact that we have new
+zones that are created for EKS,
+
+677
+00:28:58,230 --> 00:28:59,430
+but they're not delegated.
+
+678
+00:28:59,430 --> 00:29:02,970
+So we've taken on the accountability
+
+679
+00:29:02,970 --> 00:29:05,790
+to make sure that those
+services are running,
+
+680
+00:29:05,790 --> 00:29:08,100
+but dev teams can't access them.
+
+681
+00:29:08,100 --> 00:29:11,340
+They don't know how to
+access these new pods
+
+682
+00:29:11,340 --> 00:29:13,530
+that are suddenly running in EKS.
+
+683
+00:29:13,530 --> 00:29:15,120
+So we had to take ownership
+
+684
+00:29:15,120 --> 00:29:17,790
+of functionally testing
+those applications.
+
+685
+00:29:17,790 --> 00:29:20,070
+We weren't doing full-scale load tests,
+
+686
+00:29:20,070 --> 00:29:21,990
+I don't think they'd be
+particularly happy about that.
+
+687
+00:29:21,990 --> 00:29:25,170
+But we were doing very
+low level functional tests
+
+688
+00:29:25,170 --> 00:29:27,780
+to ensure that things like
+all of their pods were up,
+
+689
+00:29:27,780 --> 00:29:29,910
+that they were responding
+to health checks,
+
+690
+00:29:29,910 --> 00:29:33,540
+that they were having a
+certain level of latency
+
+691
+00:29:33,540 --> 00:29:35,340
+that that we were getting
+the right percentage
+
+692
+00:29:35,340 --> 00:29:37,410
+of 2x, 3x, 4x, 5x,
+
+693
+00:29:37,410 --> 00:29:39,840
+and we were doing continual comparison
+
+694
+00:29:39,840 --> 00:29:43,050
+between our self-managed
+clusters and our EKS clusters.
+
+695
+00:29:43,050 --> 00:29:45,030
+So we were able to look at those metrics,
+
+696
+00:29:45,030 --> 00:29:48,240
+and essentially look at deltas
+between the two clusters.
+
+697
+00:29:48,240 --> 00:29:51,510
+So even if an app has a
+significant amount of 204s
+
+698
+00:29:51,510 --> 00:29:53,220
+or a significant amount of 404s
+
+699
+00:29:53,220 --> 00:29:55,890
+because of the way that the
+application's configured
+
+700
+00:29:55,890 --> 00:29:57,930
+or really the nature of the app,
+
+701
+00:29:57,930 --> 00:29:59,430
+we would be able to compare
+
+702
+00:29:59,430 --> 00:30:01,140
+and validate that there is no difference
+
+703
+00:30:01,140 --> 00:30:03,423
+between self-managed and EKS.
+
+704
+00:30:04,950 --> 00:30:07,260
+Next is node and cluster level checks.
+
+705
+00:30:07,260 --> 00:30:08,820
+So again, we want to make sure
+
+706
+00:30:08,820 --> 00:30:10,260
+that all of our nodes are healthy.
+
+707
+00:30:10,260 --> 00:30:12,060
+We have a lot of services
+that run on them,
+
+708
+00:30:12,060 --> 00:30:13,230
+and we want to be able to run
+
+709
+00:30:13,230 --> 00:30:15,963
+node and cluster level checks continually.
+
+710
+00:30:17,040 --> 00:30:20,080
+And lastly, and this was
+something that I think
+
+711
+00:30:21,810 --> 00:30:23,670
+was probably the scariest for us,
+
+712
+00:30:23,670 --> 00:30:25,710
+and it's something that
+we couldn't really manage,
+
+713
+00:30:25,710 --> 00:30:29,490
+and that is files that we don't own.
+
+714
+00:30:29,490 --> 00:30:33,480
+So we felt that the most likely cause
+
+715
+00:30:33,480 --> 00:30:36,240
+of an incident or an
+issue with this migration
+
+716
+00:30:36,240 --> 00:30:37,980
+would not be our firewalls
+
+717
+00:30:37,980 --> 00:30:39,180
+because we've managed those,
+
+718
+00:30:39,180 --> 00:30:42,660
+and we can essentially do all
+the due diligence around that.
+
+719
+00:30:42,660 --> 00:30:46,200
+But it's, if any other team has a firewall
+
+720
+00:30:46,200 --> 00:30:51,200
+that maybe only allows
+a certain /26 or /28,
+
+721
+00:30:51,420 --> 00:30:53,640
+that, potentially, we weren't aware of,
+
+722
+00:30:53,640 --> 00:30:55,593
+we can't validate everyone's firewall.
+
+723
+00:30:56,460 --> 00:30:59,160
+So what we did was, rather
+than look at those firewalls
+
+724
+00:30:59,160 --> 00:31:00,480
+and reach out to all of those teams
+
+725
+00:31:00,480 --> 00:31:01,710
+'cause we sent the comms out,
+
+726
+00:31:01,710 --> 00:31:05,850
+but was to lean more on VPC
+flow logs and CloudWatch.
+
+727
+00:31:05,850 --> 00:31:08,820
+So we would look at
+any anomalies in spikes
+
+728
+00:31:08,820 --> 00:31:11,430
+in potential dropped connections
+
+729
+00:31:11,430 --> 00:31:14,670
+or anything essentially changing
+
+730
+00:31:14,670 --> 00:31:17,130
+between what we expect on our self-managed
+
+731
+00:31:17,130 --> 00:31:19,080
+versus what we see on our EKS.
+
+732
+00:31:19,080 --> 00:31:20,037
+This was really key,
+
+733
+00:31:20,037 --> 00:31:22,920
+and we did pick up quite a few issues here
+
+734
+00:31:22,920 --> 00:31:24,810
+where we were seeing significant numbers
+
+735
+00:31:24,810 --> 00:31:27,960
+of packets being dropped
+coming out of our platform,
+
+736
+00:31:27,960 --> 00:31:29,643
+which indicated a firewall issue.
+
+737
+00:31:30,630 --> 00:31:32,820
+And underpinning all of
+this is VictoriaMetrics.
+
+738
+00:31:32,820 --> 00:31:34,890
+So the scale that we run at,
+
+739
+00:31:34,890 --> 00:31:37,680
+we could not simply rely on
+something like Prometheus
+
+740
+00:31:37,680 --> 00:31:39,180
+or even really Thanos.
+
+741
+00:31:39,180 --> 00:31:41,070
+We needed something more distributed
+
+742
+00:31:41,070 --> 00:31:43,710
+that could scale to the
+size that we needed.
+
+743
+00:31:43,710 --> 00:31:45,990
+So this was absolutely critical
+
+744
+00:31:45,990 --> 00:31:48,240
+in us being able to do
+this type of analysis.
+
+745
+00:31:51,120 --> 00:31:52,560
+So the next area I want to zoom into
+
+746
+00:31:52,560 --> 00:31:54,990
+is our workload migration.
+
+747
+00:31:54,990 --> 00:31:58,500
+So I touched on it a moment ago
+
+748
+00:31:58,500 --> 00:32:01,320
+around some of the more complex workloads,
+
+749
+00:32:01,320 --> 00:32:05,070
+and I think the majority of
+our applications are stateless.
+
+750
+00:32:05,070 --> 00:32:08,100
+So pretty easy to migrate.
+
+751
+00:32:08,100 --> 00:32:09,120
+There were some issues,
+
+752
+00:32:09,120 --> 00:32:10,290
+but generally speaking,
+
+753
+00:32:10,290 --> 00:32:13,110
+we were moving stateless workloads from A
+
+754
+00:32:13,110 --> 00:32:16,860
+to stateless workloads in B.
+
+755
+00:32:16,860 --> 00:32:19,150
+Where it became a little
+bit more difficult
+
+756
+00:32:20,040 --> 00:32:22,710
+is this example you can see here.
+
+757
+00:32:22,710 --> 00:32:24,780
+So we have a number of services
+
+758
+00:32:24,780 --> 00:32:27,963
+that use things like Kafka for queuing,
+
+759
+00:32:27,963 --> 00:32:30,210
+and being able to have some level
+
+760
+00:32:30,210 --> 00:32:34,770
+of producer and consumer
+type architecture.
+
+761
+00:32:34,770 --> 00:32:35,980
+The problem we had here
+
+762
+00:32:36,840 --> 00:32:39,720
+was that a lot of the Kafka clusters
+
+763
+00:32:39,720 --> 00:32:40,950
+that we configure
+
+764
+00:32:40,950 --> 00:32:43,890
+have a set number of
+producers and consumers
+
+765
+00:32:43,890 --> 00:32:46,620
+defined on the cluster itself.
+
+766
+00:32:46,620 --> 00:32:48,090
+So if we, as a platform team,
+
+767
+00:32:48,090 --> 00:32:51,660
+suddenly doubled the number
+of consumers and producers,
+
+768
+00:32:51,660 --> 00:32:55,200
+that could significantly affect
+the performance of Kafka,
+
+769
+00:32:55,200 --> 00:32:57,543
+and we could get additional number of,
+
+770
+00:33:00,120 --> 00:33:02,730
+essentially degrades that Kafka cluster.
+
+771
+00:33:02,730 --> 00:33:03,990
+So what we needed to do
+
+772
+00:33:03,990 --> 00:33:07,920
+was essentially take a
+more fine-tuned approach
+
+773
+00:33:07,920 --> 00:33:08,970
+to things like Kafka.
+
+774
+00:33:08,970 --> 00:33:10,230
+You can see in that diagram
+
+775
+00:33:10,230 --> 00:33:11,850
+that I was sharing a second ago,
+
+776
+00:33:11,850 --> 00:33:15,420
+we had to shift over by a
+delta of plus or minus one.
+
+777
+00:33:15,420 --> 00:33:18,090
+So where we took a
+consumer and producer pair,
+
+778
+00:33:18,090 --> 00:33:21,870
+we increased in EKS, we
+reduced in Kubernetes.
+
+779
+00:33:21,870 --> 00:33:24,780
+Again, this isn't something
+that we did one off,
+
+780
+00:33:24,780 --> 00:33:26,700
+we had to build automation to do this
+
+781
+00:33:26,700 --> 00:33:30,360
+for a number of use cases
+across across the board.
+
+782
+00:33:30,360 --> 00:33:32,370
+But it was something that
+we worked really closely
+
+783
+00:33:32,370 --> 00:33:35,790
+with a lot of our Kafka experts
+across Global Streaming.
+
+784
+00:33:35,790 --> 00:33:39,060
+But it was definitely
+the more complex issues
+
+785
+00:33:39,060 --> 00:33:40,170
+that we actually hit.
+
+786
+00:33:40,170 --> 00:33:43,080
+But thankfully, we were able
+to sort of get through that.
+
+787
+00:33:43,080 --> 00:33:44,610
+You'll also notice in that diagram
+
+788
+00:33:44,610 --> 00:33:46,440
+that multi-region was key.
+
+789
+00:33:46,440 --> 00:33:47,427
+So what we needed to do
+
+790
+00:33:47,427 --> 00:33:50,430
+was actually shift some
+of our traffic away
+
+791
+00:33:50,430 --> 00:33:53,010
+from the environment
+that we were migrating,
+
+792
+00:33:53,010 --> 00:33:56,220
+and wait for the queues
+to essentially get to zero
+
+793
+00:33:56,220 --> 00:33:58,800
+before we perform that migration.
+
+794
+00:33:58,800 --> 00:34:00,660
+I do appreciate a lot of organizations
+
+795
+00:34:00,660 --> 00:34:02,220
+don't have multi-region,
+
+796
+00:34:02,220 --> 00:34:04,110
+and we also have certain propositions
+
+797
+00:34:04,110 --> 00:34:05,760
+that are not multi-region.
+
+798
+00:34:05,760 --> 00:34:07,020
+So the way that we approached that
+
+799
+00:34:07,020 --> 00:34:10,650
+was really focused on really
+quiet periods of the day
+
+800
+00:34:10,650 --> 00:34:14,790
+to ensure that those queues
+are as close to zero as we can.
+
+801
+00:34:14,790 --> 00:34:17,540
+And thankfully, we didn't
+hit any issues at that point.
+
+802
+00:34:20,010 --> 00:34:23,490
+So where did we get to
+in that 12-month target,
+
+803
+00:34:23,490 --> 00:34:25,440
+which is pretty ambitious at the start?
+
+804
+00:34:26,910 --> 00:34:29,040
+So we essentially spent six months
+
+805
+00:34:29,040 --> 00:34:31,050
+not migrating any cluster.
+
+806
+00:34:31,050 --> 00:34:32,400
+Whenever I was giving an update,
+
+807
+00:34:32,400 --> 00:34:35,460
+it would say I haven't
+done a single cluster yet,
+
+808
+00:34:35,460 --> 00:34:36,690
+which wasn't particularly great
+
+809
+00:34:36,690 --> 00:34:39,480
+when I was reporting up to Mans and co.
+
+810
+00:34:39,480 --> 00:34:41,790
+We weren't migrating
+clusters at that point,
+
+811
+00:34:41,790 --> 00:34:43,380
+but we really had the
+confidence and backing
+
+812
+00:34:43,380 --> 00:34:45,570
+of Mans and the team to,
+
+813
+00:34:45,570 --> 00:34:47,550
+he knew that we were developing
+
+814
+00:34:47,550 --> 00:34:49,170
+a lot of tools and automation
+
+815
+00:34:49,170 --> 00:34:52,110
+to be able to rapidly migrate to EKS.
+
+816
+00:34:52,110 --> 00:34:54,510
+So we spent really six months building
+
+817
+00:34:54,510 --> 00:34:56,883
+that six-stage process
+that I just ran through.
+
+818
+00:34:57,870 --> 00:35:01,050
+And we finally migrated our
+first cluster at the end of Q2,
+
+819
+00:35:01,050 --> 00:35:04,350
+which was kind of our internal target.
+
+820
+00:35:04,350 --> 00:35:06,180
+But what we then were able to do
+
+821
+00:35:06,180 --> 00:35:09,630
+over the succeeding six
+months, and really four months,
+
+822
+00:35:09,630 --> 00:35:13,560
+was migrate the entirety of
+Global Streaming in four months.
+
+823
+00:35:13,560 --> 00:35:15,720
+And that was all down to that automation
+
+824
+00:35:15,720 --> 00:35:17,700
+and that testing that we'd built.
+
+825
+00:35:17,700 --> 00:35:20,550
+And we had next to zero
+incidents or issues
+
+826
+00:35:20,550 --> 00:35:21,810
+with this migration.
+
+827
+00:35:21,810 --> 00:35:23,640
+And that was because of the due diligence
+
+828
+00:35:23,640 --> 00:35:24,473
+that we really put in.
+
+829
+00:35:24,473 --> 00:35:25,860
+And I also really want to highlight
+
+830
+00:35:25,860 --> 00:35:27,150
+some of the support that we had
+
+831
+00:35:27,150 --> 00:35:29,100
+from Ian and Manish and team.
+
+832
+00:35:29,100 --> 00:35:31,500
+We had a lot of support from AWS with this
+
+833
+00:35:31,500 --> 00:35:34,410
+to ensure that a lot of the right people
+
+834
+00:35:34,410 --> 00:35:36,030
+and the support was around us.
+
+835
+00:35:36,030 --> 00:35:37,380
+And I'm sure Manish is gonna go
+
+836
+00:35:37,380 --> 00:35:39,603
+into a bit more detail
+on that in a second.
+
+837
+00:35:41,520 --> 00:35:43,020
+So what's the key takeaway?
+
+838
+00:35:43,020 --> 00:35:46,770
+'Cause it's not really just
+about Kubernetes, to be honest.
+
+839
+00:35:46,770 --> 00:35:49,773
+We're not gonna be doing an EKS
+migration again, thankfully.
+
+840
+00:35:50,730 --> 00:35:54,990
+But the real unsung hero
+here was an interface,
+
+841
+00:35:54,990 --> 00:35:58,350
+a declarative way of
+defining what you want
+
+842
+00:35:58,350 --> 00:36:00,810
+with your platform engineering team.
+
+843
+00:36:00,810 --> 00:36:03,150
+So what we're now looking to try and do
+
+844
+00:36:03,150 --> 00:36:06,180
+is pivot as much of what we offer
+
+845
+00:36:06,180 --> 00:36:07,920
+as a platform engineering team
+
+846
+00:36:07,920 --> 00:36:12,540
+away from a plethora of APIs or interfaces
+
+847
+00:36:12,540 --> 00:36:15,630
+or GitHub repos or all
+of that other stuff.
+
+848
+00:36:15,630 --> 00:36:19,830
+And we want to build a
+declarative interface and spec
+
+849
+00:36:19,830 --> 00:36:23,280
+the teams and our customers,
+our internal customers,
+
+850
+00:36:23,280 --> 00:36:25,170
+can declare what they want
+
+851
+00:36:25,170 --> 00:36:29,760
+so that today is their
+workloads in Kubernetes.
+
+852
+00:36:29,760 --> 00:36:31,170
+But we're currently working
+
+853
+00:36:31,170 --> 00:36:34,110
+on being able to define
+things like Keyspaces,
+
+854
+00:36:34,110 --> 00:36:36,630
+any other database
+technology you might have,
+
+855
+00:36:36,630 --> 00:36:38,340
+CDN configuration.
+
+856
+00:36:38,340 --> 00:36:40,050
+Really, the options are limitless.
+
+857
+00:36:40,050 --> 00:36:41,190
+And when I look at things
+
+858
+00:36:41,190 --> 00:36:44,610
+like AWS controllers
+for Kubernetes or ACK,
+
+859
+00:36:44,610 --> 00:36:47,160
+and a lot of other tools out there,
+
+860
+00:36:47,160 --> 00:36:48,600
+this is really where we're seeing
+
+861
+00:36:48,600 --> 00:36:50,520
+the platform engineering industry going,
+
+862
+00:36:50,520 --> 00:36:52,710
+and we're really trying to keep pace
+
+863
+00:36:52,710 --> 00:36:54,780
+and ensure that we can
+offer that same interface
+
+864
+00:36:54,780 --> 00:36:57,273
+for our developers
+across Global Streaming.
+
+865
+00:36:59,550 --> 00:37:00,760
+So I'm now gonna hand over to Manish
+
+866
+00:37:00,760 --> 00:37:03,310
+who's gonna go into some
+of the support he gave us.
+
+867
+00:37:04,780 --> 00:37:05,760
+- Okay. Thanks, Pete.
+
+868
+00:37:05,760 --> 00:37:07,830
+And hello, everyone.
+
+869
+00:37:07,830 --> 00:37:10,500
+As Global Streaming's
+technical account manager,
+
+870
+00:37:10,500 --> 00:37:11,490
+I would like to highlight
+
+871
+00:37:11,490 --> 00:37:13,290
+how we are building operational excellence
+
+872
+00:37:13,290 --> 00:37:14,910
+for Global Streaming,
+
+873
+00:37:14,910 --> 00:37:17,340
+as well as how AWS Enterprise Support
+
+874
+00:37:17,340 --> 00:37:18,993
+help facilitate this migration.
+
+875
+00:37:19,920 --> 00:37:21,720
+But before we do that,
+
+876
+00:37:21,720 --> 00:37:24,300
+could we have a quick
+show of hands, please?
+
+877
+00:37:24,300 --> 00:37:27,723
+How many of you are AWS
+Enterprise Support customers?
+
+878
+00:37:30,120 --> 00:37:33,330
+All right, fairly good mix. Thank you.
+
+879
+00:37:33,330 --> 00:37:34,800
+For those who are unaware,
+
+880
+00:37:34,800 --> 00:37:36,780
+let me quickly talk about
+
+881
+00:37:36,780 --> 00:37:40,020
+two key AWS Enterprise Support engagements
+
+882
+00:37:40,020 --> 00:37:42,320
+that were directly linked
+with this migration.
+
+883
+00:37:43,770 --> 00:37:45,750
+So NBC Universal and Sky
+
+884
+00:37:45,750 --> 00:37:48,150
+are AWS Enterprise Support customers,
+
+885
+00:37:48,150 --> 00:37:49,740
+which means that they get access
+
+886
+00:37:49,740 --> 00:37:52,290
+to a designated technical
+account manager like me
+
+887
+00:37:52,290 --> 00:37:54,690
+who works closely with the team.
+
+888
+00:37:54,690 --> 00:37:55,890
+Through Enterprise Support,
+
+889
+00:37:55,890 --> 00:37:58,533
+we have built a technical
+partnership with the team.
+
+890
+00:37:59,550 --> 00:38:03,060
+This also means that they
+get access to AWS expertise
+
+891
+00:38:03,060 --> 00:38:04,530
+whenever they need it,
+
+892
+00:38:04,530 --> 00:38:06,570
+whether it's for
+architectural discussions,
+
+893
+00:38:06,570 --> 00:38:09,213
+technical deep dives or
+operational challenges.
+
+894
+00:38:10,500 --> 00:38:11,970
+For this migration,
+
+895
+00:38:11,970 --> 00:38:16,950
+we had our AWS Countdown
+initiated for the migration.
+
+896
+00:38:16,950 --> 00:38:18,720
+So what we did was we worked
+
+897
+00:38:18,720 --> 00:38:20,580
+in parallel with the customer team,
+
+898
+00:38:20,580 --> 00:38:23,910
+and we collated all the
+important information
+
+899
+00:38:23,910 --> 00:38:25,860
+around their AWS environment.
+
+900
+00:38:25,860 --> 00:38:29,040
+And then we had our AWS experts
+
+901
+00:38:29,040 --> 00:38:31,860
+look into the internal run books
+
+902
+00:38:31,860 --> 00:38:34,770
+against the AWS services
+involved in the migration
+
+903
+00:38:34,770 --> 00:38:36,150
+and come up with a detailed,
+
+904
+00:38:36,150 --> 00:38:38,133
+specific technical recommendations.
+
+905
+00:38:39,810 --> 00:38:40,950
+In the next slide,
+
+906
+00:38:40,950 --> 00:38:44,850
+we will look how AWS Countdown
+on helping this migration,
+
+907
+00:38:44,850 --> 00:38:46,940
+but the real success story here
+
+908
+00:38:46,940 --> 00:38:49,500
+is how Global Streaming team
+
+909
+00:38:49,500 --> 00:38:51,990
+has leveraged all of
+these support mechanisms
+
+910
+00:38:51,990 --> 00:38:55,563
+to make sure they meet their
+project migration goals.
+
+911
+00:38:56,700 --> 00:38:59,460
+They take our inputs whenever valuable,
+
+912
+00:38:59,460 --> 00:39:02,460
+but always maintain clear ownership
+
+913
+00:39:02,460 --> 00:39:03,903
+of the technical decisions.
+
+914
+00:39:07,500 --> 00:39:12,120
+So let's look into the
+timeline once again.
+
+915
+00:39:12,120 --> 00:39:12,953
+Pete has shared
+
+916
+00:39:12,953 --> 00:39:15,530
+this is what the project
+timeline looked like.
+
+917
+00:39:15,530 --> 00:39:18,360
+The project got kicked off in January,
+
+918
+00:39:18,360 --> 00:39:22,353
+and soon after, AWS
+Countdown was initiated.
+
+919
+00:39:24,120 --> 00:39:25,440
+Through the information we collated,
+
+920
+00:39:25,440 --> 00:39:28,110
+we knew that AWS Amazon EKS
+
+921
+00:39:28,110 --> 00:39:31,680
+is at the front and
+center of this migration.
+
+922
+00:39:31,680 --> 00:39:34,650
+So this prompted a very good
+technical discussion point
+
+923
+00:39:34,650 --> 00:39:35,483
+with the team.
+
+924
+00:39:36,390 --> 00:39:38,370
+The team has been managing
+
+925
+00:39:38,370 --> 00:39:40,650
+the self-managed Kubernetes cluster.
+
+926
+00:39:40,650 --> 00:39:42,510
+But with Amazon EKS,
+
+927
+00:39:42,510 --> 00:39:45,360
+the control plane became
+the managed offering.
+
+928
+00:39:45,360 --> 00:39:48,120
+So we discussed with the team
+around the best practices
+
+929
+00:39:48,120 --> 00:39:51,240
+of the observability
+for the control plane.
+
+930
+00:39:51,240 --> 00:39:54,150
+What are the key metrics that
+get exposed via CloudWatch?
+
+931
+00:39:54,150 --> 00:39:56,040
+And for this migration specifically,
+
+932
+00:39:56,040 --> 00:40:00,021
+what are the specific metrics to look for
+
+933
+00:40:00,021 --> 00:40:02,433
+to make sure that the
+control plane is healthy?
+
+934
+00:40:04,140 --> 00:40:07,650
+Similarly, we also had a
+discussion with the team
+
+935
+00:40:07,650 --> 00:40:10,083
+around the control plane scaling aspect.
+
+936
+00:40:11,760 --> 00:40:14,610
+There was already a good
+public blog post around it,
+
+937
+00:40:14,610 --> 00:40:18,780
+like around how Amazon
+EKS control plane scales
+
+938
+00:40:18,780 --> 00:40:21,033
+in response to various inputs and metrics.
+
+939
+00:40:21,990 --> 00:40:25,500
+But for this specific technical migration,
+
+940
+00:40:25,500 --> 00:40:27,330
+we discussed with the team
+
+941
+00:40:27,330 --> 00:40:29,100
+around what are the specific steps
+
+942
+00:40:29,100 --> 00:40:32,610
+to take care of so that
+the platform scales
+
+943
+00:40:32,610 --> 00:40:34,773
+in response to their migration.
+
+944
+00:40:36,750 --> 00:40:38,940
+And last but not least,
+
+945
+00:40:38,940 --> 00:40:41,070
+before the first progression
+cluster migration,
+
+946
+00:40:41,070 --> 00:40:44,040
+we had heightened AWS awareness.
+
+947
+00:40:44,040 --> 00:40:47,010
+So, which meant that in
+case if anything goes wrong
+
+948
+00:40:47,010 --> 00:40:49,290
+during the migration
+and if there is a need
+
+949
+00:40:49,290 --> 00:40:52,140
+for AWS support case to be logged in,
+
+950
+00:40:52,140 --> 00:40:54,510
+the support case engineer who is working
+
+951
+00:40:54,510 --> 00:40:58,440
+on that support case gets
+the context of the migration
+
+952
+00:40:58,440 --> 00:40:59,670
+very, very quickly
+
+953
+00:40:59,670 --> 00:41:03,183
+so that they can help the
+customer efficiently and quickly.
+
+954
+00:41:05,430 --> 00:41:07,590
+Through the rigorous testing,
+
+955
+00:41:07,590 --> 00:41:09,450
+the proactive planning discussions,
+
+956
+00:41:09,450 --> 00:41:11,880
+and this heightened AWS awareness,
+
+957
+00:41:11,880 --> 00:41:14,703
+the project went smoothly
+without any issues.
+
+958
+00:41:16,650 --> 00:41:20,070
+Now, in the last slide for this section,
+
+959
+00:41:20,070 --> 00:41:21,210
+I just want to highlight like
+
+960
+00:41:21,210 --> 00:41:24,333
+what does the life look
+like after the migration.
+
+961
+00:41:25,560 --> 00:41:26,430
+So operationally,
+
+962
+00:41:26,430 --> 00:41:29,610
+we are seeing already the
+benefits after this migration,
+
+963
+00:41:29,610 --> 00:41:33,480
+tracking the Kubernetes version
+has become very, very easy.
+
+964
+00:41:33,480 --> 00:41:35,940
+Upgrade process has
+become very smooth now.
+
+965
+00:41:35,940 --> 00:41:37,870
+So this means that engineers are
+
+966
+00:41:38,940 --> 00:41:42,243
+spending time more on innovation
+rather than maintenance.
+
+967
+00:41:44,160 --> 00:41:46,290
+Through our technical discussions,
+
+968
+00:41:46,290 --> 00:41:49,560
+we also continue to discuss
+with engineering team
+
+969
+00:41:49,560 --> 00:41:52,950
+around various optimization opportunities.
+
+970
+00:41:52,950 --> 00:41:55,309
+For example, we are already
+talking with the team
+
+971
+00:41:55,309 --> 00:41:58,113
+around Karpenter for more
+efficient node scaling,
+
+972
+00:41:59,310 --> 00:42:03,480
+as well as Provisioned Control
+Plane scaling, and much more.
+
+973
+00:42:03,480 --> 00:42:07,170
+Now, all of these technical
+discussions happen organically
+
+974
+00:42:07,170 --> 00:42:09,320
+through our Enterprise
+Support partnership.
+
+975
+00:42:10,860 --> 00:42:13,830
+And at last, we are also exploring
+
+976
+00:42:13,830 --> 00:42:17,700
+the different AWS native
+services across compute,
+
+977
+00:42:17,700 --> 00:42:19,650
+networking, database
+
+978
+00:42:19,650 --> 00:42:23,283
+to add more resilience into
+the platform capabilities.
+
+979
+00:42:24,690 --> 00:42:26,820
+With this, I'll hand it back to Mans
+
+980
+00:42:26,820 --> 00:42:30,420
+to talk about specific
+improvement metrics that we see,
+
+981
+00:42:30,420 --> 00:42:32,370
+that we are seeing after the migration.
+
+982
+00:42:34,650 --> 00:42:35,483
+- Thank you, Manish.
+
+983
+00:42:35,483 --> 00:42:37,800
+Hopefully everyone's
+still awake in the back.
+
+984
+00:42:37,800 --> 00:42:39,000
+By the way, you all look super cool.
+
+985
+00:42:39,000 --> 00:42:41,130
+It looks like a scene out of "Tron"
+
+986
+00:42:41,130 --> 00:42:43,770
+via futuristic pink headset,
+so it looks amazing.
+
+987
+00:42:43,770 --> 00:42:44,820
+I'd love to take a photo later,
+
+988
+00:42:44,820 --> 00:42:46,440
+but yeah, that's one for later.
+
+989
+00:42:46,440 --> 00:42:50,470
+So I'm gonna, now that
+I've given Pete 12 months
+
+990
+00:42:51,360 --> 00:42:52,830
+for this project, what's the benefit?
+
+991
+00:42:52,830 --> 00:42:54,330
+What do we actually get out of this?
+
+992
+00:42:54,330 --> 00:42:55,890
+So let's have a look.
+
+993
+00:42:55,890 --> 00:42:58,020
+So that pie chart I showed
+you at the beginning
+
+994
+00:42:58,020 --> 00:43:00,420
+where we had 30% as a reminder
+
+995
+00:43:00,420 --> 00:43:02,700
+of kind of what we consider BAU toil,
+
+996
+00:43:02,700 --> 00:43:04,560
+it's now dropped down to 10%.
+
+997
+00:43:04,560 --> 00:43:05,550
+So that's just a reminder.
+
+998
+00:43:05,550 --> 00:43:07,530
+That's things like upgrades,
+and security patches,
+
+999
+00:43:07,530 --> 00:43:09,180
+and other things we love to hate.
+
+1000
+00:43:10,320 --> 00:43:11,780
+So the benefit of that is obviously
+
+1001
+00:43:11,780 --> 00:43:14,520
+50,000 fewer lines of
+code that we've just,
+
+1002
+00:43:14,520 --> 00:43:16,770
+you know, thrown away, which is great.
+
+1003
+00:43:16,770 --> 00:43:19,387
+Our upgrades are now six
+times faster with EKS,
+
+1004
+00:43:19,387 --> 00:43:21,810
+obviously that's a huge benefit.
+
+1005
+00:43:21,810 --> 00:43:24,180
+But what does that actually
+mean for us in reality?
+
+1006
+00:43:24,180 --> 00:43:26,100
+So what what it means is
+that we can now accelerate
+
+1007
+00:43:26,100 --> 00:43:27,510
+what we consider development.
+
+1008
+00:43:27,510 --> 00:43:29,042
+So things like, you know,
+
+1009
+00:43:29,042 --> 00:43:31,440
+rolling out Istio, and
+Karpenter, and Argo.
+
+1010
+00:43:31,440 --> 00:43:32,760
+It's not to say we couldn't have done that
+
+1011
+00:43:32,760 --> 00:43:34,020
+without this migration,
+
+1012
+00:43:34,020 --> 00:43:35,610
+but it's allowed us to accelerate it
+
+1013
+00:43:35,610 --> 00:43:36,720
+and do more in parallel with that.
+
+1014
+00:43:36,720 --> 00:43:39,960
+Ultimately, that's the benefit
+that we've, so, you know,
+
+1015
+00:43:39,960 --> 00:43:41,670
+great work to Pete and the team,
+
+1016
+00:43:41,670 --> 00:43:44,880
+and obviously massive
+help, and thank you to AWS.
+
+1017
+00:43:44,880 --> 00:43:46,080
+But yeah, I mean obviously that it's,
+
+1018
+00:43:46,080 --> 00:43:47,130
+we could not have done that obviously
+
+1019
+00:43:47,130 --> 00:43:48,570
+without this great partnership.
+
+1020
+00:43:48,570 --> 00:43:49,520
+So yeah, thank you.
+
+1021
+00:43:50,878 --> 00:43:53,250
+I'm now gonna hand it over to Ian
+
+1022
+00:43:53,250 --> 00:43:54,900
+who's got some questions for all of us,
+
+1023
+00:43:54,900 --> 00:43:56,563
+so over to you, Ian.
+
+1024
+00:43:56,563 --> 00:43:58,233
+- All right. Thanks, Mans.
+
+1025
+00:43:59,190 --> 00:44:00,780
+So because it's a silent session today,
+
+1026
+00:44:00,780 --> 00:44:03,660
+it's really hard for us to
+do a traditional Q and A.
+
+1027
+00:44:03,660 --> 00:44:06,660
+So we actually were able
+to talk amongst ourselves
+
+1028
+00:44:06,660 --> 00:44:08,760
+and do more like a FAQ.
+
+1029
+00:44:08,760 --> 00:44:10,560
+So what we thought would
+really resonate with you
+
+1030
+00:44:10,560 --> 00:44:12,780
+are questions that we probably
+thought that you would ask.
+
+1031
+00:44:12,780 --> 00:44:14,490
+But we will be hanging around
+
+1032
+00:44:14,490 --> 00:44:15,720
+for a few minutes after the session
+
+1033
+00:44:15,720 --> 00:44:17,175
+if you wanna come and speak to us,
+
+1034
+00:44:17,175 --> 00:44:19,110
+and then, of course,
+you're welcome to do so.
+
+1035
+00:44:19,110 --> 00:44:21,450
+So first question for Mans.
+
+1036
+00:44:21,450 --> 00:44:24,480
+So, Mans, how has the Amazon EKS migration
+
+1037
+00:44:24,480 --> 00:44:27,990
+transformed Peacock's ability
+to deliver major live events
+
+1038
+00:44:27,990 --> 00:44:30,753
+like the Super Bowl, Super
+Bowl and the Olympics?
+
+1039
+00:44:31,890 --> 00:44:32,723
+- Thank you, Ian.
+
+1040
+00:44:32,723 --> 00:44:34,230
+So yeah, I mean as you can imagine
+
+1041
+00:44:34,230 --> 00:44:36,690
+there's a lot less for
+Pete and his team to do
+
+1042
+00:44:36,690 --> 00:44:38,730
+in terms of, you know,
+whether that's scaling,
+
+1043
+00:44:38,730 --> 00:44:39,600
+whether that's testing.
+
+1044
+00:44:39,600 --> 00:44:40,770
+And, you know, like I said,
+
+1045
+00:44:40,770 --> 00:44:42,900
+things like support, it's a lot easier.
+
+1046
+00:44:42,900 --> 00:44:44,610
+We also get the benefits
+of the new features
+
+1047
+00:44:44,610 --> 00:44:47,010
+that Amazon will roll out via EKS.
+
+1048
+00:44:47,010 --> 00:44:48,630
+But it's actually a lot more than EKS,
+
+1049
+00:44:48,630 --> 00:44:50,160
+and what we are looking to do
+
+1050
+00:44:50,160 --> 00:44:52,170
+is kind of transform how, you know,
+
+1051
+00:44:52,170 --> 00:44:53,580
+how we work with kind of managed services,
+
+1052
+00:44:53,580 --> 00:44:55,473
+like things like Keyspaces as well.
+
+1053
+00:44:56,580 --> 00:44:58,770
+Yes, we have obviously large
+events like the Super Bowl,
+
+1054
+00:44:58,770 --> 00:45:00,210
+and the NFL coming up,
+
+1055
+00:45:00,210 --> 00:45:02,373
+but that the key for us is obviously
+
+1056
+00:45:02,373 --> 00:45:04,650
+that the growth kind of internationally.
+
+1057
+00:45:04,650 --> 00:45:05,880
+And I could easily get a call tomorrow
+
+1058
+00:45:05,880 --> 00:45:08,190
+from my boss saying we've
+landed another deal,
+
+1059
+00:45:08,190 --> 00:45:09,750
+another partnership with
+another streaming service,
+
+1060
+00:45:09,750 --> 00:45:12,630
+and we've got another 12
+months to do a migration.
+
+1061
+00:45:12,630 --> 00:45:14,340
+So I think it's more about the mindset
+
+1062
+00:45:14,340 --> 00:45:15,900
+and the tooling that we've
+built as part of this
+
+1063
+00:45:15,900 --> 00:45:17,190
+that's ultimately, you know, given us
+
+1064
+00:45:17,190 --> 00:45:20,430
+that great option going forwards.
+
+1065
+00:45:20,430 --> 00:45:22,320
+- Yeah, brilliant. Thanks, Mans.
+
+1066
+00:45:22,320 --> 00:45:23,190
+And I think, Pete, over to you,
+
+1067
+00:45:23,190 --> 00:45:25,620
+you mentioned earlier in your presentation
+
+1068
+00:45:25,620 --> 00:45:27,930
+that you're hoping to expand
+the migration approach
+
+1069
+00:45:27,930 --> 00:45:29,790
+maybe to, from Kubernetes,
+
+1070
+00:45:29,790 --> 00:45:31,230
+but maybe to like database
+
+1071
+00:45:31,230 --> 00:45:34,320
+or content delivery networking
+or something like this.
+
+1072
+00:45:34,320 --> 00:45:35,730
+So can you tell us a
+little bit more about that?
+
+1073
+00:45:35,730 --> 00:45:36,563
+That'd be great.
+
+1074
+00:45:38,280 --> 00:45:39,113
+- Yeah, sure.
+
+1075
+00:45:39,113 --> 00:45:43,710
+So as I sort of touched
+on in the presentation,
+
+1076
+00:45:43,710 --> 00:45:46,350
+I think the key for us is ensuring
+
+1077
+00:45:46,350 --> 00:45:48,780
+that we follow a declarative way,
+
+1078
+00:45:48,780 --> 00:45:50,940
+not just for application deployment
+
+1079
+00:45:50,940 --> 00:45:53,940
+but for all aspects of
+the developer ecosystem
+
+1080
+00:45:53,940 --> 00:45:55,800
+and lifecycle.
+
+1081
+00:45:55,800 --> 00:45:59,040
+And I think traditionally
+what we've needed to do
+
+1082
+00:45:59,040 --> 00:46:01,500
+is build our own controllers.
+- Yeah.
+
+1083
+00:46:01,500 --> 00:46:05,493
+- And we have a set of
+engineers within the team
+
+1084
+00:46:05,493 --> 00:46:06,840
+that this is really something,
+
+1085
+00:46:06,840 --> 00:46:07,890
+that's their bread and butter
+
+1086
+00:46:07,890 --> 00:46:09,780
+is to be able to build those controllers.
+
+1087
+00:46:09,780 --> 00:46:11,460
+And we've built a number
+of them over the years,
+
+1088
+00:46:11,460 --> 00:46:13,650
+and this is pre-CoreDNS.
+
+1089
+00:46:13,650 --> 00:46:14,760
+We were building controllers
+
+1090
+00:46:14,760 --> 00:46:17,490
+to manage Route 53 zone delegation
+
+1091
+00:46:17,490 --> 00:46:19,560
+through the Ingress resource
+and all of that other stuff.
+
+1092
+00:46:19,560 --> 00:46:22,950
+Obviously, now the industry
+really is leaning in
+
+1093
+00:46:22,950 --> 00:46:27,120
+to the declarative-controller-based
+eventual consistency.
+
+1094
+00:46:27,120 --> 00:46:29,610
+And I think we are really excited to see
+
+1095
+00:46:29,610 --> 00:46:31,800
+what's coming out of, in particular, AWS.
+
+1096
+00:46:31,800 --> 00:46:36,181
+So I think tools such as ACK or KROs,
+
+1097
+00:46:36,181 --> 00:46:38,370
+AWS controllers for Kubernetes,
+
+1098
+00:46:38,370 --> 00:46:40,470
+I think are gonna be game changing for us,
+
+1099
+00:46:40,470 --> 00:46:41,427
+and that we can just use that.
+
+1100
+00:46:41,427 --> 00:46:43,440
+And I know it was actually
+announced a couple of days ago,
+
+1101
+00:46:43,440 --> 00:46:46,350
+the fact that that's now
+gonna be an EKS capability
+
+1102
+00:46:46,350 --> 00:46:47,790
+that we can just enable,
+
+1103
+00:46:47,790 --> 00:46:49,800
+as well as things like Argo CDs
+
+1104
+00:46:49,800 --> 00:46:52,260
+is just totally game changing for us.
+
+1105
+00:46:52,260 --> 00:46:55,380
+But if I pivot back to
+things like Keyspaces
+
+1106
+00:46:55,380 --> 00:46:57,210
+and CDN configuration,
+
+1107
+00:46:57,210 --> 00:46:59,700
+I think we, right now,
+are actively working
+
+1108
+00:46:59,700 --> 00:47:03,240
+on building controllers and
+contributing to controllers
+
+1109
+00:47:03,240 --> 00:47:06,480
+to be able to manage those aspects of the,
+
+1110
+00:47:06,480 --> 00:47:07,800
+essentially, the ecosystem.
+
+1111
+00:47:07,800 --> 00:47:09,960
+But the important part for us
+
+1112
+00:47:09,960 --> 00:47:11,970
+is making sure that the
+way that is declared
+
+1113
+00:47:11,970 --> 00:47:14,190
+is not technology specific.
+
+1114
+00:47:14,190 --> 00:47:18,390
+It needs to be declaring
+what the developer wants
+
+1115
+00:47:18,390 --> 00:47:22,290
+from that aspect, whether
+it is a relational database
+
+1116
+00:47:22,290 --> 00:47:26,360
+or whether it is the ability
+to expose their app on a CDN
+
+1117
+00:47:26,360 --> 00:47:27,840
+or add in caching,
+
+1118
+00:47:27,840 --> 00:47:30,570
+it should not be related to
+the technology under the hood.
+
+1119
+00:47:30,570 --> 00:47:32,070
+So that in the future,
+
+1120
+00:47:32,070 --> 00:47:35,220
+if we need to go and move
+to a different technology
+
+1121
+00:47:35,220 --> 00:47:38,640
+or a different CDN or we
+want to expose more CDNs,
+
+1122
+00:47:38,640 --> 00:47:43,050
+we don't need to then
+go and ask 1,600, 1,800,
+
+1123
+00:47:43,050 --> 00:47:45,390
+however many developers that we may have,
+
+1124
+00:47:45,390 --> 00:47:47,670
+to go and make those
+changes on their codebase.
+
+1125
+00:47:47,670 --> 00:47:48,810
+That data's there,
+
+1126
+00:47:48,810 --> 00:47:51,840
+we can make that change on
+the platform engineering side.
+
+1127
+00:47:51,840 --> 00:47:52,860
+- Yeah, and I think, you know, look,
+
+1128
+00:47:52,860 --> 00:47:53,910
+I think that's super interesting,
+
+1129
+00:47:53,910 --> 00:47:56,520
+and I think probably
+the people here today,
+
+1130
+00:47:56,520 --> 00:47:58,410
+and I think perhaps in the future,
+
+1131
+00:47:58,410 --> 00:47:59,460
+I'm sure you'll talk about it again,
+
+1132
+00:47:59,460 --> 00:48:01,080
+but I think it's a really
+interesting approach
+
+1133
+00:48:01,080 --> 00:48:03,300
+that I think people can
+really benefit from.
+
+1134
+00:48:03,300 --> 00:48:04,590
+And it kind of leads me nicely
+
+1135
+00:48:04,590 --> 00:48:07,080
+onto the next question for Manish.
+
+1136
+00:48:07,080 --> 00:48:09,870
+So, Manish, have you observed
+similar migration needs
+
+1137
+00:48:09,870 --> 00:48:12,000
+among other AWS customers
+
+1138
+00:48:12,000 --> 00:48:13,350
+in the way that Global Streaming
+
+1139
+00:48:13,350 --> 00:48:16,320
+have migrated to Amazon EKS?
+
+1140
+00:48:16,320 --> 00:48:17,280
+- Yes, in fact we do.
+
+1141
+00:48:17,280 --> 00:48:18,990
+Like we do see other customers
+
+1142
+00:48:18,990 --> 00:48:21,300
+going through similar migration journey,
+
+1143
+00:48:21,300 --> 00:48:22,680
+but they all do in isolation,
+
+1144
+00:48:22,680 --> 00:48:24,840
+because I appreciate there is not a lot
+
+1145
+00:48:24,840 --> 00:48:27,900
+of publicly referenceable
+documentation at this moment
+
+1146
+00:48:27,900 --> 00:48:29,490
+around these kind of journeys.
+
+1147
+00:48:29,490 --> 00:48:30,570
+So I'm really grateful
+
+1148
+00:48:30,570 --> 00:48:33,900
+that Global Streaming
+is sharing the journey
+
+1149
+00:48:33,900 --> 00:48:35,010
+with the wider audience.
+
+1150
+00:48:35,010 --> 00:48:36,900
+And I'm hoping that we can follow it up
+
+1151
+00:48:36,900 --> 00:48:40,410
+with probably like a further
+white paper or a blog post
+
+1152
+00:48:40,410 --> 00:48:43,770
+so that we can distribute
+it with the wider audience
+
+1153
+00:48:43,770 --> 00:48:44,820
+- Yeah, I mean, now, look,
+
+1154
+00:48:44,820 --> 00:48:45,810
+I think from my perspective,
+
+1155
+00:48:45,810 --> 00:48:47,850
+there's a lot from people to learn from
+
+1156
+00:48:47,850 --> 00:48:49,860
+like yourself, Mans and Pete.
+
+1157
+00:48:49,860 --> 00:48:51,990
+I think what you've done
+here is really interesting
+
+1158
+00:48:51,990 --> 00:48:52,890
+and kinda like super cool.
+
+1159
+00:48:52,890 --> 00:48:55,500
+I think if we can blog
+about it in the future
+
+1160
+00:48:55,500 --> 00:48:56,850
+or perhaps a customer use case,
+
+1161
+00:48:56,850 --> 00:48:57,810
+I think that I, you know,
+
+1162
+00:48:57,810 --> 00:49:00,720
+I think people would
+really appreciate that.
+
+1163
+00:49:00,720 --> 00:49:02,340
+So changing track a little bit now,
+
+1164
+00:49:02,340 --> 00:49:04,083
+as Peacock expands, Mans,
+
+1165
+00:49:05,280 --> 00:49:06,780
+how's the modernized infrastructure
+
+1166
+00:49:06,780 --> 00:49:08,943
+supported your overall growth strategy?
+
+1167
+00:49:10,260 --> 00:49:13,102
+- Yeah, I think speed to
+market is absolutely key.
+
+1168
+00:49:13,102 --> 00:49:15,090
+And, you know, like I said,
+we could easily, you know,
+
+1169
+00:49:15,090 --> 00:49:17,460
+sign a deal with a
+another streaming service,
+
+1170
+00:49:17,460 --> 00:49:19,550
+you know, in a matter of days
+and given another 12 months.
+
+1171
+00:49:19,550 --> 00:49:21,480
+So I think speed to market,
+
+1172
+00:49:21,480 --> 00:49:23,430
+and rather us having to provision
+
+1173
+00:49:23,430 --> 00:49:25,320
+and write a lot of our
+own infrastructure code
+
+1174
+00:49:25,320 --> 00:49:26,490
+is using managed service.
+
+1175
+00:49:26,490 --> 00:49:27,700
+Whether that's persistence,
+whether that's CDN,
+
+1176
+00:49:27,700 --> 00:49:31,200
+whether that's actual
+Kubernetes clusters itself,
+
+1177
+00:49:31,200 --> 00:49:33,780
+I think it just gives
+us that speed of market.
+
+1178
+00:49:33,780 --> 00:49:36,330
+Key for us is a lot of these
+new kind of partnerships
+
+1179
+00:49:36,330 --> 00:49:37,163
+that we're making
+
+1180
+00:49:37,163 --> 00:49:37,996
+are kind of global.
+- Yeah.
+
+1181
+00:49:37,996 --> 00:49:40,200
+- So, you know, we could get
+a call, you know, next week
+
+1182
+00:49:40,200 --> 00:49:42,390
+to say that we've signed a
+deal with someone in Asia
+
+1183
+00:49:42,390 --> 00:49:44,280
+or in Australia or in South America.
+
+1184
+00:49:44,280 --> 00:49:46,410
+So I think absolutely key
+is the speed to market,
+
+1185
+00:49:46,410 --> 00:49:48,210
+and we only really get that by using
+
+1186
+00:49:48,210 --> 00:49:51,330
+more and more kind of managed
+services with yourselves.
+
+1187
+00:49:51,330 --> 00:49:52,380
+- Yeah, I think that's amazing.
+
+1188
+00:49:52,380 --> 00:49:54,660
+And I think obviously speed to
+market really counts, right?
+
+1189
+00:49:54,660 --> 00:49:58,530
+So Pete, just a quick another
+question for yourself.
+
+1190
+00:49:58,530 --> 00:49:59,910
+You talked about your team's approach
+
+1191
+00:49:59,910 --> 00:50:01,277
+to testing and automation.
+
+1192
+00:50:01,277 --> 00:50:04,110
+I know we talked about
+Application Recovery Controller
+
+1193
+00:50:04,110 --> 00:50:05,340
+and Fault Injection Simulator,
+
+1194
+00:50:05,340 --> 00:50:07,470
+and these kind of technologies.
+
+1195
+00:50:07,470 --> 00:50:09,240
+How are you testing recovery capabilities
+
+1196
+00:50:09,240 --> 00:50:10,650
+and resilience for live sports again,
+
+1197
+00:50:10,650 --> 00:50:12,573
+like the Super Bowl or the Olympics?
+
+1198
+00:50:15,780 --> 00:50:18,810
+- Yeah, I think you can probably
+tell testing and automation
+
+1199
+00:50:18,810 --> 00:50:22,710
+is like at the heart
+of like my department.
+
+1200
+00:50:22,710 --> 00:50:24,840
+It's something that we
+all pride ourselves in,
+
+1201
+00:50:24,840 --> 00:50:26,790
+and it's always the
+first thing that we ask
+
+1202
+00:50:26,790 --> 00:50:28,863
+whenever starting any new project.
+
+1203
+00:50:29,970 --> 00:50:32,850
+And that also means that
+it's built into our culture.
+
+1204
+00:50:32,850 --> 00:50:35,550
+So when we look at our platform,
+
+1205
+00:50:35,550 --> 00:50:37,500
+we're constantly looking at ways
+
+1206
+00:50:37,500 --> 00:50:38,940
+that we can further validate,
+
+1207
+00:50:38,940 --> 00:50:40,500
+and essentially break our platform
+
+1208
+00:50:40,500 --> 00:50:44,010
+or find those particular breaking points.
+
+1209
+00:50:44,010 --> 00:50:47,100
+And I think something like
+AWS Fault Injection Service
+
+1210
+00:50:47,100 --> 00:50:50,610
+or FIS has been really valuable.
+
+1211
+00:50:50,610 --> 00:50:51,690
+We've been heavily using that
+
+1212
+00:50:51,690 --> 00:50:53,040
+over the last sort of 12 months
+
+1213
+00:50:53,040 --> 00:50:53,873
+or so.
+- Yeah.
+
+1214
+00:50:53,873 --> 00:50:55,770
+- Since it got launched.
+
+1215
+00:50:55,770 --> 00:50:57,660
+And that really allows
+us to validate things
+
+1216
+00:50:57,660 --> 00:51:00,180
+like zonal failures or regional failovers,
+
+1217
+00:51:00,180 --> 00:51:02,250
+all these sorts of things.
+
+1218
+00:51:02,250 --> 00:51:03,750
+That's absolutely key.
+
+1219
+00:51:03,750 --> 00:51:05,010
+But I think another tool,
+
+1220
+00:51:05,010 --> 00:51:06,140
+and I know you mentioned it as well,
+
+1221
+00:51:06,140 --> 00:51:08,583
+is the AWS Recovery Controller.
+
+1222
+00:51:09,660 --> 00:51:10,890
+What we're now looking to do,
+
+1223
+00:51:10,890 --> 00:51:13,560
+and this is really only possible
+
+1224
+00:51:13,560 --> 00:51:16,800
+via us being able to
+free up that BAU time,
+
+1225
+00:51:16,800 --> 00:51:18,210
+is we want to now pivot
+
+1226
+00:51:18,210 --> 00:51:22,860
+towards being able to be
+totally regional tolerant.
+
+1227
+00:51:22,860 --> 00:51:24,840
+So we want to be able to
+use something like ARC
+
+1228
+00:51:24,840 --> 00:51:27,840
+to fully fall over to a different region.
+
+1229
+00:51:27,840 --> 00:51:29,820
+But alongside that, things
+like chaos engineering
+
+1230
+00:51:29,820 --> 00:51:32,070
+and chaos testing within
+the Kubernetes cluster
+
+1231
+00:51:32,070 --> 00:51:33,780
+is again something that we really want
+
+1232
+00:51:33,780 --> 00:51:36,900
+to sort of try and focus on and build.
+
+1233
+00:51:36,900 --> 00:51:39,810
+We don't want to have all of
+the testing and automation
+
+1234
+00:51:39,810 --> 00:51:42,030
+that we did as part of
+this migration lost.
+
+1235
+00:51:42,030 --> 00:51:43,680
+We want to continue evolving that.
+
+1236
+00:51:43,680 --> 00:51:44,640
+It shouldn't just be
+
+1237
+00:51:44,640 --> 00:51:45,810
+a one shot.
+- Yeah.
+
+1238
+00:51:45,810 --> 00:51:47,250
+- This has to just be something
+
+1239
+00:51:47,250 --> 00:51:50,010
+that we continually lean into
+
+1240
+00:51:50,010 --> 00:51:52,530
+for essentially ensuring that things
+
+1241
+00:51:52,530 --> 00:51:56,070
+like the Peacock Super
+Bowl actually works.
+
+1242
+00:51:56,070 --> 00:51:58,320
+- Yeah, I mean certainly,
+
+1243
+00:51:58,320 --> 00:52:00,540
+we're hoping that is the case for sure.
+
+1244
+00:52:00,540 --> 00:52:01,800
+I think that kind of segues now.
+
+1245
+00:52:01,800 --> 00:52:04,920
+So Manish, what preparations
+are being prioritized
+
+1246
+00:52:04,920 --> 00:52:07,290
+to ensure the optimal view experience
+
+1247
+00:52:07,290 --> 00:52:09,270
+for large scale events?
+
+1248
+00:52:09,270 --> 00:52:11,460
+- Yes, so as Pete said,
+
+1249
+00:52:11,460 --> 00:52:15,360
+like the teams across Global
+Streaming do rigorous testing
+
+1250
+00:52:15,360 --> 00:52:19,080
+in preparation for all of
+these big live event games.
+
+1251
+00:52:19,080 --> 00:52:24,080
+So what we have been recommending
+to the team is to go for,
+
+1252
+00:52:24,401 --> 00:52:27,030
+like another engagement
+within AWS Enterprise Support,
+
+1253
+00:52:27,030 --> 00:52:29,190
+which is AWS Countdown Premium.
+
+1254
+00:52:29,190 --> 00:52:32,280
+So it gives you much more support
+
+1255
+00:52:32,280 --> 00:52:34,440
+while doing these testing phases.
+
+1256
+00:52:34,440 --> 00:52:38,130
+So our recommendation has been
+to get this Countdown Premium
+
+1257
+00:52:38,130 --> 00:52:39,690
+at the start of your testing life cycle.
+
+1258
+00:52:39,690 --> 00:52:42,240
+So that whichever designated
+engineer is coming in,
+
+1259
+00:52:42,240 --> 00:52:45,930
+they have more context
+around the live event games,
+
+1260
+00:52:45,930 --> 00:52:50,340
+your scale, anything that
+you hit on the roadblocks
+
+1261
+00:52:50,340 --> 00:52:51,173
+so they're aware.
+
+1262
+00:52:51,173 --> 00:52:55,320
+So that when the big day comes,
+everything has been tested.
+
+1263
+00:52:55,320 --> 00:52:59,460
+Every AWS, there is heightened
+AWS support awareness
+
+1264
+00:52:59,460 --> 00:53:01,860
+so that there is nothing
+that could go wrong
+
+1265
+00:53:01,860 --> 00:53:04,200
+on the day of the main live events.
+
+1266
+00:53:04,200 --> 00:53:05,321
+- Yeah, thanks, Manish.
+
+1267
+00:53:05,321 --> 00:53:06,513
+I think that's absolutely critical.
+
+1268
+00:53:06,513 --> 00:53:10,050
+So I think we've got time for
+perhaps one last question.
+
+1269
+00:53:10,050 --> 00:53:11,970
+- So let me throw a question
+back at you, I guess, Ian.
+
+1270
+00:53:11,970 --> 00:53:15,540
+So obviously I've touched on
+kind of our global ambition,
+
+1271
+00:53:15,540 --> 00:53:18,030
+and obviously not just
+kind of global reach,
+
+1272
+00:53:18,030 --> 00:53:19,800
+so kind of a lot of things
+we wanna do with Gen AI
+
+1273
+00:53:19,800 --> 00:53:20,880
+and kind of the features,
+
+1274
+00:53:20,880 --> 00:53:24,390
+but can you give, I guess, all of us,
+
+1275
+00:53:24,390 --> 00:53:27,120
+kind of an insight into
+what you have in your world
+
+1276
+00:53:27,120 --> 00:53:28,320
+over the next couple of years
+
+1277
+00:53:28,320 --> 00:53:30,960
+that will kind of help us
+push towards that next stage
+
+1278
+00:53:30,960 --> 00:53:33,030
+in terms of our ambitions globally?
+
+1279
+00:53:33,030 --> 00:53:35,820
+- Yeah, I mean I think
+that's a really good question
+
+1280
+00:53:35,820 --> 00:53:37,950
+for where we are at re:Invent, right?
+
+1281
+00:53:37,950 --> 00:53:40,170
+So I think we're seeing new services
+
+1282
+00:53:40,170 --> 00:53:41,720
+and features sign up every day.
+
+1283
+00:53:42,630 --> 00:53:44,138
+I think it was really,
+
+1284
+00:53:44,138 --> 00:53:44,971
+I think we're really relieved
+
+1285
+00:53:44,971 --> 00:53:47,640
+to see Amazon EKS
+Provisioned Control Plane
+
+1286
+00:53:47,640 --> 00:53:49,830
+turn up as a pre-invent item.
+
+1287
+00:53:49,830 --> 00:53:51,570
+I think that's helped us out quite a bit.
+
+1288
+00:53:51,570 --> 00:53:55,260
+But look, I think we
+have a roundup next week.
+
+1289
+00:53:55,260 --> 00:53:57,450
+I think there's so much
+to come from re:Invent,
+
+1290
+00:53:57,450 --> 00:53:58,914
+and obviously I'd encourage you now
+
+1291
+00:53:58,914 --> 00:54:02,430
+to attend as many sessions
+as possible like this,
+
+1292
+00:54:02,430 --> 00:54:05,250
+but also a lot of the
+service announcements.
+
+1293
+00:54:05,250 --> 00:54:07,980
+And then I think the same
+for everyone here today.
+
+1294
+00:54:07,980 --> 00:54:11,220
+You know, I really encourage
+you to get out there,
+
+1295
+00:54:11,220 --> 00:54:13,530
+really make the most of re:Invent,
+
+1296
+00:54:13,530 --> 00:54:16,170
+and really look at all of the new services
+
+1297
+00:54:16,170 --> 00:54:19,710
+and features that are now being
+released on a daily basis.
+
+1298
+00:54:19,710 --> 00:54:23,493
+So I think with that now,
+we will close the session.
+
+1299
+00:54:24,450 --> 00:54:26,790
+And, but I'd really, really like
+
+1300
+00:54:26,790 --> 00:54:30,417
+to thank Mans and Pete for their time
+
+1301
+00:54:30,417 --> 00:54:32,580
+and for their partnership.
+
+1302
+00:54:32,580 --> 00:54:35,760
+I think I hope you found
+the story of their journey
+
+1303
+00:54:35,760 --> 00:54:40,760
+to Amazon as EKS as inspiring as we do.
+
+1304
+00:54:40,890 --> 00:54:42,270
+And look, I'd encourage you
+
+1305
+00:54:42,270 --> 00:54:44,010
+to get out there for
+the rest of re:Invent.
+
+1306
+00:54:44,010 --> 00:54:45,390
+Really enjoy your time here,
+
+1307
+00:54:45,390 --> 00:54:48,660
+and thank you so much today
+for your time and attention.
+
+1308
+00:54:48,660 --> 00:54:49,667
+Thank you very much.
+
+1309
+00:54:49,667 --> 00:54:50,500
+(audience applauds)
+
+1310
+00:54:50,500 --> 00:54:52,293
+- Thank you, everyone.
+- Thanks.
+

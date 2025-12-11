@@ -1,0 +1,1837 @@
+1
+00:00:01,770 --> 00:00:03,480
+- Hey everyone, thank you so much
+
+2
+00:00:03,480 --> 00:00:05,370
+for joining us this afternoon.
+
+3
+00:00:05,370 --> 00:00:06,660
+I'm Philip from Baseten,
+
+4
+00:00:06,660 --> 00:00:09,240
+and I'm going to be talking
+about high performance inference
+
+5
+00:00:09,240 --> 00:00:10,953
+for Frontier AI models.
+
+6
+00:00:12,000 --> 00:00:13,830
+Really quickly, we're
+gonna cover a few things.
+
+7
+00:00:13,830 --> 00:00:16,500
+We're gonna cover the idea
+of inference engineering,
+
+8
+00:00:16,500 --> 00:00:19,050
+the rise of open source foundation models,
+
+9
+00:00:19,050 --> 00:00:21,480
+the components of an inference stack,
+
+10
+00:00:21,480 --> 00:00:23,700
+including runtime
+performance optimization,
+
+11
+00:00:23,700 --> 00:00:25,050
+and infrastructure.
+
+12
+00:00:25,050 --> 00:00:27,633
+And then look at what
+that does in production.
+
+13
+00:00:28,680 --> 00:00:30,540
+So I'm from Baseten.
+
+14
+00:00:30,540 --> 00:00:32,370
+We like to say Baseten is inference.
+
+15
+00:00:32,370 --> 00:00:33,960
+We are an inference provider.
+
+16
+00:00:33,960 --> 00:00:36,090
+We're in the AWS marketplace
+
+17
+00:00:36,090 --> 00:00:38,490
+and we serve open source,
+
+18
+00:00:38,490 --> 00:00:41,280
+fine tuned and custom
+models on infrastructure
+
+19
+00:00:41,280 --> 00:00:43,080
+that's purpose built for production.
+
+20
+00:00:44,310 --> 00:00:47,310
+We think about inference
+in a few different parts.
+
+21
+00:00:47,310 --> 00:00:49,110
+Number one is performance.
+
+22
+00:00:49,110 --> 00:00:51,420
+At the runtime level,
+you want to make sure
+
+23
+00:00:51,420 --> 00:00:56,400
+that your actual GPU is
+utilized to its fullest extent
+
+24
+00:00:56,400 --> 00:00:58,950
+to create the highest possible throughput
+
+25
+00:00:58,950 --> 00:01:01,170
+at the lowest possible latency.
+
+26
+00:01:01,170 --> 00:01:02,580
+On the infrastructure level
+
+27
+00:01:02,580 --> 00:01:06,360
+once you have that incredibly
+efficient model service,
+
+28
+00:01:06,360 --> 00:01:08,490
+eventually you're gonna
+have enough traffic
+
+29
+00:01:08,490 --> 00:01:10,260
+that you are going to be saturating it.
+
+30
+00:01:10,260 --> 00:01:12,360
+So you need to be able
+to scale horizontally
+
+31
+00:01:12,360 --> 00:01:14,790
+to two replicas, 10 replicas, a hundred,
+
+32
+00:01:14,790 --> 00:01:19,050
+a thousand replicas, across
+clusters and across regions.
+
+33
+00:01:19,050 --> 00:01:21,000
+And then all of that needs to be wrapped
+
+34
+00:01:21,000 --> 00:01:23,280
+in a delightful developer experience
+
+35
+00:01:23,280 --> 00:01:24,960
+and delivered with hands-on support
+
+36
+00:01:24,960 --> 00:01:27,123
+from expert forward deployed engineers.
+
+37
+00:01:28,170 --> 00:01:30,720
+So why did we build this?
+
+38
+00:01:30,720 --> 00:01:32,190
+Why does all of this exist?
+
+39
+00:01:32,190 --> 00:01:35,910
+It really starts with open
+source frontier AI models,
+
+40
+00:01:35,910 --> 00:01:39,870
+and today there are well over
+2 million open source models
+
+41
+00:01:39,870 --> 00:01:41,370
+on Hugging Face.
+
+42
+00:01:41,370 --> 00:01:44,880
+This is up from just a
+few tens of thousands,
+
+43
+00:01:44,880 --> 00:01:46,590
+four or five years ago.
+
+44
+00:01:46,590 --> 00:01:47,550
+And with these models,
+
+45
+00:01:47,550 --> 00:01:50,550
+it's not just about the
+number, it's about the quality.
+
+46
+00:01:50,550 --> 00:01:52,740
+Open source models are
+now routinely hitting
+
+47
+00:01:52,740 --> 00:01:56,010
+frontier quality across
+different parameter sizes.
+
+48
+00:01:56,010 --> 00:01:59,580
+When you look at stuff like
+the Kimi K2 Thinking model,
+
+49
+00:01:59,580 --> 00:02:02,250
+or think back to January Deep Seek R1,
+
+50
+00:02:02,250 --> 00:02:06,060
+we see open source models
+finally crossing the gap
+
+51
+00:02:06,060 --> 00:02:10,380
+versus closed models and
+delivering frontier intelligence.
+
+52
+00:02:10,380 --> 00:02:14,160
+But it's not just for LLMs
+though, doing this in voice.
+
+53
+00:02:14,160 --> 00:02:17,760
+We have outstanding models for
+automatic speech recognition
+
+54
+00:02:17,760 --> 00:02:20,700
+for text-to-speech
+generation for diarization,
+
+55
+00:02:20,700 --> 00:02:22,650
+we have great image generation models
+
+56
+00:02:22,650 --> 00:02:24,480
+from FLUX and Stable Diffusion.
+
+57
+00:02:24,480 --> 00:02:28,260
+We have models for generating
+and processing videos,
+
+58
+00:02:28,260 --> 00:02:29,880
+as well as embedding models
+
+59
+00:02:29,880 --> 00:02:33,450
+that can be used for all kinds
+of tasks on various data,
+
+60
+00:02:33,450 --> 00:02:36,390
+including both text data
+and multimodal data.
+
+61
+00:02:36,390 --> 00:02:38,460
+So with all of these different models,
+
+62
+00:02:38,460 --> 00:02:41,580
+all at frontier Quality,
+you need something
+
+63
+00:02:41,580 --> 00:02:43,743
+that we call inference engineering.
+
+64
+00:02:44,760 --> 00:02:47,040
+So inference engineering is the process
+
+65
+00:02:47,040 --> 00:02:49,920
+of running AI models in production,
+
+66
+00:02:49,920 --> 00:02:52,549
+and there are three
+principles that kind of define
+
+67
+00:02:52,549 --> 00:02:54,930
+this engineering practice.
+
+68
+00:02:54,930 --> 00:02:56,010
+The first is the idea
+
+69
+00:02:56,010 --> 00:02:58,890
+that optimization requires constraints.
+
+70
+00:02:58,890 --> 00:03:01,500
+So if we're going to optimize
+our systems performance,
+
+71
+00:03:01,500 --> 00:03:03,780
+we need a goal that
+we're optimizing toward.
+
+72
+00:03:03,780 --> 00:03:06,090
+We can't just try and make
+it better at everything.
+
+73
+00:03:06,090 --> 00:03:07,890
+The second is that scale unlocks
+
+74
+00:03:07,890 --> 00:03:09,630
+more performance techniques.
+
+75
+00:03:09,630 --> 00:03:11,520
+If we're going to use something like
+
+76
+00:03:11,520 --> 00:03:14,160
+large scale parallelism, disaggregation,
+
+77
+00:03:14,160 --> 00:03:15,540
+or other performance techniques,
+
+78
+00:03:15,540 --> 00:03:17,850
+we're going to need enough traffic
+
+79
+00:03:17,850 --> 00:03:21,030
+that we can cost effectively
+leverage the hardware required
+
+80
+00:03:21,030 --> 00:03:22,920
+to actually pull this off.
+
+81
+00:03:22,920 --> 00:03:24,900
+And finally, we're going
+to need to stay dynamic.
+
+82
+00:03:24,900 --> 00:03:27,173
+We're going to not configure our system
+
+83
+00:03:27,173 --> 00:03:29,880
+runtime statically and deploy it.
+
+84
+00:03:29,880 --> 00:03:33,570
+We want our system to be able
+to update itself in real time
+
+85
+00:03:33,570 --> 00:03:36,090
+to adjust to the different
+traffic configuration
+
+86
+00:03:36,090 --> 00:03:39,183
+that's coming in from our live user base.
+
+87
+00:03:40,200 --> 00:03:41,820
+And one thing I like to talk about
+
+88
+00:03:41,820 --> 00:03:45,150
+to sort of illustrate these
+points is the idea of, you know,
+
+89
+00:03:45,150 --> 00:03:46,860
+I'm a big fan of the NFL,
+
+90
+00:03:46,860 --> 00:03:48,960
+and one of the reasons that
+I like watching the NFL
+
+91
+00:03:48,960 --> 00:03:50,790
+is you see those guys
+out there on the field
+
+92
+00:03:50,790 --> 00:03:52,890
+and they're big, they're
+fast, they're strong,
+
+93
+00:03:52,890 --> 00:03:54,360
+and they're playing the sport,
+
+94
+00:03:54,360 --> 00:03:57,720
+but they're not as big as Sumo wrestlers,
+
+95
+00:03:57,720 --> 00:03:59,910
+they're not as fast as Olympic sprinters,
+
+96
+00:03:59,910 --> 00:04:03,960
+they're not as strong as a
+say champion power lifter.
+
+97
+00:04:03,960 --> 00:04:05,520
+And I think this is a useful lesson
+
+98
+00:04:05,520 --> 00:04:07,500
+when it comes to inference optimization.
+
+99
+00:04:07,500 --> 00:04:09,840
+Sometimes it's easy to get
+caught up in just trying
+
+100
+00:04:09,840 --> 00:04:12,090
+to be number one on whatever benchmark.
+
+101
+00:04:12,090 --> 00:04:13,680
+What really matters is making sure
+
+102
+00:04:13,680 --> 00:04:15,810
+that you have the right
+mix of capabilities
+
+103
+00:04:15,810 --> 00:04:19,443
+to actually serve the unique
+needs of your application.
+
+104
+00:04:21,210 --> 00:04:24,570
+And a great example of
+someone who's really found
+
+105
+00:04:24,570 --> 00:04:26,640
+that balance is OpenEvidence.
+
+106
+00:04:26,640 --> 00:04:29,790
+So the easiest way for me
+to explain OpenEvidence
+
+107
+00:04:29,790 --> 00:04:31,830
+is it's a chat application
+
+108
+00:04:31,830 --> 00:04:36,180
+for doctors to be able to
+get up to date information.
+
+109
+00:04:36,180 --> 00:04:41,180
+And so there were massively
+successful AI healthcare startup
+
+110
+00:04:41,970 --> 00:04:45,420
+and the CTOs said about Baseten
+that we support billions
+
+111
+00:04:45,420 --> 00:04:48,450
+of custom and fine-tuned
+LLM calls per week
+
+112
+00:04:48,450 --> 00:04:50,850
+for serving high stakes
+medical information
+
+113
+00:04:50,850 --> 00:04:52,830
+to healthcare providers
+at just about every
+
+114
+00:04:52,830 --> 00:04:55,590
+major healthcare facility in the country.
+
+115
+00:04:55,590 --> 00:04:57,630
+So how do you achieve this scale?
+
+116
+00:04:57,630 --> 00:05:00,870
+How do you do that with
+this excellent performance
+
+117
+00:05:00,870 --> 00:05:04,323
+and reliably enough to be
+used in a healthcare setting?
+
+118
+00:05:06,840 --> 00:05:10,263
+So that really comes down to
+the idea of an inference stack.
+
+119
+00:05:11,190 --> 00:05:13,200
+Again, inference is multiple parts.
+
+120
+00:05:13,200 --> 00:05:16,050
+You need both the runtime
+component, you need to make sure
+
+121
+00:05:16,050 --> 00:05:19,350
+that your individual GPU is
+working as well as possible.
+
+122
+00:05:19,350 --> 00:05:21,120
+And you need the infrastructure component.
+
+123
+00:05:21,120 --> 00:05:23,580
+You need to make sure that you can scale
+
+124
+00:05:23,580 --> 00:05:26,853
+that optimized instance
+across many, many replicas.
+
+125
+00:05:27,810 --> 00:05:29,460
+So let's start with the runtime layer.
+
+126
+00:05:29,460 --> 00:05:30,753
+What does that look like?
+
+127
+00:05:31,590 --> 00:05:34,620
+So inference runtime is
+really about applied research.
+
+128
+00:05:34,620 --> 00:05:36,630
+There's all of these
+really interesting papers
+
+129
+00:05:36,630 --> 00:05:38,430
+that are constantly getting published.
+
+130
+00:05:38,430 --> 00:05:40,770
+You know, NeurIPS is
+in San Diego right now.
+
+131
+00:05:40,770 --> 00:05:43,530
+There's a lot of really great
+research happening there.
+
+132
+00:05:43,530 --> 00:05:46,710
+And the question is, how do you
+take these ideas from papers
+
+133
+00:05:46,710 --> 00:05:49,200
+and actually apply them in production?
+
+134
+00:05:49,200 --> 00:05:53,250
+So one of the major pieces
+of optimization technology
+
+135
+00:05:53,250 --> 00:05:55,530
+that we use often is quantization.
+
+136
+00:05:55,530 --> 00:05:56,940
+Quantization is the idea
+
+137
+00:05:56,940 --> 00:05:59,520
+of moving from say like a 16-bit
+
+138
+00:05:59,520 --> 00:06:01,590
+floating point number
+format down to eight bits
+
+139
+00:06:01,590 --> 00:06:05,190
+or four bits so that you
+can access higher power
+
+140
+00:06:05,190 --> 00:06:08,070
+tensor cores as well as access
+
+141
+00:06:08,070 --> 00:06:10,710
+or take better advantage
+of your memory bandwidth
+
+142
+00:06:10,710 --> 00:06:13,920
+by sending less data with
+each pass through the model.
+
+143
+00:06:13,920 --> 00:06:16,230
+So we think about
+quantization both in terms
+
+144
+00:06:16,230 --> 00:06:19,020
+of being really selective
+with the formats we're using.
+
+145
+00:06:19,020 --> 00:06:21,420
+I just gave a talk at Nvidia's
+booth yesterday over there
+
+146
+00:06:21,420 --> 00:06:24,060
+about everything we're doing with NVF P4,
+
+147
+00:06:24,060 --> 00:06:28,200
+which is a new micro scaling
+data format with Blackwell.
+
+148
+00:06:28,200 --> 00:06:31,500
+And then we also think carefully
+about what we quantize.
+
+149
+00:06:31,500 --> 00:06:34,440
+Quantization isn't as simple
+as taking your entire model,
+
+150
+00:06:34,440 --> 00:06:36,360
+chucking it in your model optimizer
+
+151
+00:06:36,360 --> 00:06:38,610
+and bringing out a quantized model.
+
+152
+00:06:38,610 --> 00:06:41,280
+You want to think
+carefully about quantizing,
+
+153
+00:06:41,280 --> 00:06:43,890
+maybe just weights, just
+weights and activations.
+
+154
+00:06:43,890 --> 00:06:47,100
+Maybe you can carefully
+quantize the KV cache to FP8.
+
+155
+00:06:47,100 --> 00:06:49,110
+You probably wanna leave attention alone.
+
+156
+00:06:49,110 --> 00:06:51,480
+And even within these neural networks,
+
+157
+00:06:51,480 --> 00:06:53,070
+within each of these components,
+
+158
+00:06:53,070 --> 00:06:54,960
+maybe you quantize only the middle layers
+
+159
+00:06:54,960 --> 00:06:57,450
+and leave the input and
+output layers intact.
+
+160
+00:06:57,450 --> 00:06:59,640
+So there's a lot of granularity
+
+161
+00:06:59,640 --> 00:07:01,980
+that you can do in
+quantization to make sure
+
+162
+00:07:01,980 --> 00:07:03,363
+that you preserve quality.
+
+163
+00:07:04,260 --> 00:07:07,890
+Another main driver for us of
+performance is speculation.
+
+164
+00:07:07,890 --> 00:07:09,330
+Speculative decoding.
+
+165
+00:07:09,330 --> 00:07:11,280
+You can use these different algorithms
+
+166
+00:07:11,280 --> 00:07:13,080
+to generate draft tokens,
+
+167
+00:07:13,080 --> 00:07:16,290
+which increases tokens per
+second on memory bound decode.
+
+168
+00:07:16,290 --> 00:07:17,550
+With every pass through the model,
+
+169
+00:07:17,550 --> 00:07:19,440
+we can create more than one token,
+
+170
+00:07:19,440 --> 00:07:20,940
+which is really promising.
+
+171
+00:07:20,940 --> 00:07:23,460
+With speculation we do a
+lot of different algorithms.
+
+172
+00:07:23,460 --> 00:07:25,980
+Some of the ones that are
+seeing really great results
+
+173
+00:07:25,980 --> 00:07:30,570
+right now are EAGLE-3 which
+uses a sort of specialized
+
+174
+00:07:30,570 --> 00:07:32,940
+trained model to do the speculation.
+
+175
+00:07:32,940 --> 00:07:35,190
+The model takes hidden
+states from the target model
+
+176
+00:07:35,190 --> 00:07:36,900
+and generates draft tokens.
+
+177
+00:07:36,900 --> 00:07:40,590
+We also do a lot of look ahead
+decoding, engram speculation,
+
+178
+00:07:40,590 --> 00:07:42,570
+especially in the code completion field
+
+179
+00:07:42,570 --> 00:07:44,820
+where you have a very
+constrained vocabulary.
+
+180
+00:07:46,380 --> 00:07:49,590
+Another really important
+optimization for us is caching.
+
+181
+00:07:49,590 --> 00:07:52,170
+We do a lot of KV cache aware routing
+
+182
+00:07:52,170 --> 00:07:56,070
+to ensure high hit
+weights on KV cache reuse.
+
+183
+00:07:56,070 --> 00:07:58,740
+And with KV cache aware routing,
+
+184
+00:07:58,740 --> 00:08:01,650
+this is especially important
+for stuff like code completion.
+
+185
+00:08:01,650 --> 00:08:05,280
+So a customer of ours,
+Zed, which is a IDE,
+
+186
+00:08:05,280 --> 00:08:07,980
+was able to with the
+Baseten inference stack,
+
+187
+00:08:07,980 --> 00:08:10,890
+including a good deal of KV cache reuse,
+
+188
+00:08:10,890 --> 00:08:13,590
+achieve 2x faster
+end-to-end code completion.
+
+189
+00:08:13,590 --> 00:08:17,070
+So as you're typing, those
+suggestions pop up twice as fast
+
+190
+00:08:17,070 --> 00:08:19,440
+with a 45% lower P90 latency
+
+191
+00:08:19,440 --> 00:08:22,980
+and 3.5x faster or
+higher system throughput.
+
+192
+00:08:22,980 --> 00:08:24,420
+So that's just one example of
+
+193
+00:08:24,420 --> 00:08:26,610
+what these techniques can achieve.
+
+194
+00:08:26,610 --> 00:08:29,550
+A couple other things we think
+about a lot are parallelism,
+
+195
+00:08:29,550 --> 00:08:32,040
+especially with the rise
+of mixture of experts
+
+196
+00:08:32,040 --> 00:08:34,080
+as the predominant architecture
+
+197
+00:08:34,080 --> 00:08:36,270
+within large scale language models.
+
+198
+00:08:36,270 --> 00:08:39,120
+You have techniques like
+tensor and export parallelism
+
+199
+00:08:39,120 --> 00:08:40,800
+that need to be carefully balanced
+
+200
+00:08:40,800 --> 00:08:42,840
+to ensure that you're
+making the right trade-offs
+
+201
+00:08:42,840 --> 00:08:44,490
+between latency and throughput
+
+202
+00:08:44,490 --> 00:08:47,520
+and also with other modalities
+like video generation,
+
+203
+00:08:47,520 --> 00:08:50,610
+which challenge even
+eight 8XB 200 systems.
+
+204
+00:08:50,610 --> 00:08:53,430
+You need approaches
+like context parallelism
+
+205
+00:08:53,430 --> 00:08:56,490
+to ensure that you are
+able to split attention
+
+206
+00:08:56,490 --> 00:08:58,860
+across these eight GPUs
+
+207
+00:08:58,860 --> 00:09:00,933
+and use all of your compute efficiently.
+
+208
+00:09:01,890 --> 00:09:03,990
+And finally, one more runtime optimization
+
+209
+00:09:03,990 --> 00:09:06,450
+I'm really excited about is disaggregation
+
+210
+00:09:06,450 --> 00:09:09,510
+where you separate prefill and
+decode onto separate workers
+
+211
+00:09:09,510 --> 00:09:11,130
+that scale independently.
+
+212
+00:09:11,130 --> 00:09:13,200
+This allows you to do
+a lot of these things
+
+213
+00:09:13,200 --> 00:09:16,350
+I just talked about as
+well as adopting different,
+
+214
+00:09:16,350 --> 00:09:17,550
+you know, kernel strategies,
+
+215
+00:09:17,550 --> 00:09:21,090
+different run times and
+specialize each of your workers
+
+216
+00:09:21,090 --> 00:09:24,840
+for the specific challenge of
+either compute bound prefill
+
+217
+00:09:24,840 --> 00:09:26,580
+or memory bandwidth bound decode.
+
+218
+00:09:26,580 --> 00:09:28,710
+So disaggregation, another thing supported
+
+219
+00:09:28,710 --> 00:09:31,170
+by Dynamo by the way, is another one
+
+220
+00:09:31,170 --> 00:09:32,700
+of these model performance techniques
+
+221
+00:09:32,700 --> 00:09:35,640
+that we've found a lot of interest in.
+
+222
+00:09:35,640 --> 00:09:37,560
+But again, all of that together,
+
+223
+00:09:37,560 --> 00:09:39,330
+I just went through five of the primary
+
+224
+00:09:39,330 --> 00:09:40,890
+model performance techniques.
+
+225
+00:09:40,890 --> 00:09:44,130
+Even if you do a world class
+job of implementing those,
+
+226
+00:09:44,130 --> 00:09:45,420
+that's not going to be enough
+
+227
+00:09:45,420 --> 00:09:46,890
+for your production inference service.
+
+228
+00:09:46,890 --> 00:09:50,010
+You also need the
+infrastructure to match that.
+
+229
+00:09:50,010 --> 00:09:53,550
+And a big part of the
+infrastructure component
+
+230
+00:09:53,550 --> 00:09:55,800
+is the idea of autoscaling.
+
+231
+00:09:55,800 --> 00:09:58,650
+So a lot of companies, especially
+companies that start out
+
+232
+00:09:58,650 --> 00:10:00,660
+with large training clusters,
+
+233
+00:10:00,660 --> 00:10:03,870
+end up with sort of fixed
+amounts of GPU capacity.
+
+234
+00:10:03,870 --> 00:10:06,840
+The problem with fixed
+GPU capacity for inference
+
+235
+00:10:06,840 --> 00:10:10,800
+is that traffic fluctuates
+maybe for business applications.
+
+236
+00:10:10,800 --> 00:10:13,740
+It's highest during business
+hours, lower overnight,
+
+237
+00:10:13,740 --> 00:10:15,270
+lower on the weekends.
+
+238
+00:10:15,270 --> 00:10:17,970
+And when you have fluctuating
+traffic, you know,
+
+239
+00:10:17,970 --> 00:10:20,730
+maybe you are a consumer application
+
+240
+00:10:20,730 --> 00:10:22,800
+and sometimes you go viral on TikTok
+
+241
+00:10:22,800 --> 00:10:24,630
+and get a million users overnight,
+
+242
+00:10:24,630 --> 00:10:26,550
+some days it's a lot quieter.
+
+243
+00:10:26,550 --> 00:10:29,670
+In these cases, your static capacity
+
+244
+00:10:29,670 --> 00:10:32,550
+is not going to be a great
+match for your traffic.
+
+245
+00:10:32,550 --> 00:10:35,490
+When traffic is low, you're
+gonna have wasted spend.
+
+246
+00:10:35,490 --> 00:10:36,930
+And when traffic is high,
+
+247
+00:10:36,930 --> 00:10:38,670
+even with all of these optimizations,
+
+248
+00:10:38,670 --> 00:10:40,170
+your system won't have enough throughput,
+
+249
+00:10:40,170 --> 00:10:42,480
+you'll start missing SLAs.
+
+250
+00:10:42,480 --> 00:10:44,070
+So that's where autoscaling comes in
+
+251
+00:10:44,070 --> 00:10:46,590
+to closely match the GPU capacity
+
+252
+00:10:46,590 --> 00:10:49,590
+that you're provisioning at
+any given time to your traffic.
+
+253
+00:10:49,590 --> 00:10:52,800
+At Baseten, we do a lot of traffic based
+
+254
+00:10:52,800 --> 00:10:54,540
+autoscaling decisions
+
+255
+00:10:54,540 --> 00:10:57,960
+and we're able to get this
+capacity via something
+
+256
+00:10:57,960 --> 00:11:01,200
+that we call multi-cluster
+capacity management.
+
+257
+00:11:01,200 --> 00:11:04,380
+While many inference services
+rely on only capacity
+
+258
+00:11:04,380 --> 00:11:05,670
+within a single region,
+
+259
+00:11:05,670 --> 00:11:08,190
+so let's say you are only in US-East-1,
+
+260
+00:11:08,190 --> 00:11:10,500
+you build your entire
+inference system there.
+
+261
+00:11:10,500 --> 00:11:12,750
+With multi-cluster capacity management,
+
+262
+00:11:12,750 --> 00:11:16,110
+you are able to pool compute
+across multiple regions,
+
+263
+00:11:16,110 --> 00:11:18,630
+across multiple independent clusters.
+
+264
+00:11:18,630 --> 00:11:20,910
+And with a single global control plane,
+
+265
+00:11:20,910 --> 00:11:23,730
+treat it as a unified
+resource where you're able to,
+
+266
+00:11:23,730 --> 00:11:25,650
+if you have say 10 replicas,
+
+267
+00:11:25,650 --> 00:11:28,350
+schedule I don't know, eight
+of them on one instance,
+
+268
+00:11:28,350 --> 00:11:30,600
+two on the other, that gets you, you know,
+
+269
+00:11:30,600 --> 00:11:32,790
+great things like active
+active reliability
+
+270
+00:11:32,790 --> 00:11:36,930
+across regions and makes
+sure that you have access
+
+271
+00:11:36,930 --> 00:11:39,570
+to both more capacity, more resilience,
+
+272
+00:11:39,570 --> 00:11:42,750
+as well as more geographic
+proximity to your end users
+
+273
+00:11:42,750 --> 00:11:45,093
+for globally distributed applications.
+
+274
+00:11:46,290 --> 00:11:48,300
+And that matters because no matter
+
+275
+00:11:48,300 --> 00:11:50,640
+how fast you make your model server,
+
+276
+00:11:50,640 --> 00:11:52,560
+no matter how fast this bid is
+
+277
+00:11:52,560 --> 00:11:55,320
+where the actual inference
+workload is running.
+
+278
+00:11:55,320 --> 00:11:57,540
+If your network latency is slow
+
+279
+00:11:57,540 --> 00:11:59,760
+because you're sending a
+request from, I don't know,
+
+280
+00:11:59,760 --> 00:12:02,790
+Singapore to California and back,
+
+281
+00:12:02,790 --> 00:12:05,160
+or if your queue depth is high
+
+282
+00:12:05,160 --> 00:12:08,670
+because you are waiting on, you
+know, you only have 10 GPUs,
+
+283
+00:12:08,670 --> 00:12:10,980
+but you have 20 GPUs worth of traffic,
+
+284
+00:12:10,980 --> 00:12:13,320
+no matter how fast this model service is
+
+285
+00:12:13,320 --> 00:12:16,230
+from that inference runtime
+layer we talked about earlier,
+
+286
+00:12:16,230 --> 00:12:18,690
+your end-to-end inference
+time is going to suffer.
+
+287
+00:12:18,690 --> 00:12:22,200
+So that's why it matters
+to do both the runtime
+
+288
+00:12:22,200 --> 00:12:26,580
+and the infrastructure
+optimizations together
+
+289
+00:12:26,580 --> 00:12:28,593
+to ensure great end-to-end latency.
+
+290
+00:12:30,000 --> 00:12:33,930
+And a another sort of customer
+who's experienced this
+
+291
+00:12:33,930 --> 00:12:36,630
+is a company called Latent.
+
+292
+00:12:36,630 --> 00:12:39,180
+Latent is a pharmaceutical search company
+
+293
+00:12:39,180 --> 00:12:42,840
+and they like to talk
+about how we save them
+
+294
+00:12:42,840 --> 00:12:45,570
+a lot of stress and developer time
+
+295
+00:12:45,570 --> 00:12:48,330
+in implementing highly reliable inference
+
+296
+00:12:48,330 --> 00:12:50,730
+with this multi-cluster strategy
+
+297
+00:12:50,730 --> 00:12:53,070
+and with these autoscaling capabilities
+
+298
+00:12:53,070 --> 00:12:55,370
+within the inference
+optimized infrastructure.
+
+299
+00:12:57,330 --> 00:12:59,670
+But everything I've talked about so far
+
+300
+00:12:59,670 --> 00:13:01,710
+has been mostly focused on the idea
+
+301
+00:13:01,710 --> 00:13:03,450
+of large language models.
+
+302
+00:13:03,450 --> 00:13:05,340
+And I feel like large language models
+
+303
+00:13:05,340 --> 00:13:08,190
+and AI deservedly somewhat synonymous,
+
+304
+00:13:08,190 --> 00:13:10,650
+but there's a lot of other modalities
+
+305
+00:13:10,650 --> 00:13:12,750
+of open source models
+like we were talking about
+
+306
+00:13:12,750 --> 00:13:13,590
+at the beginning.
+
+307
+00:13:13,590 --> 00:13:16,140
+There's image generation
+models, video generation
+
+308
+00:13:16,140 --> 00:13:19,110
+and vetting models,
+text-to-speech, speech-to-text,
+
+309
+00:13:19,110 --> 00:13:22,113
+and all sorts of novel
+modalities being developed today.
+
+310
+00:13:23,070 --> 00:13:27,840
+So a great example of
+adapting this specific setup
+
+311
+00:13:27,840 --> 00:13:32,430
+to a given modality is the
+idea of embedding inference.
+
+312
+00:13:32,430 --> 00:13:35,850
+So embedding models take text as input
+
+313
+00:13:35,850 --> 00:13:37,770
+and output vectors that encode
+
+314
+00:13:37,770 --> 00:13:40,170
+the semantic meaning of that text.
+
+315
+00:13:40,170 --> 00:13:42,810
+And I should say also though,
+multimodal embedding models
+
+316
+00:13:42,810 --> 00:13:46,380
+that take images of videos
+and encode those similarly.
+
+317
+00:13:46,380 --> 00:13:50,040
+So if you have this great capability
+
+318
+00:13:50,040 --> 00:13:51,780
+around running language models,
+
+319
+00:13:51,780 --> 00:13:54,720
+well how do you then turn
+around and run embedding models?
+
+320
+00:13:54,720 --> 00:13:56,190
+It turns out that embedding models
+
+321
+00:13:56,190 --> 00:13:58,080
+like many other modalities
+
+322
+00:13:58,080 --> 00:14:00,390
+are architecturally very, very similar
+
+323
+00:14:00,390 --> 00:14:01,890
+to large language models.
+
+324
+00:14:01,890 --> 00:14:04,890
+Most of the frontier quality
+embedding models today
+
+325
+00:14:04,890 --> 00:14:07,740
+are stuff like EmbeddingGemma, Qwen Embed.
+
+326
+00:14:07,740 --> 00:14:10,080
+These models that are
+built out of open source
+
+327
+00:14:10,080 --> 00:14:11,430
+large language models.
+
+328
+00:14:11,430 --> 00:14:15,270
+As such, you can use the
+same runtime at the end here
+
+329
+00:14:15,270 --> 00:14:18,030
+if you're able to build the
+rest of the system around it.
+
+330
+00:14:18,030 --> 00:14:20,130
+Sort of a common theme in
+what I've been talking about
+
+331
+00:14:20,130 --> 00:14:21,720
+with inference today.
+
+332
+00:14:21,720 --> 00:14:25,110
+So for example, for based
+on embedding inference,
+
+333
+00:14:25,110 --> 00:14:27,810
+you would have a model
+server sitting in front of it
+
+334
+00:14:27,810 --> 00:14:29,520
+to process the requests.
+
+335
+00:14:29,520 --> 00:14:31,530
+A multi-worker tokenizer
+
+336
+00:14:31,530 --> 00:14:34,950
+that's able to take the
+generally hundreds of thousands
+
+337
+00:14:34,950 --> 00:14:37,830
+of individual sentences
+or individual inputs
+
+338
+00:14:37,830 --> 00:14:40,740
+that might be batched together
+in a single inference request
+
+339
+00:14:40,740 --> 00:14:43,410
+to a embedding model in particular,
+
+340
+00:14:43,410 --> 00:14:45,510
+stick it into a batch manager,
+
+341
+00:14:45,510 --> 00:14:48,930
+queue it up and have a,
+you know, take advantage
+
+342
+00:14:48,930 --> 00:14:51,870
+of the same sort of token
+by token inflight batching,
+
+343
+00:14:51,870 --> 00:14:54,930
+continuous batching mechanism
+that your runtime provides
+
+344
+00:14:54,930 --> 00:14:57,450
+for language models and
+then all of a sudden
+
+345
+00:14:57,450 --> 00:15:00,240
+you have the same high
+quality inference service
+
+346
+00:15:00,240 --> 00:15:02,250
+in a completely novel modality.
+
+347
+00:15:02,250 --> 00:15:03,630
+So we've done this for embeddings,
+
+348
+00:15:03,630 --> 00:15:07,140
+we've done this for
+speech-to-text, for text-to-speech
+
+349
+00:15:07,140 --> 00:15:09,210
+for image generation,
+for video generation.
+
+350
+00:15:09,210 --> 00:15:11,460
+So all six major modalities of model
+
+351
+00:15:11,460 --> 00:15:12,693
+that you could think of.
+
+352
+00:15:14,130 --> 00:15:18,750
+And a customer of ours who's
+using this is Superhuman.
+
+353
+00:15:18,750 --> 00:15:21,330
+You might know them as
+they were recently acquired
+
+354
+00:15:21,330 --> 00:15:25,740
+by Grammarly who then themselves
+rebranded as superhuman.
+
+355
+00:15:25,740 --> 00:15:27,870
+So Loic, he was the CTO
+
+356
+00:15:27,870 --> 00:15:31,080
+of the original Superhuman email app.
+
+357
+00:15:31,080 --> 00:15:33,570
+With this Baseten embedding inference,
+
+358
+00:15:33,570 --> 00:15:37,230
+they were able to cut
+the P95 latency by 80%
+
+359
+00:15:37,230 --> 00:15:39,990
+across tons of different
+fine tune embedding models
+
+360
+00:15:39,990 --> 00:15:42,270
+that power key features in their app.
+
+361
+00:15:42,270 --> 00:15:44,460
+And you'll notice one
+thing I like to highlight,
+
+362
+00:15:44,460 --> 00:15:48,711
+I'm always proudest to
+highlight these P90, these P95,
+
+363
+00:15:48,711 --> 00:15:50,550
+P99 latency gains
+
+364
+00:15:50,550 --> 00:15:54,540
+because they show the impact
+of this two part problem
+
+365
+00:15:54,540 --> 00:15:56,520
+that I've been talking
+about all day up here,
+
+366
+00:15:56,520 --> 00:15:59,130
+which is, you know, it's not
+enough to be able to run fast.
+
+367
+00:15:59,130 --> 00:16:01,320
+You need to be able to run fast reliably.
+
+368
+00:16:01,320 --> 00:16:03,390
+And that comes not only from the runtime
+
+369
+00:16:03,390 --> 00:16:05,313
+but also from the infrastructure.
+
+370
+00:16:06,900 --> 00:16:09,570
+So to review, if you're going to build
+
+371
+00:16:09,570 --> 00:16:12,000
+inference in production, you
+need to build four things.
+
+372
+00:16:12,000 --> 00:16:14,580
+You need to deliver
+world class performance,
+
+373
+00:16:14,580 --> 00:16:15,750
+state-of-the-art performance
+
+374
+00:16:15,750 --> 00:16:18,690
+in terms of time to first
+token, tokens per second
+
+375
+00:16:18,690 --> 00:16:21,690
+or whatever other metrics matter
+to you and your end users.
+
+376
+00:16:21,690 --> 00:16:24,180
+You need to pair that with infrastructure
+
+377
+00:16:24,180 --> 00:16:27,330
+that delivers four nines
+of better with reliability
+
+378
+00:16:27,330 --> 00:16:29,403
+so that you can trust your applications
+
+379
+00:16:29,403 --> 00:16:33,990
+for mission critical deployments
+in fields like healthcare.
+
+380
+00:16:33,990 --> 00:16:37,560
+You need to be able to scale
+GPU capacity across regions
+
+381
+00:16:37,560 --> 00:16:40,740
+and you know, maybe even
+across different VPCs
+
+382
+00:16:40,740 --> 00:16:42,600
+so that you can handle,
+
+383
+00:16:42,600 --> 00:16:45,690
+you know, AI powered
+applications are growing fast.
+
+384
+00:16:45,690 --> 00:16:48,630
+We see customers routinely
+growing by multiples
+
+385
+00:16:48,630 --> 00:16:51,270
+and multiples compounding
+within a single year.
+
+386
+00:16:51,270 --> 00:16:52,530
+And so you need to be able
+
+387
+00:16:52,530 --> 00:16:56,070
+to very rapidly both
+scale on a month to month
+
+388
+00:16:56,070 --> 00:16:57,120
+sort of global view.
+
+389
+00:16:57,120 --> 00:16:58,770
+You need to be able to scale compute
+
+390
+00:16:58,770 --> 00:17:03,480
+as well as individually
+within any given day.
+
+391
+00:17:03,480 --> 00:17:05,550
+You need to be able to scale automatically
+
+392
+00:17:05,550 --> 00:17:07,500
+up and down with traffic.
+
+393
+00:17:07,500 --> 00:17:09,330
+And then finally, you need
+to be able to do that,
+
+394
+00:17:09,330 --> 00:17:11,490
+not just once, not just for one model,
+
+395
+00:17:11,490 --> 00:17:14,100
+not just for one modality,
+but for any model.
+
+396
+00:17:14,100 --> 00:17:17,190
+Any of the 2 million open
+source models on Hugging Face,
+
+397
+00:17:17,190 --> 00:17:19,770
+any fine tuned model, any customized model
+
+398
+00:17:19,770 --> 00:17:21,960
+that enterprises are
+increasingly turning to
+
+399
+00:17:21,960 --> 00:17:24,570
+to deliver differentiated
+value in production.
+
+400
+00:17:24,570 --> 00:17:27,660
+All four of those things
+need to be done together.
+
+401
+00:17:27,660 --> 00:17:29,910
+Thank you for the time today.
+
+402
+00:17:29,910 --> 00:17:31,560
+I really enjoyed speaking with you.
+
+403
+00:17:31,560 --> 00:17:34,800
+So we're going to be at booth 1632,
+
+404
+00:17:34,800 --> 00:17:38,250
+which is like right over that
+way behind the reddest booth.
+
+405
+00:17:38,250 --> 00:17:40,950
+We've got these artificially
+intelligent T-shirts,
+
+406
+00:17:40,950 --> 00:17:43,500
+we've got a bunch of my
+teammates over there doing demos.
+
+407
+00:17:43,500 --> 00:17:45,810
+If you have any questions
+whatsoever about the content
+
+408
+00:17:45,810 --> 00:17:48,000
+that we talked about today,
+please join me over there.
+
+409
+00:17:48,000 --> 00:17:49,600
+Thank you so much for your time.
+

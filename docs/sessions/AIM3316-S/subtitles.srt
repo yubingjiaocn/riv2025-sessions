@@ -1,0 +1,4787 @@
+1
+00:00:00,125 --> 00:00:03,375
+(audience chattering)
+
+2
+00:00:04,830 --> 00:00:05,940
+- Good morning, everybody.
+
+3
+00:00:05,940 --> 00:00:08,100
+And if you don't have
+your headphones on yet,
+
+4
+00:00:08,100 --> 00:00:09,840
+you might wanna put 'em
+on if you can't hear me
+
+5
+00:00:09,840 --> 00:00:12,300
+from where you are sitting
+up on the front row.
+
+6
+00:00:12,300 --> 00:00:13,290
+But welcome, welcome.
+
+7
+00:00:13,290 --> 00:00:15,090
+I'm Alex. I'm a member of technical staff
+
+8
+00:00:15,090 --> 00:00:16,680
+and Anthropic and I'm joined here by,
+
+9
+00:00:16,680 --> 00:00:17,513
+- Nadine.
+
+10
+00:00:17,513 --> 00:00:19,050
+Hi, I'm Nadine. Nice to meet you all.
+
+11
+00:00:19,050 --> 00:00:20,700
+- Both members of technical staff here.
+
+12
+00:00:20,700 --> 00:00:22,740
+And we're here to tell you about some
+
+13
+00:00:22,740 --> 00:00:24,750
+of the really cool research findings
+
+14
+00:00:24,750 --> 00:00:27,204
+that we've recently published at Anthropic
+
+15
+00:00:27,204 --> 00:00:30,300
+on Long Horizon coding agents.
+
+16
+00:00:30,300 --> 00:00:32,700
+We'd really love for
+you to kind of consider
+
+17
+00:00:32,700 --> 00:00:35,220
+a couple of the lessons
+that we ourselves learned
+
+18
+00:00:35,220 --> 00:00:36,960
+that we're here to share.
+
+19
+00:00:36,960 --> 00:00:39,870
+One of those being that we're
+still the thinkers, right,
+
+20
+00:00:39,870 --> 00:00:42,090
+and that's why I'm
+wearing this thinking cap.
+
+21
+00:00:42,090 --> 00:00:43,140
+We're still the thinkers,
+
+22
+00:00:43,140 --> 00:00:46,740
+even though the agents can
+do a lot of the work for us.
+
+23
+00:00:46,740 --> 00:00:47,790
+That's one of the lessons.
+
+24
+00:00:47,790 --> 00:00:50,610
+That's kind of the societal
+impacts lesson, if you will.
+
+25
+00:00:50,610 --> 00:00:54,090
+And then the second one
+is the technical learnings
+
+26
+00:00:54,090 --> 00:00:55,340
+that we're here to share.
+
+27
+00:00:56,280 --> 00:00:58,784
+- Yeah, so if you're
+here at re:Invent Live,
+
+28
+00:00:58,784 --> 00:01:01,020
+then you might have
+actually seen our demo live
+
+29
+00:01:01,020 --> 00:01:02,340
+in the Anthropics booth,
+
+30
+00:01:02,340 --> 00:01:05,580
+specifically in the Claude
+Keeps Building booth,
+
+31
+00:01:05,580 --> 00:01:08,820
+in which Claude is building
+a project management tool
+
+32
+00:01:08,820 --> 00:01:10,320
+that we're calling Canopy
+
+33
+00:01:10,320 --> 00:01:12,090
+and it's taking in feature requests
+
+34
+00:01:12,090 --> 00:01:13,886
+from attendees like yourself
+
+35
+00:01:13,886 --> 00:01:18,060
+to continuing to iterate on
+the minimum viable product.
+
+36
+00:01:18,060 --> 00:01:22,410
+And so, this is all being
+hosted on AWS infrastructure,
+
+37
+00:01:22,410 --> 00:01:24,810
+specifically AgentCore Runtime.
+
+38
+00:01:24,810 --> 00:01:26,340
+And we'll be going in detail
+
+39
+00:01:26,340 --> 00:01:28,860
+about the architecture
+a little bit later on.
+
+40
+00:01:28,860 --> 00:01:30,590
+But to get started, we just wanna give you
+
+41
+00:01:30,590 --> 00:01:33,690
+a little bit of context
+on why this is important
+
+42
+00:01:33,690 --> 00:01:35,010
+and the lessons that we learned
+
+43
+00:01:35,010 --> 00:01:37,380
+along the way to reach this point.
+
+44
+00:01:37,380 --> 00:01:38,213
+- Yeah.
+
+45
+00:01:38,213 --> 00:01:40,140
+So let's jam with a silent
+disco and get into it.
+
+46
+00:01:40,140 --> 00:01:43,536
+So really, what are long horizon agents?
+
+47
+00:01:43,536 --> 00:01:45,900
+What are we really talking about here?
+
+48
+00:01:45,900 --> 00:01:49,380
+So we've been thinking
+about this in terms of
+
+49
+00:01:49,380 --> 00:01:52,380
+what are the ways that we can teach AI
+
+50
+00:01:52,380 --> 00:01:55,110
+to handle the quote
+unquote, "boring parts."
+
+51
+00:01:55,110 --> 00:01:57,090
+And so when we talk about boring parts,
+
+52
+00:01:57,090 --> 00:02:00,090
+it's very much a tongue in cheek phrase.
+
+53
+00:02:00,090 --> 00:02:01,042
+We, you know, how many of you here
+
+54
+00:02:01,042 --> 00:02:02,392
+are developers in the room?
+
+55
+00:02:03,510 --> 00:02:05,157
+Quite a few of you. Awesome, right?
+
+56
+00:02:05,157 --> 00:02:06,840
+So, if you think about, you know,
+
+57
+00:02:06,840 --> 00:02:10,920
+the development workflow, we
+really want to encourage us
+
+58
+00:02:10,920 --> 00:02:13,320
+to continue to be the thinkers in the room
+
+59
+00:02:13,320 --> 00:02:16,230
+while allowing the AI
+to do some of the things
+
+60
+00:02:16,230 --> 00:02:18,180
+that maybe aren't as exciting.
+
+61
+00:02:18,180 --> 00:02:19,920
+We'll talk about that here soon.
+
+62
+00:02:19,920 --> 00:02:21,840
+But really what we want to do here
+
+63
+00:02:21,840 --> 00:02:23,970
+are the lessons from building agents
+
+64
+00:02:23,970 --> 00:02:26,520
+that work across these many sessions.
+
+65
+00:02:26,520 --> 00:02:27,353
+And that's going to be
+
+66
+00:02:27,353 --> 00:02:30,270
+the technical aspect of this presentation.
+
+67
+00:02:30,270 --> 00:02:33,903
+- So let me ground this
+in developer reality.
+
+68
+00:02:34,800 --> 00:02:38,610
+So as you might all know, your
+Monday plan might start off,
+
+69
+00:02:38,610 --> 00:02:39,443
+you have a few features
+
+70
+00:02:39,443 --> 00:02:41,400
+or maybe like a pretty optimistic one
+
+71
+00:02:41,400 --> 00:02:44,940
+where you wanna work on
+updating some API documentation,
+
+72
+00:02:44,940 --> 00:02:47,850
+maybe writing some unit
+tests for edge cases,
+
+73
+00:02:47,850 --> 00:02:50,070
+maybe fixing a bug,
+
+74
+00:02:50,070 --> 00:02:51,990
+and then finally, if you have the time,
+
+75
+00:02:51,990 --> 00:02:53,816
+work on some sort of innovative feature
+
+76
+00:02:53,816 --> 00:02:57,133
+that you've been wanting
+to get to for a long time.
+
+77
+00:02:57,133 --> 00:03:00,000
+But then reality strikes or hits.
+
+78
+00:03:00,000 --> 00:03:02,190
+And what ends up happening
+is the quick sync
+
+79
+00:03:02,190 --> 00:03:03,720
+that was meant to take 15 minutes
+
+80
+00:03:03,720 --> 00:03:06,060
+might have become a 45
+minute heated debate
+
+81
+00:03:06,060 --> 00:03:09,256
+about the roadmap, or a Sev1 comms
+
+82
+00:03:09,256 --> 00:03:12,180
+and you have to fix some
+sort of production bug.
+
+83
+00:03:12,180 --> 00:03:15,580
+Or there's a 47 message slack thread
+
+84
+00:03:16,470 --> 00:03:20,160
+that requires your input to continue.
+
+85
+00:03:20,160 --> 00:03:21,960
+And so by the time you actually get
+
+86
+00:03:21,960 --> 00:03:26,700
+to opening your IDE and
+working, it's already 4:30.
+
+87
+00:03:26,700 --> 00:03:29,370
+So basically what we were looking to solve
+
+88
+00:03:29,370 --> 00:03:31,200
+and what we were looking to,
+
+89
+00:03:31,200 --> 00:03:33,690
+what we were questioning was whether AI
+
+90
+00:03:33,690 --> 00:03:36,235
+or LLMs specifically could handle
+
+91
+00:03:36,235 --> 00:03:38,310
+some of this more mechanical
+
+92
+00:03:38,310 --> 00:03:40,710
+or repetitive implementation and work,
+
+93
+00:03:40,710 --> 00:03:43,500
+and humans can focus
+on the judgment calls.
+
+94
+00:03:43,500 --> 00:03:44,850
+And I wanna be very clear,
+
+95
+00:03:44,850 --> 00:03:47,580
+we're not saying this is
+like a fix for everything.
+
+96
+00:03:47,580 --> 00:03:49,230
+This is not gonna solve all your problems,
+
+97
+00:03:49,230 --> 00:03:50,850
+won't like free up all your time.
+
+98
+00:03:50,850 --> 00:03:54,153
+What we're saying is that
+we've seen a specific,
+
+99
+00:03:55,260 --> 00:03:56,760
+we've seen specific trends
+
+100
+00:03:56,760 --> 00:04:01,350
+and specific things that work
+for specific types of tasks
+
+101
+00:04:01,350 --> 00:04:03,963
+and we wanna share those
+learnings with you today.
+
+102
+00:04:04,830 --> 00:04:07,710
+So yeah, that's sort of what our focus is.
+
+103
+00:04:07,710 --> 00:04:09,180
+And to get that started,
+
+104
+00:04:09,180 --> 00:04:12,030
+there's a specific challenge
+that we wanna describe
+
+105
+00:04:12,030 --> 00:04:15,633
+and that's the fact that LLMs
+have a fundamental limitation.
+
+106
+00:04:16,590 --> 00:04:19,260
+So yeah, thank you.
+
+107
+00:04:19,260 --> 00:04:23,550
+As you all might know,
+LLMs are forgetful, right?
+
+108
+00:04:23,550 --> 00:04:26,580
+So they're unable to
+keep a persistent memory
+
+109
+00:04:26,580 --> 00:04:27,930
+from session to session.
+
+110
+00:04:27,930 --> 00:04:32,130
+So while in theory, this new
+pair programmer might be great
+
+111
+00:04:32,130 --> 00:04:34,590
+because they love to write
+tests, which is awesome,
+
+112
+00:04:34,590 --> 00:04:37,080
+they never complain about
+updating documentation,
+
+113
+00:04:37,080 --> 00:04:38,340
+which is also great
+
+114
+00:04:38,340 --> 00:04:41,430
+and they follow your
+coding standards to the T,
+
+115
+00:04:41,430 --> 00:04:45,630
+they might forget where they
+left off session to session.
+
+116
+00:04:45,630 --> 00:04:47,400
+And that might seem like a problem,
+
+117
+00:04:47,400 --> 00:04:49,290
+like a problem that we wanna solve.
+
+118
+00:04:49,290 --> 00:04:53,235
+But what we've seen is, while
+this is great, for example,
+
+119
+00:04:53,235 --> 00:04:57,000
+for quick tasks where you have a function,
+
+120
+00:04:57,000 --> 00:05:00,210
+you ask Claude to write a
+function and it finishes it
+
+121
+00:05:00,210 --> 00:05:01,200
+and you're done,
+
+122
+00:05:01,200 --> 00:05:05,024
+for longer projects where
+it might be 200 features
+
+123
+00:05:05,024 --> 00:05:08,400
+that run over hours and maybe days,
+
+124
+00:05:08,400 --> 00:05:11,250
+this feels like it would be a problem.
+
+125
+00:05:11,250 --> 00:05:12,150
+What we've discovered,
+
+126
+00:05:12,150 --> 00:05:14,520
+and this might be a
+little counterintuitive,
+
+127
+00:05:14,520 --> 00:05:17,610
+is that forgetting isn't
+necessarily a bad thing
+
+128
+00:05:17,610 --> 00:05:19,620
+because forgetting means that the model
+
+129
+00:05:19,620 --> 00:05:21,673
+isn't picking up bad habits,
+
+130
+00:05:21,673 --> 00:05:26,673
+it's not sort of reinforcing
+these incorrect assumptions
+
+131
+00:05:27,150 --> 00:05:31,710
+and it's able to
+generally be more focused.
+
+132
+00:05:31,710 --> 00:05:35,070
+So if we solve for this memory externally
+
+133
+00:05:35,070 --> 00:05:36,780
+rather than through the model,
+
+134
+00:05:36,780 --> 00:05:40,470
+then forgetting becomes
+a feature, not a bug.
+
+135
+00:05:40,470 --> 00:05:42,600
+And that's what we're talking about today.
+
+136
+00:05:42,600 --> 00:05:43,433
+- Yeah.
+
+137
+00:05:43,433 --> 00:05:45,540
+And so let's ground this
+in the reality, right?
+
+138
+00:05:45,540 --> 00:05:49,661
+So if we think of us humans,
+it takes quite a while for us
+
+139
+00:05:49,661 --> 00:05:53,220
+to get back into flow
+If we get distracted.
+
+140
+00:05:53,220 --> 00:05:54,870
+You know, some research has shown that
+
+141
+00:05:54,870 --> 00:05:56,700
+it can take 20 minutes for somebody
+
+142
+00:05:56,700 --> 00:05:58,180
+to get back into flow as a developer.
+
+143
+00:05:58,180 --> 00:06:00,270
+I've certainly been there.
+
+144
+00:06:00,270 --> 00:06:02,653
+If you think about us here
+at Vegas and you know,
+
+145
+00:06:02,653 --> 00:06:05,730
+we go out and party and
+we come back the next day,
+
+146
+00:06:05,730 --> 00:06:07,470
+it might take actually quite a bit longer.
+
+147
+00:06:07,470 --> 00:06:08,970
+It might take, you know, an hour
+
+148
+00:06:08,970 --> 00:06:11,787
+before you're back in flow the next day.
+
+149
+00:06:11,787 --> 00:06:13,903
+With the agents they really can do this
+
+150
+00:06:13,903 --> 00:06:15,300
+very, very quickly, right?
+
+151
+00:06:15,300 --> 00:06:17,160
+They can come back into flow very quickly.
+
+152
+00:06:17,160 --> 00:06:19,110
+But there is a fundamental problem
+
+153
+00:06:19,110 --> 00:06:20,670
+and that's the context, right?
+
+154
+00:06:20,670 --> 00:06:23,670
+So while we as humans
+take longer than agents
+
+155
+00:06:23,670 --> 00:06:26,723
+to get into kind of the next session,
+
+156
+00:06:26,723 --> 00:06:30,750
+the issue for the agents
+is, as Nadine was saying,
+
+157
+00:06:30,750 --> 00:06:31,680
+how do we,
+
+158
+00:06:31,680 --> 00:06:32,850
+when the agent wakes up,
+
+159
+00:06:32,850 --> 00:06:35,370
+how does it know what to do next, right?
+
+160
+00:06:35,370 --> 00:06:39,510
+And so each new session
+begins with no real memory
+
+161
+00:06:39,510 --> 00:06:42,530
+of what came before and
+that's both a superpower
+
+162
+00:06:42,530 --> 00:06:44,610
+and a bit of a flaw too, right?
+
+163
+00:06:44,610 --> 00:06:47,790
+So really, we're talking about how do we
+
+164
+00:06:47,790 --> 00:06:50,220
+imbue the agent from session to session
+
+165
+00:06:50,220 --> 00:06:51,840
+with the correct context
+
+166
+00:06:51,840 --> 00:06:55,770
+so that it can continue
+building where it left off.
+
+167
+00:06:55,770 --> 00:06:56,603
+- Yeah.
+
+168
+00:06:56,603 --> 00:06:58,470
+And so this changes sort of how we think
+
+169
+00:06:58,470 --> 00:07:01,080
+of the human AI division of labor
+
+170
+00:07:01,080 --> 00:07:04,250
+and we wanted to show you
+what we found to be effective.
+
+171
+00:07:04,250 --> 00:07:08,075
+So what we've looked at is that
+the human would be in charge
+
+172
+00:07:08,075 --> 00:07:12,270
+of creating the vision
+or designing the vision
+
+173
+00:07:12,270 --> 00:07:16,015
+and the requirements and
+setting the standards
+
+174
+00:07:16,015 --> 00:07:18,480
+and the constraints
+
+175
+00:07:18,480 --> 00:07:22,507
+and actually making the
+architectural decisions
+
+176
+00:07:22,507 --> 00:07:26,100
+and then reviewing the
+outputs of the models.
+
+177
+00:07:26,100 --> 00:07:28,110
+And then the models, the AI builders
+
+178
+00:07:28,110 --> 00:07:30,600
+or more specifically the LLM builders,
+
+179
+00:07:30,600 --> 00:07:33,343
+will be implementing those features
+
+180
+00:07:33,343 --> 00:07:36,297
+following that vision or the guidance.
+
+181
+00:07:36,297 --> 00:07:40,410
+And then the test will
+be done within the like,
+
+182
+00:07:40,410 --> 00:07:42,640
+against the criteria that you've set
+
+183
+00:07:43,560 --> 00:07:45,741
+and the documentation
+will be constantly updated
+
+184
+00:07:45,741 --> 00:07:48,120
+as it works, which is really great.
+
+185
+00:07:48,120 --> 00:07:51,060
+And then it will basically
+iterate on the feedback
+
+186
+00:07:51,060 --> 00:07:52,503
+that you are providing it.
+
+187
+00:07:53,400 --> 00:07:55,530
+And a key word here is,
+
+188
+00:07:55,530 --> 00:07:58,020
+that I wanna emphasize is constraints.
+
+189
+00:07:58,020 --> 00:08:01,380
+So you will have a sort of standards file
+
+190
+00:08:01,380 --> 00:08:03,570
+and this should be read only to the agent.
+
+191
+00:08:03,570 --> 00:08:06,360
+So the agent shouldn't be allowed to go in
+
+192
+00:08:06,360 --> 00:08:10,558
+and edit your style or edit
+your architectural decisions.
+
+193
+00:08:10,558 --> 00:08:12,330
+The way I like to think of it is,
+
+194
+00:08:12,330 --> 00:08:15,049
+you are the architect and the AI
+
+195
+00:08:15,049 --> 00:08:17,861
+or the LLM is sort of the builder
+
+196
+00:08:17,861 --> 00:08:20,673
+that's following the
+blueprint that you designed.
+
+197
+00:08:21,990 --> 00:08:22,920
+So yeah.
+
+198
+00:08:22,920 --> 00:08:24,283
+- So let's talk about what environment
+
+199
+00:08:24,283 --> 00:08:26,700
+as memory really looks like.
+
+200
+00:08:26,700 --> 00:08:28,500
+And this is something that
+we're going to show you
+
+201
+00:08:28,500 --> 00:08:30,540
+in a live demonstration
+here in a few minutes.
+
+202
+00:08:30,540 --> 00:08:33,840
+So we're not just gonna talk
+off the slides I promise.
+
+203
+00:08:33,840 --> 00:08:35,790
+But really, you know,
+there are things that
+
+204
+00:08:35,790 --> 00:08:38,250
+we have to consider when we
+think about the environment.
+
+205
+00:08:38,250 --> 00:08:40,440
+One of those things is
+the feature list, right?
+
+206
+00:08:40,440 --> 00:08:42,497
+So interestingly, we've discovered that
+
+207
+00:08:42,497 --> 00:08:45,533
+if we have the agent
+build up the feature list
+
+208
+00:08:45,533 --> 00:08:48,540
+from a specification,
+this is kind of a form
+
+209
+00:08:48,540 --> 00:08:50,220
+of specification driven development.
+
+210
+00:08:50,220 --> 00:08:51,450
+You've probably heard this before,
+
+211
+00:08:51,450 --> 00:08:53,580
+both as developers and in the AI space.
+
+212
+00:08:53,580 --> 00:08:55,020
+It's almost like, you know,
+
+213
+00:08:55,020 --> 00:08:57,210
+all the old things are new again,
+
+214
+00:08:57,210 --> 00:08:59,670
+we have the agent build up a feature list
+
+215
+00:08:59,670 --> 00:09:01,500
+and that feature list is a JSON file.
+
+216
+00:09:01,500 --> 00:09:03,210
+And again, the reason why it's a JSON file
+
+217
+00:09:03,210 --> 00:09:05,670
+and not a markdown file is
+that we've discovered that
+
+218
+00:09:05,670 --> 00:09:07,680
+if we have it create a JSON file,
+
+219
+00:09:07,680 --> 00:09:09,570
+it's actually less likely
+to write to that file.
+
+220
+00:09:09,570 --> 00:09:11,310
+If we give it instructions to do that
+
+221
+00:09:11,310 --> 00:09:14,310
+than if we had a read me
+file, a markdown file.
+
+222
+00:09:14,310 --> 00:09:16,440
+If we have a markdown file,
+it's more likely to edit it
+
+223
+00:09:16,440 --> 00:09:18,750
+and we don't want it to do
+that once it has come up
+
+224
+00:09:18,750 --> 00:09:20,850
+with the initial specification.
+
+225
+00:09:20,850 --> 00:09:22,350
+So that's very important.
+
+226
+00:09:22,350 --> 00:09:24,291
+As Nadine was saying,
+we also want the agent
+
+227
+00:09:24,291 --> 00:09:27,355
+on every subsequent session
+to have the same standards
+
+228
+00:09:27,355 --> 00:09:29,460
+as it had in the previous session.
+
+229
+00:09:29,460 --> 00:09:31,854
+So we have a Standards MD
+file that we give the agent
+
+230
+00:09:31,854 --> 00:09:34,131
+with the standards of
+whatever development team
+
+231
+00:09:34,131 --> 00:09:36,333
+that you are on, right?
+
+232
+00:09:37,440 --> 00:09:39,720
+There's also a Claude Progress MD file
+
+233
+00:09:39,720 --> 00:09:42,030
+and the Claude Progress MD file is another
+
+234
+00:09:42,030 --> 00:09:43,790
+sort of piece of information
+that we give the agent
+
+235
+00:09:43,790 --> 00:09:47,340
+at the beginning of the
+session so that the new session
+
+236
+00:09:47,340 --> 00:09:50,400
+knows where the previous session left off.
+
+237
+00:09:50,400 --> 00:09:53,370
+That's actually joined
+up with Git commits.
+
+238
+00:09:53,370 --> 00:09:56,340
+So we as developers know
+what that's like, right?
+
+239
+00:09:56,340 --> 00:09:58,976
+If we write good commits,
+next developers that come
+
+240
+00:09:58,976 --> 00:10:02,370
+and look at the code base can
+look at the commit history
+
+241
+00:10:02,370 --> 00:10:03,990
+that previous developers have
+
+242
+00:10:03,990 --> 00:10:06,180
+actually added to the code base, right?
+
+243
+00:10:06,180 --> 00:10:09,930
+And we are learning that
+if we give the agents
+
+244
+00:10:09,930 --> 00:10:12,840
+these same sort of primitives if you will,
+
+245
+00:10:12,840 --> 00:10:14,100
+the agents do a better job.
+
+246
+00:10:14,100 --> 00:10:16,320
+They kind of think like
+us, they work like us.
+
+247
+00:10:16,320 --> 00:10:18,330
+Probably not a surprise
+because we train them right,
+
+248
+00:10:18,330 --> 00:10:21,390
+even though it's on the
+knowledge of the internet.
+
+249
+00:10:21,390 --> 00:10:24,270
+And then finally there is an init.sh file.
+
+250
+00:10:24,270 --> 00:10:25,103
+And it turns out
+
+251
+00:10:25,103 --> 00:10:26,460
+that this is actually
+quite important as well
+
+252
+00:10:26,460 --> 00:10:29,820
+because when the agent
+starts a new session,
+
+253
+00:10:29,820 --> 00:10:32,490
+we want the agent to start
+the dev server, right?
+
+254
+00:10:32,490 --> 00:10:35,220
+We want the agent to
+look at the environment.
+
+255
+00:10:35,220 --> 00:10:36,053
+There are sort of,
+
+256
+00:10:36,053 --> 00:10:38,520
+some things that are quite
+deterministic, right?
+
+257
+00:10:38,520 --> 00:10:41,850
+And those deterministic things
+go into that init.sh file.
+
+258
+00:10:41,850 --> 00:10:43,710
+So there's the non-deterministic nature
+
+259
+00:10:43,710 --> 00:10:45,450
+of what the agent will actually do,
+
+260
+00:10:45,450 --> 00:10:47,400
+but there is the deterministic part
+
+261
+00:10:47,400 --> 00:10:50,460
+of actually getting that
+environment started on each session
+
+262
+00:10:50,460 --> 00:10:53,190
+and started in a very repeatable
+and deterministic way.
+
+263
+00:10:53,190 --> 00:10:55,800
+So that's what the init.sh file is about.
+
+264
+00:10:55,800 --> 00:10:59,490
+And so with that, sorry, I'm
+getting a little bit excited
+
+265
+00:10:59,490 --> 00:11:02,140
+as you can probably tell
+'cause this is a lot of fun,
+
+266
+00:11:03,030 --> 00:11:04,560
+the loop that never breaks, right?
+
+267
+00:11:04,560 --> 00:11:06,480
+So I was talking about kind of,
+
+268
+00:11:06,480 --> 00:11:09,000
+the fundamentals of each environment,
+
+269
+00:11:09,000 --> 00:11:12,510
+but what actually happens
+when the session starts?
+
+270
+00:11:12,510 --> 00:11:13,530
+When the session starts,
+
+271
+00:11:13,530 --> 00:11:15,420
+there's essentially this agentic loop.
+
+272
+00:11:15,420 --> 00:11:17,250
+If you're familiar with, you know,
+
+273
+00:11:17,250 --> 00:11:18,240
+any of the work that we've done
+
+274
+00:11:18,240 --> 00:11:20,910
+and any of the talks we've
+done about what agents are,
+
+275
+00:11:20,910 --> 00:11:22,560
+agents are nothing more than an LLM,
+
+276
+00:11:22,560 --> 00:11:24,240
+it's environment, its tools
+
+277
+00:11:24,240 --> 00:11:26,520
+and running in a loop
+running continuously, right?
+
+278
+00:11:26,520 --> 00:11:29,520
+So the loop that never
+breaks pretty much, you know,
+
+279
+00:11:29,520 --> 00:11:32,070
+from each iteration to each iteration,
+
+280
+00:11:32,070 --> 00:11:34,680
+the agent is going to look
+at its environment first.
+
+281
+00:11:34,680 --> 00:11:37,200
+It's always going to look
+at what happened before
+
+282
+00:11:37,200 --> 00:11:39,690
+and what environment is it working within.
+
+283
+00:11:39,690 --> 00:11:43,500
+It's then going to run the
+test suite to make sure that
+
+284
+00:11:43,500 --> 00:11:45,600
+the things that happened
+in the previous session
+
+285
+00:11:45,600 --> 00:11:47,820
+are still repeatable in the next session.
+
+286
+00:11:47,820 --> 00:11:49,380
+Probably quite familiar to the work
+
+287
+00:11:49,380 --> 00:11:50,400
+that we do as developers.
+
+288
+00:11:50,400 --> 00:11:52,350
+If you're a developer, you know
+that you gotta run the tests
+
+289
+00:11:52,350 --> 00:11:54,030
+to make sure that they still pass
+
+290
+00:11:54,030 --> 00:11:55,770
+from iteration to iteration,
+
+291
+00:11:55,770 --> 00:11:57,780
+that no new regressions have occurred.
+
+292
+00:11:57,780 --> 00:11:59,370
+So this is why we have the agent
+
+293
+00:11:59,370 --> 00:12:01,650
+actually create a test suite and run it
+
+294
+00:12:01,650 --> 00:12:03,860
+every time that the session starts.
+
+295
+00:12:03,860 --> 00:12:06,570
+So there's some basic
+verification that it does.
+
+296
+00:12:06,570 --> 00:12:08,610
+After it's completed the verification,
+
+297
+00:12:08,610 --> 00:12:10,073
+we actually go in and have the agent
+
+298
+00:12:10,073 --> 00:12:12,240
+pick up the next available feature
+
+299
+00:12:12,240 --> 00:12:14,790
+to have the agent start
+working on that feature.
+
+300
+00:12:14,790 --> 00:12:16,290
+As it's working on that feature,
+
+301
+00:12:16,290 --> 00:12:18,600
+it's also continuing to run the tests.
+
+302
+00:12:18,600 --> 00:12:20,070
+And there's some interesting insights here
+
+303
+00:12:20,070 --> 00:12:23,040
+that we'll share about, you
+know, what we found so far,
+
+304
+00:12:23,040 --> 00:12:25,020
+whether it should be a
+single agent, you know,
+
+305
+00:12:25,020 --> 00:12:27,030
+two agents or multiple agents.
+
+306
+00:12:27,030 --> 00:12:28,860
+We'll talk about that here pretty soon.
+
+307
+00:12:28,860 --> 00:12:30,570
+So the agent then continues to build,
+
+308
+00:12:30,570 --> 00:12:32,040
+it continues to implement the feature
+
+309
+00:12:32,040 --> 00:12:35,220
+and this is something we'll
+show you in real time here.
+
+310
+00:12:35,220 --> 00:12:36,300
+And then it's gonna again,
+
+311
+00:12:36,300 --> 00:12:38,370
+test like a human and commit its work
+
+312
+00:12:38,370 --> 00:12:40,410
+because at the end of the
+day we really want the agent
+
+313
+00:12:40,410 --> 00:12:43,230
+to continue to write to the history.
+
+314
+00:12:43,230 --> 00:12:45,810
+We want it to write the
+sort of the progress
+
+315
+00:12:45,810 --> 00:12:47,700
+of the work that it has done.
+
+316
+00:12:47,700 --> 00:12:49,323
+Excuse me, I need some water.
+
+317
+00:12:50,340 --> 00:12:52,140
+See this is why I'm
+human and not an agent.
+
+318
+00:12:52,140 --> 00:12:52,973
+Anyway.
+
+319
+00:12:52,973 --> 00:12:55,890
+So it will write the commits
+and it will write the progress
+
+320
+00:12:55,890 --> 00:12:58,320
+and then eventually, the
+next session will pick up
+
+321
+00:12:58,320 --> 00:13:00,210
+and look at that history
+
+322
+00:13:00,210 --> 00:13:02,952
+and be able to kind of get started again.
+
+323
+00:13:02,952 --> 00:13:03,785
+- Yeah.
+
+324
+00:13:03,785 --> 00:13:05,130
+And this loop sort of emerged
+
+325
+00:13:05,130 --> 00:13:06,300
+from the learnings that we had.
+
+326
+00:13:06,300 --> 00:13:08,460
+So we wanted to like briefly explain
+
+327
+00:13:08,460 --> 00:13:10,290
+to you the breakthroughs
+that we had moving
+
+328
+00:13:10,290 --> 00:13:13,080
+from one-shotting to incremental progress.
+
+329
+00:13:13,080 --> 00:13:15,930
+Initially, the approach we
+worked with, and by yesterday,
+
+330
+00:13:15,930 --> 00:13:17,790
+I mean like around a month ago,
+
+331
+00:13:17,790 --> 00:13:18,960
+what we were working with is,
+
+332
+00:13:18,960 --> 00:13:22,680
+we had an agent that tries to
+implement everything at once.
+
+333
+00:13:22,680 --> 00:13:24,900
+And we noticed that there
+was a bit of an issue
+
+334
+00:13:24,900 --> 00:13:27,840
+with the context running out mid feature,
+
+335
+00:13:27,840 --> 00:13:29,190
+which was not ideal.
+
+336
+00:13:29,190 --> 00:13:31,117
+And we also like realized
+
+337
+00:13:31,117 --> 00:13:35,190
+that the model sometimes
+declared victory a bit too early.
+
+338
+00:13:35,190 --> 00:13:36,180
+It was quite smart.
+
+339
+00:13:36,180 --> 00:13:39,270
+So sometimes it gamed
+its own success criteria
+
+340
+00:13:39,270 --> 00:13:40,500
+and reward hacked.
+
+341
+00:13:40,500 --> 00:13:42,997
+So we noticed that we also,
+so like as Alex mentioned,
+
+342
+00:13:42,997 --> 00:13:45,630
+we noticed that we had
+to explicitly tell it
+
+343
+00:13:45,630 --> 00:13:48,248
+that it was unacceptable
+to remove or edit tests
+
+344
+00:13:48,248 --> 00:13:50,040
+to make them pass.
+
+345
+00:13:50,040 --> 00:13:51,300
+And then what we decided to do
+
+346
+00:13:51,300 --> 00:13:52,680
+and what we found most effective
+
+347
+00:13:52,680 --> 00:13:54,159
+and what we'll be showing you today
+
+348
+00:13:54,159 --> 00:13:56,133
+and we've been showing at the demos,
+
+349
+00:13:58,770 --> 00:13:59,603
+yeah,
+
+350
+00:14:01,329 --> 00:14:06,329
+is that basically we ideally
+work on one feature at a time
+
+351
+00:14:06,660 --> 00:14:08,310
+and this helps with what we mentioned
+
+352
+00:14:08,310 --> 00:14:10,080
+with the context window running out.
+
+353
+00:14:10,080 --> 00:14:12,090
+And then another thing is that
+
+354
+00:14:12,090 --> 00:14:14,783
+we leave the environment in a clean state.
+
+355
+00:14:14,783 --> 00:14:17,587
+So we're using the commits as memory,
+
+356
+00:14:17,587 --> 00:14:20,370
+but we're leaving the actual
+environment clean every time.
+
+357
+00:14:20,370 --> 00:14:22,742
+It starts off with a new feature
+
+358
+00:14:22,742 --> 00:14:26,027
+and the most important thing
+is that it tests end to end
+
+359
+00:14:26,027 --> 00:14:27,600
+like a human would.
+
+360
+00:14:27,600 --> 00:14:30,780
+So we actually give it the
+ability to use browser automation
+
+361
+00:14:30,780 --> 00:14:33,930
+so it can check the UI
+and work through the fixes
+
+362
+00:14:33,930 --> 00:14:36,840
+and the features to see that
+they're actually working
+
+363
+00:14:36,840 --> 00:14:38,877
+and not just working in theory,
+
+364
+00:14:38,877 --> 00:14:42,760
+and this might not sound
+sort of revolutionary,
+
+365
+00:14:42,760 --> 00:14:44,880
+and it seems sort of like
+
+366
+00:14:44,880 --> 00:14:47,903
+what a good engineer would
+do from a day to day,
+
+367
+00:14:47,903 --> 00:14:49,830
+but what we were working on,
+
+368
+00:14:49,830 --> 00:14:51,786
+was trying to explicitly encode this
+
+369
+00:14:51,786 --> 00:14:55,020
+and allow the agent to
+work in this manner.
+
+370
+00:14:55,020 --> 00:14:55,853
+So yeah.
+
+371
+00:14:57,240 --> 00:14:58,950
+- Yeah and that's
+actually by design, right?
+
+372
+00:14:58,950 --> 00:15:00,584
+We in our research have found that
+
+373
+00:15:00,584 --> 00:15:03,810
+the closer we actually mimic
+the developer workflow,
+
+374
+00:15:03,810 --> 00:15:05,010
+the better the agent does.
+
+375
+00:15:05,010 --> 00:15:07,770
+So precisely what Nadine
+was talking about.
+
+376
+00:15:07,770 --> 00:15:09,960
+I will go further and
+talk a little bit more
+
+377
+00:15:09,960 --> 00:15:12,480
+about this 200 feature
+manifesto in a moment.
+
+378
+00:15:12,480 --> 00:15:14,430
+But I want to go back to some of
+
+379
+00:15:14,430 --> 00:15:15,600
+what Nadine was talking about
+
+380
+00:15:15,600 --> 00:15:18,510
+when she was talking about the
+specification and the tests.
+
+381
+00:15:18,510 --> 00:15:20,036
+So we have the agent write the tests
+
+382
+00:15:20,036 --> 00:15:22,050
+as it continues to build.
+
+383
+00:15:22,050 --> 00:15:23,730
+And what we've discovered as well,
+
+384
+00:15:23,730 --> 00:15:27,060
+even just building the demo
+for the booth at booth A10,
+
+385
+00:15:27,060 --> 00:15:28,260
+please come and check it out,
+
+386
+00:15:28,260 --> 00:15:30,180
+and we'll show you some
+of that today as well,
+
+387
+00:15:30,180 --> 00:15:34,500
+is that if the agent is asked
+to write individual tests,
+
+388
+00:15:34,500 --> 00:15:38,322
+what happens is, as the time
+approaches for the agent
+
+389
+00:15:38,322 --> 00:15:40,200
+to complete its work,
+
+390
+00:15:40,200 --> 00:15:44,100
+it will actually run into
+these anxiety attacks.
+
+391
+00:15:44,100 --> 00:15:46,470
+Like, quite literally
+you'll see in the logs,
+
+392
+00:15:46,470 --> 00:15:48,930
+it's saying hey, we
+are running out of time
+
+393
+00:15:48,930 --> 00:15:50,490
+so we better finish this quickly
+
+394
+00:15:50,490 --> 00:15:53,430
+and starts to reward hack
+as Nadine was talking about.
+
+395
+00:15:53,430 --> 00:15:56,040
+And so some of the things
+that you ought to consider
+
+396
+00:15:56,040 --> 00:15:58,230
+when you are building
+this kind of stuff is,
+
+397
+00:15:58,230 --> 00:15:59,850
+how do you prevent those reward hacks
+
+398
+00:15:59,850 --> 00:16:02,160
+and what are some of the ways
+that that can be resolved?
+
+399
+00:16:02,160 --> 00:16:05,162
+And as Nadine was saying,
+if we think about the agent
+
+400
+00:16:05,162 --> 00:16:08,460
+as sort of a junior to
+mid-level developer,
+
+401
+00:16:08,460 --> 00:16:09,937
+then we really arrive at this idea
+
+402
+00:16:09,937 --> 00:16:12,660
+of a 200 feature manifesto, if you will.
+
+403
+00:16:12,660 --> 00:16:14,610
+And it's a little bit of
+work upfront, you know.
+
+404
+00:16:14,610 --> 00:16:15,589
+Building a specification,
+
+405
+00:16:15,589 --> 00:16:18,030
+which we'll actually
+show you an example of
+
+406
+00:16:18,030 --> 00:16:21,780
+that has enough details for
+the agent to do the work well,
+
+407
+00:16:21,780 --> 00:16:25,830
+for the agent to write tests
+is not an easy task upfront,
+
+408
+00:16:25,830 --> 00:16:28,200
+but it pays dividends in the end, right?
+
+409
+00:16:28,200 --> 00:16:29,687
+If you start with a specification
+
+410
+00:16:29,687 --> 00:16:31,980
+that the agent can follow quite closely
+
+411
+00:16:31,980 --> 00:16:34,110
+but still have enough capability
+
+412
+00:16:34,110 --> 00:16:37,560
+to act non deterministically
+and explore different paths,
+
+413
+00:16:37,560 --> 00:16:38,940
+that's kind of the holy grail.
+
+414
+00:16:38,940 --> 00:16:40,920
+So what winds up happening is that,
+
+415
+00:16:40,920 --> 00:16:43,470
+we go from a specification
+which is a markdown file
+
+416
+00:16:43,470 --> 00:16:46,950
+that we as humans write into
+this JSON sort of format
+
+417
+00:16:46,950 --> 00:16:50,370
+that the agent can then
+or is less likely to edit,
+
+418
+00:16:50,370 --> 00:16:52,740
+which we don't want the
+agent to modify this.
+
+419
+00:16:52,740 --> 00:16:56,970
+We want the agent to use
+the JSON file specification
+
+420
+00:16:56,970 --> 00:16:59,490
+and mark tests as passing
+
+421
+00:16:59,490 --> 00:17:02,250
+as it continues to do its
+work from session to session.
+
+422
+00:17:02,250 --> 00:17:04,710
+And so that's kind of the
+interesting thing here.
+
+423
+00:17:04,710 --> 00:17:07,350
+This changes how developers
+spend their time.
+
+424
+00:17:07,350 --> 00:17:08,183
+- Yeah.
+
+425
+00:17:08,183 --> 00:17:09,480
+So we wanted to give you a bit of an idea
+
+426
+00:17:09,480 --> 00:17:11,760
+of what this model would
+look like in practice
+
+427
+00:17:11,760 --> 00:17:15,060
+and how this would change
+for developers like yourself.
+
+428
+00:17:15,060 --> 00:17:16,590
+So we're going from,
+
+429
+00:17:16,590 --> 00:17:18,750
+originally you'd be
+writing the code yourself,
+
+430
+00:17:18,750 --> 00:17:20,850
+you're debugging manually,
+
+431
+00:17:20,850 --> 00:17:23,700
+you're documenting afterwards if at all,
+
+432
+00:17:23,700 --> 00:17:26,820
+and you're probably context
+switching between tasks
+
+433
+00:17:26,820 --> 00:17:29,700
+as you have a lot of different
+fixes at different times.
+
+434
+00:17:29,700 --> 00:17:33,390
+And the model that we're
+envisioning for after is that,
+
+435
+00:17:33,390 --> 00:17:34,800
+you're spending more of your time
+
+436
+00:17:34,800 --> 00:17:37,680
+defining these requirements
+for the LLM to follow
+
+437
+00:17:37,680 --> 00:17:39,750
+like I mentioned earlier.
+
+438
+00:17:39,750 --> 00:17:43,650
+You're also reviewing the
+AI's like test results
+
+439
+00:17:43,650 --> 00:17:46,050
+rather than fully debugging manually
+
+440
+00:17:46,050 --> 00:17:47,850
+and making sure that they're correct
+
+441
+00:17:47,850 --> 00:17:50,042
+and following what you're expecting.
+
+442
+00:17:50,042 --> 00:17:52,290
+And then, the really nice
+thing is the documentation
+
+443
+00:17:52,290 --> 00:17:55,980
+is generated as the LLM or AI is working
+
+444
+00:17:55,980 --> 00:17:59,009
+because this is encoded into the workflow
+
+445
+00:17:59,009 --> 00:18:00,892
+and the way that it's working.
+
+446
+00:18:00,892 --> 00:18:04,380
+And the last thing is that the
+agent is what's maintaining
+
+447
+00:18:04,380 --> 00:18:08,580
+its progress notes of how it's working.
+
+448
+00:18:08,580 --> 00:18:11,520
+And what we found is like
+you might be wondering
+
+449
+00:18:11,520 --> 00:18:14,370
+if this is faster overall or if it's not.
+
+450
+00:18:14,370 --> 00:18:18,390
+For us from what we found is
+that oftentimes it is faster
+
+451
+00:18:18,390 --> 00:18:21,090
+but it's faster for a very
+well specified project.
+
+452
+00:18:21,090 --> 00:18:23,640
+So it really depends on for you,
+
+453
+00:18:23,640 --> 00:18:24,960
+how your specification,
+
+454
+00:18:24,960 --> 00:18:28,773
+the domain you're in and your
+tolerance for review cycles.
+
+455
+00:18:29,730 --> 00:18:32,944
+And yeah, so we wanted
+to be a bit clear about
+
+456
+00:18:32,944 --> 00:18:36,363
+what becomes possible and like
+where the limitations are.
+
+457
+00:18:37,230 --> 00:18:40,740
+So yeah, so to start what, it's improving,
+
+458
+00:18:40,740 --> 00:18:41,880
+so I've mentioned this a lot of times
+
+459
+00:18:41,880 --> 00:18:43,530
+'cause this is really important to me,
+
+460
+00:18:43,530 --> 00:18:46,650
+but the tests are written
+for every feature by default,
+
+461
+00:18:46,650 --> 00:18:48,480
+which is awesome because then
+
+462
+00:18:48,480 --> 00:18:50,360
+you have a lot of test
+coverage which we found
+
+463
+00:18:50,360 --> 00:18:52,793
+when we were doing the demos.
+
+464
+00:18:52,793 --> 00:18:54,810
+So that's done by default.
+
+465
+00:18:54,810 --> 00:18:56,040
+And then the other thing is,
+
+466
+00:18:56,040 --> 00:18:58,043
+the documentation is
+updated for every session.
+
+467
+00:18:58,043 --> 00:19:01,980
+So it's constantly up to date
+and it's constantly accurate.
+
+468
+00:19:01,980 --> 00:19:03,150
+And then the last thing is that,
+
+469
+00:19:03,150 --> 00:19:04,710
+it's consistent with your coding style,
+
+470
+00:19:04,710 --> 00:19:07,440
+which is really great because
+like I mentioned earlier,
+
+471
+00:19:07,440 --> 00:19:09,480
+it's following your standards
+
+472
+00:19:09,480 --> 00:19:11,793
+and your style almost religiously.
+
+473
+00:19:12,840 --> 00:19:15,450
+But there are some limitations
+that we wanted to highlight.
+
+474
+00:19:15,450 --> 00:19:16,620
+So one of the main ones
+
+475
+00:19:16,620 --> 00:19:19,260
+and one that you're probably
+aware of is the vision gaps.
+
+476
+00:19:19,260 --> 00:19:22,860
+So the models might not be the best at
+
+477
+00:19:22,860 --> 00:19:24,840
+seeing every single visual bug.
+
+478
+00:19:24,840 --> 00:19:26,659
+So oftentimes, it needs your judgment
+
+479
+00:19:26,659 --> 00:19:28,860
+and that's why we're saying
+this is like a collaborative
+
+480
+00:19:28,860 --> 00:19:32,070
+sort of model to check and find these bugs
+
+481
+00:19:32,070 --> 00:19:34,230
+and these features and make
+those requests sort of like
+
+482
+00:19:34,230 --> 00:19:36,663
+how we're doing live in
+the demo at the booth.
+
+483
+00:19:37,560 --> 00:19:40,890
+And then the other thing
+is that automation,
+
+484
+00:19:40,890 --> 00:19:43,770
+like browser automations
+like Puppeteer or Playwright,
+
+485
+00:19:43,770 --> 00:19:46,320
+oftentimes can't see native alerts,
+
+486
+00:19:46,320 --> 00:19:48,180
+which is something you should be aware of.
+
+487
+00:19:48,180 --> 00:19:50,310
+And the other thing is
+that like I mentioned
+
+488
+00:19:50,310 --> 00:19:51,480
+and like we iterate a lot,
+
+489
+00:19:51,480 --> 00:19:53,640
+this is not replacing human review,
+
+490
+00:19:53,640 --> 00:19:56,910
+it's not sort of a fire
+and forget sort of model.
+
+491
+00:19:56,910 --> 00:19:59,130
+It's one that you would
+need to like verify
+
+492
+00:19:59,130 --> 00:20:01,113
+before it goes fully in production.
+
+493
+00:20:02,070 --> 00:20:04,770
+So yeah, that's sort of what
+we wanted to emphasize today,
+
+494
+00:20:04,770 --> 00:20:07,170
+what's possible and the limitations there.
+
+495
+00:20:07,170 --> 00:20:08,003
+- Yeah.
+
+496
+00:20:08,003 --> 00:20:09,630
+And let's ground this in reality,
+
+497
+00:20:09,630 --> 00:20:12,030
+and this is gonna be the
+preamble to the actual demo.
+
+498
+00:20:12,030 --> 00:20:15,300
+So this is the architecture
+that we implemented
+
+499
+00:20:15,300 --> 00:20:17,880
+for the demo booth and what
+we're gonna show here today.
+
+500
+00:20:17,880 --> 00:20:20,550
+And so, you can see that,
+hopefully this works.
+
+501
+00:20:20,550 --> 00:20:22,440
+I'm trying to do the
+laser pointer thing maybe.
+
+502
+00:20:22,440 --> 00:20:24,570
+No, it's not gonna be that
+great on a white background
+
+503
+00:20:24,570 --> 00:20:26,073
+but hopefully it'll work.
+
+504
+00:20:27,120 --> 00:20:29,280
+Yeah, so there are three major components
+
+505
+00:20:29,280 --> 00:20:31,800
+to this architecture,
+really four if you will.
+
+506
+00:20:31,800 --> 00:20:34,350
+The first is the list of GitHub issues.
+
+507
+00:20:34,350 --> 00:20:37,050
+And we think of the GitHub
+issues as kind of the backlog
+
+508
+00:20:37,050 --> 00:20:40,110
+for the agent to work on the MVP first
+
+509
+00:20:40,110 --> 00:20:42,450
+and all the subsequent
+issues that are added.
+
+510
+00:20:42,450 --> 00:20:44,394
+And because we're gonna do
+this in a public repository,
+
+511
+00:20:44,394 --> 00:20:46,830
+we're actually going
+to very happily ask you
+
+512
+00:20:46,830 --> 00:20:50,400
+to features and have the agent build them.
+
+513
+00:20:50,400 --> 00:20:52,770
+This is going to be running
+over the next couple of days.
+
+514
+00:20:52,770 --> 00:20:55,200
+So really our goal is to,
+by the end of re:Invent,
+
+515
+00:20:55,200 --> 00:20:57,510
+have an application
+that's quite functional.
+
+516
+00:20:57,510 --> 00:20:58,343
+It already is.
+
+517
+00:20:58,343 --> 00:21:00,837
+Just over the last two days,
+you'll see what we've built.
+
+518
+00:21:00,837 --> 00:21:03,210
+And so GitHub issues is
+one of the components.
+
+519
+00:21:03,210 --> 00:21:04,766
+I mentioned that there are four.
+
+520
+00:21:04,766 --> 00:21:06,390
+GitHub actions as well.
+
+521
+00:21:06,390 --> 00:21:09,090
+So the GitHub actions that
+we've written is essentially,
+
+522
+00:21:09,090 --> 00:21:10,920
+you can think of that as just the CICD
+
+523
+00:21:10,920 --> 00:21:13,920
+that we're all very happily
+familiar with, right?
+
+524
+00:21:13,920 --> 00:21:15,030
+And so what happens is,
+
+525
+00:21:15,030 --> 00:21:17,580
+there's an issue puller
+that basically sits there
+
+526
+00:21:17,580 --> 00:21:19,980
+and on a cron job, essentially
+on a scheduled basis,
+
+527
+00:21:19,980 --> 00:21:21,450
+looks at the GitHub issues
+
+528
+00:21:21,450 --> 00:21:23,280
+that are in that GitHub repository
+
+529
+00:21:23,280 --> 00:21:25,080
+and picks up new issues to work on.
+
+530
+00:21:25,080 --> 00:21:27,660
+And the way that we do that
+is we, we've kind of come up
+
+531
+00:21:27,660 --> 00:21:30,600
+with a way to allow folks
+to vote on the issues
+
+532
+00:21:30,600 --> 00:21:34,440
+and also for some of us,
+myself, Nadine and Philly
+
+533
+00:21:34,440 --> 00:21:36,660
+at the booth, to actually approve issues
+
+534
+00:21:36,660 --> 00:21:39,240
+that could be worked on by
+the agent using reactions.
+
+535
+00:21:39,240 --> 00:21:41,160
+So there's a thumbs up emoji for voting.
+
+536
+00:21:41,160 --> 00:21:42,900
+So whenever any of you add a feature,
+
+537
+00:21:42,900 --> 00:21:45,035
+you can also come in and
+vote for that feature,
+
+538
+00:21:45,035 --> 00:21:46,800
+we'll show you that in a moment
+
+539
+00:21:46,800 --> 00:21:49,290
+and then you know, we'll
+approve those features
+
+540
+00:21:49,290 --> 00:21:50,850
+if we think they're good to go.
+
+541
+00:21:50,850 --> 00:21:52,770
+And then those features are
+gonna be built by the agent.
+
+542
+00:21:52,770 --> 00:21:55,920
+And that brings us to
+the AgentCore Runtime.
+
+543
+00:21:55,920 --> 00:21:58,620
+So we think of the AgentCore
+Runtime in this architecture
+
+544
+00:21:58,620 --> 00:22:00,535
+as kind of the infrastructure provision
+
+545
+00:22:00,535 --> 00:22:03,090
+and infrastructure orchestration piece.
+
+546
+00:22:03,090 --> 00:22:05,250
+We initially started by
+thinking about building this
+
+547
+00:22:05,250 --> 00:22:08,490
+with ECS and managing all
+of our own infrastructure.
+
+548
+00:22:08,490 --> 00:22:09,930
+And that could have been
+something we could do,
+
+549
+00:22:09,930 --> 00:22:11,580
+but we only had about three weeks
+
+550
+00:22:11,580 --> 00:22:14,377
+and we thought what can
+kind of accelerate our work.
+
+551
+00:22:14,377 --> 00:22:16,440
+And AgentCore Runtime actually turned
+
+552
+00:22:16,440 --> 00:22:17,850
+out to be a great choice.
+
+553
+00:22:17,850 --> 00:22:20,190
+There are some interesting caveats there.
+
+554
+00:22:20,190 --> 00:22:22,650
+So for example, this architecture diagram,
+
+555
+00:22:22,650 --> 00:22:23,880
+this EFS storage piece,
+
+556
+00:22:23,880 --> 00:22:26,580
+so initially we were
+considering using EFS,
+
+557
+00:22:26,580 --> 00:22:30,930
+an EFS mounted volume in ECS
+container to maintain state.
+
+558
+00:22:30,930 --> 00:22:33,210
+It turns out that with AgentCore
+Runtime we can't do that,
+
+559
+00:22:33,210 --> 00:22:34,920
+but that's okay, that's
+not a bad thing, right?
+
+560
+00:22:34,920 --> 00:22:38,040
+So we figured out that AgentCore
+Runtime is quite ephemeral
+
+561
+00:22:38,040 --> 00:22:41,310
+and we can't use it with an
+EFS volume mounted in it.
+
+562
+00:22:41,310 --> 00:22:42,660
+Maybe that's coming. I don't know.
+
+563
+00:22:42,660 --> 00:22:44,370
+I don't speak for AWS.
+
+564
+00:22:44,370 --> 00:22:46,021
+But what we did instead is we used GitHub,
+
+565
+00:22:46,021 --> 00:22:50,010
+so a GIT repository as the
+state, as the source of truth
+
+566
+00:22:50,010 --> 00:22:51,900
+instead of an EFS volume.
+
+567
+00:22:51,900 --> 00:22:54,210
+And that then brings us
+to the fourth component,
+
+568
+00:22:54,210 --> 00:22:55,380
+which is here.
+
+569
+00:22:55,380 --> 00:22:58,430
+So the Anthropic API on
+running on Claude Opus 4.5.
+
+570
+00:22:59,315 --> 00:23:00,540
+What we did there is,
+
+571
+00:23:00,540 --> 00:23:03,330
+we've taken the work of
+our amazing applied AI team
+
+572
+00:23:03,330 --> 00:23:06,090
+and our researchers who
+built a custom harness
+
+573
+00:23:06,090 --> 00:23:07,770
+and we built on top of that harness.
+
+574
+00:23:07,770 --> 00:23:10,920
+And that harness
+leverages the Claude code,
+
+575
+00:23:10,920 --> 00:23:13,023
+Claude Agent SDK recently renamed.
+
+576
+00:23:14,340 --> 00:23:18,420
+And we use the Claude Opus 4.5 model.
+
+577
+00:23:18,420 --> 00:23:20,340
+And that's actually quite nice
+
+578
+00:23:20,340 --> 00:23:22,970
+because if you know anything
+about Claude Opus 4.5,
+
+579
+00:23:22,970 --> 00:23:25,140
+it has much better vision capabilities
+
+580
+00:23:25,140 --> 00:23:26,850
+than some of our older models.
+
+581
+00:23:26,850 --> 00:23:31,230
+And so with Claude Opus
+4.5 running inside,
+
+582
+00:23:31,230 --> 00:23:33,600
+essentially running, excuse me,
+
+583
+00:23:33,600 --> 00:23:36,375
+with the Agent SDK using Claude Opus 4.5
+
+584
+00:23:36,375 --> 00:23:39,270
+and the runtime and these GitHub Actions,
+
+585
+00:23:39,270 --> 00:23:41,340
+we're then able to have the agents that,
+
+586
+00:23:41,340 --> 00:23:45,120
+the agent runtime build new
+versions of the application.
+
+587
+00:23:45,120 --> 00:23:48,630
+Those versions then get
+deployed to an S3 bucket
+
+588
+00:23:48,630 --> 00:23:52,080
+fronted by a CloudFront
+distribution for all of us to see.
+
+589
+00:23:52,080 --> 00:23:54,258
+So that's essentially the
+high level architecture
+
+590
+00:23:54,258 --> 00:23:56,373
+that we're about to show in the demo.
+
+591
+00:23:57,240 --> 00:23:58,390
+All right. Let's do it.
+
+592
+00:24:01,440 --> 00:24:03,090
+So this is where things
+might get a little exciting.
+
+593
+00:24:03,090 --> 00:24:04,240
+Let's see what happens.
+
+594
+00:24:05,640 --> 00:24:07,320
+Right. Live demos.
+
+595
+00:24:07,320 --> 00:24:10,958
+So maybe Nadine, if you
+wanna talk to this feature?
+
+596
+00:24:10,958 --> 00:24:11,791
+- [Nadine] Yeah.
+
+597
+00:24:11,791 --> 00:24:15,330
+So I can quickly also show
+you just a lot of the issues
+
+598
+00:24:15,330 --> 00:24:17,732
+that we got requested if
+the WiFi's in our favor.
+
+599
+00:24:17,732 --> 00:24:19,900
+If it's not, then nevermind.
+- There it goes.
+
+600
+00:24:19,900 --> 00:24:21,120
+- [Nadine] Okay, perfect.
+
+601
+00:24:21,120 --> 00:24:23,010
+So we got throughout the re:Invent,
+
+602
+00:24:23,010 --> 00:24:24,750
+we got a lot of feature requests
+
+603
+00:24:24,750 --> 00:24:26,460
+and we've basically been building on them
+
+604
+00:24:26,460 --> 00:24:27,570
+and once we have proved them,
+
+605
+00:24:27,570 --> 00:24:28,972
+you can see that the label changes
+
+606
+00:24:28,972 --> 00:24:32,640
+and becomes when it's
+finished, Agent Complete.
+
+607
+00:24:32,640 --> 00:24:36,870
+When it's building, it's
+actually an Agent Building label.
+
+608
+00:24:36,870 --> 00:24:38,340
+WiFi's a little slow.
+
+609
+00:24:38,340 --> 00:24:41,733
+So that's not ideal, but you
+can check it out in the repo.
+
+610
+00:24:42,630 --> 00:24:44,910
+And this is an example of a feature
+
+611
+00:24:44,910 --> 00:24:46,320
+that we actually got at the booth.
+
+612
+00:24:46,320 --> 00:24:48,090
+So we got a feature
+where someone requested
+
+613
+00:24:48,090 --> 00:24:51,510
+to translate individual
+pages into Japanese.
+
+614
+00:24:51,510 --> 00:24:53,790
+And what you see here is see,
+
+615
+00:24:53,790 --> 00:24:55,200
+once the agent started building,
+
+616
+00:24:55,200 --> 00:24:57,000
+it changed its tag to Agent Building.
+
+617
+00:24:57,000 --> 00:24:58,830
+And this is all done by
+the agent, by the way.
+
+618
+00:24:58,830 --> 00:25:00,450
+This is not us doing it.
+
+619
+00:25:00,450 --> 00:25:02,490
+And then it starts the session.
+
+620
+00:25:02,490 --> 00:25:04,855
+And then as it's working, it's
+actually taking screenshots.
+
+621
+00:25:04,855 --> 00:25:06,540
+And this is because we've connected it
+
+622
+00:25:06,540 --> 00:25:08,310
+to like the Playwright MCP,
+
+623
+00:25:08,310 --> 00:25:09,630
+and it's able to take those screenshots
+
+624
+00:25:09,630 --> 00:25:13,830
+and show us what it's seeing
+as it's working to debug.
+
+625
+00:25:13,830 --> 00:25:15,181
+And we'd be looking a bit,
+
+626
+00:25:15,181 --> 00:25:17,130
+we're gonna dive deep into sort of
+
+627
+00:25:17,130 --> 00:25:18,390
+what you're seeing in the logs as well
+
+628
+00:25:18,390 --> 00:25:20,460
+because it helps you see
+how the model is reasoning
+
+629
+00:25:20,460 --> 00:25:22,320
+and what it's thinking
+
+630
+00:25:22,320 --> 00:25:25,468
+and how it's looking at these
+pictures that it's taking.
+
+631
+00:25:25,468 --> 00:25:26,651
+So yeah. Alex you wanna go ahead?
+
+632
+00:25:26,651 --> 00:25:28,140
+- Yeah, of course.
+
+633
+00:25:28,140 --> 00:25:30,037
+Yeah, so we'll jump into
+the logs here momentarily,
+
+634
+00:25:30,037 --> 00:25:31,980
+but I actually want to kind
+of come back to one thing
+
+635
+00:25:31,980 --> 00:25:34,140
+that I forgot to come back to earlier.
+
+636
+00:25:34,140 --> 00:25:37,512
+So this is the initial
+project specification
+
+637
+00:25:37,512 --> 00:25:39,540
+that we were describing.
+
+638
+00:25:39,540 --> 00:25:41,005
+And you can see here that
+this project specification
+
+639
+00:25:41,005 --> 00:25:43,674
+has a certain shape to
+it, if you will, right?
+
+640
+00:25:43,674 --> 00:25:46,230
+And you can see that it's XML.
+
+641
+00:25:46,230 --> 00:25:48,300
+And you might be wondering,
+well, why isn't this, you know,
+
+642
+00:25:48,300 --> 00:25:49,890
+just a standard markdown file.
+
+643
+00:25:49,890 --> 00:25:52,800
+So, you know, it turns out that
+as many of you probably know
+
+644
+00:25:52,800 --> 00:25:57,300
+that if we add sort of
+XML tags, we add structure
+
+645
+00:25:57,300 --> 00:25:59,190
+and the model is much better at reading
+
+646
+00:25:59,190 --> 00:26:01,860
+this kind of structure
+than just a markdown file.
+
+647
+00:26:01,860 --> 00:26:05,010
+You can see here that this
+defines kind of the overall idea
+
+648
+00:26:05,010 --> 00:26:07,230
+behind the application as
+we were describing earlier.
+
+649
+00:26:07,230 --> 00:26:08,970
+This is, you know,
+essentially a Jira clone
+
+650
+00:26:08,970 --> 00:26:10,860
+that we call Canopy because, you know,
+
+651
+00:26:10,860 --> 00:26:14,370
+it's a canopy of trees
+and, and features anyway.
+
+652
+00:26:14,370 --> 00:26:16,230
+And then there was, you know,
+
+653
+00:26:16,230 --> 00:26:18,120
+a definition for the technology stack.
+
+654
+00:26:18,120 --> 00:26:19,290
+So like what does the front end
+
+655
+00:26:19,290 --> 00:26:20,880
+of this application look like?
+
+656
+00:26:20,880 --> 00:26:22,560
+What does the data layer look like?
+
+657
+00:26:22,560 --> 00:26:24,454
+So this is like fairly prescriptive
+
+658
+00:26:24,454 --> 00:26:27,033
+and this is the MVP version of the app
+
+659
+00:26:27,033 --> 00:26:28,770
+that the agent had built.
+
+660
+00:26:28,770 --> 00:26:30,390
+And we'll show that to
+you here momentarily.
+
+661
+00:26:30,390 --> 00:26:31,223
+- Yeah.
+- Core data,
+
+662
+00:26:31,223 --> 00:26:32,070
+entities and so on.
+
+663
+00:26:32,070 --> 00:26:33,090
+- [Nadine] And I wanna add like,
+
+664
+00:26:33,090 --> 00:26:34,830
+we mentioned a lot about testing.
+
+665
+00:26:34,830 --> 00:26:37,380
+So also within this
+we've sort of given it,
+
+666
+00:26:37,380 --> 00:26:40,923
+if I can get to it, sort
+of testing scenarios.
+
+667
+00:26:41,820 --> 00:26:42,727
+Okay. It's good.
+- It's on the bottom
+
+668
+00:26:42,727 --> 00:26:44,460
+- It's hard to find it.
+- Yeah.
+
+669
+00:26:44,460 --> 00:26:45,293
+- [Nadine] Okay.
+
+670
+00:26:46,530 --> 00:26:48,030
+Yeah, here. Like test scenarios.
+
+671
+00:26:48,030 --> 00:26:49,890
+These aren't for specific features,
+
+672
+00:26:49,890 --> 00:26:52,140
+but it's sort of just to show
+it how it can do the testing
+
+673
+00:26:52,140 --> 00:26:53,550
+and like we're mentioning,
+
+674
+00:26:53,550 --> 00:26:55,950
+actually using the browser
+automation to do this.
+
+675
+00:26:55,950 --> 00:26:58,353
+So this is within our build plan.
+
+676
+00:26:59,190 --> 00:27:00,023
+- [Alex] Yeah.
+
+677
+00:27:00,023 --> 00:27:01,710
+And so then, what we'd like to show you is
+
+678
+00:27:01,710 --> 00:27:02,940
+what was initially built.
+
+679
+00:27:02,940 --> 00:27:06,657
+So if we go here and I
+think it was Issue 14.
+
+680
+00:27:06,657 --> 00:27:07,890
+- 14.
+- Yeah.
+
+681
+00:27:07,890 --> 00:27:09,180
+- [Alex] So we mentioned that this kind
+
+682
+00:27:09,180 --> 00:27:11,730
+of builds several iterations.
+
+683
+00:27:11,730 --> 00:27:14,103
+And so let's go back to
+the MVP for a second.
+
+684
+00:27:17,130 --> 00:27:18,300
+And maybe I shouldn't have done this
+
+685
+00:27:18,300 --> 00:27:19,770
+because the internet is not cooperating.
+
+686
+00:27:19,770 --> 00:27:21,180
+- [Nadine] Yeah.
+(both chuckle)
+
+687
+00:27:21,180 --> 00:27:22,730
+- [Alex] It'll load eventually,
+
+688
+00:27:23,610 --> 00:27:24,930
+- [Nadine] Maybe load
+the other one as well.
+
+689
+00:27:24,930 --> 00:27:26,240
+- [Alex] Yeah, good call.
+
+690
+00:27:27,870 --> 00:27:29,670
+- 36, was it?
+- Yes.
+
+691
+00:27:29,670 --> 00:27:30,990
+- [Alex] Yeah.
+
+692
+00:27:30,990 --> 00:27:33,033
+All right. Let's see if this works.
+
+693
+00:27:35,910 --> 00:27:36,743
+There we go.
+- Okay.
+
+694
+00:27:36,743 --> 00:27:38,100
+- [Alex] All right. Good.
+
+695
+00:27:38,100 --> 00:27:39,800
+We didn't fail in the demo, right.
+
+696
+00:27:41,293 --> 00:27:42,735
+So this was the initial version
+
+697
+00:27:42,735 --> 00:27:44,566
+of the application that was built.
+
+698
+00:27:44,566 --> 00:27:48,630
+This is the MVP based on the
+specification that you saw.
+
+699
+00:27:48,630 --> 00:27:50,460
+And then Nadine was showing you earlier
+
+700
+00:27:50,460 --> 00:27:53,580
+that there was a feature
+that we had the agent build,
+
+701
+00:27:53,580 --> 00:27:54,950
+which is this, you know,
+
+702
+00:27:54,950 --> 00:27:58,080
+translate the application into Japanese.
+
+703
+00:27:58,080 --> 00:28:00,240
+And so what you can see
+here is that, first of all,
+
+704
+00:28:00,240 --> 00:28:02,070
+this is like Issue 36.
+
+705
+00:28:02,070 --> 00:28:03,390
+We started with Issue 14,
+
+706
+00:28:03,390 --> 00:28:04,868
+so you can do the math in
+terms of the number of features
+
+707
+00:28:04,868 --> 00:28:07,620
+that were built between then and now.
+
+708
+00:28:07,620 --> 00:28:10,050
+And then you can see here,
+again, as Nadine was mentioning,
+
+709
+00:28:10,050 --> 00:28:13,290
+that there is a very, very nice audit log
+
+710
+00:28:13,290 --> 00:28:15,480
+of all the things that
+the agent has done, right?
+
+711
+00:28:15,480 --> 00:28:18,540
+So you can see that there was
+a workflow that got started
+
+712
+00:28:18,540 --> 00:28:19,710
+that the session started,
+
+713
+00:28:19,710 --> 00:28:22,800
+there's a session ID from
+the AgentCore Runtime.
+
+714
+00:28:22,800 --> 00:28:25,380
+You can see the screenshots that it takes.
+
+715
+00:28:25,380 --> 00:28:27,480
+One of the folks in the
+audience submitted that one,
+
+716
+00:28:27,480 --> 00:28:28,650
+the admin feature.
+
+717
+00:28:28,650 --> 00:28:30,173
+He's sitting somewhere in there.
+
+718
+00:28:31,410 --> 00:28:32,640
+He's on on my team.
+
+719
+00:28:32,640 --> 00:28:34,350
+So, actually he's my boss,
+
+720
+00:28:34,350 --> 00:28:36,440
+Ellie.
+(both laughing)
+
+721
+00:28:36,440 --> 00:28:38,010
+Thanks for that one.
+
+722
+00:28:38,010 --> 00:28:42,389
+And then, you know, sort
+of continuing through
+
+723
+00:28:42,389 --> 00:28:44,670
+and looking at everything
+
+724
+00:28:44,670 --> 00:28:47,550
+that the state was at
+the previous session.
+
+725
+00:28:47,550 --> 00:28:51,000
+So it's taking screenshots
+of kind of the previous state
+
+726
+00:28:51,000 --> 00:28:52,890
+of the application.
+
+727
+00:28:52,890 --> 00:28:56,310
+And then eventually it gets
+to a point where it like,
+
+728
+00:28:56,310 --> 00:28:57,870
+actually does new things.
+
+729
+00:28:57,870 --> 00:28:59,790
+So you can see so many screenshots in here
+
+730
+00:28:59,790 --> 00:29:00,960
+and you might be wondering to yourself,
+
+731
+00:29:00,960 --> 00:29:02,880
+well, how the heck is it able
+
+732
+00:29:02,880 --> 00:29:04,936
+to deal with so much context, right,
+
+733
+00:29:04,936 --> 00:29:06,361
+if it's taking these screenshots
+
+734
+00:29:06,361 --> 00:29:09,270
+and it's reading them in
+real time as it's working?
+
+735
+00:29:09,270 --> 00:29:11,773
+With the Agent SDK,
+there's built in compaction
+
+736
+00:29:11,773 --> 00:29:13,772
+and built in context management.
+
+737
+00:29:13,772 --> 00:29:16,110
+And so, it's able to actually sort of,
+
+738
+00:29:16,110 --> 00:29:17,400
+work with its own context
+
+739
+00:29:17,400 --> 00:29:19,440
+and minimize it down
+to only what it needs.
+
+740
+00:29:19,440 --> 00:29:21,120
+So that's important to note there.
+
+741
+00:29:21,120 --> 00:29:23,760
+And then as we continue,
+more and more screenshots,
+
+742
+00:29:23,760 --> 00:29:26,010
+and then eventually
+there's gonna be a commit.
+
+743
+00:29:26,010 --> 00:29:28,500
+This is like probably 150
+screenshots that it took.
+
+744
+00:29:28,500 --> 00:29:30,300
+Something like that, something wild.
+
+745
+00:29:31,290 --> 00:29:33,480
+And then eventually, it finds,
+
+746
+00:29:33,480 --> 00:29:35,220
+it builds the feature, right,
+
+747
+00:29:35,220 --> 00:29:37,800
+and then it takes screenshots
+of the translations.
+
+748
+00:29:37,800 --> 00:29:39,840
+And then here,
+
+749
+00:29:39,840 --> 00:29:42,210
+let's see if we can scroll
+down a little bit more,
+
+750
+00:29:42,210 --> 00:29:44,850
+there's the commit and
+the work has been done.
+
+751
+00:29:44,850 --> 00:29:47,189
+The application has been
+translated into Japanese.
+
+752
+00:29:47,189 --> 00:29:50,790
+And so, let's take a look at
+what that looks like here.
+
+753
+00:29:50,790 --> 00:29:52,950
+And of course, I forgot
+to put a slash at the end.
+
+754
+00:29:52,950 --> 00:29:57,060
+And that caused me to not load this page.
+
+755
+00:29:57,060 --> 00:29:58,260
+So let's do that.
+
+756
+00:29:58,260 --> 00:30:00,900
+And so here, if we go into settings now,
+
+757
+00:30:00,900 --> 00:30:03,180
+I believe is where it implemented it.
+
+758
+00:30:03,180 --> 00:30:05,010
+There you go. Japanese translation, right?
+
+759
+00:30:05,010 --> 00:30:06,210
+So if I click into that,
+
+760
+00:30:06,210 --> 00:30:08,430
+we have the app translated into Japanese.
+
+761
+00:30:08,430 --> 00:30:10,860
+It did this in one session.
+
+762
+00:30:10,860 --> 00:30:13,538
+So I think that is a
+pretty good idea for you
+
+763
+00:30:13,538 --> 00:30:16,950
+in terms of like what
+the workflow looks like.
+
+764
+00:30:16,950 --> 00:30:18,300
+But Nadine also mentioned logs.
+
+765
+00:30:18,300 --> 00:30:19,133
+Do you wanna cover some of that?
+
+766
+00:30:19,133 --> 00:30:22,687
+- [Nadine] Yeah, so if
+we look into CloudWatch,
+
+767
+00:30:22,687 --> 00:30:24,090
+so the awesome thing is because
+
+768
+00:30:24,090 --> 00:30:25,350
+we're using AgentCore Runtime,
+
+769
+00:30:25,350 --> 00:30:27,150
+we can actually look
+at the CloudWatch logs
+
+770
+00:30:27,150 --> 00:30:30,868
+and sort of get an idea of
+what's going on in the process.
+
+771
+00:30:30,868 --> 00:30:33,690
+So we can see it starting off here.
+
+772
+00:30:33,690 --> 00:30:36,570
+So let me just get to the first message.
+
+773
+00:30:36,570 --> 00:30:38,490
+It started in the background.
+
+774
+00:30:38,490 --> 00:30:40,860
+Then let me get to it.
+
+775
+00:30:40,860 --> 00:30:42,780
+It's initializing some things.
+
+776
+00:30:42,780 --> 00:30:44,040
+It's first starting off by,
+
+777
+00:30:44,040 --> 00:30:46,950
+let me understand the test structure,
+
+778
+00:30:46,950 --> 00:30:49,110
+let me read the end of the test of JSON
+
+779
+00:30:49,110 --> 00:30:50,310
+to see the latest tests.
+
+780
+00:30:50,310 --> 00:30:52,290
+So it's actually looking
+at the previous commits
+
+781
+00:30:52,290 --> 00:30:55,980
+and understanding what the
+previous session was doing.
+
+782
+00:30:55,980 --> 00:30:57,180
+And then it's like,
+
+783
+00:30:57,180 --> 00:31:00,870
+let me understand the current
+app structure and the file.
+
+784
+00:31:00,870 --> 00:31:03,690
+So you can basically get insights into
+
+785
+00:31:03,690 --> 00:31:05,720
+what it's doing with its reasoning.
+
+786
+00:31:05,720 --> 00:31:08,430
+And also when it does take screenshots,
+
+787
+00:31:08,430 --> 00:31:10,890
+we also get insights
+into what it's seeing.
+
+788
+00:31:10,890 --> 00:31:15,240
+So if I go somewhere here,
+
+789
+00:31:15,240 --> 00:31:16,200
+okay, it's a little hard to get,
+
+790
+00:31:16,200 --> 00:31:18,139
+but basically it will be able to see
+
+791
+00:31:18,139 --> 00:31:20,130
+and it will make judgements based on that.
+
+792
+00:31:20,130 --> 00:31:22,252
+Like it's saying let me
+update this and this and this
+
+793
+00:31:22,252 --> 00:31:24,592
+because of the screenshots that it took.
+
+794
+00:31:24,592 --> 00:31:27,450
+So it's really great to get
+basically an insight about
+
+795
+00:31:27,450 --> 00:31:30,180
+the development process and
+what it's going through.
+
+796
+00:31:30,180 --> 00:31:32,400
+Do you wanna add anything Alex?
+
+797
+00:31:32,400 --> 00:31:34,500
+- [Alex] No, I think this is probably good
+
+798
+00:31:34,500 --> 00:31:35,940
+and we can take questions in the end.
+
+799
+00:31:35,940 --> 00:31:37,893
+So let's continue. Yeah.
+- Yes.
+
+800
+00:31:42,390 --> 00:31:43,223
+- Yeah.
+
+801
+00:31:43,223 --> 00:31:44,670
+So we covered this,
+
+802
+00:31:44,670 --> 00:31:47,160
+but just to summarize
+everything that you've seen.
+
+803
+00:31:47,160 --> 00:31:48,810
+- [Nadine] Yeah.
+
+804
+00:31:48,810 --> 00:31:51,428
+- So as we've mentioned in
+kind of the introduction,
+
+805
+00:31:51,428 --> 00:31:54,390
+every time that a
+session starts, you know,
+
+806
+00:31:54,390 --> 00:31:56,490
+we have the agent set up the environment.
+
+807
+00:31:56,490 --> 00:31:59,130
+So we have the agent look
+at the previous commits,
+
+808
+00:31:59,130 --> 00:32:01,470
+we have the agent look at
+the previous screenshots
+
+809
+00:32:01,470 --> 00:32:04,590
+that it took, take new
+screenshots as it runs the tests,
+
+810
+00:32:04,590 --> 00:32:06,337
+show the coding agent picking up,
+
+811
+00:32:06,337 --> 00:32:09,120
+so we've already done that,
+but to kind of just going over
+
+812
+00:32:09,120 --> 00:32:11,880
+what we demonstrated,
+
+813
+00:32:11,880 --> 00:32:14,430
+it picks up a new feature
+to work on in each session.
+
+814
+00:32:14,430 --> 00:32:18,150
+And then we demonstrated that
+it does automated testing.
+
+815
+00:32:18,150 --> 00:32:19,860
+And one of the things,
+one of the key takeaways
+
+816
+00:32:19,860 --> 00:32:23,340
+that we wanted you to
+walk away with is that,
+
+817
+00:32:23,340 --> 00:32:26,520
+when we ask the agent
+to write its own tests,
+
+818
+00:32:26,520 --> 00:32:29,430
+it's much better to sort of,
+
+819
+00:32:29,430 --> 00:32:32,280
+to suggest to it that it
+should write the tests
+
+820
+00:32:32,280 --> 00:32:33,555
+for full workflows end to end.
+
+821
+00:32:33,555 --> 00:32:36,240
+And this is something that
+Nadine was covering earlier
+
+822
+00:32:36,240 --> 00:32:39,600
+because we found that if we,
+again, just to reiterate,
+
+823
+00:32:39,600 --> 00:32:41,185
+if we ask the agent to write tests
+
+824
+00:32:41,185 --> 00:32:43,440
+for just individual screens,
+
+825
+00:32:43,440 --> 00:32:45,000
+then that winds up,
+
+826
+00:32:45,000 --> 00:32:46,680
+ending up in reward hacking, right,
+
+827
+00:32:46,680 --> 00:32:47,700
+reward hacking behavior.
+
+828
+00:32:47,700 --> 00:32:49,326
+So ask it to write full tests,
+
+829
+00:32:49,326 --> 00:32:52,173
+full end-to-end tests for each feature.
+
+830
+00:32:53,340 --> 00:32:55,680
+And then of course the Git Progress
+
+831
+00:32:55,680 --> 00:32:58,099
+and sort of the notes that it
+takes from session to session,
+
+832
+00:32:58,099 --> 00:33:00,330
+and that's something we
+can show you as well,
+
+833
+00:33:00,330 --> 00:33:02,103
+where it writes to a file.
+
+834
+00:33:04,080 --> 00:33:08,880
+And so the compounding effect
+of this is that we, you know,
+
+835
+00:33:08,880 --> 00:33:11,310
+over a period of time this agent builds
+
+836
+00:33:11,310 --> 00:33:13,890
+a full end-to-end application, right.
+
+837
+00:33:13,890 --> 00:33:15,242
+And you know, in the first few minutes,
+
+838
+00:33:15,242 --> 00:33:17,850
+you'll kind of see everything
+we've just talked about
+
+839
+00:33:17,850 --> 00:33:20,160
+where, you know, the agent
+sets up the environment,
+
+840
+00:33:20,160 --> 00:33:22,020
+starts building some of
+the core functionality
+
+841
+00:33:22,020 --> 00:33:23,040
+by 30 minutes, you know.
+
+842
+00:33:23,040 --> 00:33:25,470
+If you look at the MVP
+feature on that repo,
+
+843
+00:33:25,470 --> 00:33:27,420
+you'll see that it
+completed the work actually
+
+844
+00:33:27,420 --> 00:33:28,740
+in a little bit longer period than that,
+
+845
+00:33:28,740 --> 00:33:32,190
+but it was about an
+hour toward a full MVP.
+
+846
+00:33:32,190 --> 00:33:34,521
+But every subsequent session
+winds up taking a lot less time
+
+847
+00:33:34,521 --> 00:33:37,080
+because it's already built the MVP,
+
+848
+00:33:37,080 --> 00:33:39,510
+so now it's just building
+the next iteration
+
+849
+00:33:39,510 --> 00:33:42,630
+and that actually takes
+fewer than 30 minutes.
+
+850
+00:33:42,630 --> 00:33:45,120
+And so this kind of shows the workflow
+
+851
+00:33:45,120 --> 00:33:46,440
+for building that initial MVP,
+
+852
+00:33:46,440 --> 00:33:49,680
+but every subsequent feature
+actually takes a lot less time.
+
+853
+00:33:49,680 --> 00:33:52,828
+And so, you know, by our,
+in this case, by hour one,
+
+854
+00:33:52,828 --> 00:33:54,810
+because we've actually constrained,
+
+855
+00:33:54,810 --> 00:33:58,680
+we initially started with a
+full eight hour time horizon,
+
+856
+00:33:58,680 --> 00:34:00,540
+we've constrained it down to an hour,
+
+857
+00:34:00,540 --> 00:34:03,153
+eight hours is the limitation
+that AgentCore has.
+
+858
+00:34:04,290 --> 00:34:06,780
+But we decided to narrow
+it to kind of demonstrate
+
+859
+00:34:06,780 --> 00:34:09,930
+how the sessions can be restarted.
+
+860
+00:34:09,930 --> 00:34:13,500
+So that's one reason that
+we took it down to an hour.
+
+861
+00:34:13,500 --> 00:34:15,750
+But at any rate, you know, if we,
+
+862
+00:34:15,750 --> 00:34:18,585
+by the end of just a couple of days,
+
+863
+00:34:18,585 --> 00:34:21,480
+we've had the agent build a
+fully featured application
+
+864
+00:34:21,480 --> 00:34:23,070
+and that's really the compounding effect
+
+865
+00:34:23,070 --> 00:34:25,543
+that we wanted you to take away.
+
+866
+00:34:25,543 --> 00:34:28,650
+- And we just wanna emphasize
+that we're still learning here
+
+867
+00:34:28,650 --> 00:34:31,797
+and we're open to your
+suggestions and your opinions
+
+868
+00:34:31,797 --> 00:34:34,980
+and there are a few questions
+that we wanna highlight
+
+869
+00:34:34,980 --> 00:34:36,568
+and that we'd love for you to come
+
+870
+00:34:36,568 --> 00:34:38,910
+and let us know like your opinion on.
+
+871
+00:34:38,910 --> 00:34:41,914
+So the first one is something
+we're still figuring out.
+
+872
+00:34:41,914 --> 00:34:45,270
+So is a single general purpose agent best
+
+873
+00:34:45,270 --> 00:34:48,995
+or should we have you or
+your specialized agents
+
+874
+00:34:48,995 --> 00:34:52,503
+in a more multi-agent architecture?
+
+875
+00:34:53,430 --> 00:34:56,550
+So this is still something we're
+deliberating at the moment.
+
+876
+00:34:56,550 --> 00:34:58,765
+The way it works is that we have one agent
+
+877
+00:34:58,765 --> 00:35:00,720
+that's sort of the initializer
+
+878
+00:35:00,720 --> 00:35:03,570
+and then another agent
+that's doing the main coding
+
+879
+00:35:03,570 --> 00:35:05,640
+and then most of the work.
+
+880
+00:35:05,640 --> 00:35:07,260
+But yeah, we we're not sure at the moment
+
+881
+00:35:07,260 --> 00:35:08,520
+if that's the best approach
+
+882
+00:35:08,520 --> 00:35:10,710
+and that's still
+something we're working on
+
+883
+00:35:10,710 --> 00:35:13,170
+because this is research
+and progress, right?
+
+884
+00:35:13,170 --> 00:35:17,160
+And then another thing is
+we are questioning whether
+
+885
+00:35:17,160 --> 00:35:19,620
+these patterns generalize beyond web apps.
+
+886
+00:35:19,620 --> 00:35:22,060
+So we've sort of optimized this for
+
+887
+00:35:23,070 --> 00:35:26,373
+like JSON, TypeScript, React, Node JS,
+
+888
+00:35:26,373 --> 00:35:29,190
+but we haven't yet had
+the chance to experiment
+
+889
+00:35:29,190 --> 00:35:31,050
+sort of with more data science workflows
+
+890
+00:35:31,050 --> 00:35:34,110
+or like different domains
+and things like that,
+
+891
+00:35:34,110 --> 00:35:35,220
+or even mobile.
+
+892
+00:35:35,220 --> 00:35:39,090
+So that's something where
+we'd love to explore.
+
+893
+00:35:39,090 --> 00:35:41,430
+And another thing is that
+
+894
+00:35:41,430 --> 00:35:43,900
+we don't really know
+the full failure modes
+
+895
+00:35:44,970 --> 00:35:46,650
+and there are probably failure modes
+
+896
+00:35:46,650 --> 00:35:48,240
+that we haven't discovered yet, right?
+
+897
+00:35:48,240 --> 00:35:50,220
+So we've been running this for days,
+
+898
+00:35:50,220 --> 00:35:52,500
+or actually maybe like closer two weeks,
+
+899
+00:35:52,500 --> 00:35:54,840
+but we haven't been running
+this for months, right?
+
+900
+00:35:54,840 --> 00:35:56,052
+And as you're run things for longer,
+
+901
+00:35:56,052 --> 00:35:58,380
+there are more things that you discover
+
+902
+00:35:58,380 --> 00:36:00,864
+like design problems, things like that.
+
+903
+00:36:00,864 --> 00:36:03,180
+And this is something
+we're still looking into
+
+904
+00:36:03,180 --> 00:36:05,340
+and we'd love for you to feedback to us
+
+905
+00:36:05,340 --> 00:36:07,650
+so that we can find these issues
+
+906
+00:36:07,650 --> 00:36:11,190
+and actually work towards
+fixing them and optimizing this.
+
+907
+00:36:11,190 --> 00:36:12,023
+Yeah.
+
+908
+00:36:12,023 --> 00:36:13,020
+- Yeah.
+
+909
+00:36:13,020 --> 00:36:14,703
+So let's summarize, you know,
+
+910
+00:36:14,703 --> 00:36:16,402
+the developer experience challenge
+
+911
+00:36:16,402 --> 00:36:19,319
+and what every team faces, right?
+
+912
+00:36:19,319 --> 00:36:22,410
+When we, as developers, spend a lot
+
+913
+00:36:22,410 --> 00:36:24,296
+of time on repetitive tasks, you know,
+
+914
+00:36:24,296 --> 00:36:27,423
+there's certain things that
+the agent can do for us.
+
+915
+00:36:28,350 --> 00:36:30,510
+You know, context switching
+as we talked about, right,
+
+916
+00:36:30,510 --> 00:36:32,640
+if we come back and want to get into flow,
+
+917
+00:36:32,640 --> 00:36:34,800
+it can take 20 minutes or longer.
+
+918
+00:36:34,800 --> 00:36:37,440
+That's an issue that disrupts
+our flow as developers.
+
+919
+00:36:37,440 --> 00:36:38,790
+Agents don't experience that,
+
+920
+00:36:38,790 --> 00:36:42,000
+so it's a really, sorry if I
+tapped the mic and it was loud.
+
+921
+00:36:42,000 --> 00:36:42,833
+I apologize.
+
+922
+00:36:44,321 --> 00:36:46,200
+The context switching can disrupt flow,
+
+923
+00:36:46,200 --> 00:36:48,210
+but it doesn't do that
+for the agents, right?
+
+924
+00:36:48,210 --> 00:36:50,250
+In fact, it's sort of
+a feature, not a bug.
+
+925
+00:36:50,250 --> 00:36:51,930
+We actually do want it to context switch
+
+926
+00:36:51,930 --> 00:36:54,930
+while maintaining previous information.
+
+927
+00:36:54,930 --> 00:36:56,580
+You know, documentation
+can be out of date.
+
+928
+00:36:56,580 --> 00:36:58,318
+These agents will write the documentation
+
+929
+00:36:58,318 --> 00:36:59,610
+and the tests for you.
+
+930
+00:36:59,610 --> 00:37:01,590
+So that's really fantastic.
+
+931
+00:37:01,590 --> 00:37:03,210
+You know, the tests are written
+
+932
+00:37:03,210 --> 00:37:04,860
+as the agent continues to build
+
+933
+00:37:04,860 --> 00:37:06,798
+and you can actually verify
+that in the repository.
+
+934
+00:37:06,798 --> 00:37:09,300
+There are specifications, end-to-end specs
+
+935
+00:37:09,300 --> 00:37:12,390
+that the agent has written
+and committed to the repo.
+
+936
+00:37:12,390 --> 00:37:14,190
+The technical debt can still accumulate.
+
+937
+00:37:14,190 --> 00:37:15,480
+So this isn't perfect, right?
+
+938
+00:37:15,480 --> 00:37:16,585
+We did say in the beginning
+
+939
+00:37:16,585 --> 00:37:18,960
+that this isn't a solved problem
+
+940
+00:37:18,960 --> 00:37:20,910
+because this is, you know,
+Angentic architecture.
+
+941
+00:37:20,910 --> 00:37:23,100
+Like there's a lot of non-determinism
+
+942
+00:37:23,100 --> 00:37:24,930
+and so the human is still
+very much in the loop.
+
+943
+00:37:24,930 --> 00:37:25,860
+Remember the thinking cap.
+
+944
+00:37:25,860 --> 00:37:28,470
+So, you know, we're still the ones
+
+945
+00:37:28,470 --> 00:37:30,420
+that kind of control the flow.
+
+946
+00:37:30,420 --> 00:37:32,310
+And I do want you to walk away with that,
+
+947
+00:37:32,310 --> 00:37:35,100
+that like this isn't about,
+you know, full automation.
+
+948
+00:37:35,100 --> 00:37:38,460
+This is a lot more about
+augmenting us as developers
+
+949
+00:37:38,460 --> 00:37:41,430
+with this fantastic, fantastic tool.
+
+950
+00:37:41,430 --> 00:37:43,110
+This will help with most of these things,
+
+951
+00:37:43,110 --> 00:37:44,430
+but it's not gonna, you know,
+
+952
+00:37:44,430 --> 00:37:45,570
+it's not gonna solve everything
+
+953
+00:37:45,570 --> 00:37:47,910
+and it's not gonna solve
+everything in every case.
+
+954
+00:37:47,910 --> 00:37:49,770
+So that's very, very important.
+
+955
+00:37:49,770 --> 00:37:50,603
+- Yeah.
+
+956
+00:37:50,603 --> 00:37:52,710
+So here's how you can
+basically go try this yourself.
+
+957
+00:37:52,710 --> 00:37:54,510
+So the Claude Agent SDK,
+
+958
+00:37:54,510 --> 00:37:56,130
+which is what we've been working with,
+
+959
+00:37:56,130 --> 00:37:58,710
+the framework that we're
+working with is out.
+
+960
+00:37:58,710 --> 00:38:01,140
+You can go use that, you
+can go play around with it,
+
+961
+00:38:01,140 --> 00:38:04,110
+test it and try this out yourself.
+
+962
+00:38:04,110 --> 00:38:05,850
+All the patterns that we have here
+
+963
+00:38:05,850 --> 00:38:09,750
+are documented in the blog
+post that Alex mentioned
+
+964
+00:38:09,750 --> 00:38:12,180
+and we'll be sharing a QR
+code so you can scan that
+
+965
+00:38:12,180 --> 00:38:13,982
+and get access to it and read through
+
+966
+00:38:13,982 --> 00:38:16,770
+and understand our
+reasoning in more depth.
+
+967
+00:38:16,770 --> 00:38:19,381
+And then there's also
+an example documentation
+
+968
+00:38:19,381 --> 00:38:23,100
+in our quick start that you
+can also fork and work on.
+
+969
+00:38:23,100 --> 00:38:26,010
+So you can really get started
+today if you wanted to.
+
+970
+00:38:26,010 --> 00:38:29,040
+And that's what we'd love for you to do.
+
+971
+00:38:29,040 --> 00:38:31,110
+And one thing we wanna emphasize,
+
+972
+00:38:31,110 --> 00:38:31,943
+and it's really important even though
+
+973
+00:38:31,943 --> 00:38:35,709
+it's at the end of the slide,
+but it's your standards.
+
+974
+00:38:35,709 --> 00:38:37,881
+So you're in control.
+
+975
+00:38:37,881 --> 00:38:41,157
+The agent follows your standard.md.
+
+976
+00:38:41,157 --> 00:38:44,490
+So if there's something you
+don't like about the output,
+
+977
+00:38:44,490 --> 00:38:45,750
+you can update the standards.
+
+978
+00:38:45,750 --> 00:38:48,030
+It's not a black box fully.
+
+979
+00:38:48,030 --> 00:38:50,100
+So yeah, we want you to
+really play around with this
+
+980
+00:38:50,100 --> 00:38:51,218
+and take control.
+
+981
+00:38:51,218 --> 00:38:55,260
+And if you're at re:Invent,
+which you guys are,
+
+982
+00:38:55,260 --> 00:38:56,790
+we'd love to see you at
+the booth and see it.
+
+983
+00:38:56,790 --> 00:38:57,840
+You can come see it live
+
+984
+00:38:57,840 --> 00:39:00,564
+or even ask us more
+questions if you would like.
+
+985
+00:39:00,564 --> 00:39:01,397
+Yeah.
+
+986
+00:39:01,397 --> 00:39:04,800
+- Yeah, and with that, just a
+couple of the core takeaways
+
+987
+00:39:04,800 --> 00:39:06,870
+on the technical side.
+
+988
+00:39:06,870 --> 00:39:10,324
+You know, when we were
+working on this research,
+
+989
+00:39:10,324 --> 00:39:12,360
+we thought to ourselves,
+
+990
+00:39:12,360 --> 00:39:16,020
+how can we mimic real developer workflows?
+
+991
+00:39:16,020 --> 00:39:18,090
+And that's what you're seeing
+here on this slide, right?
+
+992
+00:39:18,090 --> 00:39:20,760
+What are the parts of
+the developer workflow
+
+993
+00:39:20,760 --> 00:39:22,110
+that we can imbue the agent with
+
+994
+00:39:22,110 --> 00:39:23,730
+so that it does work similarly
+
+995
+00:39:23,730 --> 00:39:25,950
+to how real developers do this work.
+
+996
+00:39:25,950 --> 00:39:28,230
+So, you know, starting
+out by reading the docs,
+
+997
+00:39:28,230 --> 00:39:29,940
+understanding the current
+state of a feature
+
+998
+00:39:29,940 --> 00:39:33,660
+before it continues to build
+additional incremental changes.
+
+999
+00:39:33,660 --> 00:39:36,750
+You know, leaving things
+cleaner than it found it.
+
+1000
+00:39:36,750 --> 00:39:39,390
+And really what that means
+at the end of the day
+
+1001
+00:39:39,390 --> 00:39:41,580
+in practical terms is writing tests,
+
+1002
+00:39:41,580 --> 00:39:45,090
+writing tests that it can run
+on every subsequent iteration.
+
+1003
+00:39:45,090 --> 00:39:46,860
+And that's extremely critical, right?
+
+1004
+00:39:46,860 --> 00:39:49,110
+So leave things cleaner
+than you found them.
+
+1005
+00:39:49,110 --> 00:39:51,870
+And that also has to do with
+looking for errors, right?
+
+1006
+00:39:51,870 --> 00:39:55,680
+So what we wrote in our
+system prompt is to,
+
+1007
+00:39:55,680 --> 00:39:57,750
+and I don't mean system prompt for Claude,
+
+1008
+00:39:57,750 --> 00:40:01,563
+I mean for this harness that we created,
+
+1009
+00:40:01,563 --> 00:40:05,430
+to suggest that you know,
+not only do you write tests
+
+1010
+00:40:05,430 --> 00:40:07,080
+but you also write,
+
+1011
+00:40:07,080 --> 00:40:09,030
+you also verify that there are no errors
+
+1012
+00:40:09,030 --> 00:40:10,440
+in the browser logs.
+
+1013
+00:40:10,440 --> 00:40:13,020
+And so leaving things cleaner
+than you found them means,
+
+1014
+00:40:13,020 --> 00:40:14,299
+hey, leaving things in a clean state
+
+1015
+00:40:14,299 --> 00:40:16,770
+where there are no errors
+for the next session,
+
+1016
+00:40:16,770 --> 00:40:17,911
+so that when the next session starts,
+
+1017
+00:40:17,911 --> 00:40:20,820
+it doesn't start with a
+whole bunch of problems.
+
+1018
+00:40:20,820 --> 00:40:22,056
+We do have an interesting thing here
+
+1019
+00:40:22,056 --> 00:40:25,350
+that I do wanna highlight if
+you look at the code base,
+
+1020
+00:40:25,350 --> 00:40:28,290
+is that one of the things
+that we do is I mentioned
+
+1021
+00:40:28,290 --> 00:40:31,710
+that we've constricted the
+session timeframe to one hour.
+
+1022
+00:40:31,710 --> 00:40:34,080
+So you know, sometimes
+what will happen is,
+
+1023
+00:40:34,080 --> 00:40:36,090
+the agent will not have completed its work
+
+1024
+00:40:36,090 --> 00:40:39,000
+by that one hour time
+horizon within that session.
+
+1025
+00:40:39,000 --> 00:40:41,585
+And so we actually have
+the agent make a commit
+
+1026
+00:40:41,585 --> 00:40:43,830
+right before the session ends,
+
+1027
+00:40:43,830 --> 00:40:46,170
+even if it has not completed its work,
+
+1028
+00:40:46,170 --> 00:40:48,600
+so that no matter what, if
+the agent runs out of time
+
+1029
+00:40:48,600 --> 00:40:49,740
+and gets anxious or whatever,
+
+1030
+00:40:49,740 --> 00:40:51,630
+it still at least writes the history
+
+1031
+00:40:51,630 --> 00:40:53,430
+and then the next agent can pick up
+
+1032
+00:40:53,430 --> 00:40:55,470
+and clean up whatever
+the previous agent left
+
+1033
+00:40:55,470 --> 00:40:56,820
+in maybe not such a great state.
+
+1034
+00:40:56,820 --> 00:40:58,830
+So that does happen
+that it's a failure mode
+
+1035
+00:40:58,830 --> 00:41:00,036
+if you constrict that timeframe
+
+1036
+00:41:00,036 --> 00:41:02,772
+and it can't complete its work in time.
+
+1037
+00:41:02,772 --> 00:41:04,530
+And then of course the final one,
+
+1038
+00:41:04,530 --> 00:41:06,516
+which we've already said
+so many times before,
+
+1039
+00:41:06,516 --> 00:41:09,330
+test, you know, test
+before declaring victory
+
+1040
+00:41:09,330 --> 00:41:13,050
+because if you just have it write code
+
+1041
+00:41:13,050 --> 00:41:15,060
+and not test its code,
+
+1042
+00:41:15,060 --> 00:41:16,440
+you're not gonna get the best results.
+
+1043
+00:41:16,440 --> 00:41:18,060
+And this is what Nadine and
+I were talking about earlier,
+
+1044
+00:41:18,060 --> 00:41:21,630
+if we ask, you know,
+Claude to just one-shot,
+
+1045
+00:41:21,630 --> 00:41:23,040
+it can produce a good outcome
+
+1046
+00:41:23,040 --> 00:41:26,010
+but it might have surprising
+failure mode, surprising bugs.
+
+1047
+00:41:26,010 --> 00:41:28,170
+So just like we as
+developers, we want the agent
+
+1048
+00:41:28,170 --> 00:41:30,813
+to write those tests as
+it continues to work.
+
+1049
+00:41:31,860 --> 00:41:33,060
+- Yeah. So that's all.
+
+1050
+00:41:33,060 --> 00:41:35,820
+Thank you so much guys
+for attending this talk
+
+1051
+00:41:35,820 --> 00:41:37,384
+and we hope it was valuable.
+
+1052
+00:41:37,384 --> 00:41:39,930
+- We'll share it.
+- If you're here,
+
+1053
+00:41:39,930 --> 00:41:42,570
+we'd love for you to come
+to our booth, take a look.
+
+1054
+00:41:42,570 --> 00:41:44,250
+We'll also be sharing the QR code now,
+
+1055
+00:41:44,250 --> 00:41:46,620
+like that I mentioned.
+
+1056
+00:41:46,620 --> 00:41:48,120
+So there it is. So feel free to scan it.
+
+1057
+00:41:48,120 --> 00:41:50,400
+This will give you
+access to the blog post,
+
+1058
+00:41:50,400 --> 00:41:55,050
+the architecture and also,
+yeah, so a few things.
+
+1059
+00:41:55,050 --> 00:41:58,978
+So please do scan it and
+come and see us and yeah.
+
+1060
+00:41:58,978 --> 00:42:00,219
+- Yeah. Thanks so much.
+- Thank you.
+
+1061
+00:42:00,219 --> 00:42:02,550
+- And we do have some time if,
+
+1062
+00:42:02,550 --> 00:42:04,080
+I know we might be
+breaking out a little bit
+
+1063
+00:42:04,080 --> 00:42:06,540
+of the AV advice,
+
+1064
+00:42:06,540 --> 00:42:09,390
+but if anybody wants to give
+us a question we can take one,
+
+1065
+00:42:09,390 --> 00:42:10,710
+but we're just gonna have to repeat it
+
+1066
+00:42:10,710 --> 00:42:11,940
+and you're gonna have
+to speak up 'cause it's,
+
+1067
+00:42:11,940 --> 00:42:13,170
+we don't have mics.
+
+1068
+00:42:13,170 --> 00:42:14,003
+Right.
+
+1069
+00:42:14,003 --> 00:42:16,517
+So I mean we can go into
+a lot of different paths
+
+1070
+00:42:16,517 --> 00:42:19,140
+with your question but those
+are some like, you know,
+
+1071
+00:42:19,140 --> 00:42:20,673
+top of mind thoughts
+that I wanted to offer.
+
+1072
+00:42:20,673 --> 00:42:23,160
+- That's really helpful.
+- Yeah, yeah, of course.
+
+1073
+00:42:23,160 --> 00:42:23,993
+All right.
+
+1074
+00:42:23,993 --> 00:42:25,671
+Well, thank you all so much and
+enjoy the rest of re:Invent.
+
+1075
+00:42:25,671 --> 00:42:27,789
+Stop by the booth. We'll be there.
+
+1076
+00:42:27,789 --> 00:42:29,400
+We're basically for the next few days.
+
+1077
+00:42:29,400 --> 00:42:30,258
+Thank you so much.
+- Thank you.
+
+1078
+00:42:30,258 --> 00:42:32,878
+(audience applauding)
+

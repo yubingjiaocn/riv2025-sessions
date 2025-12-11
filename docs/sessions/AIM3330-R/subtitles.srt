@@ -1,0 +1,3778 @@
+1
+00:00:00,510 --> 00:00:02,100
+- It's great to see you all here.
+
+2
+00:00:02,100 --> 00:00:03,330
+My name is Sarthak Handa.
+
+3
+00:00:03,330 --> 00:00:06,000
+I'm a principal product manager
+with Bedrock AgentCore team,
+
+4
+00:00:06,000 --> 00:00:07,320
+and I'm joined by Vivek Bhadauria,
+
+5
+00:00:07,320 --> 00:00:09,720
+who's my principal engineer counterpart.
+
+6
+00:00:09,720 --> 00:00:11,190
+And today we are going
+to talk about something
+
+7
+00:00:11,190 --> 00:00:14,550
+that every team building AI
+systems deeply care about,
+
+8
+00:00:14,550 --> 00:00:16,500
+how to keep your agents out of trouble.
+
+9
+00:00:17,700 --> 00:00:19,290
+We are an exciting point in the industry
+
+10
+00:00:19,290 --> 00:00:21,690
+where how software is
+getting built and used
+
+11
+00:00:21,690 --> 00:00:23,550
+is rapidly evolving.
+
+12
+00:00:23,550 --> 00:00:25,320
+Startups and enterprise teams are building
+
+13
+00:00:25,320 --> 00:00:27,360
+completely new agent applications
+
+14
+00:00:27,360 --> 00:00:29,220
+that can understand users' goals
+
+15
+00:00:29,220 --> 00:00:31,570
+and then work across
+tools to get the job done.
+
+16
+00:00:32,490 --> 00:00:34,440
+But the moment you start giving agents
+
+17
+00:00:34,440 --> 00:00:36,480
+the ability to take real-world actions,
+
+18
+00:00:36,480 --> 00:00:40,440
+like calling APIs, updating
+records, or making transactions,
+
+19
+00:00:40,440 --> 00:00:43,650
+every misstep can have
+real-world consequences.
+
+20
+00:00:43,650 --> 00:00:44,760
+So in today's session,
+
+21
+00:00:44,760 --> 00:00:47,220
+our goal is to explore how we can ensure
+
+22
+00:00:47,220 --> 00:00:50,730
+that the agents act safely
+within their intended boundaries
+
+23
+00:00:50,730 --> 00:00:53,640
+so that we can deploy them in
+our most valuable workflows
+
+24
+00:00:53,640 --> 00:00:55,713
+and give it increasing level of autonomy.
+
+25
+00:00:57,750 --> 00:00:59,700
+We'll first start with why this matters,
+
+26
+00:00:59,700 --> 00:01:01,890
+the promise of AI agents,
+and what can go wrong
+
+27
+00:01:01,890 --> 00:01:04,830
+if the right control
+mechanisms are not in place.
+
+28
+00:01:04,830 --> 00:01:06,630
+Then, we'll walk through different layers
+
+29
+00:01:06,630 --> 00:01:08,010
+of agent safety controls
+
+30
+00:01:08,010 --> 00:01:11,010
+that are needed to put
+agents in production.
+
+31
+00:01:11,010 --> 00:01:13,020
+And finally, we'll go deeper
+
+32
+00:01:13,020 --> 00:01:16,170
+on how you can implement
+these controls using AgentCore
+
+33
+00:01:16,170 --> 00:01:18,630
+and walk through a deep dive example.
+
+34
+00:01:18,630 --> 00:01:19,780
+So let's jump right in.
+
+35
+00:01:22,980 --> 00:01:25,650
+AI agents are a new
+uniquely powerful class
+
+36
+00:01:25,650 --> 00:01:26,790
+of software system
+
+37
+00:01:26,790 --> 00:01:30,840
+that are able to understand
+user's intent, plan actions,
+
+38
+00:01:30,840 --> 00:01:34,203
+and execute multi-step workflows
+in order to achieve a goal.
+
+39
+00:01:35,100 --> 00:01:36,180
+It's a fundamental shift
+
+40
+00:01:36,180 --> 00:01:38,030
+in what software is capable of doing.
+
+41
+00:01:39,030 --> 00:01:40,170
+Unlike traditional programs
+
+42
+00:01:40,170 --> 00:01:42,600
+which follows a fixed set of rules,
+
+43
+00:01:42,600 --> 00:01:44,970
+agents figure out how to
+achieve a goal dynamically,
+
+44
+00:01:44,970 --> 00:01:47,160
+which makes them a lot more adaptive,
+
+45
+00:01:47,160 --> 00:01:48,873
+context-aware, and flexible.
+
+46
+00:01:50,430 --> 00:01:52,170
+This adaptability is already transforming
+
+47
+00:01:52,170 --> 00:01:55,170
+how enterprises are using
+software in their daily workflows.
+
+48
+00:01:56,880 --> 00:01:57,930
+We are seeing customers
+
+49
+00:01:57,930 --> 00:02:00,600
+across every single industry vertical
+
+50
+00:02:00,600 --> 00:02:02,340
+gaining immense value from agents
+
+51
+00:02:02,340 --> 00:02:05,280
+in automating complex workflows.
+
+52
+00:02:05,280 --> 00:02:07,830
+Think of automating IT ticketing process,
+
+53
+00:02:07,830 --> 00:02:10,080
+where you triage and
+resolve certain tickets.
+
+54
+00:02:11,220 --> 00:02:13,980
+Agents are also being used to
+generate structured content,
+
+55
+00:02:13,980 --> 00:02:16,050
+like knowledge artifacts, design assets,
+
+56
+00:02:16,050 --> 00:02:17,520
+or even software code,
+
+57
+00:02:17,520 --> 00:02:21,090
+in ways that were completely
+unthinkable just a year back.
+
+58
+00:02:21,090 --> 00:02:23,340
+And finally, we are seeing
+a lot of adoption of agents
+
+59
+00:02:23,340 --> 00:02:24,570
+for decision support,
+
+60
+00:02:24,570 --> 00:02:28,050
+where agents assist humans by
+gathering the right context,
+
+61
+00:02:28,050 --> 00:02:31,143
+surfacing key insights, and
+taking actions on their behalf.
+
+62
+00:02:32,700 --> 00:02:36,513
+But what makes agents powerful
+also makes them high stakes.
+
+63
+00:02:37,350 --> 00:02:40,680
+AI agents can take unsafe actions
+
+64
+00:02:40,680 --> 00:02:42,810
+without the right boundaries and controls,
+
+65
+00:02:42,810 --> 00:02:44,520
+and this is a big
+problem for organizations
+
+66
+00:02:44,520 --> 00:02:47,700
+who are trying to scale
+their agentic workloads.
+
+67
+00:02:47,700 --> 00:02:48,540
+In the real world,
+
+68
+00:02:48,540 --> 00:02:52,020
+using AI agents can produce
+several risks and challenges.
+
+69
+00:02:52,020 --> 00:02:55,203
+First, agents have
+unpredictable runtime behavior.
+
+70
+00:02:56,490 --> 00:02:59,490
+Even when you design
+your agents carefully,
+
+71
+00:02:59,490 --> 00:03:01,050
+the agent's decisions at runtime
+
+72
+00:03:01,050 --> 00:03:04,080
+often depends on the evolving
+context of user's input
+
+73
+00:03:04,080 --> 00:03:05,760
+and tool responses,
+
+74
+00:03:05,760 --> 00:03:08,010
+all of which cannot be
+predicted completely
+
+75
+00:03:08,010 --> 00:03:09,273
+during the design phase.
+
+76
+00:03:10,740 --> 00:03:13,020
+Second, agents may attend to take actions
+
+77
+00:03:13,020 --> 00:03:15,210
+that are outside their intended scope.
+
+78
+00:03:15,210 --> 00:03:18,210
+Think of agents' trying
+to trigger workflows
+
+79
+00:03:18,210 --> 00:03:20,250
+that are only meant for admins,
+
+80
+00:03:20,250 --> 00:03:23,148
+or agents trying to kickstart
+a high-value transaction
+
+81
+00:03:23,148 --> 00:03:24,813
+without the right authorization.
+
+82
+00:03:26,520 --> 00:03:30,090
+Agents may try to access
+and modify sensitive data,
+
+83
+00:03:30,090 --> 00:03:32,130
+or they may completely
+misinterpret business rules.
+
+84
+00:03:32,130 --> 00:03:32,963
+For example,
+
+85
+00:03:32,963 --> 00:03:35,250
+taking actions that are
+aligned with users' intent
+
+86
+00:03:35,250 --> 00:03:37,600
+but not align with
+company's internal policies.
+
+87
+00:03:38,940 --> 00:03:40,380
+So the real question is,
+
+88
+00:03:40,380 --> 00:03:42,810
+how do we give agents the freedom to act
+
+89
+00:03:42,810 --> 00:03:44,520
+while making sure that they do follow
+
+90
+00:03:44,520 --> 00:03:45,753
+the intended boundaries?
+
+91
+00:03:46,830 --> 00:03:49,080
+Let's try to understand
+that with an example.
+
+92
+00:03:51,840 --> 00:03:54,570
+The right mental model to
+think about agent safety
+
+93
+00:03:54,570 --> 00:03:56,520
+is to treat it as layers of protection.
+
+94
+00:03:57,510 --> 00:03:59,460
+You want to control how the agents run,
+
+95
+00:04:00,510 --> 00:04:02,280
+control what it's allowed to do,
+
+96
+00:04:02,280 --> 00:04:04,473
+and also verify what it actually did.
+
+97
+00:04:05,430 --> 00:04:07,480
+Agent safety starts at the runtime layer.
+
+98
+00:04:12,420 --> 00:04:13,320
+In this particular place,
+
+99
+00:04:13,320 --> 00:04:14,370
+the key goal is to ensure
+
+100
+00:04:14,370 --> 00:04:17,010
+that the agents execute in
+a fully isolated environment
+
+101
+00:04:17,010 --> 00:04:18,390
+so that one user's workload
+
+102
+00:04:18,390 --> 00:04:20,700
+does not interfere with that of another.
+
+103
+00:04:20,700 --> 00:04:22,710
+This is your first line of defense,
+
+104
+00:04:22,710 --> 00:04:24,600
+where you establish a safe boundary
+
+105
+00:04:24,600 --> 00:04:27,400
+that contains what can actually
+happen during execution.
+
+106
+00:04:28,380 --> 00:04:30,690
+Now, once your agent is safely executing,
+
+107
+00:04:30,690 --> 00:04:32,715
+the next step is to
+give it access to tools
+
+108
+00:04:32,715 --> 00:04:35,283
+so that it can take
+meaningful actions in runtime.
+
+109
+00:04:36,420 --> 00:04:38,850
+You wanna give your agents
+access to tools, APIs,
+
+110
+00:04:38,850 --> 00:04:41,460
+and services via a gateway
+
+111
+00:04:41,460 --> 00:04:43,500
+that acts as a controlled boundary
+
+112
+00:04:43,500 --> 00:04:46,770
+through which every single
+tool called must pass.
+
+113
+00:04:46,770 --> 00:04:48,180
+It is exactly at this boundary
+
+114
+00:04:48,180 --> 00:04:50,670
+that you want to implement policies
+
+115
+00:04:50,670 --> 00:04:54,120
+which allows you to define
+and enforce fine-grained rules
+
+116
+00:04:54,120 --> 00:04:57,390
+on what your agent can do
+and under what conditions.
+
+117
+00:04:57,390 --> 00:04:59,370
+So, for example, in this particular case,
+
+118
+00:04:59,370 --> 00:05:01,237
+you can define a policy which says,
+
+119
+00:05:01,237 --> 00:05:04,287
+"Don't approve a claim
+above a certain threshold."
+
+120
+00:05:05,910 --> 00:05:08,490
+Now, let's say your agent has executed,
+
+121
+00:05:08,490 --> 00:05:10,860
+the next obvious step is to
+know what it actually did
+
+122
+00:05:10,860 --> 00:05:12,360
+and how did it perform,
+
+123
+00:05:12,360 --> 00:05:14,760
+and that's precisely where
+Observability and Evaluations
+
+124
+00:05:14,760 --> 00:05:15,593
+come into play.
+
+125
+00:05:19,410 --> 00:05:20,340
+In this particular layer,
+
+126
+00:05:20,340 --> 00:05:21,930
+the key goal is to be able to trace
+
+127
+00:05:21,930 --> 00:05:23,370
+every single agent decision
+
+128
+00:05:23,370 --> 00:05:25,140
+that was being made during execution
+
+129
+00:05:25,140 --> 00:05:28,320
+so that you can see which tools
+did the agent try to invoke,
+
+130
+00:05:28,320 --> 00:05:29,490
+whether those tools were allowed
+
+131
+00:05:29,490 --> 00:05:32,490
+or denied based on policies,
+and what was the final outcome.
+
+132
+00:05:33,990 --> 00:05:36,720
+Now this brings together
+the entire safety framework
+
+133
+00:05:36,720 --> 00:05:39,930
+where different layers
+help you contain, control,
+
+134
+00:05:39,930 --> 00:05:41,700
+and verify agent's behavior
+
+135
+00:05:41,700 --> 00:05:43,920
+so that you are sure that
+they do actually follow
+
+136
+00:05:43,920 --> 00:05:46,020
+the intended boundaries that you plan for.
+
+137
+00:05:47,100 --> 00:05:48,390
+Now, to dive further
+
+138
+00:05:48,390 --> 00:05:50,163
+into how you can implement
+some of these controls
+
+139
+00:05:50,163 --> 00:05:52,913
+with AgentCore, I would like
+to welcome Vivek on stage.
+
+140
+00:05:57,870 --> 00:05:58,770
+- Thanks, Sarthak.
+
+141
+00:05:59,820 --> 00:06:00,660
+I'm going to dive deeper
+
+142
+00:06:00,660 --> 00:06:04,083
+into how specifically
+AgentCore helps here.
+
+143
+00:06:06,150 --> 00:06:09,240
+And I'm going to start with
+maybe a quick raise of hands.
+
+144
+00:06:09,240 --> 00:06:11,583
+How many of you have built an AI agent?
+
+145
+00:06:12,810 --> 00:06:14,040
+Cool.
+
+146
+00:06:14,040 --> 00:06:14,873
+Quite a few.
+
+147
+00:06:16,290 --> 00:06:18,790
+How many of you have
+actually put into production?
+
+148
+00:06:21,030 --> 00:06:22,230
+Okay, one.
+
+149
+00:06:22,230 --> 00:06:25,380
+How many of you who
+have put into production
+
+150
+00:06:25,380 --> 00:06:28,890
+actually feel safe about the
+security controls that you have
+
+151
+00:06:28,890 --> 00:06:31,320
+in production for AI agents?
+
+152
+00:06:31,320 --> 00:06:33,000
+Yeah, and that's expected.
+
+153
+00:06:33,000 --> 00:06:34,773
+That's the current state, right?
+
+154
+00:06:36,210 --> 00:06:38,370
+And that's there because
+as an agent developer,
+
+155
+00:06:38,370 --> 00:06:42,210
+we have to constantly make this trade-off
+
+156
+00:06:42,210 --> 00:06:45,000
+between how much autonomy
+to give to an agent
+
+157
+00:06:45,000 --> 00:06:47,070
+and how much safety
+controls we want to put.
+
+158
+00:06:47,070 --> 00:06:48,840
+The more agentic we make an agent,
+
+159
+00:06:48,840 --> 00:06:50,730
+the more autonomous it becomes.
+
+160
+00:06:50,730 --> 00:06:53,580
+We feel that and because
+of LLM indeterminism,
+
+161
+00:06:53,580 --> 00:06:55,680
+because of the lack of
+safety controls in the agent,
+
+162
+00:06:55,680 --> 00:06:57,150
+development frameworks,
+
+163
+00:06:57,150 --> 00:07:00,450
+we don't have the full safety
+guarantees that we have.
+
+164
+00:07:00,450 --> 00:07:01,577
+And this way with AgentCore Runtime,
+
+165
+00:07:01,577 --> 00:07:05,400
+we are trying to solve few of
+them with layered approach.
+
+166
+00:07:05,400 --> 00:07:06,963
+Let's dive deep into it.
+
+167
+00:07:07,980 --> 00:07:09,970
+And this where how to contain
+
+168
+00:07:11,040 --> 00:07:13,290
+what can happen within your agent.
+
+169
+00:07:13,290 --> 00:07:17,160
+Now, my definition of an
+agent is a simple one,
+
+170
+00:07:17,160 --> 00:07:19,410
+where it's an LLM in a loop.
+
+171
+00:07:19,410 --> 00:07:21,510
+So you have a task at hand,
+
+172
+00:07:21,510 --> 00:07:24,180
+you're using an LLM,
+
+173
+00:07:24,180 --> 00:07:27,630
+and that LLM kind of runs in
+a loop to achieve the purpose
+
+174
+00:07:27,630 --> 00:07:29,520
+and use the tools that it provides.
+
+175
+00:07:29,520 --> 00:07:31,590
+And that's what an agent
+code really is like.
+
+176
+00:07:31,590 --> 00:07:33,660
+You can use any agent
+development framework.
+
+177
+00:07:33,660 --> 00:07:34,980
+Sometimes you have some controls,
+
+178
+00:07:34,980 --> 00:07:36,240
+sometimes you have less controls,
+
+179
+00:07:36,240 --> 00:07:38,550
+but effectively using
+an LLM for reasoning,
+
+180
+00:07:38,550 --> 00:07:40,400
+and then you're acting through tools.
+
+181
+00:07:41,520 --> 00:07:44,880
+And that's the code that
+runs in AgentCore Runtime.
+
+182
+00:07:44,880 --> 00:07:47,370
+And we provide a strong isolation boundary
+
+183
+00:07:47,370 --> 00:07:49,470
+across every user session.
+
+184
+00:07:49,470 --> 00:07:52,350
+Think of it in a way
+where every user session
+
+185
+00:07:52,350 --> 00:07:56,520
+has its own memory,
+has its own file system
+
+186
+00:07:56,520 --> 00:08:00,480
+and CPU resources that are
+not shared by anyone else.
+
+187
+00:08:00,480 --> 00:08:03,150
+Two user sessions cannot cross boundaries,
+
+188
+00:08:03,150 --> 00:08:04,500
+cannot access each of the data,
+
+189
+00:08:04,500 --> 00:08:06,480
+and there's no crossfiring
+that can happen,
+
+190
+00:08:06,480 --> 00:08:09,330
+inadvertently or even if
+there's an adversarial attacks
+
+191
+00:08:09,330 --> 00:08:10,590
+that's going on.
+
+192
+00:08:10,590 --> 00:08:13,320
+And that provides a very
+strong guarantee for you.
+
+193
+00:08:13,320 --> 00:08:15,180
+It's as if there's a clean room
+
+194
+00:08:15,180 --> 00:08:17,640
+that is created for every user session.
+
+195
+00:08:17,640 --> 00:08:20,610
+And better yet, once that
+user session is done,
+
+196
+00:08:20,610 --> 00:08:21,690
+everything is removed,
+
+197
+00:08:21,690 --> 00:08:24,540
+so there's no after the fact
+user session can come in
+
+198
+00:08:24,540 --> 00:08:28,170
+and use any residual data
+or context from that.
+
+199
+00:08:28,170 --> 00:08:31,200
+Now that's a great guarantee
+for agent sessions.
+
+200
+00:08:31,200 --> 00:08:33,450
+Imagine that if there
+was a concurrent session
+
+201
+00:08:33,450 --> 00:08:37,230
+that is running in typical
+workloads, like microservices,
+
+202
+00:08:37,230 --> 00:08:40,620
+there could be possibility if
+agent has access to the state,
+
+203
+00:08:40,620 --> 00:08:43,500
+it can store state on behalf of one user
+
+204
+00:08:43,500 --> 00:08:47,100
+and may access that same state
+on behalf of another user.
+
+205
+00:08:47,100 --> 00:08:48,210
+That would be very...
+
+206
+00:08:48,210 --> 00:08:49,260
+That would not be possible
+
+207
+00:08:49,260 --> 00:08:51,060
+with a strong security
+and isolation boundaries
+
+208
+00:08:51,060 --> 00:08:52,410
+with AgentCore Runtime.
+
+209
+00:08:52,410 --> 00:08:54,420
+We are using lot of our technology
+
+210
+00:08:54,420 --> 00:08:57,120
+that we have over the years in AWS
+
+211
+00:08:57,120 --> 00:09:00,090
+like Firecracker microVM
+that we use for a lot,
+
+212
+00:09:00,090 --> 00:09:01,830
+driving a lot of our
+serverless architectures
+
+213
+00:09:01,830 --> 00:09:03,123
+to within this.
+
+214
+00:09:04,830 --> 00:09:07,590
+Post that, there is now we are containing
+
+215
+00:09:07,590 --> 00:09:10,980
+what an agent scaffold
+or AgentCore can do,
+
+216
+00:09:10,980 --> 00:09:13,950
+but agent interact through
+their external environment
+
+217
+00:09:13,950 --> 00:09:15,330
+via tools, right?
+
+218
+00:09:15,330 --> 00:09:17,446
+That's how they can do.
+
+219
+00:09:17,446 --> 00:09:18,420
+So even if we are containing
+
+220
+00:09:18,420 --> 00:09:19,980
+what it can do within that runtime,
+
+221
+00:09:19,980 --> 00:09:21,030
+there is still a possibility
+
+222
+00:09:21,030 --> 00:09:22,920
+that through the tools
+that we have provided,
+
+223
+00:09:22,920 --> 00:09:24,030
+it can do a lot more.
+
+224
+00:09:24,030 --> 00:09:26,880
+It can access state, it
+can affect environment,
+
+225
+00:09:26,880 --> 00:09:30,120
+it can exfiltrate data,
+or it can access the data
+
+226
+00:09:30,120 --> 00:09:32,250
+that you don't want or it's not trusted.
+
+227
+00:09:32,250 --> 00:09:35,100
+And that's where it's
+important to curate the tool
+
+228
+00:09:35,100 --> 00:09:36,480
+that you're providing to your agents.
+
+229
+00:09:36,480 --> 00:09:40,050
+It's same as lease
+privileges that we try to do
+
+230
+00:09:40,050 --> 00:09:41,430
+with every other microservices tool.
+
+231
+00:09:41,430 --> 00:09:44,460
+What actions it cannot
+do to not provide it.
+
+232
+00:09:44,460 --> 00:09:45,930
+An example, a simplistic example
+
+233
+00:09:45,930 --> 00:09:47,400
+would be that if you're building a chatbot
+
+234
+00:09:47,400 --> 00:09:50,400
+that should not give
+refunds to your customers,
+
+235
+00:09:50,400 --> 00:09:51,900
+don't provide a refund tool.
+
+236
+00:09:51,900 --> 00:09:53,580
+So curation tool does help.
+
+237
+00:09:53,580 --> 00:09:56,400
+And with AgentCore Gateway,
+it makes it simpler
+
+238
+00:09:56,400 --> 00:09:58,500
+because you can provide
+your API resources,
+
+239
+00:09:58,500 --> 00:10:00,870
+your Lambda targets, or
+even your MCP targets
+
+240
+00:10:00,870 --> 00:10:02,310
+and sort of create this abstraction
+
+241
+00:10:02,310 --> 00:10:04,833
+where you are curating
+the tools for an agent.
+
+242
+00:10:05,670 --> 00:10:09,420
+And it works totally with MCP compliance.
+
+243
+00:10:09,420 --> 00:10:10,650
+And maybe quick raise of hands,
+
+244
+00:10:10,650 --> 00:10:12,810
+how many of you already know about MCP,
+
+245
+00:10:12,810 --> 00:10:14,850
+or Model Context Protocol?
+
+246
+00:10:14,850 --> 00:10:16,620
+So quite a few, but for
+those who do not know,
+
+247
+00:10:16,620 --> 00:10:17,970
+like there's a very,
+
+248
+00:10:17,970 --> 00:10:20,700
+it's a protocol that
+was launched last year,
+
+249
+00:10:20,700 --> 00:10:22,290
+November, sort of.
+
+250
+00:10:22,290 --> 00:10:25,320
+And what it does is that it
+provides two functionalities,
+
+251
+00:10:25,320 --> 00:10:28,710
+or a simplistic where two
+functionalities to an agent,
+
+252
+00:10:28,710 --> 00:10:31,120
+where an agent can discover
+tools through list tools,
+
+253
+00:10:31,120 --> 00:10:33,360
+so it can know what tools
+are available to it,
+
+254
+00:10:33,360 --> 00:10:37,320
+and then it can invoke tool
+in a very uniform manner.
+
+255
+00:10:37,320 --> 00:10:39,330
+And that's what MC protocol dictates.
+
+256
+00:10:39,330 --> 00:10:41,640
+So any agent can use those MCP server
+
+257
+00:10:41,640 --> 00:10:43,230
+to discover what tools are available
+
+258
+00:10:43,230 --> 00:10:46,260
+and then use those to
+definitions when it's required
+
+259
+00:10:46,260 --> 00:10:47,093
+and invoke them.
+
+260
+00:10:48,270 --> 00:10:51,600
+AgentCore Gateway is
+fully compliant MCP server
+
+261
+00:10:51,600 --> 00:10:53,130
+that you get out of the box.
+
+262
+00:10:53,130 --> 00:10:54,150
+But what's more important
+
+263
+00:10:54,150 --> 00:10:56,790
+is even if you have curated that tool
+
+264
+00:10:56,790 --> 00:10:58,950
+with Lambda Interceptors
+that we have launched,
+
+265
+00:10:58,950 --> 00:11:00,930
+you can do fine-grained access control.
+
+266
+00:11:00,930 --> 00:11:02,280
+So these are the Interceptors
+
+267
+00:11:02,280 --> 00:11:04,710
+that work before every tool call,
+
+268
+00:11:04,710 --> 00:11:06,360
+and even after every tool call.
+
+269
+00:11:06,360 --> 00:11:07,800
+You can now enforce policies,
+
+270
+00:11:07,800 --> 00:11:09,450
+which are much more fine-grained.
+
+271
+00:11:09,450 --> 00:11:12,630
+A certain identity may have access,
+
+272
+00:11:12,630 --> 00:11:14,490
+a certain it may not have access.
+
+273
+00:11:14,490 --> 00:11:18,330
+A user that has booked a ticket
+should only be processed,
+
+274
+00:11:18,330 --> 00:11:20,220
+should not only be eligible for refund
+
+275
+00:11:20,220 --> 00:11:21,780
+versus a user who is not.
+
+276
+00:11:21,780 --> 00:11:23,850
+You can actually implement
+your own business logic
+
+277
+00:11:23,850 --> 00:11:25,020
+and business rules there.
+
+278
+00:11:25,020 --> 00:11:27,720
+It's a nice abstraction because
+it gives you those controls,
+
+279
+00:11:27,720 --> 00:11:30,153
+which is outside the
+boundary of an agent code.
+
+280
+00:11:31,860 --> 00:11:34,320
+And again, this helps because
+this is more enforceable
+
+281
+00:11:34,320 --> 00:11:35,870
+and everything goes through it.
+
+282
+00:11:36,900 --> 00:11:41,640
+The next one, there is
+still a problem here, right?
+
+283
+00:11:41,640 --> 00:11:44,400
+Now that we have contained
+what an agent can do,
+
+284
+00:11:44,400 --> 00:11:46,890
+we've also given curated set of tools,
+
+285
+00:11:46,890 --> 00:11:48,803
+there is still stuff where,
+
+286
+00:11:48,803 --> 00:11:52,260
+what if I work and often
+agents work on behalf of users,
+
+287
+00:11:52,260 --> 00:11:54,450
+so they obtain an identity from a user
+
+288
+00:11:54,450 --> 00:11:56,130
+and they work on behalf of it.
+
+289
+00:11:56,130 --> 00:11:57,480
+Now, if there are multiple users
+
+290
+00:11:57,480 --> 00:11:59,160
+that an agent is working on behalf of,
+
+291
+00:11:59,160 --> 00:12:00,390
+how should it not crossfire?
+
+292
+00:12:00,390 --> 00:12:02,520
+How does it implement
+this on behalf of flows
+
+293
+00:12:02,520 --> 00:12:05,070
+in a right way where the
+identities are propagated,
+
+294
+00:12:06,214 --> 00:12:09,343
+the authorization controls are implemented
+
+295
+00:12:09,343 --> 00:12:11,880
+while it's accessing external resources.
+
+296
+00:12:11,880 --> 00:12:14,760
+And this is where we
+developed AgentCore Identity
+
+297
+00:12:14,760 --> 00:12:16,530
+to do three purposes.
+
+298
+00:12:16,530 --> 00:12:19,380
+It gives an identity to
+your agent, that's one.
+
+299
+00:12:19,380 --> 00:12:21,300
+It does inbound authentication.
+
+300
+00:12:21,300 --> 00:12:23,640
+So your end user, you
+can bring your own IDP,
+
+301
+00:12:23,640 --> 00:12:24,780
+you can authenticate.
+
+302
+00:12:24,780 --> 00:12:26,340
+Much like any other services that we have,
+
+303
+00:12:26,340 --> 00:12:27,930
+you authenticate who is coming in.
+
+304
+00:12:27,930 --> 00:12:30,780
+But more importantly, it also
+does outbound authentications.
+
+305
+00:12:30,780 --> 00:12:33,390
+Agents are built to interact
+with their environment.
+
+306
+00:12:33,390 --> 00:12:35,460
+We are giving tools to interact
+with their environment.
+
+307
+00:12:35,460 --> 00:12:37,470
+It can do on behalf of flow.
+
+308
+00:12:37,470 --> 00:12:40,320
+And AgentCore Identity
+manages credentials for you,
+
+309
+00:12:40,320 --> 00:12:43,104
+token management, and
+credential exchange for you.
+
+310
+00:12:43,104 --> 00:12:46,230
+AgentCore itself doesn't have
+access to those credentials.
+
+311
+00:12:46,230 --> 00:12:47,610
+It only gets token
+
+312
+00:12:47,610 --> 00:12:50,130
+for the identity that's
+working on behalf of,
+
+313
+00:12:50,130 --> 00:12:52,280
+and then it can use it
+to access the tools.
+
+314
+00:12:55,740 --> 00:12:57,180
+Now that we are also ensuring
+
+315
+00:12:57,180 --> 00:12:58,650
+that the credentials are right,
+
+316
+00:12:58,650 --> 00:13:01,920
+we are using the right
+tools, and it's contained,
+
+317
+00:13:01,920 --> 00:13:05,250
+there is also still stuff to
+know what an agent is doing.
+
+318
+00:13:05,250 --> 00:13:09,180
+Now, what we define as a
+simplistic definition of an agent,
+
+319
+00:13:09,180 --> 00:13:11,640
+it's a LLM in a loop calling tools,
+
+320
+00:13:11,640 --> 00:13:13,740
+it's incredibly hard to debug this.
+
+321
+00:13:13,740 --> 00:13:15,450
+There are no pretty workflows.
+
+322
+00:13:15,450 --> 00:13:18,660
+There are no code to go back
+to and see what's going on
+
+323
+00:13:18,660 --> 00:13:19,983
+and why it's happening.
+
+324
+00:13:20,820 --> 00:13:23,853
+Every request can take a
+different path in that whole flow.
+
+325
+00:13:25,050 --> 00:13:27,000
+LLMs are incredibly resourceful too.
+
+326
+00:13:27,000 --> 00:13:29,880
+If a path fails, it can
+take another undefined path
+
+327
+00:13:29,880 --> 00:13:32,790
+that you don't know ahead of
+time, and that's the feature.
+
+328
+00:13:32,790 --> 00:13:36,580
+With Observability, you can
+see all the session traces
+
+329
+00:13:37,800 --> 00:13:40,080
+in like across all the components,
+
+330
+00:13:40,080 --> 00:13:43,470
+including tool calls,
+LLM calls, agent code,
+
+331
+00:13:43,470 --> 00:13:44,850
+and so on and so forth,
+
+332
+00:13:44,850 --> 00:13:47,100
+and create over the period of time,
+
+333
+00:13:47,100 --> 00:13:48,360
+what your agent is doing.
+
+334
+00:13:48,360 --> 00:13:49,920
+You can get a view of that.
+
+335
+00:13:49,920 --> 00:13:51,360
+You can query CloudWatch logs,
+
+336
+00:13:51,360 --> 00:13:54,270
+or you can have ready-made
+dashboards that you can see.
+
+337
+00:13:54,270 --> 00:13:58,050
+You can also see over the
+period ready-made dashboards
+
+338
+00:13:58,050 --> 00:13:59,880
+that says how much token usage is there,
+
+339
+00:13:59,880 --> 00:14:02,340
+which tools are failing
+often, which tools are not,
+
+340
+00:14:02,340 --> 00:14:04,530
+what are you 4XX0s, 5XX0s,
+
+341
+00:14:04,530 --> 00:14:05,980
+and all of that is available.
+
+342
+00:14:07,575 --> 00:14:09,510
+With this, there is observability,
+
+343
+00:14:09,510 --> 00:14:12,153
+but there is still a problem.
+
+344
+00:14:13,080 --> 00:14:14,700
+If I know what is happening
+
+345
+00:14:14,700 --> 00:14:17,340
+but I don't know what is
+right versus what is wrong.
+
+346
+00:14:17,340 --> 00:14:20,040
+Making all the tool called successful
+
+347
+00:14:20,040 --> 00:14:22,560
+doesn't still mean that
+the agent was helpful,
+
+348
+00:14:22,560 --> 00:14:25,560
+it achieved the goal success,
+or what I'm trying to do,
+
+349
+00:14:25,560 --> 00:14:27,840
+or it's relevant to my end user.
+
+350
+00:14:27,840 --> 00:14:30,090
+This is where the next thing
+comes, AgentCore Evaluation,
+
+351
+00:14:30,090 --> 00:14:31,740
+that we have launched only today.
+
+352
+00:14:32,820 --> 00:14:34,170
+And this is how it looks like.
+
+353
+00:14:34,170 --> 00:14:36,213
+So there's a user making an agent call,
+
+354
+00:14:37,170 --> 00:14:39,256
+and then we already know,
+
+355
+00:14:39,256 --> 00:14:41,610
+with AgentCore Observability
+all of those traces,
+
+356
+00:14:41,610 --> 00:14:42,690
+whether from AgentCore
+
+357
+00:14:42,690 --> 00:14:47,100
+or from related AgentCore
+services like Gateway, Runtime,
+
+358
+00:14:47,100 --> 00:14:49,590
+Identity, all of them
+get into Observability.
+
+359
+00:14:49,590 --> 00:14:51,360
+All of them track through one session ID
+
+360
+00:14:51,360 --> 00:14:52,960
+that you can see all the traces.
+
+361
+00:14:54,570 --> 00:14:57,120
+And now, what you can do on top of it
+
+362
+00:14:57,120 --> 00:14:58,500
+is that as an agent owner,
+
+363
+00:14:58,500 --> 00:15:03,240
+you can define what your criteria are
+
+364
+00:15:03,240 --> 00:15:05,888
+for saying that what is
+right versus what is wrong
+
+365
+00:15:05,888 --> 00:15:06,721
+for your agent.
+
+366
+00:15:06,721 --> 00:15:08,967
+You can define your
+autoverifiers, autograders,
+
+367
+00:15:08,967 --> 00:15:12,446
+or we call evaluators for your agent.
+
+368
+00:15:12,446 --> 00:15:14,340
+There are 13 prebuilt
+evaluators that we offer,
+
+369
+00:15:14,340 --> 00:15:16,503
+but you can write on your own.
+
+370
+00:15:17,880 --> 00:15:18,713
+So once you write,
+
+371
+00:15:18,713 --> 00:15:21,450
+and this typical way to
+write them is LLM as a judge.
+
+372
+00:15:21,450 --> 00:15:24,630
+So you define based on the
+input is the session trace
+
+373
+00:15:24,630 --> 00:15:27,270
+and you define to you what
+is the right, what is wrong,
+
+374
+00:15:27,270 --> 00:15:29,010
+and you can evaluate them.
+
+375
+00:15:29,010 --> 00:15:31,170
+And the good thing is all of this
+
+376
+00:15:31,170 --> 00:15:33,330
+also comes back to agent Observability.
+
+377
+00:15:33,330 --> 00:15:35,160
+So again, you can come to
+Observability and session,
+
+378
+00:15:35,160 --> 00:15:38,040
+and you can see based on your evaluation
+
+379
+00:15:38,040 --> 00:15:40,080
+whether it was helpful, accurate,
+
+380
+00:15:40,080 --> 00:15:41,970
+and whatever the dimension
+that you're interested in.
+
+381
+00:15:41,970 --> 00:15:43,410
+You can also see a dashboard
+
+382
+00:15:43,410 --> 00:15:45,000
+where you're seeing
+over the period of time,
+
+383
+00:15:45,000 --> 00:15:46,710
+which sessions are the ones
+
+384
+00:15:46,710 --> 00:15:48,300
+that are falling short
+of your expectation,
+
+385
+00:15:48,300 --> 00:15:49,750
+these sessions are exceeding.
+
+386
+00:15:52,590 --> 00:15:54,270
+That's the monitoring process.
+
+387
+00:15:54,270 --> 00:15:57,210
+The good thing about this,
+you can do it online.
+
+388
+00:15:57,210 --> 00:15:58,800
+So you can continuously evaluate,
+
+389
+00:15:58,800 --> 00:16:00,690
+you can set up your pipeline with samples,
+
+390
+00:16:00,690 --> 00:16:03,300
+certain percentage of your
+request, and continuous,
+
+391
+00:16:03,300 --> 00:16:05,460
+and whatever the value it
+is you have configured,
+
+392
+00:16:05,460 --> 00:16:06,990
+it can keep evaluating them.
+
+393
+00:16:06,990 --> 00:16:09,180
+You can do use predefined evaluators,
+
+394
+00:16:09,180 --> 00:16:11,910
+there's a dozen of them,
+or you can define your own.
+
+395
+00:16:11,910 --> 00:16:13,530
+And you can easily that
+testing phases too,
+
+396
+00:16:13,530 --> 00:16:15,450
+which doesn't have a
+dependency on CloudWatch.
+
+397
+00:16:15,450 --> 00:16:17,760
+You can just call when
+I'm developing an agent
+
+398
+00:16:17,760 --> 00:16:20,130
+to test my evaluators or test my agents
+
+399
+00:16:20,130 --> 00:16:21,280
+as I'm developing them.
+
+400
+00:16:22,530 --> 00:16:23,820
+Now this is great.
+
+401
+00:16:23,820 --> 00:16:26,730
+Now I can know what my agents are doing,
+
+402
+00:16:26,730 --> 00:16:30,810
+verify continuously how
+they are performing.
+
+403
+00:16:30,810 --> 00:16:33,090
+But with safety,
+
+404
+00:16:33,090 --> 00:16:36,000
+I don't want to take chances
+of like after the fact.
+
+405
+00:16:36,000 --> 00:16:37,860
+I know that after the fact
+
+406
+00:16:37,860 --> 00:16:39,810
+that maybe it didn't do the right thing.
+
+407
+00:16:39,810 --> 00:16:42,210
+I need more deterministic controls, right?
+
+408
+00:16:42,210 --> 00:16:44,250
+Before an agent is acting,
+
+409
+00:16:44,250 --> 00:16:46,710
+or if I know what is going
+bad, I want to affect it,
+
+410
+00:16:46,710 --> 00:16:48,030
+so it doesn't do bad.
+
+411
+00:16:48,030 --> 00:16:49,410
+And that's where Policy comes in.
+
+412
+00:16:49,410 --> 00:16:52,260
+And Policy works on top of Gateway.
+
+413
+00:16:52,260 --> 00:16:55,620
+So let's take a flow that
+happens without the Policy.
+
+414
+00:16:55,620 --> 00:16:57,770
+There's agent, there's
+an inbound tool call.
+
+415
+00:16:57,770 --> 00:17:01,560
+An agent calls the Gateway for
+the for the tool invocation,
+
+416
+00:17:01,560 --> 00:17:04,650
+and the tool invocation
+happens from the Gateway.
+
+417
+00:17:04,650 --> 00:17:08,640
+Now, with AgentCore Gateway
+as that interception layer,
+
+418
+00:17:08,640 --> 00:17:10,260
+you can assign policies,
+
+419
+00:17:10,260 --> 00:17:14,490
+you can write policies,
+deterministic policies,
+
+420
+00:17:14,490 --> 00:17:17,310
+that apply add the every tool invocation
+
+421
+00:17:17,310 --> 00:17:19,770
+and that get deterministically enforced.
+
+422
+00:17:19,770 --> 00:17:21,420
+Now, the nice little,
+
+423
+00:17:21,420 --> 00:17:23,910
+nice stuff is that you're
+not relying on AgentCore
+
+424
+00:17:23,910 --> 00:17:24,930
+to enforce it.
+
+425
+00:17:24,930 --> 00:17:28,050
+You're not relying on tools
+to have that business logic.
+
+426
+00:17:28,050 --> 00:17:28,950
+As an agent developer,
+
+427
+00:17:28,950 --> 00:17:32,490
+you can determine strictly put
+it in the AgentCore Gateway.
+
+428
+00:17:32,490 --> 00:17:36,210
+Similar to evaluators, you
+can define it ahead of time.
+
+429
+00:17:36,210 --> 00:17:38,100
+So there's a policy admin which comes,
+
+430
+00:17:38,100 --> 00:17:39,420
+define those policies.
+
+431
+00:17:39,420 --> 00:17:41,096
+Once they're defined and associated
+
+432
+00:17:41,096 --> 00:17:42,960
+with their AgentCore Gateway,
+
+433
+00:17:42,960 --> 00:17:45,210
+they get evaluated for every tool call
+
+434
+00:17:45,210 --> 00:17:46,960
+that you make through that gateway.
+
+435
+00:17:48,660 --> 00:17:50,220
+And with everything else,
+
+436
+00:17:50,220 --> 00:17:52,650
+all the policy allow and deny decisions
+
+437
+00:17:52,650 --> 00:17:55,530
+gets logged in the AgentCore
+Observability again
+
+438
+00:17:55,530 --> 00:17:56,640
+against the same session trace.
+
+439
+00:17:56,640 --> 00:17:59,133
+So you can see the full
+trace what's happening.
+
+440
+00:18:01,860 --> 00:18:04,080
+We kind of discussed some of this already.
+
+441
+00:18:04,080 --> 00:18:07,260
+So AgentCore Policy provides
+its unified protection for you.
+
+442
+00:18:07,260 --> 00:18:10,710
+It intercepts and governs all
+agent to tool interactions.
+
+443
+00:18:10,710 --> 00:18:12,990
+There's an operational simplicity to it.
+
+444
+00:18:12,990 --> 00:18:15,930
+No developer integrations
+required for each tool.
+
+445
+00:18:15,930 --> 00:18:18,210
+Because it's applied at the gateway level,
+
+446
+00:18:18,210 --> 00:18:21,000
+it's not per tool that you can do.
+
+447
+00:18:21,000 --> 00:18:22,860
+You can also associate the same policies
+
+448
+00:18:22,860 --> 00:18:25,350
+to multiple gateways too for agents.
+
+449
+00:18:25,350 --> 00:18:27,030
+There is auditability.
+
+450
+00:18:27,030 --> 00:18:29,310
+All the enforcement decisions are logged
+
+451
+00:18:29,310 --> 00:18:32,100
+and traced into the
+AgentCore Observability.
+
+452
+00:18:32,100 --> 00:18:33,840
+And performance is a key metric here,
+
+453
+00:18:33,840 --> 00:18:38,790
+because imagine, it's happening
+on your transactional path,
+
+454
+00:18:38,790 --> 00:18:40,170
+in your online path,
+
+455
+00:18:40,170 --> 00:18:43,470
+and you want to have millisecond
+latencies overhead there.
+
+456
+00:18:43,470 --> 00:18:47,040
+If it takes a lot of time or
+it is very resource-intensive,
+
+457
+00:18:47,040 --> 00:18:48,630
+it cannot be applied for every tool call
+
+458
+00:18:48,630 --> 00:18:50,380
+without the performance trade-offs.
+
+459
+00:18:53,070 --> 00:18:54,540
+Let's dive them into a use case
+
+460
+00:18:54,540 --> 00:18:57,540
+and understand how
+overall policy will work.
+
+461
+00:18:57,540 --> 00:19:00,933
+And we are taking an insurance
+agent, as an example,
+
+462
+00:19:02,431 --> 00:19:05,866
+and a typical agent user sense of prompt.
+
+463
+00:19:05,866 --> 00:19:08,580
+There's an agent is running,
+an AgentCore Runtime.
+
+464
+00:19:08,580 --> 00:19:10,440
+So that's the container unit.
+
+465
+00:19:10,440 --> 00:19:12,570
+It has its instructions, it has its tools.
+
+466
+00:19:12,570 --> 00:19:13,680
+Some of the tools are local
+
+467
+00:19:13,680 --> 00:19:16,170
+that's implemented within
+the agent scaffold.
+
+468
+00:19:16,170 --> 00:19:18,524
+And then there's an agent
+context that's available.
+
+469
+00:19:18,524 --> 00:19:20,370
+It makes model calls,
+
+470
+00:19:20,370 --> 00:19:22,140
+which are external to the Runtime,
+
+471
+00:19:22,140 --> 00:19:23,220
+And it makes tool calls,
+
+472
+00:19:23,220 --> 00:19:25,710
+which are also external
+via Gateway, right?
+
+473
+00:19:25,710 --> 00:19:26,640
+That's the general four.
+
+474
+00:19:26,640 --> 00:19:28,890
+There are three tools
+that we have provided it.
+
+475
+00:19:28,890 --> 00:19:30,060
+There's an application tool,
+
+476
+00:19:30,060 --> 00:19:32,013
+which helps it create an application.
+
+477
+00:19:32,910 --> 00:19:34,470
+There's an invoke risk model tool,
+
+478
+00:19:34,470 --> 00:19:36,600
+which helps assess the risk model
+
+479
+00:19:36,600 --> 00:19:38,700
+for that application that is created.
+
+480
+00:19:38,700 --> 00:19:39,780
+And then there's an approval tool,
+
+481
+00:19:39,780 --> 00:19:40,830
+where somebody can approve,
+
+482
+00:19:40,830 --> 00:19:43,020
+that I approve this insurance application.
+
+483
+00:19:43,020 --> 00:19:45,750
+Now that's a very simplistic
+insurance application.
+
+484
+00:19:45,750 --> 00:19:47,940
+If I were to put up policies on it,
+
+485
+00:19:47,940 --> 00:19:50,100
+these are the three steps that looks like.
+
+486
+00:19:50,100 --> 00:19:52,560
+Step 1, policy authoring.
+
+487
+00:19:52,560 --> 00:19:54,720
+And in here, I want to enforce a policy
+
+488
+00:19:54,720 --> 00:19:59,720
+which says in natural language,
+let's start with that.
+
+489
+00:19:59,820 --> 00:20:02,490
+That allow the user to
+call the application tool
+
+490
+00:20:02,490 --> 00:20:06,150
+with the coverage amount
+is under $5 million.
+
+491
+00:20:06,150 --> 00:20:08,910
+So no policy coverage,
+no policy application
+
+492
+00:20:08,910 --> 00:20:11,430
+where coverage amount
+is more than $5 million.
+
+493
+00:20:11,430 --> 00:20:13,200
+And the second one is much
+more interesting for me,
+
+494
+00:20:13,200 --> 00:20:14,160
+the second statement.
+
+495
+00:20:14,160 --> 00:20:16,650
+If you're not able to
+read, I can just repeat it.
+
+496
+00:20:16,650 --> 00:20:19,050
+If a user has a principle
+tag called department,
+
+497
+00:20:19,050 --> 00:20:20,610
+so if an identity that is calling
+
+498
+00:20:20,610 --> 00:20:24,690
+has a additional attribute
+that department is finance,
+
+499
+00:20:24,690 --> 00:20:26,880
+then only they should be
+able to do risk modeling.
+
+500
+00:20:26,880 --> 00:20:28,840
+And this is sort of something,
+
+501
+00:20:28,840 --> 00:20:31,770
+where if there's a different
+user that is calling
+
+502
+00:20:31,770 --> 00:20:33,480
+not from the finance department,
+
+503
+00:20:33,480 --> 00:20:35,460
+they should not see the risk modeling.
+
+504
+00:20:35,460 --> 00:20:38,790
+And this is an identity-based
+kind of a validation,
+
+505
+00:20:38,790 --> 00:20:42,003
+not a simplistic validation
+on just the tool inputs.
+
+506
+00:20:43,590 --> 00:20:45,363
+How many of you're aware of Cedar?
+
+507
+00:20:46,560 --> 00:20:48,273
+Okay, good to find one.
+
+508
+00:20:49,290 --> 00:20:52,020
+And for this, you don't
+have to know Cedar though,
+
+509
+00:20:52,020 --> 00:20:53,550
+but I'm just showcasing it here
+
+510
+00:20:53,550 --> 00:20:56,460
+is we are enforcing them through Cedar,
+
+511
+00:20:56,460 --> 00:20:57,420
+and that's very important,
+
+512
+00:20:57,420 --> 00:21:01,830
+because Cedar is this policy
+authorization language
+
+513
+00:21:01,830 --> 00:21:04,710
+that has been developed before gen AI.
+
+514
+00:21:04,710 --> 00:21:08,010
+It's already supported
+in API Gateways, Lambdas,
+
+515
+00:21:08,010 --> 00:21:09,090
+Amazon Verified Permission
+
+516
+00:21:09,090 --> 00:21:11,760
+is developed and open-sourced by Amazon,
+
+517
+00:21:11,760 --> 00:21:13,950
+and it's sort of a very formal policy
+
+518
+00:21:13,950 --> 00:21:15,510
+for policy authorization.
+
+519
+00:21:15,510 --> 00:21:16,920
+It's much more like Rego.
+
+520
+00:21:16,920 --> 00:21:19,440
+If anybody's aware of
+our Kubernetes and stuff,
+
+521
+00:21:19,440 --> 00:21:21,180
+very similar to Cedar.
+
+522
+00:21:21,180 --> 00:21:22,710
+And what is important here
+
+523
+00:21:22,710 --> 00:21:25,470
+is that even though there's a
+natural language definition,
+
+524
+00:21:25,470 --> 00:21:27,930
+there is a formalization
+of it through Cedar.
+
+525
+00:21:27,930 --> 00:21:30,270
+So you can actually see and
+enforce it through that.
+
+526
+00:21:30,270 --> 00:21:33,450
+That also gives it much more
+performant and determinism.
+
+527
+00:21:33,450 --> 00:21:35,040
+The natural language really helps
+
+528
+00:21:35,040 --> 00:21:37,830
+in ensuring that if you're
+not good at authoring these,
+
+529
+00:21:37,830 --> 00:21:39,480
+you can just start with natural language.
+
+530
+00:21:39,480 --> 00:21:41,190
+There's a lot of verifications that we do
+
+531
+00:21:41,190 --> 00:21:42,868
+that it's actually right.
+
+532
+00:21:42,868 --> 00:21:46,350
+And in here, it already
+shows that it's valid policy,
+
+533
+00:21:46,350 --> 00:21:47,550
+then you can apply them.
+
+534
+00:21:49,260 --> 00:21:51,960
+Second one, once we have
+created these policies
+
+535
+00:21:51,960 --> 00:21:53,760
+and associated with a gateway,
+
+536
+00:21:53,760 --> 00:21:56,449
+now you can just start calling your tools,
+
+537
+00:21:56,449 --> 00:21:57,840
+or start running your agents.
+
+538
+00:21:57,840 --> 00:21:59,400
+Same flow, looks like this.
+
+539
+00:21:59,400 --> 00:22:03,690
+We send a prompt agent
+reasons through the model,
+
+540
+00:22:03,690 --> 00:22:04,920
+decides on a tool.
+
+541
+00:22:04,920 --> 00:22:06,210
+But before invoking the tool,
+
+542
+00:22:06,210 --> 00:22:08,760
+now there's an interception
+for the policy.
+
+543
+00:22:08,760 --> 00:22:10,590
+The policy gets enforced,
+
+544
+00:22:10,590 --> 00:22:12,540
+whether it's an approved
+or a denied decision.
+
+545
+00:22:12,540 --> 00:22:13,620
+In this case, it's an approved.
+
+546
+00:22:13,620 --> 00:22:15,630
+So it goes ahead and makes the tool call,
+
+547
+00:22:15,630 --> 00:22:16,920
+the tool result comes in
+
+548
+00:22:16,920 --> 00:22:20,490
+and goes back as a response
+to the end user, right?
+
+549
+00:22:20,490 --> 00:22:23,010
+It was a deny call, it would've
+returned directly from there
+
+550
+00:22:23,010 --> 00:22:24,993
+and would've moved forward.
+
+551
+00:22:26,700 --> 00:22:28,560
+The third step is the Observability.
+
+552
+00:22:28,560 --> 00:22:30,330
+Whether it's allow or deny,
+
+553
+00:22:30,330 --> 00:22:32,280
+you can come to your Observability traces
+
+554
+00:22:32,280 --> 00:22:35,820
+and see what is going on,
+what policies are approved,
+
+555
+00:22:35,820 --> 00:22:37,500
+deny the decisions of it.
+
+556
+00:22:37,500 --> 00:22:39,300
+You can see the payload information.
+
+557
+00:22:39,300 --> 00:22:40,980
+you can see which resources.
+
+558
+00:22:40,980 --> 00:22:43,500
+And you can also see, which
+is not captured in here,
+
+559
+00:22:43,500 --> 00:22:45,060
+we will show it in the demo.
+
+560
+00:22:45,060 --> 00:22:47,550
+You can also see over the period of time
+
+561
+00:22:47,550 --> 00:22:48,750
+how your policies are working,
+
+562
+00:22:48,750 --> 00:22:50,910
+how many sessions or
+traces they're denying,
+
+563
+00:22:50,910 --> 00:22:52,590
+how many they're allowing.
+
+564
+00:22:52,590 --> 00:22:55,163
+And you can see their distribution
+over a period of time.
+
+565
+00:22:56,550 --> 00:23:00,780
+With this, we can actually
+see it in action too
+
+566
+00:23:00,780 --> 00:23:01,613
+through a demo.
+
+567
+00:23:05,818 --> 00:23:09,090
+Okay, so this is AgentCore console.
+
+568
+00:23:09,090 --> 00:23:10,710
+Let's start with Gateway.
+
+569
+00:23:10,710 --> 00:23:13,470
+I've already created a gateway in here.
+
+570
+00:23:13,470 --> 00:23:15,360
+The gateway name is what is selected.
+
+571
+00:23:15,360 --> 00:23:17,193
+And you can see inside this gateway.
+
+572
+00:23:18,154 --> 00:23:20,637
+Gateway associated with an
+identity provider, Cognito.
+
+573
+00:23:20,637 --> 00:23:24,510
+So there's a Cognito identity
+that I'm using for inbound.
+
+574
+00:23:24,510 --> 00:23:26,220
+There are three tools configured.
+
+575
+00:23:26,220 --> 00:23:28,020
+Going inside one tool,
+
+576
+00:23:28,020 --> 00:23:29,880
+and these are tools that
+we already talked about.
+
+577
+00:23:29,880 --> 00:23:31,740
+There are two properties it has.
+
+578
+00:23:31,740 --> 00:23:34,830
+It needs coverage amount
+and region as an input.
+
+579
+00:23:34,830 --> 00:23:37,200
+These are the definition
+that goes into the model.
+
+580
+00:23:37,200 --> 00:23:39,450
+This how model knows how to call it.
+
+581
+00:23:39,450 --> 00:23:41,670
+Now with these tools
+and with this gateway,
+
+582
+00:23:41,670 --> 00:23:42,990
+there is also a log delivery.
+
+583
+00:23:42,990 --> 00:23:44,760
+This is where the tracing comes about.
+
+584
+00:23:44,760 --> 00:23:46,050
+There is vendor logs
+
+585
+00:23:46,050 --> 00:23:48,120
+that you can configure
+where this log should go.
+
+586
+00:23:48,120 --> 00:23:49,590
+And the tracing is enabled as well.
+
+587
+00:23:49,590 --> 00:23:52,170
+So all the Observability
+will be enabled for this.
+
+588
+00:23:52,170 --> 00:23:53,130
+Let's quickly run it.
+
+589
+00:23:53,130 --> 00:23:54,450
+There are no policies yet, right?
+
+590
+00:23:54,450 --> 00:23:55,740
+It should just run.
+
+591
+00:23:55,740 --> 00:23:57,960
+It's a very bare bones agent.
+
+592
+00:23:57,960 --> 00:23:59,070
+Forget about custom claims.
+
+593
+00:23:59,070 --> 00:24:01,620
+Now we did not add any claims.
+
+594
+00:24:01,620 --> 00:24:04,555
+There are four tools
+here that are created,
+
+595
+00:24:04,555 --> 00:24:07,143
+but we only added three tool.
+
+596
+00:24:09,180 --> 00:24:12,303
+And does anybody know where
+this fourth tool came from?
+
+597
+00:24:14,070 --> 00:24:15,360
+Okay, I'm not surprised
+
+598
+00:24:15,360 --> 00:24:18,473
+because it's very custom for
+the gateway that we have added.
+
+599
+00:24:18,473 --> 00:24:20,610
+And the way to think about this,
+
+600
+00:24:20,610 --> 00:24:22,950
+that in this case it's not useful,
+
+601
+00:24:22,950 --> 00:24:24,990
+but there's a search
+tool that we have added.
+
+602
+00:24:24,990 --> 00:24:27,240
+Now, it's not there in MCP spec yet,
+
+603
+00:24:27,240 --> 00:24:28,140
+the search functionality,
+
+604
+00:24:28,140 --> 00:24:30,780
+but you can actually do contextual search
+
+605
+00:24:30,780 --> 00:24:33,150
+based on what your agent is processing
+
+606
+00:24:33,150 --> 00:24:35,310
+and just get the list of tools from there
+
+607
+00:24:35,310 --> 00:24:36,840
+versus all the list of tools.
+
+608
+00:24:36,840 --> 00:24:38,160
+There are just three tools here.
+
+609
+00:24:38,160 --> 00:24:38,993
+So it doesn't matter.
+
+610
+00:24:38,993 --> 00:24:41,130
+We can just list all the tools
+and provide in the context.
+
+611
+00:24:41,130 --> 00:24:43,230
+But imagine there are 30 or 300 tools
+
+612
+00:24:43,230 --> 00:24:45,120
+that you're providing all those tools
+
+613
+00:24:45,120 --> 00:24:46,470
+and you don't want to provide all of this
+
+614
+00:24:46,470 --> 00:24:49,893
+in your LLM definition, then
+search can come in and help.
+
+615
+00:24:51,600 --> 00:24:53,643
+Let's move forward with the demo.
+
+616
+00:24:55,248 --> 00:24:56,370
+Okay.
+
+617
+00:24:56,370 --> 00:24:57,300
+So in here,
+
+618
+00:24:57,300 --> 00:25:00,630
+now I'll just try to make
+a application request,
+
+619
+00:25:00,630 --> 00:25:02,460
+providing it's the U.S. region.
+
+620
+00:25:02,460 --> 00:25:06,033
+We wanted a region and a
+dollar amount, $10 million.
+
+621
+00:25:07,290 --> 00:25:09,090
+And it's a dummy implementation.
+
+622
+00:25:09,090 --> 00:25:09,923
+It'll approve...
+
+623
+00:25:09,923 --> 00:25:12,030
+It'll just create an
+application for me for now.
+
+624
+00:25:12,030 --> 00:25:13,470
+Created application.
+
+625
+00:25:13,470 --> 00:25:18,470
+This works right now without
+any policy enforcement so far.
+
+626
+00:25:19,620 --> 00:25:21,780
+Now, we can go back to the console
+
+627
+00:25:21,780 --> 00:25:25,443
+and try to see how to enforce,
+how to create our policies.
+
+628
+00:25:26,670 --> 00:25:28,140
+So here we are.
+
+629
+00:25:28,140 --> 00:25:30,363
+And this is the policy preview.
+
+630
+00:25:31,531 --> 00:25:34,830
+You can come, you can go
+to Create Policy Engine.
+
+631
+00:25:34,830 --> 00:25:37,850
+Policy Engine, imagine it
+is a container of policies.
+
+632
+00:25:37,850 --> 00:25:39,300
+So you can create many policies,
+
+633
+00:25:39,300 --> 00:25:41,400
+all of them go into one policy.
+
+634
+00:25:41,400 --> 00:25:45,630
+We'll name it, in this
+case, Underwriting_use_case.
+
+635
+00:25:45,630 --> 00:25:47,820
+And now we will select a resource.
+
+636
+00:25:47,820 --> 00:25:49,260
+A resource will be a gateway.
+
+637
+00:25:49,260 --> 00:25:51,270
+That's where we are
+applying these policies.
+
+638
+00:25:51,270 --> 00:25:52,710
+We'll select the resource.
+
+639
+00:25:52,710 --> 00:25:54,210
+This is the same natural language
+
+640
+00:25:54,210 --> 00:25:56,070
+that we talked about and went through.
+
+641
+00:25:56,070 --> 00:25:58,080
+So again, the same natural
+language that we are saying,
+
+642
+00:25:58,080 --> 00:26:00,870
+don't allow if it's more than $5 million
+
+643
+00:26:00,870 --> 00:26:01,953
+and don't approve,
+
+644
+00:26:03,180 --> 00:26:06,990
+and only risk model access
+should be enabled for a principle
+
+645
+00:26:06,990 --> 00:26:10,203
+or a user which has
+attribute finance, right?
+
+646
+00:26:11,940 --> 00:26:15,330
+In real time, you can see
+Cedar policies being created.
+
+647
+00:26:15,330 --> 00:26:17,430
+You can even iterate through that
+
+648
+00:26:17,430 --> 00:26:20,160
+as you're authoring these policies.
+
+649
+00:26:20,160 --> 00:26:21,360
+In this case, I'm showcasing.
+
+650
+00:26:21,360 --> 00:26:22,710
+I got it right in one flow.
+
+651
+00:26:22,710 --> 00:26:24,360
+You may take a few iterations.
+
+652
+00:26:24,360 --> 00:26:26,580
+You can see your policies, see the valid.
+
+653
+00:26:26,580 --> 00:26:28,599
+If they're valid or not.
+
+654
+00:26:28,599 --> 00:26:32,100
+And even not going through lot into Cedar.
+
+655
+00:26:32,100 --> 00:26:34,440
+There are three sections
+or four sections to it.
+
+656
+00:26:34,440 --> 00:26:36,510
+There's principle action resource
+
+657
+00:26:36,510 --> 00:26:41,070
+which identifies who is
+accessing, the action is the tool,
+
+658
+00:26:41,070 --> 00:26:42,480
+the resource is the gateway,
+
+659
+00:26:42,480 --> 00:26:44,130
+and the when the important part here,
+
+660
+00:26:44,130 --> 00:26:46,233
+at what conditions are you allowing it?
+
+661
+00:26:48,810 --> 00:26:50,040
+We validated both.
+
+662
+00:26:50,040 --> 00:26:51,300
+Both looks fine.
+
+663
+00:26:51,300 --> 00:26:54,630
+One is on the principle #department_name,
+
+664
+00:26:54,630 --> 00:26:56,850
+and the other one is
+the right dollar amount
+
+665
+00:26:56,850 --> 00:26:58,331
+that we wanted to do.
+
+666
+00:26:58,331 --> 00:26:59,430
+So all of this looks fine.
+
+667
+00:26:59,430 --> 00:27:01,380
+Now we can just create this policies.
+
+668
+00:27:01,380 --> 00:27:02,430
+There's a validation mode.
+
+669
+00:27:02,430 --> 00:27:04,740
+I'm just choosing for test purposes.
+
+670
+00:27:04,740 --> 00:27:07,230
+Permissive, we created these policies.
+
+671
+00:27:07,230 --> 00:27:09,750
+Now they're still not
+associated with Gateway.
+
+672
+00:27:09,750 --> 00:27:12,993
+So the next step is to
+associate with a gateway.
+
+673
+00:27:14,430 --> 00:27:16,860
+So I'll just associate
+with my existing gateways.
+
+674
+00:27:16,860 --> 00:27:19,380
+We already created a
+gateway that we had before.
+
+675
+00:27:19,380 --> 00:27:20,880
+I'll just go, select it.
+
+676
+00:27:20,880 --> 00:27:22,890
+And there are two modes for test.
+
+677
+00:27:22,890 --> 00:27:24,720
+You can just do Emits log only,
+
+678
+00:27:24,720 --> 00:27:25,620
+where it doesn't enforce,
+
+679
+00:27:25,620 --> 00:27:27,600
+but it says what a
+decision would have been.
+
+680
+00:27:27,600 --> 00:27:28,620
+It's very useful for you
+
+681
+00:27:28,620 --> 00:27:32,070
+to see, like, do a dry run
+on it before enforcing it.
+
+682
+00:27:32,070 --> 00:27:33,660
+But in here, I want to show it in a demo
+
+683
+00:27:33,660 --> 00:27:37,620
+where it actually prevents
+from calling that tool,
+
+684
+00:27:37,620 --> 00:27:38,763
+so it's enforced.
+
+685
+00:27:40,050 --> 00:27:41,310
+Cool.
+
+686
+00:27:41,310 --> 00:27:43,260
+We can go back to our agent now,
+
+687
+00:27:43,260 --> 00:27:46,713
+now that policy's enforced
+and run the same agent, right?
+
+688
+00:27:49,620 --> 00:27:51,180
+Again, there are no custom claims yet.
+
+689
+00:27:51,180 --> 00:27:52,980
+So it all shows none.
+
+690
+00:27:52,980 --> 00:27:55,170
+And in here, it's again
+very interesting right now.
+
+691
+00:27:55,170 --> 00:27:57,453
+And if anybody's noticing,
+
+692
+00:28:03,360 --> 00:28:07,533
+we only see in available
+tools one tool right now,
+
+693
+00:28:08,766 --> 00:28:11,820
+instead of like four
+tools that we had before.
+
+694
+00:28:11,820 --> 00:28:14,130
+And can anybody guess the reason
+
+695
+00:28:14,130 --> 00:28:15,630
+why there's only one tool now?
+
+696
+00:28:17,970 --> 00:28:21,510
+Well, what it means is that with Cedar,
+
+697
+00:28:21,510 --> 00:28:24,240
+it's the deny all is the default.
+
+698
+00:28:24,240 --> 00:28:26,970
+So by default, unless
+you have a permit policy,
+
+699
+00:28:26,970 --> 00:28:28,650
+it's deny all.
+
+700
+00:28:28,650 --> 00:28:31,560
+Now, we only configured
+permit for two tools.
+
+701
+00:28:31,560 --> 00:28:34,190
+So the first two, the search
+tool, there was no permit,
+
+702
+00:28:34,190 --> 00:28:35,520
+so that's denied.
+
+703
+00:28:35,520 --> 00:28:37,650
+The third tool that
+was there for approval,
+
+704
+00:28:37,650 --> 00:28:39,720
+there was no permit, that's denied.
+
+705
+00:28:39,720 --> 00:28:42,060
+This user doesn't have
+the right department.
+
+706
+00:28:42,060 --> 00:28:43,710
+It does, there's no department set.
+
+707
+00:28:43,710 --> 00:28:45,600
+So the risk model tool is denied.
+
+708
+00:28:45,600 --> 00:28:47,490
+The only one that could be,
+
+709
+00:28:47,490 --> 00:28:51,090
+if the dollar amount is
+lesser than $5 million
+
+710
+00:28:51,090 --> 00:28:52,260
+is the create application.
+
+711
+00:28:52,260 --> 00:28:53,940
+That's what agent sees.
+
+712
+00:28:53,940 --> 00:28:55,410
+So this is a very good way,
+
+713
+00:28:55,410 --> 00:28:57,990
+where your agent never even sees the tools
+
+714
+00:28:57,990 --> 00:28:59,790
+that it cannot use.
+
+715
+00:28:59,790 --> 00:29:00,690
+And that's pretty important
+
+716
+00:29:00,690 --> 00:29:01,980
+because then it cannot hallucinate.
+
+717
+00:29:01,980 --> 00:29:04,740
+There is no loops where
+agent tries something
+
+718
+00:29:04,740 --> 00:29:06,510
+and then it fails because policy denies
+
+719
+00:29:06,510 --> 00:29:07,660
+and then it comes back.
+
+720
+00:29:11,070 --> 00:29:13,350
+Okay, we'll move forward.
+
+721
+00:29:13,350 --> 00:29:15,720
+And I'm going to try the same thing.
+
+722
+00:29:15,720 --> 00:29:20,580
+I want to create an insurance
+application, U.S. region,
+
+723
+00:29:20,580 --> 00:29:25,580
+and for coverage, amount of $1 million.
+
+724
+00:29:25,620 --> 00:29:27,870
+This should be allowed based on our policy
+
+725
+00:29:27,870 --> 00:29:29,120
+and it should go forward.
+
+726
+00:29:31,470 --> 00:29:33,003
+Okay, so this work.
+
+727
+00:29:33,840 --> 00:29:34,980
+Now, we can try,
+
+728
+00:29:34,980 --> 00:29:37,650
+but it doesn't showcase that
+our policies is really working.
+
+729
+00:29:37,650 --> 00:29:41,940
+So we can try a number which
+is greater than $5 million.
+
+730
+00:29:41,940 --> 00:29:46,563
+Let's say, in this case, $10
+million is what we can try.
+
+731
+00:29:48,120 --> 00:29:51,873
+It's application creation
+in the U.S. region,
+
+732
+00:29:54,900 --> 00:29:57,963
+and amount is $10 million.
+
+733
+00:29:59,220 --> 00:30:01,830
+I'm just specifying
+additional instruction in here
+
+734
+00:30:01,830 --> 00:30:05,400
+to make the tool call again
+because it's in the same context
+
+735
+00:30:05,400 --> 00:30:07,380
+and agencies that it already
+created an application,
+
+736
+00:30:07,380 --> 00:30:09,540
+it generally sometimes says I
+already created an application
+
+737
+00:30:09,540 --> 00:30:12,750
+so just I'm providing
+additional information in here.
+
+738
+00:30:12,750 --> 00:30:15,630
+And if you see, it
+actually failed to call it
+
+739
+00:30:15,630 --> 00:30:18,150
+because the intercept
+happened with a policy
+
+740
+00:30:18,150 --> 00:30:22,620
+and it failed, we can go back and check.
+
+741
+00:30:22,620 --> 00:30:24,960
+And now you can see there's
+a view traces, right?
+
+742
+00:30:24,960 --> 00:30:25,860
+That was there before.
+
+743
+00:30:25,860 --> 00:30:28,610
+We can go there and see if
+Observability is helping us.
+
+744
+00:30:29,670 --> 00:30:30,573
+You can come here.
+
+745
+00:30:31,980 --> 00:30:34,290
+This is an auto filter
+that gets configured here
+
+746
+00:30:34,290 --> 00:30:36,090
+because you come through that view traces
+
+747
+00:30:36,090 --> 00:30:38,070
+based on the policy engine.
+
+748
+00:30:38,070 --> 00:30:40,800
+There is one interaction that
+we have had so far, one deny.
+
+749
+00:30:40,800 --> 00:30:43,500
+And you can see that one trace that's why.
+
+750
+00:30:43,500 --> 00:30:47,823
+You can come here and find
+the information for that.
+
+751
+00:30:49,890 --> 00:30:51,450
+Yep.
+
+752
+00:30:51,450 --> 00:30:54,030
+So it says policy is enforced,
+
+753
+00:30:54,030 --> 00:30:56,330
+and it says the interaction
+that is out there.
+
+754
+00:31:02,640 --> 00:31:04,200
+Now these are the metadata that is there
+
+755
+00:31:04,200 --> 00:31:05,580
+for the system to see.
+
+756
+00:31:05,580 --> 00:31:06,840
+And you can actually filter
+
+757
+00:31:06,840 --> 00:31:08,850
+and configure metrics on all of these.
+
+758
+00:31:08,850 --> 00:31:09,840
+So these are pretty useful
+
+759
+00:31:09,840 --> 00:31:11,010
+if you want to have this dimensions
+
+760
+00:31:11,010 --> 00:31:13,650
+of deny access policy engine,
+
+761
+00:31:13,650 --> 00:31:15,790
+or metadata around agent or gateway
+
+762
+00:31:15,790 --> 00:31:17,403
+where you're applying these.
+
+763
+00:31:19,020 --> 00:31:21,840
+Now we can go back and
+try the other policy too,
+
+764
+00:31:21,840 --> 00:31:23,850
+which to me is a far more interesting one,
+
+765
+00:31:23,850 --> 00:31:26,190
+which combines the principle attributes
+
+766
+00:31:26,190 --> 00:31:28,773
+and the context that we are providing.
+
+767
+00:31:32,940 --> 00:31:33,773
+Okay.
+
+768
+00:31:41,010 --> 00:31:44,403
+We will go back and try this again.
+
+769
+00:31:45,270 --> 00:31:46,710
+Cool.
+
+770
+00:31:46,710 --> 00:31:51,570
+And this time, I will add
+custom claims to my identity.
+
+771
+00:31:51,570 --> 00:31:54,030
+So by custom claims, I'll add those tags
+
+772
+00:31:54,030 --> 00:31:59,030
+that the department of
+the user will be finance
+
+773
+00:31:59,250 --> 00:32:00,240
+and there'll be other things
+
+774
+00:32:00,240 --> 00:32:02,820
+like cost center and stuff in that.
+
+775
+00:32:02,820 --> 00:32:04,350
+And we can see here.
+
+776
+00:32:04,350 --> 00:32:07,530
+And what this means is that in
+your jot token, the Java web,
+
+777
+00:32:07,530 --> 00:32:11,580
+like the JSON web tokens
+that gets to here,
+
+778
+00:32:11,580 --> 00:32:12,930
+those claims will be present,
+
+779
+00:32:12,930 --> 00:32:14,100
+those attributes will be present,
+
+780
+00:32:14,100 --> 00:32:16,890
+and then you can run your
+policies against that.
+
+781
+00:32:16,890 --> 00:32:19,290
+In this case, if you see now, it is there,
+
+782
+00:32:19,290 --> 00:32:22,140
+department name is finance,
+employee level is senior,
+
+783
+00:32:22,140 --> 00:32:24,330
+and cost center is XYZ.
+
+784
+00:32:24,330 --> 00:32:27,090
+These are three attributes
+that are provided by the IDP
+
+785
+00:32:27,090 --> 00:32:31,500
+that gets all the way
+propagated to the gateway.
+
+786
+00:32:31,500 --> 00:32:33,813
+And now you can implement
+policies on this.
+
+787
+00:32:34,680 --> 00:32:37,920
+Now, in this case, and this is
+something that is important.
+
+788
+00:32:37,920 --> 00:32:40,830
+Previously, we did see that
+there was only one tool
+
+789
+00:32:40,830 --> 00:32:41,970
+that was listed.
+
+790
+00:32:41,970 --> 00:32:44,100
+Now you can see there
+are two tools listed,
+
+791
+00:32:44,100 --> 00:32:47,760
+because the other two
+had any permit policy.
+
+792
+00:32:47,760 --> 00:32:50,580
+They'll never come, unless
+we add any permit policy.
+
+793
+00:32:50,580 --> 00:32:52,380
+But for the other two,
+
+794
+00:32:52,380 --> 00:32:54,720
+the both conditions are satisfied right.
+
+795
+00:32:54,720 --> 00:32:56,760
+So there's a department in finance,
+
+796
+00:32:56,760 --> 00:32:59,430
+so that's why the invoke risk model tool
+
+797
+00:32:59,430 --> 00:33:01,683
+is available to the
+agent and it can use it.
+
+798
+00:33:08,318 --> 00:33:12,540
+We can go forward and try
+the same approach now,
+
+799
+00:33:12,540 --> 00:33:17,540
+where now we'll try to
+just trigger the risk model
+
+800
+00:33:18,330 --> 00:33:21,543
+and see how if it makes that call or not.
+
+801
+00:33:25,710 --> 00:33:29,823
+And if you cannot see,
+yeah, I'm typing in,
+
+802
+00:33:30,840 --> 00:33:33,870
+I first typed in, I want
+to do the risk model,
+
+803
+00:33:33,870 --> 00:33:35,400
+but I didn't provide all the information.
+
+804
+00:33:35,400 --> 00:33:37,530
+And it say like it needs more information.
+
+805
+00:33:37,530 --> 00:33:39,930
+And that's what I'm providing in here.
+
+806
+00:33:39,930 --> 00:33:42,000
+Once I provided it, did the risk modeling,
+
+807
+00:33:42,000 --> 00:33:44,160
+and it provided me the status as success.
+
+808
+00:33:44,160 --> 00:33:46,143
+So the call did go through.
+
+809
+00:33:46,980 --> 00:33:50,820
+The counter example to that
+would be I can add a department
+
+810
+00:33:50,820 --> 00:33:55,380
+and set the department other
+than finance, say engineering,
+
+811
+00:33:55,380 --> 00:33:58,770
+which people do not maybe trust us enough
+
+812
+00:33:58,770 --> 00:34:01,740
+for engineers to make
+this finance decision.
+
+813
+00:34:01,740 --> 00:34:05,343
+And you will see that the list
+tools itself will not show.
+
+814
+00:34:07,050 --> 00:34:08,790
+And in here, you can
+see the list tool itself
+
+815
+00:34:08,790 --> 00:34:09,623
+is now showing,
+
+816
+00:34:09,623 --> 00:34:11,940
+just the create application
+and not the risk model.
+
+817
+00:34:13,710 --> 00:34:15,090
+And if you make the invoke call,
+
+818
+00:34:15,090 --> 00:34:18,633
+the same interception will
+happen and it'll not go through.
+
+819
+00:34:22,940 --> 00:34:24,720
+I'm going to move forward from this.
+
+820
+00:34:24,720 --> 00:34:27,303
+So that's the full policy
+in action that you can see,
+
+821
+00:34:27,303 --> 00:34:29,310
+both the policy got applied.
+
+822
+00:34:29,310 --> 00:34:32,400
+And the nice thing about
+it is that it gets applied
+
+823
+00:34:32,400 --> 00:34:34,500
+to both the tools available to the agent
+
+824
+00:34:34,500 --> 00:34:35,850
+and at the invoke time,
+
+825
+00:34:35,850 --> 00:34:39,060
+and across all the tools that
+are available via the Gateway.
+
+826
+00:34:39,060 --> 00:34:41,370
+Now coming back to the
+agent safety framework
+
+827
+00:34:41,370 --> 00:34:43,470
+and the layered architecture that we have.
+
+828
+00:34:43,470 --> 00:34:45,990
+Runtime helps to contain what can happen.
+
+829
+00:34:45,990 --> 00:34:50,590
+Identity helps to control
+who is allowed to act
+
+830
+00:34:51,510 --> 00:34:53,280
+and what actions they can take.
+
+831
+00:34:53,280 --> 00:34:57,000
+Gateway controls what tools
+you're providing to agent,
+
+832
+00:34:57,000 --> 00:34:58,650
+what an agent can do.
+
+833
+00:34:58,650 --> 00:35:01,000
+And with Observability,
+you know what happened.
+
+834
+00:35:01,890 --> 00:35:04,470
+We are enhancing both
+Gateway and Observability now
+
+835
+00:35:04,470 --> 00:35:05,730
+with policy
+
+836
+00:35:05,730 --> 00:35:08,670
+to now have fine-grained
+access control over this.
+
+837
+00:35:08,670 --> 00:35:11,010
+And imagine this Lambda
+Interceptor that we talked about
+
+838
+00:35:11,010 --> 00:35:13,800
+is another way to implement,
+find good access control,
+
+839
+00:35:13,800 --> 00:35:15,270
+much more do it yourself,
+
+840
+00:35:15,270 --> 00:35:17,270
+and policy is much more managed for you.
+
+841
+00:35:18,270 --> 00:35:20,820
+Then Observability helps you...
+
+842
+00:35:20,820 --> 00:35:23,880
+Beyond observability
+evaluation helps you verify
+
+843
+00:35:23,880 --> 00:35:27,030
+if your agents are working or are doing,
+
+844
+00:35:27,030 --> 00:35:28,683
+are working right for you.
+
+845
+00:35:31,085 --> 00:35:33,150
+With all these features,
+
+846
+00:35:33,150 --> 00:35:35,550
+where we want to get to
+is that this trade-off
+
+847
+00:35:35,550 --> 00:35:38,310
+between agent performance and agent safety
+
+848
+00:35:38,310 --> 00:35:40,200
+should not be pushed to
+the application developer.
+
+849
+00:35:40,200 --> 00:35:41,730
+There should be foundational controls
+
+850
+00:35:41,730 --> 00:35:45,000
+that are provided through
+agent platform infrastructure
+
+851
+00:35:45,000 --> 00:35:47,700
+that helps you build safe agents
+
+852
+00:35:47,700 --> 00:35:52,173
+without trading off autonomy
+for AI agent applications.
+
+853
+00:35:54,810 --> 00:35:56,130
+If you need more resources,
+
+854
+00:35:56,130 --> 00:35:58,020
+here is the launch blog for the policy,
+
+855
+00:35:58,020 --> 00:35:59,760
+and there are more GitHub code samples
+
+856
+00:35:59,760 --> 00:36:01,260
+that are ready to try for you.
+
+857
+00:36:03,180 --> 00:36:04,013
+Thank you.
+
+858
+00:36:04,013 --> 00:36:05,223
+I'm open for any questions.
+

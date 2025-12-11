@@ -1,0 +1,4954 @@
+1
+00:00:00,900 --> 00:00:05,190
+- All right, thank you very
+much everyone for coming.
+
+2
+00:00:05,190 --> 00:00:06,840
+Today we're gonna talk about a topic
+
+3
+00:00:06,840 --> 00:00:09,303
+that was barely discussed this conference,
+
+4
+00:00:10,500 --> 00:00:12,570
+and kind of under the headlines,
+
+5
+00:00:12,570 --> 00:00:13,983
+we're gonna talk about AI.
+
+6
+00:00:16,140 --> 00:00:17,910
+But seriously now,
+
+7
+00:00:17,910 --> 00:00:19,950
+I think one of the areas
+
+8
+00:00:19,950 --> 00:00:22,470
+where AI can make the biggest
+impact is observability.
+
+9
+00:00:22,470 --> 00:00:26,490
+And observability is one
+of the closer areas to code
+
+10
+00:00:26,490 --> 00:00:29,970
+where AI is already making
+a huge impact in the world
+
+11
+00:00:29,970 --> 00:00:32,370
+and it's actually has the potential
+
+12
+00:00:32,370 --> 00:00:34,650
+to not just make our lives easier
+
+13
+00:00:34,650 --> 00:00:36,600
+as software engineers
+and platform engineers,
+
+14
+00:00:36,600 --> 00:00:38,700
+but also make our lives better
+
+15
+00:00:38,700 --> 00:00:41,280
+with faster, better software delivery,
+
+16
+00:00:41,280 --> 00:00:44,400
+better stability and security of software.
+
+17
+00:00:44,400 --> 00:00:46,323
+When we thought about it in Coralogix,
+
+18
+00:00:47,204 --> 00:00:48,037
+we were trying to understand
+
+19
+00:00:48,037 --> 00:00:49,710
+what is the highest value
+that we can provide.
+
+20
+00:00:49,710 --> 00:00:50,880
+Is it an assistant?
+
+21
+00:00:50,880 --> 00:00:52,260
+Is it a co-pilot?
+
+22
+00:00:52,260 --> 00:00:53,520
+And we came up with Olly.
+
+23
+00:00:53,520 --> 00:00:55,545
+This session is going to be both
+
+24
+00:00:55,545 --> 00:00:56,580
+about how we built it
+
+25
+00:00:56,580 --> 00:00:58,500
+and how we came to that conclusion
+
+26
+00:00:58,500 --> 00:01:01,020
+of what exactly is going to be the design,
+
+27
+00:01:01,020 --> 00:01:03,840
+but also a bit about how you
+guys can build it on your own,
+
+28
+00:01:03,840 --> 00:01:06,060
+and what are the
+fundamentals that you need
+
+29
+00:01:06,060 --> 00:01:08,520
+to build an AI agent,
+
+30
+00:01:08,520 --> 00:01:09,780
+not just for observability by the way,
+
+31
+00:01:09,780 --> 00:01:11,313
+but for any data access.
+
+32
+00:01:12,390 --> 00:01:13,620
+I'll start with a bit of background
+
+33
+00:01:13,620 --> 00:01:15,540
+about Coralogix and ourselves.
+
+34
+00:01:15,540 --> 00:01:18,180
+I'm the co-founder, CEO of Coralogix.
+
+35
+00:01:18,180 --> 00:01:20,400
+Liran heads AI for Coralogix right here.
+
+36
+00:01:20,400 --> 00:01:22,450
+He'll be the one talking more about Olly.
+
+37
+00:01:24,000 --> 00:01:26,190
+We started Coralogix in 2015,
+
+38
+00:01:26,190 --> 00:01:28,620
+launched in 2017,
+
+39
+00:01:28,620 --> 00:01:31,500
+over 300 petabytes of data ingested
+
+40
+00:01:31,500 --> 00:01:32,490
+every day in the Coralogix.
+
+41
+00:01:32,490 --> 00:01:34,560
+Probably a much bigger number.
+
+42
+00:01:34,560 --> 00:01:37,740
+We raised about $400 million so far,
+
+43
+00:01:37,740 --> 00:01:39,120
+running multi-cloud,
+
+44
+00:01:39,120 --> 00:01:40,320
+but primarily Amazon.
+
+45
+00:01:40,320 --> 00:01:43,350
+Coralogix also was awarded this year
+
+46
+00:01:43,350 --> 00:01:46,650
+EMEA Partner of the year
+for Amazon Marketplace.
+
+47
+00:01:46,650 --> 00:01:49,680
+And we run on eight
+different regions today,
+
+48
+00:01:49,680 --> 00:01:52,863
+including the federal
+cloud on FedRAMP Moderate.
+
+49
+00:01:55,860 --> 00:01:57,300
+I don't have to say much.
+
+50
+00:01:57,300 --> 00:02:00,810
+Software is complex and it's
+getting more and more complex.
+
+51
+00:02:00,810 --> 00:02:02,940
+Actually, this thing,
+sometimes you need to use
+
+52
+00:02:02,940 --> 00:02:04,770
+something that you edited or something.
+
+53
+00:02:04,770 --> 00:02:08,370
+This is like a small company service map.
+
+54
+00:02:08,370 --> 00:02:10,110
+When we look at large scale companies,
+
+55
+00:02:10,110 --> 00:02:12,330
+services got so complex today,
+
+56
+00:02:12,330 --> 00:02:15,780
+it's almost impossible
+for a platform engineer.
+
+57
+00:02:15,780 --> 00:02:18,660
+And I think it also reflected in culture
+
+58
+00:02:18,660 --> 00:02:20,520
+of push things towards the engineering
+
+59
+00:02:20,520 --> 00:02:21,450
+and the service owners,
+
+60
+00:02:21,450 --> 00:02:23,100
+just because it's impossible to understand
+
+61
+00:02:23,100 --> 00:02:25,830
+and grasp software systems today.
+
+62
+00:02:25,830 --> 00:02:27,570
+If we go back in time
+
+63
+00:02:27,570 --> 00:02:30,810
+when we kind of started
+our engineering experience,
+
+64
+00:02:30,810 --> 00:02:33,030
+maybe 15, 17 years ago,
+
+65
+00:02:33,030 --> 00:02:35,640
+not not several decades ago,
+
+66
+00:02:35,640 --> 00:02:36,480
+there were monoliths.
+
+67
+00:02:36,480 --> 00:02:38,280
+You would go to the machine,
+you'd look at the logs,
+
+68
+00:02:38,280 --> 00:02:39,270
+maybe a little bit of metrics.
+
+69
+00:02:39,270 --> 00:02:41,400
+You get a good understanding
+of what's happening.
+
+70
+00:02:41,400 --> 00:02:43,080
+These days with microservices,
+
+71
+00:02:43,080 --> 00:02:44,790
+different deployment models,
+
+72
+00:02:44,790 --> 00:02:47,070
+multi-cloud, serverless,
+
+73
+00:02:47,070 --> 00:02:48,420
+your ability to actually understand
+
+74
+00:02:48,420 --> 00:02:52,080
+what's happening in your
+software is very limited.
+
+75
+00:02:52,080 --> 00:02:54,423
+And we think we have the solution to that,
+
+76
+00:02:55,920 --> 00:02:57,690
+but we'll talk about it in a minute.
+
+77
+00:02:57,690 --> 00:02:58,980
+Telemetry is exploding.
+
+78
+00:02:58,980 --> 00:03:01,350
+So people think, okay,
+
+79
+00:03:01,350 --> 00:03:03,540
+how do I monitor all these microservices?
+
+80
+00:03:03,540 --> 00:03:05,700
+How do I get a better understanding
+
+81
+00:03:05,700 --> 00:03:07,707
+of what's happening in
+my production systems?
+
+82
+00:03:07,707 --> 00:03:09,540
+I'm just gonna add more telemetry.
+
+83
+00:03:09,540 --> 00:03:11,490
+I'm gonna add a metric,
+I'm gonna add a log.
+
+84
+00:03:11,490 --> 00:03:14,490
+I'm gonna add another instrumentation.
+
+85
+00:03:14,490 --> 00:03:18,063
+And just over eight years, we see a 100X.
+
+86
+00:03:18,930 --> 00:03:21,210
+This is from public sources,
+
+87
+00:03:21,210 --> 00:03:24,270
+100X increase in telemetry data.
+
+88
+00:03:24,270 --> 00:03:25,103
+What does it mean?
+
+89
+00:03:25,103 --> 00:03:25,936
+It means that it's complex,
+
+90
+00:03:25,936 --> 00:03:27,780
+it means that it's expensive,
+
+91
+00:03:27,780 --> 00:03:30,390
+it means that it's difficult to manage,
+
+92
+00:03:30,390 --> 00:03:32,220
+but we're not really getting
+better observability.
+
+93
+00:03:32,220 --> 00:03:33,520
+And we'll talk about that.
+
+94
+00:03:36,480 --> 00:03:38,760
+The solution is the all-in-one dashboard.
+
+95
+00:03:38,760 --> 00:03:41,250
+One dashboard, it has all that you need,
+
+96
+00:03:41,250 --> 00:03:42,950
+all the KPIs that you're tracking.
+
+97
+00:03:43,830 --> 00:03:45,210
+I'm of course joking.
+
+98
+00:03:45,210 --> 00:03:48,600
+The last thing we need
+is another dashboard.
+
+99
+00:03:48,600 --> 00:03:51,270
+The last thing we need is another alert.
+
+100
+00:03:51,270 --> 00:03:53,880
+The world of just dashboarding everything
+
+101
+00:03:53,880 --> 00:03:58,860
+and alerting on every single
+possible scenario removes
+
+102
+00:03:58,860 --> 00:04:01,500
+a bit of the ownership
+from the service owners
+
+103
+00:04:01,500 --> 00:04:03,090
+and engineers towards the services
+
+104
+00:04:03,090 --> 00:04:05,370
+that they provide and run in production.
+
+105
+00:04:05,370 --> 00:04:08,130
+We think, okay, we solve the
+problem, we add a dashboard.
+
+106
+00:04:08,130 --> 00:04:09,900
+What's our definition
+of done for a feature?
+
+107
+00:04:09,900 --> 00:04:12,120
+We have dashboards and alerts set for it.
+
+108
+00:04:12,120 --> 00:04:13,710
+But the definition of
+done for a feature is
+
+109
+00:04:13,710 --> 00:04:15,420
+that we can run it in production
+
+110
+00:04:15,420 --> 00:04:18,093
+and keep it in high quality
+and high performance.
+
+111
+00:04:19,470 --> 00:04:23,940
+So that led us to build
+more dashboards and alerts
+
+112
+00:04:23,940 --> 00:04:25,860
+and it feels like we got good coverage.
+
+113
+00:04:25,860 --> 00:04:28,560
+This is an average of
+a Coralogix customer.
+
+114
+00:04:28,560 --> 00:04:30,120
+I'm talking only the dashboards
+
+115
+00:04:30,120 --> 00:04:32,520
+that are accessed and
+alerts that are triggered.
+
+116
+00:04:33,360 --> 00:04:34,530
+We're in the hundreds.
+
+117
+00:04:34,530 --> 00:04:35,700
+Sometimes we come to customers
+
+118
+00:04:35,700 --> 00:04:38,820
+that have 10,000 alerts, 20,000 alerts.
+
+119
+00:04:38,820 --> 00:04:41,100
+Can you really comprehend the system?
+
+120
+00:04:41,100 --> 00:04:43,770
+Do you really own your service
+
+121
+00:04:43,770 --> 00:04:45,420
+if it triggers 20 alerts every day
+
+122
+00:04:45,420 --> 00:04:47,220
+and has 100 dashboards on it?
+
+123
+00:04:47,220 --> 00:04:48,213
+Probably not.
+
+124
+00:04:49,170 --> 00:04:50,940
+This is what it'll look like.
+
+125
+00:04:50,940 --> 00:04:52,500
+You go into your dashboard interface,
+
+126
+00:04:52,500 --> 00:04:54,330
+you got multiple folders.
+
+127
+00:04:54,330 --> 00:04:57,840
+Many things are just, you
+know, duplicated variables
+
+128
+00:04:57,840 --> 00:04:59,310
+that you need to change to understand
+
+129
+00:04:59,310 --> 00:05:01,890
+your specific component.
+
+130
+00:05:01,890 --> 00:05:03,360
+Hundreds of alerts that are triggered.
+
+131
+00:05:03,360 --> 00:05:05,490
+And then we built on top these alerts,
+
+132
+00:05:05,490 --> 00:05:08,340
+we built all these alert aggregation tools
+
+133
+00:05:08,340 --> 00:05:10,260
+and incident management tools.
+
+134
+00:05:10,260 --> 00:05:12,300
+So we're trying to figure out the problem,
+
+135
+00:05:12,300 --> 00:05:15,630
+but we started with a
+very kind of low state
+
+136
+00:05:15,630 --> 00:05:17,180
+and we're trying to improve it.
+
+137
+00:05:19,320 --> 00:05:23,190
+There's a paradigm now
+where more dashboards,
+
+138
+00:05:23,190 --> 00:05:27,150
+more data, more alerts don't
+mean more observability,
+
+139
+00:05:27,150 --> 00:05:30,270
+don't mean more reliability.
+
+140
+00:05:30,270 --> 00:05:32,770
+And intuitively, you'd imagine
+
+141
+00:05:34,080 --> 00:05:35,760
+on data analytics in general,
+
+142
+00:05:35,760 --> 00:05:38,610
+you know, and a lot of us
+studied math or statistics,
+
+143
+00:05:38,610 --> 00:05:41,250
+the more data you have,
+the more accurate you are.
+
+144
+00:05:41,250 --> 00:05:42,510
+The more data points you get,
+
+145
+00:05:42,510 --> 00:05:44,370
+the better insights you get.
+
+146
+00:05:44,370 --> 00:05:46,167
+In reality, if you think about this
+
+147
+00:05:46,167 --> 00:05:48,900
+for observability in
+software, what is easier?
+
+148
+00:05:48,900 --> 00:05:51,960
+Is it easier debugging a
+service with one service,
+
+149
+00:05:51,960 --> 00:05:52,793
+a gigabyte of logs every day,
+
+150
+00:05:52,793 --> 00:05:54,600
+and 100 custom metrics
+
+151
+00:05:54,600 --> 00:05:58,110
+or billions of metrics,
+
+152
+00:05:58,110 --> 00:06:00,270
+terabytes of data for multiple services?
+
+153
+00:06:00,270 --> 00:06:03,300
+Obviously, it's easier when you have less.
+
+154
+00:06:03,300 --> 00:06:04,730
+So how do we deal with that?
+
+155
+00:06:04,730 --> 00:06:05,900
+Do we build more dashboards?
+
+156
+00:06:05,900 --> 00:06:07,050
+Do we create more alerts?
+
+157
+00:06:07,050 --> 00:06:08,700
+Do we trim down data,
+
+158
+00:06:08,700 --> 00:06:11,250
+which is also a complete industry
+
+159
+00:06:11,250 --> 00:06:13,890
+that's started now just
+for filtering data out.
+
+160
+00:06:13,890 --> 00:06:16,110
+We got so much garbage,
+we don't wanna pay for it.
+
+161
+00:06:16,110 --> 00:06:18,333
+We start filtering out,
+we start optimizing.
+
+162
+00:06:20,610 --> 00:06:22,230
+And
+
+163
+00:06:22,230 --> 00:06:24,330
+the numbers I've given
+on dashboards and alerts,
+
+164
+00:06:24,330 --> 00:06:27,330
+those are only the ones
+that are being accessed.
+
+165
+00:06:27,330 --> 00:06:32,330
+92% of dashboards are
+only used for one week.
+
+166
+00:06:32,670 --> 00:06:35,730
+People will create kind
+of a standalone dashboard
+
+167
+00:06:35,730 --> 00:06:37,230
+for a specific issue they have,
+
+168
+00:06:37,230 --> 00:06:39,270
+then they neglect it.
+
+169
+00:06:39,270 --> 00:06:41,250
+Now the funny part is,
+
+170
+00:06:41,250 --> 00:06:44,790
+you know what's gonna happen
+in the next postmortem?
+
+171
+00:06:44,790 --> 00:06:47,820
+The conclusions are we're
+gonna add this dashboard now
+
+172
+00:06:47,820 --> 00:06:48,690
+and alert,
+
+173
+00:06:48,690 --> 00:06:50,850
+so next time we'll know.
+
+174
+00:06:50,850 --> 00:06:52,770
+But they, you just go back and add
+
+175
+00:06:52,770 --> 00:06:53,970
+the same dashboard a week later.
+
+176
+00:06:53,970 --> 00:06:55,740
+No one looks at it.
+
+177
+00:06:55,740 --> 00:06:59,520
+So engineers now have to spend
+
+178
+00:06:59,520 --> 00:07:02,850
+close to half their time just
+triaging and understanding
+
+179
+00:07:02,850 --> 00:07:04,560
+where should I even look?
+
+180
+00:07:04,560 --> 00:07:06,660
+What dashboard do I need to look at
+
+181
+00:07:06,660 --> 00:07:07,680
+out of 100 alerts?
+
+182
+00:07:07,680 --> 00:07:09,150
+And every time there's a big incident
+
+183
+00:07:09,150 --> 00:07:10,800
+in large scale systems and you know,
+
+184
+00:07:10,800 --> 00:07:12,813
+we run one, coincidentally,
+
+185
+00:07:14,670 --> 00:07:16,080
+when one service goes wrong,
+
+186
+00:07:16,080 --> 00:07:18,000
+everyone starts firing alerts and errors.
+
+187
+00:07:18,000 --> 00:07:20,310
+So where do I even start?
+
+188
+00:07:20,310 --> 00:07:22,140
+A lot of the times we start
+triaging and we think,
+
+189
+00:07:22,140 --> 00:07:23,010
+oh, it's that service.
+
+190
+00:07:23,010 --> 00:07:24,510
+No, this is just downstream.
+
+191
+00:07:24,510 --> 00:07:25,833
+This is just the upstream.
+
+192
+00:07:27,870 --> 00:07:30,000
+So can we do something better?
+
+193
+00:07:30,000 --> 00:07:32,790
+Is there a way to deal with this?
+
+194
+00:07:32,790 --> 00:07:34,380
+And also a big question is,
+
+195
+00:07:34,380 --> 00:07:36,690
+how come this wasn't solved yet?
+
+196
+00:07:36,690 --> 00:07:38,640
+It's a big problem and the data grows
+
+197
+00:07:38,640 --> 00:07:41,190
+faster than our ability to deal with it.
+
+198
+00:07:41,190 --> 00:07:43,560
+Now there's an opportunity
+
+199
+00:07:43,560 --> 00:07:45,810
+because something big
+happened in technology
+
+200
+00:07:45,810 --> 00:07:47,310
+over the past few years,
+
+201
+00:07:47,310 --> 00:07:49,893
+and how do we leverage that?
+
+202
+00:07:51,060 --> 00:07:53,313
+So let's start with the basics.
+
+203
+00:07:54,540 --> 00:07:57,300
+Observability is a term
+that we have a problem with,
+
+204
+00:07:57,300 --> 00:07:58,133
+to be frank.
+
+205
+00:07:58,133 --> 00:07:59,403
+And it's a bit of a,
+
+206
+00:08:00,630 --> 00:08:03,263
+it's a bit tricky because
+we're an observability company,
+
+207
+00:08:04,350 --> 00:08:06,723
+but observe is a very passive term.
+
+208
+00:08:07,710 --> 00:08:10,350
+Do I want to observe my systems?
+
+209
+00:08:10,350 --> 00:08:14,640
+I mean, imagine police officers will say
+
+210
+00:08:14,640 --> 00:08:17,220
+that their job is to observe the street.
+
+211
+00:08:17,220 --> 00:08:19,110
+We're actually, you know,
+we need to keep systems
+
+212
+00:08:19,110 --> 00:08:19,943
+up and running.
+
+213
+00:08:19,943 --> 00:08:20,910
+We don't need to observe them.
+
+214
+00:08:20,910 --> 00:08:24,480
+Having more monitors and
+dashboards and telemetry is
+
+215
+00:08:24,480 --> 00:08:25,953
+a great way to observe,
+
+216
+00:08:26,970 --> 00:08:28,110
+but what's the end goal?
+
+217
+00:08:28,110 --> 00:08:30,390
+The end goal is to have reliability,
+
+218
+00:08:30,390 --> 00:08:33,570
+to have stability, to
+create business insights,
+
+219
+00:08:33,570 --> 00:08:34,533
+to have security.
+
+220
+00:08:35,910 --> 00:08:39,270
+So we keep building better observability,
+
+221
+00:08:39,270 --> 00:08:42,010
+but we kind of forgot
+why we're building it.
+
+222
+00:08:42,010 --> 00:08:43,290
+And you know, I can say that Coralogix,
+
+223
+00:08:43,290 --> 00:08:45,780
+specifically, Coralogix had invested
+
+224
+00:08:45,780 --> 00:08:50,040
+over $250 million in R&D
+over the past six years.
+
+225
+00:08:50,040 --> 00:08:53,430
+So imagine the amount of
+engineering and R&D work
+
+226
+00:08:53,430 --> 00:08:56,310
+that we put in just try to keep up
+
+227
+00:08:56,310 --> 00:08:58,743
+with how fast data and
+systems were evolving.
+
+228
+00:08:59,640 --> 00:09:01,500
+So we were in that arms race
+
+229
+00:09:01,500 --> 00:09:04,470
+against obviously a very crowded space,
+
+230
+00:09:04,470 --> 00:09:06,690
+but it was very hard for us
+
+231
+00:09:06,690 --> 00:09:09,420
+to go back to the essence
+of what companies want,
+
+232
+00:09:09,420 --> 00:09:13,350
+which is reliability, ease of management,
+
+233
+00:09:13,350 --> 00:09:15,150
+being able to resolve issues faster,
+
+234
+00:09:15,150 --> 00:09:17,343
+have performance that's measurable,
+
+235
+00:09:18,240 --> 00:09:19,800
+actually meet business KPIs
+
+236
+00:09:19,800 --> 00:09:22,080
+that drive the revenue of the business
+
+237
+00:09:22,080 --> 00:09:23,580
+and the customer satisfaction.
+
+238
+00:09:25,560 --> 00:09:26,823
+Now how do we get there?
+
+239
+00:09:27,870 --> 00:09:30,630
+Every software emits
+
+240
+00:09:30,630 --> 00:09:34,050
+millions and trillions
+sometimes of data points.
+
+241
+00:09:34,050 --> 00:09:35,640
+Coralogix cover the entire suite,
+
+242
+00:09:35,640 --> 00:09:37,410
+whether it's logs, metrics, traces,
+
+243
+00:09:37,410 --> 00:09:40,200
+infra monitoring, APM, realism monitoring,
+
+244
+00:09:40,200 --> 00:09:42,000
+SIM, AI monitoring.
+
+245
+00:09:42,000 --> 00:09:44,490
+So, we have enough signals.
+
+246
+00:09:44,490 --> 00:09:49,083
+We can get signals for
+every user action now.
+
+247
+00:09:49,920 --> 00:09:51,960
+But the challenge is
+
+248
+00:09:51,960 --> 00:09:53,310
+how do we stitch 'em together
+
+249
+00:09:53,310 --> 00:09:55,140
+into a story and the cardinality of data
+
+250
+00:09:55,140 --> 00:09:56,220
+and the variety of data
+
+251
+00:09:56,220 --> 00:10:00,510
+and the multidimensional
+aspect of it creates
+
+252
+00:10:00,510 --> 00:10:03,360
+such anthropy that to actually understand
+
+253
+00:10:03,360 --> 00:10:04,560
+what are the connections in a way
+
+254
+00:10:04,560 --> 00:10:07,140
+that gives me high
+certainty to take action is
+
+255
+00:10:07,140 --> 00:10:09,030
+really complex.
+
+256
+00:10:09,030 --> 00:10:10,560
+And the compute that it required
+
+257
+00:10:10,560 --> 00:10:14,280
+until now was just impossible to employ,
+
+258
+00:10:14,280 --> 00:10:15,113
+to solve that problem.
+
+259
+00:10:15,113 --> 00:10:17,430
+And the data was growing so fast.
+
+260
+00:10:17,430 --> 00:10:19,260
+So that frog leap we've made
+
+261
+00:10:19,260 --> 00:10:21,783
+in technology now enables something else.
+
+262
+00:10:22,860 --> 00:10:27,570
+How do we now create a story,
+
+263
+00:10:27,570 --> 00:10:29,460
+not, we don't have an assistant
+
+264
+00:10:29,460 --> 00:10:32,370
+to help you build another
+dashboard or you know,
+
+265
+00:10:32,370 --> 00:10:34,860
+a co-pilot that gives you hints.
+
+266
+00:10:34,860 --> 00:10:37,680
+How do we autonomously
+and automatically create
+
+267
+00:10:37,680 --> 00:10:40,440
+that story from those breadcrumbs
+
+268
+00:10:40,440 --> 00:10:42,540
+to create a complete new interface,
+
+269
+00:10:42,540 --> 00:10:44,969
+a complete new approach to observability
+
+270
+00:10:44,969 --> 00:10:49,530
+and go back to the basics of
+simple and coherent insights
+
+271
+00:10:49,530 --> 00:10:52,773
+that lead to reliability,
+performance, business KPIs.
+
+272
+00:10:54,150 --> 00:10:55,650
+And there comes Olly,
+
+273
+00:10:55,650 --> 00:10:56,950
+and I'll hand it to Liran.
+
+274
+00:10:57,900 --> 00:10:58,850
+- Thank you, Ariel.
+
+275
+00:11:00,300 --> 00:11:02,043
+So as Ariel mentioned,
+
+276
+00:11:02,970 --> 00:11:05,760
+we've been focusing on the wrong thing
+
+277
+00:11:05,760 --> 00:11:07,550
+for the past few years, right?
+
+278
+00:11:07,550 --> 00:11:09,390
+We have been focusing
+about how we do better
+
+279
+00:11:09,390 --> 00:11:12,420
+observability and we forgot why.
+
+280
+00:11:12,420 --> 00:11:13,950
+We forgot that the key,
+
+281
+00:11:13,950 --> 00:11:16,980
+the end goal we are
+actually aiming for, right?
+
+282
+00:11:16,980 --> 00:11:19,020
+Is just to have reliable software.
+
+283
+00:11:19,020 --> 00:11:21,270
+We built something, we invested
+in developing a software,
+
+284
+00:11:21,270 --> 00:11:23,420
+we wanted our users to
+experience something
+
+285
+00:11:24,720 --> 00:11:28,233
+and we built crazy platforms
+just to observe them.
+
+286
+00:11:29,250 --> 00:11:31,440
+And yes, we have very,
+very advanced tools,
+
+287
+00:11:31,440 --> 00:11:34,050
+but how much do we increase reliability?
+
+288
+00:11:34,050 --> 00:11:35,343
+How much have we increased reliability
+
+289
+00:11:35,343 --> 00:11:37,530
+with all these capabilities?
+
+290
+00:11:37,530 --> 00:11:39,693
+And this new paradigm of AI, right?
+
+291
+00:11:39,693 --> 00:11:41,100
+Like I think you can see it here
+
+292
+00:11:41,100 --> 00:11:45,123
+on every single booth
+and every vendor, right?
+
+293
+00:11:46,950 --> 00:11:50,430
+There's a true and great power to it,
+
+294
+00:11:50,430 --> 00:11:53,070
+which allows us really to rethink
+
+295
+00:11:53,070 --> 00:11:56,760
+what is observability or,
+you know, really reliability.
+
+296
+00:11:56,760 --> 00:11:58,140
+How do we achieve it
+
+297
+00:11:58,140 --> 00:12:00,960
+and how can we actually
+do it not the same way,
+
+298
+00:12:00,960 --> 00:12:02,940
+not grow linearly,
+
+299
+00:12:02,940 --> 00:12:04,950
+but actually how can we
+do it 10 times better
+
+300
+00:12:04,950 --> 00:12:07,230
+than what we've done until now?
+
+301
+00:12:07,230 --> 00:12:10,080
+And this is where Olly
+comes into the picture,
+
+302
+00:12:10,080 --> 00:12:13,263
+the world first autonomous
+observability agent.
+
+303
+00:12:15,690 --> 00:12:17,010
+So what Olly is doing?
+
+304
+00:12:17,010 --> 00:12:19,380
+How it actually works, right?
+
+305
+00:12:19,380 --> 00:12:22,980
+So we talked about billions
+and trillions of breadcrumbs,
+
+306
+00:12:22,980 --> 00:12:26,160
+logs, metrics, traces.
+
+307
+00:12:26,160 --> 00:12:28,950
+Let's say I'm at home watching Netflix,
+
+308
+00:12:28,950 --> 00:12:30,300
+watching "Squid Games",
+
+309
+00:12:30,300 --> 00:12:32,470
+I click on episode number two
+
+310
+00:12:33,540 --> 00:12:34,650
+and it doesn't work right?
+
+311
+00:12:34,650 --> 00:12:36,810
+Or it glitches for a few seconds, right?
+
+312
+00:12:36,810 --> 00:12:38,070
+Quite annoying.
+
+313
+00:12:38,070 --> 00:12:39,453
+Not a fun evening to have,
+
+314
+00:12:40,830 --> 00:12:41,880
+but why it happens?
+
+315
+00:12:41,880 --> 00:12:44,460
+So it means there's probably
+something along the way
+
+316
+00:12:44,460 --> 00:12:45,780
+along the software stack, right?
+
+317
+00:12:45,780 --> 00:12:48,090
+Maybe some microservice backend,
+
+318
+00:12:48,090 --> 00:12:50,850
+maybe a database experiencing some issues,
+
+319
+00:12:50,850 --> 00:12:53,220
+maybe actually another
+third party application
+
+320
+00:12:53,220 --> 00:12:54,960
+that my app, that Netflix app is
+
+321
+00:12:54,960 --> 00:12:56,760
+connected through API,
+
+322
+00:12:56,760 --> 00:12:59,580
+having some, experiencing
+some issues, right?
+
+323
+00:12:59,580 --> 00:13:02,640
+And all these pieces somehow result
+
+324
+00:13:02,640 --> 00:13:06,240
+in me as a user experiencing
+not even a downtime,
+
+325
+00:13:06,240 --> 00:13:09,150
+just a glitch or unexpected behavior
+
+326
+00:13:09,150 --> 00:13:12,030
+that what the original
+engineers actually wanted
+
+327
+00:13:12,030 --> 00:13:13,350
+and aimed for.
+
+328
+00:13:13,350 --> 00:13:15,660
+So this, all these pieces,
+
+329
+00:13:15,660 --> 00:13:18,330
+taking these, each and every component,
+
+330
+00:13:18,330 --> 00:13:20,100
+the microservices, the databases,
+
+331
+00:13:20,100 --> 00:13:22,650
+the Lambda functions,
+taking the breadcrumbs
+
+332
+00:13:22,650 --> 00:13:25,230
+of each one of them potentially
+
+333
+00:13:25,230 --> 00:13:26,390
+should tell a story of what happened
+
+334
+00:13:26,390 --> 00:13:29,013
+to Liran as a user, right?
+
+335
+00:13:29,880 --> 00:13:32,280
+And the question is not only
+what happened to me personally
+
+336
+00:13:32,280 --> 00:13:33,113
+as a user,
+
+337
+00:13:33,113 --> 00:13:36,810
+but what actually happens
+as a trend for more users.
+
+338
+00:13:36,810 --> 00:13:38,400
+Maybe there are hundreds
+or thousands users
+
+339
+00:13:38,400 --> 00:13:40,050
+experiencing the same issue
+
+340
+00:13:40,050 --> 00:13:42,123
+and what's common about all of them.
+
+341
+00:13:43,560 --> 00:13:46,710
+So back to what we see on the screen,
+
+342
+00:13:46,710 --> 00:13:50,310
+we see all these billions
+of breadcrumbs, right?
+
+343
+00:13:50,310 --> 00:13:52,200
+And usually, how do we do it?
+
+344
+00:13:52,200 --> 00:13:53,670
+We open the alerts,
+
+345
+00:13:53,670 --> 00:13:55,920
+try to find correlated alerts,
+
+346
+00:13:55,920 --> 00:13:57,810
+we deep dive into the dashboard,
+
+347
+00:13:57,810 --> 00:13:59,107
+we filter out for logs, we say,
+
+348
+00:13:59,107 --> 00:14:01,710
+"Hey, I see there's
+some error logs," right?
+
+349
+00:14:01,710 --> 00:14:03,150
+And then I understand, oh I see
+
+350
+00:14:03,150 --> 00:14:05,820
+like this services seems
+to be related, right?
+
+351
+00:14:05,820 --> 00:14:07,050
+So I further analyze.
+
+352
+00:14:07,050 --> 00:14:09,060
+So we have logs, we have,
+sorry, we have alerts,
+
+353
+00:14:09,060 --> 00:14:10,680
+we have dashboards.
+
+354
+00:14:10,680 --> 00:14:15,150
+And the third component
+is plenty of manual labor
+
+355
+00:14:15,150 --> 00:14:17,640
+going into resolving,
+
+356
+00:14:17,640 --> 00:14:21,180
+investigating production incidents, okay?
+
+357
+00:14:21,180 --> 00:14:22,140
+So with Olly,
+
+358
+00:14:22,140 --> 00:14:24,750
+we have all this information
+available not only for us
+
+359
+00:14:24,750 --> 00:14:26,070
+but also for Olly.
+
+360
+00:14:26,070 --> 00:14:30,243
+And the beauty of it is that
+it makes everything go away.
+
+361
+00:14:32,578 --> 00:14:33,411
+No, okay,
+
+362
+00:14:35,280 --> 00:14:38,070
+so Olly takes all this information,
+
+363
+00:14:38,070 --> 00:14:40,150
+we can give them the task
+
+364
+00:14:41,430 --> 00:14:42,655
+and then it zooms in
+
+365
+00:14:42,655 --> 00:14:45,750
+onto out of all these
+billions of breadcrumbs,
+
+366
+00:14:45,750 --> 00:14:48,900
+onto the specific, most relevant pieces
+
+367
+00:14:48,900 --> 00:14:49,900
+to the task at hand.
+
+368
+00:14:50,820 --> 00:14:53,970
+And the next thing, it actually
+eliminates the noise, right?
+
+369
+00:14:53,970 --> 00:14:56,640
+Remember we have more and
+more and more and more,
+
+370
+00:14:56,640 --> 00:14:58,800
+we lost clarity, we got more noise,
+
+371
+00:14:58,800 --> 00:15:00,340
+Olly eliminates all this noise
+
+372
+00:15:01,230 --> 00:15:03,270
+and can actually focuses on the signals
+
+373
+00:15:03,270 --> 00:15:05,220
+that truly are important
+
+374
+00:15:05,220 --> 00:15:09,570
+and hopefully will tell
+my story as a user.
+
+375
+00:15:09,570 --> 00:15:12,720
+And most importantly,
+it can connect the dots
+
+376
+00:15:12,720 --> 00:15:14,940
+to one single story,
+
+377
+00:15:14,940 --> 00:15:16,830
+what the end user is experiencing
+
+378
+00:15:16,830 --> 00:15:19,410
+or the end users are experiencing
+
+379
+00:15:19,410 --> 00:15:21,540
+all the way back to what was
+
+380
+00:15:21,540 --> 00:15:23,430
+the root cause of that?
+
+381
+00:15:23,430 --> 00:15:25,350
+Sounds too good to be true.
+
+382
+00:15:25,350 --> 00:15:27,930
+Yes, no, okay.
+
+383
+00:15:27,930 --> 00:15:30,540
+So yeah, these are nice slides,
+
+384
+00:15:30,540 --> 00:15:32,220
+but I think the proof is in the pudding.
+
+385
+00:15:32,220 --> 00:15:34,683
+So let's see Olly in the works.
+
+386
+00:15:37,710 --> 00:15:39,180
+So
+
+387
+00:15:39,180 --> 00:15:41,730
+what I'm going to do now,
+you can see my screen right?
+
+388
+00:15:41,730 --> 00:15:42,563
+Awesome.
+
+389
+00:15:42,563 --> 00:15:43,830
+So, nice to meet you.
+
+390
+00:15:43,830 --> 00:15:48,060
+I'm Adam, I'm head of
+platform at Sportify,
+
+391
+00:15:48,060 --> 00:15:49,360
+a sport goods companies
+
+392
+00:15:50,340 --> 00:15:52,950
+and I manage the e-commerce website
+
+393
+00:15:52,950 --> 00:15:53,820
+and the platform team.
+
+394
+00:15:53,820 --> 00:15:55,920
+And I'm just writing code in the meantime,
+
+395
+00:15:57,210 --> 00:15:59,103
+doing my day-to-day tasks.
+
+396
+00:16:01,020 --> 00:16:03,123
+And as I'm doing my work,
+
+397
+00:16:05,760 --> 00:16:06,723
+let's see,
+
+398
+00:16:13,170 --> 00:16:14,313
+oh, I got a message.
+
+399
+00:16:15,660 --> 00:16:17,160
+I got a message from Sarah Parks.
+
+400
+00:16:17,160 --> 00:16:17,993
+Let's see,
+
+401
+00:16:17,993 --> 00:16:20,640
+so Sarah is our VP of Product.
+
+402
+00:16:20,640 --> 00:16:22,770
+She's very good at what she's doing.
+
+403
+00:16:22,770 --> 00:16:25,263
+And let me zoom in a bit.
+
+404
+00:16:26,400 --> 00:16:29,070
+I got a message, Adam,
+this doesn't look good.
+
+405
+00:16:29,070 --> 00:16:29,903
+What's going on?
+
+406
+00:16:29,903 --> 00:16:32,670
+We're getting slammed with
+customers' complaints,
+
+407
+00:16:32,670 --> 00:16:35,730
+and seems like she
+referred here to an alert
+
+408
+00:16:35,730 --> 00:16:38,010
+we got on production alert channel.
+
+409
+00:16:38,010 --> 00:16:40,140
+So let's take a deeper look into it.
+
+410
+00:16:40,140 --> 00:16:42,600
+So we can see a warning
+about checkout error spike.
+
+411
+00:16:42,600 --> 00:16:45,300
+So we're an e-commerce website,
+
+412
+00:16:45,300 --> 00:16:48,180
+obviously the last part
+is customers come in
+
+413
+00:16:48,180 --> 00:16:50,850
+after they chose the
+items they can check out
+
+414
+00:16:50,850 --> 00:16:52,200
+and make the purchase.
+
+415
+00:16:52,200 --> 00:16:54,030
+And it seems like there is an issue.
+
+416
+00:16:54,030 --> 00:16:56,850
+So instead of opening another dashboard,
+
+417
+00:16:56,850 --> 00:16:58,410
+let me just ask Olly,
+
+418
+00:16:58,410 --> 00:17:02,823
+hey Olly, can you please take a look?
+
+419
+00:17:04,290 --> 00:17:06,840
+Okay, and as I tagged Olly,
+
+420
+00:17:06,840 --> 00:17:09,090
+Olly immediately reacted as you can see,
+
+421
+00:17:09,090 --> 00:17:10,500
+and it starts conducting
+
+422
+00:17:10,500 --> 00:17:13,830
+an investigation of what really happened.
+
+423
+00:17:13,830 --> 00:17:16,500
+And it shared with me this link
+
+424
+00:17:16,500 --> 00:17:19,560
+so I can see really what's
+going on in real time.
+
+425
+00:17:19,560 --> 00:17:20,733
+Let me zoom in a bit,
+
+426
+00:17:21,600 --> 00:17:22,433
+okay,
+
+427
+00:17:23,760 --> 00:17:24,720
+so how will it work?
+
+428
+00:17:24,720 --> 00:17:25,650
+What we're actually seeing?
+
+429
+00:17:25,650 --> 00:17:30,240
+Olly works like yet another
+engineer in your team.
+
+430
+00:17:30,240 --> 00:17:31,800
+So think about yourself, right?
+
+431
+00:17:31,800 --> 00:17:33,930
+You would've looked on
+dashboard every time.
+
+432
+00:17:33,930 --> 00:17:37,980
+Let's say we would've
+filtered for error logs,
+
+433
+00:17:37,980 --> 00:17:39,900
+we would've identified some pattern.
+
+434
+00:17:39,900 --> 00:17:41,373
+Actually, let me zoom out.
+
+435
+00:17:45,330 --> 00:17:47,310
+We would identify a pattern based on that.
+
+436
+00:17:47,310 --> 00:17:49,800
+We would probably see another
+filter or go to traces, right?
+
+437
+00:17:49,800 --> 00:17:50,820
+Or go to metrics.
+
+438
+00:17:50,820 --> 00:17:52,410
+So in every given point in time,
+
+439
+00:17:52,410 --> 00:17:54,540
+I have one thing on my screen.
+
+440
+00:17:54,540 --> 00:17:57,210
+So on the right side, what you can see is
+
+441
+00:17:57,210 --> 00:17:59,400
+what Olly is currently looking at.
+
+442
+00:17:59,400 --> 00:18:00,900
+So for example, right now we can see
+
+443
+00:18:00,900 --> 00:18:03,960
+Olly is looking at the logs, okay?
+
+444
+00:18:03,960 --> 00:18:07,830
+And it's writing to me,
+it's sharing with us
+
+445
+00:18:07,830 --> 00:18:11,643
+what it currently thinks and
+what path it is exploring.
+
+446
+00:18:13,440 --> 00:18:15,000
+And it has many capabilities,
+
+447
+00:18:15,000 --> 00:18:17,220
+whether it's exploring logs, metrics,
+
+448
+00:18:17,220 --> 00:18:19,890
+traces, correlating them,
+
+449
+00:18:19,890 --> 00:18:24,890
+analyzing the code and more, okay?
+
+450
+00:18:25,118 --> 00:18:27,743
+And we see that we got a result,
+so let's see what happened.
+
+451
+00:18:28,680 --> 00:18:30,000
+So let me close this.
+
+452
+00:18:32,352 --> 00:18:34,770
+And by the way, as you can
+see this is a live demo.
+
+453
+00:18:34,770 --> 00:18:37,860
+Decided not to go for a video, okay?
+
+454
+00:18:37,860 --> 00:18:39,000
+So let's see.
+
+455
+00:18:39,000 --> 00:18:41,340
+I noticed a spike in failed checkouts
+
+456
+00:18:41,340 --> 00:18:43,170
+over the last two hours.
+
+457
+00:18:43,170 --> 00:18:44,700
+Dug into shopping cart API,
+
+458
+00:18:44,700 --> 00:18:47,040
+this is one of our services,
+
+459
+00:18:47,040 --> 00:18:48,630
+logs and found a new type error
+
+460
+00:18:48,630 --> 00:18:50,550
+that correlates exactly with the spike.
+
+461
+00:18:50,550 --> 00:18:53,610
+It is affecting about 2,000 users.
+
+462
+00:18:53,610 --> 00:18:56,610
+From here, we can see
+what is the root cause,
+
+463
+00:18:56,610 --> 00:18:59,880
+failed checkouts are caused
+by type error exceptions
+
+464
+00:18:59,880 --> 00:19:02,130
+in the shopping cart API service.
+
+465
+00:19:02,130 --> 00:19:05,640
+Now one more thing you
+will see with Olly is
+
+466
+00:19:05,640 --> 00:19:09,180
+that every time Olly provides
+you with information,
+
+467
+00:19:09,180 --> 00:19:11,400
+it backs it up with evidence.
+
+468
+00:19:11,400 --> 00:19:12,637
+Why?
+
+469
+00:19:12,637 --> 00:19:13,680
+Because we know AI can hallucinate,
+
+470
+00:19:13,680 --> 00:19:14,640
+can make up things
+
+471
+00:19:14,640 --> 00:19:17,730
+and we wanna make sure we
+can actually trust Olly.
+
+472
+00:19:17,730 --> 00:19:20,970
+This is a key that we put
+a lot, a lot of effort
+
+473
+00:19:20,970 --> 00:19:22,740
+and engineering resources into
+
+474
+00:19:22,740 --> 00:19:24,990
+ensuring the quality of Olly.
+
+475
+00:19:24,990 --> 00:19:28,020
+So I can see exactly the
+logs that are relevant.
+
+476
+00:19:28,020 --> 00:19:29,760
+Let me open one of them
+
+477
+00:19:29,760 --> 00:19:31,290
+and we can see the message here is
+
+478
+00:19:31,290 --> 00:19:33,960
+unsupported operand
+type and the trace back,
+
+479
+00:19:33,960 --> 00:19:35,670
+this is a pipe service.
+
+480
+00:19:35,670 --> 00:19:38,250
+So I can see really what's going on.
+
+481
+00:19:38,250 --> 00:19:39,540
+Let's go on.
+
+482
+00:19:39,540 --> 00:19:40,863
+So, where it crashes.
+
+483
+00:19:42,060 --> 00:19:44,580
+So Olly here actually opens the code file,
+
+484
+00:19:44,580 --> 00:19:49,170
+analyzed it and found the
+specific lines of code
+
+485
+00:19:49,170 --> 00:19:50,940
+causing the issue.
+
+486
+00:19:50,940 --> 00:19:53,610
+It explains that some function failed
+
+487
+00:19:53,610 --> 00:19:56,640
+because it tried to add
+interesting and none,
+
+488
+00:19:56,640 --> 00:19:57,813
+raising this error.
+
+489
+00:19:58,890 --> 00:20:01,980
+Why have we gotten to
+this case from the get go
+
+490
+00:20:01,980 --> 00:20:06,980
+that we have none in this
+list of items in Python?
+
+491
+00:20:07,680 --> 00:20:11,280
+The reason is bug in remove
+from cart lines 65 to 66,
+
+492
+00:20:11,280 --> 00:20:12,930
+I can open the source file
+
+493
+00:20:12,930 --> 00:20:16,320
+and actually I also got
+suggested fix from Olly.
+
+494
+00:20:16,320 --> 00:20:18,540
+So it seems, you know,
+
+495
+00:20:18,540 --> 00:20:21,030
+not like, really quite an easy fix.
+
+496
+00:20:21,030 --> 00:20:22,383
+We hopefully can apply.
+
+497
+00:20:23,400 --> 00:20:26,250
+Also an analysis of how
+many users were impacted
+
+498
+00:20:26,250 --> 00:20:29,370
+and chart analyzing where
+the issue has started,
+
+499
+00:20:29,370 --> 00:20:31,383
+how it looks like and so on.
+
+500
+00:20:32,220 --> 00:20:34,020
+Olly also share with you what happened.
+
+501
+00:20:34,020 --> 00:20:36,000
+So just to understand
+
+502
+00:20:36,000 --> 00:20:39,330
+how Olly really got to
+this thing, it's not magic.
+
+503
+00:20:39,330 --> 00:20:42,840
+There was a real, in-depth
+investigation that happened
+
+504
+00:20:42,840 --> 00:20:44,013
+in this one minute.
+
+505
+00:20:44,910 --> 00:20:46,563
+So Olly analyzed metrics,
+
+506
+00:20:47,490 --> 00:20:49,950
+it tried to find relevant metrics,
+
+507
+00:20:49,950 --> 00:20:52,230
+it looks specific payment errors, API
+
+508
+00:20:52,230 --> 00:20:53,523
+or checkout our account,
+
+509
+00:20:54,660 --> 00:20:57,420
+ran query, I won't go in
+into each one of them,
+
+510
+00:20:57,420 --> 00:20:59,280
+but you can see just this,
+
+511
+00:20:59,280 --> 00:21:04,280
+let's say, see, we have
+one, two, three, four,
+
+512
+00:21:05,940 --> 00:21:07,800
+four queries.
+
+513
+00:21:07,800 --> 00:21:09,630
+Just think about how
+long would it take you
+
+514
+00:21:09,630 --> 00:21:12,510
+just to realize you
+need to write this query
+
+515
+00:21:12,510 --> 00:21:14,820
+and filter this out and make
+sure the syntax is correct
+
+516
+00:21:14,820 --> 00:21:17,940
+and realize what's the
+insights you're getting from it
+
+517
+00:21:17,940 --> 00:21:21,330
+and how you can actually
+continue with the investigation.
+
+518
+00:21:21,330 --> 00:21:23,880
+Usually, usually from what we see
+
+519
+00:21:23,880 --> 00:21:25,950
+in our customers this time being saved is
+
+520
+00:21:25,950 --> 00:21:29,580
+about 94% on average.
+
+521
+00:21:29,580 --> 00:21:33,600
+And to make it into
+numbers, that means an issue
+
+522
+00:21:33,600 --> 00:21:36,180
+that would take me five
+hours to investigate
+
+523
+00:21:36,180 --> 00:21:38,790
+with Olly would take
+about 20 minutes, okay?
+
+524
+00:21:38,790 --> 00:21:40,470
+Obviously this is average,
+
+525
+00:21:40,470 --> 00:21:44,580
+there are things that finish
+up in a matter of two minutes.
+
+526
+00:21:44,580 --> 00:21:46,980
+Some of them take longer than that.
+
+527
+00:21:46,980 --> 00:21:48,870
+But all in all, this
+is extremely powerful.
+
+528
+00:21:48,870 --> 00:21:51,840
+Okay, so now we have the,
+we've identified the issue.
+
+529
+00:21:51,840 --> 00:21:53,520
+Let me go back because I don't want
+
+530
+00:21:53,520 --> 00:21:54,843
+Sarah to be upset with me.
+
+531
+00:21:55,680 --> 00:21:57,690
+So Nikesh, our engineering lead,
+
+532
+00:21:57,690 --> 00:22:01,533
+hey, Nikesh, we have production issue.
+
+533
+00:22:02,730 --> 00:22:05,250
+Please take a look
+
+534
+00:22:05,250 --> 00:22:06,250
+on the reason
+
+535
+00:22:07,230 --> 00:22:09,810
+and deploy a fix ASAP.
+
+536
+00:22:09,810 --> 00:22:11,733
+Please keep me posted.
+
+537
+00:22:14,160 --> 00:22:16,530
+And I'll be sharing, let me go to Olly,
+
+538
+00:22:16,530 --> 00:22:18,843
+share, let share this link.
+
+539
+00:22:19,920 --> 00:22:22,290
+Awesome, and let's link Sarah,
+
+540
+00:22:22,290 --> 00:22:24,243
+we don't want to leave her waiting.
+
+541
+00:22:25,980 --> 00:22:30,160
+Sarah, thanks for bringing this up.
+
+542
+00:22:32,280 --> 00:22:33,567
+We're on it
+
+543
+00:22:33,567 --> 00:22:36,303
+and the fix is on the way.
+
+544
+00:22:37,560 --> 00:22:40,337
+I think it deserves some applause.
+
+545
+00:22:40,337 --> 00:22:43,337
+(audience applauds)
+
+546
+00:22:44,280 --> 00:22:45,360
+This is real, okay?
+
+547
+00:22:45,360 --> 00:22:47,250
+Like, this is real.
+
+548
+00:22:47,250 --> 00:22:49,590
+I have a video demo here
+
+549
+00:22:49,590 --> 00:22:51,390
+in case the internet would, you know,
+
+550
+00:22:51,390 --> 00:22:52,470
+make up some challenges.
+
+551
+00:22:52,470 --> 00:22:57,180
+But what you just saw, the
+querying, the data, the use case,
+
+552
+00:22:57,180 --> 00:23:00,120
+all of this is from a
+real environment, okay?
+
+553
+00:23:00,120 --> 00:23:02,433
+No, not a simulation
+or anything like that.
+
+554
+00:23:03,270 --> 00:23:06,123
+So what we've just,
+
+555
+00:23:07,140 --> 00:23:08,880
+what we just saw,
+
+556
+00:23:08,880 --> 00:23:10,590
+this is not better observability.
+
+557
+00:23:10,590 --> 00:23:12,660
+This is how we can actually achieve
+
+558
+00:23:12,660 --> 00:23:14,640
+10 times better reliability
+
+559
+00:23:14,640 --> 00:23:17,280
+than what we had until now, okay?
+
+560
+00:23:17,280 --> 00:23:18,660
+Olly understands your stack,
+
+561
+00:23:18,660 --> 00:23:20,523
+this is super important.
+
+562
+00:23:21,870 --> 00:23:24,180
+The reason Olly was able to do that
+
+563
+00:23:24,180 --> 00:23:25,440
+in a matter of a minute
+
+564
+00:23:25,440 --> 00:23:27,300
+and come up with valuable insight
+
+565
+00:23:27,300 --> 00:23:29,670
+and not just made up ones is
+
+566
+00:23:29,670 --> 00:23:31,380
+because like similar to any engineer
+
+567
+00:23:31,380 --> 00:23:33,930
+you would hire that would
+go through training,
+
+568
+00:23:33,930 --> 00:23:37,710
+when you connect and integrate
+Olly for the very first time,
+
+569
+00:23:37,710 --> 00:23:40,350
+it learns your observability workspace,
+
+570
+00:23:40,350 --> 00:23:42,510
+it learns which applications you have,
+
+571
+00:23:42,510 --> 00:23:43,743
+what subsystems,
+
+572
+00:23:44,640 --> 00:23:48,270
+what fields are present
+in the logs metrics.
+
+573
+00:23:48,270 --> 00:23:49,470
+Has it occurred to you
+
+574
+00:23:49,470 --> 00:23:51,810
+that you have five metrics,
+
+575
+00:23:51,810 --> 00:23:53,610
+one with capital case,
+one with lower case,
+
+576
+00:23:53,610 --> 00:23:55,560
+they all mean the same thing
+
+577
+00:23:55,560 --> 00:23:56,730
+but they have different naming.
+
+578
+00:23:56,730 --> 00:23:59,310
+So when you query, you may
+miss some of them, right?
+
+579
+00:23:59,310 --> 00:24:01,350
+Because you just didn't know
+
+580
+00:24:01,350 --> 00:24:03,000
+that the casing is so important.
+
+581
+00:24:03,000 --> 00:24:05,340
+So Olly familiar with all these fields
+
+582
+00:24:05,340 --> 00:24:06,450
+and this is extremely powerful.
+
+583
+00:24:06,450 --> 00:24:08,280
+This is what allows Olly really to conduct
+
+584
+00:24:08,280 --> 00:24:11,100
+smart and insightful investigations.
+
+585
+00:24:11,100 --> 00:24:13,440
+So in a matter of minute
+
+586
+00:24:13,440 --> 00:24:15,030
+we found the root cause,
+
+587
+00:24:15,030 --> 00:24:17,973
+we got the suggestion for a fix.
+
+588
+00:24:18,840 --> 00:24:22,950
+I think this example is
+particularly interesting
+
+589
+00:24:22,950 --> 00:24:24,753
+because the fix here was not,
+
+590
+00:24:25,650 --> 00:24:27,840
+I dunno, increase CPU
+or anything like that
+
+591
+00:24:27,840 --> 00:24:29,970
+or allocate more pods.
+
+592
+00:24:29,970 --> 00:24:32,523
+This actually was a code issue.
+
+593
+00:24:33,480 --> 00:24:36,030
+And think about an on-call.
+
+594
+00:24:36,030 --> 00:24:38,730
+Any on-call, any SRE, any developer,
+
+595
+00:24:38,730 --> 00:24:43,083
+doesn't matter how much experts they are,
+
+596
+00:24:44,400 --> 00:24:46,380
+with this, they could have gotten
+
+597
+00:24:46,380 --> 00:24:49,260
+to the root cause within
+the lines of the code,
+
+598
+00:24:49,260 --> 00:24:50,400
+even if they're not familiar
+
+599
+00:24:50,400 --> 00:24:53,550
+and they haven't seen this
+code repository before, okay?
+
+600
+00:24:53,550 --> 00:24:56,460
+So this is really the true
+power we're talking about.
+
+601
+00:24:56,460 --> 00:24:58,710
+And I think most importantly,
+
+602
+00:24:58,710 --> 00:25:01,170
+I didn't open even one dashboard.
+
+603
+00:25:01,170 --> 00:25:04,150
+I didn't filter any query on my own
+
+604
+00:25:06,150 --> 00:25:07,620
+and this is really the true power
+
+605
+00:25:07,620 --> 00:25:09,120
+and the true potential we have here
+
+606
+00:25:09,120 --> 00:25:11,610
+to achieve 10 times better reliability.
+
+607
+00:25:11,610 --> 00:25:13,590
+Now for those of you here in the crowd,
+
+608
+00:25:13,590 --> 00:25:16,230
+and I see you, some
+skeptical guys here thinking,
+
+609
+00:25:16,230 --> 00:25:18,670
+oh yeah, it's just
+ChatGPT for observability,
+
+610
+00:25:18,670 --> 00:25:20,790
+it's, you know, I saw that.
+
+611
+00:25:20,790 --> 00:25:23,070
+It's not, okay?
+
+612
+00:25:23,070 --> 00:25:25,260
+And let me elaborate what Olly is not.
+
+613
+00:25:25,260 --> 00:25:26,780
+So it's not ChatGPT for observability
+
+614
+00:25:26,780 --> 00:25:31,350
+in the sense that Olly is not
+just ChatGPT-like interface
+
+615
+00:25:31,350 --> 00:25:33,420
+for accessing your observability data.
+
+616
+00:25:33,420 --> 00:25:34,323
+It's not that.
+
+617
+00:25:35,340 --> 00:25:37,650
+Olly has context, Olly has knowledge.
+
+618
+00:25:37,650 --> 00:25:40,770
+Olly is autonomous,
+meaning in every single,
+
+619
+00:25:40,770 --> 00:25:42,390
+he doesn't have playbooks.
+
+620
+00:25:42,390 --> 00:25:45,090
+In every single point of time, it decides
+
+621
+00:25:45,090 --> 00:25:47,913
+autonomously what is the next step?
+
+622
+00:25:51,210 --> 00:25:54,753
+Olly is also not an AI assistant.
+
+623
+00:25:55,620 --> 00:25:57,270
+Now I'm sure you saw plenty,
+
+624
+00:25:57,270 --> 00:26:01,020
+every single company
+on earth these days got
+
+625
+00:26:01,020 --> 00:26:02,190
+directive from the CEO,
+
+626
+00:26:02,190 --> 00:26:05,550
+we need to add AI, as much
+AI as possible, right?
+
+627
+00:26:05,550 --> 00:26:08,040
+So we see that with AI assistant,
+
+628
+00:26:08,040 --> 00:26:10,310
+this small, cute chatbot you see
+
+629
+00:26:10,310 --> 00:26:12,690
+on the bottom right usually, right?
+
+630
+00:26:12,690 --> 00:26:14,253
+Like, hey let me help you.
+
+631
+00:26:15,150 --> 00:26:17,520
+And these are great, like they
+do provide a lot of value,
+
+632
+00:26:17,520 --> 00:26:19,320
+but the value they focus on is
+
+633
+00:26:19,320 --> 00:26:22,650
+really making you and making your users
+
+634
+00:26:22,650 --> 00:26:25,860
+more efficient within the platform, right?
+
+635
+00:26:25,860 --> 00:26:28,920
+So if Olly, for example, was an assistant,
+
+636
+00:26:28,920 --> 00:26:32,100
+it wouldn't do all the
+investigation for you or with you,
+
+637
+00:26:32,100 --> 00:26:34,230
+it would actually just help you build
+
+638
+00:26:34,230 --> 00:26:35,673
+dashboard in Coralogix.
+
+639
+00:26:36,510 --> 00:26:37,470
+So it doesn't do that.
+
+640
+00:26:37,470 --> 00:26:38,970
+It's not an AI assistant.
+
+641
+00:26:38,970 --> 00:26:43,320
+The the difference in power
+is not becoming, I dunno,
+
+642
+00:26:43,320 --> 00:26:46,800
+20% faster in building
+dashboards or alerts.
+
+643
+00:26:46,800 --> 00:26:49,020
+It's actually becoming 10
+times better in reliability,
+
+644
+00:26:49,020 --> 00:26:51,750
+which is a much broader, higher level goal
+
+645
+00:26:51,750 --> 00:26:52,800
+for the organization.
+
+646
+00:26:54,060 --> 00:26:56,130
+And lastly, MCP,
+
+647
+00:26:56,130 --> 00:26:58,893
+MCP has been around for quite a while now.
+
+648
+00:27:01,230 --> 00:27:03,720
+So Olly is not an MCP server.
+
+649
+00:27:03,720 --> 00:27:07,110
+We do offer MCP for Coralogix, okay?
+
+650
+00:27:07,110 --> 00:27:08,130
+But Olly is not that.
+
+651
+00:27:08,130 --> 00:27:10,050
+What's the differences?
+
+652
+00:27:10,050 --> 00:27:13,630
+MCP in a way is exposing API
+
+653
+00:27:15,000 --> 00:27:16,620
+for AI agents, okay?
+
+654
+00:27:16,620 --> 00:27:19,260
+So if I want to take my information
+
+655
+00:27:19,260 --> 00:27:22,560
+for example for to expose
+Coralogix information
+
+656
+00:27:22,560 --> 00:27:24,750
+to other AI agents like Cursor,
+
+657
+00:27:24,750 --> 00:27:27,900
+I would take the Coralogix MCP server.
+
+658
+00:27:27,900 --> 00:27:29,670
+But it does not have any knowledge,
+
+659
+00:27:29,670 --> 00:27:31,803
+it does not have any special context.
+
+660
+00:27:32,790 --> 00:27:35,973
+It is not an AI agent, AI system.
+
+661
+00:27:37,320 --> 00:27:40,053
+So let's understand what
+Olly is and how Olly works.
+
+662
+00:27:42,390 --> 00:27:45,300
+So it all starts with data.
+
+663
+00:27:45,300 --> 00:27:48,750
+For years, we've been really focused
+
+664
+00:27:48,750 --> 00:27:51,480
+around how we achieve, store better data.
+
+665
+00:27:51,480 --> 00:27:54,090
+And finally, I think really over a decade
+
+666
+00:27:54,090 --> 00:27:55,680
+that we're talking about data
+
+667
+00:27:55,680 --> 00:27:56,820
+and the potential value of data,
+
+668
+00:27:56,820 --> 00:27:58,200
+I think finally we can harness
+
+669
+00:27:58,200 --> 00:28:00,930
+the true value and the
+true potential of data.
+
+670
+00:28:00,930 --> 00:28:05,930
+So Coralogix is really good
+as a platform for processing,
+
+671
+00:28:06,810 --> 00:28:10,230
+harnessing tons, massive amounts of data,
+
+672
+00:28:10,230 --> 00:28:12,480
+petabytes of data, terabytes of data
+
+673
+00:28:12,480 --> 00:28:15,723
+that we've really close
+to infinite retention.
+
+674
+00:28:17,730 --> 00:28:20,133
+So all of this is being leveraged by Olly.
+
+675
+00:28:21,270 --> 00:28:23,160
+Olly learns from this data,
+
+676
+00:28:23,160 --> 00:28:25,110
+creating a knowledge base,
+
+677
+00:28:25,110 --> 00:28:28,590
+like you would learn something
+in school for example.
+
+678
+00:28:28,590 --> 00:28:30,243
+And then with this knowledge,
+
+679
+00:28:31,080 --> 00:28:33,480
+what he saw and saying that he may say,
+
+680
+00:28:33,480 --> 00:28:36,720
+hey, this is an AI, an
+observability agent.
+
+681
+00:28:36,720 --> 00:28:38,400
+It is not observability agent
+
+682
+00:28:38,400 --> 00:28:39,963
+because agent is singular.
+
+683
+00:28:40,830 --> 00:28:44,670
+Behind the scenes, Olly
+has a team of agents,
+
+684
+00:28:44,670 --> 00:28:47,550
+specialized agents working for you, okay?
+
+685
+00:28:47,550 --> 00:28:49,320
+So we have for example logs explorer,
+
+686
+00:28:49,320 --> 00:28:51,270
+we have metrics analyzer.
+
+687
+00:28:51,270 --> 00:28:53,790
+Each one of them is powered by SLMs.
+
+688
+00:28:53,790 --> 00:28:56,280
+SLMs are small language models,
+
+689
+00:28:56,280 --> 00:28:58,200
+think about 7 billion parameters,
+
+690
+00:28:58,200 --> 00:28:59,970
+13 billion parameters,
+
+691
+00:28:59,970 --> 00:29:02,880
+that is specialized in the specific role
+
+692
+00:29:02,880 --> 00:29:04,410
+and specific task at hand.
+
+693
+00:29:04,410 --> 00:29:07,710
+And they all collaborate
+together to produce
+
+694
+00:29:07,710 --> 00:29:09,960
+insights, answers,
+
+695
+00:29:09,960 --> 00:29:11,760
+which all together allow us to get
+
+696
+00:29:11,760 --> 00:29:14,510
+this 10 times better reliability
+we were talking about.
+
+697
+00:29:15,570 --> 00:29:18,030
+Now let's go a step back and talk
+
+698
+00:29:18,030 --> 00:29:20,550
+in general about any agentic AI system.
+
+699
+00:29:20,550 --> 00:29:24,120
+I think this is if you want to know
+
+700
+00:29:24,120 --> 00:29:27,210
+what you can take back
+home to your offices,
+
+701
+00:29:27,210 --> 00:29:30,840
+to your work and how do
+you build your AI agent
+
+702
+00:29:30,840 --> 00:29:32,043
+or your own Olly,
+
+703
+00:29:32,940 --> 00:29:34,920
+this is all about that.
+
+704
+00:29:34,920 --> 00:29:38,910
+So any agentic AI system
+has five main components.
+
+705
+00:29:38,910 --> 00:29:40,320
+Obviously we can break it down to more,
+
+706
+00:29:40,320 --> 00:29:42,270
+but these are the core concepts
+
+707
+00:29:42,270 --> 00:29:45,750
+and the core things you must
+have in agentic AI system.
+
+708
+00:29:45,750 --> 00:29:49,083
+So it starts with a model
+in the center, okay?
+
+709
+00:29:50,130 --> 00:29:52,800
+Which is clear, this is like the engine
+
+710
+00:29:52,800 --> 00:29:55,830
+for our agent or our agentic system.
+
+711
+00:29:55,830 --> 00:29:56,910
+We have the system prompt.
+
+712
+00:29:56,910 --> 00:30:00,690
+So for example, you are an
+expert in analyzing logs
+
+713
+00:30:00,690 --> 00:30:02,520
+for this company.
+
+714
+00:30:02,520 --> 00:30:03,750
+So this is how we provide
+
+715
+00:30:03,750 --> 00:30:05,400
+actual instructions to our agent.
+
+716
+00:30:08,910 --> 00:30:10,550
+Then we talked about multiple agents.
+
+717
+00:30:10,550 --> 00:30:12,300
+So we said logs explorer, right?
+
+718
+00:30:12,300 --> 00:30:16,560
+Metrics analyzer, let's say
+security analyst and so on.
+
+719
+00:30:16,560 --> 00:30:21,560
+The way they collaborate
+together could be different
+
+720
+00:30:21,900 --> 00:30:22,860
+and is crucial.
+
+721
+00:30:22,860 --> 00:30:24,720
+So for example, there are
+
+722
+00:30:24,720 --> 00:30:26,160
+different design patterns for it.
+
+723
+00:30:26,160 --> 00:30:27,720
+One architecture would be that I have
+
+724
+00:30:27,720 --> 00:30:30,180
+one orchestrator that takes the task.
+
+725
+00:30:30,180 --> 00:30:33,270
+For example, in this case
+we ask for investigation.
+
+726
+00:30:33,270 --> 00:30:35,190
+So the orchestrator is familiar
+
+727
+00:30:35,190 --> 00:30:38,850
+with all the other
+agents and assign tasks,
+
+728
+00:30:38,850 --> 00:30:40,620
+hey logs explorer, please find me
+
+729
+00:30:40,620 --> 00:30:42,750
+relevant logs to this issue.
+
+730
+00:30:42,750 --> 00:30:45,123
+Log explorer will come back with results,
+
+731
+00:30:46,050 --> 00:30:48,690
+orchestrator will decide on next steps.
+
+732
+00:30:48,690 --> 00:30:50,250
+This is one type,
+
+733
+00:30:50,250 --> 00:30:53,340
+another type is handovers.
+
+734
+00:30:53,340 --> 00:30:57,750
+We can decide, we can make
+any sub-agent autonomous
+
+735
+00:30:57,750 --> 00:31:00,330
+so they can play around together as a team
+
+736
+00:31:00,330 --> 00:31:01,440
+like playing ball.
+
+737
+00:31:01,440 --> 00:31:03,210
+And at every given point in time,
+
+738
+00:31:03,210 --> 00:31:05,130
+someone else holds the ball,
+
+739
+00:31:05,130 --> 00:31:06,390
+meaning they are the one
+
+740
+00:31:06,390 --> 00:31:08,310
+leading the conversation from now on.
+
+741
+00:31:08,310 --> 00:31:09,960
+So there are different architectures
+
+742
+00:31:09,960 --> 00:31:12,243
+about how we actually organize our agents.
+
+743
+00:31:14,820 --> 00:31:16,170
+Then we have the knowledge,
+
+744
+00:31:17,760 --> 00:31:20,850
+which talks about really
+how we provide this,
+
+745
+00:31:20,850 --> 00:31:23,970
+how we empower this agentic AI system
+
+746
+00:31:23,970 --> 00:31:26,730
+not only with tools
+but also the knowledge,
+
+747
+00:31:26,730 --> 00:31:28,800
+the information that's
+very, very much needed
+
+748
+00:31:28,800 --> 00:31:31,230
+to make smart decisions, smart actions.
+
+749
+00:31:31,230 --> 00:31:34,950
+And lastly but probably the
+most important one is the evals,
+
+750
+00:31:34,950 --> 00:31:36,120
+how do we actually evaluate
+
+751
+00:31:36,120 --> 00:31:38,343
+the quality of our agentic system?
+
+752
+00:31:39,420 --> 00:31:42,750
+So out of these five,
+
+753
+00:31:42,750 --> 00:31:45,210
+what you will notice is model
+
+754
+00:31:45,210 --> 00:31:47,130
+is commodity, okay?
+
+755
+00:31:47,130 --> 00:31:52,130
+So Opus was released I think
+a week ago or two weeks ago.
+
+756
+00:31:52,650 --> 00:31:55,650
+We have access to it, all
+of you have access to it.
+
+757
+00:31:55,650 --> 00:31:58,170
+GPT5 got released, same thing.
+
+758
+00:31:58,170 --> 00:32:00,060
+So there's nothing really
+unique about the model.
+
+759
+00:32:00,060 --> 00:32:01,860
+We can, we all share the same models,
+
+760
+00:32:01,860 --> 00:32:03,030
+and same for system prompt.
+
+761
+00:32:03,030 --> 00:32:05,130
+I can write something,
+you can write something,
+
+762
+00:32:05,130 --> 00:32:08,250
+it won't make a huge, huge difference.
+
+763
+00:32:08,250 --> 00:32:11,440
+So that leaves us with
+three other main components
+
+764
+00:32:12,330 --> 00:32:14,220
+which together compose what we call
+
+765
+00:32:14,220 --> 00:32:16,413
+the context engineering triangle.
+
+766
+00:32:18,090 --> 00:32:21,150
+The context engineering
+triangle, this is the key.
+
+767
+00:32:21,150 --> 00:32:23,430
+What you see here, these three components,
+
+768
+00:32:23,430 --> 00:32:27,810
+if you want to build
+powerful, high quality agent,
+
+769
+00:32:27,810 --> 00:32:29,640
+you need these three items
+
+770
+00:32:29,640 --> 00:32:33,213
+and you need to understand
+them deeply and focus on them.
+
+771
+00:32:34,350 --> 00:32:36,180
+So we covered about agent architecture
+
+772
+00:32:36,180 --> 00:32:38,230
+and the importance of agent architecture.
+
+773
+00:32:40,170 --> 00:32:42,933
+I wanna talk a little bit
+about knowledge and memory.
+
+774
+00:32:44,250 --> 00:32:46,320
+So in ChatGPT, I think we are all familiar
+
+775
+00:32:46,320 --> 00:32:48,870
+with the fact that as
+we talk with ChatGPT,
+
+776
+00:32:48,870 --> 00:32:52,080
+sometimes it memorizes
+what we talked with them
+
+777
+00:32:52,080 --> 00:32:52,950
+about it, right?
+
+778
+00:32:52,950 --> 00:32:56,073
+And then it can be reused
+in other conversations.
+
+779
+00:32:57,060 --> 00:33:01,980
+But one of the challenges
+with making agentic AI system
+
+780
+00:33:01,980 --> 00:33:02,930
+really, really good
+
+781
+00:33:04,770 --> 00:33:06,840
+with knowledge as well is
+
+782
+00:33:06,840 --> 00:33:09,750
+the limitation of context, right?
+
+783
+00:33:09,750 --> 00:33:11,910
+In theory, if I could take
+
+784
+00:33:11,910 --> 00:33:14,280
+all my petabytes of observability data
+
+785
+00:33:14,280 --> 00:33:16,320
+from the last week and just push it
+
+786
+00:33:16,320 --> 00:33:18,180
+to all of them and wish them good luck,
+
+787
+00:33:18,180 --> 00:33:19,620
+I will do that.
+
+788
+00:33:19,620 --> 00:33:23,550
+But it's not technically
+possible as for today.
+
+789
+00:33:23,550 --> 00:33:25,260
+And I think we can also
+take here the more is
+
+790
+00:33:25,260 --> 00:33:27,060
+not more here as well.
+
+791
+00:33:27,060 --> 00:33:29,730
+The fact that I will have more data
+
+792
+00:33:29,730 --> 00:33:32,073
+does not mean I will get better answers.
+
+793
+00:33:33,090 --> 00:33:34,650
+So what we do need?
+
+794
+00:33:34,650 --> 00:33:38,223
+We need to have relevant data,
+
+795
+00:33:39,240 --> 00:33:41,340
+we need to have it in a structured way
+
+796
+00:33:41,340 --> 00:33:43,323
+that is optimized for the LLM.
+
+797
+00:33:44,370 --> 00:33:46,680
+And let me tell you that it may sound
+
+798
+00:33:46,680 --> 00:33:49,620
+that changing models is quite easy, right?
+
+799
+00:33:49,620 --> 00:33:51,810
+Just within the API
+call, change the string.
+
+800
+00:33:51,810 --> 00:33:53,130
+Hey, GPT5.
+
+801
+00:33:53,130 --> 00:33:55,413
+Now I want to use Claude, very easy.
+
+802
+00:33:56,910 --> 00:33:59,910
+In reality, changing model is difficult.
+
+803
+00:33:59,910 --> 00:34:00,900
+The reason it's difficult,
+
+804
+00:34:00,900 --> 00:34:02,820
+because different models has
+
+805
+00:34:02,820 --> 00:34:04,860
+different preferences
+and you need to optimize
+
+806
+00:34:04,860 --> 00:34:06,930
+the context you're building accordingly.
+
+807
+00:34:06,930 --> 00:34:09,810
+So the knowledge needs
+to be optimized as well.
+
+808
+00:34:09,810 --> 00:34:11,700
+So going back to we wanna build
+
+809
+00:34:11,700 --> 00:34:14,100
+this observability AI agent,
+
+810
+00:34:14,100 --> 00:34:17,910
+we need to push relevant
+information to the context
+
+811
+00:34:17,910 --> 00:34:19,320
+and we already agreed
+
+812
+00:34:19,320 --> 00:34:21,990
+we cannot just take all
+the logs, metrics, traces
+
+813
+00:34:21,990 --> 00:34:23,440
+and so on from the last week.
+
+814
+00:34:24,690 --> 00:34:26,070
+So we need really what,
+
+815
+00:34:26,070 --> 00:34:28,260
+the way to do it is
+
+816
+00:34:28,260 --> 00:34:30,870
+actually same way as we investigate
+
+817
+00:34:30,870 --> 00:34:32,620
+and as we conduct an investigation,
+
+818
+00:34:33,600 --> 00:34:35,370
+is identify the key parts
+
+819
+00:34:35,370 --> 00:34:36,603
+and the key elements,
+
+820
+00:34:37,800 --> 00:34:39,213
+store them at first.
+
+821
+00:34:40,470 --> 00:34:41,820
+And the structure rate could be
+
+822
+00:34:41,820 --> 00:34:44,940
+whether in vector DB, knowledge graph
+
+823
+00:34:44,940 --> 00:34:46,680
+or just rational DB depending
+
+824
+00:34:46,680 --> 00:34:48,273
+on what information we store,
+
+825
+00:34:49,170 --> 00:34:51,690
+and allow our agent to
+access this information.
+
+826
+00:34:51,690 --> 00:34:54,210
+And the querying part is also key here
+
+827
+00:34:54,210 --> 00:34:56,580
+because the fact that I
+have this information stored
+
+828
+00:34:56,580 --> 00:34:59,370
+somewhere does not mean
+
+829
+00:34:59,370 --> 00:35:02,550
+I know how to query in an effective way.
+
+830
+00:35:02,550 --> 00:35:03,900
+So we said how do we,
+
+831
+00:35:03,900 --> 00:35:05,520
+how do I store this information?
+
+832
+00:35:05,520 --> 00:35:08,190
+How do I structure it and how do I query?
+
+833
+00:35:08,190 --> 00:35:10,830
+These are the three components
+when come to knowledge
+
+834
+00:35:10,830 --> 00:35:14,760
+and how we build this context.
+
+835
+00:35:14,760 --> 00:35:17,040
+So let's say we've done these
+two really, really good.
+
+836
+00:35:17,040 --> 00:35:20,280
+So we have model, we have system prompt,
+
+837
+00:35:20,280 --> 00:35:21,600
+we have some agents architecture,
+
+838
+00:35:21,600 --> 00:35:23,600
+we can do something simple for starters.
+
+839
+00:35:25,680 --> 00:35:28,800
+And let's say I saved
+some basic aggregations
+
+840
+00:35:28,800 --> 00:35:31,353
+on my log to start simple.
+
+841
+00:35:32,520 --> 00:35:35,010
+The last thing,
+
+842
+00:35:35,010 --> 00:35:37,869
+which is actually the most
+important one, is evals.
+
+843
+00:35:37,869 --> 00:35:39,810
+Evals is short for evaluation.
+
+844
+00:35:39,810 --> 00:35:42,360
+Now in traditional software,
+we have unit testing,
+
+845
+00:35:42,360 --> 00:35:44,820
+integration testing,
+system testing, right?
+
+846
+00:35:44,820 --> 00:35:46,500
+When we build it, we test,
+
+847
+00:35:46,500 --> 00:35:49,230
+we see hey, thumbs up,
+nothing broke, all good,
+
+848
+00:35:49,230 --> 00:35:50,103
+we can go live.
+
+849
+00:35:51,750 --> 00:35:56,750
+A new feature comes in,
+we implement it, right?
+
+850
+00:35:57,320 --> 00:36:00,363
+We build some new tests, run
+it again, all works well.
+
+851
+00:36:01,410 --> 00:36:05,640
+Ideally, we would've done
+the same with AI agents.
+
+852
+00:36:05,640 --> 00:36:09,240
+The challenge though is
+that there is no structure.
+
+853
+00:36:09,240 --> 00:36:12,000
+What are we testing, right?
+
+854
+00:36:12,000 --> 00:36:13,500
+Like we have a conversation,
+
+855
+00:36:13,500 --> 00:36:16,140
+the user can input whatever they want.
+
+856
+00:36:16,140 --> 00:36:18,660
+The possibilities are infinite, right?
+
+857
+00:36:18,660 --> 00:36:20,310
+Like, what do I test?
+
+858
+00:36:20,310 --> 00:36:22,953
+What happens if the user
+just come in and say,
+
+859
+00:36:23,827 --> 00:36:27,720
+"Hey what should I
+order for lunch", right?
+
+860
+00:36:27,720 --> 00:36:30,270
+Like there are infinite
+amounts of possibilities
+
+861
+00:36:30,270 --> 00:36:31,773
+to what the user would put in.
+
+862
+00:36:32,820 --> 00:36:35,460
+So the question of how do I evaluate it
+
+863
+00:36:35,460 --> 00:36:38,100
+becomes really, really challenging.
+
+864
+00:36:38,100 --> 00:36:40,110
+And if not done correctly,
+
+865
+00:36:40,110 --> 00:36:41,400
+or if you actually build an AI agent
+
+866
+00:36:41,400 --> 00:36:43,563
+and you don't evaluate it at all,
+
+867
+00:36:44,520 --> 00:36:47,700
+I can show from experience what happens is
+
+868
+00:36:47,700 --> 00:36:50,910
+you build something, it
+seems to be working right?
+
+869
+00:36:50,910 --> 00:36:52,800
+Even you, let's say you're very proud,
+
+870
+00:36:52,800 --> 00:36:54,217
+you deploy it to production,
+you say to your friends,
+
+871
+00:36:54,217 --> 00:36:55,530
+"Hey, I have it.
+
+872
+00:36:55,530 --> 00:36:57,150
+You can start using it."
+
+873
+00:36:57,150 --> 00:36:58,320
+In a matter of minutes probably,
+
+874
+00:36:58,320 --> 00:37:00,877
+you will get some Slack message
+or someone will tell you,
+
+875
+00:37:00,877 --> 00:37:03,660
+"Hey, hey look, I tried
+this, it doesn't work."
+
+876
+00:37:03,660 --> 00:37:05,640
+So yeah, oh, no problem, I'm on it.
+
+877
+00:37:05,640 --> 00:37:07,350
+You'll go back, you'll check
+
+878
+00:37:07,350 --> 00:37:08,940
+this very, very specific use case
+
+879
+00:37:08,940 --> 00:37:10,650
+and you'll change the system prompt.
+
+880
+00:37:10,650 --> 00:37:11,820
+And guess what?
+
+881
+00:37:11,820 --> 00:37:15,480
+You will be successful in
+resolving this use case.
+
+882
+00:37:15,480 --> 00:37:17,850
+So it seems like we made progress,
+
+883
+00:37:17,850 --> 00:37:19,950
+but what you didn't realize is
+
+884
+00:37:19,950 --> 00:37:21,450
+as you change the system prompt,
+
+885
+00:37:21,450 --> 00:37:24,210
+you change the entire
+behavior of the agent.
+
+886
+00:37:24,210 --> 00:37:26,430
+So things that used to work before,
+
+887
+00:37:26,430 --> 00:37:28,890
+the test that you ran a day ago,
+
+888
+00:37:28,890 --> 00:37:33,810
+this use case is not
+working anymore, okay?
+
+889
+00:37:33,810 --> 00:37:38,220
+So this is why evaluations
+in AI agents are
+
+890
+00:37:38,220 --> 00:37:39,813
+no less than crucial.
+
+891
+00:37:40,980 --> 00:37:43,130
+I will say just one
+more thing about evals,
+
+892
+00:37:46,920 --> 00:37:48,360
+another challenge here is
+
+893
+00:37:48,360 --> 00:37:52,770
+not only testing because
+it's not just one message.
+
+894
+00:37:52,770 --> 00:37:55,290
+I got input, output is it correct or not?
+
+895
+00:37:55,290 --> 00:37:57,600
+We have an entire flow of conversations.
+
+896
+00:37:57,600 --> 00:37:59,310
+So how do we test this?
+
+897
+00:37:59,310 --> 00:38:01,140
+So I'll leave it as a food for thought
+
+898
+00:38:01,140 --> 00:38:04,440
+and we can talk this offline
+if some of you are interested.
+
+899
+00:38:04,440 --> 00:38:06,393
+So how does that translate into Olly?
+
+900
+00:38:07,890 --> 00:38:09,690
+So the beautiful thing you saw before,
+
+901
+00:38:09,690 --> 00:38:12,210
+this is what happens behind the scenes.
+
+902
+00:38:12,210 --> 00:38:14,343
+Onto the left, okay?
+
+903
+00:38:14,343 --> 00:38:15,840
+And this is really sharing
+with you the internals,
+
+904
+00:38:15,840 --> 00:38:17,793
+how Olly works under the hood.
+
+905
+00:38:19,380 --> 00:38:21,900
+On the left, Olly is
+powered by Coralogix's
+
+906
+00:38:21,900 --> 00:38:25,080
+extremely powerful observability
+data platform, okay?
+
+907
+00:38:25,080 --> 00:38:29,283
+So notice, remember I told you
+Olly is not an AI assistant.
+
+908
+00:38:30,150 --> 00:38:31,353
+That's exactly that.
+
+909
+00:38:31,353 --> 00:38:34,500
+Olly is not an expert in using Coralogix
+
+910
+00:38:34,500 --> 00:38:37,140
+or using its feature to build dashboards.
+
+911
+00:38:37,140 --> 00:38:40,320
+It is an expert in
+helping you with achieving
+
+912
+00:38:40,320 --> 00:38:42,600
+better reliability and
+investigating issues,
+
+913
+00:38:42,600 --> 00:38:44,583
+optimizing production and so on.
+
+914
+00:38:45,540 --> 00:38:48,890
+So it leverages the large scale
+data observability platform
+
+915
+00:38:48,890 --> 00:38:50,880
+by Coralogix.
+
+916
+00:38:50,880 --> 00:38:53,910
+From it, it takes all these signals
+
+917
+00:38:53,910 --> 00:38:55,233
+and creates knowledge.
+
+918
+00:38:56,490 --> 00:38:58,140
+To be honest, like if you
+would ask me to choose
+
+919
+00:38:58,140 --> 00:38:59,610
+one thing
+
+920
+00:38:59,610 --> 00:39:02,970
+or the key to all these
+success and quality lies,
+
+921
+00:39:02,970 --> 00:39:04,293
+it's within the knowledge.
+
+922
+00:39:05,190 --> 00:39:08,670
+And then we have the collaboration
+of the multiple agents,
+
+923
+00:39:08,670 --> 00:39:09,690
+again, each one powered
+
+924
+00:39:09,690 --> 00:39:11,400
+by small language model,
+
+925
+00:39:11,400 --> 00:39:14,550
+which allows us to get really
+invaluable production insight,
+
+926
+00:39:14,550 --> 00:39:16,140
+as we saw.
+
+927
+00:39:16,140 --> 00:39:17,460
+So how can you take it back home
+
+928
+00:39:17,460 --> 00:39:20,580
+and how can you start build your own Olly?
+
+929
+00:39:20,580 --> 00:39:23,253
+So first thing first, data.
+
+930
+00:39:24,330 --> 00:39:26,310
+We need to store all
+of our data somewhere,
+
+931
+00:39:26,310 --> 00:39:27,600
+logs, metrics, traces.
+
+932
+00:39:27,600 --> 00:39:29,343
+The more we have, the better.
+
+933
+00:39:30,690 --> 00:39:32,220
+But we also need to make sure
+
+934
+00:39:32,220 --> 00:39:34,920
+that we build in a structured way
+
+935
+00:39:34,920 --> 00:39:38,280
+that the agent can
+actually optimize in that.
+
+936
+00:39:38,280 --> 00:39:39,630
+The second part is what we call
+
+937
+00:39:39,630 --> 00:39:41,520
+semantic layer, okay?
+
+938
+00:39:41,520 --> 00:39:45,300
+Semantic layer is really a more,
+
+939
+00:39:45,300 --> 00:39:46,710
+we call it a basic understanding
+
+940
+00:39:46,710 --> 00:39:48,420
+at least of the data.
+
+941
+00:39:48,420 --> 00:39:50,130
+Let's say I have a field that has
+
+942
+00:39:50,130 --> 00:39:54,930
+name CPU USG 7D.
+
+943
+00:39:54,930 --> 00:39:56,670
+What does that mean?
+
+944
+00:39:56,670 --> 00:39:59,190
+So maybe we can assume it means CPU usage
+
+945
+00:39:59,190 --> 00:40:00,510
+over the last seven days,
+
+946
+00:40:00,510 --> 00:40:03,090
+whatever is CPU usage
+over the last seven days.
+
+947
+00:40:03,090 --> 00:40:06,394
+But it's important for
+the agent, for the LLM,
+
+948
+00:40:06,394 --> 00:40:09,840
+for our engine to have this information
+
+949
+00:40:09,840 --> 00:40:12,210
+because this what allow the agent to make
+
+950
+00:40:12,210 --> 00:40:13,043
+smart decisions.
+
+951
+00:40:13,043 --> 00:40:15,030
+Say "Hey, I have a problem with CPU,"
+
+952
+00:40:15,030 --> 00:40:18,240
+this metric is actually
+the metric that would,
+
+953
+00:40:18,240 --> 00:40:19,260
+is likely to be relevant.
+
+954
+00:40:19,260 --> 00:40:21,030
+So maybe I should check this out.
+
+955
+00:40:21,030 --> 00:40:23,580
+Okay, so semantic layer is,
+
+956
+00:40:23,580 --> 00:40:26,550
+I would call it kind of
+the first building block
+
+957
+00:40:26,550 --> 00:40:28,323
+within the knowledge of the agent.
+
+958
+00:40:30,360 --> 00:40:31,410
+And the third part is
+
+959
+00:40:31,410 --> 00:40:33,693
+building your first AI agent MVP,
+
+960
+00:40:35,220 --> 00:40:38,190
+take whatever model, build it.
+
+961
+00:40:38,190 --> 00:40:39,450
+There are actually great tools,
+
+962
+00:40:39,450 --> 00:40:43,080
+whether it's OpenAI agents at Python SDK,
+
+963
+00:40:43,080 --> 00:40:44,850
+LangChain and others,
+
+964
+00:40:44,850 --> 00:40:47,940
+today it became quite easy
+to come up with an MVP.
+
+965
+00:40:47,940 --> 00:40:50,920
+So I do recommend really
+just getting your hands on
+
+966
+00:40:52,050 --> 00:40:54,780
+and try to build this thing.
+
+967
+00:40:54,780 --> 00:40:56,010
+So, and this is, you know,
+
+968
+00:40:56,010 --> 00:40:57,993
+just the core concept to start with.
+
+969
+00:40:59,250 --> 00:41:00,423
+So from here,
+
+970
+00:41:01,800 --> 00:41:05,973
+we've seen one demonstration
+of how Olly works.
+
+971
+00:41:07,050 --> 00:41:08,220
+Olly has been in beta
+
+972
+00:41:08,220 --> 00:41:12,060
+for the last few months with
+some of Coralogix's customers.
+
+973
+00:41:12,060 --> 00:41:15,060
+I do wanna share with
+you how it actually work,
+
+974
+00:41:15,060 --> 00:41:17,790
+how it actually looks in real life.
+
+975
+00:41:17,790 --> 00:41:20,730
+So this is a story of
+one of our customers.
+
+976
+00:41:20,730 --> 00:41:22,470
+I was actually fascinated to hear that,
+
+977
+00:41:22,470 --> 00:41:23,303
+to be honest.
+
+978
+00:41:24,300 --> 00:41:28,140
+So they had a notification service, okay?
+
+979
+00:41:28,140 --> 00:41:30,880
+It's a microservice running on Docker
+
+980
+00:41:32,310 --> 00:41:35,700
+that had random latency
+spikes every now and then.
+
+981
+00:41:35,700 --> 00:41:38,370
+It was really unclear what's going on.
+
+982
+00:41:38,370 --> 00:41:40,719
+They look on the logs,
+they look on the metrics,
+
+983
+00:41:40,719 --> 00:41:43,500
+they look on the traces,
+they try to analyze them,
+
+984
+00:41:43,500 --> 00:41:46,590
+but they couldn't find any correlation
+
+985
+00:41:46,590 --> 00:41:48,270
+to these latency spikes.
+
+986
+00:41:48,270 --> 00:41:51,300
+They were really puzzled
+of what's going on.
+
+987
+00:41:51,300 --> 00:41:53,280
+And at some point they say, you know what?
+
+988
+00:41:53,280 --> 00:41:54,450
+We have no idea.
+
+989
+00:41:54,450 --> 00:41:57,570
+So, let's leave it this way.
+
+990
+00:41:57,570 --> 00:42:00,180
+After trying out Olly for a few weeks,
+
+991
+00:42:00,180 --> 00:42:01,200
+they say, you know what?
+
+992
+00:42:01,200 --> 00:42:03,800
+Let's give it a try, we
+have nothing to lose, right?
+
+993
+00:42:04,770 --> 00:42:05,703
+So what happened?
+
+994
+00:42:09,870 --> 00:42:14,040
+Okay, so the first thing that
+Olly helped them realize is
+
+995
+00:42:14,040 --> 00:42:16,290
+this notification service is
+
+996
+00:42:16,290 --> 00:42:18,870
+actually connected to
+another email service
+
+997
+00:42:18,870 --> 00:42:20,790
+that's connected to authentication service
+
+998
+00:42:20,790 --> 00:42:22,083
+that's using RDS.
+
+999
+00:42:23,370 --> 00:42:26,820
+Now that's interesting because
+until that point in time,
+
+1000
+00:42:26,820 --> 00:42:29,460
+they didn't even think or consider
+
+1001
+00:42:29,460 --> 00:42:31,440
+checking for RDS
+
+1002
+00:42:31,440 --> 00:42:35,312
+because the service itself has
+nothing related to RDS, okay?
+
+1003
+00:42:35,312 --> 00:42:38,400
+So they were looking in the wrong places.
+
+1004
+00:42:38,400 --> 00:42:40,830
+Now, not only that it is connected to RDS,
+
+1005
+00:42:40,830 --> 00:42:44,160
+the reason it is interesting
+as Olly identified,
+
+1006
+00:42:44,160 --> 00:42:48,093
+Olly correlated spikes in the CPU,
+
+1007
+00:42:49,110 --> 00:42:51,210
+CPU spikes of the RDS,
+
+1008
+00:42:51,210 --> 00:42:52,620
+amount of connections,
+
+1009
+00:42:52,620 --> 00:42:55,260
+as well as latency spikes of the RDS.
+
+1010
+00:42:55,260 --> 00:42:56,940
+And this was correlated with the spikes
+
+1011
+00:42:56,940 --> 00:42:58,620
+of the notification service.
+
+1012
+00:42:58,620 --> 00:43:01,290
+So for the very first
+time after four months,
+
+1013
+00:43:01,290 --> 00:43:03,063
+they got some clue of,
+
+1014
+00:43:04,260 --> 00:43:07,010
+we have at least more
+understanding of what's going on.
+
+1015
+00:43:07,920 --> 00:43:09,450
+Now, the investigation didn't stop there.
+
+1016
+00:43:09,450 --> 00:43:10,620
+It was not the one shot,
+
+1017
+00:43:10,620 --> 00:43:11,880
+it was not just one prompt there,
+
+1018
+00:43:11,880 --> 00:43:15,993
+it was four or five messages
+in the conversation.
+
+1019
+00:43:17,190 --> 00:43:20,160
+So the next thing that
+Olly shared with them,
+
+1020
+00:43:20,160 --> 00:43:22,570
+it has found another Lambda function
+
+1021
+00:43:23,910 --> 00:43:26,940
+that also works with this RDS function.
+
+1022
+00:43:26,940 --> 00:43:28,743
+Oh, sorry, with this RDS database.
+
+1023
+00:43:29,670 --> 00:43:31,420
+And the interesting thing is that
+
+1024
+00:43:32,790 --> 00:43:34,680
+this Lambda database,
+
+1025
+00:43:34,680 --> 00:43:37,980
+sorry, this Lambda function apparently has
+
+1026
+00:43:37,980 --> 00:43:40,890
+also correlation when it activates
+
+1027
+00:43:40,890 --> 00:43:44,433
+with the spikes of the Postgres, okay?
+
+1028
+00:43:46,230 --> 00:43:48,750
+And looking, when Olly
+looked on the queries
+
+1029
+00:43:48,750 --> 00:43:51,300
+that were running by this Lambda function,
+
+1030
+00:43:51,300 --> 00:43:52,530
+it realizes this,
+
+1031
+00:43:52,530 --> 00:43:54,390
+that the queries were running against
+
+1032
+00:43:54,390 --> 00:43:56,700
+unindexed tables, right?
+
+1033
+00:43:56,700 --> 00:43:59,010
+Which obviously makes,
+
+1034
+00:43:59,010 --> 00:44:00,840
+creates loads on the RDS
+
+1035
+00:44:00,840 --> 00:44:02,910
+and as a result, identification service.
+
+1036
+00:44:02,910 --> 00:44:05,640
+So from here, the fix was quite obvious.
+
+1037
+00:44:05,640 --> 00:44:06,630
+Olly also recommended it,
+
+1038
+00:44:06,630 --> 00:44:08,340
+but I think it was quite clear
+
+1039
+00:44:08,340 --> 00:44:11,130
+that the fix is really
+just building indexes
+
+1040
+00:44:11,130 --> 00:44:12,243
+for these tables.
+
+1041
+00:44:13,800 --> 00:44:15,240
+But this is fascinating.
+
+1042
+00:44:15,240 --> 00:44:17,020
+Like, think about how much time
+
+1043
+00:44:17,970 --> 00:44:20,310
+would take to find and investigate
+
+1044
+00:44:20,310 --> 00:44:23,400
+and get to the root cause of
+something like that, right?
+
+1045
+00:44:23,400 --> 00:44:26,430
+We have three services,
+one Lambda function,
+
+1046
+00:44:26,430 --> 00:44:29,940
+each one running and being
+managed by a different team.
+
+1047
+00:44:29,940 --> 00:44:32,040
+RDS didn't even think about it
+
+1048
+00:44:32,040 --> 00:44:34,200
+as something that could be related.
+
+1049
+00:44:34,200 --> 00:44:35,820
+And in general, something tricky
+
+1050
+00:44:35,820 --> 00:44:36,870
+about Lambda functions, right?
+
+1051
+00:44:36,870 --> 00:44:40,200
+They start, they end, nothing happened,
+
+1052
+00:44:40,200 --> 00:44:41,553
+like they never existed.
+
+1053
+00:44:42,510 --> 00:44:45,630
+So this is a real case, super interesting,
+
+1054
+00:44:45,630 --> 00:44:48,750
+four months this issue was unsolved,
+
+1055
+00:44:48,750 --> 00:44:51,120
+tried with Olly less than 10 minutes,
+
+1056
+00:44:51,120 --> 00:44:52,623
+they realize what's going on.
+
+1057
+00:44:55,440 --> 00:44:58,410
+So we talked about the
+power of reliability,
+
+1058
+00:44:58,410 --> 00:45:00,645
+we talked about the fact
+
+1059
+00:45:00,645 --> 00:45:03,540
+that our focus was in the wrong place.
+
+1060
+00:45:03,540 --> 00:45:05,940
+We are running after observability,
+
+1061
+00:45:05,940 --> 00:45:09,150
+we forgot to chase after reliability.
+
+1062
+00:45:09,150 --> 00:45:11,280
+So how do we move from here?
+
+1063
+00:45:11,280 --> 00:45:13,510
+Okay, we're still in the early days of AI
+
+1064
+00:45:14,520 --> 00:45:15,810
+and what you see?
+
+1065
+00:45:15,810 --> 00:45:17,310
+So in the last decade,
+
+1066
+00:45:17,310 --> 00:45:21,390
+I would say observability has increased
+
+1067
+00:45:21,390 --> 00:45:22,223
+and has
+
+1068
+00:45:23,610 --> 00:45:25,710
+kind of evolved in a linear way.
+
+1069
+00:45:25,710 --> 00:45:28,110
+We've had the more features,
+we've had user sessions,
+
+1070
+00:45:28,110 --> 00:45:30,510
+run more capabilities,
+obviously, more features.
+
+1071
+00:45:30,510 --> 00:45:33,780
+So we have improved but not exponentially.
+
+1072
+00:45:33,780 --> 00:45:34,770
+This is the first step.
+
+1073
+00:45:34,770 --> 00:45:36,450
+What I'm just presenting you, okay,
+
+1074
+00:45:36,450 --> 00:45:39,630
+this is just the first
+step in a paradigm shift
+
+1075
+00:45:39,630 --> 00:45:41,160
+we're experiencing.
+
+1076
+00:45:41,160 --> 00:45:43,290
+The first milestone is co-pilot, okay?
+
+1077
+00:45:43,290 --> 00:45:45,810
+So just to clarify, it's
+not here to replace anyone,
+
+1078
+00:45:45,810 --> 00:45:48,960
+it's here to help us make
+our work, make our job
+
+1079
+00:45:48,960 --> 00:45:50,970
+much, much better
+
+1080
+00:45:50,970 --> 00:45:54,120
+and to allow us to focus
+on what really matters.
+
+1081
+00:45:54,120 --> 00:45:56,613
+The next step for Olly,
+
+1082
+00:45:57,450 --> 00:45:59,610
+and by the way, it's like few weeks
+
+1083
+00:45:59,610 --> 00:46:02,850
+from getting the first release of it,
+
+1084
+00:46:02,850 --> 00:46:04,023
+is being proactive.
+
+1085
+00:46:05,100 --> 00:46:05,933
+What does that mean?
+
+1086
+00:46:05,933 --> 00:46:06,766
+It means two things.
+
+1087
+00:46:06,766 --> 00:46:10,680
+One, it means when an
+alert fires on Slack,
+
+1088
+00:46:10,680 --> 00:46:13,110
+Olly automatically triage and provide you
+
+1089
+00:46:13,110 --> 00:46:15,753
+with initial understanding
+of what's going on.
+
+1090
+00:46:17,490 --> 00:46:20,370
+The second part of being proactive is
+
+1091
+00:46:20,370 --> 00:46:24,330
+really allowing Olly to
+take actions, all right?
+
+1092
+00:46:24,330 --> 00:46:27,240
+Maybe it's suggest pull request.
+
+1093
+00:46:27,240 --> 00:46:31,140
+Maybe it's suggest changing
+our AWS environment.
+
+1094
+00:46:31,140 --> 00:46:32,040
+So this is the next step,
+
+1095
+00:46:32,040 --> 00:46:34,260
+this is the proactive phase
+
+1096
+00:46:34,260 --> 00:46:37,320
+and the holy or Olly grail is
+
+1097
+00:46:37,320 --> 00:46:41,070
+getting to preventive observability, okay?
+
+1098
+00:46:41,070 --> 00:46:41,970
+Now think about it.
+
+1099
+00:46:41,970 --> 00:46:44,910
+This is an ideal,
+
+1100
+00:46:44,910 --> 00:46:47,220
+think about an agent and I
+think we've been talking about
+
+1101
+00:46:47,220 --> 00:46:48,990
+this vision for years now,
+
+1102
+00:46:48,990 --> 00:46:50,910
+but for the very first time it seems
+
+1103
+00:46:50,910 --> 00:46:52,800
+possible to get to a point
+
+1104
+00:46:52,800 --> 00:46:54,570
+where we have an agent
+
+1105
+00:46:54,570 --> 00:46:57,090
+that constantly watches our production.
+
+1106
+00:46:57,090 --> 00:46:58,500
+Whether it's from product standpoint,
+
+1107
+00:46:58,500 --> 00:47:00,690
+whether it's from cost standpoint,
+
+1108
+00:47:00,690 --> 00:47:04,380
+operations, infrastructure
+and so on and so forth.
+
+1109
+00:47:04,380 --> 00:47:06,930
+It is familiar with the
+way it works in general,
+
+1110
+00:47:06,930 --> 00:47:10,920
+it is familiar with seasonality
+and can say, hey, listen,
+
+1111
+00:47:10,920 --> 00:47:14,400
+we expect to see increase in
+load in the next few days.
+
+1112
+00:47:14,400 --> 00:47:16,530
+We have 80% utilization.
+
+1113
+00:47:16,530 --> 00:47:18,060
+We have to increase the amount of pods
+
+1114
+00:47:18,060 --> 00:47:19,380
+and take action and actually increase
+
+1115
+00:47:19,380 --> 00:47:21,000
+these amount of pods,
+
+1116
+00:47:21,000 --> 00:47:24,750
+preventing a downtime or delay for users.
+
+1117
+00:47:24,750 --> 00:47:27,100
+So this is really where
+we are going with that.
+
+1118
+00:47:29,160 --> 00:47:30,900
+And with that, I'm really happy to share
+
+1119
+00:47:30,900 --> 00:47:33,720
+that Olly is now generally available
+
+1120
+00:47:33,720 --> 00:47:35,820
+for all of Coralogix's customers.
+
+1121
+00:47:35,820 --> 00:47:38,100
+We started rolling this
+out and by December 15th,
+
+1122
+00:47:38,100 --> 00:47:40,500
+will be publicly available
+for all of our users.
+
+1123
+00:47:46,470 --> 00:47:47,463
+So,
+
+1124
+00:47:48,660 --> 00:47:50,943
+I think we covered a lot of points,
+
+1125
+00:47:53,010 --> 00:47:56,403
+whether it's the fact that the
+software stack has changed.
+
+1126
+00:47:57,510 --> 00:48:00,810
+I really remember, you know, 10 years ago
+
+1127
+00:48:00,810 --> 00:48:02,010
+when you build an app,
+
+1128
+00:48:02,010 --> 00:48:03,510
+it was just one single application.
+
+1129
+00:48:03,510 --> 00:48:05,220
+It was web application,
+
+1130
+00:48:05,220 --> 00:48:09,270
+you were running it on one
+web server and that's it.
+
+1131
+00:48:09,270 --> 00:48:12,000
+And maybe, you know, you had
+some blogs written somewhere
+
+1132
+00:48:12,000 --> 00:48:13,170
+to help you debug it.
+
+1133
+00:48:13,170 --> 00:48:16,680
+So it was much, much, much
+easier, much convenient.
+
+1134
+00:48:16,680 --> 00:48:18,385
+But now we have microservices
+
+1135
+00:48:18,385 --> 00:48:20,280
+and we have serverless and
+we have so many tech stack
+
+1136
+00:48:20,280 --> 00:48:22,020
+and so many moving parts,
+
+1137
+00:48:22,020 --> 00:48:26,430
+all of them creating so many breadcrumbs.
+
+1138
+00:48:26,430 --> 00:48:28,050
+So we have to find a better way
+
+1139
+00:48:28,050 --> 00:48:30,123
+to achieve software reliability.
+
+1140
+00:48:31,650 --> 00:48:32,750
+This is not a feature,
+
+1141
+00:48:34,440 --> 00:48:37,110
+Olly, autonomous observability,
+this is not a feature.
+
+1142
+00:48:37,110 --> 00:48:39,690
+It's not just something cool,
+
+1143
+00:48:39,690 --> 00:48:41,460
+it's really a paradigm shift.
+
+1144
+00:48:41,460 --> 00:48:44,190
+It's really a change of the way we think,
+
+1145
+00:48:44,190 --> 00:48:46,380
+the way we work, the way we act.
+
+1146
+00:48:46,380 --> 00:48:48,150
+And the time is now.
+
+1147
+00:48:48,150 --> 00:48:49,620
+It is not something futuristic.
+
+1148
+00:48:49,620 --> 00:48:51,660
+What you saw is already working,
+
+1149
+00:48:51,660 --> 00:48:56,163
+proactive is really, let's
+say two, three months away.
+
+1150
+00:48:57,210 --> 00:48:59,580
+So the time to adopt this solution,
+
+1151
+00:48:59,580 --> 00:49:01,350
+the time to implement those solutions is
+
+1152
+00:49:01,350 --> 00:49:02,850
+really now, okay?
+
+1153
+00:49:02,850 --> 00:49:04,830
+We have this opportunity
+to make our software
+
+1154
+00:49:04,830 --> 00:49:07,173
+much, much better, to
+make our work better.
+
+1155
+00:49:09,030 --> 00:49:10,800
+And with that, I want to thank you.
+
+1156
+00:49:10,800 --> 00:49:13,380
+I'm happy to take questions afterwards.
+
+1157
+00:49:13,380 --> 00:49:15,060
+I'm not sure if we have time.
+
+1158
+00:49:15,060 --> 00:49:18,060
+- [Ariel] Yeah, just we got
+like a few minutes for questions
+
+1159
+00:49:18,060 --> 00:49:20,013
+if anyone wants, we're very.
+

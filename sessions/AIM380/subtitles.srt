@@ -1,0 +1,4920 @@
+1
+00:00:00,449 --> 00:00:02,450
+Hello, everyone. Thank you for joining us
+
+2
+00:00:02,450 --> 00:00:03,329
+in this session.
+
+3
+00:00:04,339 --> 00:00:06,448
+AI M 380 customized Amazon Nova
+
+4
+00:00:06,448 --> 00:00:07,908
+models for enhanced stool calling.
+
+5
+00:00:08,329 --> 00:00:10,810
+We appreciate you spending the time with us. There are some
+
+6
+00:00:10,810 --> 00:00:13,050
+information sheets in front of you that tell us, tell
+
+7
+00:00:13,050 --> 00:00:15,130
+you, uh, what kind of fine tuning techniques
+
+8
+00:00:15,130 --> 00:00:16,829
+and models we are going to cover in this session.
+
+9
+00:00:18,670 --> 00:00:20,989
+My name is Hirsha Asnani. I'm a worldwide specialist
+
+10
+00:00:20,989 --> 00:00:23,309
+G AI essay at AWS. With
+
+11
+00:00:23,309 --> 00:00:24,949
+me, uh, joins Anupam.
+
+12
+00:00:25,298 --> 00:00:27,750
+Hi, this is Anupam. I am senior Solutions architect
+
+13
+00:00:27,750 --> 00:00:29,760
+in NoA team, so happy to be here
+
+14
+00:00:29,760 --> 00:00:31,329
+to introduce the customization
+
+15
+00:00:31,750 --> 00:00:33,270
+features that we have launched, yeah.
+
+16
+00:00:34,389 --> 00:00:36,418
+Perfect. So, a quick overview of the
+
+17
+00:00:36,418 --> 00:00:38,590
+agenda. We'll go into uh a
+
+18
+00:00:38,590 --> 00:00:40,829
+little bit of concepts of what model customization
+
+19
+00:00:40,829 --> 00:00:42,868
+is, what key considerations
+
+20
+00:00:42,868 --> 00:00:44,950
+are for model customization, especially for
+
+21
+00:00:44,950 --> 00:00:46,950
+tool calling. So what techniques are
+
+22
+00:00:46,950 --> 00:00:48,289
+available, what we used.
+
+23
+00:00:48,810 --> 00:00:51,118
+We'll quickly also go over the recent
+
+24
+00:00:51,118 --> 00:00:53,298
+reinvent launches about
+
+25
+00:00:53,298 --> 00:00:56,020
+Nova, and from there, we'll dive
+
+26
+00:00:56,020 --> 00:00:58,298
+deep into the code talk, um, take
+
+27
+00:00:58,298 --> 00:01:00,380
+you through some code that we've developed uh in
+
+28
+00:01:00,380 --> 00:01:02,380
+this session to show you how you can enhance
+
+29
+00:01:02,740 --> 00:01:04,900
+tool calling capabilities using Amazon Nova
+
+30
+00:01:04,900 --> 00:01:05,579
+models.
+
+31
+00:01:07,659 --> 00:01:11,159
+OK. Why
+
+32
+00:01:11,159 --> 00:01:13,319
+model customization, right? So before we dive
+
+33
+00:01:13,319 --> 00:01:15,638
+into Nova's customization capabilities,
+
+34
+00:01:15,709 --> 00:01:17,739
+let's get into the spectrum of uh
+
+35
+00:01:17,739 --> 00:01:19,459
+customization techniques available,
+
+36
+00:01:19,959 --> 00:01:22,000
+not just in Nova, but generally on uh
+
+37
+00:01:22,000 --> 00:01:23,058
+foundation models.
+
+38
+00:01:24,079 --> 00:01:26,400
+So it all starts with choosing
+
+39
+00:01:26,400 --> 00:01:28,540
+if you have to modify the weights or
+
+40
+00:01:28,540 --> 00:01:30,180
+not of the model, and you can see
+
+41
+00:01:30,519 --> 00:01:33,359
+from the left to the right, the level of customization
+
+42
+00:01:33,359 --> 00:01:35,400
+and effort increases when you try
+
+43
+00:01:35,400 --> 00:01:35,909
+to
+
+44
+00:01:36,439 --> 00:01:37,620
+change the weights of the model
+
+45
+00:01:38,150 --> 00:01:39,900
+on the left is a light touch technique.
+
+46
+00:01:40,349 --> 00:01:42,838
+Uh, you could try something like prompt engineering
+
+47
+00:01:42,838 --> 00:01:44,338
+where you tell the model
+
+48
+00:01:44,799 --> 00:01:46,939
+the way you want it, uh, the model to respond
+
+49
+00:01:46,939 --> 00:01:48,219
+in a particular format,
+
+50
+00:01:48,719 --> 00:01:51,058
+but essentially, uh, the model still
+
+51
+00:01:51,278 --> 00:01:53,480
+retains the concepts that it has
+
+52
+00:01:53,480 --> 00:01:55,939
+been trained on. So if you have new concepts,
+
+53
+00:01:56,469 --> 00:01:59,159
+uh, that are specific to your
+
+54
+00:01:59,159 --> 00:02:01,540
+organization's data or, you know, the styles
+
+55
+00:02:01,959 --> 00:02:03,138
+that you are used to.
+
+56
+00:02:03,730 --> 00:02:05,930
+You can probably provide that in a prompt engineering
+
+57
+00:02:05,930 --> 00:02:07,349
+um text
+
+58
+00:02:07,689 --> 00:02:10,288
+and a couple of examples and um basically
+
+59
+00:02:10,288 --> 00:02:12,550
+just take an off the shelf model
+
+60
+00:02:12,550 --> 00:02:14,308
+and see how it performs for you.
+
+61
+00:02:15,088 --> 00:02:16,808
+You can also use RAAG,
+
+62
+00:02:17,349 --> 00:02:19,849
+uh, which is short for retrieval augmented
+
+63
+00:02:19,849 --> 00:02:22,409
+generation, and what that lets you do is also
+
+64
+00:02:22,409 --> 00:02:22,990
+without
+
+65
+00:02:23,288 --> 00:02:25,189
+modifying the weights of your model.
+
+66
+00:02:25,618 --> 00:02:28,300
+It lets you provide organization-specific
+
+67
+00:02:28,300 --> 00:02:30,399
+data at the time of inference. So,
+
+68
+00:02:30,699 --> 00:02:33,278
+again, if the model hasn't learned some things, um,
+
+69
+00:02:34,020 --> 00:02:35,419
+uh, after it was trained,
+
+70
+00:02:35,778 --> 00:02:38,558
+but you have in your organization's corpus,
+
+71
+00:02:38,979 --> 00:02:41,479
+uh, it will pick it up and uh respond accordingly.
+
+72
+00:02:43,500 --> 00:02:45,778
+There are times where um
+
+73
+00:02:45,778 --> 00:02:48,129
+you will see uh with
+
+74
+00:02:48,139 --> 00:02:50,860
+these approaches that you will see saturation,
+
+75
+00:02:51,300 --> 00:02:53,819
+you'll probably see styles of responses
+
+76
+00:02:53,819 --> 00:02:55,838
+not matching up exactly
+
+77
+00:02:56,099 --> 00:02:58,179
+to what you need, which is where you go to the right
+
+78
+00:02:58,179 --> 00:03:00,219
+side. Uh, these techniques
+
+79
+00:03:00,219 --> 00:03:02,300
+will modify the weights of the model. Uh, they're
+
+80
+00:03:02,300 --> 00:03:04,278
+divided into post and pre-training
+
+81
+00:03:04,899 --> 00:03:07,008
+all the way to the right is pre-training with, uh,
+
+82
+00:03:07,020 --> 00:03:09,319
+and with pre-training, what you do is, uh,
+
+83
+00:03:09,379 --> 00:03:10,659
+basically the use cases.
+
+84
+00:03:11,788 --> 00:03:14,460
+If there are concepts again in your
+
+85
+00:03:14,460 --> 00:03:15,969
+uh organization that haven't been learned
+
+86
+00:03:16,629 --> 00:03:18,669
+in a model, you can uh use
+
+87
+00:03:18,669 --> 00:03:20,830
+pre-training concepts, uh sorry, uh, pre-training
+
+88
+00:03:20,830 --> 00:03:21,849
+techniques, but
+
+89
+00:03:22,149 --> 00:03:24,349
+if you only want to modify the model for the
+
+90
+00:03:24,349 --> 00:03:25,849
+style of responses,
+
+91
+00:03:26,300 --> 00:03:26,969
+uh,
+
+92
+00:03:27,618 --> 00:03:29,788
+in a particular format, then you could
+
+93
+00:03:29,788 --> 00:03:31,949
+use something like post training which also modifies
+
+94
+00:03:31,949 --> 00:03:33,129
+the weights of the model,
+
+95
+00:03:33,550 --> 00:03:35,868
+but is not as intense and doesn't
+
+96
+00:03:35,868 --> 00:03:36,929
+require as many
+
+97
+00:03:37,469 --> 00:03:39,550
+resources or expertise, uh, to train
+
+98
+00:03:39,550 --> 00:03:40,169
+the model.
+
+99
+00:03:48,949 --> 00:03:50,949
+So, now that we've, uh, understood the progression of
+
+100
+00:03:50,949 --> 00:03:53,389
+the customization techniques, let's get into
+
+101
+00:03:53,389 --> 00:03:55,419
+how you can do this with Amazon, uh,
+
+102
+00:03:55,508 --> 00:03:56,288
+AWS,
+
+103
+00:03:56,909 --> 00:03:59,330
+uh, especially for Nova models, we have
+
+104
+00:03:59,868 --> 00:04:01,229
+Uh, two offerings,
+
+105
+00:04:01,508 --> 00:04:03,550
+SageMaker fully managed training jobs
+
+106
+00:04:03,550 --> 00:04:05,169
+and SageMaker Hyperpod.
+
+107
+00:04:05,550 --> 00:04:07,710
+What SageMaker training jobs let you do is
+
+108
+00:04:07,710 --> 00:04:09,830
+define your training workload through declarative
+
+109
+00:04:09,830 --> 00:04:12,058
+syntax and Python SDKs,
+
+110
+00:04:12,439 --> 00:04:14,629
+where you provide your custom training scripts, your
+
+111
+00:04:14,629 --> 00:04:16,790
+data, and it just takes care of everything
+
+112
+00:04:16,790 --> 00:04:18,869
+about spinning Docker containers, bringing them
+
+113
+00:04:18,869 --> 00:04:21,028
+down, observability, scalability, things like
+
+114
+00:04:21,028 --> 00:04:23,379
+that. But if you're coming more from
+
+115
+00:04:23,379 --> 00:04:25,470
+a background of EKS and you like
+
+116
+00:04:25,470 --> 00:04:27,980
+more control on, you know, getting into your EC2
+
+117
+00:04:27,980 --> 00:04:30,639
+instances, SSH into it,
+
+118
+00:04:30,980 --> 00:04:33,178
+and you have a requirement for maximization of
+
+119
+00:04:33,178 --> 00:04:35,428
+control, you can uh use SageMaker
+
+120
+00:04:35,428 --> 00:04:36,678
+Hyperpod as well.
+
+121
+00:04:39,750 --> 00:04:41,759
+With that, I'll hand it over to one of them to go
+
+122
+00:04:41,759 --> 00:04:42,699
+over some launches.
+
+123
+00:04:43,069 --> 00:04:43,959
+Yeah, thanks, Ash.
+
+124
+00:04:44,838 --> 00:04:46,928
+Uh, yeah, so we'll basically go over some
+
+125
+00:04:46,928 --> 00:04:49,170
+of the launches that happened this year
+
+126
+00:04:49,170 --> 00:04:50,189
+in keynotes.
+
+127
+00:04:50,528 --> 00:04:52,629
+Uh, primarily, first is
+
+128
+00:04:52,629 --> 00:04:54,649
+the addition of different models that
+
+129
+00:04:54,649 --> 00:04:55,290
+we added.
+
+130
+00:04:55,689 --> 00:04:57,850
+So you can see the first generation models
+
+131
+00:04:57,850 --> 00:05:00,170
+that were released last year, Micro Light and Pro.
+
+132
+00:05:00,449 --> 00:05:02,488
+Hopefully you guys played with it and
+
+133
+00:05:02,488 --> 00:05:03,170
+using it.
+
+134
+00:05:03,488 --> 00:05:05,519
+Uh, the second generation is something that we
+
+135
+00:05:05,519 --> 00:05:07,869
+launched the day before
+
+136
+00:05:07,869 --> 00:05:09,889
+yesterday, which was Nova Light 2 Nova
+
+137
+00:05:09,889 --> 00:05:11,350
+Nova 2 Light.
+
+138
+00:05:11,819 --> 00:05:13,819
+Um, and that is again, uh,
+
+139
+00:05:13,928 --> 00:05:16,119
+a new generation model, um,
+
+140
+00:05:16,619 --> 00:05:18,778
+built from the scratch up with
+
+141
+00:05:18,778 --> 00:05:20,798
+newer training data, improved, uh,
+
+142
+00:05:21,088 --> 00:05:23,579
+improvements on more multilingual
+
+143
+00:05:23,579 --> 00:05:25,699
+capabilities, more agentic use cases,
+
+144
+00:05:25,819 --> 00:05:27,119
+more coding abilities,
+
+145
+00:05:27,379 --> 00:05:29,459
+so it shines in those cases. There
+
+146
+00:05:29,459 --> 00:05:31,730
+are public reports available so you can
+
+147
+00:05:31,730 --> 00:05:33,920
+read the technical report which has very
+
+148
+00:05:33,920 --> 00:05:34,959
+clear benchmarks
+
+149
+00:05:35,220 --> 00:05:37,189
+and comparisons with other models.
+
+150
+00:05:37,459 --> 00:05:39,528
+And then we also. Released two of the
+
+151
+00:05:39,528 --> 00:05:41,629
+early access model or private preview as
+
+152
+00:05:41,629 --> 00:05:43,829
+we call it, which is the Nova 2 Pro,
+
+153
+00:05:43,920 --> 00:05:44,838
+which is like a,
+
+154
+00:05:45,160 --> 00:05:47,278
+a Big Brother to light, uh, is a bigger
+
+155
+00:05:47,278 --> 00:05:49,319
+model but more better in terms of knowledge
+
+156
+00:05:49,319 --> 00:05:50,290
+and intelligence,
+
+157
+00:05:50,600 --> 00:05:52,920
+and then Omni, which is uh N2 image
+
+158
+00:05:52,920 --> 00:05:55,338
+and text, that means you can pass in any modality,
+
+159
+00:05:55,678 --> 00:05:58,019
+and it kind of answers back either in text
+
+160
+00:05:58,019 --> 00:06:00,040
+or the image, for example, the kind
+
+161
+00:06:00,040 --> 00:06:01,199
+of mixture of a
+
+162
+00:06:01,559 --> 00:06:03,670
+NA probe with Canvas,
+
+163
+00:06:03,709 --> 00:06:06,358
+for example. Apart
+
+164
+00:06:06,358 --> 00:06:08,559
+from the base model launches, we also
+
+165
+00:06:08,559 --> 00:06:10,600
+released uh something called A Noa Forge,
+
+166
+00:06:10,639 --> 00:06:12,920
+which is, uh, which is basically, uh, open
+
+167
+00:06:12,920 --> 00:06:14,259
+training concept,
+
+168
+00:06:14,519 --> 00:06:16,579
+uh, where you get, uh,
+
+169
+00:06:16,600 --> 00:06:18,639
+you get not just the base model
+
+170
+00:06:18,639 --> 00:06:20,869
+or the recipes for customization, but
+
+171
+00:06:20,869 --> 00:06:21,738
+you also get
+
+172
+00:06:22,079 --> 00:06:24,153
+intermediate checkpoints of. Nova, which
+
+173
+00:06:24,153 --> 00:06:26,894
+you can use to get started with your customization.
+
+174
+00:06:27,285 --> 00:06:29,314
+Until now, you only could use the
+
+175
+00:06:29,314 --> 00:06:31,713
+final checkpoint, which was the production model
+
+176
+00:06:31,713 --> 00:06:33,475
+that everybody would have access to,
+
+177
+00:06:33,754 --> 00:06:36,053
+but this allows you to get a mid-trained, uh,
+
+178
+00:06:36,194 --> 00:06:38,434
+previously trained, only CPT trained
+
+179
+00:06:38,434 --> 00:06:40,553
+so that you can start from various other
+
+180
+00:06:40,553 --> 00:06:41,514
+checkpoints as well.
+
+181
+00:06:41,994 --> 00:06:44,014
+Apart from checkpoints, we also, uh,
+
+182
+00:06:44,024 --> 00:06:46,113
+added NOAA data, which means that
+
+183
+00:06:46,113 --> 00:06:48,314
+you can mix NAA data with your data
+
+184
+00:06:48,314 --> 00:06:49,173
+when you are training.
+
+185
+00:06:49,480 --> 00:06:51,480
+So there have been scientific evidences
+
+186
+00:06:51,480 --> 00:06:53,559
+that show that when you do a mix-in
+
+187
+00:06:53,559 --> 00:06:55,579
+between your data and the data
+
+188
+00:06:55,579 --> 00:06:56,220
+of the
+
+189
+00:06:56,480 --> 00:06:58,790
+LLM that it has seen when it was training,
+
+190
+00:06:59,079 --> 00:07:01,160
+it increases the learning capability
+
+191
+00:07:01,160 --> 00:07:01,759
+of the model.
+
+192
+00:07:03,670 --> 00:07:05,670
+So yeah, those are some of the key value props
+
+193
+00:07:05,670 --> 00:07:07,709
+slash benefits of Nova Pro. You
+
+194
+00:07:07,709 --> 00:07:09,988
+get access to multiple different checkpoints
+
+195
+00:07:09,988 --> 00:07:11,819
+rather than just the last checkpoint.
+
+196
+00:07:12,250 --> 00:07:14,548
+You can blend your proprietary data with
+
+197
+00:07:14,548 --> 00:07:16,629
+Amazon NoA curated data. You
+
+198
+00:07:16,629 --> 00:07:18,829
+can also use reinforcement learning
+
+199
+00:07:18,829 --> 00:07:20,988
+by bringing your own environment, uh, which
+
+200
+00:07:20,988 --> 00:07:23,069
+means like, we work with customers who
+
+201
+00:07:23,069 --> 00:07:25,108
+have built their own environment where
+
+202
+00:07:25,108 --> 00:07:27,209
+they do reward function calculation.
+
+203
+00:07:27,540 --> 00:07:29,540
+And use that to improve the model
+
+204
+00:07:29,738 --> 00:07:31,738
+and they didn't want to move the whole set up to
+
+205
+00:07:31,738 --> 00:07:33,778
+AWS because you have
+
+206
+00:07:33,778 --> 00:07:35,980
+invested and created that whole environment.
+
+207
+00:07:36,298 --> 00:07:38,500
+So this lets you just hook up that uh
+
+208
+00:07:38,500 --> 00:07:40,500
+external environment, which is calculating
+
+209
+00:07:40,500 --> 00:07:41,439
+the reward function
+
+210
+00:07:41,738 --> 00:07:44,019
+while training the model in the BPC.
+
+211
+00:07:44,778 --> 00:07:47,100
+And then, yes, it comes with the push button
+
+212
+00:07:47,100 --> 00:07:49,459
+recipes. So you get like pre-baked recipes
+
+213
+00:07:49,459 --> 00:07:51,500
+with the most optimal values for multiple
+
+214
+00:07:51,500 --> 00:07:53,600
+hyperparameters that you can use.
+
+215
+00:07:53,980 --> 00:07:56,500
+Um, and then lastly, you also get a responsible
+
+216
+00:07:56,500 --> 00:07:58,769
+AI toolkit, so that if you have a, like
+
+217
+00:07:58,769 --> 00:08:00,439
+a security use case or
+
+218
+00:08:00,738 --> 00:08:03,079
+a content moderation use case, you can utilize
+
+219
+00:08:03,079 --> 00:08:05,220
+the, and modify or customize the
+
+220
+00:08:05,220 --> 00:08:07,350
+responsible AI layer of Nova as well.
+
+221
+00:08:09,358 --> 00:08:11,439
+Um, so yeah, that's pretty much
+
+222
+00:08:11,439 --> 00:08:13,920
+the launches. Uh, this, this table
+
+223
+00:08:13,920 --> 00:08:16,040
+gives you a higher-level overview of
+
+224
+00:08:16,040 --> 00:08:18,199
+the 1.0 offerings and then 2.0
+
+225
+00:08:18,199 --> 00:08:18,879
+offerings,
+
+226
+00:08:19,238 --> 00:08:21,519
+uh, in terms of different techniques. Like
+
+227
+00:08:21,519 --> 00:08:23,600
+Harsh mentioned, they are post-training. So like
+
+228
+00:08:23,600 --> 00:08:25,759
+if you see parameter efficient fine tuning, which
+
+229
+00:08:25,759 --> 00:08:27,838
+is a type of fine tuning where you are
+
+230
+00:08:27,838 --> 00:08:29,540
+only changing the adapter
+
+231
+00:08:29,798 --> 00:08:30,600
+of the model,
+
+232
+00:08:30,879 --> 00:08:32,879
+uh, as well as full rank fine tuning where
+
+233
+00:08:32,879 --> 00:08:33,428
+you're changing actual.
+
+234
+00:08:34,029 --> 00:08:36,119
+Rates of the model both are available
+
+235
+00:08:36,119 --> 00:08:37,960
+in 1.0 and 2.0.
+
+236
+00:08:38,308 --> 00:08:40,389
+DPO is another kind of, uh,
+
+237
+00:08:40,399 --> 00:08:42,440
+post training where you are getting like that
+
+238
+00:08:42,440 --> 00:08:44,479
+thumbs up, thumbs down feedback, and you
+
+239
+00:08:44,479 --> 00:08:46,719
+want to teach model what a good looks like versus
+
+240
+00:08:46,719 --> 00:08:47,869
+what a bad looks like
+
+241
+00:08:48,200 --> 00:08:49,658
+so that it can steer towards
+
+242
+00:08:49,989 --> 00:08:52,119
+your preferences or human preferences.
+
+243
+00:08:52,399 --> 00:08:54,940
+Uh, that is also available in 1.0
+
+244
+00:08:54,940 --> 00:08:57,119
+and similarly PPO, which is another
+
+245
+00:08:57,119 --> 00:08:58,538
+class of very similar to.
+
+246
+00:08:59,399 --> 00:09:01,639
+but another class of, uh, RLHF
+
+247
+00:09:01,639 --> 00:09:02,279
+technique.
+
+248
+00:09:02,678 --> 00:09:05,038
+And then, uh, we have reinforcement
+
+249
+00:09:05,038 --> 00:09:07,038
+fine-tuning, which is the state of the
+
+250
+00:09:07,038 --> 00:09:09,200
+art RLHF as of today, which
+
+251
+00:09:09,200 --> 00:09:11,229
+is available in 2.0. And
+
+252
+00:09:11,229 --> 00:09:13,349
+the reason why it is only in 2.0 is because
+
+253
+00:09:13,349 --> 00:09:15,440
+RLHF works or RFT, which is
+
+254
+00:09:15,440 --> 00:09:17,440
+reinforcement fine tuning, works much
+
+255
+00:09:17,440 --> 00:09:19,599
+better on a reasoning model, and NAA Light
+
+256
+00:09:19,599 --> 00:09:20,960
+2 is a reasoning model.
+
+257
+00:09:21,320 --> 00:09:23,200
+So that's why that combination.
+
+258
+00:09:24,960 --> 00:09:27,048
+With that, we will jump into the use case and
+
+259
+00:09:27,048 --> 00:09:29,090
+just give you a brief idea of what we are going to
+
+260
+00:09:29,090 --> 00:09:30,250
+do today, um,
+
+261
+00:09:30,629 --> 00:09:32,769
+rather than spending too much on PPT we'll move to
+
+262
+00:09:32,769 --> 00:09:33,649
+code now, but
+
+263
+00:09:34,009 --> 00:09:36,090
+so the use case, uh, architecture that
+
+264
+00:09:36,090 --> 00:09:38,330
+we're going to pick today is a security
+
+265
+00:09:38,330 --> 00:09:40,668
+agreement legal assistant agent. So
+
+266
+00:09:41,090 --> 00:09:43,090
+this agent would be responsible for looking
+
+267
+00:09:43,090 --> 00:09:45,288
+through the multiple documents and,
+
+268
+00:09:45,408 --> 00:09:47,450
+uh, and then we will give it a question and it has
+
+269
+00:09:47,450 --> 00:09:49,029
+to pick the right tool to call.
+
+270
+00:09:49,529 --> 00:09:51,408
+To get access to the right information,
+
+271
+00:09:51,719 --> 00:09:53,969
+right parameters to pick, and then, uh,
+
+272
+00:09:54,099 --> 00:09:54,859
+go from there.
+
+273
+00:09:55,288 --> 00:09:57,408
+So in different modules that we will
+
+274
+00:09:57,408 --> 00:09:59,479
+cover, firstly, we will, uh,
+
+275
+00:09:59,489 --> 00:10:01,690
+teach you how synthetic data generator works
+
+276
+00:10:01,690 --> 00:10:04,048
+or how you can generate your own data
+
+277
+00:10:04,048 --> 00:10:06,200
+because we see a lot of customers who don't have
+
+278
+00:10:06,200 --> 00:10:08,668
+the data to begin with when you come to customization,
+
+279
+00:10:08,769 --> 00:10:09,649
+and that is like a P0 or pre
+
+280
+00:10:10,389 --> 00:10:11,418
+prerequisite.
+
+281
+00:10:11,969 --> 00:10:14,048
+So we'll work, give you some sneak peek
+
+282
+00:10:14,048 --> 00:10:16,048
+on what, uh, synthetic data
+
+283
+00:10:16,048 --> 00:10:18,288
+generator we have been using, uh, for this
+
+284
+00:10:18,288 --> 00:10:19,229
+particular demo.
+
+285
+00:10:19,769 --> 00:10:22,450
+And then, uh, do a base model evaluation
+
+286
+00:10:22,450 --> 00:10:24,639
+just to get, OK, where we are from just
+
+287
+00:10:24,639 --> 00:10:26,808
+the base model without any customization.
+
+288
+00:10:27,210 --> 00:10:29,408
+Move on to supervised fine tuning. That's
+
+289
+00:10:29,408 --> 00:10:31,570
+the first thing we would use for
+
+290
+00:10:31,570 --> 00:10:33,750
+fine tuning with prompt response pairs.
+
+291
+00:10:34,408 --> 00:10:36,599
+Do an eval on that post-SFT
+
+292
+00:10:36,599 --> 00:10:37,139
+checkpoint,
+
+293
+00:10:37,408 --> 00:10:39,570
+uh, to get, OK, how much, uh, did we
+
+294
+00:10:39,570 --> 00:10:41,119
+improve from the base model.
+
+295
+00:10:41,649 --> 00:10:43,729
+Move on to reinforcement fine-tuning, which
+
+296
+00:10:43,729 --> 00:10:45,849
+would be sitting on top of the SFT
+
+297
+00:10:45,849 --> 00:10:48,070
+checkpoint. So it is an iterative, uh,
+
+298
+00:10:48,210 --> 00:10:49,190
+fine tuning approach.
+
+299
+00:10:49,869 --> 00:10:51,960
+And then do a post RFT evaluation
+
+300
+00:10:51,960 --> 00:10:53,239
+to see how that goes.
+
+301
+00:10:53,599 --> 00:10:55,798
+And then finally, make a deployment to Bedrock
+
+302
+00:10:55,798 --> 00:10:57,918
+to make inference. So, we'll cover all these
+
+303
+00:10:57,918 --> 00:10:59,969
+modules in today's code talk. We have very
+
+304
+00:10:59,969 --> 00:11:02,239
+one hour, but too many modules to cover. So
+
+305
+00:11:02,239 --> 00:11:03,428
+hopefully, we are good,
+
+306
+00:11:03,918 --> 00:11:04,619
+uh, there.
+
+307
+00:11:04,879 --> 00:11:07,229
+But just to give you an idea of what SFT
+
+308
+00:11:07,229 --> 00:11:09,279
+is, if you are not familiar with it,
+
+309
+00:11:09,479 --> 00:11:11,519
+it all starts with an adapter trainer, if
+
+310
+00:11:11,519 --> 00:11:13,879
+you go with the Lora-base technique or parameter
+
+311
+00:11:13,879 --> 00:11:14,479
+efficient.
+
+312
+00:11:14,950 --> 00:11:17,288
+That is what we will be showcasing today. It's
+
+313
+00:11:17,288 --> 00:11:19,340
+the most lightweight SFT you can
+
+314
+00:11:19,340 --> 00:11:21,899
+do with like limited resources, quick,
+
+315
+00:11:21,979 --> 00:11:24,168
+uh, you don't really have a lot to spend
+
+316
+00:11:24,168 --> 00:11:26,219
+and you get decent results in the first
+
+317
+00:11:26,219 --> 00:11:28,298
+go, or at least give a good signal
+
+318
+00:11:28,460 --> 00:11:30,580
+if the model is capable of learning for your
+
+319
+00:11:30,580 --> 00:11:31,349
+use case or not.
+
+320
+00:11:31,940 --> 00:11:34,048
+So adapter training basically gets the
+
+321
+00:11:34,048 --> 00:11:34,599
+data
+
+322
+00:11:34,940 --> 00:11:37,178
+from in, from your database, which it would be S3
+
+323
+00:11:37,178 --> 00:11:39,678
+in this case. It gets the base model,
+
+324
+00:11:39,779 --> 00:11:41,779
+uh, from the recipe, and then
+
+325
+00:11:41,779 --> 00:11:43,779
+it basically do a forward
+
+326
+00:11:43,779 --> 00:11:44,719
+backward pass
+
+327
+00:11:44,979 --> 00:11:47,500
+to learn from the data that you're providing
+
+328
+00:11:47,500 --> 00:11:48,798
+along with the base model,
+
+329
+00:11:49,139 --> 00:11:51,298
+uh, and gets a trainer, and then you get
+
+330
+00:11:51,298 --> 00:11:53,798
+the base model, and you do a fusion
+
+331
+00:11:54,219 --> 00:11:56,450
+where the adapter is fused with the base
+
+332
+00:11:56,450 --> 00:11:58,450
+model. To get the final model.
+
+333
+00:11:58,690 --> 00:12:01,099
+So that is what SFT does essentially.
+
+334
+00:12:01,250 --> 00:12:03,330
+SFT adapter-based training does
+
+335
+00:12:03,330 --> 00:12:03,928
+essentially.
+
+336
+00:12:04,210 --> 00:12:06,369
+It's just a light adapter that you're
+
+337
+00:12:06,369 --> 00:12:08,070
+training and then doing a fusion.
+
+338
+00:12:08,408 --> 00:12:08,989
+Um,
+
+339
+00:12:09,649 --> 00:12:12,250
+while RFT is a little more elaborate,
+
+340
+00:12:12,369 --> 00:12:13,629
+so it has, um,
+
+341
+00:12:14,090 --> 00:12:15,950
+training VPC customer VPC.
+
+342
+00:12:16,288 --> 00:12:18,489
+So in training, there are two main modules.
+
+343
+00:12:18,570 --> 00:12:20,418
+There is a rollout and there's a trainer,
+
+344
+00:12:20,690 --> 00:12:22,729
+and then in your customer account, there is
+
+345
+00:12:22,729 --> 00:12:24,889
+the lambda function, which is the reward
+
+346
+00:12:24,889 --> 00:12:27,048
+function. Um, so
+
+347
+00:12:27,048 --> 00:12:29,129
+again, you get access to the prompt data, which
+
+348
+00:12:29,129 --> 00:12:31,239
+is your dataset that you want to train the
+
+349
+00:12:31,239 --> 00:12:33,509
+model to teach the RFT technique,
+
+350
+00:12:33,769 --> 00:12:35,129
+and you get the base model.
+
+351
+00:12:35,450 --> 00:12:37,450
+You, again, load both things from the
+
+352
+00:12:37,450 --> 00:12:39,609
+rollout and trainer also loads the
+
+353
+00:12:39,609 --> 00:12:40,330
+base model.
+
+354
+00:12:40,719 --> 00:12:42,840
+And then it calls the lambda
+
+355
+00:12:42,840 --> 00:12:45,080
+function to to calculate
+
+356
+00:12:45,080 --> 00:12:45,940
+the predictions.
+
+357
+00:12:46,250 --> 00:12:48,509
+So what does rollout do is think
+
+358
+00:12:48,509 --> 00:12:50,259
+of it like a, uh, uh,
+
+359
+00:12:50,678 --> 00:12:52,830
+I don't know, a system that generates like
+
+360
+00:12:52,830 --> 00:12:54,279
+any number of answers.
+
+361
+00:12:54,599 --> 00:12:56,678
+So rollout is like N number of generations
+
+362
+00:12:56,678 --> 00:12:58,719
+or N number of predictions and passes
+
+363
+00:12:58,719 --> 00:13:00,859
+all those predictions to the lambda
+
+364
+00:13:01,119 --> 00:13:03,519
+to calculate the score based on your evaluation
+
+365
+00:13:03,519 --> 00:13:05,590
+metric. Uh, it gets the
+
+366
+00:13:05,590 --> 00:13:07,739
+res responses back, which is basically
+
+367
+00:13:07,739 --> 00:13:09,918
+rewards. So it gets the rewards back
+
+368
+00:13:10,099 --> 00:13:12,359
+and then it feeds those rewards
+
+369
+00:13:12,580 --> 00:13:14,820
+back to the trainer. So trainer can learn
+
+370
+00:13:14,820 --> 00:13:17,139
+from those answers or from that feedback
+
+371
+00:13:17,139 --> 00:13:18,250
+and further improve.
+
+372
+00:13:18,779 --> 00:13:20,820
+And then it does the forward backward pass
+
+373
+00:13:20,820 --> 00:13:23,190
+on the trainer to get the learnings,
+
+374
+00:13:23,340 --> 00:13:25,599
+and that's where it goes back to the rollout
+
+375
+00:13:25,820 --> 00:13:28,070
+to update the weight policy. And this
+
+376
+00:13:28,080 --> 00:13:30,788
+this cycle continues where more rollouts
+
+377
+00:13:30,788 --> 00:13:32,798
+are generated, lambda function calculates
+
+378
+00:13:32,798 --> 00:13:34,899
+the rewards, back passes it back to trainer.
+
+379
+00:13:35,029 --> 00:13:37,099
+Trainer updates the weights, new rollouts are
+
+380
+00:13:37,099 --> 00:13:39,190
+generated, and that cycle continues
+
+381
+00:13:39,190 --> 00:13:41,190
+for a number of steps that you define
+
+382
+00:13:41,190 --> 00:13:43,269
+in your recipe, and that's how the
+
+383
+00:13:43,269 --> 00:13:44,450
+model starts learning,
+
+384
+00:13:44,710 --> 00:13:47,229
+and we'll see today how it happens in real
+
+385
+00:13:47,229 --> 00:13:49,428
+example. Uh, OK. With
+
+386
+00:13:49,428 --> 00:13:51,428
+that, I will move on to the code
+
+387
+00:13:51,428 --> 00:13:52,469
+sample. So, yeah.
+
+388
+00:13:53,418 --> 00:13:54,119
+Let me switch
+
+389
+00:13:57,558 --> 00:13:59,609
+OK, so time to dive
+
+390
+00:13:59,609 --> 00:14:01,690
+right into code soup. So this is a code talk. There's
+
+391
+00:14:01,690 --> 00:14:03,808
+a bunch of code we've developed, uh, to demonstrate
+
+392
+00:14:03,808 --> 00:14:04,590
+the use case,
+
+393
+00:14:05,009 --> 00:14:07,349
+uh, planning to get through all of it in an hour,
+
+394
+00:14:07,529 --> 00:14:09,570
+uh, but it can get dense. So
+
+395
+00:14:09,570 --> 00:14:11,798
+we have planned to show you the essential code
+
+396
+00:14:11,798 --> 00:14:12,389
+blocks
+
+397
+00:14:12,649 --> 00:14:14,649
+and hide away some of, or glance over,
+
+398
+00:14:14,769 --> 00:14:16,889
+uh, some of the utility helper functions.
+
+399
+00:14:17,369 --> 00:14:19,609
+We will take questions at the end of each
+
+400
+00:14:19,609 --> 00:14:21,849
+notebook, maybe a couple. We'll do a quick time
+
+401
+00:14:21,849 --> 00:14:24,009
+check, and if there are more questions, we
+
+402
+00:14:24,009 --> 00:14:26,389
+can just, you know, probably take them out in the hallway.
+
+403
+00:14:27,149 --> 00:14:29,658
+Uh, this is not a demo and we want to keep this session
+
+404
+00:14:29,658 --> 00:14:31,918
+educational and interactive. So, uh,
+
+405
+00:14:32,000 --> 00:14:34,668
+please let us know if you have any questions at the end of the notebooks.
+
+406
+00:14:35,279 --> 00:14:37,519
+First up is the data prep step. Uh,
+
+407
+00:14:37,590 --> 00:14:39,840
+what's interesting here is that
+
+408
+00:14:39,840 --> 00:14:42,200
+instead of taking an existing data set, we
+
+409
+00:14:42,200 --> 00:14:44,500
+have generated data to fine tune
+
+410
+00:14:44,500 --> 00:14:46,678
+the foundational models for an
+
+411
+00:14:46,678 --> 00:14:48,019
+example use case,
+
+412
+00:14:48,558 --> 00:14:50,570
+uh, essentially just pulling it out of thin air,
+
+413
+00:14:50,619 --> 00:14:52,639
+uh, and the idea is that if we
+
+414
+00:14:52,639 --> 00:14:54,788
+can generate this data from silos,
+
+415
+00:14:54,928 --> 00:14:56,359
+uh, you know, anywhere on the Internet.
+
+416
+00:14:56,960 --> 00:14:57,500
+Uh,
+
+417
+00:14:57,759 --> 00:15:00,038
+data that is structured, unstructured, or a combination
+
+418
+00:15:00,038 --> 00:15:03,000
+and create agentic applications that are hyper-personalized,
+
+419
+00:15:03,119 --> 00:15:04,139
+you can do the same,
+
+420
+00:15:04,519 --> 00:15:06,798
+uh, with data existing in your
+
+421
+00:15:06,798 --> 00:15:07,979
+organization's silos.
+
+422
+00:15:08,808 --> 00:15:10,889
+Uh, coming back to the use case that we have here,
+
+423
+00:15:11,259 --> 00:15:13,538
+there are 3 radar sources that we use, and
+
+424
+00:15:13,538 --> 00:15:15,700
+imagine that the end user is an attorney
+
+425
+00:15:15,700 --> 00:15:18,019
+or a paralegal or someone who's trying to
+
+426
+00:15:18,019 --> 00:15:20,399
+ensure securities transactions
+
+427
+00:15:20,399 --> 00:15:21,849
+like, uh, private stock sales,
+
+428
+00:15:22,178 --> 00:15:24,599
+public offerings comply with SEC regulations.
+
+429
+00:15:25,250 --> 00:15:27,918
+We I
+
+430
+00:15:27,918 --> 00:15:29,928
+do want to point out that you can
+
+431
+00:15:29,928 --> 00:15:32,149
+use NOAA models for a variety of use
+
+432
+00:15:32,149 --> 00:15:34,558
+cases, but especially for legal
+
+433
+00:15:34,558 --> 00:15:35,989
+and healthcare use cases,
+
+434
+00:15:36,918 --> 00:15:39,200
+please use it at your discretion and
+
+435
+00:15:39,200 --> 00:15:41,129
+especially with other regulated
+
+436
+00:15:41,599 --> 00:15:43,418
+and sensitive use cases as well.
+
+437
+00:15:44,330 --> 00:15:46,349
+But here, we have 3 data
+
+438
+00:15:46,349 --> 00:15:48,369
+sources. Uh, so we have the EDGR
+
+439
+00:15:48,369 --> 00:15:49,229
+filings
+
+440
+00:15:49,729 --> 00:15:52,048
+that are the actual agreements that were filed
+
+441
+00:15:52,048 --> 00:15:53,869
+with SEC themselves. So,
+
+442
+00:15:54,129 --> 00:15:56,200
+uh, apparently got an attorney filled the form out,
+
+443
+00:15:56,369 --> 00:15:58,649
+you know, uh, pushed it out, uh, for
+
+444
+00:15:58,649 --> 00:15:59,469
+review to SEC.
+
+445
+00:16:00,129 --> 00:16:02,408
+Then there are the SEC formal language
+
+446
+00:16:02,408 --> 00:16:04,570
+regulations that tell us how
+
+447
+00:16:04,570 --> 00:16:06,649
+to, uh, the legal language that should
+
+448
+00:16:06,649 --> 00:16:09,090
+be in those agreements. And finally, there are judicial
+
+449
+00:16:09,090 --> 00:16:10,428
+interpretations, uh,
+
+450
+00:16:10,769 --> 00:16:12,928
+from federal judges and courts of those filed
+
+451
+00:16:12,928 --> 00:16:14,200
+agreements. So the model
+
+452
+00:16:14,570 --> 00:16:15,509
+can, uh,
+
+453
+00:16:16,210 --> 00:16:18,529
+use these interconnected data, uh, sets
+
+454
+00:16:18,529 --> 00:16:20,788
+to enable, uh, cross-document analysis
+
+455
+00:16:20,788 --> 00:16:23,190
+and validate, uh, the agreements against,
+
+456
+00:16:23,500 --> 00:16:25,690
+you know, the text, um, that's required,
+
+457
+00:16:25,729 --> 00:16:27,308
+the text that provided,
+
+458
+00:16:27,649 --> 00:16:29,210
+and how the text was interpreted.
+
+459
+00:16:30,719 --> 00:16:31,308
+So,
+
+460
+00:16:31,849 --> 00:16:33,950
+we will glance over some of these functions.
+
+461
+00:16:34,038 --> 00:16:36,038
+Uh, we will also publish
+
+462
+00:16:36,038 --> 00:16:38,279
+these in a GitHub repo soon, uh, so you'll
+
+463
+00:16:38,279 --> 00:16:40,399
+have access to everything that we covered here and
+
+464
+00:16:40,399 --> 00:16:42,629
+more, but these are just basically
+
+465
+00:16:42,629 --> 00:16:44,798
+crawling some data from, uh, open
+
+466
+00:16:44,798 --> 00:16:46,418
+source, uh, websites,
+
+467
+00:16:47,000 --> 00:16:49,229
+um. These can be easily
+
+468
+00:16:49,229 --> 00:16:51,250
+modified to, you know, download the kind of
+
+469
+00:16:51,250 --> 00:16:53,019
+forms that you want to download, for example,
+
+470
+00:16:57,450 --> 00:16:59,940
+Then comes the actual synthetic
+
+471
+00:16:59,940 --> 00:17:01,979
+data generator, and
+
+472
+00:17:01,979 --> 00:17:02,639
+um
+
+473
+00:17:03,219 --> 00:17:05,219
+once we do have the raw data sitting with
+
+474
+00:17:05,219 --> 00:17:07,219
+us, Uh, we can start
+
+475
+00:17:07,219 --> 00:17:09,259
+generating data in a format that is
+
+476
+00:17:09,259 --> 00:17:11,380
+ready to be consumed by NOAA,
+
+477
+00:17:11,578 --> 00:17:13,930
+uh, the NAA models that we'll use. The
+
+478
+00:17:13,930 --> 00:17:16,140
+format, the, uh, will depend on the model
+
+479
+00:17:16,140 --> 00:17:17,078
+that you use,
+
+480
+00:17:17,578 --> 00:17:19,180
+uh, and, uh, you can.
+
+481
+00:17:20,078 --> 00:17:22,118
+We recommend using Nova, but you can try this
+
+482
+00:17:22,118 --> 00:17:24,189
+with any other models available on, uh,
+
+483
+00:17:24,199 --> 00:17:25,900
+Bedrock or SageMaker.
+
+484
+00:17:26,279 --> 00:17:26,818
+Um,
+
+485
+00:17:27,719 --> 00:17:30,199
+important to note is, uh, prompt engineering
+
+486
+00:17:30,199 --> 00:17:32,479
+that should be provided while generating the data,
+
+487
+00:17:32,489 --> 00:17:34,630
+so the model knows what format to
+
+488
+00:17:34,630 --> 00:17:35,598
+generate that in.
+
+489
+00:17:37,439 --> 00:17:39,630
+Uh, quick animation shows you
+
+490
+00:17:39,630 --> 00:17:41,868
+how that is happening. I will give it
+
+491
+00:17:41,868 --> 00:17:43,489
+about 0.5 minute
+
+492
+00:17:43,989 --> 00:17:45,078
+for it to play.
+
+493
+00:17:53,680 --> 00:17:55,709
+So, you see here on the left that we have a
+
+494
+00:17:55,709 --> 00:17:57,799
+data generation kit, and
+
+495
+00:17:57,799 --> 00:18:00,358
+essentially what you see here, that's happening is chunking
+
+496
+00:18:00,358 --> 00:18:01,098
+the data.
+
+497
+00:18:01,640 --> 00:18:03,539
+Maybe we can actually go to uh still.
+
+498
+00:18:03,910 --> 00:18:06,199
+It's chunking the data into a
+
+499
+00:18:06,199 --> 00:18:08,338
+predefined set of character limits.
+
+500
+00:18:08,789 --> 00:18:10,838
+Uh, that is done because
+
+501
+00:18:10,838 --> 00:18:11,880
+if, generally,
+
+502
+00:18:12,160 --> 00:18:14,199
+you know, data is in silos exists in like gigabytes
+
+503
+00:18:14,199 --> 00:18:16,279
+or terabytes, and this will blow up the
+
+504
+00:18:16,279 --> 00:18:17,459
+context size
+
+505
+00:18:17,838 --> 00:18:19,979
+of your model, and it will
+
+506
+00:18:19,979 --> 00:18:20,500
+not be,
+
+507
+00:18:20,799 --> 00:18:22,118
+basically, it will not be able to admit,
+
+508
+00:18:22,400 --> 00:18:23,180
+generate any data.
+
+509
+00:18:23,640 --> 00:18:25,880
+So we chunk it, and the chunk size
+
+510
+00:18:25,880 --> 00:18:28,130
+depends on the context window of the model that you choose
+
+511
+00:18:28,130 --> 00:18:29,630
+again, M is the parameter.
+
+512
+00:18:30,380 --> 00:18:31,920
+Another parameter is N.
+
+513
+00:18:32,380 --> 00:18:34,539
+What N does is it defines the number
+
+514
+00:18:34,539 --> 00:18:36,699
+of overlapping characters between
+
+515
+00:18:36,699 --> 00:18:37,598
+those chunks
+
+516
+00:18:37,900 --> 00:18:39,519
+so that the model knows,
+
+517
+00:18:39,868 --> 00:18:42,380
+um, if there is semantic continuity,
+
+518
+00:18:42,459 --> 00:18:44,400
+if, you know, sentences cut midway,
+
+519
+00:18:44,660 --> 00:18:46,779
+the model is instructed in its prompt,
+
+520
+00:18:47,348 --> 00:18:49,559
+um, to say that you will receive
+
+521
+00:18:49,559 --> 00:18:51,608
+chunks of data, uh, this is the
+
+522
+00:18:51,608 --> 00:18:52,239
+context,
+
+523
+00:18:52,699 --> 00:18:54,699
+uh, try to maintain semantic,
+
+524
+00:18:54,739 --> 00:18:55,779
+uh, similarity.
+
+525
+00:18:56,930 --> 00:18:58,709
+Each chunk is actually then,
+
+526
+00:18:59,170 --> 00:19:01,189
+uh, fed into the prompt, and,
+
+527
+00:19:01,250 --> 00:19:01,779
+um,
+
+528
+00:19:02,250 --> 00:19:04,430
+that makes a single invocation into
+
+529
+00:19:04,430 --> 00:19:05,630
+a teacher model.
+
+530
+00:19:06,009 --> 00:19:08,078
+Uh, for our use case, we use Nova Premium.
+
+531
+00:19:08,608 --> 00:19:11,269
+So if you have 100 chunks, you'll have 100 invocations
+
+532
+00:19:11,269 --> 00:19:13,229
+that finally generate synthetic data.
+
+533
+00:19:13,689 --> 00:19:16,059
+Uh, we have it in a format that's consumable
+
+534
+00:19:16,059 --> 00:19:17,848
+by our student model, which is NoA Light,
+
+535
+00:19:18,410 --> 00:19:20,410
+and we fine-tune it, uh, which we'll
+
+536
+00:19:20,410 --> 00:19:22,449
+see in, in further notebooks to be consumed by
+
+537
+00:19:22,449 --> 00:19:23,309
+end users.
+
+538
+00:19:26,989 --> 00:19:29,430
+Quick glance over how the format looks
+
+539
+00:19:29,430 --> 00:19:31,549
+for Nova, uh, all Nova
+
+540
+00:19:31,549 --> 00:19:33,949
+family or SFT particularly.
+
+541
+00:19:34,259 --> 00:19:36,328
+You have a system prompt where you define, uh,
+
+542
+00:19:36,380 --> 00:19:37,199
+what you would want
+
+543
+00:19:37,539 --> 00:19:39,729
+the model to do or the agent
+
+544
+00:19:39,729 --> 00:19:41,779
+application to do. Here, uh, for
+
+545
+00:19:41,779 --> 00:19:43,858
+example, we would say something like, you're
+
+546
+00:19:43,858 --> 00:19:45,368
+a helpful legal assistant.
+
+547
+00:19:45,779 --> 00:19:47,979
+Please help me ensure that my
+
+548
+00:19:47,979 --> 00:19:49,689
+agreements are to point.
+
+549
+00:19:50,250 --> 00:19:52,759
+We can look at an example.
+
+550
+00:19:53,680 --> 00:19:54,660
+Of how that
+
+551
+00:19:55,199 --> 00:19:56,439
+is after generation.
+
+552
+00:20:11,630 --> 00:20:13,890
+It is a bit different for RFT, but,
+
+553
+00:20:13,989 --> 00:20:16,229
+um, concepts are the same. You have a system prompt,
+
+554
+00:20:16,338 --> 00:20:18,348
+you have a user prompt that actually feeds
+
+555
+00:20:18,348 --> 00:20:19,160
+in the query,
+
+556
+00:20:19,469 --> 00:20:21,789
+and you have an answer that is generated,
+
+557
+00:20:21,828 --> 00:20:23,449
+uh, by the model.
+
+558
+00:20:24,068 --> 00:20:26,078
+These are all, uh, JSON objects,
+
+559
+00:20:26,180 --> 00:20:27,890
+so we explicitly
+
+560
+00:20:28,219 --> 00:20:30,229
+instruct the model to generate it
+
+561
+00:20:30,229 --> 00:20:32,309
+in that format, but as you all know,
+
+562
+00:20:32,509 --> 00:20:34,549
+our foundation models are non-deterministic
+
+563
+00:20:34,549 --> 00:20:36,039
+in Some form.
+
+564
+00:20:36,420 --> 00:20:38,739
+So we do, uh, provide a validation
+
+565
+00:20:38,739 --> 00:20:40,858
+loop, uh, to ensure that these can
+
+566
+00:20:40,858 --> 00:20:42,799
+be consumed by our underlying model.
+
+567
+00:20:46,368 --> 00:20:48,608
+Ultimately, our goal is
+
+568
+00:20:48,608 --> 00:20:50,769
+for this model to select the right
+
+569
+00:20:50,769 --> 00:20:52,769
+tools, given an input query.
+
+570
+00:20:52,890 --> 00:20:55,199
+So we measure what good looks like by measuring
+
+571
+00:20:55,199 --> 00:20:57,209
+some metrics about the tools that it
+
+572
+00:20:57,209 --> 00:20:58,469
+selected. So
+
+573
+00:20:58,769 --> 00:21:00,680
+given a query, did it select the right tool?
+
+574
+00:21:01,209 --> 00:21:03,279
+If it needed multiple tools, did it select it
+
+575
+00:21:03,279 --> 00:21:04,469
+in the right sequence.
+
+576
+00:21:04,858 --> 00:21:07,289
+The tools are essentially Python functions,
+
+577
+00:21:07,410 --> 00:21:08,719
+so they take parameters.
+
+578
+00:21:09,318 --> 00:21:11,449
+Did it provide the tool the right parameters
+
+579
+00:21:11,449 --> 00:21:13,848
+that it needs to perform the query?
+
+580
+00:21:14,250 --> 00:21:16,449
+So these are some metrics that we are tracking. These
+
+581
+00:21:16,449 --> 00:21:18,680
+are customizable. Uh, you can provide your own metrics
+
+582
+00:21:18,680 --> 00:21:21,049
+as well, and we'll look at that in code
+
+583
+00:21:21,049 --> 00:21:21,858
+in a second.
+
+584
+00:21:22,250 --> 00:21:24,250
+But for now, let's look at the
+
+585
+00:21:24,250 --> 00:21:26,410
+prompt that we provide to the synthetic
+
+586
+00:21:26,410 --> 00:21:27,489
+data generator.
+
+587
+00:21:28,689 --> 00:21:31,068
+You'll see some annotations here. You'll see
+
+588
+00:21:31,209 --> 00:21:33,180
+double hashes, guidelines, and caps.
+
+589
+00:21:33,608 --> 00:21:35,769
+Each, uh, foundation model has
+
+590
+00:21:35,769 --> 00:21:37,479
+prompting, uh, best practices.
+
+591
+00:21:37,809 --> 00:21:39,848
+So for NA, this is what it looks like, and
+
+592
+00:21:39,848 --> 00:21:42,068
+we've incorporated it here. We tell
+
+593
+00:21:42,568 --> 00:21:44,598
+the model what it needs to do in the prompt, uh,
+
+594
+00:21:44,689 --> 00:21:45,789
+through these annotations.
+
+595
+00:21:46,539 --> 00:21:49,019
+Uh, we tell it what tools it has
+
+596
+00:21:49,019 --> 00:21:51,088
+access to and what it, uh, needs, uh,
+
+597
+00:21:51,180 --> 00:21:53,459
+what, what each tool needs
+
+598
+00:21:53,459 --> 00:21:54,559
+as a parameter.
+
+599
+00:21:54,939 --> 00:21:57,098
+We also tell the model to classify each
+
+600
+00:21:57,098 --> 00:21:59,299
+query into 8 predetermined, uh,
+
+601
+00:21:59,420 --> 00:22:01,239
+predetermined categories. So
+
+602
+00:22:01,539 --> 00:22:03,858
+those then finally map to
+
+603
+00:22:03,858 --> 00:22:05,979
+what tools it will use.
+
+604
+00:22:06,459 --> 00:22:07,219
+There's a quick,
+
+605
+00:22:07,578 --> 00:22:09,699
+there's a table that I can go
+
+606
+00:22:09,699 --> 00:22:10,279
+over.
+
+607
+00:22:11,608 --> 00:22:13,699
+That shows how that works. Basically, if it's
+
+608
+00:22:14,279 --> 00:22:16,279
+a regulation definition, this is the tool that
+
+609
+00:22:16,279 --> 00:22:16,818
+should be used.
+
+610
+00:22:17,439 --> 00:22:19,949
+If it's a regulatory compliance analysis,
+
+611
+00:22:20,459 --> 00:22:22,660
+two tools should be used in this sequence.
+
+612
+00:22:26,449 --> 00:22:28,449
+And finally, we tell them all that we want,
+
+613
+00:22:28,568 --> 00:22:31,059
+um, strictly JSON schema that adheres
+
+614
+00:22:31,059 --> 00:22:32,029
+to this structure.
+
+615
+00:22:32,650 --> 00:22:34,769
+We also provide some example definitions,
+
+616
+00:22:34,848 --> 00:22:35,420
+um,
+
+617
+00:22:35,890 --> 00:22:37,969
+essentially doing a few short prompting in
+
+618
+00:22:37,969 --> 00:22:40,009
+this, um, of how the
+
+619
+00:22:40,009 --> 00:22:40,868
+data should look like.
+
+620
+00:22:41,699 --> 00:22:43,979
+And finally, at the end, we insert the chunk
+
+621
+00:22:43,979 --> 00:22:46,059
+that was generated by the synthetic data
+
+622
+00:22:46,059 --> 00:22:49,608
+toolkit. The
+
+623
+00:22:49,608 --> 00:22:52,479
+toolkit that we used in
+
+624
+00:22:53,358 --> 00:22:55,519
+This session is uh uh an open
+
+625
+00:22:55,519 --> 00:22:57,759
+source toolkit by uh Meta.
+
+626
+00:22:57,799 --> 00:23:00,219
+It's called uh Synthetic Data Toolit.
+
+627
+00:23:00,969 --> 00:23:01,729
+Uh, what,
+
+628
+00:23:02,209 --> 00:23:04,390
+again, you can use any open-source framework,
+
+629
+00:23:04,449 --> 00:23:05,068
+um,
+
+630
+00:23:05,818 --> 00:23:08,009
+for this, uh, but essentially what
+
+631
+00:23:08,009 --> 00:23:09,588
+we've done in this code is
+
+632
+00:23:09,930 --> 00:23:12,039
+provided the capability to use Bedrock and
+
+633
+00:23:12,039 --> 00:23:14,289
+SageMaker models with the toolkit to
+
+634
+00:23:14,289 --> 00:23:15,170
+generate this data.
+
+635
+00:23:17,469 --> 00:23:19,549
+From there, um, we turn
+
+636
+00:23:19,549 --> 00:23:21,670
+the kit on, we try to, uh,
+
+637
+00:23:21,789 --> 00:23:22,809
+do a system check.
+
+638
+00:23:23,259 --> 00:23:24,489
+Uh, we use
+
+639
+00:23:24,828 --> 00:23:26,969
+the NOA model hosted in Bedrock.
+
+640
+00:23:27,108 --> 00:23:29,189
+Um, we provide an input prompt that just
+
+641
+00:23:29,189 --> 00:23:29,809
+says, hi,
+
+642
+00:23:30,150 --> 00:23:31,809
+and we can see the model is ready,
+
+643
+00:23:32,108 --> 00:23:33,868
+uh, to take invocation requests.
+
+644
+00:23:36,088 --> 00:23:37,868
+After which, uh,
+
+645
+00:23:38,549 --> 00:23:40,789
+we just basically file parse the data.
+
+646
+00:23:42,809 --> 00:23:44,719
+And then start generating prompts.
+
+647
+00:23:46,309 --> 00:23:48,459
+Once that is done, maybe we can
+
+648
+00:23:48,459 --> 00:23:50,618
+get a quick sneak peek of how that
+
+649
+00:23:50,618 --> 00:23:51,529
+looks like.
+
+650
+00:23:52,059 --> 00:23:54,180
+We combine it into a JSON
+
+651
+00:23:54,180 --> 00:23:56,259
+L, uh, JSON lines file because
+
+652
+00:23:56,259 --> 00:23:57,640
+that's how NA expects us
+
+653
+00:23:58,098 --> 00:23:59,880
+to provide it for SFT fine-tuning.
+
+654
+00:24:08,199 --> 00:24:10,209
+We also split it between 3 sets,
+
+655
+00:24:10,328 --> 00:24:21,828
+so. For
+
+656
+00:24:21,828 --> 00:24:23,088
+example, uh,
+
+657
+00:24:23,799 --> 00:24:25,108
+Nova generated this query
+
+658
+00:24:25,509 --> 00:24:27,509
+and what an appropriate answer should look
+
+659
+00:24:27,509 --> 00:24:29,828
+like. So we further feed it to the, uh, student
+
+660
+00:24:29,828 --> 00:24:31,910
+model and it learns how to
+
+661
+00:24:31,910 --> 00:24:33,890
+do this on actual user queries.
+
+662
+00:24:35,059 --> 00:24:37,469
+Uh, we'll pause here before going to the SFT
+
+663
+00:24:37,469 --> 00:24:39,549
+notebook, uh, to see how we do the actual
+
+664
+00:24:39,549 --> 00:24:40,848
+fine tuning and take
+
+665
+00:24:41,150 --> 00:24:42,189
+any questions.
+
+666
+00:24:46,900 --> 00:24:49,088
+What. Sorry,
+
+667
+00:24:49,489 --> 00:24:51,489
+uh, the GitHub is public or not? Is that
+
+668
+00:24:51,489 --> 00:24:52,088
+your question?
+
+669
+00:24:52,449 --> 00:24:54,489
+It's not yet public, but it would be
+
+670
+00:24:54,489 --> 00:24:56,529
+public by today. Um, so
+
+671
+00:24:56,529 --> 00:24:58,568
+yeah, we can, we can, it would be
+
+672
+00:24:58,568 --> 00:25:00,328
+available in NoA Samples GitHub.
+
+673
+00:25:00,890 --> 00:25:01,529
+Um, yeah.
+
+674
+00:25:04,699 --> 00:25:05,759
+Any other questions?
+
+675
+00:25:07,588 --> 00:25:08,430
+You need Mike.
+
+676
+00:25:09,709 --> 00:25:11,828
+Can you apply a similar process to Novasonic
+
+677
+00:25:11,828 --> 00:25:12,848
+or is that
+
+678
+00:25:13,390 --> 00:25:13,989
+down the line?
+
+679
+00:25:15,368 --> 00:25:17,539
+Uh, you mean customizing Noah Sonic?
+
+680
+00:25:18,130 --> 00:25:20,269
+Uh, no, that's not available as of today.
+
+681
+00:25:20,449 --> 00:25:21,229
+Um, yeah.
+
+682
+00:25:22,209 --> 00:25:23,219
+Maybe in the future,
+
+683
+00:25:23,529 --> 00:25:25,750
+if there's a use case, we can talk about where you're thinking
+
+684
+00:25:25,750 --> 00:25:26,769
+of custom, OK.
+
+685
+00:25:29,039 --> 00:25:31,130
+OK. If there are no further questions, maybe we
+
+686
+00:25:31,130 --> 00:25:32,390
+can move to the SFT.
+
+687
+00:25:34,539 --> 00:25:36,568
+Perfect. So, as Anupam, uh,
+
+688
+00:25:36,578 --> 00:25:38,699
+told you about SFT, the magic
+
+689
+00:25:38,699 --> 00:25:40,739
+with Laura and SFT is that when
+
+690
+00:25:40,739 --> 00:25:42,979
+you use an adapter trainer, which is
+
+691
+00:25:42,979 --> 00:25:45,239
+a parameter efficient fine-tuning technique,
+
+692
+00:25:45,779 --> 00:25:48,219
+it essentially takes 1 to 2%
+
+693
+00:25:48,219 --> 00:25:50,328
+of the model weights and tries to,
+
+694
+00:25:50,489 --> 00:25:52,578
+uh, fine tune those instead of the whole
+
+695
+00:25:52,578 --> 00:25:53,500
+model, which
+
+696
+00:25:53,858 --> 00:25:56,140
+reduces your infrastructure, training time, costs,
+
+697
+00:25:56,459 --> 00:25:59,009
+everything. We've seen that
+
+698
+00:25:59,180 --> 00:26:01,199
+if you give it pertinent data,
+
+699
+00:26:01,578 --> 00:26:03,739
+it gives you up to 90%
+
+700
+00:26:03,739 --> 00:26:06,019
+accuracy performance as compared to
+
+701
+00:26:06,019 --> 00:26:06,559
+full
+
+702
+00:26:07,539 --> 00:26:08,660
+supervised fine tuning.
+
+703
+00:26:09,608 --> 00:26:11,150
+So, basically, the raptor is
+
+704
+00:26:11,410 --> 00:26:13,769
+the 1 to 2% of the weights, um, that
+
+705
+00:26:13,769 --> 00:26:15,189
+Laura extracts, strains it,
+
+706
+00:26:15,568 --> 00:26:17,729
+adds it to the base model, and finally gives
+
+707
+00:26:17,729 --> 00:26:19,930
+you, uh, a fine-tuned, uh,
+
+708
+00:26:20,088 --> 00:26:20,949
+Nova Light model.
+
+709
+00:26:23,848 --> 00:26:26,000
+Since we've covered a bunch of that, let's
+
+710
+00:26:26,000 --> 00:26:28,088
+get into model fine-tuning code.
+
+711
+00:26:28,489 --> 00:26:30,608
+The first thing we do is set up a SageMaker
+
+712
+00:26:30,608 --> 00:26:32,729
+session so that we can interact, uh,
+
+713
+00:26:32,769 --> 00:26:34,769
+with the SageMaker clients, submit jobs from
+
+714
+00:26:34,769 --> 00:26:35,838
+our local notebook,
+
+715
+00:26:36,289 --> 00:26:38,509
+uh, provided the data set that we need to.
+
+716
+00:26:40,009 --> 00:26:41,500
+We select, uh, the
+
+717
+00:26:41,939 --> 00:26:43,828
+particular instance that we will need.
+
+718
+00:26:44,309 --> 00:26:46,439
+Uh, we also do distributed training here,
+
+719
+00:26:46,519 --> 00:26:48,519
+so we select 4 instances, uh,
+
+720
+00:26:48,640 --> 00:26:49,459
+so that, um,
+
+721
+00:26:49,838 --> 00:26:50,759
+training is faster.
+
+722
+00:26:51,108 --> 00:26:53,160
+We select the image URI, which is
+
+723
+00:26:53,160 --> 00:26:55,199
+a docker image hosted in ECR.
+
+724
+00:26:55,559 --> 00:26:56,160
+Uh,
+
+725
+00:26:56,439 --> 00:26:58,479
+these are sticky with the model that you
+
+726
+00:26:58,479 --> 00:27:00,680
+use. So if you use Nova 2.0, that'll
+
+727
+00:27:00,680 --> 00:27:02,098
+have a particular image URI.
+
+728
+00:27:04,818 --> 00:27:05,598
+From there,
+
+729
+00:27:06,259 --> 00:27:08,618
+excuse me, uh, we use recipes
+
+730
+00:27:08,618 --> 00:27:09,719
+and recipes, as an,
+
+731
+00:27:10,140 --> 00:27:12,660
+uh, let us know earlier, are just abstractions
+
+732
+00:27:12,660 --> 00:27:14,739
+of configurable, um,
+
+733
+00:27:15,449 --> 00:27:16,309
+Parameters
+
+734
+00:27:16,568 --> 00:27:18,608
+what that looks like is
+
+735
+00:27:23,098 --> 00:27:25,140
+You, let's say you want to define your, uh,
+
+736
+00:27:25,150 --> 00:27:27,150
+training hyperparameterss, the number of steps you would
+
+737
+00:27:27,150 --> 00:27:28,289
+like to run, your
+
+738
+00:27:28,549 --> 00:27:30,979
+learning rate scheduler, the kind of learning, um,
+
+739
+00:27:31,108 --> 00:27:33,250
+uh, rate adapter you would like to use,
+
+740
+00:27:33,549 --> 00:27:35,868
+if you would like to use Laura or not, and then,
+
+741
+00:27:35,910 --> 00:27:38,150
+um, you know, Laura specific fine-tuning
+
+742
+00:27:38,150 --> 00:27:39,410
+hyperparameterss as well.
+
+743
+00:27:45,469 --> 00:27:47,709
+Once that is done, we select, uh,
+
+744
+00:27:47,799 --> 00:27:50,318
+what we call in the Sagemaker terminology,
+
+745
+00:27:50,358 --> 00:27:52,400
+an estimator. We use a Pytorch
+
+746
+00:27:52,400 --> 00:27:54,199
+estimator because NA
+
+747
+00:27:54,719 --> 00:27:56,959
+essentially trains, uh, this
+
+748
+00:27:56,959 --> 00:27:59,140
+using the Pytorch lightning framework.
+
+749
+00:27:59,920 --> 00:28:01,900
+Uh, we provide it, again, whatever
+
+750
+00:28:02,519 --> 00:28:04,140
+variables we defined earlier,
+
+751
+00:28:04,608 --> 00:28:06,729
+and we give it the recipe, and, uh, finally,
+
+752
+00:28:06,759 --> 00:28:07,880
+we give it the image URI.
+
+753
+00:28:09,818 --> 00:28:12,199
+The data that we generated in the previous notebook
+
+754
+00:28:12,459 --> 00:28:13,500
+and start training.
+
+755
+00:28:16,469 --> 00:28:18,439
+So this is a completed notebook,
+
+756
+00:28:19,108 --> 00:28:21,009
+just to show you how it looks in the console.
+
+757
+00:28:28,469 --> 00:28:30,539
+From here, you can look at some metrics
+
+758
+00:28:30,539 --> 00:28:32,959
+about the infrastructure utilization,
+
+759
+00:28:33,219 --> 00:28:34,259
+look at logs.
+
+760
+00:28:47,049 --> 00:28:49,469
+You see one log stream each for each
+
+761
+00:28:50,250 --> 00:28:51,348
+instance that it trained on.
+
+762
+00:28:59,259 --> 00:29:01,390
+Which exited each with a status 200
+
+763
+00:29:01,390 --> 00:29:03,209
+code, which means training was successful.
+
+764
+00:29:06,368 --> 00:29:08,439
+OK, So training, uh,
+
+765
+00:29:08,588 --> 00:29:10,608
+takes anywhere between 20 to 40 minutes.
+
+766
+00:29:10,799 --> 00:29:13,150
+Uh, typical workflow, ML workflow
+
+767
+00:29:13,150 --> 00:29:15,390
+is after you're done with training, you want to look at, uh,
+
+768
+00:29:15,588 --> 00:29:18,009
+training validation curves. So we download,
+
+769
+00:29:18,029 --> 00:29:20,098
+um, the model Tarball,
+
+770
+00:29:20,650 --> 00:29:22,709
+uh, of the fine-tuned data, extract
+
+771
+00:29:22,709 --> 00:29:24,750
+it, which has a manifest
+
+772
+00:29:24,750 --> 00:29:26,459
+file and a.
+
+773
+00:29:34,039 --> 00:29:36,078
+Train loss file that tells us, uh, how
+
+774
+00:29:36,078 --> 00:29:38,318
+the model converged. As you can see from
+
+775
+00:29:38,318 --> 00:29:40,420
+step, we gave it 100 steps, but from
+
+776
+00:29:40,759 --> 00:29:42,789
+step 0 to 100, it converged
+
+777
+00:29:42,789 --> 00:29:43,380
+from
+
+778
+00:29:43,640 --> 00:29:45,680
+70 to 10, which is pretty
+
+779
+00:29:45,680 --> 00:29:46,469
+good performance on
+
+780
+00:29:47,519 --> 00:29:48,380
+the train
+
+781
+00:29:49,189 --> 00:29:53,328
+set only. Now
+
+782
+00:29:53,328 --> 00:29:55,910
+one thing to keep in mind is this
+
+783
+00:29:55,920 --> 00:29:58,309
+evaluation metric is actually
+
+784
+00:29:58,489 --> 00:30:00,529
+different from our evaluation metrics
+
+785
+00:30:00,529 --> 00:30:02,559
+that we want to test the model on because we actually
+
+786
+00:30:02,559 --> 00:30:03,469
+want to see what
+
+787
+00:30:03,930 --> 00:30:06,209
+tools it selected, you know, the series
+
+788
+00:30:06,209 --> 00:30:08,250
+that it selected it in, and if it
+
+789
+00:30:08,250 --> 00:30:09,930
+was Jason possible, things like that.
+
+790
+00:30:10,410 --> 00:30:12,430
+So the training curve is just telling you if
+
+791
+00:30:12,430 --> 00:30:13,469
+it matched
+
+792
+00:30:13,848 --> 00:30:16,309
+the same output that was in
+
+793
+00:30:16,449 --> 00:30:18,130
+the training data, which is.
+
+794
+00:30:21,739 --> 00:30:22,880
+Essentially what the
+
+795
+00:30:23,279 --> 00:30:25,439
+assistant responds with. So it's a text to text
+
+796
+00:30:25,439 --> 00:30:27,459
+match. If it, if it was a match, the
+
+797
+00:30:27,459 --> 00:30:28,578
+training laws converged.
+
+798
+00:30:45,118 --> 00:30:47,400
+OK. So from there,
+
+799
+00:30:47,650 --> 00:30:49,719
+we are, uh, measuring the accuracy
+
+800
+00:30:49,719 --> 00:30:50,430
+of
+
+801
+00:30:51,130 --> 00:30:53,328
+tool selection by a couple of metrics here. Some are,
+
+802
+00:30:53,368 --> 00:30:55,608
+um, traditional classical
+
+803
+00:30:55,608 --> 00:30:57,809
+accuracy metrics. So, you see precision recall,
+
+804
+00:30:57,848 --> 00:30:58,910
+F1 on tool,
+
+805
+00:30:59,328 --> 00:31:01,068
+which is if, uh, how many times,
+
+806
+00:31:01,890 --> 00:31:04,049
+um, was the tool selection done properly,
+
+807
+00:31:04,130 --> 00:31:06,750
+how many times, uh, you, you saw false positives,
+
+808
+00:31:07,088 --> 00:31:09,170
+and what, um, the AUROC
+
+809
+00:31:09,170 --> 00:31:11,170
+curve looks like and what F1 looks
+
+810
+00:31:11,170 --> 00:31:13,380
+like. We also have an overall
+
+811
+00:31:13,380 --> 00:31:15,459
+score that is weighted, uh,
+
+812
+00:31:15,578 --> 00:31:16,439
+based on
+
+813
+00:31:16,779 --> 00:31:18,858
+the parameters that were provided to the tool,
+
+814
+00:31:18,979 --> 00:31:20,979
+and the tools that it selected and the sequence that
+
+815
+00:31:20,979 --> 00:31:22,799
+it's selected in. These are customizable.
+
+816
+00:31:29,229 --> 00:31:31,299
+One thing that's different, um,
+
+817
+00:31:31,799 --> 00:31:34,250
+between the evaluation that happens
+
+818
+00:31:34,250 --> 00:31:36,500
+in the training loop versus what
+
+819
+00:31:36,500 --> 00:31:37,630
+we do is
+
+820
+00:31:38,049 --> 00:31:40,328
+in, in the eval loop, you have this test
+
+821
+00:31:40,328 --> 00:31:42,368
+split that was sent to
+
+822
+00:31:42,368 --> 00:31:44,449
+the base model, and then it was sent to the
+
+823
+00:31:44,449 --> 00:31:45,328
+fine-tune model.
+
+824
+00:31:46,199 --> 00:31:48,279
+The way we evaluate these metrics
+
+825
+00:31:48,279 --> 00:31:50,098
+is we have predefined functions
+
+826
+00:31:50,459 --> 00:31:51,959
+that are loaded in lambda.
+
+827
+00:31:52,309 --> 00:31:54,358
+So on each invocation of
+
+828
+00:31:54,358 --> 00:31:56,618
+the base model, as you see on the left,
+
+829
+00:31:57,729 --> 00:31:59,769
+The answer goes to a lambda function.
+
+830
+00:31:59,890 --> 00:32:02,890
+The lambda evaluates it for customizable
+
+831
+00:32:02,890 --> 00:32:05,759
+functions and sends those metrics
+
+832
+00:32:05,759 --> 00:32:08,170
+back to the base model. It does that for the fine-tuned
+
+833
+00:32:08,170 --> 00:32:09,219
+model as well,
+
+834
+00:32:09,529 --> 00:32:11,539
+and at the end, we just compare the both.
+
+835
+00:32:16,799 --> 00:32:19,229
+Base model eval and fine-tuned model eval
+
+836
+00:32:19,229 --> 00:32:21,269
+look very similar to a training job. So
+
+837
+00:32:21,269 --> 00:32:22,118
+you select, uh,
+
+838
+00:32:22,430 --> 00:32:24,670
+instance types, counts, the image URI,
+
+839
+00:32:24,750 --> 00:32:25,890
+which is different,
+
+840
+00:32:26,189 --> 00:32:27,750
+um, than the training loop.
+
+841
+00:32:28,189 --> 00:32:30,189
+You configure recipes again, uh, that
+
+842
+00:32:30,189 --> 00:32:32,309
+point in the recipe, it points
+
+843
+00:32:32,309 --> 00:32:34,348
+to the lambda ARN of the lambda that we
+
+844
+00:32:34,348 --> 00:32:36,420
+have just configured. We define the pitot
+
+845
+00:32:36,709 --> 00:32:38,068
+estimator just like we did.
+
+846
+00:32:39,789 --> 00:32:41,500
+We provided with a test split.
+
+847
+00:32:42,848 --> 00:32:44,118
+Start the evaluation job.
+
+848
+00:32:48,618 --> 00:32:50,660
+It takes about 20 minutes from there,
+
+849
+00:32:50,699 --> 00:32:51,959
+we want to look at.
+
+850
+00:32:52,789 --> 00:32:54,818
+Download the tarball again and
+
+851
+00:32:54,818 --> 00:32:56,640
+look at what the results.
+
+852
+00:32:57,299 --> 00:32:58,390
+are visually.
+
+853
+00:33:01,559 --> 00:33:02,880
+Maybe zoom out.
+
+854
+00:33:06,949 --> 00:33:08,989
+OK. So, these are metrics on
+
+855
+00:33:08,989 --> 00:33:11,009
+the base model itself. It wasn't fine-tuned.
+
+856
+00:33:12,309 --> 00:33:14,608
+We'll have similarly for the fine-tuned model.
+
+857
+00:33:17,430 --> 00:33:19,969
+Going significantly up and then we compare.
+
+858
+00:33:23,660 --> 00:33:25,900
+So you can see overall score has jumped
+
+859
+00:33:25,900 --> 00:33:27,989
+from 44% to 75%
+
+860
+00:33:27,989 --> 00:33:29,059
+on the SFT loop.
+
+861
+00:33:29,650 --> 00:33:32,059
+Uh, this is where we end the SFT cycle.
+
+862
+00:33:32,259 --> 00:33:34,838
+We take this SFT fine-tune model
+
+863
+00:33:35,019 --> 00:33:37,539
+and then further try to increase its accuracy
+
+864
+00:33:37,539 --> 00:33:38,500
+by doing RFT.
+
+865
+00:33:40,219 --> 00:33:41,140
+Uh
+
+866
+00:33:42,630 --> 00:33:44,650
+OK, so now, uh, now
+
+867
+00:33:44,650 --> 00:33:46,578
+that we have customized, uh,
+
+868
+00:33:46,989 --> 00:33:47,689
+adapter,
+
+869
+00:33:48,088 --> 00:33:50,449
+let's move to the RFT which is
+
+870
+00:33:50,449 --> 00:33:51,809
+a cool part of it.
+
+871
+00:33:52,209 --> 00:33:54,368
+So in, uh, RFT, as I explained,
+
+872
+00:33:54,449 --> 00:33:56,729
+it's basically doing a rollout,
+
+873
+00:33:56,809 --> 00:33:59,029
+which is going to generate a number of
+
+874
+00:33:59,529 --> 00:34:00,250
+responses,
+
+875
+00:34:00,519 --> 00:34:02,650
+and then a trainer, which will take the feedback
+
+876
+00:34:02,650 --> 00:34:04,650
+that is coming from the reward function, which
+
+877
+00:34:04,650 --> 00:34:06,769
+is a lambda, and use that
+
+878
+00:34:06,769 --> 00:34:08,688
+feedback from that reward function.
+
+879
+00:34:09,079 --> 00:34:10,280
+To update it weights,
+
+880
+00:34:10,550 --> 00:34:11,179
+improve itself,
+
+881
+00:34:11,559 --> 00:34:13,829
+and then do that cycle multiple times.
+
+882
+00:34:14,039 --> 00:34:16,280
+Uh, again, that the multiple times
+
+883
+00:34:16,280 --> 00:34:18,478
+can be defined at the step in the steps,
+
+884
+00:34:18,519 --> 00:34:20,090
+which is a recipe parameter,
+
+885
+00:34:20,510 --> 00:34:22,840
+number of rollouts that you want can be defined
+
+886
+00:34:22,840 --> 00:34:24,260
+in the recipe parameter.
+
+887
+00:34:24,829 --> 00:34:26,840
+So those things are hyperparameterss
+
+888
+00:34:26,840 --> 00:34:27,860
+that are configurable.
+
+889
+00:34:28,610 --> 00:34:30,699
+Uh, so first, just the basics, setting up
+
+890
+00:34:30,699 --> 00:34:31,739
+the IM role,
+
+891
+00:34:32,019 --> 00:34:34,500
+doing the imports, uh, retrieving
+
+892
+00:34:34,500 --> 00:34:36,739
+the two main things from Hersh's notebook,
+
+893
+00:34:36,780 --> 00:34:37,478
+which was
+
+894
+00:34:37,780 --> 00:34:40,179
+the checkpoint after SFT because that
+
+895
+00:34:40,179 --> 00:34:42,378
+would be needed to run RFT
+
+896
+00:34:42,378 --> 00:34:43,398
+on top of it,
+
+897
+00:34:43,739 --> 00:34:45,860
+and the results that he showed that are
+
+898
+00:34:45,860 --> 00:34:46,978
+captured in a data frame.
+
+899
+00:34:47,708 --> 00:34:49,708
+Uh, so, yeah, for data prep, this
+
+900
+00:34:49,708 --> 00:34:51,949
+is the format for RFT system,
+
+901
+00:34:52,050 --> 00:34:53,898
+user, and reference answer.
+
+902
+00:34:54,349 --> 00:34:56,409
+Uh, reference answer is basically anything.
+
+903
+00:34:56,429 --> 00:34:58,550
+You can pass in any random thing which
+
+904
+00:34:58,550 --> 00:35:00,699
+you care about, which the model should learn. It
+
+905
+00:35:00,699 --> 00:35:02,699
+does not need to be the ground truth only.
+
+906
+00:35:02,949 --> 00:35:03,739
+It can be
+
+907
+00:35:04,429 --> 00:35:06,510
+thinking, notes, whatever you have,
+
+908
+00:35:06,708 --> 00:35:09,030
+because RFT is the, the, the essence
+
+909
+00:35:09,030 --> 00:35:11,148
+of it is that it will just learn from whatever you're
+
+910
+00:35:11,148 --> 00:35:11,909
+passing with it.
+
+911
+00:35:12,228 --> 00:35:14,429
+It will not memorize the ground truth only,
+
+912
+00:35:14,539 --> 00:35:15,869
+which is what SFT does.
+
+913
+00:35:16,219 --> 00:35:16,889
+Um,
+
+914
+00:35:17,489 --> 00:35:20,168
+And then we will create the data sets
+
+915
+00:35:20,168 --> 00:35:22,250
+in that format and store it
+
+916
+00:35:22,250 --> 00:35:23,269
+in S3,
+
+917
+00:35:23,610 --> 00:35:25,969
+and then create our lambda function, which is the reward
+
+918
+00:35:25,969 --> 00:35:28,090
+function. That is the critical part in getting
+
+919
+00:35:28,090 --> 00:35:30,648
+a good RFT is getting a good reward
+
+920
+00:35:30,648 --> 00:35:32,760
+function. If your reward function is biased,
+
+921
+00:35:33,128 --> 00:35:35,168
+or it can be easily hacked,
+
+922
+00:35:35,250 --> 00:35:37,610
+then RFT will go for hacking the reward
+
+923
+00:35:37,610 --> 00:35:39,688
+function. And by hacking, I mean, it
+
+924
+00:35:39,688 --> 00:35:41,969
+will try to find loopholes in your reward function
+
+925
+00:35:41,969 --> 00:35:44,289
+to make it maximize the reward, and
+
+926
+00:35:44,289 --> 00:35:46,329
+then you will, your model will just not learn that
+
+927
+00:35:46,329 --> 00:35:48,559
+well. So it's essential
+
+928
+00:35:48,559 --> 00:35:50,840
+to see how we created the,
+
+929
+00:35:50,878 --> 00:35:52,719
+um, reward function.
+
+930
+00:35:53,039 --> 00:35:53,550
+So it's,
+
+931
+00:35:54,039 --> 00:35:55,000
+firstly, we,
+
+932
+00:35:55,320 --> 00:35:57,409
+uh, so it's lambda handler and
+
+933
+00:35:57,409 --> 00:35:59,519
+lambda grader. In the lambda grader,
+
+934
+00:35:59,559 --> 00:36:01,559
+you get, uh, input as this,
+
+935
+00:36:01,628 --> 00:36:03,719
+which is, so in this case, you see, we
+
+936
+00:36:03,719 --> 00:36:05,760
+passed the user prompt assistant
+
+937
+00:36:05,760 --> 00:36:07,978
+response that came from one of the predictions,
+
+938
+00:36:08,398 --> 00:36:10,659
+uh, and then the reference answer, which is
+
+939
+00:36:11,079 --> 00:36:13,199
+sort of our ground truth. So we pass like
+
+940
+00:36:13,199 --> 00:36:14,938
+what type of information is needed.
+
+941
+00:36:15,289 --> 00:36:17,559
+Uh, and what tool you should be calling, what
+
+942
+00:36:17,559 --> 00:36:19,539
+parameters you should be using for that tool,
+
+943
+00:36:20,039 --> 00:36:22,039
+uh, and any reasoning why you picked that
+
+944
+00:36:22,039 --> 00:36:24,179
+tool, uh, and then it
+
+945
+00:36:24,179 --> 00:36:26,519
+returns back, uh, aggregated reward
+
+946
+00:36:26,519 --> 00:36:28,800
+score. Now this is a score that
+
+947
+00:36:28,800 --> 00:36:31,000
+because RFT works on a numerical reward
+
+948
+00:36:31,000 --> 00:36:31,510
+function,
+
+949
+00:36:31,800 --> 00:36:34,079
+so at the end, you have to return a numerical
+
+950
+00:36:34,079 --> 00:36:36,050
+value which it tries to optimize on.
+
+951
+00:36:36,438 --> 00:36:38,809
+So aggregate reward function, uh, is
+
+952
+00:36:38,820 --> 00:36:40,739
+right now is the, uh, weighted average,
+
+953
+00:36:41,010 --> 00:36:42,539
+um, as Hersh mentioned.
+
+954
+00:36:42,889 --> 00:36:45,090
+Uh, on all the metrics that we care
+
+955
+00:36:45,090 --> 00:36:47,128
+about, like, is the right tool being called, is the right
+
+956
+00:36:47,128 --> 00:36:49,168
+parameters being used, is the sequence of
+
+957
+00:36:49,168 --> 00:36:51,530
+the tool correct? Is the adjacent schema passable?
+
+958
+00:36:51,769 --> 00:36:53,769
+And we kind of aggregate that through this
+
+959
+00:36:53,769 --> 00:36:54,750
+weighted average.
+
+960
+00:36:55,090 --> 00:36:55,708
+Um,
+
+961
+00:36:56,050 --> 00:36:57,179
+so yeah, this is, uh,
+
+962
+00:36:57,469 --> 00:36:59,728
+so these are the metrics, uh, default values,
+
+963
+00:36:59,809 --> 00:37:02,050
+0 if some error happens or something.
+
+964
+00:37:02,599 --> 00:37:04,949
+But uh more values if, uh,
+
+965
+00:37:04,958 --> 00:37:07,199
+things are right, uh, and then we capture
+
+966
+00:37:07,199 --> 00:37:09,519
+all the metrics here and the aggregate
+
+967
+00:37:09,519 --> 00:37:11,958
+score at the end as well and
+
+968
+00:37:11,958 --> 00:37:13,378
+we pass the result back,
+
+969
+00:37:13,760 --> 00:37:15,878
+um, so that's, that's pretty much what
+
+970
+00:37:15,878 --> 00:37:17,019
+reward function is doing,
+
+971
+00:37:17,398 --> 00:37:17,918
+uh.
+
+972
+00:37:18,559 --> 00:37:21,199
+The main thing is you should make it gradient,
+
+973
+00:37:21,208 --> 00:37:23,239
+uh, in your reward function. It's, it should
+
+974
+00:37:23,239 --> 00:37:25,668
+not be binary, like plus minus or
+
+975
+00:37:25,668 --> 00:37:26,300
+true false.
+
+976
+00:37:26,570 --> 00:37:28,648
+It should have a gradient like this is good, this
+
+977
+00:37:28,648 --> 00:37:30,309
+is average, this is
+
+978
+00:37:30,769 --> 00:37:31,610
+close to good,
+
+979
+00:37:31,889 --> 00:37:33,909
+so that it uses that information
+
+980
+00:37:33,909 --> 00:37:36,179
+to optimize close to good to closer to
+
+981
+00:37:36,179 --> 00:37:37,050
+the best answer.
+
+982
+00:37:37,898 --> 00:37:39,978
+Um, and the next, we, uh,
+
+983
+00:37:40,099 --> 00:37:42,110
+yeah, create the lambda, push it to,
+
+984
+00:37:42,219 --> 00:37:42,898
+uh, push it,
+
+985
+00:37:43,250 --> 00:37:44,918
+deploy the lambda on AWS
+
+986
+00:37:45,219 --> 00:37:47,300
+and then kick off the RFT. So this is the
+
+987
+00:37:47,300 --> 00:37:48,519
+crux of everything.
+
+988
+00:37:48,829 --> 00:37:50,918
+Uh, so here we are passing the
+
+989
+00:37:51,059 --> 00:37:52,648
+checkpoint, which was trained.
+
+990
+00:37:52,909 --> 00:37:55,219
+We are passing our recipe, uh, we're
+
+991
+00:37:55,219 --> 00:37:57,500
+passing the image URI which is publicly
+
+992
+00:37:57,500 --> 00:38:00,179
+available. We are using P548X,
+
+993
+00:38:00,300 --> 00:38:02,619
+uh, 4 instances are minimum that are needed
+
+994
+00:38:02,619 --> 00:38:03,438
+to run RFT.
+
+995
+00:38:03,938 --> 00:38:05,619
+We'll be using NA Light 2,
+
+996
+00:38:06,179 --> 00:38:07,398
+as the base model.
+
+997
+00:38:07,889 --> 00:38:10,030
+And then we, uh, kick off, uh,
+
+998
+00:38:10,570 --> 00:38:11,168
+RFT job. So,
+
+999
+00:38:11,628 --> 00:38:13,840
+uh, again, the Pytorch estimator call,
+
+1000
+00:38:13,929 --> 00:38:15,099
+very similar to SFT
+
+1001
+00:38:15,889 --> 00:38:18,188
+defining your training, train data, validation
+
+1002
+00:38:18,188 --> 00:38:20,559
+data, starting the dot fit command,
+
+1003
+00:38:20,610 --> 00:38:22,958
+which is basically what will kick off the training.
+
+1004
+00:38:23,168 --> 00:38:25,250
+And you can see the logs, so you can also print the logs
+
+1005
+00:38:25,250 --> 00:38:27,668
+in notebook or you can go to the console,
+
+1006
+00:38:28,010 --> 00:38:30,280
+uh, but you can see the log, start seeing the,
+
+1007
+00:38:30,409 --> 00:38:32,409
+uh, steps that it is training on
+
+1008
+00:38:32,409 --> 00:38:34,449
+and all the, uh, different metrics
+
+1009
+00:38:34,449 --> 00:38:35,510
+that it is capturing.
+
+1010
+00:38:36,010 --> 00:38:38,519
+Um. And this is a screenshot
+
+1011
+00:38:38,519 --> 00:38:40,519
+of like how uh the console
+
+1012
+00:38:40,519 --> 00:38:42,539
+looks like, so you can see it starts training, downloaded
+
+1013
+00:38:42,539 --> 00:38:43,820
+the downloads the image,
+
+1014
+00:38:44,239 --> 00:38:45,500
+and then begins the training.
+
+1015
+00:38:46,599 --> 00:38:48,929
+Uh, next, we capture
+
+1016
+00:38:48,929 --> 00:38:51,090
+the, uh, training results,
+
+1017
+00:38:51,208 --> 00:38:53,360
+uh, because we need to see how the metrics
+
+1018
+00:38:53,360 --> 00:38:54,889
+looks like after RFT.
+
+1019
+00:38:55,449 --> 00:38:56,728
+Uh, so in this, uh,
+
+1020
+00:38:57,239 --> 00:38:59,378
+we get the results, uh, which is the,
+
+1021
+00:38:59,530 --> 00:39:01,530
+uh, stepwise training metrics to
+
+1022
+00:39:01,530 --> 00:39:03,869
+see how the training is doing.
+
+1023
+00:39:04,449 --> 00:39:06,489
+And this is a screenshot of, uh,
+
+1024
+00:39:06,849 --> 00:39:10,050
+a previous run that I did. Instead of 55
+
+1025
+00:39:10,050 --> 00:39:12,090
+steps, I did 150 steps just to
+
+1026
+00:39:12,090 --> 00:39:14,208
+see how much it can be, I can stretch it.
+
+1027
+00:39:14,708 --> 00:39:16,800
+Um, and then I looked at the
+
+1028
+00:39:16,800 --> 00:39:19,099
+train reward function, train reward metric,
+
+1029
+00:39:19,148 --> 00:39:21,329
+which is the key metric that we should be looking
+
+1030
+00:39:21,329 --> 00:39:23,579
+for RFT, like, how is our reward
+
+1031
+00:39:23,579 --> 00:39:25,708
+improving? We want to see a gradual
+
+1032
+00:39:25,708 --> 00:39:28,030
+increase in reward from like a low value
+
+1033
+00:39:28,030 --> 00:39:30,099
+to going as high as close to one,
+
+1034
+00:39:30,349 --> 00:39:32,519
+and that indicates that model is learning as
+
+1035
+00:39:32,519 --> 00:39:34,668
+the cycles are going through and the reward
+
+1036
+00:39:34,668 --> 00:39:35,329
+is improving.
+
+1037
+00:39:36,070 --> 00:39:38,208
+Um, so in this, we see,
+
+1038
+00:39:38,228 --> 00:39:41,309
+uh, a, a decent lift from like 0.81
+
+1039
+00:39:41,309 --> 00:39:44,090
+or 8.2 to 0.8586,
+
+1040
+00:39:44,340 --> 00:39:46,389
+uh, in a gradual increase. It even reaches
+
+1041
+00:39:46,389 --> 00:39:48,389
+0.9 in some cases. And that
+
+1042
+00:39:48,389 --> 00:39:50,590
+is closely correlated to the Eval
+
+1043
+00:39:50,590 --> 00:39:52,750
+metrics. Um, so what we were seeing
+
+1044
+00:39:52,750 --> 00:39:54,869
+on SFT which was
+
+1045
+00:39:54,869 --> 00:39:56,469
+around 74, 75.
+
+1046
+00:39:56,789 --> 00:39:59,039
+It's now reaching around 88, 89
+
+1047
+00:39:59,039 --> 00:39:59,898
+after RFT.
+
+1048
+00:40:00,320 --> 00:40:02,668
+So that, that gives confidence that reward
+
+1049
+00:40:02,668 --> 00:40:04,760
+functions are increasing, um, and
+
+1050
+00:40:04,760 --> 00:40:06,760
+we also see the, the entropy is
+
+1051
+00:40:06,760 --> 00:40:08,978
+reducing so it's getting more deterministic,
+
+1052
+00:40:09,360 --> 00:40:10,340
+uh, as well.
+
+1053
+00:40:11,539 --> 00:40:13,579
+And then how we evaluate, we again,
+
+1054
+00:40:13,699 --> 00:40:15,809
+do two evaluations, one,
+
+1055
+00:40:17,579 --> 00:40:19,958
+on the base model RFT and then second
+
+1056
+00:40:19,958 --> 00:40:22,208
+on post SFT post RFT,
+
+1057
+00:40:22,458 --> 00:40:23,219
+uh, eval.
+
+1058
+00:40:23,849 --> 00:40:26,168
+So, again, the recipe looks like this
+
+1059
+00:40:26,168 --> 00:40:28,429
+for RFT eval. You, you can define
+
+1060
+00:40:28,429 --> 00:40:29,969
+your inference parameters.
+
+1061
+00:40:30,449 --> 00:40:33,128
+One cool thing is that it also supports log probabilities.
+
+1062
+00:40:33,250 --> 00:40:35,688
+So you can actually get probabilities of
+
+1063
+00:40:35,688 --> 00:40:37,728
+tokens that are being predicted, and you can use that
+
+1064
+00:40:37,728 --> 00:40:38,750
+to calibrate your
+
+1065
+00:40:39,128 --> 00:40:41,168
+answers, or if you have a classifier, you
+
+1066
+00:40:41,168 --> 00:40:43,208
+can use that to calibrate what's your precision
+
+1067
+00:40:43,208 --> 00:40:44,550
+recall boundary is.
+
+1068
+00:40:45,079 --> 00:40:47,079
+And then in your RL environment, here
+
+1069
+00:40:47,079 --> 00:40:49,199
+I'm passing that lambda function that would
+
+1070
+00:40:49,199 --> 00:40:50,860
+be used, um,
+
+1071
+00:40:51,360 --> 00:40:53,360
+for evaluation as well, which is the same
+
+1072
+00:40:53,360 --> 00:40:54,739
+as the reward function.
+
+1073
+00:40:55,309 --> 00:40:55,918
+Um,
+
+1074
+00:40:56,199 --> 00:40:58,239
+so yeah, so I basically kick off
+
+1075
+00:40:58,239 --> 00:41:00,559
+the Pytorch, I overwrite those parameters
+
+1076
+00:41:00,559 --> 00:41:02,239
+because my reward function
+
+1077
+00:41:02,519 --> 00:41:04,478
+right now is just a random string here.
+
+1078
+00:41:04,760 --> 00:41:07,668
+So I'm overriding it with actual on of my lambda
+
+1079
+00:41:07,668 --> 00:41:09,978
+function, and I'm passing the final checkpoint
+
+1080
+00:41:09,978 --> 00:41:10,599
+that I got.
+
+1081
+00:41:11,070 --> 00:41:13,239
+So this is post SFT eval, which is
+
+1082
+00:41:13,239 --> 00:41:15,168
+similar to what has showed as well.
+
+1083
+00:41:15,458 --> 00:41:17,610
+And then this is post RFT
+
+1084
+00:41:17,610 --> 00:41:18,179
+eval.
+
+1085
+00:41:19,159 --> 00:41:21,559
+So next, what we do is we again unpack
+
+1086
+00:41:21,559 --> 00:41:23,599
+the post-eval results, uh,
+
+1087
+00:41:23,679 --> 00:41:25,300
+and we kind of
+
+1088
+00:41:25,559 --> 00:41:27,639
+find like, it's, it comes in a dictionary,
+
+1089
+00:41:27,719 --> 00:41:28,829
+it's a JSON file.
+
+1090
+00:41:29,188 --> 00:41:31,398
+So we get these custom metrics from there
+
+1091
+00:41:31,398 --> 00:41:33,438
+that we were calculating in
+
+1092
+00:41:33,438 --> 00:41:34,860
+reward function as well,
+
+1093
+00:41:35,119 --> 00:41:37,119
+uh, and create a dictionary so that we
+
+1094
+00:41:37,119 --> 00:41:39,239
+can compare, uh, in like a
+
+1095
+00:41:39,239 --> 00:41:41,438
+matPlotlib using the data frame
+
+1096
+00:41:41,438 --> 00:41:43,260
+that we loaded from the last call.
+
+1097
+00:41:43,739 --> 00:41:45,898
+So this was, this is how we see it. Like
+
+1098
+00:41:45,898 --> 00:41:47,898
+the base model was 0.44 on this
+
+1099
+00:41:47,898 --> 00:41:50,289
+task, fine-tune, made it 74,
+
+1100
+00:41:50,579 --> 00:41:52,099
+RFT made it around 90.
+
+1101
+00:41:52,418 --> 00:41:54,458
+So that progression
+
+1102
+00:41:54,458 --> 00:41:56,458
+tells us that it is improving,
+
+1103
+00:41:56,500 --> 00:41:58,500
+uh, if the RFT is introduced at
+
+1104
+00:41:58,500 --> 00:42:00,300
+a later cycle than SFT.
+
+1105
+00:42:00,699 --> 00:42:02,760
+We also tried to switch this up, like doing
+
+1106
+00:42:02,760 --> 00:42:04,978
+RFT only on the base model
+
+1107
+00:42:04,978 --> 00:42:07,139
+instead of doing SFT first, and we didn't
+
+1108
+00:42:07,139 --> 00:42:09,500
+see that good results on that. And that indicated
+
+1109
+00:42:09,500 --> 00:42:11,860
+that SFT is actually helping
+
+1110
+00:42:11,860 --> 00:42:12,478
+with RFT.
+
+1111
+00:42:12,969 --> 00:42:15,030
+Uh, because SFT is getting
+
+1112
+00:42:15,030 --> 00:42:17,050
+the basics right, getting the formatting right,
+
+1113
+00:42:17,199 --> 00:42:19,208
+Jason's schema right, all that, and then
+
+1114
+00:42:19,208 --> 00:42:21,250
+RFT is improving the quality of the
+
+1115
+00:42:21,250 --> 00:42:22,789
+parameters that are being predicted.
+
+1116
+00:42:24,320 --> 00:42:26,559
+This is more results on a different valid,
+
+1117
+00:42:26,599 --> 00:42:29,019
+like different metrics. This is only on overall
+
+1118
+00:42:29,019 --> 00:42:31,199
+score. That is what we care about, but these are
+
+1119
+00:42:31,199 --> 00:42:32,378
+the submetrics,
+
+1120
+00:42:32,719 --> 00:42:35,000
+uh, and where we see it failing
+
+1121
+00:42:35,000 --> 00:42:37,159
+the most, or we can still continue
+
+1122
+00:42:37,159 --> 00:42:37,780
+doing it,
+
+1123
+00:42:38,079 --> 00:42:39,519
+the failure analysis on it.
+
+1124
+00:42:39,969 --> 00:42:42,280
+Improving our RFT data to
+
+1125
+00:42:42,280 --> 00:42:44,369
+see, uh, further improvements if we
+
+1126
+00:42:44,369 --> 00:42:46,519
+want. But that, that gives a good, uh,
+
+1127
+00:42:46,530 --> 00:42:47,789
+indication of how
+
+1128
+00:42:48,289 --> 00:42:50,369
+you should be doing, like starting
+
+1129
+00:42:50,369 --> 00:42:52,300
+with your base model eval, SFT
+
+1130
+00:42:52,809 --> 00:42:54,659
+and then post, uh SFT RFT,
+
+1131
+00:42:55,489 --> 00:42:57,570
+um, but the good part is like you can keep
+
+1132
+00:42:57,570 --> 00:42:59,639
+continuing these iterative loops, so you can
+
+1133
+00:42:59,639 --> 00:43:01,929
+keep building on top of a previous
+
+1134
+00:43:01,929 --> 00:43:04,128
+checkpoint and saving that checkpoint,
+
+1135
+00:43:04,208 --> 00:43:06,250
+evaluating that, and then building on
+
+1136
+00:43:06,250 --> 00:43:06,929
+top of it.
+
+1137
+00:43:07,289 --> 00:43:07,898
+Um.
+
+1138
+00:43:08,449 --> 00:43:10,530
+The last notebook that I wanted to
+
+1139
+00:43:10,530 --> 00:43:12,590
+show is the deployment.
+
+1140
+00:43:12,728 --> 00:43:14,349
+Now that we have the
+
+1141
+00:43:15,208 --> 00:43:17,329
+final checkpoint, so final checkpoint goes as
+
+1142
+00:43:17,329 --> 00:43:19,369
+a S3 URI. So you don't get the
+
+1143
+00:43:19,369 --> 00:43:21,449
+model model itself, you just get a S3
+
+1144
+00:43:21,449 --> 00:43:23,610
+URI. If I can find
+
+1145
+00:43:23,610 --> 00:43:25,648
+an example here, let
+
+1146
+00:43:25,648 --> 00:43:27,010
+me show, uh.
+
+1147
+00:43:29,059 --> 00:43:30,369
+So, um,
+
+1148
+00:43:30,809 --> 00:43:32,849
+yeah, this is the checkpoint S3 bucket that
+
+1149
+00:43:32,849 --> 00:43:33,949
+gets loaded, but
+
+1150
+00:43:34,289 --> 00:43:37,090
+I can find, let's see, uh,
+
+1151
+00:43:45,489 --> 00:43:47,619
+Yeah, like, for example, this is an example of
+
+1152
+00:43:47,619 --> 00:43:49,340
+how a checkpoint would look like.
+
+1153
+00:43:49,659 --> 00:43:51,699
+This is a bucket, which you will not have
+
+1154
+00:43:51,699 --> 00:43:53,519
+access. It's a service-side bucket, but
+
+1155
+00:43:54,219 --> 00:43:56,539
+that checkpoint is, can be accessed
+
+1156
+00:43:56,539 --> 00:43:58,780
+through the IM policy that you will be using.
+
+1157
+00:43:59,280 --> 00:44:01,559
+So, uh, this checkpoint is now our task
+
+1158
+00:44:01,559 --> 00:44:03,878
+is to take this final S3 checkpoint
+
+1159
+00:44:03,878 --> 00:44:05,878
+for after RFT and somehow
+
+1160
+00:44:05,878 --> 00:44:08,079
+move it to Bedrock so that we can make inference
+
+1161
+00:44:08,079 --> 00:44:10,320
+calls. And that is done
+
+1162
+00:44:10,320 --> 00:44:12,829
+through two Bedrock functions. So,
+
+1163
+00:44:12,840 --> 00:44:15,300
+basically, what we will do is, first, we will,
+
+1164
+00:44:15,619 --> 00:44:17,659
+Make the, export the model
+
+1165
+00:44:17,659 --> 00:44:19,679
+from S3 checkpoint to Bedrock.
+
+1166
+00:44:20,099 --> 00:44:22,239
+So with that, we will use the
+
+1167
+00:44:22,239 --> 00:44:24,500
+create custom model API which will
+
+1168
+00:44:24,500 --> 00:44:26,438
+move the model to Bedrock.
+
+1169
+00:44:26,800 --> 00:44:28,898
+We will monitor the status of it once
+
+1170
+00:44:28,898 --> 00:44:31,139
+it is active, that means the model is deployed
+
+1171
+00:44:31,139 --> 00:44:31,898
+on Bedrock.
+
+1172
+00:44:32,309 --> 00:44:34,090
+And then we will make it, uh,
+
+1173
+00:44:34,478 --> 00:44:36,510
+the second call, which is using
+
+1174
+00:44:36,510 --> 00:44:38,030
+create custom model deployment.
+
+1175
+00:44:38,309 --> 00:44:40,570
+Now, this will use on-demand inference
+
+1176
+00:44:40,570 --> 00:44:42,909
+and basically create an inference endpoint
+
+1177
+00:44:42,909 --> 00:44:44,949
+for you of your custom model to
+
+1178
+00:44:44,949 --> 00:44:46,530
+hit, start hitting on Bedrock.
+
+1179
+00:44:46,989 --> 00:44:48,849
+Um, and this is, again, uh,
+
+1180
+00:44:49,188 --> 00:44:51,260
+because we use Loa across the thing,
+
+1181
+00:44:51,269 --> 00:44:53,550
+like we did SFT on parameter efficient,
+
+1182
+00:44:53,628 --> 00:44:55,869
+we did RFT also on parameter efficient.
+
+1183
+00:44:56,309 --> 00:44:58,378
+Uh, we can use on-demand inference,
+
+1184
+00:44:58,478 --> 00:45:00,679
+uh, because everything was on adapter only,
+
+1185
+00:45:00,878 --> 00:45:03,260
+so it can reuse the same hardware, um,
+
+1186
+00:45:03,639 --> 00:45:06,070
+yeah. And then we finally
+
+1187
+00:45:06,070 --> 00:45:08,250
+see the model in Bedrock, which is now,
+
+1188
+00:45:08,269 --> 00:45:10,550
+um, hosted and it can be
+
+1189
+00:45:10,550 --> 00:45:12,070
+made to hit publicly,
+
+1190
+00:45:12,349 --> 00:45:13,989
+uh, through your AWS account.
+
+1191
+00:45:14,269 --> 00:45:16,510
+So how do we change, uh, code
+
+1192
+00:45:16,510 --> 00:45:18,750
+when we are making the inference call? It's basically
+
+1193
+00:45:18,750 --> 00:45:19,708
+one line of change.
+
+1194
+00:45:20,030 --> 00:45:22,110
+So this is a converse API which all
+
+1195
+00:45:22,110 --> 00:45:23,369
+you might be familiar with.
+
+1196
+00:45:23,949 --> 00:45:26,019
+Here, I'm passing the model ID as
+
+1197
+00:45:26,019 --> 00:45:28,409
+base model, which is Nova Light 2, and
+
+1198
+00:45:28,510 --> 00:45:30,510
+I just get some random results of
+
+1199
+00:45:30,510 --> 00:45:32,820
+like. Explanation, which is useless
+
+1200
+00:45:32,820 --> 00:45:34,938
+to me because I was asking it to be structured
+
+1201
+00:45:34,938 --> 00:45:37,030
+output. And then
+
+1202
+00:45:37,030 --> 00:45:37,610
+I,
+
+1203
+00:45:37,949 --> 00:45:40,070
+uh, did the same call, but this time
+
+1204
+00:45:40,070 --> 00:45:42,070
+I passed the deployed model ID which
+
+1205
+00:45:42,070 --> 00:45:44,469
+is the ARN of the on-demand
+
+1206
+00:45:44,469 --> 00:45:46,500
+inference that I got from the previous call.
+
+1207
+00:45:46,949 --> 00:45:49,030
+And here, I get much structured
+
+1208
+00:45:49,030 --> 00:45:51,148
+answer with the right, with the right tools
+
+1209
+00:45:51,148 --> 00:45:53,389
+being called, like the statute retrieval
+
+1210
+00:45:53,389 --> 00:45:54,809
+and then compliance checker.
+
+1211
+00:45:55,918 --> 00:45:58,000
+So that indicates to me that the model has
+
+1212
+00:45:58,000 --> 00:46:00,648
+learned and it's improving its accuracy
+
+1213
+00:46:00,648 --> 00:46:01,688
+from the base model.
+
+1214
+00:46:02,320 --> 00:46:04,320
+Uh, so that's pretty much it. What we wanted
+
+1215
+00:46:04,320 --> 00:46:06,378
+to cover end to end from data prep
+
+1216
+00:46:06,378 --> 00:46:09,059
+to SFT to RFT and then deployment.
+
+1217
+00:46:09,559 --> 00:46:11,760
+Um, we're open for questions
+
+1218
+00:46:11,760 --> 00:46:13,300
+if anybody has any.
+
+1219
+00:46:13,728 --> 00:46:15,840
+Yeah, we'd love to talk about the use cases that you
+
+1220
+00:46:15,840 --> 00:46:17,840
+have as well since we have some time, uh, if
+
+1221
+00:46:17,840 --> 00:46:19,559
+you wanted to discuss those, but yeah.
+
+1222
+00:46:22,030 --> 00:46:24,219
+Awesome. Cool. If
+
+1223
+00:46:24,219 --> 00:46:26,219
+there are no further questions, you can scan
+
+1224
+00:46:26,219 --> 00:46:27,760
+and, uh, give, uh,
+
+1225
+00:46:28,300 --> 00:46:30,349
+free ratings or whatever it's, what it's called
+
+1226
+00:46:32,030 --> 00:46:34,340
+CA CA, yeah, so you can give it. So
+
+1227
+00:46:34,340 --> 00:46:34,898
+yeah, but
+
+1228
+00:46:35,179 --> 00:46:37,039
+thanks, thanks for attending the talk.
+
+1229
+00:46:39,228 --> 00:46:41,438
+And we'll be hanging out here. So if you have any questions,
+
+1230
+00:46:41,639 --> 00:46:42,168
+thank you.
+

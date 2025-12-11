@@ -1,0 +1,5456 @@
+1
+00:00:01,620 --> 00:00:02,880
+- All right, welcome everybody.
+
+2
+00:00:02,880 --> 00:00:04,980
+My name is Sohaib Katariwala.
+
+3
+00:00:04,980 --> 00:00:06,930
+I'm a senior OpenSearch specialist SA
+
+4
+00:00:06,930 --> 00:00:08,700
+with Amazon OpenSearch Service.
+
+5
+00:00:08,700 --> 00:00:10,350
+And joining me today is-
+
+6
+00:00:10,350 --> 00:00:11,610
+- Hey, I'm Joshua Bright,
+
+7
+00:00:11,610 --> 00:00:14,430
+product manager within the
+OpenSearch Service team.
+
+8
+00:00:14,430 --> 00:00:16,230
+- And today, we're gonna be talking about
+
+9
+00:00:16,230 --> 00:00:18,420
+intelligent observability
+and modernization
+
+10
+00:00:18,420 --> 00:00:20,910
+with Amazon OpenSearch Service.
+
+11
+00:00:20,910 --> 00:00:23,550
+So the takeaways for today's
+session are gonna be,
+
+12
+00:00:23,550 --> 00:00:25,860
+first, we're gonna start a
+little bit about, you know,
+
+13
+00:00:25,860 --> 00:00:28,710
+just using Amazon OpenSearch
+Service for observability.
+
+14
+00:00:28,710 --> 00:00:31,080
+Then we're gonna go into
+the new analytic features
+
+15
+00:00:31,080 --> 00:00:33,060
+that have been launched
+over the past year.
+
+16
+00:00:33,060 --> 00:00:34,680
+And then finally, we're gonna talk about
+
+17
+00:00:34,680 --> 00:00:35,890
+agentic AI for observability.
+
+18
+00:00:35,890 --> 00:00:38,640
+So you want to make sure you
+stick around for that one.
+
+19
+00:00:39,870 --> 00:00:42,485
+But before we dive into
+the technical details,
+
+20
+00:00:42,485 --> 00:00:45,060
+let's first talk about Any Company,
+
+21
+00:00:45,060 --> 00:00:46,440
+a fictional company.
+
+22
+00:00:46,440 --> 00:00:50,040
+Any Company is a fast
+growing e-commerce platform
+
+23
+00:00:50,040 --> 00:00:52,170
+that helps small and medium businesses
+
+24
+00:00:52,170 --> 00:00:54,570
+create their own marketplaces.
+
+25
+00:00:54,570 --> 00:00:56,195
+And the goal is it they're starting
+
+26
+00:00:56,195 --> 00:00:58,050
+to become more and more popular
+
+27
+00:00:58,050 --> 00:01:01,080
+with businesses looking to
+compete with major retailers.
+
+28
+00:01:01,080 --> 00:01:02,460
+They have an architecture
+
+29
+00:01:02,460 --> 00:01:05,730
+that contains of modern microservices.
+
+30
+00:01:05,730 --> 00:01:07,800
+So their front end is React based
+
+31
+00:01:07,800 --> 00:01:10,530
+with a customer portal
+and a vendor dashboard.
+
+32
+00:01:10,530 --> 00:01:13,890
+Their backend services are
+order and payment management,
+
+33
+00:01:13,890 --> 00:01:16,080
+and inventory management
+authentication, et cetera,
+
+34
+00:01:16,080 --> 00:01:17,507
+as you might have.
+
+35
+00:01:17,507 --> 00:01:20,670
+And then their infrastructure
+is containerized services
+
+36
+00:01:20,670 --> 00:01:23,010
+on AWS using EKS.
+
+37
+00:01:23,010 --> 00:01:25,110
+And they are also using databases
+
+38
+00:01:25,110 --> 00:01:29,223
+like RDS and DynamoDB for
+their databases, okay?
+
+39
+00:01:30,090 --> 00:01:33,510
+But they have some challenges
+with this architecture.
+
+40
+00:01:33,510 --> 00:01:36,510
+Number one, we're gonna call
+microservices complexity.
+
+41
+00:01:36,510 --> 00:01:38,790
+This is where Any Company's
+distributed architecture
+
+42
+00:01:38,790 --> 00:01:40,770
+creates some visibility challenges
+
+43
+00:01:40,770 --> 00:01:43,620
+across lots of microservices
+that they have.
+
+44
+00:01:43,620 --> 00:01:47,370
+When checkout failures
+spike during flash sales,
+
+45
+00:01:47,370 --> 00:01:49,470
+teams are struggling to find
+
+46
+00:01:49,470 --> 00:01:52,320
+whether it's a payment
+service that has the issue
+
+47
+00:01:52,320 --> 00:01:54,630
+or the inventory service that has an issue
+
+48
+00:01:54,630 --> 00:01:57,120
+or some sort of connectivity, right?
+
+49
+00:01:57,120 --> 00:01:59,250
+So that's the microservices complexity
+
+50
+00:01:59,250 --> 00:02:00,990
+that the first challenge is.
+
+51
+00:02:00,990 --> 00:02:04,020
+The second one we're gonna
+call data pipeline chaos.
+
+52
+00:02:04,020 --> 00:02:06,784
+So with multiple data
+sources and databases
+
+53
+00:02:06,784 --> 00:02:10,200
+and data formats from
+different services coming in,
+
+54
+00:02:10,200 --> 00:02:13,650
+the administrators and engineers
+face constant challenges,
+
+55
+00:02:13,650 --> 00:02:16,350
+making sure the pipelines are calibrated
+
+56
+00:02:16,350 --> 00:02:19,290
+and they're performing up to par.
+
+57
+00:02:19,290 --> 00:02:22,200
+The third is developer productivity.
+
+58
+00:02:22,200 --> 00:02:25,041
+So DevOps teams spend hours manually
+
+59
+00:02:25,041 --> 00:02:28,020
+looking through logs
+and correlating issues
+
+60
+00:02:28,020 --> 00:02:30,150
+across traces and metrics,
+
+61
+00:02:30,150 --> 00:02:32,340
+and they need to write complex queries
+
+62
+00:02:32,340 --> 00:02:33,840
+to understand what's going on,
+
+63
+00:02:33,840 --> 00:02:36,090
+to build some custom visualizations
+
+64
+00:02:36,090 --> 00:02:37,320
+for the different stakeholders
+
+65
+00:02:37,320 --> 00:02:38,490
+that want to know what's going on
+
+66
+00:02:38,490 --> 00:02:40,887
+across our different applications.
+
+67
+00:02:40,887 --> 00:02:42,060
+And so it takes a lot of time
+
+68
+00:02:42,060 --> 00:02:43,860
+for these developers to be productive.
+
+69
+00:02:43,860 --> 00:02:46,950
+And then finally, cost management, right?
+
+70
+00:02:46,950 --> 00:02:49,703
+This is where the
+observability data volume
+
+71
+00:02:49,703 --> 00:02:52,470
+continues to grow and explode
+
+72
+00:02:52,470 --> 00:02:53,863
+as with many customers.
+
+73
+00:02:53,863 --> 00:02:57,900
+For the past year, it's grown
+over 300% for Any Company.
+
+74
+00:02:57,900 --> 00:02:59,910
+And they're continuing to scale,
+
+75
+00:02:59,910 --> 00:03:01,650
+which makes traditional monitoring
+
+76
+00:03:01,650 --> 00:03:03,561
+solutions cost prohibitive.
+
+77
+00:03:03,561 --> 00:03:05,760
+Are any of you facing
+any similar challenges
+
+78
+00:03:05,760 --> 00:03:07,113
+in your organization?
+
+79
+00:03:09,360 --> 00:03:11,430
+I see some hands and some head shaking.
+
+80
+00:03:11,430 --> 00:03:13,710
+So this is what we hear from
+a lot of our customers, right?
+
+81
+00:03:13,710 --> 00:03:15,300
+So we've kind of compiled these things
+
+82
+00:03:15,300 --> 00:03:17,460
+from all the customer
+conversations that we have,
+
+83
+00:03:17,460 --> 00:03:18,360
+and we're representing it
+
+84
+00:03:18,360 --> 00:03:21,480
+through this fictional
+company called Any Company.
+
+85
+00:03:21,480 --> 00:03:25,320
+Now what we see is the common challenges
+
+86
+00:03:25,320 --> 00:03:27,240
+that customers tell us every day,
+
+87
+00:03:27,240 --> 00:03:28,560
+most modern applications,
+
+88
+00:03:28,560 --> 00:03:31,439
+like the e-commerce platform
+that Any Company has,
+
+89
+00:03:31,439 --> 00:03:32,820
+are distributed across
+
+90
+00:03:32,820 --> 00:03:34,380
+many, many services and microservices,
+
+91
+00:03:34,380 --> 00:03:36,230
+as you can see in the diagram.
+
+92
+00:03:36,230 --> 00:03:39,341
+And with these many
+services and microservices,
+
+93
+00:03:39,341 --> 00:03:42,569
+the visibility into them
+can be extremely low,
+
+94
+00:03:42,569 --> 00:03:45,410
+especially for inter
+microservice interactions
+
+95
+00:03:45,410 --> 00:03:48,235
+and interaction with other AWS services.
+
+96
+00:03:48,235 --> 00:03:51,540
+When any companies
+check out failures spike
+
+97
+00:03:51,540 --> 00:03:54,780
+during their Black Friday traffic surge,
+
+98
+00:03:54,780 --> 00:03:57,060
+their engineering team was left wondering
+
+99
+00:03:57,060 --> 00:03:58,020
+what was the issue?
+
+100
+00:03:58,020 --> 00:04:00,510
+Was it a bug in the checkout service?
+
+101
+00:04:00,510 --> 00:04:01,835
+Was it a payment,API failure?
+
+102
+00:04:01,835 --> 00:04:04,470
+Was it a database connectivity issue?
+
+103
+00:04:04,470 --> 00:04:05,790
+What's really going on?
+
+104
+00:04:05,790 --> 00:04:09,359
+And the reality is that these
+decoupled code and services
+
+105
+00:04:09,359 --> 00:04:11,433
+are really, really hard to diagnose.
+
+106
+00:04:12,900 --> 00:04:17,730
+So each of Any Company's
+components emit some signals
+
+107
+00:04:17,730 --> 00:04:20,850
+through logs, metrics and
+traces also called telemetry,
+
+108
+00:04:20,850 --> 00:04:23,135
+and their checkout service logs errors,
+
+109
+00:04:23,135 --> 00:04:24,360
+payment service tracks,
+
+110
+00:04:24,360 --> 00:04:26,460
+transaction metrics, et cetera, et cetera.
+
+111
+00:04:26,460 --> 00:04:28,499
+And this is creating, you know,
+
+112
+00:04:28,499 --> 00:04:31,020
+a lot of different signals
+
+113
+00:04:31,020 --> 00:04:33,690
+and having to manually correlate
+
+114
+00:04:33,690 --> 00:04:36,210
+and find the needle in the haystack
+
+115
+00:04:36,210 --> 00:04:37,470
+becomes very challenging.
+
+116
+00:04:37,470 --> 00:04:41,160
+And this is where teams
+get stuck during a crisis.
+
+117
+00:04:41,160 --> 00:04:42,630
+Recently, for example,
+
+118
+00:04:42,630 --> 00:04:44,850
+Any Company's main website went down
+
+119
+00:04:44,850 --> 00:04:47,730
+and engineers had to
+manually grip their logs
+
+120
+00:04:47,730 --> 00:04:49,440
+and spent hours trying to find
+
+121
+00:04:49,440 --> 00:04:53,040
+what was happening across
+their distributed system.
+
+122
+00:04:53,040 --> 00:04:55,800
+And so to remediate these
+failures effectively,
+
+123
+00:04:55,800 --> 00:04:57,600
+you need analysis of interactions
+
+124
+00:04:57,600 --> 00:05:01,200
+and code across all these
+distributed components.
+
+125
+00:05:01,200 --> 00:05:05,010
+This is where a unified
+observability becomes critical,
+
+126
+00:05:05,010 --> 00:05:08,554
+and where a comprehensive
+observability solution transforms
+
+127
+00:05:08,554 --> 00:05:13,554
+how Any Company's teams
+can monitor, troubleshoot,
+
+128
+00:05:13,923 --> 00:05:17,313
+and optimize their modern
+cloud native applications.
+
+129
+00:05:19,200 --> 00:05:21,300
+So what is an observability platform
+
+130
+00:05:21,300 --> 00:05:23,280
+and why is it useful?
+
+131
+00:05:23,280 --> 00:05:25,189
+Just to recap, an observability platform
+
+132
+00:05:25,189 --> 00:05:28,500
+collects information
+from your entire system
+
+133
+00:05:28,500 --> 00:05:31,410
+in real time to help find
+
+134
+00:05:31,410 --> 00:05:35,610
+and resolve the unexpected
+or unknown issues.
+
+135
+00:05:35,610 --> 00:05:38,070
+It helps the builders and administrators
+
+136
+00:05:38,070 --> 00:05:42,960
+efficiently detect, investigate,
+and remediate issues.
+
+137
+00:05:42,960 --> 00:05:46,260
+So usually this is done by
+creating insights over telemetry,
+
+138
+00:05:46,260 --> 00:05:49,200
+such as metrics, logs, and traces.
+
+139
+00:05:49,200 --> 00:05:51,660
+And an observability platform
+
+140
+00:05:51,660 --> 00:05:53,010
+offers developers the ability
+
+141
+00:05:53,010 --> 00:05:55,200
+to understand the applications better
+
+142
+00:05:55,200 --> 00:05:57,690
+and tools to analyze root causes
+
+143
+00:05:57,690 --> 00:05:59,220
+in the event of failures.
+
+144
+00:05:59,220 --> 00:06:02,100
+And as you know, it's
+a very, very important
+
+145
+00:06:02,100 --> 00:06:03,990
+part of a workload.
+
+146
+00:06:03,990 --> 00:06:06,330
+Just like other things such as scalability
+
+147
+00:06:06,330 --> 00:06:07,560
+and loose coupling,
+
+148
+00:06:07,560 --> 00:06:09,760
+observability is very
+critical to get right.
+
+149
+00:06:11,430 --> 00:06:15,982
+So AWS, as a whole, provides
+many choices in monitoring
+
+150
+00:06:15,982 --> 00:06:19,920
+and observability services
+that you can use to collect,
+
+151
+00:06:19,920 --> 00:06:23,400
+to store, to investigate an alarm on data
+
+152
+00:06:23,400 --> 00:06:26,040
+from your infrastructure
+and your applications.
+
+153
+00:06:26,040 --> 00:06:28,170
+And together these services
+compliment each other
+
+154
+00:06:28,170 --> 00:06:30,540
+by providing insights and analytics
+
+155
+00:06:30,540 --> 00:06:34,500
+using predefined instrumentation
+and visualizations.
+
+156
+00:06:34,500 --> 00:06:36,780
+For example, Amazon CloudWatch,
+
+157
+00:06:36,780 --> 00:06:38,100
+which you can see there is a service
+
+158
+00:06:38,100 --> 00:06:39,660
+that monitors applications
+
+159
+00:06:39,660 --> 00:06:41,699
+and responds to performance changes.
+
+160
+00:06:41,699 --> 00:06:44,700
+It optimizes resource use.
+
+161
+00:06:44,700 --> 00:06:46,495
+It's really useful for simpler
+
+162
+00:06:46,495 --> 00:06:48,300
+real time performance monitoring
+
+163
+00:06:48,300 --> 00:06:50,730
+of your AWS environment.
+
+164
+00:06:50,730 --> 00:06:53,640
+And then you also see Amazon
+managed service for Prometheus,
+
+165
+00:06:53,640 --> 00:06:57,150
+which is a managed monitoring
+and alerting service,
+
+166
+00:06:57,150 --> 00:07:00,330
+which provides data
+and actionable insights
+
+167
+00:07:00,330 --> 00:07:03,397
+for container environments
+that are deployed at scale.
+
+168
+00:07:03,397 --> 00:07:05,820
+And then you also see
+Amazon OpenSearch Service,
+
+169
+00:07:05,820 --> 00:07:08,160
+which allows for deep log analysis
+
+170
+00:07:08,160 --> 00:07:12,720
+for complex search needs across
+logs, metrics and traces,
+
+171
+00:07:12,720 --> 00:07:15,333
+especially for longer
+term data storage needs.
+
+172
+00:07:16,230 --> 00:07:17,670
+So as you've heard,
+
+173
+00:07:17,670 --> 00:07:20,790
+Any Company has a very complex tech stack
+
+174
+00:07:20,790 --> 00:07:21,780
+with many components
+
+175
+00:07:21,780 --> 00:07:24,600
+that require deeper analysis capabilities,
+
+176
+00:07:24,600 --> 00:07:26,760
+and they require longer term storage.
+
+177
+00:07:26,760 --> 00:07:28,920
+And this is what makes
+Amazon OpenSearch Service
+
+178
+00:07:28,920 --> 00:07:30,423
+a great fit for Any Company.
+
+179
+00:07:32,130 --> 00:07:34,050
+So today, of course, we're going to focus
+
+180
+00:07:34,050 --> 00:07:38,520
+on achieving a world-class
+level of data-driven insights
+
+181
+00:07:38,520 --> 00:07:40,410
+using Amazon OpenSearch Service,
+
+182
+00:07:40,410 --> 00:07:43,710
+and all the exciting new enhancements
+
+183
+00:07:43,710 --> 00:07:45,540
+and features that have been launched
+
+184
+00:07:45,540 --> 00:07:48,660
+that make achieving this
+full stack observability
+
+185
+00:07:48,660 --> 00:07:50,370
+easier than ever.
+
+186
+00:07:50,370 --> 00:07:53,700
+So OpenSearch itself is a community-driven
+
+187
+00:07:53,700 --> 00:07:57,330
+open source platform, which
+is extremely versatile
+
+188
+00:07:57,330 --> 00:08:00,287
+and covers lots of use cases
+that include lexical search,
+
+189
+00:08:00,287 --> 00:08:02,850
+vector search, semantic search,
+
+190
+00:08:02,850 --> 00:08:05,571
+and then they also include observability.
+
+191
+00:08:05,571 --> 00:08:07,503
+And thousands of
+customers trust OpenSearch
+
+192
+00:08:07,503 --> 00:08:09,570
+with their production workloads.
+
+193
+00:08:09,570 --> 00:08:11,580
+In 2024 and 2025,
+
+194
+00:08:11,580 --> 00:08:14,100
+OpenSearch Software Foundation
+
+195
+00:08:14,100 --> 00:08:17,460
+has become a project of
+the Linux Foundation now.
+
+196
+00:08:17,460 --> 00:08:20,790
+So this is to foster an open collaboration
+
+197
+00:08:20,790 --> 00:08:23,520
+for search analytics and observability.
+
+198
+00:08:23,520 --> 00:08:26,410
+And as you can see, many
+companies have already
+
+199
+00:08:26,410 --> 00:08:28,420
+joined the project that
+you can see listed there
+
+200
+00:08:28,420 --> 00:08:31,530
+to continue supporting
+the open source project
+
+201
+00:08:31,530 --> 00:08:32,703
+and the ecosystem.
+
+202
+00:08:33,720 --> 00:08:35,959
+The OpenSearch project continues to grow
+
+203
+00:08:35,959 --> 00:08:38,580
+with 1.3 billion downloads
+
+204
+00:08:38,580 --> 00:08:43,080
+and more than 3,400 active contributors,
+
+205
+00:08:43,080 --> 00:08:45,120
+and now at 28 releases.
+
+206
+00:08:45,120 --> 00:08:47,670
+And you can see many,
+many members are joining,
+
+207
+00:08:47,670 --> 00:08:49,110
+contributors are joining.
+
+208
+00:08:49,110 --> 00:08:51,810
+So you know, one thing you
+can take away from here
+
+209
+00:08:51,810 --> 00:08:53,820
+is if you're interested
+in contributing back,
+
+210
+00:08:53,820 --> 00:08:56,755
+this is a great community to get with.
+
+211
+00:08:56,755 --> 00:08:59,375
+Now, Amazon OpenSearch Service
+is an AWS managed service
+
+212
+00:08:59,375 --> 00:09:04,141
+that lets you run and
+scale OpenSearch clusters
+
+213
+00:09:04,141 --> 00:09:08,940
+without having to worry about
+the managing, the monitoring
+
+214
+00:09:08,940 --> 00:09:11,310
+and the maintenance of the infrastructure,
+
+215
+00:09:11,310 --> 00:09:14,850
+or having to have the expertise
+
+216
+00:09:14,850 --> 00:09:17,460
+in the operations of managing a cluster.
+
+217
+00:09:17,460 --> 00:09:19,763
+So that's what Amazon
+OpenSearch Service gives you.
+
+218
+00:09:20,629 --> 00:09:24,630
+OpenSearch and OpenSearch
+Service is a robust ecosystem
+
+219
+00:09:24,630 --> 00:09:27,930
+of tools that can make it easy and fast
+
+220
+00:09:27,930 --> 00:09:31,170
+to build a robust observability platform.
+
+221
+00:09:31,170 --> 00:09:33,990
+So to ingest, to filter, to transform,
+
+222
+00:09:33,990 --> 00:09:37,800
+to enrich the data and route
+it from your applications
+
+223
+00:09:37,800 --> 00:09:41,760
+to OpenSearch domain or
+serverless collection,
+
+224
+00:09:41,760 --> 00:09:44,640
+you can use the Amazon
+OpenSearch Ingestion,
+
+225
+00:09:44,640 --> 00:09:46,560
+which is a feature of OpenSearch Service,
+
+226
+00:09:46,560 --> 00:09:48,390
+which is great at ingestion.
+
+227
+00:09:48,390 --> 00:09:52,242
+To store the data, you can
+use either open source cluster
+
+228
+00:09:52,242 --> 00:09:53,884
+of OpenSearch that
+you've deployed yourself
+
+229
+00:09:53,884 --> 00:09:55,290
+and managed yourself,
+
+230
+00:09:55,290 --> 00:09:58,260
+or what we recommend is to
+use Amazon OpenSearch Service,
+
+231
+00:09:58,260 --> 00:10:00,458
+which takes all the administration
+
+232
+00:10:00,458 --> 00:10:02,730
+out of having to deploy it yourself.
+
+233
+00:10:02,730 --> 00:10:03,750
+And then to take it even further,
+
+234
+00:10:03,750 --> 00:10:05,430
+you can use Amazon OpenSearch Serverless,
+
+235
+00:10:05,430 --> 00:10:07,110
+which is completely zero administration,
+
+236
+00:10:07,110 --> 00:10:09,990
+automatic scaling, and
+you pay for what you use.
+
+237
+00:10:09,990 --> 00:10:10,840
+And then finally,
+
+238
+00:10:12,509 --> 00:10:16,590
+to do application debugging,
+to do visualizations,
+
+239
+00:10:16,590 --> 00:10:18,720
+and to analyze application behavior,
+
+240
+00:10:18,720 --> 00:10:20,340
+you can use OpenSearch Dashboards,
+
+241
+00:10:20,340 --> 00:10:22,860
+which is a purpose-built user experience
+
+242
+00:10:22,860 --> 00:10:25,110
+to get insights out of your data.
+
+243
+00:10:25,110 --> 00:10:27,218
+So now I'm gonna go into
+each of these pieces
+
+244
+00:10:27,218 --> 00:10:31,710
+of the architecture and talk about
+
+245
+00:10:31,710 --> 00:10:33,960
+how Any Company can use OpenSearch Service
+
+246
+00:10:33,960 --> 00:10:35,400
+to accomplish their goal
+
+247
+00:10:35,400 --> 00:10:37,260
+of addressing those challenges
+
+248
+00:10:37,260 --> 00:10:39,150
+that we talked about earlier.
+
+249
+00:10:39,150 --> 00:10:40,650
+So first, we'll talk about
+
+250
+00:10:40,650 --> 00:10:42,994
+how Any Company can
+start collecting signals
+
+251
+00:10:42,994 --> 00:10:44,773
+from their microservices
+
+252
+00:10:44,773 --> 00:10:48,570
+and pieces of their infrastructure, right?
+
+253
+00:10:48,570 --> 00:10:49,710
+So your applications,
+
+254
+00:10:49,710 --> 00:10:51,949
+just like any companies
+can be either AWS native
+
+255
+00:10:51,949 --> 00:10:54,360
+or they could be custom applications
+
+256
+00:10:54,360 --> 00:10:56,370
+with infrastructure such as databases,
+
+257
+00:10:56,370 --> 00:10:58,500
+containers, virtual environments.
+
+258
+00:10:58,500 --> 00:11:02,250
+So Any Company collects these by running,
+
+259
+00:11:02,250 --> 00:11:04,260
+which generally called agents.
+
+260
+00:11:04,260 --> 00:11:08,400
+And agents are basically
+small software processes
+
+261
+00:11:08,400 --> 00:11:11,760
+that run next to their application
+
+262
+00:11:11,760 --> 00:11:16,200
+or run in parallel to the
+containers to collect metrics,
+
+263
+00:11:16,200 --> 00:11:18,030
+to collect logs and traces,
+
+264
+00:11:18,030 --> 00:11:21,903
+and export them forward to
+the observability solution.
+
+265
+00:11:23,490 --> 00:11:25,260
+And one of the most popular mechanisms
+
+266
+00:11:25,260 --> 00:11:26,760
+for collecting the data
+
+267
+00:11:26,760 --> 00:11:29,970
+we see that AWS customers
+using is OpenTelemetry.
+
+268
+00:11:29,970 --> 00:11:32,640
+It's a set of vendor agnostic SDKs
+
+269
+00:11:32,640 --> 00:11:35,910
+and libraries to instrument
+your applications.
+
+270
+00:11:35,910 --> 00:11:38,760
+It supports logs, metrics,
+and traces collection.
+
+271
+00:11:38,760 --> 00:11:39,960
+And due to the popularity,
+
+272
+00:11:39,960 --> 00:11:42,543
+we've seen many, many
+vendors start to support it.
+
+273
+00:11:43,710 --> 00:11:48,240
+And so AWS also offers open
+distribution of OpenTelemetry,
+
+274
+00:11:48,240 --> 00:11:51,840
+which is a way that supports natively
+
+275
+00:11:51,840 --> 00:11:53,242
+many, many AWS services.
+
+276
+00:11:53,242 --> 00:11:55,050
+And it offers collection
+
+277
+00:11:55,050 --> 00:11:57,863
+and storing telemetry into
+the native AWS solutions
+
+278
+00:11:57,863 --> 00:11:59,583
+like OpenSearch Service.
+
+279
+00:12:01,530 --> 00:12:05,940
+So now Any Company sends their
+data from these collectors
+
+280
+00:12:05,940 --> 00:12:08,190
+into Amazon OpenSearch Ingestion,
+
+281
+00:12:08,190 --> 00:12:10,410
+which is a feature of OpenSearch Service,
+
+282
+00:12:10,410 --> 00:12:12,900
+which gathers the data and buffers it
+
+283
+00:12:12,900 --> 00:12:15,150
+using its built-in buffering capability.
+
+284
+00:12:15,150 --> 00:12:18,450
+And then before writing it to OpenSearch,
+
+285
+00:12:18,450 --> 00:12:19,620
+you can transform the data.
+
+286
+00:12:19,620 --> 00:12:21,450
+So Any Company can transform it
+
+287
+00:12:21,450 --> 00:12:24,090
+to format the data in the
+way that they would like,
+
+288
+00:12:24,090 --> 00:12:27,500
+and then they forward it to
+Amazon OpenSearch Service.
+
+289
+00:12:27,500 --> 00:12:29,490
+They also enrich their data.
+
+290
+00:12:29,490 --> 00:12:31,050
+They can parse logs and metrics
+
+291
+00:12:31,050 --> 00:12:33,500
+during this ingestion
+using OpenSearch Ingestion.
+
+292
+00:12:36,100 --> 00:12:40,770
+So now that the data is
+collected, it's transformed.
+
+293
+00:12:40,770 --> 00:12:43,890
+Now, OpenSearch Ingestion
+pipelines write this data
+
+294
+00:12:43,890 --> 00:12:47,520
+to Amazon OpenSearch
+Service clusters or domains
+
+295
+00:12:47,520 --> 00:12:51,630
+for short to medium term
+storage and analysis.
+
+296
+00:12:51,630 --> 00:12:54,990
+And then OpenSearch Service
+also has built in tiering
+
+297
+00:12:54,990 --> 00:12:57,026
+that allows Any Company to retain data
+
+298
+00:12:57,026 --> 00:13:00,750
+for longer periods of time at lower costs.
+
+299
+00:13:00,750 --> 00:13:03,796
+So you may decide to
+store some of the data
+
+300
+00:13:03,796 --> 00:13:08,010
+in OpenSearch into the hot
+tier, and then a warmer tier
+
+301
+00:13:08,010 --> 00:13:10,071
+or directly in S3
+
+302
+00:13:10,071 --> 00:13:13,890
+as a really, really sort of
+a cold level tier of data
+
+303
+00:13:13,890 --> 00:13:17,040
+and read it into OpenSearch
+Service on demand.
+
+304
+00:13:17,040 --> 00:13:18,750
+All of this data has the insights
+
+305
+00:13:18,750 --> 00:13:22,230
+that Any Company needs to debug
+
+306
+00:13:22,230 --> 00:13:23,880
+or understand their applications.
+
+307
+00:13:26,160 --> 00:13:28,860
+Okay, so now the data is stored,
+
+308
+00:13:28,860 --> 00:13:30,345
+how do they surface this data
+
+309
+00:13:30,345 --> 00:13:34,200
+and allow their engineers and DevOps teams
+
+310
+00:13:34,200 --> 00:13:35,580
+to get insights out of it?
+
+311
+00:13:35,580 --> 00:13:37,288
+So to surface these insights,
+
+312
+00:13:37,288 --> 00:13:38,760
+OpenSearch Service comes
+
+313
+00:13:38,760 --> 00:13:41,970
+with a built in guided user experience
+
+314
+00:13:41,970 --> 00:13:44,550
+called OpenSearch Dashboards.
+
+315
+00:13:44,550 --> 00:13:48,180
+And now it's called OpenSearch UI,
+
+316
+00:13:48,180 --> 00:13:50,780
+which we will discuss in
+detail in the next section.
+
+317
+00:13:51,780 --> 00:13:56,580
+So now that we've seen how
+we've collected the data,
+
+318
+00:13:56,580 --> 00:13:58,200
+we've transformed it, we've stored it,
+
+319
+00:13:58,200 --> 00:13:59,880
+we can use dashboards.
+
+320
+00:13:59,880 --> 00:14:02,070
+Now we need to see how to measure
+
+321
+00:14:02,070 --> 00:14:04,260
+and gain insights from this data.
+
+322
+00:14:04,260 --> 00:14:06,495
+So let's go back to Any Company's
+engineering team, right?
+
+323
+00:14:06,495 --> 00:14:08,040
+They need to know exactly what to measure
+
+324
+00:14:08,040 --> 00:14:10,680
+across their distributed architecture
+
+325
+00:14:10,680 --> 00:14:13,110
+and how to interpret those measurements
+
+326
+00:14:13,110 --> 00:14:16,050
+and turn them into
+performance improvements.
+
+327
+00:14:16,050 --> 00:14:19,410
+So the DevOps teams need to
+measure, check out latency,
+
+328
+00:14:19,410 --> 00:14:21,150
+they need to measure the response times
+
+329
+00:14:21,150 --> 00:14:23,490
+from the different services, et cetera.
+
+330
+00:14:23,490 --> 00:14:25,320
+So how will they be able to do that?
+
+331
+00:14:25,320 --> 00:14:28,650
+Well, they can use OpenSearch Dashboards,
+
+332
+00:14:28,650 --> 00:14:30,900
+which is a purpose built user experience
+
+333
+00:14:30,900 --> 00:14:33,420
+to get the most out of
+your observability data.
+
+334
+00:14:33,420 --> 00:14:34,710
+So this is sort of the landing place
+
+335
+00:14:34,710 --> 00:14:37,590
+where you connect to OpenSearch
+UI, OpenSearch Dashboards.
+
+336
+00:14:37,590 --> 00:14:40,320
+You see, you know the
+dashboards that you've created.
+
+337
+00:14:40,320 --> 00:14:42,170
+It comes pre-configured with widgets
+
+338
+00:14:42,170 --> 00:14:45,172
+that give you insights that you need
+
+339
+00:14:45,172 --> 00:14:48,390
+and can help you perform
+root cause analysis.
+
+340
+00:14:48,390 --> 00:14:49,860
+And it also offers the ability
+
+341
+00:14:49,860 --> 00:14:51,322
+to create new visualizations
+
+342
+00:14:51,322 --> 00:14:54,183
+with easy drag and drop capability.
+
+343
+00:14:55,050 --> 00:14:56,760
+Once you're happy with
+your visualizations,
+
+344
+00:14:56,760 --> 00:14:58,808
+you can embed them in your applications
+
+345
+00:14:58,808 --> 00:15:00,240
+and it's multi-tenant,
+
+346
+00:15:00,240 --> 00:15:02,619
+which means you can have multiple teams
+
+347
+00:15:02,619 --> 00:15:05,820
+with access to different applications data
+
+348
+00:15:05,820 --> 00:15:07,740
+and have the right people
+looking into the right data
+
+349
+00:15:07,740 --> 00:15:09,303
+that they're responsible for.
+
+350
+00:15:11,072 --> 00:15:13,290
+Now the analysts and developers
+
+351
+00:15:13,290 --> 00:15:16,650
+can also use something called
+the Discover experience.
+
+352
+00:15:16,650 --> 00:15:19,860
+Discover is used to explore the data
+
+353
+00:15:19,860 --> 00:15:22,920
+using a variety of different
+supported languages,
+
+354
+00:15:22,920 --> 00:15:27,420
+including Dashboard Query
+Language, Lucene, standard SQL,
+
+355
+00:15:27,420 --> 00:15:29,579
+and PPL, pipe processing language,
+
+356
+00:15:29,579 --> 00:15:31,860
+as well as natural
+language queries as well,
+
+357
+00:15:31,860 --> 00:15:33,990
+which you can see in the screenshot below,
+
+358
+00:15:33,990 --> 00:15:35,283
+powered by Amazon Q.
+
+359
+00:15:36,810 --> 00:15:38,430
+So when you're debugging
+
+360
+00:15:38,430 --> 00:15:40,650
+or when you're analyzing
+application behavior,
+
+361
+00:15:40,650 --> 00:15:44,022
+you need an ability to filter,
+to calculate statistics,
+
+362
+00:15:44,022 --> 00:15:46,051
+to sort the data, right?
+
+363
+00:15:46,051 --> 00:15:48,180
+That gives you the insights
+
+364
+00:15:48,180 --> 00:15:49,590
+that you're looking for.
+
+365
+00:15:49,590 --> 00:15:52,470
+OpenSearch Service has a powerful
+pipe processing language,
+
+366
+00:15:52,470 --> 00:15:54,000
+which you can use to filter
+
+367
+00:15:54,000 --> 00:15:58,260
+and measure various metrics or KPIs.
+
+368
+00:15:58,260 --> 00:16:01,830
+For example, you can
+construct your desired outcome
+
+369
+00:16:01,830 --> 00:16:03,630
+in a step-by-step manner
+
+370
+00:16:03,630 --> 00:16:05,760
+with each step getting you closer
+
+371
+00:16:05,760 --> 00:16:07,830
+to your desired result.
+
+372
+00:16:07,830 --> 00:16:11,670
+Now Dashboards and the
+Discovery experience
+
+373
+00:16:11,670 --> 00:16:13,830
+are really good if you are there
+
+374
+00:16:13,830 --> 00:16:15,570
+and you're looking at them
+
+375
+00:16:15,570 --> 00:16:17,160
+and you know what to go after.
+
+376
+00:16:17,160 --> 00:16:18,540
+But what if you're not around, right?
+
+377
+00:16:18,540 --> 00:16:20,340
+What if you're not act actively logged in
+
+378
+00:16:20,340 --> 00:16:22,770
+and looking at this user experience
+
+379
+00:16:22,770 --> 00:16:25,110
+and you really want the
+observability solution
+
+380
+00:16:25,110 --> 00:16:29,640
+to keep an eye on the
+application telemetry for you?
+
+381
+00:16:29,640 --> 00:16:31,980
+So open source service
+has a robust monitoring
+
+382
+00:16:31,980 --> 00:16:34,260
+and anomaly detection capability,
+
+383
+00:16:34,260 --> 00:16:35,850
+which keeps an eye on your data
+
+384
+00:16:35,850 --> 00:16:38,520
+and sends you an alert
+in the case of a failure,
+
+385
+00:16:38,520 --> 00:16:40,779
+or in the case that it finds any unusual
+
+386
+00:16:40,779 --> 00:16:43,350
+or anomalous patterns.
+
+387
+00:16:43,350 --> 00:16:45,810
+And you don't really need any
+machine learning experience
+
+388
+00:16:45,810 --> 00:16:49,080
+to configure these anomaly
+detectors and set up alerts,
+
+389
+00:16:49,080 --> 00:16:52,653
+which makes it really popular
+amongst Any Company's teams.
+
+390
+00:16:54,570 --> 00:16:56,880
+So speaking of alerts, notifications,
+
+391
+00:16:56,880 --> 00:16:58,890
+you can receive these notifications
+
+392
+00:16:58,890 --> 00:17:00,990
+in a variety of different
+ways or channels,
+
+393
+00:17:00,990 --> 00:17:03,900
+and you can send it to your
+favorite Slack channel.
+
+394
+00:17:03,900 --> 00:17:06,768
+For example, Any Company's
+teams routed their Slack channel
+
+395
+00:17:06,768 --> 00:17:09,060
+and they route it to their mobile devices
+
+396
+00:17:09,060 --> 00:17:10,624
+using their built-in alerting
+
+397
+00:17:10,624 --> 00:17:12,330
+and incident management tools
+
+398
+00:17:12,330 --> 00:17:14,460
+such as PagerDuty or Opsgenie.
+
+399
+00:17:14,460 --> 00:17:17,712
+And generally you have a
+link back to the dashboards
+
+400
+00:17:17,712 --> 00:17:21,420
+in the notification that
+is sent to these channels.
+
+401
+00:17:21,420 --> 00:17:23,730
+So the developers can
+quickly click on that link
+
+402
+00:17:23,730 --> 00:17:26,613
+and continue the investigation
+by logging into the UI.
+
+403
+00:17:28,680 --> 00:17:32,310
+So the other experience,
+what we see is, you know,
+
+404
+00:17:32,310 --> 00:17:34,110
+microservices are very common
+
+405
+00:17:34,110 --> 00:17:36,270
+amongst most of our customers
+that we talked to today.
+
+406
+00:17:36,270 --> 00:17:37,830
+And when you're working
+with microservices,
+
+407
+00:17:37,830 --> 00:17:39,300
+there are many moving parts
+
+408
+00:17:39,300 --> 00:17:41,490
+and investigating all
+of these moving parts
+
+409
+00:17:41,490 --> 00:17:42,660
+can be difficult.
+
+410
+00:17:42,660 --> 00:17:43,950
+So to make this simpler,
+
+411
+00:17:43,950 --> 00:17:45,768
+we use what's called traces, right?
+
+412
+00:17:45,768 --> 00:17:48,090
+Traces will capture the communication
+
+413
+00:17:48,090 --> 00:17:49,710
+between different services
+
+414
+00:17:49,710 --> 00:17:51,330
+so that you can know what happens
+
+415
+00:17:51,330 --> 00:17:53,310
+when a service calls another service,
+
+416
+00:17:53,310 --> 00:17:55,770
+was it successful or not, et cetera.
+
+417
+00:17:55,770 --> 00:17:59,190
+OpenSearch Dashboards offers
+purpose-built visualizations
+
+418
+00:17:59,190 --> 00:18:01,500
+that analyze this data.
+
+419
+00:18:01,500 --> 00:18:03,060
+We have something called a service map
+
+420
+00:18:03,060 --> 00:18:04,830
+with which you can see
+if there's any error
+
+421
+00:18:04,830 --> 00:18:07,652
+in your application at a glance
+
+422
+00:18:07,652 --> 00:18:10,784
+or if your applications
+are facing any issues
+
+423
+00:18:10,784 --> 00:18:13,581
+with higher latency and
+error rates, et cetera.
+
+424
+00:18:13,581 --> 00:18:16,428
+You also have something called
+Trace Group Visualization,
+
+425
+00:18:16,428 --> 00:18:18,743
+which groups related traces together
+
+426
+00:18:18,743 --> 00:18:21,417
+into a single widget and allows you
+
+427
+00:18:21,417 --> 00:18:24,263
+to see if a certain function
+in your application,
+
+428
+00:18:24,263 --> 00:18:28,170
+for example, a checkout
+is facing an issue, right?
+
+429
+00:18:28,170 --> 00:18:30,649
+So now with these different
+visualization capabilities,
+
+430
+00:18:30,649 --> 00:18:32,880
+you can pinpoint exactly where to look,
+
+431
+00:18:32,880 --> 00:18:34,290
+you can uncover the logs
+
+432
+00:18:34,290 --> 00:18:36,567
+that cause the issues using traces,
+
+433
+00:18:36,567 --> 00:18:39,033
+and then you can start
+analyzing those logs.
+
+434
+00:18:40,560 --> 00:18:42,845
+So now the volume of operational data
+
+435
+00:18:42,845 --> 00:18:45,796
+that customers need to
+analyze is continuing to grow.
+
+436
+00:18:45,796 --> 00:18:47,550
+As we hear from many customers,
+
+437
+00:18:47,550 --> 00:18:49,650
+the data volumes are continuing to grow.
+
+438
+00:18:49,650 --> 00:18:51,390
+The same thing with Any Company.
+
+439
+00:18:51,390 --> 00:18:55,270
+OpenSearch Service already
+supports observability workloads
+
+440
+00:18:55,270 --> 00:18:57,174
+up to 25 petabytes.
+
+441
+00:18:57,174 --> 00:19:00,450
+And of course, in the
+future, like everything else,
+
+442
+00:19:00,450 --> 00:19:02,220
+it's continuing to grow.
+
+443
+00:19:02,220 --> 00:19:03,780
+To meet this growing scale,
+
+444
+00:19:03,780 --> 00:19:06,510
+customers often store operational data
+
+445
+00:19:06,510 --> 00:19:09,390
+across multiple OpenSearch
+Service deployments.
+
+446
+00:19:09,390 --> 00:19:10,860
+Maybe they have multiple clusters,
+
+447
+00:19:10,860 --> 00:19:12,180
+maybe they have some clusters
+
+448
+00:19:12,180 --> 00:19:15,060
+and some OpenSearch
+serverless collections, right?
+
+449
+00:19:15,060 --> 00:19:18,090
+And customers are
+increasingly asking OpenSearch
+
+450
+00:19:18,090 --> 00:19:20,510
+to work across multiple data sources.
+
+451
+00:19:20,510 --> 00:19:23,190
+So they want the dashboard experience,
+
+452
+00:19:23,190 --> 00:19:25,860
+but they don't want to tie
+it to a specific cluster.
+
+453
+00:19:25,860 --> 00:19:28,234
+So to centralize all this data management
+
+454
+00:19:28,234 --> 00:19:31,290
+and give this view in a single place,
+
+455
+00:19:31,290 --> 00:19:35,100
+we've launched a next
+generation OpenSearch UI.
+
+456
+00:19:35,100 --> 00:19:37,050
+The next generation OpenSearch UI
+
+457
+00:19:37,050 --> 00:19:39,690
+is an independent dashboard application,
+
+458
+00:19:39,690 --> 00:19:41,880
+which is designed to
+help customers aggregate
+
+459
+00:19:41,880 --> 00:19:45,393
+comprehensive insights
+into a single unified view,
+
+460
+00:19:47,088 --> 00:19:50,040
+which allows you to see and view data
+
+461
+00:19:50,040 --> 00:19:53,640
+across multiple OpenSearch
+domains and collections.
+
+462
+00:19:53,640 --> 00:19:56,640
+And currently, applications
+can be associated
+
+463
+00:19:56,640 --> 00:19:57,703
+with multiple OpenSearch clusters,
+
+464
+00:19:57,703 --> 00:20:00,360
+OpenSearch serverless collections,
+
+465
+00:20:00,360 --> 00:20:03,303
+and even other sources
+like direct query to S3.
+
+466
+00:20:05,520 --> 00:20:08,640
+Now that all these dashboard
+instances are consolidated,
+
+467
+00:20:08,640 --> 00:20:10,230
+it becomes even more important
+
+468
+00:20:10,230 --> 00:20:12,207
+to have a way to organize the data
+
+469
+00:20:12,207 --> 00:20:14,520
+and the dashboards from
+the different sources,
+
+470
+00:20:14,520 --> 00:20:16,980
+the different alerts, the
+different saved queries.
+
+471
+00:20:16,980 --> 00:20:21,000
+So that's why we introduced
+workspaces in OpenSearch UI.
+
+472
+00:20:21,000 --> 00:20:24,780
+With workspaces, you can
+easily create your dashboards,
+
+473
+00:20:24,780 --> 00:20:28,260
+save them, and as well as
+your alerts and queries
+
+474
+00:20:28,260 --> 00:20:29,790
+in a private space.
+
+475
+00:20:29,790 --> 00:20:32,460
+This private space allows
+you to manage permissions
+
+476
+00:20:32,460 --> 00:20:36,240
+tailored to how your team
+needs to share their data.
+
+477
+00:20:36,240 --> 00:20:38,630
+And workspaces gives
+you a curated experience
+
+478
+00:20:38,630 --> 00:20:42,150
+for popular use cases as
+well, such as observability,
+
+479
+00:20:42,150 --> 00:20:44,310
+such as security analytics, et cetera.
+
+480
+00:20:44,310 --> 00:20:47,282
+So you can find it
+straightforward to build content
+
+481
+00:20:47,282 --> 00:20:49,290
+for your use case.
+
+482
+00:20:49,290 --> 00:20:52,920
+Workspace also supports
+collaborator management
+
+483
+00:20:52,920 --> 00:20:54,390
+so that you can share your workspace
+
+484
+00:20:54,390 --> 00:20:56,850
+only to your intended
+collaborators, right?
+
+485
+00:20:56,850 --> 00:21:00,240
+And manage permissions for each
+collaborator as you'd like.
+
+486
+00:21:00,240 --> 00:21:03,200
+So while that was all launched last year,
+
+487
+00:21:03,200 --> 00:21:05,940
+there have been some exciting updates
+
+488
+00:21:05,940 --> 00:21:08,576
+and features that we've
+added to OpenSearch UI
+
+489
+00:21:08,576 --> 00:21:10,470
+this year so far.
+
+490
+00:21:10,470 --> 00:21:12,390
+And now I'll turn it over to Joshua
+
+491
+00:21:12,390 --> 00:21:15,663
+to walk you through those new updates now.
+
+492
+00:21:17,010 --> 00:21:18,253
+- Awesome, hey, thanks Sohaib.
+
+493
+00:21:18,253 --> 00:21:19,653
+I really appreciate it.
+
+494
+00:21:21,630 --> 00:21:23,460
+Everybody able to hear me okay?
+
+495
+00:21:23,460 --> 00:21:24,293
+Okay, perfect.
+
+496
+00:21:25,662 --> 00:21:27,907
+Before I get started in talking about,
+
+497
+00:21:27,907 --> 00:21:31,320
+you know, what's new
+within OpenSearch Service,
+
+498
+00:21:31,320 --> 00:21:32,850
+I wanted to just take a moment.
+
+499
+00:21:32,850 --> 00:21:34,950
+We're on the heels of
+Thanksgiving holiday,
+
+500
+00:21:34,950 --> 00:21:38,580
+so I just want to thank
+all of OpenSearch customers
+
+501
+00:21:38,580 --> 00:21:41,310
+as well as the community,
+open source community.
+
+502
+00:21:41,310 --> 00:21:43,504
+We really appreciate your partnership
+
+503
+00:21:43,504 --> 00:21:46,288
+and really love working
+backwards with you.
+
+504
+00:21:46,288 --> 00:21:48,115
+And I look forward to announcing
+
+505
+00:21:48,115 --> 00:21:50,618
+more what's new features next year
+
+506
+00:21:50,618 --> 00:21:52,623
+in conjunction with you.
+
+507
+00:21:53,850 --> 00:21:57,709
+Okay, so the What's new
+section is gonna be two parts.
+
+508
+00:21:57,709 --> 00:22:00,483
+So one of them is more of your visual
+
+509
+00:22:00,483 --> 00:22:03,900
+deterministic analytics
+with OpenSearch UI.
+
+510
+00:22:03,900 --> 00:22:05,430
+That'll be my section.
+
+511
+00:22:05,430 --> 00:22:08,070
+And the second section
+will be with Sohaib,
+
+512
+00:22:08,070 --> 00:22:11,460
+who will be talking about
+agentic development.
+
+513
+00:22:11,460 --> 00:22:13,830
+Let's go ahead and get started though.
+
+514
+00:22:13,830 --> 00:22:17,180
+So we looked into the
+issues that Any Company
+
+515
+00:22:17,180 --> 00:22:22,170
+was, you know, calling out as as problems.
+
+516
+00:22:22,170 --> 00:22:24,300
+And we realized that, you know,
+
+517
+00:22:24,300 --> 00:22:27,150
+it seemed like everyone
+was trying to solve this
+
+518
+00:22:27,150 --> 00:22:30,633
+with more features and more complexity.
+
+519
+00:22:31,800 --> 00:22:33,723
+We took kind of the opposite approach.
+
+520
+00:22:34,680 --> 00:22:37,813
+What if we made log analytics simpler,
+
+521
+00:22:37,813 --> 00:22:39,850
+not more complex?
+
+522
+00:22:39,850 --> 00:22:43,930
+You know, what if we
+prioritize the user experience
+
+523
+00:22:45,000 --> 00:22:47,071
+instead of adding additional features
+
+524
+00:22:47,071 --> 00:22:49,339
+and bolting things on?
+
+525
+00:22:49,339 --> 00:22:50,793
+And that's what we've done.
+
+526
+00:22:52,080 --> 00:22:56,370
+With OpenSearch UI's
+observability workspace,
+
+527
+00:22:56,370 --> 00:22:59,070
+we've made pipe processing language,
+
+528
+00:22:59,070 --> 00:23:00,960
+the language that Sohaib
+were talking about
+
+529
+00:23:00,960 --> 00:23:01,793
+a little bit earlier,
+
+530
+00:23:01,793 --> 00:23:05,940
+we made that as the forefront
+and we've segmented it
+
+531
+00:23:05,940 --> 00:23:09,257
+or complimented it with AI
+
+532
+00:23:09,257 --> 00:23:11,741
+in the form of natural language
+
+533
+00:23:11,741 --> 00:23:15,783
+as well as with a result
+summarization feature.
+
+534
+00:23:16,830 --> 00:23:21,830
+So now we've made this
+experience integrated,
+
+535
+00:23:22,800 --> 00:23:26,403
+instead of it being kind
+of this bolted on workflow,
+
+536
+00:23:28,715 --> 00:23:31,350
+now you can query with PPL
+
+537
+00:23:31,350 --> 00:23:34,440
+and supplement it with the
+natural language experience.
+
+538
+00:23:34,440 --> 00:23:35,273
+Pretty great.
+
+539
+00:23:37,290 --> 00:23:39,330
+So in addition to that though,
+
+540
+00:23:39,330 --> 00:23:42,390
+we've also made it easier to ingest
+
+541
+00:23:42,390 --> 00:23:44,940
+data from OpenTelemetry
+
+542
+00:23:44,940 --> 00:23:47,730
+so that teams like those at Any Company
+
+543
+00:23:47,730 --> 00:23:51,180
+can go from their raw data
+to actionable insights
+
+544
+00:23:51,180 --> 00:23:52,563
+with very little effort.
+
+545
+00:23:56,160 --> 00:23:59,610
+And let me give you a concrete
+example of what I mean.
+
+546
+00:23:59,610 --> 00:24:03,952
+So Any Company's data admins
+were complaining, right?
+
+547
+00:24:03,952 --> 00:24:06,422
+Like, hey, it takes a lot of time for me
+
+548
+00:24:06,422 --> 00:24:08,700
+to set up these pipelines
+
+549
+00:24:08,700 --> 00:24:12,650
+that I want to ingest it into OpenSearch
+
+550
+00:24:12,650 --> 00:24:15,762
+or into other log analytics tools.
+
+551
+00:24:15,762 --> 00:24:18,000
+Gotta configure parsers.
+
+552
+00:24:18,000 --> 00:24:19,770
+You probably have all run into this,
+
+553
+00:24:19,770 --> 00:24:21,843
+configure all of your mappings,
+
+554
+00:24:22,740 --> 00:24:24,420
+and you're kind of debugging
+
+555
+00:24:24,420 --> 00:24:25,410
+and playing Whack-a-Mole
+
+556
+00:24:25,410 --> 00:24:26,970
+trying to figure out like why data
+
+557
+00:24:26,970 --> 00:24:29,540
+is not landing the way
+that you would expect.
+
+558
+00:24:29,540 --> 00:24:34,540
+This setup is a lot of
+overhead and super frustrating
+
+559
+00:24:35,054 --> 00:24:38,133
+when you're just trying to
+get something out the door.
+
+560
+00:24:39,930 --> 00:24:42,704
+So our approach kind of
+flips this completely.
+
+561
+00:24:42,704 --> 00:24:45,900
+We provide out of the box blueprints
+
+562
+00:24:45,900 --> 00:24:48,930
+that will get things set up for you.
+
+563
+00:24:48,930 --> 00:24:51,819
+So we cover things, you
+know, popular AWS logs,
+
+564
+00:24:51,819 --> 00:24:56,819
+certainly like ALB logs,
+CloudTrail logs, Lambda logs,
+
+565
+00:24:56,940 --> 00:25:01,161
+as well as third party
+logs like Jira integration,
+
+566
+00:25:01,161 --> 00:25:06,161
+OpenTelemetry, certainly as
+well as HTTP Apache logs.
+
+567
+00:25:08,340 --> 00:25:11,220
+So, but that wasn't enough.
+
+568
+00:25:11,220 --> 00:25:16,220
+We also wanted to make the
+workflow fundamentally easier.
+
+569
+00:25:16,260 --> 00:25:18,210
+So we have a new get started workflow,
+
+570
+00:25:18,210 --> 00:25:22,080
+you can see it in the OpenSearch console
+
+571
+00:25:22,080 --> 00:25:24,870
+where you have this new setup
+
+572
+00:25:24,870 --> 00:25:28,800
+that allows you to set up
+an OpenTelemetry pipeline.
+
+573
+00:25:28,800 --> 00:25:31,050
+All the bells and whistles are included,
+
+574
+00:25:31,050 --> 00:25:32,880
+you point it over at your cluster
+
+575
+00:25:32,880 --> 00:25:34,280
+and it will automatically set up
+
+576
+00:25:34,280 --> 00:25:37,350
+an OpenSearch UI instance for you.
+
+577
+00:25:37,350 --> 00:25:39,075
+So no more dilly dallying
+
+578
+00:25:39,075 --> 00:25:41,670
+trying to get your proof of concepts up
+
+579
+00:25:41,670 --> 00:25:44,613
+or new pipelines super easy.
+
+580
+00:25:46,350 --> 00:25:49,140
+So Any Company's teams can now get started
+
+581
+00:25:49,140 --> 00:25:50,820
+analyzing their logs,
+
+582
+00:25:50,820 --> 00:25:53,010
+whether that be their react front end,
+
+583
+00:25:53,010 --> 00:25:54,780
+whether order processing service
+
+584
+00:25:54,780 --> 00:25:58,563
+or recommendation engine
+in minutes instead of days.
+
+585
+00:26:03,540 --> 00:26:07,980
+But even when you get through
+the onboarding, right?
+
+586
+00:26:07,980 --> 00:26:09,540
+You hit another wall,
+
+587
+00:26:09,540 --> 00:26:13,706
+which is actually being
+able to utilize the tooling.
+
+588
+00:26:13,706 --> 00:26:16,920
+So customers like Any Company told us
+
+589
+00:26:16,920 --> 00:26:19,380
+that they have lots of queries
+
+590
+00:26:19,380 --> 00:26:23,130
+and dashboards that already
+set up in another tool.
+
+591
+00:26:23,130 --> 00:26:28,130
+You know, they don't want
+to relearn a new tool,
+
+592
+00:26:28,530 --> 00:26:31,323
+a new language, or new workflows.
+
+593
+00:26:33,600 --> 00:26:35,883
+So we made a fundamental decision.
+
+594
+00:26:36,720 --> 00:26:40,743
+We made pipe processing
+language feel familiar.
+
+595
+00:26:41,970 --> 00:26:45,960
+If you know pipe delimited
+languages from, you know,
+
+596
+00:26:45,960 --> 00:26:47,760
+Unix or other tools,
+
+597
+00:26:47,760 --> 00:26:51,090
+you'll feel at home in OpenSearch Service.
+
+598
+00:26:51,090 --> 00:26:53,850
+We aligned our syntax, our commands,
+
+599
+00:26:53,850 --> 00:26:56,310
+our functions to feel natural.
+
+600
+00:26:56,310 --> 00:26:58,825
+And the result, Any Company's teams
+
+601
+00:26:58,825 --> 00:27:02,130
+existing knowledge becomes an asset.
+
+602
+00:27:02,130 --> 00:27:03,900
+It's not a liability.
+
+603
+00:27:03,900 --> 00:27:08,610
+And their migration from
+which was gonna be taking,
+
+604
+00:27:08,610 --> 00:27:12,720
+you know, six months, you know, to a year
+
+605
+00:27:12,720 --> 00:27:14,970
+now is something that can be accomplished
+
+606
+00:27:14,970 --> 00:27:16,983
+within, you know, a few weeks.
+
+607
+00:27:19,440 --> 00:27:21,873
+But language is just the start, isn't it?
+
+608
+00:27:22,830 --> 00:27:24,930
+You need also need the right words,
+
+609
+00:27:24,930 --> 00:27:27,150
+or in this case, commands
+
+610
+00:27:27,150 --> 00:27:29,820
+to express the complex ideas
+
+611
+00:27:29,820 --> 00:27:34,650
+that you're interested in extracting.
+
+612
+00:27:34,650 --> 00:27:36,980
+So over the past year,
+we've more than doubled
+
+613
+00:27:36,980 --> 00:27:39,900
+pipe processing language capabilities.
+
+614
+00:27:39,900 --> 00:27:42,185
+We've added joins and lookups
+
+615
+00:27:42,185 --> 00:27:45,243
+to be able to join indices together.
+
+616
+00:27:46,085 --> 00:27:50,940
+We've added comprehensive
+time analysis commands
+
+617
+00:27:50,940 --> 00:27:54,330
+like time chart and event stats
+
+618
+00:27:54,330 --> 00:27:56,913
+that allow you to
+understand events over time.
+
+619
+00:27:58,380 --> 00:28:02,025
+And in addition, we've
+included the ability
+
+620
+00:28:02,025 --> 00:28:05,220
+to extract unstructured data,
+
+621
+00:28:05,220 --> 00:28:07,980
+not possible in in OpenSearch currently.
+
+622
+00:28:07,980 --> 00:28:09,750
+The ability to extract the data
+
+623
+00:28:09,750 --> 00:28:12,454
+and create new fields
+
+624
+00:28:12,454 --> 00:28:16,890
+for your analysis using rex and spath.
+
+625
+00:28:16,890 --> 00:28:21,890
+So this isn't about just
+like adding more features,
+
+626
+00:28:22,890 --> 00:28:24,690
+it's about having the right tools
+
+627
+00:28:24,690 --> 00:28:28,140
+to ask sophisticated
+questions of your data.
+
+628
+00:28:28,140 --> 00:28:32,160
+And now Any Company can
+correlate their checkout failures
+
+629
+00:28:32,160 --> 00:28:34,540
+with their recommendation engine
+
+630
+00:28:34,540 --> 00:28:36,393
+in a single query.
+
+631
+00:28:39,120 --> 00:28:40,680
+Let me show you what I mean.
+
+632
+00:28:40,680 --> 00:28:42,660
+Anyone can write a query that says,
+
+633
+00:28:42,660 --> 00:28:44,730
+show me all the errors, right?
+
+634
+00:28:44,730 --> 00:28:46,320
+That's table stakes.
+
+635
+00:28:46,320 --> 00:28:50,430
+But observability isn't
+just about collecting data,
+
+636
+00:28:50,430 --> 00:28:54,030
+it's about asking sophisticated questions.
+
+637
+00:28:54,030 --> 00:28:55,860
+And the real insights
+
+638
+00:28:55,860 --> 00:28:59,310
+come from when you can
+quickly identify errors
+
+639
+00:28:59,310 --> 00:29:02,910
+that are occurring, quantify
+how large the impact is,
+
+640
+00:29:02,910 --> 00:29:05,976
+and understand the next course of action.
+
+641
+00:29:05,976 --> 00:29:09,747
+For Any Company, that means
+connecting checkout failures,
+
+642
+00:29:09,747 --> 00:29:12,225
+with their authentication
+service performance,
+
+643
+00:29:12,225 --> 00:29:15,270
+and payment processing latency.
+
+644
+00:29:15,270 --> 00:29:18,813
+That's where you find the
+root cause, not just symptoms.
+
+645
+00:29:20,370 --> 00:29:23,040
+And now you have all
+the tools that you need
+
+646
+00:29:23,040 --> 00:29:24,423
+to gather those insights.
+
+647
+00:29:27,930 --> 00:29:31,480
+Any Company's teams were
+losing quite a few hours
+
+648
+00:29:31,480 --> 00:29:34,894
+moving in between workflows as well.
+
+649
+00:29:34,894 --> 00:29:37,629
+So we talked a little bit
+about a familiar syntax,
+
+650
+00:29:37,629 --> 00:29:40,279
+we talked a little bit
+about the new commands
+
+651
+00:29:40,279 --> 00:29:42,810
+and functions that exist.
+
+652
+00:29:42,810 --> 00:29:44,760
+The last piece that we wanted to target
+
+653
+00:29:44,760 --> 00:29:48,690
+was the improved user experience
+and streamlining that.
+
+654
+00:29:48,690 --> 00:29:51,139
+So at Any Company, they were moving
+
+655
+00:29:51,139 --> 00:29:53,880
+between the querying experience
+
+656
+00:29:53,880 --> 00:29:56,340
+and the visualization building experience
+
+657
+00:29:56,340 --> 00:29:58,950
+and the dashboarding experience.
+
+658
+00:29:58,950 --> 00:30:02,160
+And what we've done is we
+said, okay, forget all that.
+
+659
+00:30:02,160 --> 00:30:03,990
+Like let's consolidate everything
+
+660
+00:30:03,990 --> 00:30:05,880
+into the discovery experience.
+
+661
+00:30:05,880 --> 00:30:09,600
+And so what we've done
+instead is we've built out
+
+662
+00:30:09,600 --> 00:30:13,260
+that those different
+workflows into discover.
+
+663
+00:30:13,260 --> 00:30:15,960
+So now when you analyze your data,
+
+664
+00:30:15,960 --> 00:30:18,231
+you're also able to not only do that
+
+665
+00:30:18,231 --> 00:30:19,880
+from a results perspective,
+
+666
+00:30:19,880 --> 00:30:21,900
+but also you can enhance
+
+667
+00:30:21,900 --> 00:30:24,273
+and compliment that with visualizations.
+
+668
+00:30:25,613 --> 00:30:28,020
+And then very easily be able to add
+
+669
+00:30:28,020 --> 00:30:29,400
+that into your dashboard.
+
+670
+00:30:29,400 --> 00:30:31,200
+So no longer are you kind of moving in
+
+671
+00:30:31,200 --> 00:30:34,950
+between different areas
+of your logging tool.
+
+672
+00:30:34,950 --> 00:30:37,200
+You can capture all of
+those critical things
+
+673
+00:30:37,200 --> 00:30:38,160
+that you need to set up
+
+674
+00:30:38,160 --> 00:30:40,743
+and support your APIs all within Discover.
+
+675
+00:30:42,000 --> 00:30:44,340
+So now you know, folks can stay
+
+676
+00:30:44,340 --> 00:30:48,003
+in the flow from question
+to answer to action.
+
+677
+00:30:51,150 --> 00:30:54,060
+And this applies to
+your data in OpenSearch,
+
+678
+00:30:54,060 --> 00:30:57,900
+but certainly applies to
+the data where it rests.
+
+679
+00:30:57,900 --> 00:31:00,948
+So as Sohaib mentioned,
+we also have integrations
+
+680
+00:31:00,948 --> 00:31:05,948
+with Amazon S3 for
+historical and audit logs.
+
+681
+00:31:07,367 --> 00:31:09,557
+Your data in CloudWatch logs.
+
+682
+00:31:09,557 --> 00:31:11,460
+Instead of piping your data
+
+683
+00:31:11,460 --> 00:31:13,380
+from CloudWatch logs into OpenSearch,
+
+684
+00:31:13,380 --> 00:31:17,010
+you can analyze your data in
+CloudWatch logs from OpenSearch
+
+685
+00:31:17,010 --> 00:31:18,780
+and then certainly from, you know,
+
+686
+00:31:18,780 --> 00:31:22,353
+doing security investigations
+for Security Lake.
+
+687
+00:31:25,290 --> 00:31:27,810
+So let's bring this together.
+
+688
+00:31:27,810 --> 00:31:32,520
+We've built our solution on
+three pillars, easy startup.
+
+689
+00:31:32,520 --> 00:31:36,071
+So you have easy startup
+with these new blueprints
+
+690
+00:31:36,071 --> 00:31:40,365
+that allow you to get started
+with very common log types,
+
+691
+00:31:40,365 --> 00:31:44,520
+been able to create this
+new get started workflow
+
+692
+00:31:44,520 --> 00:31:48,180
+that allows you to very quickly
+create the new pipelines
+
+693
+00:31:48,180 --> 00:31:51,713
+and utilize OpenSearch UI.
+
+694
+00:31:51,713 --> 00:31:53,820
+I, we've made it easier to get started
+
+695
+00:31:53,820 --> 00:31:57,704
+because we built out a familiar syntax
+
+696
+00:31:57,704 --> 00:32:02,704
+that everyone coming from pipe
+languages easily understands.
+
+697
+00:32:05,159 --> 00:32:09,230
+And we've also made it easy to get started
+
+698
+00:32:09,230 --> 00:32:14,108
+by incorporating the
+natural language prompts
+
+699
+00:32:14,108 --> 00:32:16,980
+within the querying experience itself.
+
+700
+00:32:16,980 --> 00:32:19,230
+So you can ask questions of your data
+
+701
+00:32:19,230 --> 00:32:21,213
+and get that analysis back.
+
+702
+00:32:22,410 --> 00:32:23,883
+And if that wasn't enough,
+
+703
+00:32:25,380 --> 00:32:28,530
+we also have the AI summarization feature,
+
+704
+00:32:28,530 --> 00:32:33,159
+which allows you to understand
+as you type in your query,
+
+705
+00:32:33,159 --> 00:32:34,906
+it will summarize the results
+
+706
+00:32:34,906 --> 00:32:36,930
+and provide you an understanding
+
+707
+00:32:36,930 --> 00:32:40,863
+of what is in the result set.
+
+708
+00:32:42,090 --> 00:32:45,430
+So that's kind of the
+easy startup section.
+
+709
+00:32:45,430 --> 00:32:47,460
+The next section that we did
+
+710
+00:32:47,460 --> 00:32:51,540
+is we added additional
+commands and functions
+
+711
+00:32:51,540 --> 00:32:52,800
+in pipe processing language
+
+712
+00:32:52,800 --> 00:32:55,920
+to really unlock insights
+like never before.
+
+713
+00:32:55,920 --> 00:32:59,400
+And then last, we created
+a cohesive work experience.
+
+714
+00:32:59,400 --> 00:33:02,100
+So now you no longer have to move in
+
+715
+00:33:02,100 --> 00:33:03,990
+through different workflows.
+
+716
+00:33:03,990 --> 00:33:05,940
+You can accomplish all of your insights
+
+717
+00:33:05,940 --> 00:33:08,626
+right within OpenSearch Discover
+
+718
+00:33:08,626 --> 00:33:12,510
+and be able to very easily
+create your visualizations
+
+719
+00:33:12,510 --> 00:33:14,310
+and add those over into a dashboard.
+
+720
+00:33:15,875 --> 00:33:18,810
+I'm gonna go on ahead
+and get over to the demo
+
+721
+00:33:18,810 --> 00:33:20,550
+'cause there's a lot of talking,
+
+722
+00:33:20,550 --> 00:33:21,810
+but I like to see action.
+
+723
+00:33:21,810 --> 00:33:23,610
+So we'll move over to the demo next.
+
+724
+00:33:27,020 --> 00:33:30,573
+What we're gonna do is we're going to-
+
+725
+00:33:32,370 --> 00:33:33,840
+we understand that there's a problem
+
+726
+00:33:33,840 --> 00:33:36,090
+with the load generator service.
+
+727
+00:33:36,090 --> 00:33:37,020
+And so what we're gonna do
+
+728
+00:33:37,020 --> 00:33:42,020
+is we're going to query
+the load generator service
+
+729
+00:33:42,180 --> 00:33:45,780
+or understand what kind of
+errors are coming through.
+
+730
+00:33:45,780 --> 00:33:48,750
+So here, I do a simple where statement
+
+731
+00:33:48,750 --> 00:33:51,993
+which pulls all of the
+errors from the logs.
+
+732
+00:33:52,919 --> 00:33:54,240
+And that's cool.
+
+733
+00:33:54,240 --> 00:33:56,550
+So now we can see that
+the load generator service
+
+734
+00:33:56,550 --> 00:33:58,260
+is showing up.
+
+735
+00:33:58,260 --> 00:33:59,970
+For the next section,
+
+736
+00:33:59,970 --> 00:34:03,180
+what we'll do is I wanna
+show off this unstructured,
+
+737
+00:34:03,180 --> 00:34:05,370
+the ability to pull out unstructured data.
+
+738
+00:34:05,370 --> 00:34:09,299
+So I'm gonna show here that
+we have the rex command,
+
+739
+00:34:09,299 --> 00:34:11,801
+which allows you to extract the data
+
+740
+00:34:11,801 --> 00:34:14,483
+using regular expression.
+
+741
+00:34:14,483 --> 00:34:17,070
+So you can see in the table below
+
+742
+00:34:17,070 --> 00:34:19,773
+that you have error type
+as well as error message.
+
+743
+00:34:21,360 --> 00:34:22,380
+Really, and the nice thing
+
+744
+00:34:22,380 --> 00:34:25,290
+is we have all of these
+different types of visualizations
+
+745
+00:34:25,290 --> 00:34:26,430
+that you can select from
+
+746
+00:34:26,430 --> 00:34:28,920
+right within the discovery experience.
+
+747
+00:34:28,920 --> 00:34:30,240
+So that's what I mean about
+
+748
+00:34:30,240 --> 00:34:33,330
+having this comprehensive
+and cohesive experience.
+
+749
+00:34:33,330 --> 00:34:35,100
+It's all within discover,
+
+750
+00:34:35,100 --> 00:34:36,690
+no more kind of having to move around
+
+751
+00:34:36,690 --> 00:34:37,740
+to accomplish those tasks
+
+752
+00:34:37,740 --> 00:34:39,440
+that you were hoping to do before.
+
+753
+00:34:40,837 --> 00:34:43,204
+Next, what I would like to do
+
+754
+00:34:43,204 --> 00:34:46,200
+is understand the error rate.
+
+755
+00:34:46,200 --> 00:34:49,770
+So you know, I'm going to
+be filing a ticket 'cause-
+
+756
+00:34:49,770 --> 00:34:52,617
+So I'm gonna do this investigation,
+I need to file a ticket.
+
+757
+00:34:52,617 --> 00:34:55,387
+So I need to understand what's happening
+
+758
+00:34:55,387 --> 00:34:57,060
+from an error perspective.
+
+759
+00:34:57,060 --> 00:35:00,000
+So you can see I use event stats,
+
+760
+00:35:00,000 --> 00:35:03,930
+which allows me to track
+the error over time.
+
+761
+00:35:03,930 --> 00:35:06,660
+And I'm doing the total_events
+
+762
+00:35:06,660 --> 00:35:08,919
+as well as the error_count above
+
+763
+00:35:08,919 --> 00:35:12,150
+and calculating the error rate.
+
+764
+00:35:12,150 --> 00:35:14,520
+I don't know about you,
+but 16% error rate,
+
+765
+00:35:14,520 --> 00:35:16,320
+that's no bueno, that's no bueno.
+
+766
+00:35:16,320 --> 00:35:19,590
+So we gotta do better and
+I'm gonna assign this ticket
+
+767
+00:35:19,590 --> 00:35:22,294
+to someone who's going to help us out.
+
+768
+00:35:22,294 --> 00:35:23,790
+In order to do that though,
+
+769
+00:35:23,790 --> 00:35:25,560
+'cause I don't inherently know
+
+770
+00:35:25,560 --> 00:35:27,720
+where the ticket needs to go,
+
+771
+00:35:27,720 --> 00:35:30,500
+I'm going to join our this erroe data
+
+772
+00:35:30,500 --> 00:35:33,000
+with our service catalog.
+
+773
+00:35:33,000 --> 00:35:34,743
+So now with-
+
+774
+00:35:36,900 --> 00:35:41,162
+But before we do that,
+we need to understand
+
+775
+00:35:41,162 --> 00:35:44,249
+when the error had occurred
+
+776
+00:35:44,249 --> 00:35:47,220
+so that we can fill out
+the ticket properly.
+
+777
+00:35:47,220 --> 00:35:49,260
+So we use the time chart command
+
+778
+00:35:49,260 --> 00:35:52,080
+to go on ahead and
+understand what happened.
+
+779
+00:35:52,080 --> 00:35:54,570
+And so with this lovely visualization,
+
+780
+00:35:54,570 --> 00:35:57,000
+I'm able to very quickly understand
+
+781
+00:35:57,000 --> 00:36:00,120
+when the error started,
+when the error ended,
+
+782
+00:36:00,120 --> 00:36:02,913
+so I can fill out the full
+case detail of this ticket.
+
+783
+00:36:04,668 --> 00:36:08,013
+And then last, that's
+when we get to the join.
+
+784
+00:36:08,910 --> 00:36:11,252
+So I have a service catalog off the side,
+
+785
+00:36:11,252 --> 00:36:15,750
+it has all of the details of
+who is responsible for what.
+
+786
+00:36:15,750 --> 00:36:20,340
+And now I'm able to join
+my data across the errors
+
+787
+00:36:20,340 --> 00:36:24,930
+or the logs with the service catalog data.
+
+788
+00:36:24,930 --> 00:36:26,190
+And I see that Charlie,
+
+789
+00:36:26,190 --> 00:36:28,350
+oh, unfortunately Charlie is in trouble.
+
+790
+00:36:28,350 --> 00:36:30,150
+Charlie is going to get a ticket.
+
+791
+00:36:30,150 --> 00:36:31,667
+But now you know,
+
+792
+00:36:31,667 --> 00:36:33,660
+I think that's a really great thing.
+
+793
+00:36:33,660 --> 00:36:36,837
+So now we have all sorts
+of these new commands,
+
+794
+00:36:36,837 --> 00:36:38,370
+pipe processing language
+
+795
+00:36:38,370 --> 00:36:41,815
+that we weren't able
+to do before with DQL.
+
+796
+00:36:41,815 --> 00:36:46,590
+So now we're able to unlock
+all sorts of new insights
+
+797
+00:36:46,590 --> 00:36:48,390
+and we're really excited about that.
+
+798
+00:36:50,850 --> 00:36:53,130
+But what if you're not, you know,
+
+799
+00:36:53,130 --> 00:36:56,940
+a piped language expert or guru?
+
+800
+00:36:56,940 --> 00:36:59,520
+Well, I talked a little bit earlier about
+
+801
+00:36:59,520 --> 00:37:03,270
+the AI assistant that helps
+you build out your queries.
+
+802
+00:37:03,270 --> 00:37:05,460
+So I can very easily just come in here
+
+803
+00:37:05,460 --> 00:37:08,490
+and type out an English prompt.
+
+804
+00:37:08,490 --> 00:37:12,300
+The nice thing is not
+only do I get the results,
+
+805
+00:37:12,300 --> 00:37:14,040
+fantastic of course,
+
+806
+00:37:14,040 --> 00:37:17,880
+but I also get the PPL statement as well.
+
+807
+00:37:17,880 --> 00:37:20,823
+So you're able to learn with-
+
+808
+00:37:22,200 --> 00:37:24,990
+you're able to learn as
+well as get the results
+
+809
+00:37:24,990 --> 00:37:27,393
+that you need using
+this language assistant.
+
+810
+00:37:28,805 --> 00:37:30,240
+And I can iterate on it.
+
+811
+00:37:30,240 --> 00:37:33,705
+See, so now I can go
+over into the query bar,
+
+812
+00:37:33,705 --> 00:37:37,203
+make adjustments to the
+query if I wanted to.
+
+813
+00:37:38,130 --> 00:37:40,470
+So super easy.
+
+814
+00:37:40,470 --> 00:37:42,120
+But let's say it's 2:00 in the morning
+
+815
+00:37:42,120 --> 00:37:44,640
+and I got paged super frustrating.
+
+816
+00:37:44,640 --> 00:37:46,590
+I know what we've all been there.
+
+817
+00:37:46,590 --> 00:37:48,705
+I have the AI summary feature as well.
+
+818
+00:37:48,705 --> 00:37:50,614
+So I can go and execute the query
+
+819
+00:37:50,614 --> 00:37:53,370
+and then use the AI summary feature
+
+820
+00:37:53,370 --> 00:37:57,270
+to extract those insights
+from the results set
+
+821
+00:37:57,270 --> 00:37:59,130
+to very quickly give me hints
+
+822
+00:37:59,130 --> 00:38:01,683
+as to what to do next and who to contact.
+
+823
+00:38:05,695 --> 00:38:07,830
+I mentioned the visualizations
+
+824
+00:38:07,830 --> 00:38:10,153
+and all of the options that
+we have with visualizations,
+
+825
+00:38:10,153 --> 00:38:14,910
+but really it is as easy
+as you execute your query,
+
+826
+00:38:14,910 --> 00:38:16,950
+you analyze your results,
+
+827
+00:38:16,950 --> 00:38:19,260
+you get that perfect visualization
+
+828
+00:38:19,260 --> 00:38:20,850
+that you need for, you know,
+
+829
+00:38:20,850 --> 00:38:23,760
+supplemental materials for your ticket
+
+830
+00:38:23,760 --> 00:38:25,260
+and you can add it to a dashboard
+
+831
+00:38:25,260 --> 00:38:28,053
+from right within the discover experience,
+
+832
+00:38:40,170 --> 00:38:41,310
+Bada bing, bada boom.
+
+833
+00:38:41,310 --> 00:38:43,380
+Now we got a dashboard.
+
+834
+00:38:43,380 --> 00:38:44,433
+Easy, easy.
+
+835
+00:38:47,640 --> 00:38:50,826
+So what's even easier, right?
+
+836
+00:38:50,826 --> 00:38:55,470
+We talked about, you
+know, having a easy setup,
+
+837
+00:38:55,470 --> 00:38:58,140
+great rich analytics experience,
+
+838
+00:38:58,140 --> 00:39:03,140
+cohesive experience from
+a discover visualization.
+
+839
+00:39:03,483 --> 00:39:07,410
+Sohaib is gonna talk to us
+about agentic development.
+
+840
+00:39:07,410 --> 00:39:09,543
+So looking forward to that.
+
+841
+00:39:15,237 --> 00:39:16,350
+- Thank you.
+
+842
+00:39:16,350 --> 00:39:18,330
+All right, now the exciting stuff, right?
+
+843
+00:39:18,330 --> 00:39:21,090
+So we've seen how Any Company
+engineers and analysts
+
+844
+00:39:21,090 --> 00:39:24,540
+can use this improved UI experience
+
+845
+00:39:24,540 --> 00:39:28,200
+to easily get started to
+use familiar languages
+
+846
+00:39:28,200 --> 00:39:30,940
+and analyze data using
+a rich set of features
+
+847
+00:39:30,940 --> 00:39:34,860
+and query languages to reduce
+the time to resolution.
+
+848
+00:39:34,860 --> 00:39:37,597
+But you know, before I
+jump into the next thing,
+
+849
+00:39:37,597 --> 00:39:39,840
+which is a separate team in Any Company
+
+850
+00:39:39,840 --> 00:39:42,630
+wants to take it really
+even a step further,
+
+851
+00:39:42,630 --> 00:39:45,040
+they want to know how they can use AI
+
+852
+00:39:46,020 --> 00:39:49,080
+and agents to help with
+the same kind of things
+
+853
+00:39:49,080 --> 00:39:51,480
+that we saw to speed up investigations
+
+854
+00:39:51,480 --> 00:39:53,730
+and the time to resolution
+
+855
+00:39:53,730 --> 00:39:56,209
+without needing to even have
+any engineers and analysts
+
+856
+00:39:56,209 --> 00:39:58,347
+using this UI experience.
+
+857
+00:39:58,347 --> 00:40:00,150
+And so what we hear from customers
+
+858
+00:40:00,150 --> 00:40:03,210
+are these two different
+sort of requirements, right?
+
+859
+00:40:03,210 --> 00:40:06,930
+One is how can we work
+without having a team
+
+860
+00:40:06,930 --> 00:40:08,490
+of engineers and analysts?
+
+861
+00:40:08,490 --> 00:40:12,030
+So this is where teams
+are, you know, staff short
+
+862
+00:40:12,030 --> 00:40:13,684
+and they don't have the time to go
+
+863
+00:40:13,684 --> 00:40:16,740
+and do the investigation
+and use PPL like we saw.
+
+864
+00:40:16,740 --> 00:40:18,960
+And this is where they could
+use the help of an AI agent.
+
+865
+00:40:18,960 --> 00:40:22,290
+And there are other teams where
+they already have engineers
+
+866
+00:40:22,290 --> 00:40:24,660
+and analysts that are
+used to using these tools
+
+867
+00:40:24,660 --> 00:40:25,860
+and they just wanna make it easier
+
+868
+00:40:25,860 --> 00:40:28,020
+and they prefer to go themselves
+
+869
+00:40:28,020 --> 00:40:29,310
+and build visualizations
+
+870
+00:40:29,310 --> 00:40:33,120
+and build these integrated
+queries and visualizations.
+
+871
+00:40:33,120 --> 00:40:34,290
+So they want the best of both.
+
+872
+00:40:34,290 --> 00:40:36,720
+They want the ability to easily do the UI
+
+873
+00:40:36,720 --> 00:40:39,270
+and they also want this
+easy agentic experience.
+
+874
+00:40:39,270 --> 00:40:41,520
+And that's why we have
+the second piece of it,
+
+875
+00:40:41,520 --> 00:40:45,269
+which is how can we use AI agents
+
+876
+00:40:45,269 --> 00:40:47,370
+to make this even easier.
+
+877
+00:40:47,370 --> 00:40:49,680
+So Any Company wants to provide
+
+878
+00:40:49,680 --> 00:40:51,611
+deep and actionable visibility
+
+879
+00:40:51,611 --> 00:40:55,509
+to AI agents that can monitor
+and analyze and reason
+
+880
+00:40:55,509 --> 00:40:59,730
+and improve observability process
+within their organization.
+
+881
+00:40:59,730 --> 00:41:03,420
+They want to have an AI agent
+that has access to tools
+
+882
+00:41:03,420 --> 00:41:07,590
+such as the list of indexes
+in the OpenSearch clusters
+
+883
+00:41:07,590 --> 00:41:08,820
+and other data sources
+
+884
+00:41:08,820 --> 00:41:11,520
+that Joshua showed like S3
+and CloudWatch, et cetera.
+
+885
+00:41:11,520 --> 00:41:13,320
+And they want this AI agent
+
+886
+00:41:13,320 --> 00:41:15,420
+to be able to get the metadata
+
+887
+00:41:15,420 --> 00:41:17,370
+from the OpenSearch cluster as well
+
+888
+00:41:17,370 --> 00:41:19,320
+to see what are all the indexes there,
+
+889
+00:41:19,320 --> 00:41:21,510
+what are they called,
+what are the fields there
+
+890
+00:41:21,510 --> 00:41:24,540
+so that it can properly
+know which fields to query
+
+891
+00:41:24,540 --> 00:41:26,190
+and where to run the filters.
+
+892
+00:41:26,190 --> 00:41:28,077
+And they want to do this very easily
+
+893
+00:41:28,077 --> 00:41:31,170
+to get started and do a quick POC to see
+
+894
+00:41:31,170 --> 00:41:33,570
+does this work before they
+decide to move, you know,
+
+895
+00:41:33,570 --> 00:41:35,700
+if they wanna move this into production.
+
+896
+00:41:35,700 --> 00:41:38,280
+So they wanna see how
+can we start to do this
+
+897
+00:41:38,280 --> 00:41:40,796
+and what steps can we start using
+
+898
+00:41:40,796 --> 00:41:42,570
+to try to remediate future issues
+
+899
+00:41:42,570 --> 00:41:44,640
+as well using AI agents.
+
+900
+00:41:44,640 --> 00:41:47,346
+And so this is where one
+of the main components
+
+901
+00:41:47,346 --> 00:41:49,470
+of OpenSearch becomes helpful,
+
+902
+00:41:49,470 --> 00:41:52,380
+where, you know, OpenSearch
+already has a capability
+
+903
+00:41:52,380 --> 00:41:54,750
+called model context protocol or MCP.
+
+904
+00:41:54,750 --> 00:41:56,100
+I'm sure you've heard a lot about it
+
+905
+00:41:56,100 --> 00:41:58,830
+in many other sessions,
+but just as a recap.
+
+906
+00:41:58,830 --> 00:42:01,140
+Traditionally connecting
+multiple AI agents
+
+907
+00:42:01,140 --> 00:42:02,730
+to different data sources
+
+908
+00:42:02,730 --> 00:42:04,590
+required individual connections
+
+909
+00:42:04,590 --> 00:42:07,380
+from each of the agents to each source.
+
+910
+00:42:07,380 --> 00:42:09,600
+And so MCP simplifies this
+
+911
+00:42:09,600 --> 00:42:11,956
+by introducing a centralized component.
+
+912
+00:42:11,956 --> 00:42:13,740
+This component handles
+
+913
+00:42:13,740 --> 00:42:16,200
+all the boilerplate code for connectivity
+
+914
+00:42:16,200 --> 00:42:19,290
+for making the system more
+efficient and manageable.
+
+915
+00:42:19,290 --> 00:42:21,630
+The MCP consists of
+these two parts usually
+
+916
+00:42:21,630 --> 00:42:24,180
+where you have a MCP
+server and an MCP client.
+
+917
+00:42:24,180 --> 00:42:25,680
+The server is a lightweight program
+
+918
+00:42:25,680 --> 00:42:27,510
+that invokes the rest APIs
+
+919
+00:42:27,510 --> 00:42:29,875
+of services like OpenSearch
+Service in this case
+
+920
+00:42:29,875 --> 00:42:32,880
+and the server and the
+client is an adapter
+
+921
+00:42:32,880 --> 00:42:34,950
+for allowing the AI agent
+
+922
+00:42:34,950 --> 00:42:37,083
+to use the servers functionalities.
+
+923
+00:42:38,070 --> 00:42:39,750
+And for OpenSearch specifically,
+
+924
+00:42:39,750 --> 00:42:43,753
+it has this MCP server in
+the open source community.
+
+925
+00:42:43,753 --> 00:42:45,724
+It was developed by the community
+
+926
+00:42:45,724 --> 00:42:49,050
+and it's community-driven
+development and support.
+
+927
+00:42:49,050 --> 00:42:52,044
+So that's one major
+benefit of using OpenSearch
+
+928
+00:42:52,044 --> 00:42:54,210
+in the OpenSearch MCP server.
+
+929
+00:42:54,210 --> 00:42:55,560
+It has flexible communications
+
+930
+00:42:55,560 --> 00:42:57,810
+and its support standard I/O protocols
+
+931
+00:42:57,810 --> 00:43:01,440
+as well as streaming and it's adaptable.
+
+932
+00:43:01,440 --> 00:43:04,276
+And then it has a comprehensive
+suite of tools available.
+
+933
+00:43:04,276 --> 00:43:06,660
+Read-only tools such as, you know,
+
+934
+00:43:06,660 --> 00:43:07,890
+the ability to search data,
+
+935
+00:43:07,890 --> 00:43:10,338
+the ability to check
+the clusters held itself
+
+936
+00:43:10,338 --> 00:43:12,990
+and check the performance
+metrics, et cetera.
+
+937
+00:43:12,990 --> 00:43:16,530
+And then finally, has
+robust security options
+
+938
+00:43:16,530 --> 00:43:18,813
+with different authentication methods.
+
+939
+00:43:19,980 --> 00:43:24,450
+So we've put together a
+quick demo for Any Company
+
+940
+00:43:24,450 --> 00:43:28,500
+to show the power of using this MCP server
+
+941
+00:43:28,500 --> 00:43:31,500
+to connect to OpenSearch
+with their AI agents.
+
+942
+00:43:31,500 --> 00:43:34,050
+For this demo, I'm using
+Amazon Q Developer CLI,
+
+943
+00:43:34,050 --> 00:43:38,775
+which is now renamed
+to Kiro, you know, CLI
+
+944
+00:43:38,775 --> 00:43:41,850
+as you might hear about it as well.
+
+945
+00:43:41,850 --> 00:43:43,680
+So to easily get started,
+
+946
+00:43:43,680 --> 00:43:45,510
+this is a very simple architecture
+
+947
+00:43:45,510 --> 00:43:47,880
+where we have Q Developer CLI,
+
+948
+00:43:47,880 --> 00:43:49,560
+we have the MCP server stood up
+
+949
+00:43:49,560 --> 00:43:51,750
+and connected to the Q Developer CLI,
+
+950
+00:43:51,750 --> 00:43:54,189
+and it knows about the OpenSearch cluster
+
+951
+00:43:54,189 --> 00:43:56,730
+through the MCP server.
+
+952
+00:43:56,730 --> 00:43:58,083
+So to set context for the demo
+
+953
+00:43:58,083 --> 00:44:00,347
+that I'm gonna be showing you.
+
+954
+00:44:00,347 --> 00:44:01,803
+It's a POC demo.
+
+955
+00:44:03,030 --> 00:44:06,094
+It's Black Friday morning
+for Any Company, right?
+
+956
+00:44:06,094 --> 00:44:09,090
+Traffic is 10 times normal levels
+
+957
+00:44:09,090 --> 00:44:12,044
+and suddenly checkout
+failures start occurring.
+
+958
+00:44:12,044 --> 00:44:15,180
+The engineer team gets alerts,
+
+959
+00:44:15,180 --> 00:44:17,760
+but they're overwhelmed with data
+
+960
+00:44:17,760 --> 00:44:19,440
+from many, many different microservices
+
+961
+00:44:19,440 --> 00:44:20,910
+also sending alerts.
+
+962
+00:44:20,910 --> 00:44:22,560
+And this is where they wanna see
+
+963
+00:44:22,560 --> 00:44:24,510
+if the AI observability agent
+
+964
+00:44:24,510 --> 00:44:27,303
+powered by the MCP server
+can come to the rescue.
+
+965
+00:44:28,920 --> 00:44:33,420
+So here I already have
+Q Developer CLI launched
+
+966
+00:44:33,420 --> 00:44:37,380
+and I've already connected it
+to the OpenSearch MCP server,
+
+967
+00:44:37,380 --> 00:44:39,240
+which you can see at the top.
+
+968
+00:44:39,240 --> 00:44:41,190
+It's loaded already successfully.
+
+969
+00:44:41,190 --> 00:44:44,880
+And so right away we can
+just start asking questions.
+
+970
+00:44:44,880 --> 00:44:47,504
+So the first thing what
+we wanna do is, you know-
+
+971
+00:44:47,504 --> 00:44:49,348
+oh, by the way, this is the indexes
+
+972
+00:44:49,348 --> 00:44:52,170
+that exist in my
+OpenSearch cluster already.
+
+973
+00:44:52,170 --> 00:44:55,260
+So there is anycompany-app-logs index,
+
+974
+00:44:55,260 --> 00:44:57,690
+there is an anycompany-metrics index
+
+975
+00:44:57,690 --> 00:44:59,040
+and then there's a traces index.
+
+976
+00:44:59,040 --> 00:45:00,600
+We've put them in the same cluster,
+
+977
+00:45:00,600 --> 00:45:05,250
+but they could be across
+different sources.
+
+978
+00:45:05,250 --> 00:45:07,080
+So the first question we're
+gonna ask is, you know,
+
+979
+00:45:07,080 --> 00:45:08,700
+we're seeing increased error rates
+
+980
+00:45:08,700 --> 00:45:10,530
+across our checkout services.
+
+981
+00:45:10,530 --> 00:45:12,150
+Can you investigate what's happening
+
+982
+00:45:12,150 --> 00:45:14,640
+and provide us a root cause analysis?
+
+983
+00:45:14,640 --> 00:45:18,520
+So the agent uses all
+the tools that it has
+
+984
+00:45:18,520 --> 00:45:20,340
+to figure out what's going on.
+
+985
+00:45:20,340 --> 00:45:21,750
+So immediately we can see
+
+986
+00:45:21,750 --> 00:45:23,130
+that it starts running queries
+
+987
+00:45:23,130 --> 00:45:25,500
+against the OpenSearch cluster,
+
+988
+00:45:25,500 --> 00:45:27,240
+against the indexes to fetch the data.
+
+989
+00:45:27,240 --> 00:45:30,450
+And we can even see the query that it ran,
+
+990
+00:45:30,450 --> 00:45:33,990
+we can see the index name
+is anycompany-app logs,
+
+991
+00:45:33,990 --> 00:45:35,130
+we can see the cluster name.
+
+992
+00:45:35,130 --> 00:45:36,630
+And then we can also see additional things
+
+993
+00:45:36,630 --> 00:45:38,965
+such as filter clauses
+in the query itself.
+
+994
+00:45:38,965 --> 00:45:41,850
+It's filtering for a
+service called checkout.
+
+995
+00:45:41,850 --> 00:45:45,090
+You know, this is so useful for analysts,
+
+996
+00:45:45,090 --> 00:45:47,100
+which they don't have to write queries.
+
+997
+00:45:47,100 --> 00:45:49,170
+And usually, when you write
+a query you have to run it
+
+998
+00:45:49,170 --> 00:45:51,180
+a bunch of times and maybe adjust it
+
+999
+00:45:51,180 --> 00:45:53,280
+and we can see the agent does that also.
+
+1000
+00:45:53,280 --> 00:45:54,990
+You know, the first query
+didn't get the right results.
+
+1001
+00:45:54,990 --> 00:45:56,790
+So it actually went back to another tool
+
+1002
+00:45:56,790 --> 00:45:58,200
+called index mapping
+
+1003
+00:45:58,200 --> 00:46:00,120
+to learn more about what's the metadata,
+
+1004
+00:46:00,120 --> 00:46:01,110
+what fields exist,
+
+1005
+00:46:01,110 --> 00:46:03,600
+and then rewrite the query
+using the correct field names.
+
+1006
+00:46:03,600 --> 00:46:05,580
+And then it does the same
+thing again and again
+
+1007
+00:46:05,580 --> 00:46:07,500
+through the other indexes
+that seem relevant.
+
+1008
+00:46:07,500 --> 00:46:09,390
+So it checks traces as well.
+
+1009
+00:46:09,390 --> 00:46:11,010
+And it also checks metrics.
+
+1010
+00:46:11,010 --> 00:46:12,690
+And it keeps going back and forth
+
+1011
+00:46:12,690 --> 00:46:15,270
+between running queries, checking metadata
+
+1012
+00:46:15,270 --> 00:46:17,280
+for what fields exists in my index,
+
+1013
+00:46:17,280 --> 00:46:19,680
+and then readjusting the filters to apply,
+
+1014
+00:46:19,680 --> 00:46:20,640
+let's check this field,
+
+1015
+00:46:20,640 --> 00:46:22,170
+let's check this field, et cetera.
+
+1016
+00:46:22,170 --> 00:46:24,990
+So it's going through and
+running multiple queries.
+
+1017
+00:46:24,990 --> 00:46:26,218
+So useful to save, you know,
+
+1018
+00:46:26,218 --> 00:46:28,140
+hours and hours of time
+
+1019
+00:46:28,140 --> 00:46:30,390
+of a human having to do all of this.
+
+1020
+00:46:30,390 --> 00:46:32,370
+And then finally it takes
+all the data gathered
+
+1021
+00:46:32,370 --> 00:46:33,690
+from all the queries
+
+1022
+00:46:33,690 --> 00:46:37,260
+and synthesizes it together
+into a single analysis.
+
+1023
+00:46:37,260 --> 00:46:38,190
+So it tells us, you know,
+
+1024
+00:46:38,190 --> 00:46:40,260
+based on the investigation of the data,
+
+1025
+00:46:40,260 --> 00:46:41,130
+here's what happens.
+
+1026
+00:46:41,130 --> 00:46:44,370
+So first we get a timeline
+of events, super useful.
+
+1027
+00:46:44,370 --> 00:46:46,770
+We know at 10:00 AM things were normal,
+
+1028
+00:46:46,770 --> 00:46:50,250
+and then at 10:30, there
+was an incident peak
+
+1029
+00:46:50,250 --> 00:46:52,320
+and it gives us the data points
+
+1030
+00:46:52,320 --> 00:46:54,510
+to prove why it thinks
+that's the incident peak
+
+1031
+00:46:54,510 --> 00:46:57,210
+because it saw error rates spiking.
+
+1032
+00:46:57,210 --> 00:46:59,790
+And then finally it gives
+us an actual root cause,
+
+1033
+00:46:59,790 --> 00:47:01,290
+which is what we were looking for.
+
+1034
+00:47:01,290 --> 00:47:03,564
+And the primary cause
+is because, you know,
+
+1035
+00:47:03,564 --> 00:47:05,636
+the service was unavailable,
+
+1036
+00:47:05,636 --> 00:47:07,800
+the checkout service became unavailable.
+
+1037
+00:47:07,800 --> 00:47:09,390
+So now we know that this checkout service
+
+1038
+00:47:09,390 --> 00:47:11,820
+is really what caused
+all the subsequent alerts
+
+1039
+00:47:11,820 --> 00:47:15,243
+and issues that started
+the whole snowball.
+
+1040
+00:47:16,080 --> 00:47:18,330
+And it even gives us
+from the trace analysis.
+
+1041
+00:47:18,330 --> 00:47:20,760
+One specific service name
+called process order,
+
+1042
+00:47:20,760 --> 00:47:22,890
+which had the error starting.
+
+1043
+00:47:22,890 --> 00:47:24,720
+So now we want to dive
+a little deeper, right?
+
+1044
+00:47:24,720 --> 00:47:27,090
+We say okay, the checkout
+errors seem to be related
+
+1045
+00:47:27,090 --> 00:47:28,429
+to the payment processing.
+
+1046
+00:47:28,429 --> 00:47:31,320
+Can you trace the request flow
+
+1047
+00:47:31,320 --> 00:47:33,990
+and identify where the actual
+bottleneck is occurring
+
+1048
+00:47:33,990 --> 00:47:35,910
+that caused these issues to happen?
+
+1049
+00:47:35,910 --> 00:47:38,460
+So again, it'll go through
+basically the same process.
+
+1050
+00:47:38,460 --> 00:47:41,246
+Again, it's running some queries.
+
+1051
+00:47:41,246 --> 00:47:44,310
+You'll see the queries are
+a little bit different now.
+
+1052
+00:47:44,310 --> 00:47:45,660
+The filters are different.
+
+1053
+00:47:45,660 --> 00:47:48,056
+It's looking for payment first
+
+1054
+00:47:48,056 --> 00:47:50,580
+and then it'll synthesize this data
+
+1055
+00:47:50,580 --> 00:47:52,890
+to try to find what's
+the actual bottleneck
+
+1056
+00:47:52,890 --> 00:47:56,643
+that caused that service
+to fail and give errors.
+
+1057
+00:47:58,440 --> 00:48:01,083
+Okay, so now it's going
+to get the trace flow.
+
+1058
+00:48:05,880 --> 00:48:07,500
+We can even see trace IDs.
+
+1059
+00:48:07,500 --> 00:48:10,800
+So it's identify, okay, trace_003 and 004
+
+1060
+00:48:10,800 --> 00:48:12,000
+correlate to this issue.
+
+1061
+00:48:12,000 --> 00:48:15,420
+So we'll dig in deeper to
+those specific trace IDs
+
+1062
+00:48:15,420 --> 00:48:17,264
+and find the correlated logs.
+
+1063
+00:48:17,264 --> 00:48:20,640
+Again, you know, saves hours of time
+
+1064
+00:48:20,640 --> 00:48:22,840
+for a human to have to
+do all this analysis.
+
+1065
+00:48:25,140 --> 00:48:29,373
+And then finally, it's going
+to look further into the logs.
+
+1066
+00:48:34,657 --> 00:48:35,880
+And now metrics.
+
+1067
+00:48:35,880 --> 00:48:39,180
+So any related metrics,
+
+1068
+00:48:39,180 --> 00:48:42,960
+if not, it can just kind of ignore that.
+
+1069
+00:48:42,960 --> 00:48:45,573
+So now it's synthesized all of that.
+
+1070
+00:48:45,573 --> 00:48:48,003
+And now let's see what the bottleneck is.
+
+1071
+00:48:48,840 --> 00:48:51,690
+The bottleneck identified in this case
+
+1072
+00:48:51,690 --> 00:48:55,920
+seems to be the database
+timeout and the payment service.
+
+1073
+00:48:55,920 --> 00:48:59,069
+And so it gives us another
+bit of data that's helpful,
+
+1074
+00:48:59,069 --> 00:49:01,110
+but really at the bottom
+you see the root cause.
+
+1075
+00:49:01,110 --> 00:49:02,700
+That's where the helpful
+piece of information
+
+1076
+00:49:02,700 --> 00:49:04,050
+is that I was looking for,
+
+1077
+00:49:04,050 --> 00:49:06,634
+which is tell me what the root cause is.
+
+1078
+00:49:06,634 --> 00:49:10,830
+And primary issue seems to
+be the connection timed out
+
+1079
+00:49:10,830 --> 00:49:14,580
+after 5000 milliseconds
+on our database service.
+
+1080
+00:49:14,580 --> 00:49:18,750
+So due to the spike of
+queries against our database,
+
+1081
+00:49:18,750 --> 00:49:19,920
+the queries are running slower
+
+1082
+00:49:19,920 --> 00:49:21,270
+and then eventually they hit a timeout,
+
+1083
+00:49:21,270 --> 00:49:22,500
+which cause the errors,
+
+1084
+00:49:22,500 --> 00:49:24,090
+which cause other downstream effects
+
+1085
+00:49:24,090 --> 00:49:28,140
+and it even shows us other
+failures that are correlated.
+
+1086
+00:49:28,140 --> 00:49:29,460
+So super helpful.
+
+1087
+00:49:29,460 --> 00:49:32,213
+And then, you know,
+again, it summarizes it.
+
+1088
+00:49:32,213 --> 00:49:35,340
+Also, if you wanted, you could
+kind of copy and paste this
+
+1089
+00:49:35,340 --> 00:49:36,660
+and send it to leadership
+
+1090
+00:49:36,660 --> 00:49:38,626
+to say, okay, here's what's going on.
+
+1091
+00:49:38,626 --> 00:49:41,610
+And now of course what
+we wanna know is, okay,
+
+1092
+00:49:41,610 --> 00:49:44,490
+we identified the issue,
+what's the impact, right?
+
+1093
+00:49:44,490 --> 00:49:48,180
+What's the impact of this timeout?
+
+1094
+00:49:48,180 --> 00:49:49,230
+And how can we fix it?
+
+1095
+00:49:49,230 --> 00:49:50,910
+That's the next natural questions.
+
+1096
+00:49:50,910 --> 00:49:54,810
+So we'll ask the agent,
+the next question is:
+
+1097
+00:49:54,810 --> 00:49:57,930
+what's the business impact of
+this issue actually occurring
+
+1098
+00:49:57,930 --> 00:50:00,390
+and how many customers are affected
+
+1099
+00:50:00,390 --> 00:50:04,893
+and what's the revenue
+at risk from this issue?
+
+1100
+00:50:11,147 --> 00:50:14,223
+Okay, so yeah, this is the
+next question, business impact.
+
+1101
+00:50:18,090 --> 00:50:20,430
+So the interesting thing
+is we also have some
+
+1102
+00:50:20,430 --> 00:50:23,904
+non logs related data that
+we've given the agent access to.
+
+1103
+00:50:23,904 --> 00:50:26,160
+So we've given this agent access
+
+1104
+00:50:26,160 --> 00:50:28,260
+to our sales tables as well.
+
+1105
+00:50:28,260 --> 00:50:30,346
+So we can see previous sales history.
+
+1106
+00:50:30,346 --> 00:50:33,960
+And in this case, it's
+able to not only associate,
+
+1107
+00:50:33,960 --> 00:50:36,960
+you know, the logs and traces and metrics,
+
+1108
+00:50:36,960 --> 00:50:38,362
+but to find the impact.
+
+1109
+00:50:38,362 --> 00:50:41,280
+It actually queries our sales history
+
+1110
+00:50:41,280 --> 00:50:43,740
+to find the normal order volume
+
+1111
+00:50:43,740 --> 00:50:46,710
+and the average order amount
+
+1112
+00:50:46,710 --> 00:50:48,630
+and the ordered dollar value
+
+1113
+00:50:48,630 --> 00:50:50,910
+so that it can try to estimate
+
+1114
+00:50:50,910 --> 00:50:53,160
+based on the number of
+orders that we were seeing
+
+1115
+00:50:53,160 --> 00:50:56,670
+and how many errors we had
+and the average dollar value,
+
+1116
+00:50:56,670 --> 00:51:00,630
+what's the potential lost
+revenue there directly.
+
+1117
+00:51:00,630 --> 00:51:02,770
+And that's really helpful
+if you wanna quickly
+
+1118
+00:51:02,770 --> 00:51:04,920
+send leadership update to say, okay,
+
+1119
+00:51:04,920 --> 00:51:07,470
+this is how many orders we
+might have lost because of this.
+
+1120
+00:51:07,470 --> 00:51:10,666
+And the potential future
+impact of customers churning
+
+1121
+00:51:10,666 --> 00:51:13,740
+because they were not able to
+full complete their checkouts.
+
+1122
+00:51:13,740 --> 00:51:16,170
+They would've bought, but they didn't.
+
+1123
+00:51:16,170 --> 00:51:18,150
+And so it kind of goes
+through all that math
+
+1124
+00:51:18,150 --> 00:51:18,983
+right here, right?
+
+1125
+00:51:18,983 --> 00:51:21,330
+You could see average order value
+
+1126
+00:51:21,330 --> 00:51:23,790
+is from the e-commerce data,
+
+1127
+00:51:23,790 --> 00:51:26,134
+then there's normal traffic,
+
+1128
+00:51:26,134 --> 00:51:28,053
+incident response as well.
+
+1129
+00:51:52,568 --> 00:51:54,390
+I am trying to see if I
+can speed this up for you
+
+1130
+00:51:54,390 --> 00:51:56,670
+because I think you get the idea.
+
+1131
+00:51:56,670 --> 00:51:58,148
+But it's a lot of good data in there
+
+1132
+00:51:58,148 --> 00:52:01,173
+to see the checkout
+service issues, et cetera.
+
+1133
+00:52:08,370 --> 00:52:10,410
+Okay, so now what we're gonna do
+
+1134
+00:52:10,410 --> 00:52:15,410
+is we're going to ask the agent
+to, based on the analysis,
+
+1135
+00:52:16,020 --> 00:52:18,723
+what's the recommended
+remediation step, right?
+
+1136
+00:52:20,204 --> 00:52:22,260
+How can I fix this issue now?
+
+1137
+00:52:22,260 --> 00:52:24,300
+And then also, how can
+I prevent this issue
+
+1138
+00:52:24,300 --> 00:52:25,950
+from occurring in the future again?
+
+1139
+00:52:25,950 --> 00:52:28,257
+So that's a different
+question to kind of ask
+
+1140
+00:52:28,257 --> 00:52:30,402
+after we establish the business impact,
+
+1141
+00:52:30,402 --> 00:52:32,640
+which you can kind of see there.
+
+1142
+00:52:32,640 --> 00:52:34,740
+So now what I'll do is I'll ask the agent,
+
+1143
+00:52:36,060 --> 00:52:38,070
+tell me what I can do to fix it,
+
+1144
+00:52:38,070 --> 00:52:39,390
+but not just tell me now,
+
+1145
+00:52:39,390 --> 00:52:41,070
+why don't you create a document for me?
+
+1146
+00:52:41,070 --> 00:52:44,127
+Create a document for me,
+you know, save it locally,
+
+1147
+00:52:44,127 --> 00:52:46,664
+that gives me all the steps I need to do.
+
+1148
+00:52:46,664 --> 00:52:50,370
+And then I can share that
+document with my engineers,
+
+1149
+00:52:50,370 --> 00:52:51,870
+I can share it with my leadership
+
+1150
+00:52:51,870 --> 00:52:53,220
+and it should give me all the steps
+
+1151
+00:52:53,220 --> 00:52:54,780
+that I should take right away
+
+1152
+00:52:54,780 --> 00:52:56,880
+and the steps that I need to
+take in the next week or so,
+
+1153
+00:52:56,880 --> 00:52:58,980
+the steps I need to
+take in the next month.
+
+1154
+00:52:58,980 --> 00:53:00,510
+And then, you know, in
+the next few months.
+
+1155
+00:53:00,510 --> 00:53:04,862
+So it created a comprehensive
+remediation plan
+
+1156
+00:53:04,862 --> 00:53:07,470
+and it even wrote it out to my local path.
+
+1157
+00:53:07,470 --> 00:53:10,890
+You can see it's called
+payment incident runbook.
+
+1158
+00:53:10,890 --> 00:53:12,900
+And it goes through all the things I need
+
+1159
+00:53:12,900 --> 00:53:14,733
+to do to fix this issue.
+
+1160
+00:53:17,280 --> 00:53:21,420
+And then, yeah, I used
+the right tool to do this
+
+1161
+00:53:21,420 --> 00:53:24,657
+and then also created
+a different document,
+
+1162
+00:53:27,780 --> 00:53:30,295
+which is a runbook for future issues
+
+1163
+00:53:30,295 --> 00:53:32,673
+that our on-call engineers might face.
+
+1164
+00:53:35,100 --> 00:53:36,303
+So now it's doing that.
+
+1165
+00:53:45,103 --> 00:53:46,860
+Okay, and just similar to the first one,
+
+1166
+00:53:46,860 --> 00:53:47,910
+I think you get the idea
+
+1167
+00:53:47,910 --> 00:53:49,590
+that it creates a runbook,
+
+1168
+00:53:49,590 --> 00:53:50,703
+it saves it locally.
+
+1169
+00:53:52,260 --> 00:53:54,903
+And I just wanna show
+you what that looks like.
+
+1170
+00:53:58,650 --> 00:54:01,050
+So here's the payment
+processing remediation plan
+
+1171
+00:54:01,050 --> 00:54:02,490
+that I've just opened up.
+
+1172
+00:54:02,490 --> 00:54:04,740
+I don't know why this monitor
+is jittering like that,
+
+1173
+00:54:04,740 --> 00:54:08,304
+but it provides even the
+database alter statements
+
+1174
+00:54:08,304 --> 00:54:10,110
+that I need to do to change
+
+1175
+00:54:10,110 --> 00:54:11,883
+the connectivity issue that we saw.
+
+1176
+00:54:12,990 --> 00:54:14,340
+And those are the short term fixes
+
+1177
+00:54:14,340 --> 00:54:15,750
+that need to happen right away.
+
+1178
+00:54:15,750 --> 00:54:18,550
+And then it also provides
+some long term fixes
+
+1179
+00:54:18,550 --> 00:54:20,283
+that we should see.
+
+1180
+00:54:22,560 --> 00:54:24,900
+So it's giving us the
+actual database commands
+
+1181
+00:54:24,900 --> 00:54:26,223
+for the engineers to do.
+
+1182
+00:54:32,160 --> 00:54:33,873
+Okay, so I think we get the idea-
+
+1183
+00:54:35,370 --> 00:54:38,490
+That's essentially a quick
+demo of what can be done.
+
+1184
+00:54:38,490 --> 00:54:39,690
+Of course to productionalize it,
+
+1185
+00:54:39,690 --> 00:54:41,407
+you can use something like, you know,
+
+1186
+00:54:41,407 --> 00:54:44,100
+AgentCore to build an agent in production
+
+1187
+00:54:44,100 --> 00:54:45,720
+that has similar capabilities.
+
+1188
+00:54:45,720 --> 00:54:49,079
+So what we saw today was we
+saw automatic correlation.
+
+1189
+00:54:49,079 --> 00:54:51,990
+The observability agent
+was able to correlate
+
+1190
+00:54:51,990 --> 00:54:53,634
+and connect data from different indexes
+
+1191
+00:54:53,634 --> 00:54:56,160
+for logs, metric, traces and sales data
+
+1192
+00:54:56,160 --> 00:54:57,840
+without any human input.
+
+1193
+00:54:57,840 --> 00:55:00,882
+It was able to explain what
+it found in natural language
+
+1194
+00:55:00,882 --> 00:55:03,591
+that was easy to understand for humans
+
+1195
+00:55:03,591 --> 00:55:06,300
+as well as data points that it used
+
+1196
+00:55:06,300 --> 00:55:08,430
+to justify the conclusions.
+
+1197
+00:55:08,430 --> 00:55:11,640
+And it also suggested
+preventative measures
+
+1198
+00:55:11,640 --> 00:55:15,150
+for future events like
+Black Fridays as well.
+
+1199
+00:55:15,150 --> 00:55:15,983
+And in near real time,
+
+1200
+00:55:15,983 --> 00:55:19,410
+you know, you could see
+it's updating its database
+
+1201
+00:55:19,410 --> 00:55:21,600
+with the memory of this incident.
+
+1202
+00:55:21,600 --> 00:55:23,640
+So that if something similar
+happens in the future,
+
+1203
+00:55:23,640 --> 00:55:28,640
+it can also use a memory to
+help make that process faster
+
+1204
+00:55:29,130 --> 00:55:31,470
+since it can remember
+this happened in the past
+
+1205
+00:55:31,470 --> 00:55:32,820
+and this is what we did to fix it.
+
+1206
+00:55:32,820 --> 00:55:34,260
+So it wouldn't even have to potentially
+
+1207
+00:55:34,260 --> 00:55:37,470
+go and do all this research
+this next time around.
+
+1208
+00:55:37,470 --> 00:55:38,580
+So before the AI agent,
+
+1209
+00:55:38,580 --> 00:55:40,080
+this would've taken hours and hours
+
+1210
+00:55:40,080 --> 00:55:42,000
+and would've cost thousands of dollars
+
+1211
+00:55:42,000 --> 00:55:43,980
+in the meantime where we're
+trying to figure it out.
+
+1212
+00:55:43,980 --> 00:55:45,060
+But with the AI agent,
+
+1213
+00:55:45,060 --> 00:55:47,698
+now you could see within
+a few minutes, you know,
+
+1214
+00:55:47,698 --> 00:55:51,300
+eight minute end to end when I ran that
+
+1215
+00:55:51,300 --> 00:55:54,510
+was to come up with all the
+answers to all our questions.
+
+1216
+00:55:54,510 --> 00:55:57,445
+And for Any Company,
+this could be, you know,
+
+1217
+00:55:57,445 --> 00:56:01,909
+70, 80% in a reduction
+in the incidents impact
+
+1218
+00:56:01,909 --> 00:56:05,550
+with the the short amount
+of time it takes, right?
+
+1219
+00:56:05,550 --> 00:56:06,993
+So thank you all so much.
+
+1220
+00:56:06,993 --> 00:56:10,860
+If you wanna go deeper into
+this type of demonstration
+
+1221
+00:56:10,860 --> 00:56:13,740
+and get more hands-on, get more deeper,
+
+1222
+00:56:13,740 --> 00:56:16,740
+we have a chalk talk coming
+up later on this week,
+
+1223
+00:56:16,740 --> 00:56:17,880
+that's ANT-330.
+
+1224
+00:56:17,880 --> 00:56:18,780
+You can see that there.
+
+1225
+00:56:18,780 --> 00:56:20,136
+Make sure to check that out.
+
+1226
+00:56:20,136 --> 00:56:22,380
+And you can ask questions
+and do the architecture
+
+1227
+00:56:22,380 --> 00:56:23,670
+for how to build something like this
+
+1228
+00:56:23,670 --> 00:56:26,492
+that's even more in depth
+and has more capabilities.
+
+1229
+00:56:26,492 --> 00:56:29,430
+If you wanna learn more about
+how to use MCP yourself,
+
+1230
+00:56:29,430 --> 00:56:31,080
+we have a blog about it
+
+1231
+00:56:31,080 --> 00:56:32,910
+and then we also have documentation
+
+1232
+00:56:32,910 --> 00:56:35,640
+on all the observability
+features that we talked about.
+
+1233
+00:56:35,640 --> 00:56:37,590
+So make sure you check those out.
+
+1234
+00:56:37,590 --> 00:56:39,570
+And then also, if you wanna learn more
+
+1235
+00:56:39,570 --> 00:56:41,940
+and you wanna level up
+your skills on OpenSearch
+
+1236
+00:56:41,940 --> 00:56:45,720
+and other AWS services,
+check out skillbuilder.aws.
+
+1237
+00:56:45,720 --> 00:56:48,690
+There's thousands of free resources there
+
+1238
+00:56:48,690 --> 00:56:51,723
+and you can start, you know,
+scan to start learning.
+
+1239
+00:56:53,100 --> 00:56:55,020
+Okay, thank you so much
+for attending our session.
+
+1240
+00:56:55,020 --> 00:56:56,580
+Remember to fill out the survey.
+
+1241
+00:56:56,580 --> 00:56:57,540
+And if you have any questions,
+
+1242
+00:56:57,540 --> 00:56:59,910
+we can be here for a
+few minutes afterwards.
+
+1243
+00:56:59,910 --> 00:57:00,743
+Thank you.
+
+1244
+00:57:00,743 --> 00:57:03,691
+(audience applauding)
+

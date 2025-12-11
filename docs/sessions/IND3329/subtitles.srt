@@ -1,0 +1,4168 @@
+1
+00:00:00,000 --> 00:00:03,300
+- Good afternoon, everyone,
+and welcome to our session.
+
+2
+00:00:03,300 --> 00:00:06,390
+I'm Ravi, Senior Solutions
+Architect at AWS,
+
+3
+00:00:06,390 --> 00:00:08,940
+and today I'm joined by
+Brian-Lloyd Newberry,
+
+4
+00:00:08,940 --> 00:00:11,610
+Associate Vice President,
+Enterprise Architecture,
+
+5
+00:00:11,610 --> 00:00:15,210
+and Tabare Gowon, Lead
+Architect, Cox Automotive.
+
+6
+00:00:15,210 --> 00:00:17,490
+Just a quick question before we dive in.
+
+7
+00:00:17,490 --> 00:00:19,020
+How many of you are experimenting
+
+8
+00:00:19,020 --> 00:00:20,853
+with AI agents in your organization?
+
+9
+00:00:22,170 --> 00:00:24,240
+And keep those hands up
+if you have launched one
+
+10
+00:00:24,240 --> 00:00:26,103
+to production and operating at scale.
+
+11
+00:00:27,450 --> 00:00:28,440
+You see the drop?
+
+12
+00:00:28,440 --> 00:00:30,330
+That's what we're gonna talk about today,
+
+13
+00:00:30,330 --> 00:00:32,340
+and you'll see Cox Automotive's blueprint
+
+14
+00:00:32,340 --> 00:00:33,840
+for addressing this challenge.
+
+15
+00:00:35,310 --> 00:00:36,510
+So here's the agenda.
+
+16
+00:00:36,510 --> 00:00:39,900
+I'm going to do a quick intro
+of Amazon Bedrock Agent Core,
+
+17
+00:00:39,900 --> 00:00:41,460
+then hand it over to BLN,
+
+18
+00:00:41,460 --> 00:00:43,800
+who will talk about Cox
+Automotive's agentic AI journey
+
+19
+00:00:43,800 --> 00:00:45,930
+and their success blueprint.
+
+20
+00:00:45,930 --> 00:00:47,370
+Tabare, then we'll walk you through
+
+21
+00:00:47,370 --> 00:00:49,860
+a reference implementation,
+key considerations,
+
+22
+00:00:49,860 --> 00:00:51,930
+and lesson learned from the trenches.
+
+23
+00:00:51,930 --> 00:00:54,813
+We'll stick around for
+any Q&A, so let's dive in.
+
+24
+00:00:56,730 --> 00:00:59,400
+So the biggest challenge
+we see getting your agents
+
+25
+00:00:59,400 --> 00:01:01,410
+from prototype to production.
+
+26
+00:01:01,410 --> 00:01:03,210
+What are AI agents anyway?
+
+27
+00:01:03,210 --> 00:01:06,330
+They're autonomous
+systems that can reason,
+
+28
+00:01:06,330 --> 00:01:09,420
+make decisions, use tools to take actions
+
+29
+00:01:09,420 --> 00:01:12,390
+in order to perform goals autonomously.
+
+30
+00:01:12,390 --> 00:01:15,780
+Your POC works great, but
+there are five key challenges
+
+31
+00:01:15,780 --> 00:01:17,730
+that you must address.
+
+32
+00:01:17,730 --> 00:01:20,520
+Runtime, you need scalable infrastructure
+
+33
+00:01:20,520 --> 00:01:24,930
+to run long-running workflows
+with complex orchestration.
+
+34
+00:01:24,930 --> 00:01:28,830
+Without the performance
+overhead and the cost overruns.
+
+35
+00:01:28,830 --> 00:01:31,380
+Agents need to maintain context
+
+36
+00:01:31,380 --> 00:01:33,990
+and to have a meaningful conversation
+
+37
+00:01:33,990 --> 00:01:36,780
+with the end customer across the sessions.
+
+38
+00:01:36,780 --> 00:01:39,603
+So you need to have a
+server-managed memory offering.
+
+39
+00:01:40,590 --> 00:01:43,080
+Agents, you need to
+secure access to agents,
+
+40
+00:01:43,080 --> 00:01:45,870
+the tools they access, and the data.
+
+41
+00:01:45,870 --> 00:01:49,260
+Agents need a mechanism to
+discover your existing systems
+
+42
+00:01:49,260 --> 00:01:51,390
+through agent-ready tools
+
+43
+00:01:51,390 --> 00:01:53,100
+and talk to other agents seamlessly.
+
+44
+00:01:53,100 --> 00:01:57,450
+And because agents are
+non-deterministic in nature,
+
+45
+00:01:57,450 --> 00:02:00,360
+you need complete visibility
+into their execution
+
+46
+00:02:00,360 --> 00:02:04,110
+so that you can trace, debug,
+and evaluate their behavior.
+
+47
+00:02:04,110 --> 00:02:06,273
+Let me use an example
+to drive this better.
+
+48
+00:02:07,590 --> 00:02:10,170
+So picture a service technician assistant.
+
+49
+00:02:10,170 --> 00:02:12,780
+A customer walks in with
+a check engine light.
+
+50
+00:02:12,780 --> 00:02:15,360
+The technician takes
+pictures of the dashboard,
+
+51
+00:02:15,360 --> 00:02:17,640
+perhaps records the engine noise,
+
+52
+00:02:17,640 --> 00:02:20,340
+and keys in customer concern.
+
+53
+00:02:20,340 --> 00:02:21,720
+The agent uses this data,
+
+54
+00:02:21,720 --> 00:02:25,440
+looks at the knowledge
+sources, like OEM manuals,
+
+55
+00:02:25,440 --> 00:02:28,500
+technical service bulletins,
+recall notices, and so on,
+
+56
+00:02:28,500 --> 00:02:31,560
+in order to come up with
+a proper diagnostic plan.
+
+57
+00:02:31,560 --> 00:02:33,900
+The technician starts working on it,
+
+58
+00:02:33,900 --> 00:02:35,730
+and the technician finds something else,
+
+59
+00:02:35,730 --> 00:02:37,050
+then the agent has to adapt
+
+60
+00:02:37,050 --> 00:02:38,430
+and make a different recommendation.
+
+61
+00:02:38,430 --> 00:02:41,280
+So you see this back
+and forth that goes on
+
+62
+00:02:41,280 --> 00:02:44,190
+to adapt and diagnose the car.
+
+63
+00:02:44,190 --> 00:02:46,427
+The service technician assistant
+
+64
+00:02:46,427 --> 00:02:49,590
+determines that they need
+parts to fix the car,
+
+65
+00:02:49,590 --> 00:02:52,140
+then the agent goes and
+checks the internal system,
+
+66
+00:02:52,140 --> 00:02:54,600
+pricing, inventory, availability,
+
+67
+00:02:54,600 --> 00:02:57,450
+and keeps customer preferences in mind.
+
+68
+00:02:57,450 --> 00:03:00,240
+This customer prefers quality OEM parts,
+
+69
+00:03:00,240 --> 00:03:02,193
+or this customer is budget conscious.
+
+70
+00:03:03,030 --> 00:03:04,710
+And then recommend the parts.
+
+71
+00:03:04,710 --> 00:03:06,450
+And if parts are not in stock,
+
+72
+00:03:06,450 --> 00:03:10,590
+perhaps agent has to log into
+legacy supplier applications,
+
+73
+00:03:10,590 --> 00:03:13,173
+web applications, and place order.
+
+74
+00:03:14,790 --> 00:03:16,560
+So this repair can take hours,
+
+75
+00:03:16,560 --> 00:03:19,170
+and the agent maintains
+a session throughout.
+
+76
+00:03:19,170 --> 00:03:21,360
+And when the customer returns weeks later,
+
+77
+00:03:21,360 --> 00:03:23,190
+the agent must remember everything
+
+78
+00:03:23,190 --> 00:03:26,400
+to resume the diagnostic process again.
+
+79
+00:03:26,400 --> 00:03:29,670
+So now imagine this whole
+infrastructure scaling up,
+
+80
+00:03:29,670 --> 00:03:31,950
+supporting multiple technicians,
+
+81
+00:03:31,950 --> 00:03:34,203
+addressing multiple customer problems,
+
+82
+00:03:36,000 --> 00:03:38,190
+and with full session isolation.
+
+83
+00:03:38,190 --> 00:03:41,010
+And you need to trace every single step,
+
+84
+00:03:41,010 --> 00:03:44,040
+how an agent recommended a
+particular diagnostic step,
+
+85
+00:03:44,040 --> 00:03:46,140
+and what sources it used.
+
+86
+00:03:46,140 --> 00:03:48,630
+For complete debugging and evaluation.
+
+87
+00:03:48,630 --> 00:03:50,100
+So without these capabilities,
+
+88
+00:03:50,100 --> 00:03:52,350
+we believe you are stuck
+in the prototype mode.
+
+89
+00:03:52,350 --> 00:03:54,513
+And that's the gap AgentCore fills.
+
+90
+00:03:57,360 --> 00:04:00,180
+So AgentCore offers five
+fully managed services
+
+91
+00:04:00,180 --> 00:04:02,580
+with two special purpose tools.
+
+92
+00:04:02,580 --> 00:04:06,150
+Runtime is secure,
+scalable, and serverless.
+
+93
+00:04:06,150 --> 00:04:08,490
+It supports multi-modal inputs,
+
+94
+00:04:08,490 --> 00:04:10,440
+up to 100 megabytes of payload,
+
+95
+00:04:10,440 --> 00:04:13,350
+with long running sessions
+up to eight hours.
+
+96
+00:04:13,350 --> 00:04:16,950
+You can use any framework
+to build the agent,
+
+97
+00:04:16,950 --> 00:04:18,650
+and you can use it with any model.
+
+98
+00:04:19,840 --> 00:04:22,200
+Memory offers a short-term memory
+
+99
+00:04:22,200 --> 00:04:24,720
+for storing the conversational state,
+
+100
+00:04:24,720 --> 00:04:26,553
+and long-term memory to extract,
+
+101
+00:04:27,780 --> 00:04:30,723
+to learn from customer
+interactions and adapt.
+
+102
+00:04:31,800 --> 00:04:33,180
+There are out-of-the-box strategies,
+
+103
+00:04:33,180 --> 00:04:37,980
+such as user preferences,
+semantic facts, and summarization.
+
+104
+00:04:37,980 --> 00:04:39,780
+You can use those strategies,
+
+105
+00:04:39,780 --> 00:04:41,973
+override them, or bring your own strategy.
+
+106
+00:04:43,520 --> 00:04:47,190
+Identity provides secure authentication
+
+107
+00:04:47,190 --> 00:04:48,480
+and credential management.
+
+108
+00:04:48,480 --> 00:04:51,860
+It supports OAuth and IAM out-of-the-box.
+
+109
+00:04:51,860 --> 00:04:54,690
+And Gateway converts your existing APIs
+
+110
+00:04:54,690 --> 00:04:58,410
+and Lambda functions as
+agent-ready MCP tools,
+
+111
+00:04:58,410 --> 00:05:01,590
+and provides a built-in
+semantic search mechanism
+
+112
+00:05:01,590 --> 00:05:02,973
+for intelligent discovery.
+
+113
+00:05:04,500 --> 00:05:07,320
+Observability gives
+you complete visibility
+
+114
+00:05:07,320 --> 00:05:09,480
+into agent's path trajectory,
+
+115
+00:05:09,480 --> 00:05:11,440
+with out-of-the-box CloudWatch dashboards,
+
+116
+00:05:11,440 --> 00:05:15,340
+and integrates with your
+existing observability stacks
+
+117
+00:05:15,340 --> 00:05:17,553
+via open telemetry format.
+
+118
+00:05:19,020 --> 00:05:20,880
+Browser enables the agent
+
+119
+00:05:20,880 --> 00:05:24,750
+to perform complex web automation tasks,
+
+120
+00:05:24,750 --> 00:05:26,820
+and Code Interpreter allows agents
+
+121
+00:05:26,820 --> 00:05:30,810
+to run ad hoc complex calculations
+
+122
+00:05:30,810 --> 00:05:35,110
+in any language in a secure sandbox.
+
+123
+00:05:35,110 --> 00:05:37,440
+So we believe this is the infrastructure
+
+124
+00:05:37,440 --> 00:05:39,390
+that gets your agents into production.
+
+125
+00:05:39,390 --> 00:05:41,100
+With that, I'll hand it over to BLN
+
+126
+00:05:41,100 --> 00:05:43,560
+to walk through Cox Autos
+Agentic AI Blueprint.
+
+127
+00:05:43,560 --> 00:05:44,393
+Thank you.
+
+128
+00:05:50,028 --> 00:05:53,100
+(audience applauds)
+
+129
+00:05:53,100 --> 00:05:54,360
+- You all hear me okay?
+
+130
+00:05:54,360 --> 00:05:55,590
+Good.
+
+131
+00:05:55,590 --> 00:05:57,330
+So my name is Brian-Lloyd Newberry,
+
+132
+00:05:57,330 --> 00:05:58,800
+and everybody calls me BLN.
+
+133
+00:05:58,800 --> 00:06:00,510
+If you wanna know why,
+come up after the talk,
+
+134
+00:06:00,510 --> 00:06:02,460
+and I'm happy to tell you.
+
+135
+00:06:02,460 --> 00:06:04,530
+I have the privilege of leading
+
+136
+00:06:04,530 --> 00:06:07,593
+the Cox Automotive Product
+and Technology Innovation Lab.
+
+137
+00:06:08,850 --> 00:06:11,850
+Me and a small team have,
+for the last three years,
+
+138
+00:06:11,850 --> 00:06:14,640
+been completely embedded in generative AI,
+
+139
+00:06:14,640 --> 00:06:17,403
+and in this journey to move
+toward agentic software.
+
+140
+00:06:23,830 --> 00:06:26,670
+I wanna start by just introducing
+you to Cox Automotive,
+
+141
+00:06:26,670 --> 00:06:28,530
+'cause you may not understand the brand,
+
+142
+00:06:28,530 --> 00:06:31,650
+you may not understand Cox
+Automotive as an entity,
+
+143
+00:06:31,650 --> 00:06:34,170
+but who here has shopped for a car
+
+144
+00:06:34,170 --> 00:06:36,990
+or bought a car anytime, right?
+
+145
+00:06:36,990 --> 00:06:37,890
+Not everybody, right?
+
+146
+00:06:37,890 --> 00:06:41,520
+But if you've heard of
+brands like autotrader.com
+
+147
+00:06:41,520 --> 00:06:43,620
+and kellybluebook.com,
+
+148
+00:06:43,620 --> 00:06:45,810
+you're running into some of
+the largest consumer portals
+
+149
+00:06:45,810 --> 00:06:47,400
+in the automotive industry.
+
+150
+00:06:47,400 --> 00:06:48,850
+People use them to buy vehicles
+
+151
+00:06:48,850 --> 00:06:52,050
+every single day, and so we
+get a lot of traffic there.
+
+152
+00:06:52,050 --> 00:06:55,140
+We do websites for the
+majority of the OEMs,
+
+153
+00:06:55,140 --> 00:06:59,530
+the automotive manufacturers,
+in the United States,
+
+154
+00:06:59,530 --> 00:07:01,920
+so we see a lot of web traffic there.
+
+155
+00:07:01,920 --> 00:07:02,970
+So in the consumer space,
+
+156
+00:07:02,970 --> 00:07:06,450
+we see a ton of consumer
+information coming together.
+
+157
+00:07:06,450 --> 00:07:09,990
+We also provide liquidity
+in the automotive market.
+
+158
+00:07:09,990 --> 00:07:11,970
+If you've ever traded a car in,
+
+159
+00:07:11,970 --> 00:07:15,180
+you probably have had that car liquidated.
+
+160
+00:07:15,180 --> 00:07:17,370
+The dealer took it
+through Mannheim Auctions,
+
+161
+00:07:17,370 --> 00:07:19,920
+sold it, and bought other
+cars from Mannheim Auctions
+
+162
+00:07:19,920 --> 00:07:21,120
+to sell to other people.
+
+163
+00:07:22,050 --> 00:07:26,310
+We also offer an entire
+suite of dealer software,
+
+164
+00:07:26,310 --> 00:07:28,530
+things like ERPs, custom CRMs,
+
+165
+00:07:28,530 --> 00:07:31,020
+inventory management, and the like,
+
+166
+00:07:31,020 --> 00:07:33,330
+as well as a suite of
+finance applications,
+
+167
+00:07:33,330 --> 00:07:38,170
+and we're moving into mobility
+and other spaces as well.
+
+168
+00:07:38,170 --> 00:07:42,070
+We're the dominant player
+in the automotive industry
+
+169
+00:07:42,070 --> 00:07:43,743
+for software providers.
+
+170
+00:07:46,900 --> 00:07:51,120
+Because we have that much
+visibility in the industry,
+
+171
+00:07:51,120 --> 00:07:55,530
+we have a view of everything happening.
+
+172
+00:07:55,530 --> 00:07:59,840
+We see the automotive
+industry every single day.
+
+173
+00:07:59,840 --> 00:08:03,720
+Just as a round number, we get
+about 5.1 trillion insights
+
+174
+00:08:03,720 --> 00:08:06,153
+about vehicles in the market.
+
+175
+00:08:07,300 --> 00:08:11,880
+We see hundreds of millions
+of customer interactions
+
+176
+00:08:11,880 --> 00:08:15,300
+as people look at vehicles,
+they get their vehicles.
+
+177
+00:08:15,300 --> 00:08:18,483
+They get serviced and move
+through that life cycle.
+
+178
+00:08:19,500 --> 00:08:23,010
+And we provide all of, we
+take all of that information,
+
+179
+00:08:23,010 --> 00:08:25,350
+which is the lifeblood of AI,
+
+180
+00:08:25,350 --> 00:08:27,180
+and we wrap AI models around it.
+
+181
+00:08:27,180 --> 00:08:29,430
+We've been doing AI for quite a while.
+
+182
+00:08:29,430 --> 00:08:31,620
+We have hundreds of AI
+models in production.
+
+183
+00:08:31,620 --> 00:08:36,513
+I think 150-something was a
+threshold we crossed last month.
+
+184
+00:08:37,440 --> 00:08:39,093
+Some of those might be agentic.
+
+185
+00:08:43,830 --> 00:08:45,830
+All right, so what I wanna do today
+
+186
+00:08:45,830 --> 00:08:50,550
+is tell you how, as an
+organization, you can get moving.
+
+187
+00:08:50,550 --> 00:08:52,800
+One of the things we see as
+we work with product teams
+
+188
+00:08:52,800 --> 00:08:54,970
+across the organization
+and engineering teams
+
+189
+00:08:54,970 --> 00:08:57,663
+is there's a lot of
+playing with agentic AI.
+
+190
+00:08:58,560 --> 00:08:59,640
+Although, most of the time,
+
+191
+00:08:59,640 --> 00:09:02,880
+people are just playing with
+assistants, not agentic AI.
+
+192
+00:09:02,880 --> 00:09:04,380
+And so there's a lot of generative AI
+
+193
+00:09:04,380 --> 00:09:06,150
+and sort of like noodling
+around the edges.
+
+194
+00:09:06,150 --> 00:09:08,710
+But people don't really know
+what is an agentic application
+
+195
+00:09:08,710 --> 00:09:11,210
+and how do you get moving
+and how do you build it.
+
+196
+00:09:14,430 --> 00:09:17,330
+Our chief product officer has this saying,
+
+197
+00:09:17,330 --> 00:09:20,040
+"Start with crazy and work backwards."
+
+198
+00:09:20,040 --> 00:09:22,410
+And so I'm gonna tell you
+about a crazy experiment
+
+199
+00:09:22,410 --> 00:09:24,810
+we ran this past August.
+
+200
+00:09:24,810 --> 00:09:26,270
+And then Tabare's gonna show you
+
+201
+00:09:26,270 --> 00:09:30,090
+how one of the specific
+projects that we kicked off went
+
+202
+00:09:30,090 --> 00:09:31,473
+and then we'll wrap it up.
+
+203
+00:09:33,990 --> 00:09:36,960
+As I said, we've been in
+this journey a long time.
+
+204
+00:09:36,960 --> 00:09:40,770
+Mannheim, our auction provider,
+
+205
+00:09:40,770 --> 00:09:43,200
+has been around for probably
+80 years at this point.
+
+206
+00:09:43,200 --> 00:09:45,390
+I should know that number
+off the top of my head.
+
+207
+00:09:45,390 --> 00:09:46,263
+Sorry, Roger.
+
+208
+00:09:47,970 --> 00:09:51,570
+We've been, in 2018,
+we went all in with AWS
+
+209
+00:09:51,570 --> 00:09:55,320
+and migrated from 50 data
+centers down to three
+
+210
+00:09:55,320 --> 00:10:00,090
+and the rest running in AWS
+regions, both east and west.
+
+211
+00:10:00,090 --> 00:10:03,180
+We've been doing predictive
+AI for a very long time
+
+212
+00:10:03,180 --> 00:10:05,340
+using traditional machine learning models.
+
+213
+00:10:05,340 --> 00:10:07,290
+And Kelly Blue Book, that little book
+
+214
+00:10:07,290 --> 00:10:08,970
+that people used to literally buy
+
+215
+00:10:08,970 --> 00:10:10,740
+to look at the price of used vehicles
+
+216
+00:10:10,740 --> 00:10:14,610
+was a mathematical compilation
+of vehicle valuations
+
+217
+00:10:14,610 --> 00:10:16,713
+that's going back 100 years.
+
+218
+00:10:17,710 --> 00:10:21,183
+In 2023, something happens.
+
+219
+00:10:23,610 --> 00:10:28,610
+So November 30th, 2022, Chat
+GPT was released by OpenAI,
+
+220
+00:10:30,650 --> 00:10:34,293
+that the Chat GPT-3 model went live.
+
+221
+00:10:35,610 --> 00:10:37,200
+That created a ton of buzz.
+
+222
+00:10:37,200 --> 00:10:38,940
+Again, we knew that these
+models were out there.
+
+223
+00:10:38,940 --> 00:10:40,170
+We've been looking at them.
+
+224
+00:10:40,170 --> 00:10:41,400
+Created a ton of buzz.
+
+225
+00:10:41,400 --> 00:10:44,170
+And what happened is in March of 2023,
+
+226
+00:10:44,170 --> 00:10:46,950
+we went all in on generative AI.
+
+227
+00:10:46,950 --> 00:10:49,410
+We took this team that
+I'm leading right now,
+
+228
+00:10:49,410 --> 00:10:51,720
+we threw us in, and within a month
+
+229
+00:10:51,720 --> 00:10:56,280
+had access to multiple providers,
+models in our environment.
+
+230
+00:10:56,280 --> 00:10:57,630
+We built a sandbox.
+
+231
+00:10:57,630 --> 00:10:58,830
+We started to build products.
+
+232
+00:10:58,830 --> 00:11:02,550
+And in the following year, we
+had three major products live,
+
+233
+00:11:02,550 --> 00:11:06,510
+one of which saved about $750,000 a year
+
+234
+00:11:06,510 --> 00:11:08,460
+by just eliminating the need to pay
+
+235
+00:11:08,460 --> 00:11:10,170
+for content to be
+generated someplace else.
+
+236
+00:11:10,170 --> 00:11:12,150
+And our content was better and faster.
+
+237
+00:11:12,150 --> 00:11:14,640
+And then we went in with
+products for dealers
+
+238
+00:11:14,640 --> 00:11:18,360
+that increased response
+rates from customers by 50%.
+
+239
+00:11:18,360 --> 00:11:20,763
+And we did other products as well.
+
+240
+00:11:23,210 --> 00:11:27,180
+On top of, to power that
+generative AI model,
+
+241
+00:11:27,180 --> 00:11:28,550
+we really focused on our data
+
+242
+00:11:28,550 --> 00:11:30,930
+and bringing all of our data together.
+
+243
+00:11:30,930 --> 00:11:35,013
+And in 2024, on the way
+back from Amazon re:Invent,
+
+244
+00:11:36,480 --> 00:11:39,240
+we launched a new initiative.
+
+245
+00:11:39,240 --> 00:11:40,470
+We set up a couple of teams
+
+246
+00:11:40,470 --> 00:11:42,780
+to go in and dive into the agentic space
+
+247
+00:11:42,780 --> 00:11:45,060
+and get ahead of the industry.
+
+248
+00:11:45,060 --> 00:11:48,270
+There was a lot of FUD
+and excitement there,
+
+249
+00:11:48,270 --> 00:11:51,480
+but there wasn't a lot of meat behind it.
+
+250
+00:11:51,480 --> 00:11:52,620
+And we did a ton of work.
+
+251
+00:11:52,620 --> 00:11:54,170
+We were really successful driving through
+
+252
+00:11:54,170 --> 00:11:58,500
+building internal apps,
+doing proof of concepts.
+
+253
+00:11:58,500 --> 00:12:02,463
+But we were kind of stuck.
+
+254
+00:12:04,130 --> 00:12:07,950
+We didn't really get a lot of
+pull through on our products.
+
+255
+00:12:07,950 --> 00:12:08,970
+We had some.
+
+256
+00:12:08,970 --> 00:12:10,290
+We had four or five products
+
+257
+00:12:10,290 --> 00:12:12,710
+using generative AI in production.
+
+258
+00:12:12,710 --> 00:12:15,570
+A couple of them internal,
+the rest external.
+
+259
+00:12:15,570 --> 00:12:17,670
+But we weren't seeing the pull through
+
+260
+00:12:17,670 --> 00:12:19,560
+from our product teams.
+
+261
+00:12:19,560 --> 00:12:21,930
+People had things they needed to deliver.
+
+262
+00:12:21,930 --> 00:12:25,830
+They didn't wanna disrupt
+what they were doing.
+
+263
+00:12:25,830 --> 00:12:27,153
+People were scared.
+
+264
+00:12:28,230 --> 00:12:29,400
+I bet you if you went,
+
+265
+00:12:29,400 --> 00:12:31,950
+if we all sat down and
+asked what an agent is,
+
+266
+00:12:31,950 --> 00:12:34,320
+there would actually be some debate.
+
+267
+00:12:34,320 --> 00:12:36,790
+Agentic applications, people
+think about as a chatbot
+
+268
+00:12:36,790 --> 00:12:41,790
+with an AI, a generative
+AI interface strapped on.
+
+269
+00:12:42,330 --> 00:12:45,450
+And that's a very naive
+version of agentic AI.
+
+270
+00:12:45,450 --> 00:12:47,070
+Google deep research being,
+
+271
+00:12:47,070 --> 00:12:49,350
+or deep research in all
+of the deep research tools
+
+272
+00:12:49,350 --> 00:12:51,110
+being one of the first examples I saw
+
+273
+00:12:51,110 --> 00:12:53,430
+of the true power of this kind of system.
+
+274
+00:12:53,430 --> 00:12:56,160
+But going back to Newton's principles
+
+275
+00:12:56,160 --> 00:12:58,383
+from high school physics,
+
+276
+00:12:59,670 --> 00:13:02,100
+you've got inertia,
+momentum, and reaction.
+
+277
+00:13:02,100 --> 00:13:05,790
+So what you need to do
+
+278
+00:13:05,790 --> 00:13:08,223
+is you need to figure
+out how to get moving.
+
+279
+00:13:09,750 --> 00:13:14,750
+If you're not changing anything,
+nothing is going to change.
+
+280
+00:13:15,420 --> 00:13:17,070
+You have to get moving.
+
+281
+00:13:17,070 --> 00:13:21,000
+No one is an expert at
+building agentic AI systems.
+
+282
+00:13:21,000 --> 00:13:23,943
+Like, it's been around for a year, right?
+
+283
+00:13:24,870 --> 00:13:28,070
+And having a PhD in math doesn't help you
+
+284
+00:13:28,070 --> 00:13:30,960
+because it's a soft skill.
+
+285
+00:13:30,960 --> 00:13:34,143
+It's looking at systems,
+doing systems modeling,
+
+286
+00:13:35,070 --> 00:13:38,190
+writing text that helps
+guide these LLM systems
+
+287
+00:13:38,190 --> 00:13:39,210
+to do things.
+
+288
+00:13:39,210 --> 00:13:42,420
+Just pick something and
+get your teams moving.
+
+289
+00:13:42,420 --> 00:13:45,090
+So let's talk a little
+bit about the craziness.
+
+290
+00:13:45,090 --> 00:13:48,330
+So the second, end of
+the second week of July,
+
+291
+00:13:48,330 --> 00:13:51,790
+MJ said, "I wanna launch
+five products by Labor Day."
+
+292
+00:13:51,790 --> 00:13:53,790
+And there are gonna be
+agentic AI products,
+
+293
+00:13:53,790 --> 00:13:56,730
+brand new product capabilities in market.
+
+294
+00:13:56,730 --> 00:13:59,520
+And we said, okay.
+
+295
+00:13:59,520 --> 00:14:01,710
+Now we'd been building things,
+we knew we could do that,
+
+296
+00:14:01,710 --> 00:14:06,710
+but we had five weeks to do
+it and the teams that we had
+
+297
+00:14:08,010 --> 00:14:10,200
+had never built agentic AI apps before.
+
+298
+00:14:10,200 --> 00:14:12,570
+Well, Tabare and team
+had built a little bit,
+
+299
+00:14:12,570 --> 00:14:15,180
+but they were a little ahead
+of the curve, but not very far.
+
+300
+00:14:15,180 --> 00:14:17,763
+So we were starting from ground zero.
+
+301
+00:14:21,500 --> 00:14:22,503
+What do you do?
+
+302
+00:14:23,850 --> 00:14:25,020
+Your chief product officer and EVP
+
+303
+00:14:25,020 --> 00:14:27,247
+of product and technology is saying,
+
+304
+00:14:27,247 --> 00:14:29,610
+"We're launching five
+products by Labor Day."
+
+305
+00:14:29,610 --> 00:14:32,240
+You're starting from ground
+zero with five teams.
+
+306
+00:14:32,240 --> 00:14:34,620
+You've got the blank page problem.
+
+307
+00:14:34,620 --> 00:14:36,120
+So you panic.
+
+308
+00:14:36,120 --> 00:14:38,790
+Kind of like when you have to
+put together a deck in a hurry
+
+309
+00:14:38,790 --> 00:14:39,873
+just as an example.
+
+310
+00:14:41,400 --> 00:14:43,230
+You don't know where to go.
+
+311
+00:14:43,230 --> 00:14:44,063
+You don't know how to move.
+
+312
+00:14:44,063 --> 00:14:44,896
+You're stuck.
+
+313
+00:14:48,270 --> 00:14:50,130
+So here's what's necessary to accelerate.
+
+314
+00:14:50,130 --> 00:14:54,090
+Have a goal, set a
+deadline, drive excitement.
+
+315
+00:14:54,090 --> 00:14:57,120
+We had a goal, five projects,
+five teams in production.
+
+316
+00:14:57,120 --> 00:14:58,380
+We had a deadline, Labor Day,
+
+317
+00:14:58,380 --> 00:15:01,980
+which was about five and a
+half weeks from that point.
+
+318
+00:15:01,980 --> 00:15:04,650
+And we had excitement because what we did
+
+319
+00:15:04,650 --> 00:15:06,780
+is we brought those five
+teams together in a room.
+
+320
+00:15:06,780 --> 00:15:08,220
+We made a lot of noise around it.
+
+321
+00:15:08,220 --> 00:15:09,480
+It was a big event.
+
+322
+00:15:09,480 --> 00:15:11,250
+And we said that we're
+doing this hard thing.
+
+323
+00:15:11,250 --> 00:15:12,360
+We're gonna launch five products
+
+324
+00:15:12,360 --> 00:15:13,920
+and here's what the products are.
+
+325
+00:15:13,920 --> 00:15:15,603
+They weren't fully flushed out,
+
+326
+00:15:17,010 --> 00:15:18,810
+but they had a good core around them.
+
+327
+00:15:18,810 --> 00:15:21,250
+And we're gonna use
+agentic AI to deliver them
+
+328
+00:15:22,140 --> 00:15:25,443
+and to in the solutions that
+we are bringing to market.
+
+329
+00:15:26,850 --> 00:15:28,500
+So you've got the excitement.
+
+330
+00:15:28,500 --> 00:15:30,510
+Now, what do you do next?
+
+331
+00:15:30,510 --> 00:15:31,860
+What are our assets?
+
+332
+00:15:31,860 --> 00:15:33,510
+What are our gaps?
+
+333
+00:15:33,510 --> 00:15:34,560
+Now let's get moving.
+
+334
+00:15:35,560 --> 00:15:37,050
+So what do we have?
+
+335
+00:15:37,050 --> 00:15:38,310
+We were all on AWS.
+
+336
+00:15:38,310 --> 00:15:39,960
+We're a close partner with them.
+
+337
+00:15:39,960 --> 00:15:43,050
+We understood what their
+product roadmap was
+
+338
+00:15:43,050 --> 00:15:46,170
+and we had been deeply
+engaged with Bedrock.
+
+339
+00:15:46,170 --> 00:15:47,280
+We were one of the first customers
+
+340
+00:15:47,280 --> 00:15:49,510
+running Bedrock models in production
+
+341
+00:15:50,940 --> 00:15:54,570
+and first with access to Clawed.
+
+342
+00:15:54,570 --> 00:15:56,910
+We had a small team of internal expertise,
+
+343
+00:15:56,910 --> 00:15:59,250
+a couple of teams that had
+built these types of apps.
+
+344
+00:15:59,250 --> 00:16:02,160
+And we had some ideas,
+whether they were good or not,
+
+345
+00:16:02,160 --> 00:16:03,630
+sort of we didn't know yet.
+
+346
+00:16:03,630 --> 00:16:04,463
+We needed to get a team together.
+
+347
+00:16:04,463 --> 00:16:05,720
+Get them into production.
+
+348
+00:16:05,720 --> 00:16:07,260
+And we had to launch five things.
+
+349
+00:16:07,260 --> 00:16:08,310
+That's our inventory.
+
+350
+00:16:09,810 --> 00:16:11,190
+So what do we need?
+
+351
+00:16:11,190 --> 00:16:13,020
+I'm an architect.
+
+352
+00:16:13,020 --> 00:16:16,110
+So that's a kind of blank
+pages are scary to architects,
+
+353
+00:16:16,110 --> 00:16:18,210
+especially in new spaces.
+
+354
+00:16:18,210 --> 00:16:21,633
+So you start out with the
+reference architecture placemat.
+
+355
+00:16:22,920 --> 00:16:24,870
+So this is, what are all of,
+
+356
+00:16:24,870 --> 00:16:27,120
+we sat down and most of the gray in this
+
+357
+00:16:27,120 --> 00:16:28,500
+is stuff that we already had solved for.
+
+358
+00:16:28,500 --> 00:16:29,980
+But there's a lot of white boxes here
+
+359
+00:16:29,980 --> 00:16:31,350
+that we had to figure out.
+
+360
+00:16:31,350 --> 00:16:34,230
+Things like cost management
+and model monitoring
+
+361
+00:16:34,230 --> 00:16:37,380
+and orchestration agent
+workflows and tools
+
+362
+00:16:37,380 --> 00:16:40,060
+and API management and orchestration
+
+363
+00:16:40,060 --> 00:16:41,940
+and how to connect it to our data
+
+364
+00:16:41,940 --> 00:16:43,490
+and how to see what's going on.
+
+365
+00:16:44,520 --> 00:16:45,750
+You know where the story is going
+
+366
+00:16:45,750 --> 00:16:47,910
+'cause Ravi talked to
+you about the products
+
+367
+00:16:47,910 --> 00:16:51,570
+that AWS has put together in
+Bedrock and in Agent Core.
+
+368
+00:16:51,570 --> 00:16:55,350
+But this is a really scary
+problem for a lot of teams
+
+369
+00:16:55,350 --> 00:16:56,310
+'cause it's a blank slate.
+
+370
+00:16:56,310 --> 00:16:57,360
+They don't know what to do.
+
+371
+00:16:57,360 --> 00:16:58,210
+So what do we do?
+
+372
+00:17:00,180 --> 00:17:03,660
+We were on Amazon Bedrock, we
+said we're gonna stay here.
+
+373
+00:17:03,660 --> 00:17:04,500
+We're gonna take a risk
+
+374
+00:17:04,500 --> 00:17:06,060
+and we're gonna dive into Agent Core.
+
+375
+00:17:06,060 --> 00:17:07,260
+Agent Core hadn't been released.
+
+376
+00:17:07,260 --> 00:17:08,370
+It wasn't released until after
+
+377
+00:17:08,370 --> 00:17:10,800
+we were done with these projects.
+
+378
+00:17:10,800 --> 00:17:13,590
+We never released stuff into the market.
+
+379
+00:17:13,590 --> 00:17:15,570
+And again, it wasn't
+hyper-scaled at that point.
+
+380
+00:17:15,570 --> 00:17:18,300
+But we never put stuff on
+first generation products,
+
+381
+00:17:18,300 --> 00:17:19,800
+technology products into market.
+
+382
+00:17:19,800 --> 00:17:21,810
+We did here because
+we'd partnered with AWS,
+
+383
+00:17:21,810 --> 00:17:23,940
+we saw the roadmap, we
+understood what was there.
+
+384
+00:17:23,940 --> 00:17:25,520
+And we knew how silly it would be
+
+385
+00:17:25,520 --> 00:17:27,200
+for us to build it ourselves.
+
+386
+00:17:27,200 --> 00:17:28,033
+And more silly for us
+to build it ourselves.
+
+387
+00:17:28,033 --> 00:17:29,550
+And more silly for our
+teams to have to figure out
+
+388
+00:17:29,550 --> 00:17:31,050
+how to build them themselves.
+
+389
+00:17:31,050 --> 00:17:33,750
+You heard some of what Ravi
+was talking about earlier.
+
+390
+00:17:37,800 --> 00:17:40,140
+So the next decision we made is,
+
+391
+00:17:40,140 --> 00:17:41,400
+you get into this conversation
+
+392
+00:17:41,400 --> 00:17:45,060
+about which agentic framework to use.
+
+393
+00:17:45,060 --> 00:17:47,340
+And I make the joke,
+it's really not a joke,
+
+394
+00:17:47,340 --> 00:17:48,630
+that there's like a new agentic framework
+
+395
+00:17:48,630 --> 00:17:50,100
+every two or three days.
+
+396
+00:17:50,100 --> 00:17:52,560
+And there has been for the last year plus,
+
+397
+00:17:52,560 --> 00:17:54,750
+just like there's new models every day.
+
+398
+00:17:54,750 --> 00:17:55,803
+Pick one and go.
+
+399
+00:17:56,970 --> 00:17:59,640
+What you're doing here,
+we'll talk about in a second,
+
+400
+00:17:59,640 --> 00:18:02,580
+you have the ability to pivot and change.
+
+401
+00:18:02,580 --> 00:18:04,080
+Especially if you're using agentic AI
+
+402
+00:18:04,080 --> 00:18:05,580
+to help you do that work.
+
+403
+00:18:05,580 --> 00:18:06,413
+Pick things and go.
+
+404
+00:18:06,413 --> 00:18:09,550
+And strands is an AWS
+backed open source product
+
+405
+00:18:09,550 --> 00:18:11,640
+that runs natively.
+
+406
+00:18:11,640 --> 00:18:15,990
+And at the point we
+started was best option
+
+407
+00:18:15,990 --> 00:18:20,070
+to go in and run on agent core.
+
+408
+00:18:20,070 --> 00:18:22,263
+And it met all of the needs we had.
+
+409
+00:18:23,250 --> 00:18:25,590
+The other thing is
+agent core, sorry, yeah,
+
+410
+00:18:25,590 --> 00:18:29,760
+agent core could run other frameworks.
+
+411
+00:18:29,760 --> 00:18:31,020
+And we could have given one framework
+
+412
+00:18:31,020 --> 00:18:32,610
+to each of the five teams,
+
+413
+00:18:32,610 --> 00:18:35,790
+but would that, maybe we
+would have learned things,
+
+414
+00:18:35,790 --> 00:18:37,770
+but we really wanted to
+get a market in five weeks.
+
+415
+00:18:37,770 --> 00:18:40,860
+So let's focus all of our
+energy learning one thing
+
+416
+00:18:40,860 --> 00:18:43,380
+and getting really good at
+it and enabling the teams.
+
+417
+00:18:43,380 --> 00:18:45,453
+So focus is an important part of this.
+
+418
+00:18:47,190 --> 00:18:48,990
+So we talked a little bit about strands
+
+419
+00:18:48,990 --> 00:18:50,973
+at the high level architecture level.
+
+420
+00:18:51,900 --> 00:18:54,810
+Building, we talk about, I think,
+
+421
+00:18:54,810 --> 00:18:56,817
+as Ravi was talking,
+we're talking about agents
+
+422
+00:18:56,817 --> 00:18:58,110
+and how magical they are
+
+423
+00:18:58,110 --> 00:18:59,250
+and all the things you have to maintain.
+
+424
+00:18:59,250 --> 00:19:03,150
+But building an agent
+yourself as a developer,
+
+425
+00:19:03,150 --> 00:19:06,000
+there's only a couple of core
+things you do in the agent.
+
+426
+00:19:07,210 --> 00:19:11,820
+One, you write some text,
+which is the prompt.
+
+427
+00:19:11,820 --> 00:19:13,620
+Two, you make some configuration,
+
+428
+00:19:13,620 --> 00:19:15,543
+which is usually also written in text.
+
+429
+00:19:16,740 --> 00:19:19,260
+And three, you attach it to a model
+
+430
+00:19:19,260 --> 00:19:21,180
+with some configuration parameters.
+
+431
+00:19:21,180 --> 00:19:22,710
+And then you attach it to some tools
+
+432
+00:19:22,710 --> 00:19:24,750
+that allow it to do things.
+
+433
+00:19:24,750 --> 00:19:26,370
+Conceptually, that's all you have to do.
+
+434
+00:19:26,370 --> 00:19:28,710
+With strands, all you
+really have to think about
+
+435
+00:19:28,710 --> 00:19:31,530
+is what the text you write
+is and the tools you use are
+
+436
+00:19:31,530 --> 00:19:34,953
+and how you take that very
+abstract system and make it real.
+
+437
+00:19:36,660 --> 00:19:40,383
+You're literally just writing
+Python as configuration.
+
+438
+00:19:41,310 --> 00:19:43,980
+In this case, super simple
+case from the strands website,
+
+439
+00:19:43,980 --> 00:19:45,360
+you're bringing in an agent,
+
+440
+00:19:45,360 --> 00:19:47,880
+you're bringing in a calculator
+tool that already exists.
+
+441
+00:19:47,880 --> 00:19:49,140
+I don't have time today to show you
+
+442
+00:19:49,140 --> 00:19:50,820
+the implementation of that tool.
+
+443
+00:19:50,820 --> 00:19:53,250
+But if you looked at it, you'd
+see the Python documentation
+
+444
+00:19:53,250 --> 00:19:55,530
+describing what the tool
+is and when to use it
+
+445
+00:19:55,530 --> 00:19:56,760
+and what the parameter values mean,
+
+446
+00:19:56,760 --> 00:19:59,050
+just like you should be
+doing with any Python
+
+447
+00:19:59,050 --> 00:20:00,810
+or any source code you write.
+
+448
+00:20:00,810 --> 00:20:02,190
+It's well documented.
+
+449
+00:20:02,190 --> 00:20:04,890
+And the strands framework can bring it in
+
+450
+00:20:04,890 --> 00:20:06,603
+and wire it in automatically.
+
+451
+00:20:08,530 --> 00:20:10,417
+And then you say to that agent,
+
+452
+00:20:10,417 --> 00:20:14,997
+"Hey, what's the square root
+of whatever that number is?"
+
+453
+00:20:15,990 --> 00:20:19,350
+This is how LLMs actually solve
+math problems, by the way,
+
+454
+00:20:19,350 --> 00:20:20,610
+or how they should.
+
+455
+00:20:20,610 --> 00:20:23,310
+You should rely on a
+deterministic process to do that.
+
+456
+00:20:24,610 --> 00:20:25,830
+It really is that simple.
+
+457
+00:20:25,830 --> 00:20:27,150
+And you can get started in strands
+
+458
+00:20:27,150 --> 00:20:29,220
+running on your desktop today
+
+459
+00:20:29,220 --> 00:20:33,633
+or running an AWS
+infrastructure in minutes.
+
+460
+00:20:36,150 --> 00:20:39,240
+So the key message here is get started
+
+461
+00:20:39,240 --> 00:20:43,230
+and focus your teams in on the
+features and functionalities,
+
+462
+00:20:43,230 --> 00:20:45,570
+not the frameworks and infrastructure.
+
+463
+00:20:45,570 --> 00:20:47,250
+The language doesn't matter.
+
+464
+00:20:47,250 --> 00:20:49,030
+Jenna, I can write it for you.
+
+465
+00:20:49,030 --> 00:20:50,760
+The frameworks don't matter.
+
+466
+00:20:50,760 --> 00:20:51,630
+There's a hundred of them
+
+467
+00:20:51,630 --> 00:20:53,780
+and they all do pretty
+much the same thing.
+
+468
+00:20:55,260 --> 00:20:57,330
+Find one that's really
+well-supported and run it.
+
+469
+00:20:57,330 --> 00:20:59,970
+And since you're all here
+at the AWS conference,
+
+470
+00:20:59,970 --> 00:21:02,580
+start with AgentCore and strands.
+
+471
+00:21:02,580 --> 00:21:04,880
+You can use the other
+frameworks as necessary.
+
+472
+00:21:08,340 --> 00:21:10,080
+So I'd like to invite Tabare up.
+
+473
+00:21:10,080 --> 00:21:12,330
+And Tabare was the lead architect
+
+474
+00:21:12,330 --> 00:21:14,430
+for one of the projects we launched,
+
+475
+00:21:14,430 --> 00:21:15,960
+probably the most successful project,
+
+476
+00:21:15,960 --> 00:21:17,760
+the most customers using it today.
+
+477
+00:21:17,760 --> 00:21:20,400
+He's gonna tell you about what he learned
+
+478
+00:21:20,400 --> 00:21:21,810
+and what the journey was for that.
+
+479
+00:21:21,810 --> 00:21:23,850
+And then we'll come
+together and wrap up on,
+
+480
+00:21:23,850 --> 00:21:26,243
+maybe we'll tell you how the
+rest of the projects went.
+
+481
+00:21:27,760 --> 00:21:29,850
+- All right, am I on?
+
+482
+00:21:29,850 --> 00:21:30,780
+Great.
+
+483
+00:21:30,780 --> 00:21:34,230
+Okay, thank you, BLN, and
+good afternoon, everyone.
+
+484
+00:21:34,230 --> 00:21:36,690
+My name is Tabare Gowon, and as BLN said,
+
+485
+00:21:36,690 --> 00:21:39,840
+I'm a lead architect at Cox Automotive.
+
+486
+00:21:39,840 --> 00:21:41,850
+And so just a moment ago,
+
+487
+00:21:41,850 --> 00:21:45,300
+BLN shared with you our agentic journey,
+
+488
+00:21:45,300 --> 00:21:48,210
+our company's overall agentic strategy,
+
+489
+00:21:48,210 --> 00:21:51,930
+and where we're planning to
+go with these principles.
+
+490
+00:21:51,930 --> 00:21:53,850
+Now, I'd like to walk you through
+
+491
+00:21:53,850 --> 00:21:56,130
+what that's actually looked
+like on a product team
+
+492
+00:21:56,130 --> 00:21:59,040
+at Cox Auto, and hopefully leave you
+
+493
+00:21:59,040 --> 00:22:01,620
+with some of the patterns
+that can guide you
+
+494
+00:22:01,620 --> 00:22:04,800
+to building your own agentic solutions.
+
+495
+00:22:04,800 --> 00:22:08,910
+But of course, I'm gonna have
+to tell you how we got here.
+
+496
+00:22:08,910 --> 00:22:11,100
+So let's start at the top.
+
+497
+00:22:11,100 --> 00:22:15,420
+As BLN said earlier,
+it's around 2022, 2023,
+
+498
+00:22:15,420 --> 00:22:17,460
+and the LLMs are hitting the mainstream,
+
+499
+00:22:17,460 --> 00:22:19,860
+chat GPT, et cetera.
+
+500
+00:22:19,860 --> 00:22:21,180
+If you were like our team,
+
+501
+00:22:21,180 --> 00:22:23,380
+you were probably
+thinking around this time,
+
+502
+00:22:24,360 --> 00:22:25,560
+this tech is actually pretty cool.
+
+503
+00:22:25,560 --> 00:22:26,520
+I mean, how can we use it?
+
+504
+00:22:26,520 --> 00:22:27,450
+How can we put it here?
+
+505
+00:22:27,450 --> 00:22:29,310
+How could we put it there, et cetera?
+
+506
+00:22:29,310 --> 00:22:33,060
+And so our team, at the end of 2023,
+
+507
+00:22:33,060 --> 00:22:37,140
+started our first Gen
+AI POC, and, oh, great.
+
+508
+00:22:37,140 --> 00:22:38,580
+At the beginning of this year,
+
+509
+00:22:38,580 --> 00:22:41,190
+we actually launched that product
+
+510
+00:22:41,190 --> 00:22:42,870
+called Predictive Insights.
+
+511
+00:22:42,870 --> 00:22:47,760
+It's a human-in-a-loop
+Gen AI message generator
+
+512
+00:22:47,760 --> 00:22:49,480
+for our company's CRM.
+
+513
+00:22:49,480 --> 00:22:53,340
+So with Predictive Insights,
+as you click a button,
+
+514
+00:22:53,340 --> 00:22:54,990
+as our dealers click a button,
+
+515
+00:22:54,990 --> 00:22:59,160
+they can craft personalized
+messages to their customers
+
+516
+00:22:59,160 --> 00:23:02,310
+using all of the data that
+BLN mentioned earlier.
+
+517
+00:23:02,310 --> 00:23:05,910
+And since we launched
+in earlier this year,
+
+518
+00:23:05,910 --> 00:23:07,800
+we've got a lot of good praise.
+
+519
+00:23:07,800 --> 00:23:09,210
+Our dealers are loving it
+
+520
+00:23:09,210 --> 00:23:11,970
+because they can move their customers
+
+521
+00:23:11,970 --> 00:23:15,123
+right alongside their journey
+with just a simple click.
+
+522
+00:23:16,080 --> 00:23:19,320
+But here we have a problem.
+
+523
+00:23:19,320 --> 00:23:22,460
+Predictive Insights requires
+you to actually click a button
+
+524
+00:23:22,460 --> 00:23:25,080
+and generate a message to the customer.
+
+525
+00:23:25,080 --> 00:23:27,600
+But the reality is, at the dealership,
+
+526
+00:23:27,600 --> 00:23:30,120
+more than half of their
+leads come in after hours
+
+527
+00:23:30,120 --> 00:23:33,390
+where there isn't anyone
+to click the button.
+
+528
+00:23:33,390 --> 00:23:36,300
+So we thought to ourselves, all right,
+
+529
+00:23:36,300 --> 00:23:37,530
+this is working out pretty well.
+
+530
+00:23:37,530 --> 00:23:39,750
+How can we take what we just built
+
+531
+00:23:39,750 --> 00:23:42,300
+and move fully autonomous?
+
+532
+00:23:42,300 --> 00:23:45,000
+And in doing that process,
+
+533
+00:23:45,000 --> 00:23:48,450
+we realized the actual question was,
+
+534
+00:23:48,450 --> 00:23:52,200
+how do we build automated AI solutions
+
+535
+00:23:52,200 --> 00:23:53,910
+that our users will trust?
+
+536
+00:23:53,910 --> 00:23:55,710
+Because it's one thing to say,
+
+537
+00:23:55,710 --> 00:23:57,720
+yes, we need to build a solution
+
+538
+00:23:57,720 --> 00:24:01,900
+that knows a dealer's
+voice and knows their brand
+
+539
+00:24:01,900 --> 00:24:06,240
+and can meet their customer
+at any time of the day.
+
+540
+00:24:06,240 --> 00:24:08,670
+But at the same time, we need to do that
+
+541
+00:24:08,670 --> 00:24:11,970
+while maintaining safety
+and brand reputation
+
+542
+00:24:11,970 --> 00:24:16,020
+just for us and the dealer,
+all without human oversight.
+
+543
+00:24:16,020 --> 00:24:21,020
+So that became the challenge,
+and here's what we built.
+
+544
+00:24:23,550 --> 00:24:27,440
+So this here is our fully
+automated virtual assistant
+
+545
+00:24:27,440 --> 00:24:30,960
+for customer conversations
+at the dealership.
+
+546
+00:24:30,960 --> 00:24:33,180
+It's built on Amazon Agent Core
+
+547
+00:24:33,180 --> 00:24:34,983
+and the Strands Agent Framework.
+
+548
+00:24:35,880 --> 00:24:38,820
+If we start at the top,
+we have an orchestrator.
+
+549
+00:24:38,820 --> 00:24:40,960
+When a customer sends in a new message,
+
+550
+00:24:40,960 --> 00:24:43,460
+the orchestrator understands that intent
+
+551
+00:24:43,460 --> 00:24:48,460
+and routes that message down
+to one of several sub-agents,
+
+552
+00:24:48,930 --> 00:24:52,380
+sales, service, and so on.
+
+553
+00:24:52,380 --> 00:24:56,070
+Each sub-agent now
+understands its own domain
+
+554
+00:24:56,070 --> 00:24:58,500
+and it can handle its
+part of the conversation
+
+555
+00:24:58,500 --> 00:24:59,333
+independently.
+
+556
+00:25:01,050 --> 00:25:04,380
+So then, once all the
+sub-agents are complete,
+
+557
+00:25:04,380 --> 00:25:08,160
+the orchestrator now grabs
+all of that resulting data
+
+558
+00:25:08,160 --> 00:25:11,310
+and crafts a message back to the customer
+
+559
+00:25:11,310 --> 00:25:12,807
+and continues the conversation.
+
+560
+00:25:12,807 --> 00:25:14,220
+And this goes back and forth
+
+561
+00:25:14,220 --> 00:25:18,270
+for as long as the
+conversation is necessary.
+
+562
+00:25:18,270 --> 00:25:20,220
+Of course, as you can see in this diagram,
+
+563
+00:25:20,220 --> 00:25:22,200
+there's more to this story.
+
+564
+00:25:22,200 --> 00:25:26,070
+And sure, we can give you
+all of the technical details,
+
+565
+00:25:26,070 --> 00:25:27,990
+but the reality is, when you're starting
+
+566
+00:25:27,990 --> 00:25:31,443
+one of these projects,
+where do you actually start?
+
+567
+00:25:32,380 --> 00:25:33,990
+You start with your foundation,
+
+568
+00:25:33,990 --> 00:25:36,663
+and that foundation is Agent Core.
+
+569
+00:25:39,690 --> 00:25:43,530
+So, when you're building
+conversational assistance,
+
+570
+00:25:43,530 --> 00:25:47,100
+you know one thing you need is
+to keep your data separated.
+
+571
+00:25:47,100 --> 00:25:49,830
+And as BLN said earlier,
+
+572
+00:25:49,830 --> 00:25:52,560
+many of you who had your hand up earlier,
+
+573
+00:25:52,560 --> 00:25:55,800
+you know that these AI
+frameworks, they change every day.
+
+574
+00:25:55,800 --> 00:25:59,850
+So the tools that you
+build your solutions today
+
+575
+00:25:59,850 --> 00:26:02,730
+might not be the tools
+that you use tomorrow.
+
+576
+00:26:02,730 --> 00:26:04,280
+So you're gonna need to
+build your infrastructure
+
+577
+00:26:04,280 --> 00:26:06,000
+on things that are both safe
+
+578
+00:26:06,000 --> 00:26:09,030
+and that could evolve as
+your business evolves.
+
+579
+00:26:09,030 --> 00:26:12,270
+And this is where Agent Core comes in.
+
+580
+00:26:12,270 --> 00:26:15,640
+It keeps your data sessions separated,
+
+581
+00:26:15,640 --> 00:26:17,940
+and it allows you to swap frameworks
+
+582
+00:26:17,940 --> 00:26:20,850
+without re-architecting your entire stack.
+
+583
+00:26:20,850 --> 00:26:23,740
+When my team started our process,
+
+584
+00:26:23,740 --> 00:26:26,940
+the guidance that we
+received from several sources
+
+585
+00:26:26,940 --> 00:26:30,120
+was to start on Agent Squad.
+
+586
+00:26:30,120 --> 00:26:33,390
+I think this is AWS Labs, don't quote.
+
+587
+00:26:33,390 --> 00:26:35,760
+But the reality is, by the
+time we got into mid-project,
+
+588
+00:26:35,760 --> 00:26:37,800
+the new guidance was use trans-agents.
+
+589
+00:26:37,800 --> 00:26:40,260
+This is a more better solution.
+
+590
+00:26:40,260 --> 00:26:41,670
+Go down that route.
+
+591
+00:26:41,670 --> 00:26:44,640
+Now normally, in the old days,
+
+592
+00:26:44,640 --> 00:26:47,100
+this could have taken several
+weeks to migrate the project,
+
+593
+00:26:47,100 --> 00:26:49,770
+but because we had started
+with solid foundation,
+
+594
+00:26:49,770 --> 00:26:51,420
+it only took us two.
+
+595
+00:26:51,420 --> 00:26:54,090
+So when you're building your solutions,
+
+596
+00:26:54,090 --> 00:26:55,530
+also start with a foundation
+
+597
+00:26:55,530 --> 00:26:57,330
+that can evolve with your business,
+
+598
+00:26:57,330 --> 00:27:00,960
+and that will leave you the
+room to think about the problems
+
+599
+00:27:00,960 --> 00:27:05,420
+that actually matter to
+your domain, like safety.
+
+600
+00:27:05,420 --> 00:27:09,600
+How do you keep these
+agentic solutions safe?
+
+601
+00:27:09,600 --> 00:27:11,190
+Anyone?
+
+602
+00:27:11,190 --> 00:27:13,053
+For us, we red-team them.
+
+603
+00:27:14,400 --> 00:27:15,720
+So you might be asking,
+
+604
+00:27:15,720 --> 00:27:17,970
+all right, what exactly is red-teaming?
+
+605
+00:27:17,970 --> 00:27:20,580
+Red-teaming now is when you actively try
+
+606
+00:27:20,580 --> 00:27:22,400
+to make the system go off the rails,
+
+607
+00:27:22,400 --> 00:27:24,840
+and you can do this in a number of ways.
+
+608
+00:27:24,840 --> 00:27:27,360
+For our assistant, for example,
+
+609
+00:27:27,360 --> 00:27:29,620
+you could try asking the assistant
+
+610
+00:27:29,620 --> 00:27:31,653
+a question in a foreign language.
+
+611
+00:27:32,730 --> 00:27:35,900
+Another option is maybe
+you can feed the assistant
+
+612
+00:27:35,900 --> 00:27:39,240
+bytes and bytes of unreadable characters.
+
+613
+00:27:39,240 --> 00:27:41,910
+Or if you're trying to be clever,
+
+614
+00:27:41,910 --> 00:27:43,620
+you could try to sweet-talk the assistant
+
+615
+00:27:43,620 --> 00:27:47,130
+to maybe just, maybe
+give it its system prompt
+
+616
+00:27:47,130 --> 00:27:48,420
+or tool definitions.
+
+617
+00:27:48,420 --> 00:27:52,200
+You're basically trying to find
+your system's failure modes.
+
+618
+00:27:52,200 --> 00:27:54,510
+And now, as you hear this,
+you're probably thinking,
+
+619
+00:27:54,510 --> 00:27:56,463
+okay, isn't this just testing?
+
+620
+00:27:57,360 --> 00:27:58,340
+No.
+
+621
+00:27:58,340 --> 00:28:02,160
+Because testing checks what works.
+
+622
+00:28:02,160 --> 00:28:04,590
+And red-teaming actually
+tries to break it.
+
+623
+00:28:04,590 --> 00:28:08,730
+And you can't leave this
+type of solution to the end.
+
+624
+00:28:08,730 --> 00:28:12,990
+For us, we red-teamed
+before our alpha phase,
+
+625
+00:28:12,990 --> 00:28:16,140
+our beta phase, and we
+continue to red-team
+
+626
+00:28:16,140 --> 00:28:17,700
+as we move to production.
+
+627
+00:28:17,700 --> 00:28:22,230
+We catalog every exploit,
+and then we fix them,
+
+628
+00:28:22,230 --> 00:28:23,940
+and then we iterate to the next thing.
+
+629
+00:28:23,940 --> 00:28:26,670
+And we do this after every code deployment
+
+630
+00:28:26,670 --> 00:28:28,410
+and every prompt change.
+
+631
+00:28:28,410 --> 00:28:31,860
+Because realistically, your
+stakeholders are gonna ask you,
+
+632
+00:28:31,860 --> 00:28:33,900
+how does this thing break?
+
+633
+00:28:33,900 --> 00:28:36,630
+And if you do this, you'll
+have both the answers
+
+634
+00:28:36,630 --> 00:28:40,500
+and the examples of what could go wrong.
+
+635
+00:28:40,500 --> 00:28:43,530
+And then, of course, you're
+gonna have to fix it.
+
+636
+00:28:43,530 --> 00:28:46,320
+How exactly do you fix these solutions?
+
+637
+00:28:46,320 --> 00:28:47,583
+You use your guardrails.
+
+638
+00:28:48,700 --> 00:28:51,630
+So, because we're at this conference,
+
+639
+00:28:51,630 --> 00:28:54,540
+you've probably heard
+about bedrock guardrails.
+
+640
+00:28:54,540 --> 00:28:56,760
+I'm here to say that most of you know
+
+641
+00:28:56,760 --> 00:28:59,010
+that you need something to prevent AI
+
+642
+00:28:59,010 --> 00:29:00,270
+from going off the rails.
+
+643
+00:29:00,270 --> 00:29:01,470
+That's a given.
+
+644
+00:29:01,470 --> 00:29:03,900
+But when you're dealing
+with customer service,
+
+645
+00:29:03,900 --> 00:29:06,420
+if you only focus on blocking,
+
+646
+00:29:06,420 --> 00:29:08,910
+you're gonna provide a
+poor customer experience.
+
+647
+00:29:08,910 --> 00:29:12,420
+So, in our opinion, you have
+to consider your guardrails
+
+648
+00:29:12,420 --> 00:29:14,850
+from at least two perspectives.
+
+649
+00:29:14,850 --> 00:29:17,430
+Something to completely block the system,
+
+650
+00:29:17,430 --> 00:29:20,880
+as well as something to just
+gently nudge the conversation
+
+651
+00:29:20,880 --> 00:29:22,350
+into a different direction
+
+652
+00:29:22,350 --> 00:29:25,350
+that you actually want
+to do something with.
+
+653
+00:29:25,350 --> 00:29:29,460
+We call these hard guardrails
+and soft guardrails.
+
+654
+00:29:29,460 --> 00:29:31,800
+Now, with hard guardrails,
+
+655
+00:29:31,800 --> 00:29:34,290
+the system doesn't even
+talk, really, to the LLM.
+
+656
+00:29:34,290 --> 00:29:36,480
+Usually, these guardrails
+sit right on top.
+
+657
+00:29:36,480 --> 00:29:39,427
+And they're the things that
+respond with things like,
+
+658
+00:29:39,427 --> 00:29:41,853
+"I can't help that," and
+the conversation stops.
+
+659
+00:29:43,260 --> 00:29:45,150
+These are the things
+that you can configure
+
+660
+00:29:45,150 --> 00:29:47,280
+with bedrock guardrails.
+
+661
+00:29:47,280 --> 00:29:51,390
+On the other hand, soft
+guardrails do use the LLM,
+
+662
+00:29:51,390 --> 00:29:53,640
+but you configure them with your workflow
+
+663
+00:29:53,640 --> 00:29:55,800
+or your prompt design.
+
+664
+00:29:55,800 --> 00:29:58,530
+So, for example, let's say,
+this is really specific for us,
+
+665
+00:29:58,530 --> 00:30:00,030
+but I think you'll understand.
+
+666
+00:30:00,030 --> 00:30:02,520
+Let's say you created a virtual assistant
+
+667
+00:30:02,520 --> 00:30:04,230
+for the automotive industry.
+
+668
+00:30:04,230 --> 00:30:07,980
+And in the process of a
+customer having a conversation,
+
+669
+00:30:07,980 --> 00:30:09,607
+the customer says, "Yeah, you know,
+
+670
+00:30:09,607 --> 00:30:12,997
+"I really do like this car,
+but I have pretty bad credit.
+
+671
+00:30:12,997 --> 00:30:14,947
+"So I was hoping I could get into this
+
+672
+00:30:14,947 --> 00:30:17,790
+"for maybe 100, 150 a month."
+
+673
+00:30:17,790 --> 00:30:19,580
+And you've designed your virtual assistant
+
+674
+00:30:19,580 --> 00:30:21,480
+to solve a lot of problems,
+
+675
+00:30:21,480 --> 00:30:24,220
+but you don't want it to
+handle pricing negotiation.
+
+676
+00:30:24,220 --> 00:30:27,210
+When you use soft guardrails,
+you tune the system
+
+677
+00:30:27,210 --> 00:30:29,467
+so that it responds with,
+
+678
+00:30:29,467 --> 00:30:31,687
+"That's a great question
+for our finance team.
+
+679
+00:30:31,687 --> 00:30:33,810
+"Let me schedule an appointment."
+
+680
+00:30:33,810 --> 00:30:36,870
+And these kind of guardrails allow you
+
+681
+00:30:36,870 --> 00:30:40,620
+to continue to be helpful
+while staying safe.
+
+682
+00:30:40,620 --> 00:30:42,510
+So think about your guardrails
+
+683
+00:30:42,510 --> 00:30:45,453
+from both of these perspectives.
+
+684
+00:30:46,480 --> 00:30:49,650
+All right, so I've
+given you a lot already.
+
+685
+00:30:49,650 --> 00:30:51,720
+But let's just pause for a second.
+
+686
+00:30:51,720 --> 00:30:53,610
+Let's say that many of you here
+
+687
+00:30:53,610 --> 00:30:57,150
+are trying to hit that
+orange, ready to launch.
+
+688
+00:30:57,150 --> 00:30:59,767
+And after this conversation,
+you've decided,
+
+689
+00:30:59,767 --> 00:31:02,107
+"All right, let's use Agent Core.
+
+690
+00:31:02,107 --> 00:31:03,660
+"That'll be our foundation."
+
+691
+00:31:03,660 --> 00:31:07,200
+And what this guy just
+said sounded about right.
+
+692
+00:31:07,200 --> 00:31:10,620
+I'm gonna go home and
+red team my application.
+
+693
+00:31:10,620 --> 00:31:15,500
+And because we are safe practitioners
+
+694
+00:31:15,500 --> 00:31:18,000
+of this agentic landscape,
+
+695
+00:31:18,000 --> 00:31:20,660
+I will also configure my guardrails
+
+696
+00:31:20,660 --> 00:31:23,000
+so that things don't go off the rails,
+
+697
+00:31:23,000 --> 00:31:24,810
+and I'll use the soft guardrails.
+
+698
+00:31:24,810 --> 00:31:27,570
+This point, you should
+probably be ready to launch.
+
+699
+00:31:27,570 --> 00:31:28,403
+Correct?
+
+700
+00:31:30,560 --> 00:31:33,960
+No, because the reality is,
+
+701
+00:31:33,960 --> 00:31:37,230
+even if you red team your
+system to see if it breaks,
+
+702
+00:31:37,230 --> 00:31:40,200
+you still actually have to
+test that it works, right?
+
+703
+00:31:40,200 --> 00:31:43,000
+But traditional testing
+can only take you so far
+
+704
+00:31:43,000 --> 00:31:45,600
+because these LLMs are probabilistic.
+
+705
+00:31:45,600 --> 00:31:47,370
+So you're going to need to find something
+
+706
+00:31:47,370 --> 00:31:49,650
+that's more dynamic.
+
+707
+00:31:49,650 --> 00:31:51,810
+All right, we know this.
+
+708
+00:31:51,810 --> 00:31:53,550
+So what are our options?
+
+709
+00:31:53,550 --> 00:31:56,820
+Well, we could just manually
+review every conversation.
+
+710
+00:31:56,820 --> 00:32:01,260
+And that will work for a
+couple dozen conversations,
+
+711
+00:32:01,260 --> 00:32:02,910
+maybe a couple hundred conversations.
+
+712
+00:32:02,910 --> 00:32:05,160
+But when you're dealing
+with tens of thousands
+
+713
+00:32:05,160 --> 00:32:08,700
+of transactions daily, manual
+review just won't scale.
+
+714
+00:32:08,700 --> 00:32:12,030
+So you're gonna have to
+look for some other option.
+
+715
+00:32:12,030 --> 00:32:15,423
+And this is where automated
+evaluation comes in.
+
+716
+00:32:17,880 --> 00:32:22,840
+So what do I mean by
+automate your evaluation?
+
+717
+00:32:22,840 --> 00:32:26,760
+Just as you can use an LLM
+to generate these responses,
+
+718
+00:32:26,760 --> 00:32:30,060
+you can use another LLM to judge
+
+719
+00:32:30,060 --> 00:32:31,950
+whether or not these
+responses are correct.
+
+720
+00:32:31,950 --> 00:32:35,010
+This approach is called LLM as a judge.
+
+721
+00:32:35,010 --> 00:32:37,830
+And the process is pretty straightforward.
+
+722
+00:32:37,830 --> 00:32:41,640
+First, you generate a bunch
+of test conversations.
+
+723
+00:32:41,640 --> 00:32:44,440
+Then you run them through your system.
+
+724
+00:32:44,440 --> 00:32:45,273
+(coughs)
+
+725
+00:32:45,273 --> 00:32:48,990
+Then you evaluate, how did it do?
+
+726
+00:32:48,990 --> 00:32:51,450
+And you track this over time.
+
+727
+00:32:51,450 --> 00:32:53,250
+Once you have actual data,
+
+728
+00:32:53,250 --> 00:32:54,980
+you can use the same evaluation framework
+
+729
+00:32:54,980 --> 00:32:59,040
+to test whether your system is working
+
+730
+00:32:59,040 --> 00:33:00,390
+for the things that matter.
+
+731
+00:33:01,800 --> 00:33:05,430
+So this type of testing
+actually checks what's right.
+
+732
+00:33:05,430 --> 00:33:09,180
+For us, we track metrics like relevancy,
+
+733
+00:33:09,180 --> 00:33:10,660
+completeness, and tone,
+
+734
+00:33:10,660 --> 00:33:13,950
+things that matter for
+customer conversations.
+
+735
+00:33:13,950 --> 00:33:16,350
+But of course, yours will be different.
+
+736
+00:33:16,350 --> 00:33:19,683
+So find the metrics that
+matter most for your business.
+
+737
+00:33:20,820 --> 00:33:23,130
+All right, so we're gonna go back
+
+738
+00:33:23,130 --> 00:33:24,980
+to that previous slide one more time.
+
+739
+00:33:25,940 --> 00:33:26,940
+We're still here.
+
+740
+00:33:26,940 --> 00:33:29,760
+We know that agent core
+is where we're gonna go.
+
+741
+00:33:29,760 --> 00:33:32,160
+Red teaming is the
+right thing to do, sure.
+
+742
+00:33:32,160 --> 00:33:35,430
+Better our guardrails and the
+soft guardrails, we got it.
+
+743
+00:33:35,430 --> 00:33:38,040
+And now you know that
+not only are you trying
+
+744
+00:33:38,040 --> 00:33:40,530
+to test what breaks, but you
+gotta make sure that it works.
+
+745
+00:33:40,530 --> 00:33:42,100
+So we're gonna automate our evaluation
+
+746
+00:33:42,100 --> 00:33:46,470
+so we can scale up for our
+actual production needs.
+
+747
+00:33:46,470 --> 00:33:50,193
+At this point, now you're
+ready to launch, right?
+
+748
+00:33:51,760 --> 00:33:53,850
+I think you already know
+where this is going.
+
+749
+00:33:53,850 --> 00:33:57,840
+No, because like I said just a moment ago,
+
+750
+00:33:57,840 --> 00:34:01,230
+LLMs are probabilistic, and
+you can do all of this work,
+
+751
+00:34:01,230 --> 00:34:03,260
+and you still will have
+the LLM do something
+
+752
+00:34:03,260 --> 00:34:04,950
+that you least expected.
+
+753
+00:34:04,950 --> 00:34:07,260
+And the last thing you want is to wake up
+
+754
+00:34:07,260 --> 00:34:09,270
+to a whopping LLM bill.
+
+755
+00:34:09,270 --> 00:34:10,713
+So now what do you do?
+
+756
+00:34:11,610 --> 00:34:15,960
+Well, you need to put
+something to stop the system
+
+757
+00:34:15,960 --> 00:34:19,290
+before it goes off the rails
+while you're not around,
+
+758
+00:34:19,290 --> 00:34:23,073
+and that's where circuit
+breakers come in to the mix.
+
+759
+00:34:24,120 --> 00:34:27,720
+So when I talk about circuit breakers,
+
+760
+00:34:27,720 --> 00:34:30,333
+I'm talking about the hard limits
+
+761
+00:34:30,333 --> 00:34:34,100
+that stop the assistant
+when things go wrong.
+
+762
+00:34:34,100 --> 00:34:39,100
+In our case, we consider two
+metrics as our hard limits,
+
+763
+00:34:41,580 --> 00:34:43,530
+cost limits and turn limits.
+
+764
+00:34:43,530 --> 00:34:47,220
+So for example, let's
+say that in the process
+
+765
+00:34:47,220 --> 00:34:49,160
+of a conversation, we've identified
+
+766
+00:34:49,160 --> 00:34:52,280
+that the conversation
+has hit our P95 threshold
+
+767
+00:34:52,280 --> 00:34:53,820
+in terms of cost.
+
+768
+00:34:53,820 --> 00:34:56,610
+At that point, the assistant will stop.
+
+769
+00:34:56,610 --> 00:34:58,520
+Likewise, let's say that
+we're having a conversation
+
+770
+00:34:58,520 --> 00:35:00,720
+and we've gone back and
+forth and back and forth
+
+771
+00:35:00,720 --> 00:35:01,890
+and back and forth and back and forth,
+
+772
+00:35:01,890 --> 00:35:04,230
+and all of a sudden, I
+don't know why there's a two
+
+773
+00:35:04,230 --> 00:35:05,790
+and a zero underneath, but let's say
+
+774
+00:35:05,790 --> 00:35:08,220
+that we've hit 20 turns.
+
+775
+00:35:08,220 --> 00:35:11,220
+At the same time, our assistant will stop.
+
+776
+00:35:11,220 --> 00:35:15,180
+In either case, the P99 cost or the turn,
+
+777
+00:35:15,180 --> 00:35:18,360
+we hand off the conversation
+to someone at the dealership
+
+778
+00:35:18,360 --> 00:35:21,993
+so now they can decide, does
+this conversation continue?
+
+779
+00:35:22,920 --> 00:35:26,010
+So these type of metrics, cost and turn,
+
+780
+00:35:26,010 --> 00:35:28,530
+those are things that
+Bedrock tracks for you,
+
+781
+00:35:28,530 --> 00:35:31,560
+but it's your job to analyze that data
+
+782
+00:35:31,560 --> 00:35:33,900
+and set the thresholds
+that make the most sense
+
+783
+00:35:33,900 --> 00:35:34,920
+for your business.
+
+784
+00:35:34,920 --> 00:35:37,560
+So set these limits from day one
+
+785
+00:35:37,560 --> 00:35:38,920
+and know where your boundaries are
+
+786
+00:35:38,920 --> 00:35:42,600
+so that when you fail,
+you can fail gracefully
+
+787
+00:35:42,600 --> 00:35:44,200
+and you can sleep well at night.
+
+788
+00:35:45,360 --> 00:35:50,360
+All right, so those are
+some of the patterns
+
+789
+00:35:51,720 --> 00:35:54,510
+that we have learned through the process
+
+790
+00:35:54,510 --> 00:35:59,510
+of getting our project
+into beta and beyond,
+
+791
+00:35:59,670 --> 00:36:02,313
+and let me share with
+you where we are today.
+
+792
+00:36:03,840 --> 00:36:07,980
+So as I just said, we
+are right now in beta
+
+793
+00:36:07,980 --> 00:36:11,550
+and our dealers are seeing
+the results that they need.
+
+794
+00:36:11,550 --> 00:36:13,170
+We're hearing that their customers
+
+795
+00:36:13,170 --> 00:36:15,480
+are getting the answers that they need
+
+796
+00:36:15,480 --> 00:36:19,350
+both during the day and after hours.
+
+797
+00:36:19,350 --> 00:36:24,350
+We plan to launch at the
+beginning of Q1, so stay tuned.
+
+798
+00:36:28,020 --> 00:36:31,230
+And that's really all I have right now.
+
+799
+00:36:31,230 --> 00:36:33,420
+Your system, however,
+is gonna look different
+
+800
+00:36:33,420 --> 00:36:36,780
+because your requirements
+are understandably different.
+
+801
+00:36:36,780 --> 00:36:39,000
+But if you start with
+the right foundation,
+
+802
+00:36:39,000 --> 00:36:42,150
+like Agent Core, and focus
+on the patterns that matter,
+
+803
+00:36:42,150 --> 00:36:47,150
+you also can create your automated
+AI that your users trust.
+
+804
+00:36:47,850 --> 00:36:48,683
+Thank you.
+
+805
+00:36:58,380 --> 00:37:01,920
+- So I promised you we'd come
+up and tell you how we did,
+
+806
+00:37:01,920 --> 00:37:05,790
+but before you do that,
+who thinks, you saw one,
+
+807
+00:37:05,790 --> 00:37:08,490
+who thinks that's the only success we had?
+
+808
+00:37:08,490 --> 00:37:11,220
+Oh, come on, someone's
+gonna be negative, right?
+
+809
+00:37:11,220 --> 00:37:13,570
+Who thinks we knocked
+all five out of the park?
+
+810
+00:37:15,180 --> 00:37:17,733
+So thank you, I appreciate your faith.
+
+811
+00:37:19,260 --> 00:37:20,910
+Let's talk a little bit about it.
+
+812
+00:37:20,910 --> 00:37:23,130
+So we had five projects.
+
+813
+00:37:23,130 --> 00:37:27,660
+Today we have three apps in
+production in a beta format.
+
+814
+00:37:27,660 --> 00:37:30,600
+The first one to be going full live
+
+815
+00:37:30,600 --> 00:37:33,960
+is the one that Tabare's
+talking to you about.
+
+816
+00:37:33,960 --> 00:37:36,330
+We have an app going into production
+
+817
+00:37:36,330 --> 00:37:37,920
+that's actually being used in dealerships
+
+818
+00:37:37,920 --> 00:37:42,920
+that essentially, when
+you price inventory,
+
+819
+00:37:42,990 --> 00:37:45,510
+there's a lot of work you have to do.
+
+820
+00:37:45,510 --> 00:37:48,330
+And we remind people to do
+it and they don't do it.
+
+821
+00:37:48,330 --> 00:37:52,200
+And so we built an agentic
+solution to do it for them.
+
+822
+00:37:52,200 --> 00:37:53,820
+And instead of nagging
+them to do the work,
+
+823
+00:37:53,820 --> 00:37:57,750
+we said, hey, I did the work
+for you, are you good with it?
+
+824
+00:37:57,750 --> 00:38:00,450
+And then we'll move that into
+full agentic moving forward.
+
+825
+00:38:00,450 --> 00:38:02,880
+So that's another type
+of product we built.
+
+826
+00:38:02,880 --> 00:38:04,650
+We built a couple others.
+
+827
+00:38:04,650 --> 00:38:06,690
+So three are in production today.
+
+828
+00:38:06,690 --> 00:38:09,330
+One's about to launch a little bit later.
+
+829
+00:38:09,330 --> 00:38:11,520
+And let's just say one we
+took back to the drawing board
+
+830
+00:38:11,520 --> 00:38:13,290
+and reimagined.
+
+831
+00:38:13,290 --> 00:38:16,140
+That actually is probably
+some of the most valuable
+
+832
+00:38:16,140 --> 00:38:20,070
+data we got is what didn't work, right?
+
+833
+00:38:20,070 --> 00:38:23,070
+What I'll tell you is
+agentic systems are hard.
+
+834
+00:38:23,070 --> 00:38:27,930
+The hardest thing that we ran into is in,
+
+835
+00:38:27,930 --> 00:38:30,300
+this is a soft way of programming.
+
+836
+00:38:30,300 --> 00:38:31,590
+It's not deterministic.
+
+837
+00:38:31,590 --> 00:38:33,840
+This whole thing is non-deterministic.
+
+838
+00:38:33,840 --> 00:38:36,020
+And so the way you think about products
+
+839
+00:38:36,020 --> 00:38:39,450
+and the way you think
+about capabilities here,
+
+840
+00:38:39,450 --> 00:38:42,960
+agents have agency, they
+can do what they want.
+
+841
+00:38:42,960 --> 00:38:44,640
+You have to put the guardrails around,
+
+842
+00:38:44,640 --> 00:38:47,010
+but that's a hard thing for
+people to wrap their mind around
+
+843
+00:38:47,010 --> 00:38:49,110
+from a product point of view.
+
+844
+00:38:49,110 --> 00:38:50,130
+So what were our lessons?
+
+845
+00:38:50,130 --> 00:38:52,530
+Let's talk really quickly
+about our lessons today.
+
+846
+00:38:52,530 --> 00:38:55,620
+So the first lesson is get moving.
+
+847
+00:38:55,620 --> 00:38:56,910
+Nobody's an expert.
+
+848
+00:38:56,910 --> 00:38:59,190
+There's some great, Amazon
+has some great offerings
+
+849
+00:38:59,190 --> 00:39:01,170
+here in Bedrock and Agent Core.
+
+850
+00:39:01,170 --> 00:39:03,060
+Strands is an option,
+but there are a bunch of,
+
+851
+00:39:03,060 --> 00:39:05,460
+like as you heard, any agentic
+framework can run on it
+
+852
+00:39:05,460 --> 00:39:07,533
+if you prefer something different.
+
+853
+00:39:09,090 --> 00:39:11,403
+The other is to think disruptively.
+
+854
+00:39:13,170 --> 00:39:14,610
+Many people would not have said,
+
+855
+00:39:14,610 --> 00:39:16,500
+we're taking five
+projects and putting them
+
+856
+00:39:16,500 --> 00:39:19,500
+with live production traffic
+with customers in five weeks.
+
+857
+00:39:19,500 --> 00:39:21,240
+That seems insane, right?
+
+858
+00:39:21,240 --> 00:39:23,040
+Start with crazy and work backwards.
+
+859
+00:39:24,270 --> 00:39:29,270
+Agenic AI lets you fundamentally
+change your assumptions.
+
+860
+00:39:30,720 --> 00:39:33,420
+You can use it to build systems faster
+
+861
+00:39:33,420 --> 00:39:35,370
+than you can ever imagine before,
+
+862
+00:39:35,370 --> 00:39:37,020
+and you can have it build things
+
+863
+00:39:37,020 --> 00:39:38,470
+that you could never imagine.
+
+864
+00:39:41,520 --> 00:39:44,040
+And so the embrace of agentic is key,
+
+865
+00:39:44,040 --> 00:39:45,900
+and you need to be
+using agentic every day,
+
+866
+00:39:45,900 --> 00:39:48,300
+not just as engineers,
+but as product leaders,
+
+867
+00:39:48,300 --> 00:39:51,930
+as engineering leaders, as architects,
+
+868
+00:39:51,930 --> 00:39:55,470
+because until you get past
+the fundamental understanding
+
+869
+00:39:55,470 --> 00:39:57,780
+that agentic is different,
+
+870
+00:39:57,780 --> 00:40:00,560
+you can't understand how
+to build agentic products.
+
+871
+00:40:00,560 --> 00:40:04,260
+I talked a little bit
+earlier about chatbots.
+
+872
+00:40:04,260 --> 00:40:06,750
+Tabare's application is
+far more than a chatbot.
+
+873
+00:40:06,750 --> 00:40:08,760
+You have those multiple agentic layers.
+
+874
+00:40:08,760 --> 00:40:10,920
+There's a chatbot agent with other agents
+
+875
+00:40:10,920 --> 00:40:12,900
+back in the background doing work.
+
+876
+00:40:12,900 --> 00:40:15,810
+You can build tools like deep research.
+
+877
+00:40:15,810 --> 00:40:18,840
+You can build tools that essentially
+
+878
+00:40:18,840 --> 00:40:22,890
+invert the shopping funnel
+so that you give customers,
+
+879
+00:40:22,890 --> 00:40:26,010
+just click on this button
+and you can buy it.
+
+880
+00:40:26,010 --> 00:40:27,390
+There's all kinds of things you can do
+
+881
+00:40:27,390 --> 00:40:28,890
+that are not just chatbots.
+
+882
+00:40:28,890 --> 00:40:30,480
+Think beyond chatbots.
+
+883
+00:40:30,480 --> 00:40:31,950
+But you've gotta use it every day
+
+884
+00:40:31,950 --> 00:40:33,893
+'cause it's gonna change the way you work.
+
+885
+00:40:37,240 --> 00:40:39,240
+So, Tabare.
+
+886
+00:40:39,240 --> 00:40:43,047
+- Yeah, so when you're
+thinking about those things
+
+887
+00:40:43,047 --> 00:40:44,553
+and you start building,
+
+888
+00:40:45,510 --> 00:40:47,820
+what can you start with right after this?
+
+889
+00:40:47,820 --> 00:40:52,820
+Number one, start red teaming today.
+
+890
+00:40:52,860 --> 00:40:55,290
+I know it says tomorrow, but start today.
+
+891
+00:40:55,290 --> 00:40:57,660
+Learn how your system breaks.
+
+892
+00:40:57,660 --> 00:40:59,740
+Learn how to break your system
+
+893
+00:40:59,740 --> 00:41:03,400
+and do these things before
+your customers get to it first
+
+894
+00:41:03,400 --> 00:41:05,460
+so that you can set up your guardrails
+
+895
+00:41:05,460 --> 00:41:10,460
+and prevent some of those
+things happening down the line.
+
+896
+00:41:10,460 --> 00:41:14,620
+Second, design for your worst case.
+
+897
+00:41:14,620 --> 00:41:16,680
+If you already have an idea
+
+898
+00:41:16,680 --> 00:41:19,810
+of what kind of keeps you up at night
+
+899
+00:41:21,060 --> 00:41:23,730
+with what your agentic solution could be,
+
+900
+00:41:23,730 --> 00:41:26,040
+build your evaluation
+framework around that
+
+901
+00:41:26,040 --> 00:41:27,840
+so that over time you can see
+
+902
+00:41:27,840 --> 00:41:30,600
+whether or not that was
+truly the worst case
+
+903
+00:41:30,600 --> 00:41:32,200
+and whether or not you've mitigated
+
+904
+00:41:32,200 --> 00:41:34,440
+the crisis from occurring.
+
+905
+00:41:34,440 --> 00:41:36,753
+And then finally, as I said before,
+
+906
+00:41:37,710 --> 00:41:40,110
+even if you do all these other things,
+
+907
+00:41:40,110 --> 00:41:41,430
+things will still go wrong.
+
+908
+00:41:41,430 --> 00:41:44,430
+Just to let you know, things
+will probably still go wrong.
+
+909
+00:41:44,430 --> 00:41:45,900
+So set your hard limits.
+
+910
+00:41:45,900 --> 00:41:49,080
+Understand what your thresholds are.
+
+911
+00:41:49,080 --> 00:41:50,580
+Understand what your boundaries are
+
+912
+00:41:50,580 --> 00:41:53,970
+so that when you do have these failures,
+
+913
+00:41:53,970 --> 00:41:55,900
+you can fail gracefully.
+
+914
+00:41:55,900 --> 00:41:59,313
+And if you do those things,
+you'll be all right.
+
+915
+00:42:02,190 --> 00:42:06,450
+- So to wrap this up,
+we're at AWS re:Invent.
+
+916
+00:42:08,010 --> 00:42:09,300
+And so I was thinking about like
+
+917
+00:42:09,300 --> 00:42:11,350
+what's the right message to land this on?
+
+918
+00:42:13,320 --> 00:42:14,403
+Today's your day one.
+
+919
+00:42:16,550 --> 00:42:19,350
+This is a Bezos quote.
+
+920
+00:42:19,350 --> 00:42:21,540
+Day one is a core Amazon philosophy.
+
+921
+00:42:21,540 --> 00:42:22,650
+We work very closely with them.
+
+922
+00:42:22,650 --> 00:42:26,550
+We talk about day one and
+we adopt it in our practices
+
+923
+00:42:26,550 --> 00:42:27,933
+and try to model it.
+
+924
+00:42:28,890 --> 00:42:32,133
+Day two is stasis followed by irrelevance,
+
+925
+00:42:33,240 --> 00:42:36,690
+followed by excruciating painful
+decline, followed by death.
+
+926
+00:42:36,690 --> 00:42:38,400
+And that's why it's always day one.
+
+927
+00:42:38,400 --> 00:42:40,050
+Get moving.
+
+928
+00:42:40,050 --> 00:42:44,100
+Don't be stuck in waiting
+for someone else to do this
+
+929
+00:42:44,100 --> 00:42:45,720
+or the right answer.
+
+930
+00:42:45,720 --> 00:42:49,533
+Get moving and build something
+in five weeks or one.
+
+931
+00:42:53,370 --> 00:42:57,480
+So I want you, there's a
+couple of resources here.
+
+932
+00:42:57,480 --> 00:43:00,633
+There's a QR code for leveling up skills.
+
+933
+00:43:01,890 --> 00:43:03,510
+And there's a QR code
+
+934
+00:43:03,510 --> 00:43:06,600
+for the Asian Core Deep
+Dive hands-on workshops.
+
+935
+00:43:06,600 --> 00:43:07,770
+I highly recommend that.
+
+936
+00:43:07,770 --> 00:43:10,170
+It's a great way to get your hands on
+
+937
+00:43:10,170 --> 00:43:13,950
+and see how easy it is
+to build these things.
+
+938
+00:43:13,950 --> 00:43:16,743
+And so definitely scan
+those with QR codes.
+
+939
+00:43:17,880 --> 00:43:22,680
+And please, please, please
+complete the session survey
+
+940
+00:43:22,680 --> 00:43:24,270
+in the mobile app.
+
+941
+00:43:24,270 --> 00:43:27,930
+We'd love to hear your feedback
+and how we could do better.
+
+942
+00:43:27,930 --> 00:43:30,780
+And thank you very much.
+
+943
+00:43:30,780 --> 00:43:33,270
+If you have questions, we'll
+be up here for a little while.
+
+944
+00:43:33,270 --> 00:43:34,140
+We've got a few more minutes
+
+945
+00:43:34,140 --> 00:43:36,420
+before we need to relinquish the room.
+
+946
+00:43:36,420 --> 00:43:39,450
+So thank you very much for
+being in attendance today.
+
+947
+00:43:39,450 --> 00:43:42,617
+(audience applauding)
+

@@ -1,0 +1,4842 @@
+1
+00:00:00,540 --> 00:00:01,623
+- Okay, hi everyone.
+
+2
+00:00:02,670 --> 00:00:04,230
+My name's Alex Livingstone.
+
+3
+00:00:04,230 --> 00:00:06,660
+I'm a principal specialist
+solutions architect
+
+4
+00:00:06,660 --> 00:00:08,753
+specializing in cloud operations,
+
+5
+00:00:08,753 --> 00:00:11,490
+and particularly observability.
+
+6
+00:00:11,490 --> 00:00:16,350
+I've been doing kind of operations
+stuff for about 25 years.
+
+7
+00:00:16,350 --> 00:00:17,790
+I feel old now,
+
+8
+00:00:17,790 --> 00:00:22,023
+and I've been doing this stuff
+in AWS for about nine years.
+
+9
+00:00:23,910 --> 00:00:27,930
+So I wanna start with like the reality
+
+10
+00:00:27,930 --> 00:00:30,570
+of enterprise observability today.
+
+11
+00:00:30,570 --> 00:00:33,750
+It's a lot different from
+traditional monitoring.
+
+12
+00:00:33,750 --> 00:00:35,707
+You might have to be worrying
+about having hundreds
+
+13
+00:00:35,707 --> 00:00:39,930
+or even maybe thousands of
+accounts across multiple regions,
+
+14
+00:00:39,930 --> 00:00:41,475
+thousands, maybe tens of thousands,
+
+15
+00:00:41,475 --> 00:00:43,860
+in some cases, maybe even
+hundreds of thousands
+
+16
+00:00:43,860 --> 00:00:46,143
+of microservices or services.
+
+17
+00:00:47,700 --> 00:00:48,660
+And for some of you,
+
+18
+00:00:48,660 --> 00:00:52,260
+you might have petabytes
+of telemetry daily.
+
+19
+00:00:52,260 --> 00:00:54,210
+I mean, not everyone's gonna have that.
+
+20
+00:00:54,210 --> 00:00:55,096
+And what we're gonna talk about today
+
+21
+00:00:55,096 --> 00:00:57,536
+is actually it's best practices generally.
+
+22
+00:00:57,536 --> 00:01:01,833
+So it doesn't necessarily
+have to be at huge scale.
+
+23
+00:01:04,080 --> 00:01:06,780
+And some of the challenges
+that this leads to generally
+
+24
+00:01:06,780 --> 00:01:08,640
+when I speak to customers
+
+25
+00:01:08,640 --> 00:01:12,360
+is they have lots of different tooling.
+
+26
+00:01:12,360 --> 00:01:14,220
+You might have logs in one tool,
+
+27
+00:01:14,220 --> 00:01:17,730
+traces in another tool,
+metrics in another tool,
+
+28
+00:01:17,730 --> 00:01:19,860
+and this becomes challenging.
+
+29
+00:01:19,860 --> 00:01:21,873
+Also, it can become very costly,
+
+30
+00:01:23,790 --> 00:01:25,260
+and it can lead to alert fatigue.
+
+31
+00:01:25,260 --> 00:01:27,660
+How many of you have alert
+fatigue as a problem?
+
+32
+00:01:28,830 --> 00:01:30,810
+Yeah, quite a few of you.
+
+33
+00:01:30,810 --> 00:01:33,180
+And obviously, that can
+lead to missed alerts
+
+34
+00:01:33,180 --> 00:01:35,853
+and not spotting critical issues.
+
+35
+00:01:36,810 --> 00:01:37,977
+So these are the daily realities,
+
+36
+00:01:37,977 --> 00:01:39,141
+probably for a lot of you
+
+37
+00:01:39,141 --> 00:01:41,163
+and for enterprise teams in general.
+
+38
+00:01:43,320 --> 00:01:45,960
+And when your observability doesn't scale,
+
+39
+00:01:45,960 --> 00:01:47,910
+you see these kind of problems:
+
+40
+00:01:47,910 --> 00:01:50,013
+increased meantime to resolution,
+
+41
+00:01:51,270 --> 00:01:53,463
+as I said, alert noise and fatigue,
+
+42
+00:01:55,530 --> 00:01:58,800
+data silos, and this might
+not just be actual data silos,
+
+43
+00:01:58,800 --> 00:02:00,717
+but you might also have
+team silos as well,
+
+44
+00:02:00,717 --> 00:02:03,450
+and that can make things more difficult.
+
+45
+00:02:03,450 --> 00:02:04,798
+And if your data is siloed,
+
+46
+00:02:04,798 --> 00:02:09,798
+that kind of reinforces your
+teams being siloed as well.
+
+47
+00:02:12,450 --> 00:02:14,640
+And then if you've got multiple tools,
+
+48
+00:02:14,640 --> 00:02:17,540
+then you have to do manual
+correlation across those tools.
+
+49
+00:02:18,720 --> 00:02:20,520
+And I see this with customers a lot.
+
+50
+00:02:21,600 --> 00:02:22,984
+If your metrics are in one tool
+
+51
+00:02:22,984 --> 00:02:25,050
+and your logs are in another,
+
+52
+00:02:25,050 --> 00:02:26,853
+then you have to be looking
+at one tab for your metrics,
+
+53
+00:02:26,853 --> 00:02:28,050
+another for your logs.
+
+54
+00:02:28,050 --> 00:02:30,750
+You have to look at the time
+and across these different tabs
+
+55
+00:02:30,750 --> 00:02:32,220
+and switch back and forth,
+
+56
+00:02:32,220 --> 00:02:34,770
+and that can be a bit of a nightmare.
+
+57
+00:02:34,770 --> 00:02:36,408
+And then you also have
+inconsistent coverage
+
+58
+00:02:36,408 --> 00:02:38,280
+if you're using different tools,
+
+59
+00:02:38,280 --> 00:02:39,900
+different teams are using different tools,
+
+60
+00:02:39,900 --> 00:02:41,640
+different standards,
+
+61
+00:02:41,640 --> 00:02:43,540
+and that makes it even more difficult.
+
+62
+00:02:44,580 --> 00:02:46,830
+Now, I'm gonna come on to the cost.
+
+63
+00:02:46,830 --> 00:02:50,790
+Before I click next on my clicker,
+
+64
+00:02:50,790 --> 00:02:55,790
+how many of you here know
+exactly the dollar amount
+
+65
+00:02:56,130 --> 00:02:59,760
+per hour for downtime for your application
+
+66
+00:02:59,760 --> 00:03:02,340
+or for your organization?
+
+67
+00:03:02,340 --> 00:03:03,173
+Anyone?
+
+68
+00:03:04,830 --> 00:03:09,480
+Okay, so for 90% of enterprises,
+
+69
+00:03:09,480 --> 00:03:12,180
+it's $300,000 an hour.
+
+70
+00:03:12,180 --> 00:03:14,030
+Now I'm not saying this to scare you,
+
+71
+00:03:15,930 --> 00:03:18,690
+and it's like it's one
+to $5 million per hour,
+
+72
+00:03:18,690 --> 00:03:20,790
+41% of enterprises.
+
+73
+00:03:20,790 --> 00:03:22,650
+So yeah, this is not to scare you.
+
+74
+00:03:22,650 --> 00:03:26,443
+This is to help you to justify
+
+75
+00:03:26,443 --> 00:03:28,099
+why observability is important
+
+76
+00:03:28,099 --> 00:03:32,040
+to your business, your company.
+
+77
+00:03:32,040 --> 00:03:32,873
+So you can justify
+
+78
+00:03:32,873 --> 00:03:35,553
+why you should be
+investing in observability.
+
+79
+00:03:36,630 --> 00:03:40,293
+Because if it comes at that
+cost when you have downtime,
+
+80
+00:03:41,700 --> 00:03:43,410
+the relatively, it's not tiny,
+
+81
+00:03:43,410 --> 00:03:44,659
+but the relatively small amount of money
+
+82
+00:03:44,659 --> 00:03:46,119
+you can invest into observability
+
+83
+00:03:46,119 --> 00:03:48,690
+to stop this downtime happening,
+
+84
+00:03:48,690 --> 00:03:50,340
+the return on investment,
+
+85
+00:03:50,340 --> 00:03:52,443
+I mean, it should be really clear.
+
+86
+00:03:54,810 --> 00:03:58,080
+Obviously, as well as just the cost,
+
+87
+00:03:58,080 --> 00:04:01,503
+you have the lost time from engineers,
+
+88
+00:04:02,610 --> 00:04:05,250
+customers experience problems
+
+89
+00:04:05,250 --> 00:04:07,110
+that can lead to
+reputational loss as well,
+
+90
+00:04:07,110 --> 00:04:10,293
+beyond just the actual cost of downtime.
+
+91
+00:04:11,790 --> 00:04:14,670
+And this can also lead
+to delayed features.
+
+92
+00:04:14,670 --> 00:04:17,280
+There are other repercussions as well,
+
+93
+00:04:17,280 --> 00:04:20,936
+but delayed feature delivery
+that might cause problems
+
+94
+00:04:20,936 --> 00:04:24,153
+with revenue that you're not yet getting.
+
+95
+00:04:26,790 --> 00:04:30,693
+Okay, so before we go into
+the technical solutions,
+
+96
+00:04:32,040 --> 00:04:33,690
+I'm gonna start off by,
+
+97
+00:04:33,690 --> 00:04:37,050
+I'm try and get you to,
+for some of you anyway,
+
+98
+00:04:37,050 --> 00:04:38,370
+this might not be all of you,
+
+99
+00:04:38,370 --> 00:04:40,410
+to fundamentally think differently
+
+100
+00:04:40,410 --> 00:04:42,750
+about the way you do monitoring.
+
+101
+00:04:42,750 --> 00:04:44,580
+So this section
+
+102
+00:04:44,580 --> 00:04:47,970
+is just about the way
+you think about metrics.
+
+103
+00:04:47,970 --> 00:04:50,670
+And traditionally we kind of,
+when we look at monitoring,
+
+104
+00:04:50,670 --> 00:04:53,100
+we look at infrastructure metrics.
+
+105
+00:04:53,100 --> 00:04:55,980
+So here we can see things like compute,
+
+106
+00:04:55,980 --> 00:04:58,260
+network, containers, storage,
+
+107
+00:04:58,260 --> 00:05:00,090
+and then obviously we vend metrics
+
+108
+00:05:00,090 --> 00:05:03,423
+for nearly all of the AWS services.
+
+109
+00:05:04,890 --> 00:05:05,723
+And then on top of that,
+
+110
+00:05:05,723 --> 00:05:07,800
+you might have your application metrics,
+
+111
+00:05:07,800 --> 00:05:12,443
+so performance, API calls, IOPS.
+
+112
+00:05:12,443 --> 00:05:15,153
+You might even have metrics
+on individual features.
+
+113
+00:05:16,680 --> 00:05:18,660
+And then golden signals,
+
+114
+00:05:18,660 --> 00:05:21,840
+so latency, traffic,
+errors, and saturation.
+
+115
+00:05:21,840 --> 00:05:25,320
+I'm sure most of you have
+probably heard about these.
+
+116
+00:05:25,320 --> 00:05:29,400
+So let me think how to phrase this.
+
+117
+00:05:29,400 --> 00:05:32,820
+How many of you kind of
+stop at that top layer?
+
+118
+00:05:32,820 --> 00:05:34,980
+Do any of you think about metrics
+
+119
+00:05:34,980 --> 00:05:36,543
+that may be above that layer?
+
+120
+00:05:38,640 --> 00:05:41,640
+Yeah, a couple of, yeah, a few hands.
+
+121
+00:05:41,640 --> 00:05:44,160
+And this is what I want
+you to think about.
+
+122
+00:05:44,160 --> 00:05:46,140
+Business outcomes.
+
+123
+00:05:46,140 --> 00:05:48,429
+So business outcome metrics
+are really, really important.
+
+124
+00:05:48,429 --> 00:05:50,553
+And I want you to think about this.
+
+125
+00:05:52,260 --> 00:05:54,180
+And there's two fundamental reasons why,
+
+126
+00:05:54,180 --> 00:05:55,920
+which I'll go into in a minute.
+
+127
+00:05:55,920 --> 00:05:56,973
+But think about,
+
+128
+00:05:59,130 --> 00:06:00,660
+think about what your
+customers care about.
+
+129
+00:06:00,660 --> 00:06:04,470
+They don't care about the
+CPU on your EC2 instance.
+
+130
+00:06:04,470 --> 00:06:07,740
+They don't care about the
+utilization of your containers.
+
+131
+00:06:07,740 --> 00:06:09,273
+They don't care about the,
+
+132
+00:06:12,839 --> 00:06:16,826
+how much storage or CPU or memory
+
+133
+00:06:16,826 --> 00:06:18,513
+or Lambda functions you're using.
+
+134
+00:06:19,530 --> 00:06:21,480
+They care about things
+that matter to them,
+
+135
+00:06:21,480 --> 00:06:23,100
+and you should be caring about the things
+
+136
+00:06:23,100 --> 00:06:24,930
+that matter to your customers.
+
+137
+00:06:24,930 --> 00:06:29,040
+So if you go on to amazon.com for example,
+
+138
+00:06:29,040 --> 00:06:31,080
+our most important metric,
+
+139
+00:06:31,080 --> 00:06:34,743
+as you can guess, it's not
+gonna be CPU utilization,
+
+140
+00:06:35,700 --> 00:06:39,030
+it's not even gonna be some
+performance-related metric.
+
+141
+00:06:39,030 --> 00:06:40,440
+It's not even latency.
+
+142
+00:06:40,440 --> 00:06:42,360
+These things are all important,
+
+143
+00:06:42,360 --> 00:06:46,710
+but the most important
+metric is orders per minute.
+
+144
+00:06:46,710 --> 00:06:49,290
+Because the idea of you
+coming onto amazon.com
+
+145
+00:06:49,290 --> 00:06:51,390
+is you wanna buy something.
+
+146
+00:06:51,390 --> 00:06:53,690
+If you can't buy something,
+there's a problem.
+
+147
+00:06:54,900 --> 00:06:58,920
+And the reason you should
+measure these business outcomes,
+
+148
+00:06:58,920 --> 00:07:01,200
+there's two major reasons.
+
+149
+00:07:01,200 --> 00:07:04,080
+One is if you measure
+for business outcomes,
+
+150
+00:07:04,080 --> 00:07:05,520
+if there's not a technical metric
+
+151
+00:07:05,520 --> 00:07:07,440
+telling you you've got an issue,
+
+152
+00:07:07,440 --> 00:07:08,730
+the business outcome metric
+
+153
+00:07:08,730 --> 00:07:10,980
+will definitely tell
+you you've got an issue.
+
+154
+00:07:12,390 --> 00:07:14,160
+The other reason to do it
+
+155
+00:07:14,160 --> 00:07:15,780
+is if there is a technical metric
+
+156
+00:07:15,780 --> 00:07:17,940
+that tells you you've got an issue,
+
+157
+00:07:17,940 --> 00:07:20,700
+how do you know what
+the business impact is?
+
+158
+00:07:20,700 --> 00:07:21,870
+A lot of the time,
+
+159
+00:07:21,870 --> 00:07:24,210
+maybe you've experienced
+this issue before,
+
+160
+00:07:24,210 --> 00:07:26,640
+you can take a rough
+estimate of what it might be.
+
+161
+00:07:26,640 --> 00:07:29,100
+You might have a good
+idea of what it might be.
+
+162
+00:07:29,100 --> 00:07:30,164
+But the only way to be sure
+
+163
+00:07:30,164 --> 00:07:32,670
+is if you're measuring business outcomes.
+
+164
+00:07:32,670 --> 00:07:35,760
+So if you take, I hope you
+take more than just this away,
+
+165
+00:07:35,760 --> 00:07:37,620
+but if you take one thing away from this,
+
+166
+00:07:37,620 --> 00:07:40,020
+I'd really like you to go away
+
+167
+00:07:40,020 --> 00:07:43,410
+and think about the
+business outcome metrics
+
+168
+00:07:43,410 --> 00:07:45,210
+for your applications.
+
+169
+00:07:45,210 --> 00:07:48,090
+What matters to your
+customers, measure those.
+
+170
+00:07:48,090 --> 00:07:50,400
+The other advantage it gives you as well
+
+171
+00:07:50,400 --> 00:07:52,500
+is your managers will love it
+
+172
+00:07:52,500 --> 00:07:55,050
+if they can see these
+business outcome metrics
+
+173
+00:07:55,050 --> 00:07:57,240
+in near real time
+
+174
+00:07:57,240 --> 00:07:59,009
+rather than waiting for BI tools
+
+175
+00:07:59,009 --> 00:08:01,623
+and getting weekly and monthly reports.
+
+176
+00:08:04,710 --> 00:08:07,252
+So we're gonna go through like a blueprint
+
+177
+00:08:07,252 --> 00:08:10,620
+for how you can implement observability
+
+178
+00:08:10,620 --> 00:08:12,990
+at this kind of enterprise scale.
+
+179
+00:08:12,990 --> 00:08:15,455
+We'll talk about centralized logging,
+
+180
+00:08:15,455 --> 00:08:17,490
+how to collect metrics,
+
+181
+00:08:17,490 --> 00:08:18,783
+we'll talk about tracing,
+
+182
+00:08:20,520 --> 00:08:22,800
+and then we'll talk about
+adding intelligence to that.
+
+183
+00:08:22,800 --> 00:08:25,350
+So we'll talk about anomaly detection.
+
+184
+00:08:25,350 --> 00:08:28,157
+Jared will talk about how to do,
+
+185
+00:08:28,157 --> 00:08:31,080
+how to look at high cardinality metrics,
+
+186
+00:08:31,080 --> 00:08:33,030
+and then also correlation,
+
+187
+00:08:33,030 --> 00:08:34,948
+and how to do that automatically
+
+188
+00:08:34,948 --> 00:08:37,923
+and not have to, you know,
+mess around between tabs.
+
+189
+00:08:39,930 --> 00:08:41,220
+And then to add onto that,
+
+190
+00:08:41,220 --> 00:08:43,923
+we'll talk about
+CloudWatch investigations,
+
+191
+00:08:44,970 --> 00:08:48,300
+application signals for APM,
+
+192
+00:08:48,300 --> 00:08:50,610
+and then some specialized
+insights integration,
+
+193
+00:08:50,610 --> 00:08:52,800
+which I will get into later.
+
+194
+00:08:52,800 --> 00:08:54,390
+So now I'm gonna hand over to Jared
+
+195
+00:08:54,390 --> 00:08:57,093
+and he's talk about how
+we do this at Amazon.
+
+196
+00:09:01,980 --> 00:09:03,853
+- Hey folks, my name is Jared Nance
+
+197
+00:09:03,853 --> 00:09:07,231
+and I'm a principal
+engineer at CloudWatch.
+
+198
+00:09:07,231 --> 00:09:09,648
+I'm gonna talk a bit about how
+we use CloudWatch internally
+
+199
+00:09:09,648 --> 00:09:12,030
+to monitor our own services.
+
+200
+00:09:12,030 --> 00:09:13,590
+But to set some context,
+
+201
+00:09:13,590 --> 00:09:14,580
+I wanted to take a moment
+
+202
+00:09:14,580 --> 00:09:17,970
+to help you understand
+the scale of CloudWatch.
+
+203
+00:09:17,970 --> 00:09:19,593
+So every month we're processing
+
+204
+00:09:19,593 --> 00:09:23,040
+20 quadrillion metric observations,
+
+205
+00:09:23,040 --> 00:09:27,896
+13 exabytes of log data,
+455 billion traces,
+
+206
+00:09:27,896 --> 00:09:31,803
+and we're running 861
+million canaries every month.
+
+207
+00:09:32,700 --> 00:09:33,750
+Why is this relevant?
+
+208
+00:09:33,750 --> 00:09:35,550
+Well, it gives you some insights
+
+209
+00:09:35,550 --> 00:09:38,130
+into the scale of our own services,
+
+210
+00:09:38,130 --> 00:09:41,523
+and we actually use CloudWatch
+to monitor these services.
+
+211
+00:09:43,080 --> 00:09:45,478
+At Amazon, we've largely
+standardized on CloudWatch
+
+212
+00:09:45,478 --> 00:09:47,133
+for new workloads.
+
+213
+00:09:47,133 --> 00:09:48,674
+There are of course some older systems
+
+214
+00:09:48,674 --> 00:09:52,740
+that don't use CloudWatch
+from the early days.
+
+215
+00:09:52,740 --> 00:09:56,220
+But most of the new ones
+all depend on on CloudWatch,
+
+216
+00:09:56,220 --> 00:09:57,993
+and we use this across Amazon.
+
+217
+00:09:59,010 --> 00:10:01,980
+And the way that we approach
+monitoring and observability
+
+218
+00:10:01,980 --> 00:10:03,867
+really starts with how
+we organize our teams
+
+219
+00:10:03,867 --> 00:10:05,880
+and our services.
+
+220
+00:10:05,880 --> 00:10:07,440
+So as I'm sure a lot of you know,
+
+221
+00:10:07,440 --> 00:10:09,990
+Amazon follows a DevOps model
+
+222
+00:10:09,990 --> 00:10:14,422
+where we partition system
+complexity into services
+
+223
+00:10:14,422 --> 00:10:16,320
+and those services are operated
+
+224
+00:10:16,320 --> 00:10:18,750
+by what we call two-pizza teams.
+
+225
+00:10:18,750 --> 00:10:21,490
+So let's start by looking at what happens
+
+226
+00:10:21,490 --> 00:10:24,720
+when we create a new service.
+
+227
+00:10:24,720 --> 00:10:26,400
+We have a set of blueprints
+
+228
+00:10:26,400 --> 00:10:28,590
+that we use for common architectures,
+
+229
+00:10:28,590 --> 00:10:31,170
+and a team can just create
+an instance of a blueprint
+
+230
+00:10:31,170 --> 00:10:33,150
+with everything already set up.
+
+231
+00:10:33,150 --> 00:10:37,380
+So consider an API workload
+running on Amazon API Gateway
+
+232
+00:10:37,380 --> 00:10:40,127
+with a Lambda function integration
+
+233
+00:10:40,127 --> 00:10:42,180
+that might look like this.
+
+234
+00:10:42,180 --> 00:10:43,170
+How do we ensure
+
+235
+00:10:43,170 --> 00:10:47,460
+that this system is set up
+for success with CloudWatch?
+
+236
+00:10:47,460 --> 00:10:49,950
+Well, for all of those vended services,
+
+237
+00:10:49,950 --> 00:10:51,810
+the infrastructure is code templates
+
+238
+00:10:51,810 --> 00:10:53,160
+that we use to provision them
+
+239
+00:10:53,160 --> 00:10:57,090
+already configure things
+like execution logging
+
+240
+00:10:57,090 --> 00:11:00,180
+from our Amazon API gateways
+
+241
+00:11:00,180 --> 00:11:01,791
+and active tracing from the gateway
+
+242
+00:11:01,791 --> 00:11:04,080
+and the Lambda functions.
+
+243
+00:11:04,080 --> 00:11:05,620
+And of course, you get all
+of those vended metrics
+
+244
+00:11:05,620 --> 00:11:08,550
+for free from the services.
+
+245
+00:11:08,550 --> 00:11:10,000
+And if you're running on AWS Lambda,
+
+246
+00:11:10,000 --> 00:11:13,053
+it's automatically integrated
+with CloudWatch logs.
+
+247
+00:11:14,820 --> 00:11:16,830
+But what about your custom telemetry?
+
+248
+00:11:16,830 --> 00:11:18,816
+And when I talk about custom telemetry,
+
+249
+00:11:18,816 --> 00:11:22,170
+what I'm really referring
+to is the workload
+
+250
+00:11:22,170 --> 00:11:24,300
+or business specific instrumentation
+
+251
+00:11:24,300 --> 00:11:26,043
+that you need from your services.
+
+252
+00:11:27,000 --> 00:11:28,620
+All of the data that we need
+
+253
+00:11:28,620 --> 00:11:30,150
+to know what this workload is doing,
+
+254
+00:11:30,150 --> 00:11:31,590
+what it's interacting with,
+
+255
+00:11:31,590 --> 00:11:34,109
+how many records it processed in a batch,
+
+256
+00:11:34,109 --> 00:11:39,109
+this is all custom data that
+we can add into our telemetry.
+
+257
+00:11:39,240 --> 00:11:41,220
+So whenever we create these blueprints,
+
+258
+00:11:41,220 --> 00:11:44,190
+they come pre-wired with
+instrumentation frameworks.
+
+259
+00:11:44,190 --> 00:11:46,569
+So a basic Lambda handler like this
+
+260
+00:11:46,569 --> 00:11:49,530
+would also come with an
+instrumentation framework
+
+261
+00:11:49,530 --> 00:11:51,580
+that's pre-configured the way we need it.
+
+262
+00:11:53,130 --> 00:11:56,280
+Whenever we create an
+instrument within this function,
+
+263
+00:11:56,280 --> 00:11:59,340
+it interoperates with all the
+other frameworks we're using
+
+264
+00:11:59,340 --> 00:12:02,670
+like our caching frameworks
+or our web frameworks.
+
+265
+00:12:02,670 --> 00:12:05,190
+And so here when we create the instrument,
+
+266
+00:12:05,190 --> 00:12:06,780
+it'll automatically add
+
+267
+00:12:06,780 --> 00:12:09,900
+things like the identity
+that's calling the function,
+
+268
+00:12:09,900 --> 00:12:11,880
+it'll link trace IDs into our logs.
+
+269
+00:12:11,880 --> 00:12:13,664
+And these are all things
+that as a developer
+
+270
+00:12:13,664 --> 00:12:15,303
+I don't have to think about.
+
+271
+00:12:16,860 --> 00:12:19,919
+Then we can go in and we
+can add our custom metrics
+
+272
+00:12:19,919 --> 00:12:23,223
+and the labels that we want
+to include in our telemetry.
+
+273
+00:12:24,420 --> 00:12:27,144
+We then pass the instrument
+factory to child operations
+
+274
+00:12:27,144 --> 00:12:29,640
+so they can continue
+further instrumentation
+
+275
+00:12:29,640 --> 00:12:32,160
+carrying all of the context as it goes.
+
+276
+00:12:32,160 --> 00:12:34,920
+And interoperability
+here is super important.
+
+277
+00:12:34,920 --> 00:12:36,655
+In Amazon, we've standardized
+
+278
+00:12:36,655 --> 00:12:39,870
+on our instrumentation
+frameworks a long time ago,
+
+279
+00:12:39,870 --> 00:12:42,180
+but you can use tools like Open Telemetry
+
+280
+00:12:42,180 --> 00:12:44,220
+to get this kind of interoperability
+
+281
+00:12:44,220 --> 00:12:46,590
+so that the frameworks that you use,
+
+282
+00:12:46,590 --> 00:12:49,020
+whether they're caching
+frameworks or web frameworks
+
+283
+00:12:49,020 --> 00:12:51,120
+are all emitting telemetry
+in a consistent way
+
+284
+00:12:51,120 --> 00:12:54,341
+and carrying context as
+you're adding information
+
+285
+00:12:54,341 --> 00:12:57,003
+into your telemetry.
+
+286
+00:12:59,460 --> 00:13:00,642
+When we emit telemetry,
+
+287
+00:13:00,642 --> 00:13:05,642
+we co-locate metrics and labels
+
+288
+00:13:05,730 --> 00:13:08,070
+in event data that might look like this.
+
+289
+00:13:08,070 --> 00:13:11,340
+This allows us to store
+high cardinality context
+
+290
+00:13:11,340 --> 00:13:12,450
+in the spans
+
+291
+00:13:12,450 --> 00:13:14,640
+while using metrics for other things
+
+292
+00:13:14,640 --> 00:13:16,923
+like alarms and dashboards.
+
+293
+00:13:17,910 --> 00:13:20,014
+It also enables us to
+quickly answer questions
+
+294
+00:13:20,014 --> 00:13:22,080
+like which requests failed
+
+295
+00:13:22,080 --> 00:13:24,030
+or which customers are impacted
+
+296
+00:13:24,030 --> 00:13:27,153
+by running logs insights queries
+and contributor insights.
+
+297
+00:13:30,000 --> 00:13:33,780
+One of the most challenging
+things in observability today
+
+298
+00:13:33,780 --> 00:13:35,680
+is dealing with high cardinality data.
+
+299
+00:13:38,190 --> 00:13:39,023
+Today, some of those challenges
+
+300
+00:13:39,023 --> 00:13:40,571
+with traditional monitoring systems
+
+301
+00:13:40,571 --> 00:13:44,760
+include that you may be emitting
+millions of unique metrics,
+
+302
+00:13:44,760 --> 00:13:48,180
+which may hit limits on some
+of the existing systems.
+
+303
+00:13:48,180 --> 00:13:52,500
+The insights are also buried
+in that cardinality explosion.
+
+304
+00:13:52,500 --> 00:13:55,048
+So if you consider a service
+
+305
+00:13:55,048 --> 00:13:57,510
+that just wants to emit a metric latency
+
+306
+00:13:57,510 --> 00:13:58,343
+and it has dimensions
+
+307
+00:13:58,343 --> 00:14:03,030
+like customers, API
+endpoints, and regions,
+
+308
+00:14:03,030 --> 00:14:04,190
+if I have a thousand customers
+
+309
+00:14:04,190 --> 00:14:07,860
+and 50 API endpoints in 10 regions,
+
+310
+00:14:07,860 --> 00:14:09,420
+that one metric now explodes
+
+311
+00:14:09,420 --> 00:14:12,213
+to 500,000 unique metric dimensions.
+
+312
+00:14:13,470 --> 00:14:15,935
+So contributor insights
+takes a different approach.
+
+313
+00:14:15,935 --> 00:14:19,026
+It uses automatic top end analysis
+
+314
+00:14:19,026 --> 00:14:21,270
+where we take those structured logs
+
+315
+00:14:21,270 --> 00:14:23,051
+and we identify top contributors
+
+316
+00:14:23,051 --> 00:14:24,843
+for the metrics in your data.
+
+317
+00:14:26,970 --> 00:14:29,970
+It allows us to do real
+time contributor ranking
+
+318
+00:14:29,970 --> 00:14:31,483
+and it's cost effective
+as it doesn't result
+
+319
+00:14:31,483 --> 00:14:35,283
+in metric dimensionality
+and cardinality explosion.
+
+320
+00:14:37,260 --> 00:14:39,980
+We offer a structured format for the data
+
+321
+00:14:39,980 --> 00:14:41,441
+called embedded metric format,
+
+322
+00:14:41,441 --> 00:14:43,620
+which allows this to happen automatically.
+
+323
+00:14:43,620 --> 00:14:46,290
+So when you emit that span data,
+
+324
+00:14:46,290 --> 00:14:48,870
+you have the structured
+data in your CloudWatch logs
+
+325
+00:14:48,870 --> 00:14:49,703
+and you have the metrics
+
+326
+00:14:49,703 --> 00:14:51,990
+that you want extracted in your metrics
+
+327
+00:14:51,990 --> 00:14:54,150
+all through a single event.
+
+328
+00:14:54,150 --> 00:14:55,680
+And we also have alarm integrations.
+
+329
+00:14:55,680 --> 00:14:58,770
+So you can actually alarm when
+you have a single contributor
+
+330
+00:14:58,770 --> 00:15:02,940
+that is breaching some
+threshold for some metric.
+
+331
+00:15:02,940 --> 00:15:04,320
+So this allows you to identify
+
+332
+00:15:04,320 --> 00:15:06,963
+when just one of your
+customers is having a bad day.
+
+333
+00:15:09,540 --> 00:15:12,325
+So this is a kind of
+graph that you might get
+
+334
+00:15:12,325 --> 00:15:14,760
+if you're using contributor insights.
+
+335
+00:15:14,760 --> 00:15:18,870
+Internally, we use this for
+all of our critical metrics.
+
+336
+00:15:18,870 --> 00:15:23,370
+We've had cases where we see
+a small drop in availability
+
+337
+00:15:23,370 --> 00:15:27,000
+and we realize that it's all
+caused by a single customer.
+
+338
+00:15:27,000 --> 00:15:28,976
+And we've been able to
+work with those customers
+
+339
+00:15:28,976 --> 00:15:31,530
+to identify issues that
+they may have introduced
+
+340
+00:15:31,530 --> 00:15:34,053
+through deployments that
+may be impacting them.
+
+341
+00:15:36,420 --> 00:15:37,515
+We actually use contributor insights
+
+342
+00:15:37,515 --> 00:15:39,990
+to power the personal health dashboards
+
+343
+00:15:39,990 --> 00:15:41,564
+so that in a short amount of time
+
+344
+00:15:41,564 --> 00:15:43,654
+we can identify during a large scale event
+
+345
+00:15:43,654 --> 00:15:47,010
+which customers are impacted
+and quickly notify you.
+
+346
+00:15:47,010 --> 00:15:49,210
+And this is the tool
+that we use to do that.
+
+347
+00:15:51,390 --> 00:15:52,820
+So contributor insights allows us
+
+348
+00:15:52,820 --> 00:15:55,680
+to go from an aggregated metric
+
+349
+00:15:55,680 --> 00:15:58,380
+and identify the top
+contributors for that metric.
+
+350
+00:15:58,380 --> 00:16:00,660
+But what if I wanna go
+from an aggregate metric
+
+351
+00:16:00,660 --> 00:16:02,670
+to a very, very small slice?
+
+352
+00:16:02,670 --> 00:16:05,880
+Maybe I have one request that's failing,
+
+353
+00:16:05,880 --> 00:16:07,205
+maybe I wanna see the full trace
+
+354
+00:16:07,205 --> 00:16:10,140
+for that one aggregated metric.
+
+355
+00:16:10,140 --> 00:16:11,580
+So suppose I have a graph
+
+356
+00:16:11,580 --> 00:16:14,160
+for service availability
+that looks like this.
+
+357
+00:16:14,160 --> 00:16:15,930
+This is an aggregated metric
+
+358
+00:16:15,930 --> 00:16:18,120
+and each sample in this data
+
+359
+00:16:18,120 --> 00:16:21,510
+may contain many
+different actual requests.
+
+360
+00:16:21,510 --> 00:16:22,944
+And I just wanna get one of those requests
+
+361
+00:16:22,944 --> 00:16:24,603
+to understand what's happening.
+
+362
+00:16:26,370 --> 00:16:28,200
+Because we're co-locating our metrics
+
+363
+00:16:28,200 --> 00:16:30,720
+and our structured log
+data in the same events,
+
+364
+00:16:30,720 --> 00:16:31,884
+we're able to run a logs insights query
+
+365
+00:16:31,884 --> 00:16:33,720
+that looks like this,
+
+366
+00:16:33,720 --> 00:16:37,710
+where I am first isolating
+the data by the API
+
+367
+00:16:37,710 --> 00:16:40,350
+and filtering it to just
+the errored requests.
+
+368
+00:16:40,350 --> 00:16:42,002
+And now I can get things like the trace ID
+
+369
+00:16:42,002 --> 00:16:44,253
+and the exception message.
+
+370
+00:16:46,680 --> 00:16:49,170
+But what about cross-account
+and cross-region?
+
+371
+00:16:49,170 --> 00:16:53,550
+At AWS, we partition our
+workloads across accounts
+
+372
+00:16:53,550 --> 00:16:55,203
+for region isolation.
+
+373
+00:16:56,100 --> 00:16:59,730
+So whenever I deploy a
+service into a new region,
+
+374
+00:16:59,730 --> 00:17:02,130
+it's entirely isolated
+into a different account.
+
+375
+00:17:02,970 --> 00:17:05,814
+But how do we get visibility
+across all of these, right?
+
+376
+00:17:05,814 --> 00:17:08,160
+Whenever an operator gets paged in,
+
+377
+00:17:08,160 --> 00:17:09,780
+they know exactly which region
+
+378
+00:17:09,780 --> 00:17:12,540
+and therefore they know
+which account to go into.
+
+379
+00:17:12,540 --> 00:17:15,570
+If an operator group owns
+multiple service accounts,
+
+380
+00:17:15,570 --> 00:17:17,111
+they can create a central
+monitoring account
+
+381
+00:17:17,111 --> 00:17:19,560
+that aggregates the CloudWatch data
+
+382
+00:17:19,560 --> 00:17:21,093
+across accounts and regions.
+
+383
+00:17:24,540 --> 00:17:25,650
+So now, let's talk a little bit
+
+384
+00:17:25,650 --> 00:17:28,050
+about incident detection and response
+
+385
+00:17:28,050 --> 00:17:29,549
+and how do we discover that
+there are actually issues
+
+386
+00:17:29,549 --> 00:17:32,220
+that may be impacting our customers.
+
+387
+00:17:32,220 --> 00:17:34,008
+Whenever we create those blueprints,
+
+388
+00:17:34,008 --> 00:17:37,260
+they also come with predefined dashboards
+
+389
+00:17:37,260 --> 00:17:38,906
+that we deploy through
+infrastructure as code
+
+390
+00:17:38,906 --> 00:17:40,830
+into CloudWatch.
+
+391
+00:17:40,830 --> 00:17:42,116
+This give us, and every week,
+
+392
+00:17:42,116 --> 00:17:43,200
+the service team will go through
+
+393
+00:17:43,200 --> 00:17:46,920
+and they'll review all of our
+customer experience metrics
+
+394
+00:17:46,920 --> 00:17:49,720
+and ask questions about, you know,
+
+395
+00:17:49,720 --> 00:17:52,830
+what's driving this increase in latency?
+
+396
+00:17:52,830 --> 00:17:55,595
+And this gives us a regular
+cadence to deep dive into issues
+
+397
+00:17:55,595 --> 00:17:58,080
+and ask questions about, you know,
+
+398
+00:17:58,080 --> 00:18:00,250
+whether we're monitoring the right things,
+
+399
+00:18:00,250 --> 00:18:03,720
+what kinds of regressions are
+we seeing in our services,
+
+400
+00:18:03,720 --> 00:18:05,970
+and identify things that
+may need automated detection
+
+401
+00:18:05,970 --> 00:18:07,970
+that we actually haven't configured yet.
+
+402
+00:18:09,480 --> 00:18:12,394
+But since we don't sit around
+staring at dashboards all day,
+
+403
+00:18:12,394 --> 00:18:15,603
+we use alarms to notify us
+when something goes wrong.
+
+404
+00:18:16,980 --> 00:18:18,195
+We don't want every single alarm
+
+405
+00:18:18,195 --> 00:18:21,900
+triggering tickets and paging operators
+
+406
+00:18:21,900 --> 00:18:25,140
+because large events may
+actually trigger multiple issues.
+
+407
+00:18:25,140 --> 00:18:27,090
+So we use composite alarms
+
+408
+00:18:27,090 --> 00:18:29,370
+to actually interface with our teams.
+
+409
+00:18:29,370 --> 00:18:31,170
+So whenever a child alarm goes off,
+
+410
+00:18:31,170 --> 00:18:33,540
+it'll trigger a composite alarm
+
+411
+00:18:33,540 --> 00:18:35,760
+and that composite alarm
+will create a ticket
+
+412
+00:18:35,760 --> 00:18:38,193
+in our incident management system.
+
+413
+00:18:39,150 --> 00:18:40,410
+When that ticket gets cut,
+
+414
+00:18:40,410 --> 00:18:43,440
+we automatically trigger a
+CloudWatch investigation.
+
+415
+00:18:43,440 --> 00:18:44,880
+So the CloudWatch investigation
+
+416
+00:18:44,880 --> 00:18:48,750
+will initiate an investigation
+that's AI driven,
+
+417
+00:18:48,750 --> 00:18:50,850
+it'll look to identify the root cause,
+
+418
+00:18:50,850 --> 00:18:52,620
+and it will hopefully do that
+
+419
+00:18:52,620 --> 00:18:54,030
+before the operator has even logged on
+
+420
+00:18:54,030 --> 00:18:56,013
+to investigate the issue.
+
+421
+00:18:57,150 --> 00:19:00,360
+We embed a link back to the
+investigation into the ticket
+
+422
+00:19:00,360 --> 00:19:02,550
+so that when the operator logs on,
+
+423
+00:19:02,550 --> 00:19:04,080
+they go directly into the ticket
+
+424
+00:19:04,080 --> 00:19:06,870
+and then they're able to federate
+directly into the account
+
+425
+00:19:06,870 --> 00:19:07,980
+that's having the issue,
+
+426
+00:19:07,980 --> 00:19:09,540
+review the AI summary,
+
+427
+00:19:09,540 --> 00:19:11,943
+and if needed, do further
+manual investigation.
+
+428
+00:19:12,870 --> 00:19:15,120
+So with that, I'm gonna
+hand it back to Alex
+
+429
+00:19:15,120 --> 00:19:17,350
+to talk about these
+features in more detail
+
+430
+00:19:17,350 --> 00:19:18,843
+as well as a few others.
+
+431
+00:19:24,060 --> 00:19:24,893
+- Thanks, Jared.
+
+432
+00:19:25,918 --> 00:19:28,080
+Okay, the first thing I
+want to talk about is,
+
+433
+00:19:28,080 --> 00:19:31,230
+and these are all things
+that are gonna help you,
+
+434
+00:19:31,230 --> 00:19:32,640
+I'm gonna talk about
+a bunch of things here
+
+435
+00:19:32,640 --> 00:19:36,783
+that are gonna help you
+do this thing at scale.
+
+436
+00:19:37,740 --> 00:19:40,350
+The first thing I'm gonna talk
+about is centralized logging.
+
+437
+00:19:40,350 --> 00:19:43,870
+Now we introduced a new feature
+
+438
+00:19:45,000 --> 00:19:46,920
+a couple of months ago,
+
+439
+00:19:46,920 --> 00:19:48,960
+and it's filled a big gap
+
+440
+00:19:48,960 --> 00:19:51,144
+because we've had the ability
+
+441
+00:19:51,144 --> 00:19:53,220
+to centralize all of your monitoring,
+
+442
+00:19:53,220 --> 00:19:56,157
+so your metrics and your traces,
+
+443
+00:19:56,157 --> 00:19:58,170
+cross-account and cross-region,
+
+444
+00:19:58,170 --> 00:20:00,510
+in either a single monitoring account
+
+445
+00:20:00,510 --> 00:20:02,390
+or multiple monitoring accounts
+
+446
+00:20:02,390 --> 00:20:04,380
+for quite a while now.
+
+447
+00:20:04,380 --> 00:20:05,610
+And the thing that was missing
+
+448
+00:20:05,610 --> 00:20:07,980
+was the ability to do this with logs.
+
+449
+00:20:07,980 --> 00:20:09,182
+And it's the thing that
+customers have asked for
+
+450
+00:20:09,182 --> 00:20:10,470
+for a long time
+
+451
+00:20:10,470 --> 00:20:11,580
+and you can now do this.
+
+452
+00:20:11,580 --> 00:20:12,690
+So if you weren't aware,
+
+453
+00:20:12,690 --> 00:20:15,000
+we released this a couple of months ago
+
+454
+00:20:15,000 --> 00:20:18,142
+and you now have the ability
+
+455
+00:20:18,142 --> 00:20:22,650
+to have a free copy of your
+logs in one central location.
+
+456
+00:20:22,650 --> 00:20:24,330
+So one account, one region,
+
+457
+00:20:24,330 --> 00:20:26,490
+and that means that you can then query
+
+458
+00:20:26,490 --> 00:20:29,040
+all of your logs from one place.
+
+459
+00:20:29,040 --> 00:20:30,197
+So I think this is a really big deal,
+
+460
+00:20:30,197 --> 00:20:31,254
+this is really exciting
+
+461
+00:20:31,254 --> 00:20:35,700
+'cause this now allows
+you to have CloudWatch
+
+462
+00:20:35,700 --> 00:20:40,380
+as your central destination
+for metrics, logs, and traces.
+
+463
+00:20:40,380 --> 00:20:42,980
+And before this, it was a
+bit problematic with logs.
+
+464
+00:20:44,040 --> 00:20:47,133
+So this is multi-account and multi-region.
+
+465
+00:20:48,480 --> 00:20:50,760
+And as I said, this now allows you
+
+466
+00:20:50,760 --> 00:20:55,050
+to do these unified log insights queries
+
+467
+00:20:55,050 --> 00:20:56,973
+cross-accounts and cross-regions.
+
+468
+00:20:58,560 --> 00:20:59,393
+And it also means
+
+469
+00:20:59,393 --> 00:21:02,280
+you can have centralized
+retention policies
+
+470
+00:21:02,280 --> 00:21:04,653
+and to manage your cost as well.
+
+471
+00:21:06,360 --> 00:21:08,250
+Another thing that's
+difficult to do at scale
+
+472
+00:21:08,250 --> 00:21:11,970
+is creating alarms.
+
+473
+00:21:11,970 --> 00:21:12,965
+And this is something else
+
+474
+00:21:12,965 --> 00:21:15,780
+that was released just a few months ago
+
+475
+00:21:15,780 --> 00:21:18,870
+and, well, let me talk
+about the challenge first.
+
+476
+00:21:18,870 --> 00:21:23,870
+So before this, you'd have to
+create an alarm per resource.
+
+477
+00:21:23,940 --> 00:21:28,940
+So imagine you've got hundreds
+of thousands of containers
+
+478
+00:21:29,220 --> 00:21:31,770
+and you want to set up an
+alarm for each container.
+
+479
+00:21:32,850 --> 00:21:35,640
+And even if you do this
+infrastructure as code,
+
+480
+00:21:35,640 --> 00:21:37,200
+it's still a bit of a pain
+
+481
+00:21:37,200 --> 00:21:41,793
+and you'd have to create
+an alarm per resource.
+
+482
+00:21:42,750 --> 00:21:45,000
+And that would also lead to
+having inconsistent thresholds.
+
+483
+00:21:45,000 --> 00:21:48,273
+So different teams would
+set different thresholds,
+
+484
+00:21:49,410 --> 00:21:52,590
+and obviously it creates alarm sprawl.
+
+485
+00:21:52,590 --> 00:21:54,479
+You can end up with tens of thousands,
+
+486
+00:21:54,479 --> 00:21:55,920
+hundreds of thousands,
+
+487
+00:21:55,920 --> 00:21:57,603
+maybe even millions of alarms.
+
+488
+00:21:58,530 --> 00:22:00,430
+And there's no centralized management.
+
+489
+00:22:01,920 --> 00:22:03,768
+And then when you're
+looking at threshold tuning,
+
+490
+00:22:03,768 --> 00:22:06,658
+it's reactive and different
+teams are doing different things
+
+491
+00:22:06,658 --> 00:22:08,823
+with their thresholds.
+
+492
+00:22:11,100 --> 00:22:13,080
+So this kind of creates
+a nightmare scenario
+
+493
+00:22:13,080 --> 00:22:15,690
+where you have thousands of alarms
+
+494
+00:22:15,690 --> 00:22:18,000
+but no confidence
+
+495
+00:22:18,000 --> 00:22:20,250
+that they're actually
+measuring what matters.
+
+496
+00:22:21,270 --> 00:22:23,370
+So with metric insights,
+
+497
+00:22:23,370 --> 00:22:26,100
+we've always had this SQL-like queries
+
+498
+00:22:26,100 --> 00:22:29,280
+for your CloudWatch metrics.
+
+499
+00:22:29,280 --> 00:22:31,230
+But the two things we've added recently,
+
+500
+00:22:31,230 --> 00:22:34,290
+one is tag-based filtering
+for vended metrics.
+
+501
+00:22:34,290 --> 00:22:37,953
+So this means you can
+use tags in the query.
+
+502
+00:22:40,020 --> 00:22:44,340
+And the biggest thing I think
+is multi-resource alarms.
+
+503
+00:22:44,340 --> 00:22:45,299
+So what this allows you to do
+
+504
+00:22:45,299 --> 00:22:49,140
+is say you've got a
+hundred thousand containers
+
+505
+00:22:49,140 --> 00:22:51,287
+and you want to say alert me
+
+506
+00:22:51,287 --> 00:22:55,560
+if the CPU on any of those
+containers goes above 80%,
+
+507
+00:22:55,560 --> 00:22:58,320
+you don't have to create
+a hundred thousand alarms,
+
+508
+00:22:58,320 --> 00:23:00,120
+you can create one alarm to do that.
+
+509
+00:23:02,610 --> 00:23:06,150
+And this obviously gives
+you this central control
+
+510
+00:23:06,150 --> 00:23:09,180
+and it also allows you
+to have a better view
+
+511
+00:23:09,180 --> 00:23:12,753
+across your entire state
+to look at trend analysis.
+
+512
+00:23:13,650 --> 00:23:16,780
+So this transforms how we
+can do alarm management
+
+513
+00:23:17,760 --> 00:23:20,463
+and manage all of these
+individual resources.
+
+514
+00:23:21,420 --> 00:23:22,970
+And this is what it looks like.
+
+515
+00:23:23,940 --> 00:23:26,490
+So here we just have,
+
+516
+00:23:26,490 --> 00:23:28,440
+in fact it's the example I said.
+
+517
+00:23:28,440 --> 00:23:32,800
+So I'm looking at the
+maximum memory utilization
+
+518
+00:23:33,720 --> 00:23:36,723
+potentially across every
+single container that I have.
+
+519
+00:23:38,220 --> 00:23:39,870
+In my account, I don't have that many,
+
+520
+00:23:39,870 --> 00:23:42,821
+so there's what about 20 or so there.
+
+521
+00:23:42,821 --> 00:23:46,860
+But I'm able to immediately
+just do one query
+
+522
+00:23:46,860 --> 00:23:49,473
+and I can set an alarm on
+all of those containers.
+
+523
+00:23:52,920 --> 00:23:54,903
+How many of you here are doing tracing?
+
+524
+00:23:57,240 --> 00:23:59,040
+Okay, quite a few.
+
+525
+00:23:59,040 --> 00:24:00,510
+Maybe about a third.
+
+526
+00:24:00,510 --> 00:24:02,070
+Third to a half maybe.
+
+527
+00:24:02,070 --> 00:24:03,240
+And how many of you
+
+528
+00:24:03,240 --> 00:24:06,723
+are having to sample your traces for cost?
+
+529
+00:24:08,160 --> 00:24:09,153
+Yeah, quite a few.
+
+530
+00:24:10,830 --> 00:24:12,993
+So with transaction search,
+
+531
+00:24:15,480 --> 00:24:17,010
+it solves the problem of sampling.
+
+532
+00:24:17,010 --> 00:24:20,700
+So you can capture a hundred
+percent of your traces
+
+533
+00:24:20,700 --> 00:24:23,283
+rather than sampling one to 5% may be.
+
+534
+00:24:24,180 --> 00:24:25,350
+This means you can do,
+
+535
+00:24:25,350 --> 00:24:27,720
+it also allows you to do
+
+536
+00:24:27,720 --> 00:24:30,390
+like real-time searching of those traces.
+
+537
+00:24:30,390 --> 00:24:35,390
+So we can go through millions
+of traces in seconds.
+
+538
+00:24:36,510 --> 00:24:38,745
+You can add custom
+attributes to your traces
+
+539
+00:24:38,745 --> 00:24:42,153
+and they'll be indexed,
+optionally indexed.
+
+540
+00:24:43,620 --> 00:24:48,620
+And this allows you to have
+this correlation without gaps.
+
+541
+00:24:49,020 --> 00:24:54,020
+Now, if you do sampling,
+there's a problem.
+
+542
+00:24:55,230 --> 00:24:58,200
+Now even if you do tail
+sampling, which is,
+
+543
+00:24:58,200 --> 00:25:02,730
+let's say I want to set up
+tail sampling, which I can do,
+
+544
+00:25:02,730 --> 00:25:07,260
+and say I'll have a hundred
+percent of my errors
+
+545
+00:25:07,260 --> 00:25:10,920
+and I'll sample 5% maybe
+of my successful requests.
+
+546
+00:25:10,920 --> 00:25:12,720
+Well, even that doesn't work
+
+547
+00:25:12,720 --> 00:25:14,550
+because you might have
+a successful request
+
+548
+00:25:14,550 --> 00:25:16,620
+that you want to go and have a look at
+
+549
+00:25:16,620 --> 00:25:19,740
+because maybe actually
+technically it was successful,
+
+550
+00:25:19,740 --> 00:25:20,707
+but actually there was a problem
+
+551
+00:25:20,707 --> 00:25:22,650
+and you need to go and look at it.
+
+552
+00:25:22,650 --> 00:25:24,250
+And the problem is with sampling
+
+553
+00:25:25,260 --> 00:25:27,623
+is you either get an aggregation
+
+554
+00:25:27,623 --> 00:25:29,880
+of what everything looks like
+
+555
+00:25:29,880 --> 00:25:32,640
+or you can go and look
+at individual traces
+
+556
+00:25:32,640 --> 00:25:36,270
+and see what some people
+had issues with maybe.
+
+557
+00:25:36,270 --> 00:25:37,560
+But if you've got a particular issue
+
+558
+00:25:37,560 --> 00:25:39,510
+and it's not in your sample,
+
+559
+00:25:39,510 --> 00:25:41,910
+then, was gonna swear then,
+
+560
+00:25:41,910 --> 00:25:45,000
+then your, yeah,
+
+561
+00:25:45,000 --> 00:25:48,857
+your, I can't think of a good word for it,
+
+562
+00:25:48,857 --> 00:25:51,057
+you don't have the
+chance to go and do that.
+
+563
+00:25:52,800 --> 00:25:55,110
+So what transaction
+search allows you to do
+
+564
+00:25:55,110 --> 00:26:00,110
+is the ability to have every single trace
+
+565
+00:26:00,390 --> 00:26:03,450
+query across millions of
+these traces in seconds.
+
+566
+00:26:03,450 --> 00:26:06,450
+You can filter by the business context.
+
+567
+00:26:06,450 --> 00:26:07,620
+So these are things,
+
+568
+00:26:07,620 --> 00:26:10,500
+maybe you'll have a customer ID,
+
+569
+00:26:10,500 --> 00:26:12,480
+you may have a session ID,
+
+570
+00:26:12,480 --> 00:26:14,883
+things like that, even feature flags.
+
+571
+00:26:16,650 --> 00:26:19,683
+So you can add those into your tracing.
+
+572
+00:26:20,700 --> 00:26:24,273
+And they correlate with logs
+and metrics automatically.
+
+573
+00:26:25,260 --> 00:26:27,510
+You can also export this trace data
+
+574
+00:26:27,510 --> 00:26:29,560
+for things like machine learning analysis
+
+575
+00:26:30,900 --> 00:26:34,593
+and you can do this search
+on up to 10,000 accounts.
+
+576
+00:26:35,610 --> 00:26:38,010
+So that's gonna work for
+most scenarios I think.
+
+577
+00:26:39,960 --> 00:26:41,790
+And this is what it looks like.
+
+578
+00:26:41,790 --> 00:26:45,180
+So here, I've just done a search
+
+579
+00:26:45,180 --> 00:26:47,970
+on all of my traces
+
+580
+00:26:47,970 --> 00:26:49,950
+and just grouped them by status code.
+
+581
+00:26:49,950 --> 00:26:54,270
+So I've got accounts and by status code.
+
+582
+00:26:54,270 --> 00:26:56,250
+And then you'll see there's a button there
+
+583
+00:26:56,250 --> 00:26:58,020
+called summarize results.
+
+584
+00:26:58,020 --> 00:27:02,310
+And that just uses AI to
+summarize the results of my query.
+
+585
+00:27:02,310 --> 00:27:03,720
+You can do this in log insights
+
+586
+00:27:03,720 --> 00:27:06,480
+as well as in transaction search.
+
+587
+00:27:06,480 --> 00:27:08,040
+And then it's given me a summary
+
+588
+00:27:08,040 --> 00:27:10,060
+telling me a bit about
+
+589
+00:27:11,370 --> 00:27:13,870
+which status codes I've
+got and how many I've got.
+
+590
+00:27:16,320 --> 00:27:18,330
+So with anomaly detection,
+
+591
+00:27:18,330 --> 00:27:20,970
+we have anomaly detection
+on all three pillars,
+
+592
+00:27:20,970 --> 00:27:23,580
+so metrics, logs, and traces.
+
+593
+00:27:23,580 --> 00:27:26,670
+With metrics, we get baselines
+
+594
+00:27:26,670 --> 00:27:29,130
+that take into account seasonality.
+
+595
+00:27:29,130 --> 00:27:32,463
+It uses the last 14 days worth of data.
+
+596
+00:27:33,660 --> 00:27:35,880
+We continuously adjust the model.
+
+597
+00:27:35,880 --> 00:27:38,880
+So if we create a new
+model, that's better.
+
+598
+00:27:38,880 --> 00:27:40,140
+We'll replace the model.
+
+599
+00:27:40,140 --> 00:27:42,660
+If it's not better,
+we'll keep the old model.
+
+600
+00:27:42,660 --> 00:27:45,843
+It supports custom metrics
+and vended metrics.
+
+601
+00:27:46,710 --> 00:27:50,163
+And what it does is it
+just identifies outliers.
+
+602
+00:27:51,390 --> 00:27:52,350
+And this is really useful
+
+603
+00:27:52,350 --> 00:27:57,350
+if you've got metrics that are repeatable,
+
+604
+00:27:57,360 --> 00:28:00,120
+so, you know, you have a
+busy pattern during the day
+
+605
+00:28:00,120 --> 00:28:01,950
+and maybe it's quiet at night,
+
+606
+00:28:01,950 --> 00:28:03,579
+or you have a metric that keeps on rising
+
+607
+00:28:03,579 --> 00:28:06,180
+or one that keeps on going down,
+
+608
+00:28:06,180 --> 00:28:09,270
+or maybe you're going into
+production for the first time
+
+609
+00:28:09,270 --> 00:28:10,669
+and you have no idea what the baseline
+
+610
+00:28:10,669 --> 00:28:12,690
+for that metric is gonna be.
+
+611
+00:28:12,690 --> 00:28:14,130
+So there's kind of four use cases
+
+612
+00:28:14,130 --> 00:28:16,533
+for using anomaly detection for metrics.
+
+613
+00:28:18,330 --> 00:28:21,480
+And then we've also got
+anomaly detection for logs.
+
+614
+00:28:21,480 --> 00:28:25,860
+This is built on something we introduced,
+
+615
+00:28:25,860 --> 00:28:28,020
+I think it was last year,
+
+616
+00:28:28,020 --> 00:28:31,050
+which was pattern detection in logs.
+
+617
+00:28:31,050 --> 00:28:33,660
+So we've built on that
+pattern detection in logs
+
+618
+00:28:33,660 --> 00:28:38,660
+and you can automatically
+surface anomalies in logs,
+
+619
+00:28:39,810 --> 00:28:42,570
+just turning it on for a log group.
+
+620
+00:28:42,570 --> 00:28:45,093
+And there's five different anomaly types.
+
+621
+00:28:46,020 --> 00:28:47,433
+One is the frequency,
+
+622
+00:28:48,450 --> 00:28:50,520
+well, I suppose two of the frequency,
+
+623
+00:28:50,520 --> 00:28:51,810
+is this happening more often
+
+624
+00:28:51,810 --> 00:28:53,760
+or is this happening less often?
+
+625
+00:28:53,760 --> 00:28:56,310
+Or you might have a new
+pattern that's emerged
+
+626
+00:28:56,310 --> 00:28:58,623
+or a pattern that's just
+disappeared entirely.
+
+627
+00:28:59,970 --> 00:29:01,216
+And you can run this continuously
+
+628
+00:29:01,216 --> 00:29:04,170
+with log anomaly detection
+for your log group
+
+629
+00:29:04,170 --> 00:29:06,960
+or you can run it as a log insights query.
+
+630
+00:29:06,960 --> 00:29:08,490
+Another thing you can take away
+
+631
+00:29:08,490 --> 00:29:12,060
+if you just take away
+one log insights query,
+
+632
+00:29:12,060 --> 00:29:14,193
+unfortunately, I don't have it on here,
+
+633
+00:29:15,540 --> 00:29:20,540
+but if you do pattern app
+message, pipe anomaly,
+
+634
+00:29:20,610 --> 00:29:25,610
+you will see it will
+basically give you a summary
+
+635
+00:29:26,070 --> 00:29:29,610
+of all of your anomalies
+in your chosen log groups
+
+636
+00:29:29,610 --> 00:29:32,130
+and you can choose all of the log groups.
+
+637
+00:29:32,130 --> 00:29:33,825
+So if you've centralized all of your logs
+
+638
+00:29:33,825 --> 00:29:36,000
+into one account in one region,
+
+639
+00:29:36,000 --> 00:29:37,470
+you could go into log insights,
+
+640
+00:29:37,470 --> 00:29:40,440
+write that pattern app
+message, pipe anomaly,
+
+641
+00:29:40,440 --> 00:29:44,490
+and it would tell all your
+anomalies in all of your logs
+
+642
+00:29:44,490 --> 00:29:46,200
+in that time period.
+
+643
+00:29:46,200 --> 00:29:47,403
+Really, really useful.
+
+644
+00:29:49,650 --> 00:29:50,950
+And then we've got traces.
+
+645
+00:29:53,730 --> 00:29:58,730
+So for traces, it integrates
+with X-ray analytics
+
+646
+00:29:58,740 --> 00:30:03,060
+and it looks at things like
+latency and error rates
+
+647
+00:30:03,060 --> 00:30:04,977
+and dependencies and
+other services as well.
+
+648
+00:30:04,977 --> 00:30:06,927
+And I'll show you what these look like.
+
+649
+00:30:08,580 --> 00:30:11,010
+So this is a typical metric
+
+650
+00:30:11,010 --> 00:30:16,010
+that's kinda quite
+steady in and repeatable.
+
+651
+00:30:16,260 --> 00:30:18,480
+And you can see here
+everything is kind of fitting
+
+652
+00:30:18,480 --> 00:30:20,760
+within that gray band.
+
+653
+00:30:20,760 --> 00:30:23,400
+We can adjust the size of that gray band
+
+654
+00:30:23,400 --> 00:30:24,588
+and then you can alert on anything
+
+655
+00:30:24,588 --> 00:30:27,090
+that goes either above or below
+
+656
+00:30:27,090 --> 00:30:30,333
+or just above or just below that band.
+
+657
+00:30:33,270 --> 00:30:37,300
+And this is log anomaly detection
+
+658
+00:30:38,190 --> 00:30:41,070
+and here it's detecting an error
+
+659
+00:30:41,070 --> 00:30:44,250
+that I've not previously
+had or an increase,
+
+660
+00:30:44,250 --> 00:30:46,563
+no, it's one I've not
+previously had I think.
+
+661
+00:30:49,050 --> 00:30:49,883
+And you'll see here
+
+662
+00:30:49,883 --> 00:30:52,560
+that when we detect
+patterns in these logs,
+
+663
+00:30:52,560 --> 00:30:56,250
+what we're basically doing
+is looking at the patterns
+
+664
+00:30:56,250 --> 00:30:57,220
+and taking out the variables.
+
+665
+00:30:57,220 --> 00:30:59,460
+And we call these tokens,
+
+666
+00:30:59,460 --> 00:31:01,137
+we've got token values here,
+
+667
+00:31:01,137 --> 00:31:03,363
+and I've chosen to look
+at these to token values
+
+668
+00:31:03,363 --> 00:31:06,390
+because they're showing me the trace ID.
+
+669
+00:31:06,390 --> 00:31:08,970
+So what I can do with this
+
+670
+00:31:08,970 --> 00:31:11,910
+is I can look at this log anomaly and go,
+
+671
+00:31:11,910 --> 00:31:13,600
+oh, okay, I wanna
+investigate this a bit more
+
+672
+00:31:13,600 --> 00:31:16,452
+and I can actually just
+look at those trace IDs
+
+673
+00:31:16,452 --> 00:31:19,350
+and then go and have
+a look at those traces
+
+674
+00:31:19,350 --> 00:31:22,350
+and see some more about what's happened.
+
+675
+00:31:22,350 --> 00:31:25,272
+And because traces and
+log events are correlated,
+
+676
+00:31:25,272 --> 00:31:27,450
+when you look at the trace view,
+
+677
+00:31:27,450 --> 00:31:29,653
+if you looked at the trace view of that,
+
+678
+00:31:29,653 --> 00:31:31,770
+of any of those traces,
+
+679
+00:31:31,770 --> 00:31:33,390
+you'd see every single log event
+
+680
+00:31:33,390 --> 00:31:35,140
+correlated with that trace as well.
+
+681
+00:31:37,770 --> 00:31:41,536
+And this is what anomaly
+detection looks like in traces,
+
+682
+00:31:41,536 --> 00:31:44,820
+so this is in the x-ray console.
+
+683
+00:31:44,820 --> 00:31:48,150
+And this gives a bit
+of added value as well.
+
+684
+00:31:48,150 --> 00:31:53,067
+It tries to give you a description
+
+685
+00:31:53,067 --> 00:31:56,740
+and the root cause of the issue as well.
+
+686
+00:31:56,740 --> 00:31:58,650
+Well, the root cause service.
+
+687
+00:31:58,650 --> 00:32:00,930
+And you can drill down
+a bit further into this
+
+688
+00:32:00,930 --> 00:32:02,643
+and it gives you more information.
+
+689
+00:32:05,220 --> 00:32:09,660
+Okay, so application signals.
+
+690
+00:32:09,660 --> 00:32:11,640
+So I've said more insights, less work.
+
+691
+00:32:11,640 --> 00:32:14,370
+So you have to do a bit of
+work here but not very much.
+
+692
+00:32:14,370 --> 00:32:18,450
+So before application signals
+
+693
+00:32:18,450 --> 00:32:21,210
+and before open telemetry I guess,
+
+694
+00:32:21,210 --> 00:32:24,033
+you'd have to do manual
+code instrumentation.
+
+695
+00:32:26,912 --> 00:32:29,810
+So your developers would
+have to add code to,
+
+696
+00:32:29,810 --> 00:32:34,810
+or your developers have to
+add code to your applications,
+
+697
+00:32:34,980 --> 00:32:37,650
+you'd have to do manual
+updates every release,
+
+698
+00:32:37,650 --> 00:32:39,880
+you have inconsistencies
+in data collection,
+
+699
+00:32:39,880 --> 00:32:42,180
+which Jared talked about earlier,
+
+700
+00:32:42,180 --> 00:32:44,237
+and there was selective coverage as well
+
+701
+00:32:44,237 --> 00:32:47,310
+in what libraries were covered.
+
+702
+00:32:47,310 --> 00:32:50,445
+But now with application signals,
+
+703
+00:32:50,445 --> 00:32:55,440
+at least for Python, java, .net, no JS,
+
+704
+00:32:55,440 --> 00:32:57,750
+you can have automatic instrumentation.
+
+705
+00:32:57,750 --> 00:32:59,422
+And this uses open telemetry, right?
+
+706
+00:32:59,422 --> 00:33:00,778
+So this is using open standards,
+
+707
+00:33:00,778 --> 00:33:04,890
+we're using open telemetry to
+do the auto instrumentation,
+
+708
+00:33:04,890 --> 00:33:07,770
+and then we're sending the traces to X-ray
+
+709
+00:33:07,770 --> 00:33:10,227
+and the metrics to CloudWatch.
+
+710
+00:33:10,227 --> 00:33:12,030
+And it's an agent based deployment.
+
+711
+00:33:12,030 --> 00:33:13,200
+There's no code.
+
+712
+00:33:13,200 --> 00:33:15,570
+It's just drop in and plug and play.
+
+713
+00:33:15,570 --> 00:33:17,490
+So it's just configuration.
+
+714
+00:33:17,490 --> 00:33:20,850
+This is particularly easy to do in EKS
+
+715
+00:33:20,850 --> 00:33:24,820
+because you just add an
+observability add onto EKS
+
+716
+00:33:26,040 --> 00:33:29,100
+and then you just turn on
+application signals and that's it.
+
+717
+00:33:29,100 --> 00:33:30,258
+There's a little bit more work to do
+
+718
+00:33:30,258 --> 00:33:34,020
+when you do it in ECS or EC2,
+
+719
+00:33:34,020 --> 00:33:36,292
+but it's basically just deploying an agent
+
+720
+00:33:36,292 --> 00:33:38,820
+and adding some configuration.
+
+721
+00:33:38,820 --> 00:33:41,420
+And it's also built into
+Lamba as well as an option.
+
+722
+00:33:45,210 --> 00:33:48,960
+And obviously, this gives you
+much faster implementation.
+
+723
+00:33:48,960 --> 00:33:51,990
+There's like hardly any
+developer effort at all.
+
+724
+00:33:51,990 --> 00:33:53,367
+It's easy to maintain.
+
+725
+00:33:53,367 --> 00:33:56,193
+We maintain the agent for you.
+
+726
+00:33:57,600 --> 00:34:00,693
+In EKS, we can update the
+agent for you as well.
+
+727
+00:34:02,040 --> 00:34:03,213
+You get standardized telemetry
+
+728
+00:34:03,213 --> 00:34:05,940
+across all of your applications
+
+729
+00:34:05,940 --> 00:34:09,690
+and this is what gives you
+that full stack visibility
+
+730
+00:34:09,690 --> 00:34:11,640
+without any effort.
+
+731
+00:34:11,640 --> 00:34:14,099
+Now I would say there is one exception
+
+732
+00:34:14,099 --> 00:34:16,710
+where you might not want to use this
+
+733
+00:34:16,710 --> 00:34:21,710
+if you've got very, very
+latency sensitive applications
+
+734
+00:34:21,922 --> 00:34:25,474
+like high frequency trading
+or something like that,
+
+735
+00:34:25,474 --> 00:34:28,500
+you wouldn't want to use
+auto instrumentation at all
+
+736
+00:34:28,500 --> 00:34:30,390
+from any vendor.
+
+737
+00:34:30,390 --> 00:34:31,890
+Doesn't matter if it's
+CloudWatch or anything.
+
+738
+00:34:31,890 --> 00:34:34,410
+Don't use automatic instrumentation
+
+739
+00:34:34,410 --> 00:34:37,710
+because there is a tiny
+little overhead to,
+
+740
+00:34:37,710 --> 00:34:40,170
+because of the way auto
+instrumentation works,
+
+741
+00:34:40,170 --> 00:34:42,810
+it looks at the code and it
+is analyzing it on the fly.
+
+742
+00:34:42,810 --> 00:34:46,080
+So it adds a tiny bit of latency.
+
+743
+00:34:46,080 --> 00:34:47,370
+But unless you're doing that,
+
+744
+00:34:47,370 --> 00:34:49,173
+it's kind of a no brainer to use.
+
+745
+00:34:51,600 --> 00:34:55,860
+And it's really hard to get a screenshot
+
+746
+00:34:55,860 --> 00:34:58,590
+that shows you everything
+with application signals.
+
+747
+00:34:58,590 --> 00:35:01,980
+But this is kind of the
+high level overview you get.
+
+748
+00:35:01,980 --> 00:35:03,993
+So it does service discovery.
+
+749
+00:35:05,550 --> 00:35:07,474
+It allows you to...
+
+750
+00:35:07,474 --> 00:35:11,340
+It creates the golden signals for you.
+
+751
+00:35:11,340 --> 00:35:15,390
+It allows you to create SLOs
+based on those golden signals.
+
+752
+00:35:15,390 --> 00:35:19,140
+So you can see, I can see the
+health of my services there.
+
+753
+00:35:19,140 --> 00:35:22,020
+So this is a weather application.
+
+754
+00:35:22,020 --> 00:35:24,930
+You can see I've probably
+been a bit aggressive
+
+755
+00:35:24,930 --> 00:35:26,160
+with my SLOs.
+
+756
+00:35:26,160 --> 00:35:27,270
+It's actually not that bad,
+
+757
+00:35:27,270 --> 00:35:30,243
+but it's showing that
+they're all unhealthy.
+
+758
+00:35:31,590 --> 00:35:33,690
+And you get services by fault rate.
+
+759
+00:35:33,690 --> 00:35:35,665
+And when you go into
+these individual services,
+
+760
+00:35:35,665 --> 00:35:40,665
+you'll see things like what
+dependencies they have,
+
+761
+00:35:40,770 --> 00:35:42,507
+what services they're interacting with
+
+762
+00:35:42,507 --> 00:35:45,243
+and the SLOs for that individual service.
+
+763
+00:35:47,490 --> 00:35:49,830
+Okay, so this is better, more insights.
+
+764
+00:35:49,830 --> 00:35:50,823
+No work at all.
+
+765
+00:35:52,050 --> 00:35:54,600
+You have to turn it on,
+but that's about it.
+
+766
+00:35:54,600 --> 00:35:59,600
+So container insights we
+can use for EKS and ECS
+
+767
+00:35:59,820 --> 00:36:03,660
+and it gives you resource
+utilization right down,
+
+768
+00:36:03,660 --> 00:36:07,830
+right from the cluster level
+right down to the pod level.
+
+769
+00:36:07,830 --> 00:36:11,280
+And it can give you metrics
+on container performance,
+
+770
+00:36:11,280 --> 00:36:16,230
+cluster performance
+information about deployments.
+
+771
+00:36:16,230 --> 00:36:18,780
+And it integrates with
+application signals as well.
+
+772
+00:36:20,580 --> 00:36:22,500
+We have database insights.
+
+773
+00:36:22,500 --> 00:36:24,630
+Again, something you can just turn on,
+
+774
+00:36:24,630 --> 00:36:26,100
+well, actually it's turned on by default,
+
+775
+00:36:26,100 --> 00:36:29,100
+but there are two tiers to it.
+
+776
+00:36:29,100 --> 00:36:31,710
+And if you're running something
+serious in production,
+
+777
+00:36:31,710 --> 00:36:34,950
+you probably want to
+turn on the next tier.
+
+778
+00:36:34,950 --> 00:36:37,323
+By default, you'll just
+get the basic tier.
+
+779
+00:36:38,340 --> 00:36:42,090
+So it gives you performance
+monitoring for RDS,
+
+780
+00:36:42,090 --> 00:36:45,930
+gives you analysis of your queries,
+
+781
+00:36:45,930 --> 00:36:48,210
+things like connection pull tracking,
+
+782
+00:36:48,210 --> 00:36:51,480
+and it can also give you
+performance recommendations.
+
+783
+00:36:51,480 --> 00:36:53,068
+So it can proactively
+give you recommendations
+
+784
+00:36:53,068 --> 00:36:55,593
+on what you should do with your database.
+
+785
+00:36:57,570 --> 00:36:59,640
+And we've got Lambda Insights.
+
+786
+00:36:59,640 --> 00:37:00,930
+Again, you can just turn this on
+
+787
+00:37:00,930 --> 00:37:03,120
+and this gives you function level metrics,
+
+788
+00:37:03,120 --> 00:37:04,361
+things like cold start analysis,
+
+789
+00:37:04,361 --> 00:37:07,083
+memory and CPU utilization network.
+
+790
+00:37:08,550 --> 00:37:11,730
+And this integrates with tracing as well.
+
+791
+00:37:11,730 --> 00:37:13,890
+I'll just show you what this looks like.
+
+792
+00:37:13,890 --> 00:37:15,990
+So this is what Container
+Insights looks like.
+
+793
+00:37:15,990 --> 00:37:19,980
+I've got a view of one
+particular service there.
+
+794
+00:37:19,980 --> 00:37:21,690
+I'm just running two pods
+
+795
+00:37:21,690 --> 00:37:24,753
+and I can see all my metrics
+for that individual service.
+
+796
+00:37:26,040 --> 00:37:27,120
+For database insights,
+
+797
+00:37:27,120 --> 00:37:29,910
+there's lots of information
+database insights.
+
+798
+00:37:29,910 --> 00:37:32,820
+This particular database is not very busy,
+
+799
+00:37:32,820 --> 00:37:35,373
+but we can see the top SQL there.
+
+800
+00:37:37,260 --> 00:37:38,850
+And for Lambda Insights,
+
+801
+00:37:38,850 --> 00:37:39,934
+you can have a multi-function view
+
+802
+00:37:39,934 --> 00:37:41,550
+or a single function view.
+
+803
+00:37:41,550 --> 00:37:43,920
+Here, I've got a single function view.
+
+804
+00:37:43,920 --> 00:37:45,123
+This is one of my services
+
+805
+00:37:45,123 --> 00:37:47,610
+that goes and gets the current weather.
+
+806
+00:37:47,610 --> 00:37:51,300
+And we can see things like
+invocations, duration,
+
+807
+00:37:51,300 --> 00:37:54,360
+memory utilization, CPU utilization.
+
+808
+00:37:54,360 --> 00:37:57,570
+We can also get a view of
+the last 1,000 invocations.
+
+809
+00:37:57,570 --> 00:38:00,210
+We can link directly to application logs.
+
+810
+00:38:00,210 --> 00:38:02,250
+And there's also a link
+
+811
+00:38:02,250 --> 00:38:04,833
+directly to application
+insights there as well.
+
+812
+00:38:07,890 --> 00:38:09,450
+Okay, and now,
+
+813
+00:38:09,450 --> 00:38:12,420
+so we've gone from doing
+a little bit of work
+
+814
+00:38:12,420 --> 00:38:13,470
+to doing no work,
+
+815
+00:38:13,470 --> 00:38:15,820
+and now we're gonna let
+AI do the work for you.
+
+816
+00:38:18,960 --> 00:38:20,340
+So we've got anomaly detection
+
+817
+00:38:20,340 --> 00:38:23,760
+as I've talked about across
+metrics, logs, and traces.
+
+818
+00:38:23,760 --> 00:38:25,990
+And we can do a correlation
+
+819
+00:38:29,185 --> 00:38:31,290
+of all of these resources
+
+820
+00:38:31,290 --> 00:38:32,332
+using CloudWatch investigation.
+
+821
+00:38:32,332 --> 00:38:35,550
+So I'm gonna kinda show you
+quickly what this looks like.
+
+822
+00:38:35,550 --> 00:38:38,340
+This also gives you a visual mapping
+
+823
+00:38:38,340 --> 00:38:43,340
+of like the causal relationships
+between your services,
+
+824
+00:38:43,950 --> 00:38:46,983
+and it gives you root cause
+analysis with natural language.
+
+825
+00:38:48,120 --> 00:38:50,120
+It can even recommend run books as well.
+
+826
+00:38:53,250 --> 00:38:56,430
+So this has a scope that
+can cross multiple accounts.
+
+827
+00:38:56,430 --> 00:38:57,360
+So you don't have to worry
+
+828
+00:38:57,360 --> 00:38:59,040
+about just running it in one account.
+
+829
+00:38:59,040 --> 00:39:00,090
+Well, you run it in one account,
+
+830
+00:39:00,090 --> 00:39:03,093
+but it can take in the
+scope of multiple accounts.
+
+831
+00:39:04,110 --> 00:39:05,760
+It can correlate with change events.
+
+832
+00:39:05,760 --> 00:39:07,593
+So it looks at things like,
+
+833
+00:39:09,600 --> 00:39:11,700
+obviously it looks at
+metrics, logs, and traces,
+
+834
+00:39:11,700 --> 00:39:14,100
+but it looks at things
+like Cloud trail as well.
+
+835
+00:39:16,800 --> 00:39:18,235
+As I said, it gives you
+that visual overview
+
+836
+00:39:18,235 --> 00:39:22,170
+of the scope of your investigation.
+
+837
+00:39:22,170 --> 00:39:24,421
+You can share the findings
+of the investigation
+
+838
+00:39:24,421 --> 00:39:25,350
+with your teams.
+
+839
+00:39:25,350 --> 00:39:27,690
+Obviously, there's
+programmatic access as well.
+
+840
+00:39:27,690 --> 00:39:31,290
+So like Jared mentioned,
+we use it internally.
+
+841
+00:39:31,290 --> 00:39:32,820
+We have an alarm.
+
+842
+00:39:32,820 --> 00:39:35,100
+We create an investigation.
+
+843
+00:39:35,100 --> 00:39:36,709
+You can trigger an investigation
+
+844
+00:39:36,709 --> 00:39:38,760
+based on the CloudWatch alarm,
+
+845
+00:39:38,760 --> 00:39:40,800
+and then obviously you can use the APIs
+
+846
+00:39:40,800 --> 00:39:43,200
+to then send that information
+wherever you want.
+
+847
+00:39:45,120 --> 00:39:48,020
+So yes, you can integrate it
+with your instance workflows.
+
+848
+00:39:51,030 --> 00:39:54,330
+And I suggest that if you do use this,
+
+849
+00:39:54,330 --> 00:39:55,879
+do it in a similar way that we do.
+
+850
+00:39:55,879 --> 00:39:59,250
+Integrate this with your ITSM processes.
+
+851
+00:39:59,250 --> 00:40:02,220
+Like if we're using
+ServiceNow for example,
+
+852
+00:40:02,220 --> 00:40:05,373
+put this into your ServiceNow tickets.
+
+853
+00:40:07,170 --> 00:40:11,610
+So this is an example of what
+an investigation looks like.
+
+854
+00:40:11,610 --> 00:40:13,470
+It's telling me what happened.
+
+855
+00:40:13,470 --> 00:40:16,740
+It's giving me the evidence
+and the likely causes.
+
+856
+00:40:16,740 --> 00:40:20,048
+It's given me that visual overview.
+
+857
+00:40:20,048 --> 00:40:22,173
+There's some reasoning below this.
+
+858
+00:40:23,790 --> 00:40:28,350
+And don't worry, I'm gonna
+kinda go through what I did.
+
+859
+00:40:28,350 --> 00:40:33,350
+So I was basically looking at this metric.
+
+860
+00:40:33,480 --> 00:40:35,580
+And I noticed on the left hand side,
+
+861
+00:40:35,580 --> 00:40:37,800
+you can see where it says impact start.
+
+862
+00:40:37,800 --> 00:40:39,825
+I noticed there was a bit of a increase
+
+863
+00:40:39,825 --> 00:40:42,840
+in the duration of my Lambda function.
+
+864
+00:40:42,840 --> 00:40:43,673
+That was all.
+
+865
+00:40:43,673 --> 00:40:46,830
+So my Lambda function was
+running for nearly six seconds
+
+866
+00:40:46,830 --> 00:40:50,940
+instead of roughly just
+under four seconds.
+
+867
+00:40:50,940 --> 00:40:52,390
+So I asked it to investigate.
+
+868
+00:40:53,700 --> 00:40:55,980
+And this is the root cause summary.
+
+869
+00:40:55,980 --> 00:40:57,920
+So essentially, I've...
+
+870
+00:40:59,430 --> 00:41:04,430
+Bedrock was throttling me because
+I'd reached my rate limits
+
+871
+00:41:04,950 --> 00:41:07,350
+and my retry logic was failing
+
+872
+00:41:07,350 --> 00:41:12,063
+because of these repeated
+failed calls to Bedrock.
+
+873
+00:41:13,890 --> 00:41:16,530
+And it was telling me my function duration
+
+874
+00:41:16,530 --> 00:41:17,640
+went from, you know,
+
+875
+00:41:17,640 --> 00:41:20,370
+four seconds to six seconds.
+
+876
+00:41:20,370 --> 00:41:23,574
+So it's told me the root cause
+
+877
+00:41:23,574 --> 00:41:24,975
+and it would tell me then
+
+878
+00:41:24,975 --> 00:41:27,903
+to obviously go and
+increase my Bedrock limits.
+
+879
+00:41:29,910 --> 00:41:34,230
+So we've also got MCP
+servers for CloudWatch.
+
+880
+00:41:34,230 --> 00:41:35,250
+We've got two of them in fact.
+
+881
+00:41:35,250 --> 00:41:38,580
+So we've got the CloudWatch MCP server.
+
+882
+00:41:38,580 --> 00:41:42,000
+So this allows you to
+obviously use natural language
+
+883
+00:41:42,000 --> 00:41:43,140
+to go and do things
+
+884
+00:41:43,140 --> 00:41:47,043
+like look at metrics,
+logs, and traces for you.
+
+885
+00:41:48,960 --> 00:41:51,030
+And we've also got application signals,
+
+886
+00:41:51,030 --> 00:41:53,830
+so that can look at all the
+data in application signals.
+
+887
+00:41:55,200 --> 00:41:56,640
+So both of those working together
+
+888
+00:41:56,640 --> 00:41:58,953
+are probably the best way of doing it.
+
+889
+00:42:00,150 --> 00:42:02,220
+And these are the kind of at the top here,
+
+890
+00:42:02,220 --> 00:42:04,970
+the kind of natural language
+things that you might ask.
+
+891
+00:42:06,000 --> 00:42:07,800
+And this is one of the things I did ask.
+
+892
+00:42:07,800 --> 00:42:09,903
+So here I am using Kiro.
+
+893
+00:42:12,000 --> 00:42:16,620
+And in Kiro I've got
+these MTP servers set up
+
+894
+00:42:16,620 --> 00:42:20,670
+and I've just said my application
+is deployed in eu-west-1
+
+895
+00:42:20,670 --> 00:42:21,728
+based on the #Codebase.
+
+896
+00:42:21,728 --> 00:42:26,681
+So Kiro will have
+context of the #Codebase,
+
+897
+00:42:26,681 --> 00:42:29,400
+once I put #Codebase in,
+
+898
+00:42:29,400 --> 00:42:32,490
+show me CPU spikes in
+production in the last hour.
+
+899
+00:42:32,490 --> 00:42:34,240
+Now because it's got my code base
+
+900
+00:42:35,190 --> 00:42:37,620
+and I've got the MCP servers,
+
+901
+00:42:37,620 --> 00:42:40,260
+it knows what resources to look for.
+
+902
+00:42:40,260 --> 00:42:44,370
+It's not gonna go and find
+stuff that I don't care about
+
+903
+00:42:44,370 --> 00:42:46,320
+that's not related to this application.
+
+904
+00:42:47,462 --> 00:42:48,810
+And you can see here,
+
+905
+00:42:48,810 --> 00:42:50,400
+there's logging information and stuff,
+
+906
+00:42:50,400 --> 00:42:53,070
+but that's not really important for now.
+
+907
+00:42:53,070 --> 00:42:56,670
+What I wanna show you is the output.
+
+908
+00:42:56,670 --> 00:42:59,040
+So the output here is just showing
+
+909
+00:42:59,040 --> 00:43:04,040
+I had some spikes in CPU
+utilization for my EC2 instances.
+
+910
+00:43:04,110 --> 00:43:06,243
+It said that critical spikes detected.
+
+911
+00:43:08,790 --> 00:43:11,010
+I would argue they're
+probably not critical.
+
+912
+00:43:11,010 --> 00:43:15,600
+My EC2 instances spike
+to like 30% maximum.
+
+913
+00:43:15,600 --> 00:43:17,661
+And then I've got some EKS pods,
+
+914
+00:43:17,661 --> 00:43:20,490
+some ECS services,
+
+915
+00:43:20,490 --> 00:43:22,037
+and it's given me a
+kind of summary of that.
+
+916
+00:43:22,037 --> 00:43:24,300
+And at the end, it said the good news,
+
+917
+00:43:24,300 --> 00:43:26,730
+your application and
+other critical services
+
+918
+00:43:26,730 --> 00:43:28,203
+remain stable throughout.
+
+919
+00:43:29,580 --> 00:43:31,320
+But all of that, it's gone and done for me
+
+920
+00:43:31,320 --> 00:43:33,273
+just with that one little prompt.
+
+921
+00:43:34,110 --> 00:43:38,763
+So this is really nice if
+you're able to use MCP servers,
+
+922
+00:43:39,720 --> 00:43:41,850
+have a look at the CloudWatch MCP server
+
+923
+00:43:41,850 --> 00:43:44,820
+and the application signals MCP server.
+
+924
+00:43:44,820 --> 00:43:45,780
+They can be really useful
+
+925
+00:43:45,780 --> 00:43:47,700
+just to go and dig into things
+
+926
+00:43:47,700 --> 00:43:50,973
+as well as using
+CloudWatch investigations.
+
+927
+00:43:53,190 --> 00:43:56,704
+So I wanna, we've talked about
+lots of different things,
+
+928
+00:43:56,704 --> 00:43:58,980
+logs, metrics, traces,
+
+929
+00:43:58,980 --> 00:44:00,700
+these are the kind of fundamentals
+
+930
+00:44:01,680 --> 00:44:04,740
+before you can build up
+to using those AI tools
+
+931
+00:44:04,740 --> 00:44:06,030
+in a meaningful way.
+
+932
+00:44:06,030 --> 00:44:09,033
+So you have to set the foundation,
+
+933
+00:44:09,900 --> 00:44:11,730
+configure a monitoring account, right?
+
+934
+00:44:11,730 --> 00:44:13,680
+So you've got everything in one place.
+
+935
+00:44:13,680 --> 00:44:15,046
+Set up log centralization again
+
+936
+00:44:15,046 --> 00:44:17,790
+so you've got everything in one place.
+
+937
+00:44:17,790 --> 00:44:21,900
+Make sure you've got retention
+policies that reflect,
+
+938
+00:44:21,900 --> 00:44:25,320
+they've gotta reflect your
+organization's requirements,
+
+939
+00:44:25,320 --> 00:44:28,743
+things like compliance
+requirements as well.
+
+940
+00:44:30,030 --> 00:44:31,009
+Deploying and alerting framework,
+
+941
+00:44:31,009 --> 00:44:34,680
+so by that I mean the kind of
+thing that Jared talked about
+
+942
+00:44:34,680 --> 00:44:36,130
+about when you do an alert
+
+943
+00:44:37,950 --> 00:44:39,840
+or when you have a CloudWatch alarm,
+
+944
+00:44:39,840 --> 00:44:42,210
+you know, follow a standard pattern.
+
+945
+00:44:42,210 --> 00:44:43,667
+Maybe it would involve
+
+946
+00:44:43,667 --> 00:44:45,933
+triggering a CloudWatch investigation,
+
+947
+00:44:46,890 --> 00:44:48,851
+opening a ticket on your system,
+
+948
+00:44:48,851 --> 00:44:51,870
+in the way that Jared described.
+
+949
+00:44:51,870 --> 00:44:55,650
+And make sure you have
+tagging on your resources,
+
+950
+00:44:55,650 --> 00:45:00,030
+especially with the ability
+for metric insights,
+
+951
+00:45:00,030 --> 00:45:01,500
+at least for vended metrics right now,
+
+952
+00:45:01,500 --> 00:45:04,860
+to be able to run queries based on tags.
+
+953
+00:45:04,860 --> 00:45:06,003
+That's super useful.
+
+954
+00:45:06,900 --> 00:45:08,400
+And another thing is,
+
+955
+00:45:08,400 --> 00:45:09,840
+I've not mentioned on here,
+
+956
+00:45:09,840 --> 00:45:11,910
+I should have mentioned
+it probably on here,
+
+957
+00:45:11,910 --> 00:45:13,860
+is create standards.
+
+958
+00:45:13,860 --> 00:45:17,670
+Create standards for logs,
+create standards for metrics.
+
+959
+00:45:17,670 --> 00:45:18,840
+Tell all of your teams
+
+960
+00:45:18,840 --> 00:45:21,420
+that they should be
+logging in JSON format.
+
+961
+00:45:21,420 --> 00:45:23,093
+These are the kind of fields that we want
+
+962
+00:45:23,093 --> 00:45:27,930
+in every single application or service.
+
+963
+00:45:27,930 --> 00:45:30,060
+Things like who owns it,
+
+964
+00:45:30,060 --> 00:45:31,743
+what application is it part of,
+
+965
+00:45:33,510 --> 00:45:35,910
+what environment is it in.
+
+966
+00:45:35,910 --> 00:45:37,910
+All of these things are super important.
+
+967
+00:45:40,320 --> 00:45:41,883
+And then we come onto insights.
+
+968
+00:45:42,960 --> 00:45:45,330
+On the left we've got
+the kind of fundamentals.
+
+969
+00:45:45,330 --> 00:45:48,252
+Insights, these are
+really simple to deploy.
+
+970
+00:45:48,252 --> 00:45:49,150
+There's no reason.
+
+971
+00:45:49,150 --> 00:45:52,110
+Obviously, they come at the cost.
+
+972
+00:45:52,110 --> 00:45:53,913
+But in terms of ease of deployment,
+
+973
+00:45:53,913 --> 00:45:57,120
+there's no reason not to
+do these container insights
+
+974
+00:45:57,120 --> 00:45:58,230
+just to tick.
+
+975
+00:45:58,230 --> 00:46:00,180
+And database insights, same thing.
+
+976
+00:46:00,180 --> 00:46:02,070
+Lambda insights, same thing.
+
+977
+00:46:02,070 --> 00:46:04,482
+Obviously, you can do this
+with infrastructure as code
+
+978
+00:46:04,482 --> 00:46:06,393
+as well as using the console.
+
+979
+00:46:08,610 --> 00:46:10,953
+Have CloudWatch agents on EC2.
+
+980
+00:46:12,300 --> 00:46:16,323
+How many of you have
+not got an agent on EC2?
+
+981
+00:46:17,190 --> 00:46:18,990
+Any kind of agent.
+
+982
+00:46:18,990 --> 00:46:19,950
+Good, that's good news.
+
+983
+00:46:19,950 --> 00:46:21,270
+Sometimes I speak to customers
+
+984
+00:46:21,270 --> 00:46:24,147
+and they've got nothing running on EC2.
+
+985
+00:46:24,147 --> 00:46:26,376
+Now the advantage of having
+the CloudWatch agent on EC2
+
+986
+00:46:26,376 --> 00:46:31,053
+is obviously that gives you
+everything in one place.
+
+987
+00:46:32,040 --> 00:46:37,040
+It also means that you
+can use compute optimizer
+
+988
+00:46:37,290 --> 00:46:40,920
+to right size your EC2 instances as well.
+
+989
+00:46:40,920 --> 00:46:43,170
+If you use Compute Optimizer
+
+990
+00:46:43,170 --> 00:46:45,840
+and you're not using the CloudWatch agent,
+
+991
+00:46:45,840 --> 00:46:50,220
+then you will only get CPU
+and networking metrics.
+
+992
+00:46:50,220 --> 00:46:53,520
+And who wants to rightsize
+their EC2 instances
+
+993
+00:46:53,520 --> 00:46:55,563
+without taking into account memory?
+
+994
+00:46:56,698 --> 00:46:58,140
+Enable network monitoring.
+
+995
+00:46:58,140 --> 00:47:01,890
+We've got some really
+nice tools in CloudWatch
+
+996
+00:47:01,890 --> 00:47:04,053
+to monitor networking.
+
+997
+00:47:04,950 --> 00:47:06,000
+I think very recently
+
+998
+00:47:06,000 --> 00:47:09,840
+there was something
+announced with monitoring EKS
+
+999
+00:47:09,840 --> 00:47:12,033
+as well that's built into CloudWatch.
+
+1000
+00:47:13,320 --> 00:47:14,397
+We haven't really had
+time to talk about this
+
+1001
+00:47:14,397 --> 00:47:16,697
+in this like short space of time.
+
+1002
+00:47:16,697 --> 00:47:18,180
+Have a look at internet monitor.
+
+1003
+00:47:18,180 --> 00:47:19,013
+That's a really nice thing to go
+
+1004
+00:47:19,013 --> 00:47:21,677
+and have a look at to see
+the kind of thing you can do.
+
+1005
+00:47:23,790 --> 00:47:26,970
+And then start to look at
+application performance.
+
+1006
+00:47:26,970 --> 00:47:31,260
+If you've got applications
+that are written in Python,
+
+1007
+00:47:31,260 --> 00:47:34,230
+java, node, or .net,
+
+1008
+00:47:34,230 --> 00:47:38,220
+then have a look at application signals.
+
+1009
+00:47:38,220 --> 00:47:42,480
+Try it on one of your
+workloads in development
+
+1010
+00:47:42,480 --> 00:47:45,205
+and just see what it gives you
+
+1011
+00:47:45,205 --> 00:47:46,771
+because it is very little effort
+
+1012
+00:47:46,771 --> 00:47:48,723
+and it gives you lots of information.
+
+1013
+00:47:50,280 --> 00:47:51,780
+If you don't wanna do sampling
+
+1014
+00:47:53,820 --> 00:47:56,790
+and you're worried about the
+cost of tracing everything,
+
+1015
+00:47:56,790 --> 00:47:58,800
+enable transaction search.
+
+1016
+00:47:58,800 --> 00:47:59,880
+Again, that's super useful.
+
+1017
+00:47:59,880 --> 00:48:02,253
+It means that you're
+not gonna lose any data.
+
+1018
+00:48:03,570 --> 00:48:06,330
+Make use of application
+signals for your SLOs.
+
+1019
+00:48:06,330 --> 00:48:09,873
+But even if you are not
+using application signals,
+
+1020
+00:48:11,160 --> 00:48:13,140
+and it's not immediately obvious this,
+
+1021
+00:48:13,140 --> 00:48:16,170
+but if you go into the CloudWatch console
+
+1022
+00:48:16,170 --> 00:48:19,810
+and you look under application
+performance monitoring
+
+1023
+00:48:21,090 --> 00:48:22,590
+and you see SLOs,
+
+1024
+00:48:22,590 --> 00:48:25,434
+you can actually create SLOs
+on any CloudWatch metric.
+
+1025
+00:48:25,434 --> 00:48:30,333
+It doesn't have to be related
+to application signals.
+
+1026
+00:48:32,100 --> 00:48:33,463
+You can enable real user monitoring
+
+1027
+00:48:33,463 --> 00:48:35,200
+for your web applications
+
+1028
+00:48:37,200 --> 00:48:39,214
+and you can create synthetic canaries.
+
+1029
+00:48:39,214 --> 00:48:42,780
+Synthetic canaries are
+really, really useful.
+
+1030
+00:48:42,780 --> 00:48:45,630
+You can run them up to every minute
+
+1031
+00:48:45,630 --> 00:48:47,700
+and you can either just
+do like a heartbeat check
+
+1032
+00:48:47,700 --> 00:48:49,810
+or you can run through a complex workflow
+
+1033
+00:48:51,300 --> 00:48:53,609
+and you can run them to a schedule
+
+1034
+00:48:53,609 --> 00:48:55,560
+or you can run them on demand.
+
+1035
+00:48:55,560 --> 00:48:58,650
+So they might also be useful
+for things like smoke testing.
+
+1036
+00:48:58,650 --> 00:49:00,540
+So you create a bunch of smoke tests
+
+1037
+00:49:00,540 --> 00:49:02,340
+using synthetic canaries
+
+1038
+00:49:02,340 --> 00:49:05,223
+and you run them on demand
+at the end of your pipeline.
+
+1039
+00:49:07,980 --> 00:49:09,990
+And then add intelligence.
+
+1040
+00:49:09,990 --> 00:49:11,670
+So use contributor insights.
+
+1041
+00:49:11,670 --> 00:49:13,503
+Who uses contributor insights here?
+
+1042
+00:49:15,780 --> 00:49:16,707
+Or no one?
+
+1043
+00:49:16,707 --> 00:49:19,533
+This is really sad.
+
+1044
+00:49:21,030 --> 00:49:22,141
+I think contributor insights
+
+1045
+00:49:22,141 --> 00:49:25,203
+is one of the most powerful tools we have.
+
+1046
+00:49:27,540 --> 00:49:29,340
+And I mean, I'm not
+gonna go into it again,
+
+1047
+00:49:29,340 --> 00:49:30,600
+Jared talked about it,
+
+1048
+00:49:30,600 --> 00:49:32,175
+but have a look at contributor insights
+
+1049
+00:49:32,175 --> 00:49:34,923
+because it's really, really powerful.
+
+1050
+00:49:35,970 --> 00:49:38,463
+Use metric insights for your alarms.
+
+1051
+00:49:39,780 --> 00:49:41,430
+Have a look at metric anomaly detection.
+
+1052
+00:49:41,430 --> 00:49:43,530
+Look at log anomaly detection.
+
+1053
+00:49:43,530 --> 00:49:48,130
+Also look at just how you
+can use pattern analysis
+
+1054
+00:49:49,260 --> 00:49:51,660
+just when you're doing
+queries and log insights.
+
+1055
+00:49:54,330 --> 00:49:55,410
+Once you've got all of this,
+
+1056
+00:49:55,410 --> 00:49:56,243
+then you can start
+
+1057
+00:49:56,243 --> 00:49:59,130
+to really make use of CloudWatch
+investigations properly.
+
+1058
+00:49:59,130 --> 00:50:00,370
+Now you can use CloudWatch investigations
+
+1059
+00:50:00,370 --> 00:50:02,640
+when you haven't done all of this.
+
+1060
+00:50:02,640 --> 00:50:06,150
+But to really get the best out
+of CloudWatch investigations,
+
+1061
+00:50:06,150 --> 00:50:09,180
+obviously like anything AI-powered,
+
+1062
+00:50:09,180 --> 00:50:11,250
+the more information it has,
+
+1063
+00:50:11,250 --> 00:50:15,570
+the better it's gonna be at
+getting to the right answer.
+
+1064
+00:50:15,570 --> 00:50:19,140
+You can create run books
+in systems manager.
+
+1065
+00:50:19,140 --> 00:50:22,143
+How many of you create run
+books in Systems manager?
+
+1066
+00:50:23,460 --> 00:50:24,303
+A few of you.
+
+1067
+00:50:25,470 --> 00:50:30,470
+So when you have an alarm triggered,
+
+1068
+00:50:30,990 --> 00:50:34,390
+you can choose to run a systems
+manager automation document
+
+1069
+00:50:35,460 --> 00:50:37,660
+if you've got something that's repeatable
+
+1070
+00:50:39,120 --> 00:50:40,870
+and you can fix with an automation.
+
+1071
+00:50:43,261 --> 00:50:45,362
+I think one really simple
+explanation of this
+
+1072
+00:50:45,362 --> 00:50:48,273
+is if you've got an EC2 instance,
+
+1073
+00:50:49,860 --> 00:50:52,020
+you don't wanna get woken up
+at two o'clock in the morning
+
+1074
+00:50:52,020 --> 00:50:53,870
+just because the disc is full, right?
+
+1075
+00:50:55,050 --> 00:50:57,531
+So there's a systems
+manager automation document
+
+1076
+00:50:57,531 --> 00:51:00,450
+already built into systems manager
+
+1077
+00:51:00,450 --> 00:51:01,803
+where you can,
+
+1078
+00:51:02,729 --> 00:51:06,000
+if there's an alarm for a disc space full,
+
+1079
+00:51:06,000 --> 00:51:07,920
+you can just trigger this document,
+
+1080
+00:51:07,920 --> 00:51:09,480
+it will expand the EBS volume,
+
+1081
+00:51:09,480 --> 00:51:12,120
+then expand the OS volume
+into the EBS volume
+
+1082
+00:51:12,120 --> 00:51:13,590
+and then you can
+investigate in the morning
+
+1083
+00:51:13,590 --> 00:51:15,030
+when you get into work
+
+1084
+00:51:15,030 --> 00:51:16,320
+rather than having to be woken up
+
+1085
+00:51:16,320 --> 00:51:17,820
+at two o'clock in the morning.
+
+1086
+00:51:18,870 --> 00:51:20,880
+We've got AWS chat bots as well.
+
+1087
+00:51:20,880 --> 00:51:25,350
+So you can use that to send information
+
+1088
+00:51:25,350 --> 00:51:29,013
+like to and from Slack and Teams.
+
+1089
+00:51:30,570 --> 00:51:33,693
+It's really important to set
+up these incident workflows.
+
+1090
+00:51:35,010 --> 00:51:35,925
+Please don't be in a situation
+
+1091
+00:51:35,925 --> 00:51:40,500
+where you just send your alarms
+straight to Slack or Teams
+
+1092
+00:51:40,500 --> 00:51:43,713
+and you don't have any proper
+incident management workflow.
+
+1093
+00:51:46,260 --> 00:51:47,707
+And then after you've done all of this,
+
+1094
+00:51:47,707 --> 00:51:50,520
+that's when you can begin to optimize
+
+1095
+00:51:50,520 --> 00:51:52,590
+for cost and performance.
+
+1096
+00:51:52,590 --> 00:51:55,190
+Maybe then consider
+using composite alarms.
+
+1097
+00:51:55,190 --> 00:51:57,120
+So composite alarms allow you to create
+
+1098
+00:51:57,120 --> 00:52:00,483
+like a tree of alarms using Boolean logic.
+
+1099
+00:52:01,470 --> 00:52:04,470
+You can use things like
+embedded metric format
+
+1100
+00:52:04,470 --> 00:52:07,380
+and you can start to optimize
+
+1101
+00:52:07,380 --> 00:52:09,540
+things like your log retention,
+
+1102
+00:52:09,540 --> 00:52:13,383
+maybe also you can optimize metrics.
+
+1103
+00:52:15,569 --> 00:52:17,160
+And also for tracing as well,
+
+1104
+00:52:17,160 --> 00:52:18,990
+you can optimize your sampling,
+
+1105
+00:52:18,990 --> 00:52:21,513
+especially if you are
+using transaction search.
+
+1106
+00:52:23,790 --> 00:52:24,623
+But that's it.
+
+1107
+00:52:24,623 --> 00:52:26,160
+Thank you very much for coming.
+
+1108
+00:52:26,160 --> 00:52:28,590
+I hope you've enjoyed your time here.
+
+1109
+00:52:28,590 --> 00:52:30,720
+Please fill in the survey on the app.
+
+1110
+00:52:30,720 --> 00:52:31,720
+Thank you very much.
+

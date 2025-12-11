@@ -1,0 +1,4544 @@
+1
+00:00:00,000 --> 00:00:01,920
+- [Jim] Hey, everybody.
+
+2
+00:00:01,920 --> 00:00:03,810
+I am Jim.
+
+3
+00:00:03,810 --> 00:00:05,100
+- [Vlad] I'm Vlad.
+
+4
+00:00:05,100 --> 00:00:08,130
+- [Jim] So today we're gonna
+talk about coding an MCP server
+
+5
+00:00:08,130 --> 00:00:09,333
+for Amazon Aurora.
+
+6
+00:00:10,290 --> 00:00:13,260
+For those of you that have
+never been to a Code Talk,
+
+7
+00:00:13,260 --> 00:00:15,810
+this is gonna be a little different.
+
+8
+00:00:15,810 --> 00:00:17,880
+You're gonna sit here and watch me code
+
+9
+00:00:17,880 --> 00:00:19,983
+for the next hour, right?
+
+10
+00:00:20,910 --> 00:00:23,310
+So it's, I'm a bad typist
+
+11
+00:00:23,310 --> 00:00:25,560
+giving you that heads up
+right from the beginning.
+
+12
+00:00:25,560 --> 00:00:28,080
+So I'm gonna use Kiro to do
+a lot of this stuff for me.
+
+13
+00:00:28,080 --> 00:00:31,765
+Otherwise, you'd be watching
+me having typos constantly.
+
+14
+00:00:31,765 --> 00:00:34,740
+But let's keep this interactive.
+
+15
+00:00:34,740 --> 00:00:38,340
+Let's turn this into a giant
+paired programming exercise.
+
+16
+00:00:38,340 --> 00:00:41,400
+So if you see me making typos,
+shout it out. It's okay.
+
+17
+00:00:41,400 --> 00:00:44,520
+I won't be offended if
+you see me making a typo.
+
+18
+00:00:44,520 --> 00:00:45,450
+It'll make things go faster.
+
+19
+00:00:45,450 --> 00:00:46,750
+And if you have questions,
+
+20
+00:00:47,760 --> 00:00:49,470
+let's have them, as they're coming along.
+
+21
+00:00:49,470 --> 00:00:54,270
+Vlad's gonna be walking
+around with the microphone.
+
+22
+00:00:54,270 --> 00:00:59,270
+So let's just keep it interactive
+while we're doing things.
+
+23
+00:00:59,340 --> 00:01:02,973
+So what we're gonna
+talk about today is MCP.
+
+24
+00:01:05,460 --> 00:01:06,540
+Its already Tuesday.
+
+25
+00:01:06,540 --> 00:01:09,720
+You probably have had a
+few sessions about MCP,
+
+26
+00:01:09,720 --> 00:01:11,820
+model context protocol.
+
+27
+00:01:11,820 --> 00:01:15,330
+This is a universal
+framework in order to be able
+
+28
+00:01:15,330 --> 00:01:20,330
+to expose out your backend
+data to LLMs for gen ai.
+
+29
+00:01:21,030 --> 00:01:25,740
+It is still a new and
+maturing specification.
+
+30
+00:01:25,740 --> 00:01:28,290
+It's only a year old. Got
+released about a year ago.
+
+31
+00:01:28,290 --> 00:01:30,693
+Latest spec just came out last week.
+
+32
+00:01:31,650 --> 00:01:33,360
+Haven't had a chance to deep dive on it,
+
+33
+00:01:33,360 --> 00:01:35,310
+but there's a lot of cool
+security stuff in there
+
+34
+00:01:35,310 --> 00:01:36,900
+that I'm excited about.
+
+35
+00:01:36,900 --> 00:01:38,190
+Because I thought that was something
+
+36
+00:01:38,190 --> 00:01:39,750
+that was missing before,
+
+37
+00:01:39,750 --> 00:01:40,710
+as we were thinking about
+
+38
+00:01:40,710 --> 00:01:42,240
+how do we push this into production,
+
+39
+00:01:42,240 --> 00:01:45,690
+into exposing things externally
+
+40
+00:01:45,690 --> 00:01:49,143
+outside of your internal infrastructure.
+
+41
+00:01:50,700 --> 00:01:54,720
+We're gonna leverage one
+of the AWS MCP servers,
+
+42
+00:01:54,720 --> 00:01:56,880
+the Aurora Postgre MCP server.
+
+43
+00:01:56,880 --> 00:01:59,070
+There's a bunch of them around.
+A lot of different services.
+
+44
+00:01:59,070 --> 00:02:00,750
+They're all on GitHub.
+
+45
+00:02:00,750 --> 00:02:03,303
+Feel free to download and play with them.
+
+46
+00:02:06,480 --> 00:02:10,560
+MCP really is made up of a bunch of tools.
+
+47
+00:02:10,560 --> 00:02:14,010
+You're exposing out a bunch
+of services out to the LLM
+
+48
+00:02:14,010 --> 00:02:16,590
+and it gives you an API in
+order to be able to do that.
+
+49
+00:02:16,590 --> 00:02:19,050
+And it's more in free text, right?
+
+50
+00:02:19,050 --> 00:02:23,100
+So really how the LMS
+determine what those tools do
+
+51
+00:02:23,100 --> 00:02:25,110
+is by the code, by the description
+
+52
+00:02:25,110 --> 00:02:28,023
+that you type there in
+human readable format.
+
+53
+00:02:29,310 --> 00:02:31,960
+What you type there really
+matters in a lot of cases.
+
+54
+00:02:34,170 --> 00:02:37,950
+We're gonna use Aurora Postgre.
+
+55
+00:02:37,950 --> 00:02:40,140
+So when we talk about Amazon Aurora,
+
+56
+00:02:40,140 --> 00:02:44,460
+we have Aurora Postgre,
+Aurora MySQL, and Aurora DSQL.
+
+57
+00:02:44,460 --> 00:02:46,860
+We're gonna focus on Aurora Postgre.
+
+58
+00:02:46,860 --> 00:02:48,960
+But the stuff we're gonna
+do today really would work
+
+59
+00:02:48,960 --> 00:02:50,940
+across any of the Postgre variants.
+
+60
+00:02:50,940 --> 00:02:53,970
+Even open source community Postgre.
+
+61
+00:02:53,970 --> 00:02:57,540
+We're not doing anything
+specifically Aurora.
+
+62
+00:02:57,540 --> 00:03:02,190
+Some of the MCP server stuff
+uses the data API for it.
+
+63
+00:03:02,190 --> 00:03:05,670
+But the code we're writing
+is really Postgre code,
+
+64
+00:03:05,670 --> 00:03:07,173
+not necessarily Aurora code.
+
+65
+00:03:08,820 --> 00:03:10,860
+We're gonna leverage Bedrock.
+
+66
+00:03:10,860 --> 00:03:13,350
+Again, this is probably
+something that you're seeing
+
+67
+00:03:13,350 --> 00:03:15,003
+in a lot of sessions this week,
+
+68
+00:03:16,020 --> 00:03:19,863
+but we're gonna use Bedrock
+to be able to host our models.
+
+69
+00:03:21,210 --> 00:03:22,380
+So what we're building,
+
+70
+00:03:22,380 --> 00:03:26,340
+we're gonna start with a real
+basic Strands application
+
+71
+00:03:26,340 --> 00:03:30,210
+that it is gonna be an
+entertainment hub where just...
+
+72
+00:03:30,210 --> 00:03:31,043
+Right.
+
+73
+00:03:31,043 --> 00:03:32,310
+And then we're gonna build an MCP server
+
+74
+00:03:32,310 --> 00:03:34,803
+that has two tools in it.
+
+75
+00:03:36,300 --> 00:03:39,270
+It's gonna have a tool called
+Get, get movie characters,
+
+76
+00:03:39,270 --> 00:03:41,133
+and get actor roles.
+
+77
+00:03:42,570 --> 00:03:46,110
+Those are gonna pull data from
+an Aurora Postgre database.
+
+78
+00:03:46,110 --> 00:03:51,030
+And then Strands is going
+to use Bedrock for the LLM
+
+79
+00:03:51,030 --> 00:03:52,880
+in order to be able to use that data.
+
+80
+00:03:56,015 --> 00:03:59,779
+The MCP client we're
+leveraging from Strands, right,
+
+81
+00:03:59,779 --> 00:04:04,050
+is we're gonna start with
+a simple time MCP server
+
+82
+00:04:04,050 --> 00:04:05,673
+so we can tell what time it is.
+
+83
+00:04:06,510 --> 00:04:09,540
+Just those are one of
+those sample MCP servers
+
+84
+00:04:09,540 --> 00:04:13,350
+that actually end up becoming
+really, really useful.
+
+85
+00:04:13,350 --> 00:04:15,660
+Because LLMs don't know what time it is,
+
+86
+00:04:15,660 --> 00:04:18,540
+so if you start asking
+questions about time,
+
+87
+00:04:18,540 --> 00:04:20,010
+it needs to know what the current time is
+
+88
+00:04:20,010 --> 00:04:20,843
+for different things.
+
+89
+00:04:20,843 --> 00:04:22,530
+So if you wanted to say,
+
+90
+00:04:22,530 --> 00:04:25,260
+show me all the log
+history for the last hour,
+
+91
+00:04:25,260 --> 00:04:26,700
+it kind of needs to know what time it is
+
+92
+00:04:26,700 --> 00:04:27,720
+for different things like that.
+
+93
+00:04:27,720 --> 00:04:30,150
+So it needs a source of truth for that.
+
+94
+00:04:30,150 --> 00:04:31,650
+So it ends up being fairly useful
+
+95
+00:04:31,650 --> 00:04:33,150
+for a lot of different things.
+
+96
+00:04:35,640 --> 00:04:38,010
+We're gonna use our data model.
+
+97
+00:04:38,010 --> 00:04:40,830
+This is from the IMDB dataset.
+
+98
+00:04:40,830 --> 00:04:42,240
+I created a data model
+
+99
+00:04:42,240 --> 00:04:45,390
+that's more of a traditional
+normalized data model.
+
+100
+00:04:45,390 --> 00:04:47,490
+Foreign keys, something
+that you would expect
+
+101
+00:04:47,490 --> 00:04:51,600
+in your old school legacy OLTP databases.
+
+102
+00:04:51,600 --> 00:04:53,160
+So there's gonna be some joints, right?
+
+103
+00:04:53,160 --> 00:04:56,850
+So this way it's not just
+the simple single table.
+
+104
+00:04:56,850 --> 00:04:58,440
+It needs to think a
+little bit in order to,
+
+105
+00:04:58,440 --> 00:05:00,270
+how do I get this data out?
+
+106
+00:05:00,270 --> 00:05:02,940
+And it's some of it's ugly data, right?
+
+107
+00:05:02,940 --> 00:05:06,120
+Of just being, how does it get out, like,
+
+108
+00:05:06,120 --> 00:05:09,270
+when some certain things are
+null, what does that mean?
+
+109
+00:05:09,270 --> 00:05:12,270
+Because that's real life with data models
+
+110
+00:05:12,270 --> 00:05:14,970
+that's evolved over a period of time.
+
+111
+00:05:14,970 --> 00:05:16,170
+Instead of rolling out new columns,
+
+112
+00:05:16,170 --> 00:05:18,990
+sometimes people change the
+meaning of those columns
+
+113
+00:05:18,990 --> 00:05:21,423
+as they put in new data
+types data into them.
+
+114
+00:05:23,160 --> 00:05:25,380
+And we're gonna focus on
+securing our database,
+
+115
+00:05:25,380 --> 00:05:28,440
+making sure that we do
+this in a secure way.
+
+116
+00:05:28,440 --> 00:05:33,440
+Because it's, you're opening
+up your database to an LLM.
+
+117
+00:05:33,750 --> 00:05:37,470
+To me as an old school database
+person, that scares me.
+
+118
+00:05:37,470 --> 00:05:40,020
+So I wanna make sure that we're
+doing this in a secure way
+
+119
+00:05:40,020 --> 00:05:42,770
+and different things that we
+could put in along the way
+
+120
+00:05:42,770 --> 00:05:45,810
+to make sure that what
+it's doing with the data
+
+121
+00:05:45,810 --> 00:05:47,940
+is only what you intend it to do.
+
+122
+00:05:47,940 --> 00:05:50,760
+So we don't want it to be
+able to just query everything
+
+123
+00:05:50,760 --> 00:05:52,110
+and post it out to the internet,
+
+124
+00:05:52,110 --> 00:05:55,380
+that if somebody has some
+prompt injection attacks,
+
+125
+00:05:55,380 --> 00:05:57,783
+how do we protect from
+those sort of things.
+
+126
+00:05:59,880 --> 00:06:01,530
+So let's start writing some code.
+
+127
+00:06:07,320 --> 00:06:08,153
+All right.
+
+128
+00:06:09,420 --> 00:06:12,930
+So this is our application.
+
+129
+00:06:12,930 --> 00:06:14,280
+Let's...
+
+130
+00:06:14,280 --> 00:06:16,710
+Right? So we won't be in
+this screen very much.
+
+131
+00:06:16,710 --> 00:06:18,630
+So this is just the basic thing.
+
+132
+00:06:18,630 --> 00:06:20,920
+So just a heads up.
+
+133
+00:06:20,920 --> 00:06:22,440
+Right at the end of the session,
+
+134
+00:06:22,440 --> 00:06:25,590
+I'm gonna put a QR code to a GitHub repo
+
+135
+00:06:25,590 --> 00:06:28,170
+that's gonna have all the code
+that we're gonna write today.
+
+136
+00:06:28,170 --> 00:06:30,180
+So this way you guys could go download it,
+
+137
+00:06:30,180 --> 00:06:33,180
+I'll upload it when I get
+back home after re:Invent,
+
+138
+00:06:33,180 --> 00:06:34,620
+probably on Monday, right?
+
+139
+00:06:34,620 --> 00:06:35,700
+But I'll post it all there.
+
+140
+00:06:35,700 --> 00:06:38,760
+But this way you'll get
+everybody'll have the link for it.
+
+141
+00:06:38,760 --> 00:06:39,593
+Right?
+
+142
+00:06:39,593 --> 00:06:42,023
+So let's just kind of show
+you a little bit what it is.
+
+143
+00:06:42,023 --> 00:06:43,673
+So this the simple Streamlit app.
+
+144
+00:06:58,470 --> 00:07:02,403
+So it has a simple login
+page. Nothing crazy.
+
+145
+00:07:08,280 --> 00:07:10,650
+So we have a list of movies, right?
+
+146
+00:07:10,650 --> 00:07:13,173
+And then we have our MCP server there.
+
+147
+00:07:15,330 --> 00:07:16,293
+What time is it?
+
+148
+00:07:18,840 --> 00:07:21,270
+And if we have a decent
+internet connection,
+
+149
+00:07:21,270 --> 00:07:23,790
+everything's gonna sit
+there, it returns the time.
+
+150
+00:07:23,790 --> 00:07:28,443
+So that all seems to be
+working just fine. Okay?
+
+151
+00:07:30,360 --> 00:07:34,803
+Now, our data model here,
+this is our list of tables.
+
+152
+00:07:36,060 --> 00:07:39,030
+Primarily what we're gonna be
+looking at is the titles table
+
+153
+00:07:39,030 --> 00:07:41,610
+that has really all the
+information in there.
+
+154
+00:07:41,610 --> 00:07:45,660
+So it has a handful of columns
+in there, has a primary key,
+
+155
+00:07:45,660 --> 00:07:49,320
+a title type, the title,
+start year, end year,
+
+156
+00:07:49,320 --> 00:07:54,300
+a bunch of indexes, foreign keys, right?
+
+157
+00:07:54,300 --> 00:07:58,500
+The other thing that we
+have here is on this,
+
+158
+00:07:58,500 --> 00:08:02,280
+I added descriptions for
+everything that's there.
+
+159
+00:08:02,280 --> 00:08:06,273
+Inside of Postgre, using
+the comment command here,
+
+160
+00:08:07,590 --> 00:08:10,680
+we could put in a
+description that's there.
+
+161
+00:08:10,680 --> 00:08:13,260
+The MCP servers can use
+that in order to have
+
+162
+00:08:13,260 --> 00:08:15,240
+the right context of what's in there.
+
+163
+00:08:15,240 --> 00:08:17,220
+So that's something that, you know,
+
+164
+00:08:17,220 --> 00:08:20,280
+when you're working
+with developers or DBAs,
+
+165
+00:08:20,280 --> 00:08:22,560
+everybody kind of knows what's
+in all the different columns.
+
+166
+00:08:22,560 --> 00:08:26,130
+And we need to be able to share
+that knowledge with the LLMs
+
+167
+00:08:26,130 --> 00:08:28,560
+using the native tools inside of Postgre
+
+168
+00:08:28,560 --> 00:08:30,540
+that allows you to put
+comments and everything,
+
+169
+00:08:30,540 --> 00:08:32,910
+lets you really be able
+to jump into and do that.
+
+170
+00:08:32,910 --> 00:08:35,490
+So like you have things
+like here, end year,
+
+171
+00:08:35,490 --> 00:08:38,670
+like, only TV series is
+gonna have an end year.
+
+172
+00:08:38,670 --> 00:08:40,020
+It's null for all everything else.
+
+173
+00:08:40,020 --> 00:08:41,880
+So having that sort of
+information in there,
+
+174
+00:08:41,880 --> 00:08:44,370
+so this way the LLMs know about it.
+
+175
+00:08:44,370 --> 00:08:47,670
+Or this one here, the TS vector
+
+176
+00:08:47,670 --> 00:08:50,370
+for the full tech search for Postgre.
+
+177
+00:08:50,370 --> 00:08:51,900
+Putting a description of what it is
+
+178
+00:08:51,900 --> 00:08:53,880
+and even how to use it, right?
+
+179
+00:08:53,880 --> 00:08:58,110
+So this way, the LLM knows
+how to use that sort of column
+
+180
+00:08:58,110 --> 00:09:01,140
+right, so outside of just
+for LLM, that's a great way
+
+181
+00:09:01,140 --> 00:09:03,210
+for sharing that
+knowledge with developers.
+
+182
+00:09:03,210 --> 00:09:05,280
+If you need to be able to, you know,
+
+183
+00:09:05,280 --> 00:09:06,900
+tell everybody what's in your schema.
+
+184
+00:09:06,900 --> 00:09:07,770
+Use comments.
+
+185
+00:09:07,770 --> 00:09:09,870
+We put it inside our source code.
+
+186
+00:09:09,870 --> 00:09:12,330
+Put it on your database objects too.
+
+187
+00:09:12,330 --> 00:09:14,555
+You can put 'em on... pretty
+much, inside of Postgre,
+
+188
+00:09:14,555 --> 00:09:16,380
+you could put it on basically
+every type of object
+
+189
+00:09:16,380 --> 00:09:17,613
+to use it.
+
+190
+00:09:18,702 --> 00:09:19,680
+Right.
+
+191
+00:09:19,680 --> 00:09:23,120
+So let's start by creating a...
+
+192
+00:09:27,120 --> 00:09:29,320
+there's a little lag
+here with the internet.
+
+193
+00:09:32,910 --> 00:09:35,433
+So we'll go create that.
+
+194
+00:09:38,880 --> 00:09:42,813
+So we're gonna use Kiro to do
+all our heavy lifting today.
+
+195
+00:09:45,030 --> 00:09:49,100
+And we have a couple MCP servers that I...
+
+196
+00:09:50,730 --> 00:09:51,563
+Did I?
+
+197
+00:09:54,870 --> 00:09:55,920
+There we go.
+
+198
+00:09:55,920 --> 00:09:57,540
+So there's some built in.
+
+199
+00:09:57,540 --> 00:09:59,850
+We have the Postgre MCP server,
+
+200
+00:09:59,850 --> 00:10:02,340
+and we have the weather MCP server,
+
+201
+00:10:02,340 --> 00:10:04,893
+just as something to be able to do it,
+
+202
+00:10:05,730 --> 00:10:07,443
+make sure that MCP is working.
+
+203
+00:10:08,550 --> 00:10:13,403
+What is the whether in Vegas?
+
+204
+00:10:19,500 --> 00:10:21,750
+And the cool thing that in Kiro,
+
+205
+00:10:21,750 --> 00:10:23,130
+it actually asks you whether or not
+
+206
+00:10:23,130 --> 00:10:25,380
+you want to do a lot of operations
+
+207
+00:10:25,380 --> 00:10:28,410
+is based on whether or
+not it's trusted or not.
+
+208
+00:10:28,410 --> 00:10:31,950
+So it returns back the weather, right?
+
+209
+00:10:31,950 --> 00:10:32,783
+Cool.
+
+210
+00:10:32,783 --> 00:10:34,290
+The MCP that you could have weather
+
+211
+00:10:34,290 --> 00:10:36,810
+and you could have Postgre
+all on the same thing, right?
+
+212
+00:10:36,810 --> 00:10:38,790
+It'll be able to determine
+kind of what you want to do.
+
+213
+00:10:38,790 --> 00:10:42,790
+So I could also say, what tables
+
+214
+00:10:45,240 --> 00:10:46,983
+can I query?
+
+215
+00:10:48,810 --> 00:10:50,220
+Right?
+
+216
+00:10:50,220 --> 00:10:51,120
+It's gonna think for a second,
+
+217
+00:10:51,120 --> 00:10:52,680
+and then it's gonna say,
+
+218
+00:10:52,680 --> 00:10:54,317
+Hey, do you want...
+
+219
+00:10:54,317 --> 00:10:57,120
+I can run this off the information schema
+
+220
+00:10:57,120 --> 00:10:59,070
+to get the list of tables.
+
+221
+00:10:59,070 --> 00:10:59,903
+Right?
+
+222
+00:10:59,903 --> 00:11:02,430
+I'm also doing this to build
+up a little context for Kiro
+
+223
+00:11:02,430 --> 00:11:04,830
+so it knows what tables
+that are there, right?
+
+224
+00:11:04,830 --> 00:11:06,930
+So those are the same
+tables that we're seeing
+
+225
+00:11:06,930 --> 00:11:09,150
+inside of Postgre when we
+look at it that it's there.
+
+226
+00:11:09,150 --> 00:11:12,780
+So let's start with,
+you know, when, for me,
+
+227
+00:11:12,780 --> 00:11:14,460
+I, being a database person,
+
+228
+00:11:14,460 --> 00:11:16,410
+whenever I'm writing some sort of function
+
+229
+00:11:16,410 --> 00:11:18,450
+or whatever that has to
+pull data from the database,
+
+230
+00:11:18,450 --> 00:11:20,610
+I start with a query, right?
+
+231
+00:11:20,610 --> 00:11:24,900
+When I'm using tools
+like Kiro or other ones,
+
+232
+00:11:24,900 --> 00:11:27,210
+I tend to use it the way I code,
+
+233
+00:11:27,210 --> 00:11:29,670
+in the same order, in the same chunks.
+
+234
+00:11:29,670 --> 00:11:31,560
+So I start with writing the queries,
+
+235
+00:11:31,560 --> 00:11:34,140
+and then I start building
+around that, right?
+
+236
+00:11:34,140 --> 00:11:38,830
+A query that returns
+
+237
+00:11:40,620 --> 00:11:42,290
+all of the...
+
+238
+00:11:44,370 --> 00:11:46,950
+hopefully the yellow line
+could get that typo, right?
+
+239
+00:11:46,950 --> 00:11:49,500
+Otherwise, like my OCD
+would drive me crazy
+
+240
+00:11:49,500 --> 00:11:51,060
+for some of these things.
+
+241
+00:11:51,060 --> 00:11:52,950
+All the characters
+
+242
+00:11:52,950 --> 00:11:56,920
+and the actors who played them
+
+243
+00:11:58,500 --> 00:12:02,223
+for a given movie title.
+
+244
+00:12:05,550 --> 00:12:08,220
+So now it's gonna ask,
+if you see the schema.
+
+245
+00:12:08,220 --> 00:12:09,210
+So I'm gonna try,
+
+246
+00:12:09,210 --> 00:12:12,150
+so this is using one of
+the built in MCP tools,
+
+247
+00:12:12,150 --> 00:12:13,050
+get table schema,
+
+248
+00:12:13,050 --> 00:12:14,400
+it's gonna get the table definition.
+
+249
+00:12:14,400 --> 00:12:15,360
+So I'm gonna trust that
+
+250
+00:12:15,360 --> 00:12:19,470
+because it's a query
+that I know and I trust
+
+251
+00:12:19,470 --> 00:12:22,113
+versus just being able
+to run a random thing.
+
+252
+00:12:25,260 --> 00:12:26,760
+So...
+
+253
+00:12:26,760 --> 00:12:27,750
+- [Vlad] Quick question.
+
+254
+00:12:27,750 --> 00:12:29,310
+- Yep.
+- Is that actually
+
+255
+00:12:29,310 --> 00:12:32,550
+calling an MCP server from Kiro?
+
+256
+00:12:32,550 --> 00:12:33,593
+- [Jim] Yes. Yes it is.
+
+257
+00:12:33,593 --> 00:12:36,570
+- [Vlad] That is not related to our effort
+
+258
+00:12:36,570 --> 00:12:41,100
+of pulling data from
+movies and weather, right?
+
+259
+00:12:41,100 --> 00:12:42,000
+- No.
+- Weather and movies
+
+260
+00:12:42,000 --> 00:12:44,400
+are part of our build?
+
+261
+00:12:44,400 --> 00:12:46,260
+And then what you're
+doing is the ID portion
+
+262
+00:12:46,260 --> 00:12:47,820
+that's reaching out to the database
+
+263
+00:12:47,820 --> 00:12:51,000
+through a database specific MCP server?
+
+264
+00:12:51,000 --> 00:12:51,833
+- [Jim] Yeah.
+
+265
+00:12:51,833 --> 00:12:55,290
+It's using the Aurora Postgre MCP server
+
+266
+00:12:55,290 --> 00:12:58,050
+that I have pre-configured
+connecting to my database.
+
+267
+00:12:58,050 --> 00:13:01,260
+So I gave it the connection
+string user ID password.
+
+268
+00:13:01,260 --> 00:13:03,360
+So this way it's all set
+to connect to a database
+
+269
+00:13:03,360 --> 00:13:05,280
+in my development environment, right?
+
+270
+00:13:05,280 --> 00:13:08,700
+So that it's kind of
+pulling it live, right?
+
+271
+00:13:08,700 --> 00:13:13,440
+So it produced a four table join here
+
+272
+00:13:13,440 --> 00:13:16,893
+using the full tech search that
+we're talking about, right?
+
+273
+00:13:18,420 --> 00:13:21,663
+So we could say, test the query,
+
+274
+00:13:26,520 --> 00:13:29,103
+and it's gonna go run it.
+
+275
+00:13:29,103 --> 00:13:30,353
+Do we wanna run it. Sure.
+
+276
+00:13:35,460 --> 00:13:37,470
+You notice there's a little latency
+
+277
+00:13:37,470 --> 00:13:38,550
+as it's kind of going there.
+
+278
+00:13:38,550 --> 00:13:42,240
+So if you're thinking about
+doing kind of text to SQL,
+
+279
+00:13:42,240 --> 00:13:43,263
+keep that in mind.
+
+280
+00:13:44,280 --> 00:13:46,470
+So queries worked, right?
+
+281
+00:13:46,470 --> 00:13:48,360
+It's like, here's an improved version
+
+282
+00:13:48,360 --> 00:13:51,720
+that's going to pull out
+some of the JSON elements.
+
+283
+00:13:51,720 --> 00:13:53,970
+We don't really want that, right?
+
+284
+00:13:53,970 --> 00:13:55,650
+But the other thing to think about
+
+285
+00:13:55,650 --> 00:14:00,123
+is it's doing a full
+text search on the name,
+
+286
+00:14:02,820 --> 00:14:05,820
+but The Godfather has multiple things.
+
+287
+00:14:05,820 --> 00:14:08,370
+They got Godfather, Godfather 2.
+
+288
+00:14:08,370 --> 00:14:09,930
+We can forget about Godfather 3.
+
+289
+00:14:09,930 --> 00:14:11,910
+We'll pretend that never happened.
+
+290
+00:14:11,910 --> 00:14:14,760
+But it will return multiple
+things it's coming along, right?
+
+291
+00:14:14,760 --> 00:14:17,940
+So, you know, let's make it
+
+292
+00:14:17,940 --> 00:14:22,113
+so this way it only pulls
+one, one particular movie.
+
+293
+00:14:23,436 --> 00:14:24,767
+- [Audience] You wanna explain it?
+
+294
+00:14:24,767 --> 00:14:25,684
+- Jim Sure.
+
+295
+00:14:27,440 --> 00:14:28,773
+Put it in there.
+
+296
+00:14:41,220 --> 00:14:42,880
+Gonna do an explain analyze
+
+297
+00:14:57,489 --> 00:14:58,860
+and it will show you
+the results it explained
+
+298
+00:14:58,860 --> 00:14:59,760
+while they are there.
+
+299
+00:14:59,760 --> 00:15:02,250
+So a lot of times what I'm
+doing, if it's running slow,
+
+300
+00:15:02,250 --> 00:15:03,360
+I'll ask it to do that
+
+301
+00:15:03,360 --> 00:15:06,360
+and say suggest ways to improve the query.
+
+302
+00:15:06,360 --> 00:15:07,470
+It's pretty good at doing that,
+
+303
+00:15:07,470 --> 00:15:10,830
+and analyzing Postgre
+explain outputs, right?
+
+304
+00:15:10,830 --> 00:15:12,810
+So it says it's using a GIN index
+
+305
+00:15:12,810 --> 00:15:15,330
+and a primary key index, right?
+
+306
+00:15:15,330 --> 00:15:19,630
+So let's change the query to
+
+307
+00:15:20,790 --> 00:15:24,960
+only return the most popular title
+
+308
+00:15:31,890 --> 00:15:33,960
+or multiple matches.
+
+309
+00:15:33,960 --> 00:15:35,573
+Let's see what it does with that.
+
+310
+00:15:39,117 --> 00:15:40,867
+It wants to check the ratings table
+
+311
+00:15:47,877 --> 00:15:51,090
+and it's gonna put it in
+there as a sub query, right?
+
+312
+00:15:51,090 --> 00:15:51,923
+I don't like the fact
+
+313
+00:15:51,923 --> 00:15:54,660
+that it's doing a full text search twice.
+
+314
+00:15:54,660 --> 00:15:55,570
+So let's have it
+
+315
+00:15:57,930 --> 00:16:02,583
+to only use full text search once.
+
+316
+00:16:09,210 --> 00:16:11,250
+So now it's gonna do it as a CTE.
+
+317
+00:16:11,250 --> 00:16:14,880
+So it could do pretty
+sophisticated queries,
+
+318
+00:16:14,880 --> 00:16:16,920
+but you need to work with it a little bit
+
+319
+00:16:16,920 --> 00:16:18,750
+in order to kind of massage
+it to get to what you want.
+
+320
+00:16:18,750 --> 00:16:20,460
+But it's the same way that
+I would write a query.
+
+321
+00:16:20,460 --> 00:16:22,230
+It's like you write something
+to kind of get the data
+
+322
+00:16:22,230 --> 00:16:24,900
+and then you switch it
+around, optimize it.
+
+323
+00:16:24,900 --> 00:16:26,300
+So let's just test it again.
+
+324
+00:16:37,680 --> 00:16:40,260
+I never trust when it's
+gonna run SQL directly
+
+325
+00:16:40,260 --> 00:16:41,430
+if I don't know.
+
+326
+00:16:41,430 --> 00:16:43,980
+So I always wait then
+and check to make sure,
+
+327
+00:16:43,980 --> 00:16:47,430
+because sometimes it
+does weird things, right?
+
+328
+00:16:47,430 --> 00:16:49,320
+So it works.
+
+329
+00:16:49,320 --> 00:16:53,300
+So write the query to a...
+
+330
+00:16:57,900 --> 00:17:00,720
+so what I'm doing is I'm saving
+that off that context there,
+
+331
+00:17:00,720 --> 00:17:03,510
+so this way we could use that later.
+
+332
+00:17:03,510 --> 00:17:05,703
+One of the things about using these tools,
+
+333
+00:17:06,990 --> 00:17:09,450
+if something happens and you
+lose your session, right,
+
+334
+00:17:09,450 --> 00:17:11,970
+it loses all the context that's there.
+
+335
+00:17:11,970 --> 00:17:13,830
+And we want to, as you're doing things,
+
+336
+00:17:13,830 --> 00:17:16,200
+you want to build things up,
+save it off for a little while,
+
+337
+00:17:16,200 --> 00:17:19,140
+be able to use that again later, right?
+
+338
+00:17:19,140 --> 00:17:21,600
+So as I finish one little
+piece of it, it's like,
+
+339
+00:17:21,600 --> 00:17:24,572
+I wanna save off that file
+so this way I could use it
+
+340
+00:17:24,572 --> 00:17:27,450
+as we're building up the bigger solution.
+
+341
+00:17:27,450 --> 00:17:28,283
+There's a lot of tools.
+
+342
+00:17:28,283 --> 00:17:30,960
+We saw them in the keynote this morning
+
+343
+00:17:30,960 --> 00:17:33,570
+about being able to do it
+in a much broader thing.
+
+344
+00:17:33,570 --> 00:17:36,240
+But as you're kind of
+learning and being able to,
+
+345
+00:17:36,240 --> 00:17:37,560
+you start using these tools,
+
+346
+00:17:37,560 --> 00:17:40,800
+it's a lot of times using it
+the way you would normally code
+
+347
+00:17:40,800 --> 00:17:41,820
+and do it that way,
+
+348
+00:17:41,820 --> 00:17:44,430
+it's a lot easier to start
+start being able to learn
+
+349
+00:17:44,430 --> 00:17:46,137
+how to do those sort of things.
+
+350
+00:17:46,137 --> 00:17:48,120
+And it's thinking a really long time
+
+351
+00:17:48,120 --> 00:17:50,320
+to be able to just write
+out a simple query.
+
+352
+00:17:51,180 --> 00:17:52,350
+This happens sometimes.
+
+353
+00:17:52,350 --> 00:17:53,877
+Probably if you have a
+whole bunch of people
+
+354
+00:17:53,877 --> 00:17:57,810
+who are also using Kiro
+
+355
+00:17:57,810 --> 00:18:00,606
+in one of the workshops
+or something like that.
+
+356
+00:18:00,606 --> 00:18:03,330
+We have 60,000 people here
+
+357
+00:18:03,330 --> 00:18:06,280
+probably all playing around
+with Kiro all at the same time.
+
+358
+00:18:08,009 --> 00:18:10,964
+- [Audience] Where's
+your MPC server hosted?
+
+359
+00:18:10,964 --> 00:18:11,797
+- [Jim] Sorry?
+
+360
+00:18:11,797 --> 00:18:13,710
+- [Audience] Where's
+this MCP server hosted?
+
+361
+00:18:13,710 --> 00:18:15,462
+- [Jim] Right now, it's
+just in a subdirectory
+
+362
+00:18:15,462 --> 00:18:16,320
+for my application.
+
+363
+00:18:16,320 --> 00:18:19,291
+- So it's local?
+- It's local, yeah. So-
+
+364
+00:18:19,291 --> 00:18:23,310
+(audience member speaking
+indistinctly away from microphone)
+
+365
+00:18:23,310 --> 00:18:24,720
+- [Vlad] No.
+
+366
+00:18:24,720 --> 00:18:28,011
+The MCP server does not
+call an LLM by itself.
+
+367
+00:18:28,011 --> 00:18:29,970
+(audience member speaking
+indistinctly away from microphone)
+
+368
+00:18:29,970 --> 00:18:31,690
+- [Vlad] Kiro. Absolutely, yes.
+
+369
+00:18:31,690 --> 00:18:33,372
+Yeah.
+- And one more thing.
+
+370
+00:18:33,372 --> 00:18:35,763
+How do you preserve the sessions over?
+
+371
+00:18:35,763 --> 00:18:39,263
+(audience member speaking
+indistinctly away from microphone)
+
+372
+00:18:39,263 --> 00:18:41,040
+You come back day two, you
+want to preserve the session.
+
+373
+00:18:41,040 --> 00:18:42,390
+That's what you were saying, right?
+
+374
+00:18:42,390 --> 00:18:45,180
+How to remember this session
+in Kiro itself, right?
+
+375
+00:18:45,180 --> 00:18:46,290
+- Yeah.
+- Then what did you do
+
+376
+00:18:46,290 --> 00:18:48,090
+specifically to save that?
+
+377
+00:18:48,090 --> 00:18:49,860
+- [Jim] This one, I just
+told it to write the query
+
+378
+00:18:49,860 --> 00:18:52,350
+to a file, right?
+
+379
+00:18:52,350 --> 00:18:55,290
+So just write, so the prompt I gave it
+
+380
+00:18:55,290 --> 00:18:59,820
+was write the query to a file
+called Query1.sql, right?
+
+381
+00:18:59,820 --> 00:19:02,370
+So this way it's just saving
+off the query that we built.
+
+382
+00:19:02,370 --> 00:19:03,720
+- [Audience] So the plan here is that
+
+383
+00:19:03,720 --> 00:19:07,140
+if you're building it in
+multiple days, this one,
+
+384
+00:19:07,140 --> 00:19:12,140
+you just leave the Kiro IDE open.
+
+385
+00:19:12,150 --> 00:19:13,350
+- [Jim] Yeah.
+
+386
+00:19:13,350 --> 00:19:16,350
+For the way that I'm using
+it now, using the CLI,
+
+387
+00:19:16,350 --> 00:19:17,900
+there's other more sophisticated tools
+
+388
+00:19:17,900 --> 00:19:19,530
+to have longer term memory.
+
+389
+00:19:19,530 --> 00:19:21,480
+Maybe Vlad knows some of the ones.
+
+390
+00:19:21,480 --> 00:19:23,760
+He tends to use those things
+a little bit more than I do.
+
+391
+00:19:23,760 --> 00:19:27,810
+I'm going beyond VI right now.
+
+392
+00:19:27,810 --> 00:19:29,763
+So this is sophisticated for me.
+
+393
+00:19:30,630 --> 00:19:32,580
+- [Vlad] You're using the Kiro ID
+
+394
+00:19:32,580 --> 00:19:36,240
+and you do have access to
+multiple sessions, threads,
+
+395
+00:19:36,240 --> 00:19:39,090
+and are able to switch between them
+
+396
+00:19:39,090 --> 00:19:42,243
+and keep different contexts
+for different tasks and so on.
+
+397
+00:19:46,560 --> 00:19:48,360
+- [Jim] So we're gonna
+write our other query now,
+
+398
+00:19:48,360 --> 00:19:49,980
+write a query that returns all the roles
+
+399
+00:19:49,980 --> 00:19:54,330
+and the movie titles
+
+400
+00:19:54,330 --> 00:19:56,463
+for a given actor.
+
+401
+00:20:03,505 --> 00:20:05,730
+And it had its context before.
+
+402
+00:20:05,730 --> 00:20:08,760
+So it's writing a query a lot faster
+
+403
+00:20:08,760 --> 00:20:11,550
+using that same sort of thing.
+
+404
+00:20:11,550 --> 00:20:13,890
+But we also put that in the comment there.
+
+405
+00:20:13,890 --> 00:20:17,643
+So this way it knows that I'm
+thinking it should use that.
+
+406
+00:20:23,565 --> 00:20:27,982
+So we'll test it again, make
+sure that's all working.
+
+407
+00:20:28,860 --> 00:20:30,480
+Things usually work,
+
+408
+00:20:30,480 --> 00:20:33,243
+but sometimes it makes
+some syntactical changes,
+
+409
+00:20:34,470 --> 00:20:35,583
+little typos.
+
+410
+00:20:36,450 --> 00:20:39,347
+Sometimes it guides off
+into some weird loop, right?
+
+411
+00:20:42,060 --> 00:20:45,000
+It all depends really
+on what the context is.
+
+412
+00:20:45,000 --> 00:20:46,423
+It seems like it's, right now it's trying
+
+413
+00:20:46,423 --> 00:20:47,820
+to figure some things out
+
+414
+00:20:47,820 --> 00:20:51,543
+because it's trying to
+run it multiple times.
+
+415
+00:20:54,664 --> 00:20:55,602
+- [Audience] While you're waiting for it,
+
+416
+00:20:55,602 --> 00:20:57,508
+can I ask another question?
+
+417
+00:20:57,508 --> 00:20:59,758
+So is this MCP server, not this one,
+
+418
+00:20:59,758 --> 00:21:01,132
+the one that we are building,
+
+419
+00:21:01,132 --> 00:21:03,150
+the MCP server that we are building
+
+420
+00:21:03,150 --> 00:21:06,420
+that is, your plan is
+actually to write a SQL
+
+421
+00:21:06,420 --> 00:21:10,230
+and then wrap it in the MCP
+as the name function, right?
+
+422
+00:21:10,230 --> 00:21:12,120
+- Yep.
+- And give a description.
+
+423
+00:21:12,120 --> 00:21:15,000
+And that's how it's going
+to, LLM is gonna know,
+
+424
+00:21:15,000 --> 00:21:17,370
+hey, if I want to have movies,
+
+425
+00:21:17,370 --> 00:21:21,300
+movie list is your MCP
+server's target definition
+
+426
+00:21:21,300 --> 00:21:22,133
+or something like that?
+
+427
+00:21:22,133 --> 00:21:24,330
+And then you have a SQL behind it.
+
+428
+00:21:24,330 --> 00:21:25,320
+- [Jim] Yeah, exactly.
+
+429
+00:21:25,320 --> 00:21:26,850
+So we're gonna write those two tools.
+
+430
+00:21:26,850 --> 00:21:28,290
+And so we need two SQL queries.
+
+431
+00:21:28,290 --> 00:21:30,143
+Each one of those tools is gonna pull data
+
+432
+00:21:30,143 --> 00:21:32,411
+from the database.
+
+433
+00:21:32,411 --> 00:21:35,970
+I've always done database stuff.
+
+434
+00:21:35,970 --> 00:21:38,070
+So I think in terms of
+write the query first
+
+435
+00:21:38,070 --> 00:21:39,030
+and then wrap it.
+
+436
+00:21:39,030 --> 00:21:41,430
+Other people start with the API, right?
+
+437
+00:21:41,430 --> 00:21:43,620
+And then figure out the
+other direction, right?
+
+438
+00:21:43,620 --> 00:21:46,020
+That's just the way that I tend to code.
+
+439
+00:21:46,020 --> 00:21:47,850
+Others people think about it differently.
+
+440
+00:21:47,850 --> 00:21:50,580
+But you could do it either way.
+
+441
+00:21:50,580 --> 00:21:53,313
+But that's just the way I'd rather do it.
+
+442
+00:21:54,797 --> 00:21:55,630
+- [Audience] When you have the next break,
+
+443
+00:21:55,630 --> 00:21:57,060
+I'll ask my next question,
+
+444
+00:21:57,060 --> 00:21:58,410
+follow up question as well.
+
+445
+00:22:02,340 --> 00:22:04,860
+- [Jim] So it seems like
+there's something wrong here
+
+446
+00:22:04,860 --> 00:22:05,693
+with the connection.
+
+447
+00:22:05,693 --> 00:22:08,133
+So I'm just gonna write the context out.
+
+448
+00:22:11,144 --> 00:22:12,120
+- [Vlad] What Jim is trying to do here
+
+449
+00:22:12,120 --> 00:22:15,180
+is essentially called
+the canned query pattern.
+
+450
+00:22:15,180 --> 00:22:16,300
+- Yeah.
+- So...
+
+451
+00:22:16,300 --> 00:22:17,520
+- That.
+- We're essentially
+
+452
+00:22:17,520 --> 00:22:21,600
+taking queries, wrapping them into tools,
+
+453
+00:22:21,600 --> 00:22:23,580
+and they become deterministic tools.
+
+454
+00:22:23,580 --> 00:22:28,080
+That is with this Aurora MCP server,
+
+455
+00:22:28,080 --> 00:22:29,910
+you can always ask it by hand,
+
+456
+00:22:29,910 --> 00:22:31,950
+hey, give me this data
+from here, here and here.
+
+457
+00:22:31,950 --> 00:22:34,320
+But what's happening behind the scenes is
+
+458
+00:22:34,320 --> 00:22:37,410
+the MCP agent's gonna think about
+
+459
+00:22:37,410 --> 00:22:39,000
+trying to discover the schema,
+
+460
+00:22:39,000 --> 00:22:41,910
+figuring out what tables to ask,
+
+461
+00:22:41,910 --> 00:22:43,560
+what joints it might need to make,
+
+462
+00:22:43,560 --> 00:22:45,793
+and then come up with a query.
+
+463
+00:22:45,793 --> 00:22:47,610
+A query may work or may not work.
+
+464
+00:22:47,610 --> 00:22:49,260
+It'll test it.
+
+465
+00:22:49,260 --> 00:22:52,680
+So you're going through a
+lot of agent loop cycles
+
+466
+00:22:52,680 --> 00:22:54,150
+just to find the right query.
+
+467
+00:22:54,150 --> 00:22:58,527
+Which works if you're just
+doing data exploration, right?
+
+468
+00:22:58,527 --> 00:23:01,470
+But if you're writing it
+for a front end application,
+
+469
+00:23:01,470 --> 00:23:05,220
+you probably don't want
+that type of a complexity,
+
+470
+00:23:05,220 --> 00:23:06,360
+let alone latency.
+
+471
+00:23:06,360 --> 00:23:11,360
+So the application's
+gonna call, predictably,
+
+472
+00:23:11,610 --> 00:23:13,650
+a certain set of deterministic queries.
+
+473
+00:23:13,650 --> 00:23:17,850
+So let's take those queries,
+wrap 'em into tools,
+
+474
+00:23:17,850 --> 00:23:20,220
+and then expose them to any end users.
+
+475
+00:23:20,220 --> 00:23:23,640
+And that's what we're trying to do here.
+
+476
+00:23:23,640 --> 00:23:25,140
+But we're starting with the queries.
+
+477
+00:23:25,140 --> 00:23:26,100
+- [Jim] Yeah.
+
+478
+00:23:26,100 --> 00:23:27,060
+- [Audience] One way to do it
+
+479
+00:23:27,060 --> 00:23:30,480
+is to expose it as tools, right?
+
+480
+00:23:30,480 --> 00:23:32,220
+So each and every query that you need,
+
+481
+00:23:32,220 --> 00:23:33,960
+you want to expose those tools.
+
+482
+00:23:33,960 --> 00:23:36,660
+The other way is, why
+can't you basically say,
+
+483
+00:23:36,660 --> 00:23:38,130
+these are the tables that are available
+
+484
+00:23:38,130 --> 00:23:40,380
+along with the metadata
+that he already had, right?
+
+485
+00:23:40,380 --> 00:23:44,340
+And then let the LLM
+decide how to join those.
+
+486
+00:23:44,340 --> 00:23:45,540
+- [Vlad] You absolutely can,
+
+487
+00:23:45,540 --> 00:23:49,590
+but there's two practical
+implications there, right?
+
+488
+00:23:49,590 --> 00:23:52,650
+Who are the users of that tool?
+
+489
+00:23:52,650 --> 00:23:55,500
+If it's you or Jim in front of there,
+
+490
+00:23:55,500 --> 00:23:57,120
+then he can afford to go in
+
+491
+00:23:57,120 --> 00:24:00,780
+and let the LLM figure out the query.
+
+492
+00:24:00,780 --> 00:24:02,790
+That's perfectly fine, right?
+
+493
+00:24:02,790 --> 00:24:05,430
+That's the purpose here.
+
+494
+00:24:05,430 --> 00:24:07,920
+I imagine there's 10,000
+of Jims sitting there
+
+495
+00:24:07,920 --> 00:24:08,940
+and doing that.
+
+496
+00:24:08,940 --> 00:24:12,810
+At that scale, does that
+make sense anymore, right?
+
+497
+00:24:12,810 --> 00:24:15,630
+No, because then you're
+consuming a lot of tokens,
+
+498
+00:24:15,630 --> 00:24:17,700
+it's gonna be very, very costly for you
+
+499
+00:24:17,700 --> 00:24:19,980
+to offer that capability.
+
+500
+00:24:19,980 --> 00:24:21,750
+But if you know that the people are always
+
+501
+00:24:21,750 --> 00:24:24,003
+going to ask the question
+about the actors,
+
+502
+00:24:25,110 --> 00:24:27,150
+go ahead and take that query,
+
+503
+00:24:27,150 --> 00:24:29,220
+wrap it around into its own tool,
+
+504
+00:24:29,220 --> 00:24:31,860
+and it's gonna always going
+to call that single tool.
+
+505
+00:24:31,860 --> 00:24:35,220
+It doesn't need to go through
+multiple loops of the LLM.
+
+506
+00:24:35,220 --> 00:24:37,500
+It doesn't need to consume extra tokens.
+
+507
+00:24:37,500 --> 00:24:40,770
+It doesn't need to wait
+and have extra latency.
+
+508
+00:24:40,770 --> 00:24:42,630
+So there's a trade off there, right?
+
+509
+00:24:42,630 --> 00:24:47,430
+But what Jim is doing there
+is giving him flexibility
+
+510
+00:24:47,430 --> 00:24:49,893
+to design the right tools.
+
+511
+00:24:51,339 --> 00:24:55,497
+But if this would be an
+agent that I would be using
+
+512
+00:24:55,497 --> 00:24:57,153
+as a consumer,
+
+513
+00:24:58,500 --> 00:24:59,760
+that wouldn't be cost effective
+
+514
+00:24:59,760 --> 00:25:01,890
+for whoever is operating that service.
+
+515
+00:25:01,890 --> 00:25:05,850
+So Jim is building the tools for me,
+
+516
+00:25:05,850 --> 00:25:07,563
+essentially, as a consumer.
+
+517
+00:25:11,439 --> 00:25:12,300
+- [Audience] You can basically say
+
+518
+00:25:12,300 --> 00:25:15,990
+with the default local MCP server,
+
+519
+00:25:15,990 --> 00:25:20,250
+you can let it query the schema
+and say write an MCP server,
+
+520
+00:25:20,250 --> 00:25:21,660
+because that's also an element, right,
+
+521
+00:25:21,660 --> 00:25:24,480
+write an MCP server, look at these tables,
+
+522
+00:25:24,480 --> 00:25:28,050
+but have the tools defined
+
+523
+00:25:28,050 --> 00:25:31,503
+as one for movie and one for actors.
+
+524
+00:25:32,850 --> 00:25:35,103
+Write an MCP server with two tools, right?
+
+525
+00:25:35,103 --> 00:25:35,936
+- [Vlad] Yeah, yeah.
+
+526
+00:25:35,936 --> 00:25:37,080
+You can absolutely design that way.
+
+527
+00:25:37,080 --> 00:25:39,660
+Or it can be a thousand queries or tools.
+
+528
+00:25:39,660 --> 00:25:41,850
+It doesn't matter,
+right? It's the use case.
+
+529
+00:25:41,850 --> 00:25:43,850
+- [Audience] What is an optimal runtime.
+
+530
+00:25:44,716 --> 00:25:45,750
+(audience member speaking
+indistinctly away from microphone)
+
+531
+00:25:45,750 --> 00:25:46,900
+- [Vlad] Correct. Yeah.
+
+532
+00:25:49,860 --> 00:25:51,570
+- [Jim] So writing a prompt now
+
+533
+00:25:51,570 --> 00:25:53,850
+to really write the MCP server.
+
+534
+00:25:53,850 --> 00:25:56,460
+So I'm telling it I
+want to have two tools.
+
+535
+00:25:56,460 --> 00:26:00,240
+I gave it a reference to
+the weather MCP server
+
+536
+00:26:00,240 --> 00:26:01,230
+as a template.
+
+537
+00:26:01,230 --> 00:26:03,840
+It does a lot better if
+you point it at something
+
+538
+00:26:03,840 --> 00:26:06,510
+of what you basically
+wanna look like, right,
+
+539
+00:26:06,510 --> 00:26:07,650
+in order to do that,
+
+540
+00:26:07,650 --> 00:26:09,090
+telling it to connect to the database
+
+541
+00:26:09,090 --> 00:26:11,070
+using "Psycho." PG3,
+
+542
+00:26:11,070 --> 00:26:14,730
+use the queries that we
+generate as templates.
+
+543
+00:26:14,730 --> 00:26:18,880
+And then we wanna load
+the connection information
+
+544
+00:26:21,690 --> 00:26:25,803
+from my file called .env.
+
+545
+00:26:29,214 --> 00:26:30,600
+Now it's gonna think
+about that for a second,
+
+546
+00:26:30,600 --> 00:26:33,480
+and it's gonna want to go check that tool,
+
+547
+00:26:33,480 --> 00:26:36,513
+that other MCP server, so
+we can see what's there.
+
+548
+00:26:36,513 --> 00:26:38,793
+It's gonna go find those queries.
+
+549
+00:26:42,990 --> 00:26:44,760
+Now it's gonna build that MCP server
+
+550
+00:26:44,760 --> 00:26:47,280
+writing a lot of Python code
+
+551
+00:26:47,280 --> 00:26:50,190
+a lot faster than I could do it, right?
+
+552
+00:26:50,190 --> 00:26:51,590
+Than I could type it, right?
+
+553
+00:26:53,160 --> 00:26:56,910
+So this is what it's given us, right?
+
+554
+00:26:56,910 --> 00:27:01,910
+It's movie server creating a
+database connection, right?
+
+555
+00:27:01,980 --> 00:27:05,733
+It's only getting a database URL.
+
+556
+00:27:07,290 --> 00:27:09,780
+We need to change that, right?
+
+557
+00:27:09,780 --> 00:27:13,863
+Here it's pulling in that
+query that we had, right?
+
+558
+00:27:15,030 --> 00:27:17,490
+Here's the other one, pulling
+in the other query, right?
+
+559
+00:27:17,490 --> 00:27:18,750
+And then it's the main thing.
+
+560
+00:27:18,750 --> 00:27:22,983
+So let's tell it to change
+the get DB connection.
+
+561
+00:27:41,220 --> 00:27:44,253
+Like user and password.
+
+562
+00:27:45,810 --> 00:27:47,013
+Instead of a full URL.
+
+563
+00:27:53,850 --> 00:27:55,290
+It'd much rather have distinct things.
+
+564
+00:27:55,290 --> 00:27:57,720
+So this way you have to go
+change your password, right?
+
+565
+00:27:57,720 --> 00:27:59,580
+Or you should do this thing
+
+566
+00:27:59,580 --> 00:28:01,500
+instead of having the
+full connection string.
+
+567
+00:28:01,500 --> 00:28:03,230
+It's just the way I'd prefer it.
+
+568
+00:28:03,230 --> 00:28:05,730
+So let's see if it did that, right?
+
+569
+00:28:05,730 --> 00:28:07,320
+Right. There we go, right?
+
+570
+00:28:07,320 --> 00:28:09,846
+Pulling that all together that way.
+
+571
+00:28:09,846 --> 00:28:13,837
+So we say, yeah, let's save that off.
+
+572
+00:28:16,471 --> 00:28:18,243
+All right.
+
+573
+00:28:19,170 --> 00:28:23,793
+So now let's... now we
+have this movie server.
+
+574
+00:28:26,190 --> 00:28:29,793
+We'll copy the .env file here.
+
+575
+00:28:35,880 --> 00:28:39,033
+And let's get outta here
+and let's test that out.
+
+576
+00:28:45,000 --> 00:28:46,050
+Gotta go up one more.
+
+577
+00:28:50,756 --> 00:28:52,080
+Now, if we could go
+through this whole session
+
+578
+00:28:52,080 --> 00:28:53,820
+with this thing producing no errors,
+
+579
+00:28:53,820 --> 00:28:56,910
+it would be the first time ever
+I've run through this thing.
+
+580
+00:28:56,910 --> 00:29:00,810
+So I'm anticipating
+something going wrong, right?
+
+581
+00:29:00,810 --> 00:29:02,700
+Especially since it's,
+
+582
+00:29:02,700 --> 00:29:05,430
+you know, things are non-deterministic.
+
+583
+00:29:05,430 --> 00:29:06,450
+As a database person,
+
+584
+00:29:06,450 --> 00:29:08,310
+that drives me a little crazy, right?
+
+585
+00:29:08,310 --> 00:29:10,440
+Because you don't know
+what you're gonna get.
+
+586
+00:29:10,440 --> 00:29:14,103
+Let's see in Star Wars.
+
+587
+00:29:18,420 --> 00:29:19,253
+Alright?
+
+588
+00:29:23,730 --> 00:29:25,830
+And because it knows what Star Wars is,
+
+589
+00:29:25,830 --> 00:29:28,890
+it just pulled it off the internet, right?
+
+590
+00:29:28,890 --> 00:29:30,993
+So it, we didn't fix.
+
+591
+00:29:33,780 --> 00:29:35,430
+You need to be able to tell the user app
+
+592
+00:29:35,430 --> 00:29:36,480
+to be able to use it.
+
+593
+00:29:38,490 --> 00:29:40,203
+Let's go back to Kiro here.
+
+594
+00:29:48,120 --> 00:29:48,953
+Change.
+
+595
+00:30:02,730 --> 00:30:03,813
+Directory.
+
+596
+00:30:12,840 --> 00:30:15,000
+So the way I tend to
+interact with these things,
+
+597
+00:30:15,000 --> 00:30:16,830
+with the prompts, it's
+just the same way as if
+
+598
+00:30:16,830 --> 00:30:20,340
+I was talking to somebody
+next to me and trying to,
+
+599
+00:30:20,340 --> 00:30:22,620
+like, have them code for me, right?
+
+600
+00:30:22,620 --> 00:30:24,750
+Assuming my fingers weren't working
+
+601
+00:30:24,750 --> 00:30:26,313
+if I was gonna have somebody do it
+
+602
+00:30:26,313 --> 00:30:29,220
+that kind of knows how to
+code a little bit, right?
+
+603
+00:30:29,220 --> 00:30:32,370
+And extracting 'em, it's
+like... it tends to work.
+
+604
+00:30:32,370 --> 00:30:34,530
+- [Vlad] You're a backseat
+coder there, basically.
+
+605
+00:30:34,530 --> 00:30:35,550
+- [Jim] Yeah. Yeah.
+
+606
+00:30:35,550 --> 00:30:38,010
+It's that, that's definitely what it is.
+
+607
+00:30:38,010 --> 00:30:42,150
+I'm really embracing the
+two person coding rule there
+
+608
+00:30:42,150 --> 00:30:44,190
+and having somebody
+else do all the typing.
+
+609
+00:30:44,190 --> 00:30:47,580
+As everybody's seeing, I'm
+a terrible typer, right?
+
+610
+00:30:47,580 --> 00:30:49,500
+So now we're adding that in there.
+
+611
+00:30:49,500 --> 00:30:51,603
+Added that second MCP server.
+
+612
+00:30:59,280 --> 00:31:00,113
+All right.
+
+613
+00:31:01,680 --> 00:31:03,093
+Let's go try that again.
+
+614
+00:31:06,570 --> 00:31:08,100
+But that's kind of how we're using it too,
+
+615
+00:31:08,100 --> 00:31:09,480
+even inside of RDS
+
+616
+00:31:09,480 --> 00:31:11,760
+and how everybody's
+starting to use these tools.
+
+617
+00:31:11,760 --> 00:31:14,550
+It's kind of a paired programming thing
+
+618
+00:31:14,550 --> 00:31:16,500
+for a lot of people in
+order to really accelerate
+
+619
+00:31:16,500 --> 00:31:17,750
+your development program.
+
+620
+00:31:24,450 --> 00:31:26,850
+Now, let's see if we could find that tool.
+
+621
+00:31:26,850 --> 00:31:28,260
+There we go.
+
+622
+00:31:28,260 --> 00:31:32,310
+Found the tool. Get movie characters.
+
+623
+00:31:32,310 --> 00:31:35,460
+So it's running the query
+in the background, right?
+
+624
+00:31:35,460 --> 00:31:38,130
+Gets back the list of them
+there and then it displays it.
+
+625
+00:31:38,130 --> 00:31:41,700
+So that's something there
+that is out on the internet.
+
+626
+00:31:41,700 --> 00:31:44,010
+So you know, it's not
+really showing anything
+
+627
+00:31:44,010 --> 00:31:45,540
+because it is kind of public.
+
+628
+00:31:45,540 --> 00:31:48,450
+So let's go create something there
+
+629
+00:31:48,450 --> 00:31:50,583
+that's not there, right?
+
+630
+00:31:52,410 --> 00:31:56,583
+So I have this simple
+app here called admin.
+
+631
+00:31:57,780 --> 00:32:00,420
+Instead of you watching
+me write a bunch of stuff
+
+632
+00:32:00,420 --> 00:32:01,507
+inside of SQL,
+
+633
+00:32:05,340 --> 00:32:07,740
+just basic thing over top of it.
+
+634
+00:32:07,740 --> 00:32:11,050
+So let's create a new movie called DAT429
+
+635
+00:32:13,710 --> 00:32:16,143
+Coding an MCP Server.
+
+636
+00:32:17,460 --> 00:32:20,313
+And we will make this a TV movie.
+
+637
+00:32:24,300 --> 00:32:27,663
+We'll add a person. So add Jim.
+
+638
+00:32:32,250 --> 00:32:33,083
+Come on. Go.
+
+639
+00:32:37,650 --> 00:32:38,653
+No, there we go.
+
+640
+00:32:39,820 --> 00:32:41,793
+Okay, let's add Vlad.
+
+641
+00:32:44,310 --> 00:32:46,293
+Now let's put them in that movie.
+
+642
+00:32:51,540 --> 00:32:53,160
+Jim.
+
+643
+00:32:53,160 --> 00:32:56,130
+Everybody in the Postgre
+community calls me Jimbo.
+
+644
+00:32:56,130 --> 00:32:58,923
+So let's, that's the character name,
+
+645
+00:32:59,820 --> 00:33:01,233
+and let's go Vlad.
+
+646
+00:33:03,150 --> 00:33:06,930
+And we got Mr. Vlad over there in the back
+
+647
+00:33:06,930 --> 00:33:08,463
+with the microphone.
+
+648
+00:33:09,660 --> 00:33:12,660
+So now we have a movie there
+that's not out on the internet.
+
+649
+00:33:20,040 --> 00:33:22,923
+And I just killed my session there, right?
+
+650
+00:33:33,268 --> 00:33:35,580
+I know Streamlit's still running.
+
+651
+00:33:35,580 --> 00:33:36,573
+It is.
+
+652
+00:33:37,830 --> 00:33:39,033
+Let's kill this sucker.
+
+653
+00:34:01,350 --> 00:34:03,150
+Let's see if we could go find that movie
+
+654
+00:34:03,150 --> 00:34:04,470
+that we just created.
+
+655
+00:34:04,470 --> 00:34:08,400
+Because that's only gonna
+be in our database, right?
+
+656
+00:34:08,400 --> 00:34:10,410
+Same as if you had your
+own internal stuff.
+
+657
+00:34:10,410 --> 00:34:13,173
+That's not, the models haven't
+been trained on, right?
+
+658
+00:34:15,030 --> 00:34:19,143
+Who is in the movie?
+
+659
+00:34:21,150 --> 00:34:22,270
+DAT429
+
+660
+00:34:28,650 --> 00:34:30,630
+Boom. Was able to find that.
+
+661
+00:34:30,630 --> 00:34:33,960
+So this way it had enough reference there
+
+662
+00:34:33,960 --> 00:34:35,933
+to be able to know, hey, it's a movie.
+
+663
+00:34:35,933 --> 00:34:38,070
+Let the movie tool so this
+way you could get that.
+
+664
+00:34:38,070 --> 00:34:39,630
+It doesn't have to go out
+the internet to get it.
+
+665
+00:34:39,630 --> 00:34:41,490
+It's pulling off my local database.
+
+666
+00:34:41,490 --> 00:34:45,090
+So even though we're using
+public information there,
+
+667
+00:34:45,090 --> 00:34:47,240
+a lot of times you
+wanna build these tools,
+
+668
+00:34:48,090 --> 00:34:50,700
+these MCP tools using
+your own internal stuff
+
+669
+00:34:50,700 --> 00:34:52,410
+that you're not training public models on,
+
+670
+00:34:52,410 --> 00:34:54,910
+but you still want people
+to interact with, right?
+
+671
+00:34:56,370 --> 00:34:58,200
+But how do we secure this stuff, right?
+
+672
+00:34:58,200 --> 00:35:00,311
+This is still, if you're putting
+this out on the internet,
+
+673
+00:35:00,311 --> 00:35:02,910
+right, or if you wanna be able
+to do that, you wanna be able
+
+674
+00:35:02,910 --> 00:35:05,493
+to secure that a little bit better, right?
+
+675
+00:35:07,440 --> 00:35:09,477
+- [Vlad] One comment I would make there is
+
+676
+00:35:09,477 --> 00:35:12,780
+the LLM is not necessarily
+going out on the internet
+
+677
+00:35:12,780 --> 00:35:13,710
+and doing a search.
+
+678
+00:35:13,710 --> 00:35:16,923
+So whenever Jim searched for Star Wars,
+
+679
+00:35:18,150 --> 00:35:21,270
+Star Wars was part of a training data set
+
+680
+00:35:21,270 --> 00:35:22,740
+for the model itself.
+
+681
+00:35:22,740 --> 00:35:26,703
+So it, when the LLM got invoked,
+
+682
+00:35:27,600 --> 00:35:29,160
+it figured that it can answer
+
+683
+00:35:29,160 --> 00:35:32,643
+that question directly
+without invoking any tools.
+
+684
+00:35:34,035 --> 00:35:35,169
+- [Jim] Yeah.
+
+685
+00:35:35,169 --> 00:35:37,718
+(audience member speaking
+indistinctly away from microphone)
+
+686
+00:35:37,718 --> 00:35:40,080
+- [Vlad] Well, the first
+time when Jim asked
+
+687
+00:35:40,080 --> 00:35:42,963
+for Star Wars, gimme the
+characters for Star Wars,
+
+688
+00:35:44,213 --> 00:35:47,070
+the LLM actually didn't go
+through any sort of tools.
+
+689
+00:35:47,070 --> 00:35:50,310
+It simply just answered,
+it generated the answer
+
+690
+00:35:50,310 --> 00:35:54,390
+because it had... it most
+likely, it's such a popular thing
+
+691
+00:35:54,390 --> 00:35:56,670
+that it was most likely
+in the training data set
+
+692
+00:35:56,670 --> 00:35:59,733
+for that particular model
+that is used underneath Kiro.
+
+693
+00:36:01,860 --> 00:36:04,380
+But in this case, right, this wasn't.
+
+694
+00:36:04,380 --> 00:36:06,780
+So that's when it decided
+
+695
+00:36:06,780 --> 00:36:09,690
+that this is potentially
+an obscure enough movie
+
+696
+00:36:09,690 --> 00:36:11,853
+that it needs to use
+the tool to access it.
+
+697
+00:36:12,846 --> 00:36:17,846
+(audience member speaking
+indistinctly away from microphone)
+
+698
+00:36:19,140 --> 00:36:20,280
+It's non-deterministic.
+
+699
+00:36:20,280 --> 00:36:25,230
+So there is no, it's not a rule that says,
+
+700
+00:36:25,230 --> 00:36:27,690
+Hey, first ask your tools and then do,
+
+701
+00:36:27,690 --> 00:36:30,210
+if you can't do the other thing.
+
+702
+00:36:30,210 --> 00:36:35,210
+When the agent sends that
+particular prompt to the LLM,
+
+703
+00:36:37,673 --> 00:36:39,870
+the LLM is going to decide
+
+704
+00:36:39,870 --> 00:36:42,570
+what is the best course of action.
+
+705
+00:36:42,570 --> 00:36:43,467
+That's it.
+
+706
+00:36:43,467 --> 00:36:45,687
+You have no control
+over that at that point.
+
+707
+00:36:45,687 --> 00:36:48,420
+You might have control
+using steering documents.
+
+708
+00:36:48,420 --> 00:36:51,000
+And so using the prompt itself,
+
+709
+00:36:51,000 --> 00:36:52,440
+you could potentially tell it,
+
+710
+00:36:52,440 --> 00:36:56,760
+Hey, always look for this
+information in the tools
+
+711
+00:36:56,760 --> 00:36:57,780
+before answering.
+
+712
+00:36:57,780 --> 00:37:00,180
+Or you can do that, but
+even then you don't have
+
+713
+00:37:00,180 --> 00:37:03,900
+a full guarantee that
+it will do that, right?
+
+714
+00:37:03,900 --> 00:37:07,500
+Fundamentally what the LLM responds back
+
+715
+00:37:07,500 --> 00:37:12,063
+is going to be relatively
+non-deterministic, right?
+
+716
+00:37:14,340 --> 00:37:16,950
+- [Jim] So let's... no,
+go ahead this question.
+
+717
+00:37:16,950 --> 00:37:19,563
+- Alright, this is an
+inter interesting topic.
+
+718
+00:37:21,450 --> 00:37:23,580
+When doing stuff with MCP,
+
+719
+00:37:23,580 --> 00:37:28,580
+is it possible to create sort
+of like a shadow of knowledge
+
+720
+00:37:28,650 --> 00:37:33,450
+by having the agent select
+a specific MCP server
+
+721
+00:37:33,450 --> 00:37:35,130
+to ask for a solution
+
+722
+00:37:35,130 --> 00:37:38,550
+that it already would
+have access in the model,
+
+723
+00:37:38,550 --> 00:37:41,640
+and so therefore you
+could make it not aware
+
+724
+00:37:41,640 --> 00:37:42,633
+of certain things?
+
+725
+00:37:44,790 --> 00:37:47,100
+- [Vlad] Maybe. (laughing)
+
+726
+00:37:47,100 --> 00:37:48,543
+Yeah, that's the answer.
+
+727
+00:37:51,690 --> 00:37:56,690
+You can tell the MCP
+server to use certain tools
+
+728
+00:37:57,570 --> 00:38:01,157
+and within certain frameworks
+of building agents,
+
+729
+00:38:03,270 --> 00:38:07,560
+you can define what some
+of the steps are in that.
+
+730
+00:38:07,560 --> 00:38:09,270
+So for example, if you would be using
+
+731
+00:38:09,270 --> 00:38:11,190
+something like line graph,
+
+732
+00:38:11,190 --> 00:38:14,700
+you can define nodes that need
+to be transitioned through
+
+733
+00:38:14,700 --> 00:38:18,750
+before it goes to the
+LLM for the decision.
+
+734
+00:38:18,750 --> 00:38:20,130
+So in those situations,
+
+735
+00:38:20,130 --> 00:38:22,200
+you could force a step at the beginning,
+
+736
+00:38:22,200 --> 00:38:26,880
+Hey, always look here
+right, into this data set,
+
+737
+00:38:26,880 --> 00:38:28,777
+before you invoke the LLM.
+
+738
+00:38:29,700 --> 00:38:34,500
+But that's not MCP that's enforcing that,
+
+739
+00:38:34,500 --> 00:38:36,257
+that's not your tool
+that's enforcing that.
+
+740
+00:38:36,257 --> 00:38:40,320
+That's the way you're
+building the agent itself
+
+741
+00:38:40,320 --> 00:38:41,220
+that does that.
+
+742
+00:38:41,220 --> 00:38:42,723
+- [Jim] Yeah, a lot of that stuff,
+
+743
+00:38:42,723 --> 00:38:45,450
+it's how do you force some
+determinism into something
+
+744
+00:38:45,450 --> 00:38:48,420
+that's inherently
+non-deterministic, right?
+
+745
+00:38:48,420 --> 00:38:52,410
+It's, you have to force
+it in some way, right?
+
+746
+00:38:52,410 --> 00:38:54,360
+And that's kind of what
+we're gonna show here
+
+747
+00:38:54,360 --> 00:38:55,530
+a little bit too, of like,
+
+748
+00:38:55,530 --> 00:38:57,600
+how do we lock down some of this data
+
+749
+00:38:57,600 --> 00:39:00,300
+based off the user
+that's logged in, right?
+
+750
+00:39:00,300 --> 00:39:03,270
+So, you know, if we look
+here at this titles table,
+
+751
+00:39:03,270 --> 00:39:05,223
+there's 11 million entries in there.
+
+752
+00:39:06,420 --> 00:39:09,270
+But you know, for this
+one we wanna lock it down
+
+753
+00:39:09,270 --> 00:39:11,820
+by the title type that, you know,
+
+754
+00:39:11,820 --> 00:39:15,630
+Jim could only see title
+type of one, that's movies.
+
+755
+00:39:15,630 --> 00:39:16,950
+Vlad could see them all,
+
+756
+00:39:16,950 --> 00:39:19,920
+and test two could see one in five, right?
+
+757
+00:39:19,920 --> 00:39:22,200
+It's like we're using that for titles.
+
+758
+00:39:22,200 --> 00:39:24,600
+A lot of times you might have a tenant ID
+
+759
+00:39:24,600 --> 00:39:26,700
+or some other determining factor
+
+760
+00:39:26,700 --> 00:39:28,740
+of who could see what data, right?
+
+761
+00:39:28,740 --> 00:39:30,600
+Based on some roles, right?
+
+762
+00:39:30,600 --> 00:39:33,450
+So using that, we could see if we have
+
+763
+00:39:33,450 --> 00:39:36,810
+this sort of where clause
+where title type equals any,
+
+764
+00:39:36,810 --> 00:39:39,540
+because this is a Postgre array, right?
+
+765
+00:39:39,540 --> 00:39:43,470
+We have 700,000 titles in there.
+
+766
+00:39:43,470 --> 00:39:48,090
+Movie titles, one in five,
+we have 872,000 those.
+
+767
+00:39:48,090 --> 00:39:50,040
+So it's like that's
+kind of the where clause
+
+768
+00:39:50,040 --> 00:39:52,290
+that we want to inherently
+have all the time.
+
+769
+00:39:53,490 --> 00:39:56,220
+Putting that something
+inside of the MCP server
+
+770
+00:39:56,220 --> 00:39:58,770
+and being able to pass that thing there,
+
+771
+00:39:58,770 --> 00:40:00,780
+it's like having the LLM put
+the right thing in there.
+
+772
+00:40:00,780 --> 00:40:02,220
+We can never trust that.
+
+773
+00:40:02,220 --> 00:40:04,680
+So we wanna make it in a
+more deterministic way.
+
+774
+00:40:04,680 --> 00:40:07,410
+So tools like Postgre have that ability.
+
+775
+00:40:07,410 --> 00:40:11,130
+So what we want to do is
+use row level security
+
+776
+00:40:11,130 --> 00:40:13,140
+in order to be able to lock that down.
+
+777
+00:40:13,140 --> 00:40:15,873
+So let's go do that.
+
+778
+00:40:21,570 --> 00:40:24,270
+So what I'm gonna do is
+set an environment variable
+
+779
+00:40:24,270 --> 00:40:25,510
+inside of Postgre
+
+780
+00:40:30,210 --> 00:40:32,790
+so this way we could start
+building what we want
+
+781
+00:40:32,790 --> 00:40:34,863
+for our policy to be.
+
+782
+00:40:36,300 --> 00:40:39,540
+So there's a function called
+set_config that'll set that.
+
+783
+00:40:39,540 --> 00:40:42,060
+So this way now we could go here
+
+784
+00:40:42,060 --> 00:40:44,370
+and instead of having that string,
+
+785
+00:40:44,370 --> 00:40:47,703
+we'll get the current setting.
+
+786
+00:41:02,430 --> 00:41:04,380
+So now we set that to just having one.
+
+787
+00:41:04,380 --> 00:41:07,860
+So that should match our 719,000 rows.
+
+788
+00:41:07,860 --> 00:41:10,620
+So this way now, this is
+really the where clause
+
+789
+00:41:10,620 --> 00:41:11,670
+that we want to set.
+
+790
+00:41:11,670 --> 00:41:13,890
+So this way, based off what we set
+
+791
+00:41:13,890 --> 00:41:18,780
+that RLS typed environment
+variable to, right?
+
+792
+00:41:18,780 --> 00:41:21,693
+That where clause automatically
+gets appended to it.
+
+793
+00:41:24,960 --> 00:41:26,770
+Read policy ROS
+
+794
+00:41:28,020 --> 00:41:31,080
+types on titles,
+
+795
+00:41:31,080 --> 00:41:32,013
+using.
+
+796
+00:41:33,690 --> 00:41:36,243
+I always copy and paste this where clause.
+
+797
+00:41:42,522 --> 00:41:43,355
+Okay?
+
+798
+00:41:44,290 --> 00:41:47,343
+Alter table titles.
+
+799
+00:41:49,410 --> 00:41:52,023
+Enable row level security.
+
+800
+00:41:52,890 --> 00:41:54,180
+Okay?
+
+801
+00:41:54,180 --> 00:41:58,170
+Now we are currently running
+as the table's owner.
+
+802
+00:41:58,170 --> 00:42:00,300
+So row level security won't apply to that.
+
+803
+00:42:00,300 --> 00:42:03,690
+So let's connect as the MCP user,
+
+804
+00:42:03,690 --> 00:42:06,810
+not as the MCP owner, right?
+
+805
+00:42:06,810 --> 00:42:10,837
+Now if we do just this one.
+
+806
+00:42:18,294 --> 00:42:20,160
+So when we run that is
+that you get nothing,
+
+807
+00:42:20,160 --> 00:42:21,270
+because we have nothing set.
+
+808
+00:42:21,270 --> 00:42:22,980
+So when you set, you create your policy
+
+809
+00:42:22,980 --> 00:42:24,980
+for something like role level
+security, you wanna make it
+
+810
+00:42:24,980 --> 00:42:28,380
+so this way if things aren't
+set, you get no data, right?
+
+811
+00:42:28,380 --> 00:42:30,270
+So now we want to explicitly allow
+
+812
+00:42:30,270 --> 00:42:31,620
+to be able to see some of that.
+
+813
+00:42:31,620 --> 00:42:34,020
+So we'll go back and set
+the config here, right?
+
+814
+00:42:35,160 --> 00:42:36,660
+And now we could do that again
+
+815
+00:42:36,660 --> 00:42:38,993
+without putting that where
+clause in there, right?
+
+816
+00:42:41,040 --> 00:42:43,500
+And we wait that and now we
+get the right answer there.
+
+817
+00:42:43,500 --> 00:42:45,510
+So row level security with Postgre.
+
+818
+00:42:45,510 --> 00:42:46,920
+So automatically add that in there.
+
+819
+00:42:46,920 --> 00:42:49,230
+So when we're thinking about
+things like context like MCP
+
+820
+00:42:49,230 --> 00:42:52,260
+or things where you're not
+quite sure what's gonna happen
+
+821
+00:42:52,260 --> 00:42:53,280
+as things get passed in there,
+
+822
+00:42:53,280 --> 00:42:55,110
+we want to add that determinism in there,
+
+823
+00:42:55,110 --> 00:42:56,973
+especially around securing your data.
+
+824
+00:42:58,050 --> 00:42:59,790
+Things like if you're in the Oracle world,
+
+825
+00:42:59,790 --> 00:43:01,800
+virtual private database,
+there's things like that.
+
+826
+00:43:01,800 --> 00:43:04,380
+There's other ways of doing
+that inside the database
+
+827
+00:43:04,380 --> 00:43:08,580
+that we could be sure that's there, right?
+
+828
+00:43:08,580 --> 00:43:11,070
+So now let's use those,
+those tools that's there.
+
+829
+00:43:11,070 --> 00:43:13,353
+So let's go into the movie server.
+
+830
+00:43:14,243 --> 00:43:17,013
+So we'll go back to Kiro.
+
+831
+00:43:23,610 --> 00:43:24,443
+Change the...
+
+832
+00:43:31,320 --> 00:43:34,390
+So what I'm gonna do is to take in
+
+833
+00:43:35,340 --> 00:43:36,990
+command line parameter
+
+834
+00:43:36,990 --> 00:43:41,550
+because that's how this MCP
+server is taking things in
+
+835
+00:43:41,550 --> 00:43:42,693
+through standard IO,
+
+836
+00:43:51,299 --> 00:43:55,299
+and I'm telling you kind
+of what library to use.
+
+837
+00:43:59,220 --> 00:44:02,433
+Value to call.
+
+838
+00:44:03,601 --> 00:44:06,153
+Set_config.
+
+839
+00:44:07,860 --> 00:44:12,860
+Right after making a database connection.
+
+840
+00:44:16,320 --> 00:44:18,303
+Use the following as a template.
+
+841
+00:44:22,740 --> 00:44:24,810
+You notice I'm always
+telling it to use a template
+
+842
+00:44:24,810 --> 00:44:26,460
+because I usually try these things
+
+843
+00:44:26,460 --> 00:44:28,740
+and then once I know it's gonna work,
+
+844
+00:44:28,740 --> 00:44:30,750
+I don't let it try to
+figure it out a second time.
+
+845
+00:44:30,750 --> 00:44:33,330
+I just tell it how to do it, right?
+
+846
+00:44:33,330 --> 00:44:35,040
+Ends up being a lot faster that way
+
+847
+00:44:35,040 --> 00:44:36,940
+instead of it trying to figure it out.
+
+848
+00:44:42,840 --> 00:44:46,980
+So pulled that import in there,
+
+849
+00:44:46,980 --> 00:44:49,230
+set that to none,
+
+850
+00:44:49,230 --> 00:44:50,490
+right after the connection,
+
+851
+00:44:50,490 --> 00:44:52,410
+we're gonna call that with the value
+
+852
+00:44:52,410 --> 00:44:54,600
+that it gets passed in.
+
+853
+00:44:54,600 --> 00:44:58,337
+Yep. We're gonna allow that,
+merge that patch, right?
+
+854
+00:45:01,317 --> 00:45:03,570
+And now it's parsing, getting titles type.
+
+855
+00:45:03,570 --> 00:45:04,833
+Yep, we want that.
+
+856
+00:45:08,940 --> 00:45:09,773
+Cool.
+
+857
+00:45:11,601 --> 00:45:13,030
+So now let's go change
+
+858
+00:45:18,060 --> 00:45:19,180
+parent directory
+
+859
+00:45:22,290 --> 00:45:27,290
+to pass title types
+
+860
+00:45:28,350 --> 00:45:30,903
+to the MCP server.
+
+861
+00:45:34,230 --> 00:45:36,450
+Load entitled_types
+
+862
+00:45:39,870 --> 00:45:43,990
+from the user table
+
+863
+00:45:44,970 --> 00:45:46,293
+when logging in.
+
+864
+00:45:50,626 --> 00:45:51,840
+Let's see what it does with that.
+
+865
+00:45:51,840 --> 00:45:53,250
+It's always an adventure with this seeing
+
+866
+00:45:53,250 --> 00:45:54,630
+what it's going to kind of code,
+
+867
+00:45:54,630 --> 00:45:56,430
+it's gonna spit out at me, right?
+
+868
+00:45:56,430 --> 00:45:59,760
+It's you need to be able to
+look at things along the way.
+
+869
+00:45:59,760 --> 00:46:00,993
+Yeah, we'll trust this.
+
+870
+00:46:05,550 --> 00:46:06,720
+Yep.
+
+871
+00:46:06,720 --> 00:46:08,823
+Wants to be able to go see that. Sure.
+
+872
+00:46:13,860 --> 00:46:16,863
+So added that into select,
+that's getting there,
+
+873
+00:46:17,700 --> 00:46:20,610
+but that's coming back as a Postgre array.
+
+874
+00:46:20,610 --> 00:46:22,800
+Python doesn't handle that so well.
+
+875
+00:46:22,800 --> 00:46:27,800
+So exchange the query to cast
+entitled_types as a text.
+
+876
+00:46:33,780 --> 00:46:35,160
+We want that coming back as a string
+
+877
+00:46:35,160 --> 00:46:37,680
+so it's easier to pass around.
+
+878
+00:46:37,680 --> 00:46:39,210
+That one I've run through a bunch of times
+
+879
+00:46:39,210 --> 00:46:40,200
+and run a bunch of errors.
+
+880
+00:46:40,200 --> 00:46:42,540
+So just save everybody
+the time that I know
+
+881
+00:46:42,540 --> 00:46:44,133
+we have to cast that as a text.
+
+882
+00:46:52,890 --> 00:46:55,383
+Right now it's putting it in the session.
+
+883
+00:47:01,470 --> 00:47:04,620
+Now it's passing in the
+ARGs that are there.
+
+884
+00:47:04,620 --> 00:47:07,830
+Right? So this is another
+thing that I noticed.
+
+885
+00:47:07,830 --> 00:47:11,310
+Because this thing is in a
+different memory context there,
+
+886
+00:47:11,310 --> 00:47:13,350
+it's not gonna have access
+to that session, right?
+
+887
+00:47:13,350 --> 00:47:14,700
+So this is another one of those things
+
+888
+00:47:14,700 --> 00:47:16,816
+I keep bumping into, right?
+
+889
+00:47:16,816 --> 00:47:21,816
+So change it so entitled
+
+890
+00:47:27,720 --> 00:47:31,147
+is passed to the args
+
+891
+00:47:34,443 --> 00:47:36,003
+as a local variable.
+
+892
+00:47:39,720 --> 00:47:42,210
+I haven't tried this prompt
+yet. We'll see what happens.
+
+893
+00:47:42,210 --> 00:47:43,880
+I just know that that
+code that it spit out
+
+894
+00:47:43,880 --> 00:47:46,050
+is gonna be a problem, right?
+
+895
+00:47:46,050 --> 00:47:48,690
+There we go. We put it
+there, put it in there.
+
+896
+00:47:48,690 --> 00:47:50,963
+That looks like it'll
+work a little bit better.
+
+897
+00:47:54,810 --> 00:47:55,643
+Cool.
+
+898
+00:48:02,370 --> 00:48:03,520
+Now we gotta go up one.
+
+899
+00:48:05,762 --> 00:48:06,679
+Here we go.
+
+900
+00:48:22,380 --> 00:48:24,990
+This is taking a lot longer, right?
+
+901
+00:48:24,990 --> 00:48:27,990
+So, and it's not spitting out
+any movies or anything there.
+
+902
+00:48:27,990 --> 00:48:29,310
+Because we have the row level security.
+
+903
+00:48:29,310 --> 00:48:31,650
+We didn't set change user_app.py
+
+904
+00:48:31,650 --> 00:48:33,930
+in order to handle the row level security.
+
+905
+00:48:33,930 --> 00:48:36,093
+We're just passing it to the MCP server.
+
+906
+00:48:37,635 --> 00:48:38,468
+Okay?
+
+907
+00:48:43,316 --> 00:48:45,393
+DAT429.
+
+908
+00:48:48,960 --> 00:48:52,290
+So calling the tool, right?
+
+909
+00:48:52,290 --> 00:48:54,060
+Couldn't find it, right?
+
+910
+00:48:54,060 --> 00:48:57,270
+It's 'cause when we created
+DAT429 that, that movie,
+
+911
+00:48:57,270 --> 00:49:01,620
+we set it as a type of a TV
+movie, not a regular movie,
+
+912
+00:49:01,620 --> 00:49:04,680
+which has a code of five instead of one.
+
+913
+00:49:04,680 --> 00:49:06,573
+Jim only has access to,
+
+914
+00:49:08,820 --> 00:49:12,030
+only has access to titles of one.
+
+915
+00:49:12,030 --> 00:49:14,943
+So if we log in as Vlad.
+
+916
+00:49:17,190 --> 00:49:18,633
+Vlad, I stole your password.
+
+917
+00:49:19,770 --> 00:49:20,603
+- [Vlad] Oh no.
+
+918
+00:49:31,290 --> 00:49:34,833
+- [Jim] Now Vlad has
+access to all the types.
+
+919
+00:49:38,100 --> 00:49:39,303
+Still couldn't find it.
+
+920
+00:49:41,730 --> 00:49:43,203
+Maybe that's a session thing.
+
+921
+00:49:47,627 --> 00:49:49,050
+Can tell this isn't a pre-can demo
+
+922
+00:49:49,050 --> 00:49:52,440
+because the the cool stuff didn't run.
+
+923
+00:49:52,440 --> 00:49:54,600
+Let's try this guy, see if that one works.
+
+924
+00:49:54,600 --> 00:49:55,433
+Test two.
+
+925
+00:50:25,560 --> 00:50:26,850
+Still couldn't find it.
+
+926
+00:50:26,850 --> 00:50:30,303
+So the sucker is locked
+down pretty good, right?
+
+927
+00:50:32,220 --> 00:50:34,140
+Not quite sure where that's going that,
+
+928
+00:50:34,140 --> 00:50:36,060
+but there, there's...
+
+929
+00:50:36,060 --> 00:50:39,570
+being able to pass in the determinism here
+
+930
+00:50:39,570 --> 00:50:44,400
+is something that the LLM
+isn't gonna be able to do.
+
+931
+00:50:44,400 --> 00:50:47,610
+That's why we're passing it in here
+
+932
+00:50:47,610 --> 00:50:50,670
+through logging it in, right?
+
+933
+00:50:50,670 --> 00:50:53,880
+So getting it there and then
+passing it in down here.
+
+934
+00:50:53,880 --> 00:50:56,310
+So it's probably that I'm
+not passing it in through
+
+935
+00:50:56,310 --> 00:50:58,893
+this entitled types properly.
+
+936
+00:50:59,970 --> 00:51:04,560
+Right? It's probably this sort of thing.
+
+937
+00:51:04,560 --> 00:51:05,460
+Let's just put it here
+
+938
+00:51:05,460 --> 00:51:06,990
+and that's probably
+gonna give us an error,
+
+939
+00:51:06,990 --> 00:51:07,940
+but let's try that.
+
+940
+00:51:09,810 --> 00:51:10,643
+- [Vlad] This is the point
+
+941
+00:51:10,643 --> 00:51:12,783
+where I would honestly try logging.
+
+942
+00:51:14,361 --> 00:51:16,350
+(pair laughing)
+
+943
+00:51:16,350 --> 00:51:20,130
+See what the variables are, or you know.
+
+944
+00:51:20,130 --> 00:51:21,330
+- [Jim] Try mocking.
+
+945
+00:51:21,330 --> 00:51:22,163
+- Yeah.
+- Yeah.
+
+946
+00:51:23,820 --> 00:51:26,520
+Yeah, we could, but we only
+have a few minutes left.
+
+947
+00:51:26,520 --> 00:51:28,980
+So go going ahead and
+trying to go through that
+
+948
+00:51:28,980 --> 00:51:31,220
+and having it go do all that is...
+
+949
+00:51:36,750 --> 00:51:37,770
+It is a little finicky
+
+950
+00:51:37,770 --> 00:51:39,770
+about how you pass some of that through.
+
+951
+00:51:49,560 --> 00:51:50,510
+- [Vlad] It did it?
+
+952
+00:51:53,070 --> 00:51:54,120
+- [Jim] Yeah, there's the error.
+
+953
+00:51:54,120 --> 00:51:57,093
+So that's the error that
+I was trying to avoid.
+
+954
+00:51:58,290 --> 00:51:59,370
+All right.
+
+955
+00:51:59,370 --> 00:52:00,750
+Where I can't find that key,
+
+956
+00:52:00,750 --> 00:52:03,570
+the missing key here, right?
+
+957
+00:52:03,570 --> 00:52:07,590
+So that comes down to
+Python Streamlit stuff
+
+958
+00:52:07,590 --> 00:52:11,340
+that I don't really want to
+debug in front of everybody here
+
+959
+00:52:11,340 --> 00:52:13,020
+because I don't know
+where that's gonna go.
+
+960
+00:52:13,020 --> 00:52:16,953
+And we ask Kiro, it's gonna
+go off into little tangents,
+
+961
+00:52:18,090 --> 00:52:23,090
+but the main idea there of
+using row level security
+
+962
+00:52:23,130 --> 00:52:24,450
+in order to lock down your data,
+
+963
+00:52:24,450 --> 00:52:27,060
+because that's the deterministic part.
+
+964
+00:52:27,060 --> 00:52:29,850
+If the LLM is passing
+something that's there,
+
+965
+00:52:29,850 --> 00:52:32,640
+it has policies that, as you could see,
+
+966
+00:52:32,640 --> 00:52:35,733
+you get no data if it's sending
+things in the wrong way.
+
+967
+00:52:36,570 --> 00:52:38,550
+That's what you want the default to be
+
+968
+00:52:38,550 --> 00:52:42,120
+is don't expose out your
+data in some sort of way.
+
+969
+00:52:42,120 --> 00:52:45,840
+You'd rather it get no data
+than putting out the wrong data.
+
+970
+00:52:45,840 --> 00:52:47,400
+As we're using these tools
+
+971
+00:52:47,400 --> 00:52:49,560
+and it's moving faster and faster,
+
+972
+00:52:49,560 --> 00:52:52,290
+we have to remember good security
+practices around our data
+
+973
+00:52:52,290 --> 00:52:54,240
+and the privacy and the aspect of that.
+
+974
+00:52:55,080 --> 00:52:57,900
+So it means leveraging the
+features inside the database
+
+975
+00:52:57,900 --> 00:52:59,820
+in order to be able to do that.
+
+976
+00:52:59,820 --> 00:53:02,268
+Because those are the deterministic parts.
+
+977
+00:53:02,268 --> 00:53:06,360
+If we added another parameter
+to the tools that's passed in,
+
+978
+00:53:06,360 --> 00:53:10,050
+like the user ID or the entitled types,
+
+979
+00:53:10,050 --> 00:53:12,060
+maybe the LLM will put it in there, right?
+
+980
+00:53:12,060 --> 00:53:13,563
+Maybe it won't, right?
+
+981
+00:53:14,430 --> 00:53:17,130
+It might just say, hey, I
+want access to all the movies.
+
+982
+00:53:17,130 --> 00:53:19,650
+So then it'll try to
+log in as Vlad, right?
+
+983
+00:53:19,650 --> 00:53:22,080
+It's like it'll pass
+in like a random string
+
+984
+00:53:22,080 --> 00:53:25,980
+that I'll give you all the
+things that are there, but...
+
+985
+00:53:25,980 --> 00:53:28,170
+Right. That's the main thing that's there.
+
+986
+00:53:28,170 --> 00:53:31,160
+Let me flip back over here so as...
+
+987
+00:53:32,790 --> 00:53:33,920
+As we get...
+
+988
+00:53:38,550 --> 00:53:41,260
+That QR code goes to the GitHub repo
+
+989
+00:53:42,900 --> 00:53:45,870
+that I'll post this code that's up there.
+
+990
+00:53:45,870 --> 00:53:49,110
+I will get it working, right,
+with that last little bit
+
+991
+00:53:49,110 --> 00:53:51,130
+and I'll leave comments in the code
+
+992
+00:53:52,050 --> 00:53:55,800
+of what I changed from what
+we have here in our session.
+
+993
+00:53:55,800 --> 00:53:57,920
+So this way everybody
+could see that's there
+
+994
+00:53:57,920 --> 00:54:00,840
+of what did it quite do
+wrong with passing that thing
+
+995
+00:54:00,840 --> 00:54:04,380
+and that entitled types parameter across.
+
+996
+00:54:04,380 --> 00:54:07,350
+But for folks who are doing that
+
+997
+00:54:07,350 --> 00:54:08,183
+you'll be able to see it
+
+998
+00:54:08,183 --> 00:54:10,020
+and you'll be able to run everything.
+
+999
+00:54:10,020 --> 00:54:11,820
+I also have scripts on
+how to create the database
+
+1000
+00:54:11,820 --> 00:54:13,620
+of downloading the files,
+
+1001
+00:54:13,620 --> 00:54:15,540
+being able to recreate
+everything that we did.
+
+1002
+00:54:15,540 --> 00:54:19,020
+It'll be in that GitHub repo
+probably Monday morning.
+
+1003
+00:54:19,020 --> 00:54:20,430
+When you're doing it in
+development environment.
+
+1004
+00:54:20,430 --> 00:54:22,920
+We saw a lot of the loops
+as we were going here.
+
+1005
+00:54:22,920 --> 00:54:25,470
+But if that was your main
+production application,
+
+1006
+00:54:25,470 --> 00:54:27,840
+you have a basically
+the internet doing there
+
+1007
+00:54:27,840 --> 00:54:30,030
+that all of a sudden
+if they ask questions,
+
+1008
+00:54:30,030 --> 00:54:32,040
+all of a sudden your bill
+goes through the roof.
+
+1009
+00:54:32,040 --> 00:54:34,290
+And you have no way of
+determining that, right?
+
+1010
+00:54:34,290 --> 00:54:36,510
+It's like it becomes a problem.
+
+1011
+00:54:36,510 --> 00:54:38,700
+So like Vlad said,
+
+1012
+00:54:38,700 --> 00:54:40,230
+it's if you're sure
+
+1013
+00:54:40,230 --> 00:54:43,041
+you're gonna need that context
+every time, just add it.
+
+1014
+00:54:43,041 --> 00:54:43,874
+- Yep.
+- Right.
+
+1015
+00:54:43,874 --> 00:54:47,730
+We, Vlad and I did a code
+talk of last year about RAG
+
+1016
+00:54:47,730 --> 00:54:50,850
+where it was more deterministic
+of doing some of that stuff
+
+1017
+00:54:50,850 --> 00:54:54,090
+where we took movies,
+created a JSON document,
+
+1018
+00:54:54,090 --> 00:54:56,460
+it put putting vectors on it
+
+1019
+00:54:56,460 --> 00:54:57,741
+and then used that for semantic,
+
+1020
+00:54:57,741 --> 00:55:02,130
+for nearest neighbor
+searches and stuff like that.
+
+1021
+00:55:02,130 --> 00:55:06,300
+For semantic searches was
+more deterministic than this,
+
+1022
+00:55:06,300 --> 00:55:07,890
+but it was less flexible
+
+1023
+00:55:07,890 --> 00:55:11,070
+because we had to pre-can all
+the vectors ahead of the time.
+
+1024
+00:55:11,070 --> 00:55:14,070
+So if we were gonna add the movie,
+
+1025
+00:55:14,070 --> 00:55:16,050
+we had to go create the
+vector of that new movie,
+
+1026
+00:55:16,050 --> 00:55:19,020
+put it into, decide the database
+in order for it to find it.
+
+1027
+00:55:19,020 --> 00:55:21,540
+This is just using standard SQL.
+
+1028
+00:55:21,540 --> 00:55:23,430
+Thank you everybody.
+
+1029
+00:55:23,430 --> 00:55:24,600
+Please fill out the survey.
+
+1030
+00:55:24,600 --> 00:55:26,100
+It really helps us in order
+
+1031
+00:55:26,100 --> 00:55:28,530
+to make everything better for you.
+
+1032
+00:55:28,530 --> 00:55:30,090
+So please fill out the survey
+
+1033
+00:55:30,090 --> 00:55:31,260
+and leave some comments for us.
+
+1034
+00:55:31,260 --> 00:55:33,450
+Even if it just says hi.
+That would be cool too.
+
+1035
+00:55:33,450 --> 00:55:35,910
+Appreciate it. Thanks everybody.
+
+1036
+00:55:35,910 --> 00:55:39,533
+- [Vlad] Thank you all.
+(audience applauding)
+

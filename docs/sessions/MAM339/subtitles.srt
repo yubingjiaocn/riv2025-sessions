@@ -1,0 +1,5327 @@
+1
+00:00:00,207 --> 00:00:03,690
+- All right, welcome to MAM339,
+
+2
+00:00:03,690 --> 00:00:05,880
+where we'll be diving into
+Tipalti's transformation
+
+3
+00:00:05,880 --> 00:00:08,043
+to Windows containers on AWS.
+
+4
+00:00:09,090 --> 00:00:12,300
+I'm joined here today
+by Maya Morav Freiman,
+
+5
+00:00:12,300 --> 00:00:14,250
+technical account manager with AWS,
+
+6
+00:00:14,250 --> 00:00:15,780
+who was part of the journey,
+
+7
+00:00:15,780 --> 00:00:20,100
+and lead DevOps architect
+for Tipalti, Danny Teller,
+
+8
+00:00:20,100 --> 00:00:22,860
+who joins us today to give us
+his experience and insights
+
+9
+00:00:22,860 --> 00:00:24,240
+on that journey.
+
+10
+00:00:24,240 --> 00:00:26,340
+And quick question
+before we kick off today
+
+11
+00:00:26,340 --> 00:00:28,470
+to make sure these headphones are working,
+
+12
+00:00:28,470 --> 00:00:30,930
+who here is actually running
+Windows applications,
+
+13
+00:00:30,930 --> 00:00:32,970
+Windows workloads and their environments?
+
+14
+00:00:32,970 --> 00:00:33,930
+Now, Windows containers?
+
+15
+00:00:33,930 --> 00:00:35,640
+All right, perfect.
+
+16
+00:00:35,640 --> 00:00:36,840
+How many have actually considered
+
+17
+00:00:36,840 --> 00:00:38,823
+containerizing these applications?
+
+18
+00:00:40,080 --> 00:00:42,570
+All right so, this is
+gonna be a great session
+
+19
+00:00:42,570 --> 00:00:45,900
+because Danny has quite the
+roadmap coming up here for you
+
+20
+00:00:45,900 --> 00:00:49,200
+where you'll be able to see
+all the pitfalls and successes
+
+21
+00:00:49,200 --> 00:00:52,000
+that they've engaged over the
+last 12 months doing this.
+
+22
+00:00:53,100 --> 00:00:54,870
+So our quick agenda for today,
+
+23
+00:00:54,870 --> 00:00:56,730
+we're gonna do a quick
+background level set
+
+24
+00:00:56,730 --> 00:00:58,620
+on what containers are.
+
+25
+00:00:58,620 --> 00:01:01,110
+Then we're gonna dive into
+Tipalti, their journey,
+
+26
+00:01:01,110 --> 00:01:02,610
+how they got where they are today,
+
+27
+00:01:02,610 --> 00:01:04,530
+the lessons learned, and what's next,
+
+28
+00:01:04,530 --> 00:01:05,730
+what happens after this.
+
+29
+00:01:07,590 --> 00:01:09,390
+And Danny, if you wanna
+let the audience know
+
+30
+00:01:09,390 --> 00:01:12,060
+what they'll be in for
+over the next 60 minutes,
+
+31
+00:01:12,060 --> 00:01:12,930
+that'd be perfect.
+
+32
+00:01:12,930 --> 00:01:14,190
+- Definitely. Thank you, Aidan.
+
+33
+00:01:14,190 --> 00:01:15,630
+So what we're gonna do today
+
+34
+00:01:15,630 --> 00:01:18,840
+is we're gonna walk through
+from ancient to modern,
+
+35
+00:01:18,840 --> 00:01:22,410
+all the technical decision-making
+that we had to go through,
+
+36
+00:01:22,410 --> 00:01:24,329
+the challenges we faced,
+
+37
+00:01:24,329 --> 00:01:27,870
+and our performance gains, optimizations,
+
+38
+00:01:27,870 --> 00:01:29,520
+all these fun stuff,
+
+39
+00:01:29,520 --> 00:01:32,880
+some truly weird things, and our results,
+
+40
+00:01:32,880 --> 00:01:35,250
+and finally how it impacted our business.
+
+41
+00:01:35,250 --> 00:01:37,290
+So stay in tuned, fellas.
+
+42
+00:01:37,290 --> 00:01:38,123
+Thank you, Aidan.
+- Thank you.
+
+43
+00:01:38,123 --> 00:01:39,780
+So we'll see you in a few minutes.
+
+44
+00:01:39,780 --> 00:01:42,420
+So like I mentioned, we
+just wanna level set.
+
+45
+00:01:42,420 --> 00:01:44,730
+So everybody's familiar with
+what Windows containers are,
+
+46
+00:01:44,730 --> 00:01:46,590
+how they come around, and that way,
+
+47
+00:01:46,590 --> 00:01:49,080
+if you're an advanced
+user or just beginning up,
+
+48
+00:01:49,080 --> 00:01:51,630
+you'll see how easy it is
+to get started with them.
+
+49
+00:01:51,630 --> 00:01:53,970
+So we're all pretty
+much familiar with this.
+
+50
+00:01:53,970 --> 00:01:55,440
+Back in the day,
+
+51
+00:01:55,440 --> 00:01:58,860
+one app per server wasn't a
+great use of the hardware,
+
+52
+00:01:58,860 --> 00:02:00,060
+a lot of high costs,
+
+53
+00:02:00,060 --> 00:02:02,790
+wasn't very, very efficient at all.
+
+54
+00:02:02,790 --> 00:02:05,610
+Next up, as we all know, hypervisors.
+
+55
+00:02:05,610 --> 00:02:07,350
+It virtualized the operating system,
+
+56
+00:02:07,350 --> 00:02:09,060
+the hardware, which is great,
+
+57
+00:02:09,060 --> 00:02:11,940
+but unfortunately it still
+wasn't that efficient.
+
+58
+00:02:11,940 --> 00:02:14,910
+You could only run so many
+hypervisors in one box
+
+59
+00:02:14,910 --> 00:02:17,133
+and costs again are a major component.
+
+60
+00:02:18,120 --> 00:02:20,970
+Lastly, this is where containers
+really come into its own,
+
+61
+00:02:20,970 --> 00:02:23,160
+virtualizing the operating system.
+
+62
+00:02:23,160 --> 00:02:26,070
+The benefit this has, you
+can now have a shared kernel,
+
+63
+00:02:26,070 --> 00:02:27,780
+multiple containers using it,
+
+64
+00:02:27,780 --> 00:02:30,900
+and really optimizing your costs on this.
+
+65
+00:02:30,900 --> 00:02:33,990
+So big takeaway here is your cost,
+
+66
+00:02:33,990 --> 00:02:37,560
+your ability to spin up
+new systems, be agile,
+
+67
+00:02:37,560 --> 00:02:40,200
+and just to be much more efficient
+
+68
+00:02:40,200 --> 00:02:42,183
+in the use of all these resources.
+
+69
+00:02:43,980 --> 00:02:46,800
+So a lot of people forget
+that the first Docker spec
+
+70
+00:02:46,800 --> 00:02:49,020
+was created about 10 years ago, in 2015.
+
+71
+00:02:49,020 --> 00:02:52,170
+So it's a pretty solid
+solution to go with today.
+
+72
+00:02:52,170 --> 00:02:53,610
+It's not like it's brand new.
+
+73
+00:02:53,610 --> 00:02:55,920
+I know people are familiar
+with Linux containers,
+
+74
+00:02:55,920 --> 00:02:57,390
+that's what everybody thinks.
+
+75
+00:02:57,390 --> 00:02:59,850
+But fast forward to 2017,
+
+76
+00:02:59,850 --> 00:03:04,050
+that's when Microsoft enabled
+Linux support on containers
+
+77
+00:03:04,050 --> 00:03:06,330
+that opened up hybrid strategies.
+
+78
+00:03:06,330 --> 00:03:08,010
+Again, we won't go
+through every single item,
+
+79
+00:03:08,010 --> 00:03:10,383
+but containerd came up with Server 2019,
+
+80
+00:03:11,941 --> 00:03:13,770
+2023 Karpenter support enabled,
+
+81
+00:03:13,770 --> 00:03:15,930
+Amazon supported at the same time,
+
+82
+00:03:15,930 --> 00:03:17,790
+and it's continued to evolve today.
+
+83
+00:03:17,790 --> 00:03:20,370
+So the big takeaway here
+is that 10 years later,
+
+84
+00:03:20,370 --> 00:03:22,200
+this is still an evolving process,
+
+85
+00:03:22,200 --> 00:03:24,780
+but it is really a tried and true method
+
+86
+00:03:24,780 --> 00:03:26,230
+for doing Windows containers.
+
+87
+00:03:27,810 --> 00:03:29,250
+Some quick benefits.
+
+88
+00:03:29,250 --> 00:03:30,330
+Being agile is one.
+
+89
+00:03:30,330 --> 00:03:33,060
+Being able to spin these
+up, shut them down,
+
+90
+00:03:33,060 --> 00:03:35,520
+rapid development, that's essential.
+
+91
+00:03:35,520 --> 00:03:37,860
+Cost-wise, we do see customers save
+
+92
+00:03:37,860 --> 00:03:40,500
+about 60% under EC2 costs,
+
+93
+00:03:40,500 --> 00:03:43,680
+roughly about 68% on their storage costs
+
+94
+00:03:43,680 --> 00:03:45,570
+and reducing your management overhead.
+
+95
+00:03:45,570 --> 00:03:47,010
+If you are something like, you know,
+
+96
+00:03:47,010 --> 00:03:50,700
+EKS and orchestrator, you know,
+patching, getting them back,
+
+97
+00:03:50,700 --> 00:03:52,277
+getting them up, failovers, all this,
+
+98
+00:03:52,277 --> 00:03:54,693
+it's a much, much simpler
+management as well.
+
+99
+00:03:57,060 --> 00:03:58,290
+When we're choosing these,
+
+100
+00:03:58,290 --> 00:04:01,260
+there are some considerations
+to be brought up.
+
+101
+00:04:01,260 --> 00:04:03,330
+For example, this is 2025.
+
+102
+00:04:03,330 --> 00:04:06,810
+As we go into 2026, if I
+have a new application today
+
+103
+00:04:06,810 --> 00:04:10,080
+and it's going to use cross-platform.net,
+
+104
+00:04:10,080 --> 00:04:12,330
+I'm gonna choose Linux, let's be honest.
+
+105
+00:04:12,330 --> 00:04:14,070
+It's just going to be modern.
+
+106
+00:04:14,070 --> 00:04:16,200
+However, for Windows applications,
+
+107
+00:04:16,200 --> 00:04:17,460
+they're a little bit beefier,
+
+108
+00:04:17,460 --> 00:04:19,140
+so you're going to start off immediately
+
+109
+00:04:19,140 --> 00:04:20,820
+with a three-gig image,
+
+110
+00:04:20,820 --> 00:04:22,350
+which means that the
+host has to be larger.
+
+111
+00:04:22,350 --> 00:04:23,790
+So cost is an issue.
+
+112
+00:04:23,790 --> 00:04:26,280
+The size of that image is also an issue.
+
+113
+00:04:26,280 --> 00:04:28,950
+Only certain applications
+can be used as well
+
+114
+00:04:28,950 --> 00:04:29,940
+to be containerized.
+
+115
+00:04:29,940 --> 00:04:31,860
+And we'll dive into what
+some of those applications
+
+116
+00:04:31,860 --> 00:04:32,943
+can be as well.
+
+117
+00:04:35,160 --> 00:04:37,710
+We do see, across the financial industry,
+
+118
+00:04:37,710 --> 00:04:38,970
+healthcare industry,
+
+119
+00:04:38,970 --> 00:04:41,010
+a lot of use cases in AWS
+
+120
+00:04:41,010 --> 00:04:43,160
+for customers taking their applications
+
+121
+00:04:43,160 --> 00:04:44,790
+on Windows containers.
+
+122
+00:04:44,790 --> 00:04:48,330
+And the types of applications
+that we do recommend to take
+
+123
+00:04:48,330 --> 00:04:50,400
+would be your ASP.NET,
+
+124
+00:04:50,400 --> 00:04:53,190
+WCF or Windows Services Applications,
+
+125
+00:04:53,190 --> 00:04:55,320
+and finally, Console Applications.
+
+126
+00:04:55,320 --> 00:04:57,600
+Anything that requires a full GUI,
+
+127
+00:04:57,600 --> 00:04:59,580
+absolutely skip that one for right now,
+
+128
+00:04:59,580 --> 00:05:01,200
+these would be your best bet.
+
+129
+00:05:01,200 --> 00:05:02,910
+If it runs on Windows Server today,
+
+130
+00:05:02,910 --> 00:05:03,900
+there's a pretty good chance
+
+131
+00:05:03,900 --> 00:05:06,050
+that you can containerize
+that application.
+
+132
+00:05:08,280 --> 00:05:10,740
+Now, to get started altogether with this,
+
+133
+00:05:10,740 --> 00:05:12,810
+you only need five items.
+
+134
+00:05:12,810 --> 00:05:14,970
+The first item you need
+is your Dockerfile.
+
+135
+00:05:14,970 --> 00:05:16,440
+That's your blueprint
+for your application.
+
+136
+00:05:16,440 --> 00:05:17,610
+It has everything in there.
+
+137
+00:05:17,610 --> 00:05:20,430
+The second item here is
+your Proprietary Base Image.
+
+138
+00:05:20,430 --> 00:05:23,160
+Typically, that's your
+Windows Server core image
+
+139
+00:05:23,160 --> 00:05:25,530
+that you can just pull
+down from Microsoft.
+
+140
+00:05:25,530 --> 00:05:28,050
+Third item is your registry
+to store your images.
+
+141
+00:05:28,050 --> 00:05:29,970
+In this case we'll say ECR.
+
+142
+00:05:29,970 --> 00:05:32,280
+Fourth, you need your host
+for worker nodes and so on,
+
+143
+00:05:32,280 --> 00:05:33,720
+which would be EKS.
+
+144
+00:05:33,720 --> 00:05:35,760
+And finally, you need your orchestrator.
+
+145
+00:05:35,760 --> 00:05:37,620
+For just failovers, bringing these up,
+
+146
+00:05:37,620 --> 00:05:40,980
+spinning down all of that,
+again, EKS is your friend here.
+
+147
+00:05:40,980 --> 00:05:42,840
+So just these five simple items,
+
+148
+00:05:42,840 --> 00:05:46,083
+you are actually off and
+running with containers.
+
+149
+00:05:48,150 --> 00:05:49,950
+Now, one thing that you can do as well
+
+150
+00:05:49,950 --> 00:05:53,850
+is to speed up the deployment
+from pulling the actual image
+
+151
+00:05:53,850 --> 00:05:55,890
+to actually starting that off as well,
+
+152
+00:05:55,890 --> 00:06:00,060
+is using what we do is EC2
+Image Builder cache strategy.
+
+153
+00:06:00,060 --> 00:06:03,870
+And how this works is basically,
+you create a custom AMI.
+
+154
+00:06:03,870 --> 00:06:06,390
+And within that you bake
+in all the components to it
+
+155
+00:06:06,390 --> 00:06:08,100
+through the Image Builder.
+
+156
+00:06:08,100 --> 00:06:09,270
+And we're gonna fly through this.
+
+157
+00:06:09,270 --> 00:06:12,000
+There is a blog that
+explains this much deeper
+
+158
+00:06:12,000 --> 00:06:13,830
+and you can Google this up online.
+
+159
+00:06:13,830 --> 00:06:15,090
+But essentially, by doing this,
+
+160
+00:06:15,090 --> 00:06:16,980
+it does all the work for you upfront.
+
+161
+00:06:16,980 --> 00:06:18,210
+So then when you go to launch this,
+
+162
+00:06:18,210 --> 00:06:20,910
+it actually launches about 65% faster
+
+163
+00:06:20,910 --> 00:06:22,770
+than without a caching strategy.
+
+164
+00:06:22,770 --> 00:06:24,990
+And just so you can see this,
+
+165
+00:06:24,990 --> 00:06:26,670
+I've got two screenshots here.
+
+166
+00:06:26,670 --> 00:06:31,020
+The top one is using
+basically a vanilla.net,
+
+167
+00:06:31,020 --> 00:06:32,850
+ASP.net application.
+
+168
+00:06:32,850 --> 00:06:35,550
+It is using the image cache strategy.
+
+169
+00:06:35,550 --> 00:06:38,010
+And the advantage of
+that is, as you can see,
+
+170
+00:06:38,010 --> 00:06:40,830
+pull to pull is about 54 seconds.
+
+171
+00:06:40,830 --> 00:06:43,080
+On the bottom you see two arrows there,
+
+172
+00:06:43,080 --> 00:06:47,220
+we have a pull and then
+finally it's pulled
+
+173
+00:06:47,220 --> 00:06:48,990
+and up and working and started.
+
+174
+00:06:48,990 --> 00:06:50,760
+It takes 7x longer.
+
+175
+00:06:50,760 --> 00:06:52,800
+So you can see the image cache strategy
+
+176
+00:06:52,800 --> 00:06:54,510
+does absolutely benefit
+
+177
+00:06:54,510 --> 00:06:56,710
+and gets that launched
+much quicker for you.
+
+178
+00:06:58,890 --> 00:07:01,410
+I'd mentioned back in 2023, Karpenter,
+
+179
+00:07:01,410 --> 00:07:03,750
+AWS does support Karpenter.
+
+180
+00:07:03,750 --> 00:07:05,370
+It's highly recommended,
+
+181
+00:07:05,370 --> 00:07:06,780
+works with the kube-scheduler
+
+182
+00:07:06,780 --> 00:07:09,120
+so it automatically spins
+up nodes as is needed.
+
+183
+00:07:09,120 --> 00:07:10,290
+There'll be cost-effective,
+
+184
+00:07:10,290 --> 00:07:11,850
+works with the compute provider,
+
+185
+00:07:11,850 --> 00:07:13,530
+absolutely something that should be used
+
+186
+00:07:13,530 --> 00:07:15,530
+when you are running Windows containers.
+
+187
+00:07:18,420 --> 00:07:20,397
+This week, you're probably
+hearing a lot about
+
+188
+00:07:20,397 --> 00:07:21,630
+AWS Transform.
+
+189
+00:07:21,630 --> 00:07:23,610
+We're not going to dive too much into it,
+
+190
+00:07:23,610 --> 00:07:25,890
+but during your modernization journey,
+
+191
+00:07:25,890 --> 00:07:27,300
+what you will be considering doing
+
+192
+00:07:27,300 --> 00:07:29,580
+is also modernizing the code afterwards.
+
+193
+00:07:29,580 --> 00:07:31,860
+The first step is to
+get it into a container.
+
+194
+00:07:31,860 --> 00:07:33,180
+That way you can modernize
+
+195
+00:07:33,180 --> 00:07:35,190
+without having to do any code adjustments.
+
+196
+00:07:35,190 --> 00:07:37,780
+The follow up to this would be to use
+
+197
+00:07:37,780 --> 00:07:39,600
+AWS Transform for .NET,
+
+198
+00:07:39,600 --> 00:07:41,280
+point that at your application
+
+199
+00:07:41,280 --> 00:07:44,040
+and it generally will
+increase the conversion time,
+
+200
+00:07:44,040 --> 00:07:47,370
+about 4x is what we're seeing
+back from customers today.
+
+201
+00:07:47,370 --> 00:07:49,800
+Like I mentioned, if you want
+to learn more about Transform
+
+202
+00:07:49,800 --> 00:07:52,890
+pop by the Expo Center, go
+down by the Amazon booths,
+
+203
+00:07:52,890 --> 00:07:54,480
+all of them have either VMware
+
+204
+00:07:54,480 --> 00:07:57,960
+and other items that
+they'll discuss there,
+
+205
+00:07:57,960 --> 00:08:00,160
+code analysis, everything
+like that for you.
+
+206
+00:08:01,290 --> 00:08:02,123
+And on that note,
+
+207
+00:08:02,123 --> 00:08:04,650
+I'm gonna pass you off to
+the guys from Tipalti here.
+
+208
+00:08:04,650 --> 00:08:05,790
+Maya, Danny,
+
+209
+00:08:05,790 --> 00:08:06,960
+if you wanna take it away.
+
+210
+00:08:06,960 --> 00:08:07,793
+- Thank you.
+- Perfect.
+
+211
+00:08:07,793 --> 00:08:08,626
+- Thank you, Aidan.
+- Amazing.
+
+212
+00:08:08,626 --> 00:08:09,459
+Thank you, Aidan.
+
+213
+00:08:09,459 --> 00:08:14,010
+So Danny, tell us what
+Tipalti is all about.
+
+214
+00:08:14,010 --> 00:08:17,310
+- Well, Tipalti is an
+finance automation platform
+
+215
+00:08:17,310 --> 00:08:18,990
+powered by AI.
+
+216
+00:08:18,990 --> 00:08:22,620
+And it basically streamlines
+all your CFO operations.
+
+217
+00:08:22,620 --> 00:08:26,340
+Anything from global payouts,
+account payables, procurement,
+
+218
+00:08:26,340 --> 00:08:29,460
+tax compliance, treasury,
+you name it, we've got it.
+
+219
+00:08:29,460 --> 00:08:32,610
+So it actually just makes
+your life a lot easier.
+
+220
+00:08:32,610 --> 00:08:34,500
+Everything, all financial operations,
+
+221
+00:08:34,500 --> 00:08:36,810
+just make it life a lot better.
+
+222
+00:08:36,810 --> 00:08:41,253
+So we distinguish ourselves by combining,
+
+223
+00:08:43,260 --> 00:08:44,253
+sorry, sorry,
+
+224
+00:08:45,180 --> 00:08:47,520
+by combining a single suite platform
+
+225
+00:08:47,520 --> 00:08:51,390
+with the simplicity and all
+the complexity you can imagine
+
+226
+00:08:51,390 --> 00:08:52,340
+just making simple.
+
+227
+00:08:54,270 --> 00:08:55,170
+- Amazing.
+
+228
+00:08:55,170 --> 00:08:58,260
+Now, let's talk about
+the technical foundation.
+
+229
+00:08:58,260 --> 00:09:00,240
+Tell us about the application architecture
+
+230
+00:09:00,240 --> 00:09:01,980
+that started this journey.
+
+231
+00:09:01,980 --> 00:09:04,560
+- All right, so picture
+the early Tipalti days.
+
+232
+00:09:04,560 --> 00:09:08,583
+A .NET 4.7 platform, sorry, framework,
+
+233
+00:09:09,420 --> 00:09:12,750
+and monolithic architecture
+and a payment platform.
+
+234
+00:09:12,750 --> 00:09:13,920
+And all of that fun stuff
+
+235
+00:09:13,920 --> 00:09:16,650
+was actually hosted on EC2 instances,
+
+236
+00:09:16,650 --> 00:09:19,140
+which is like most monoliths are.
+
+237
+00:09:19,140 --> 00:09:21,840
+And our process was
+actually multiple processes
+
+238
+00:09:21,840 --> 00:09:23,910
+running all these EC2 instances,
+
+239
+00:09:23,910 --> 00:09:26,850
+you know, fast to develop, reliable,
+
+240
+00:09:26,850 --> 00:09:28,450
+great match for a startup phase.
+
+241
+00:09:29,640 --> 00:09:31,740
+- Well, that's a good setup.
+
+242
+00:09:31,740 --> 00:09:34,590
+Early stage priorities are
+all about speed and focus
+
+243
+00:09:34,590 --> 00:09:37,833
+while enterprise scale demand
+something else entirely.
+
+244
+00:09:39,510 --> 00:09:41,970
+How did that initial success played out?
+
+245
+00:09:41,970 --> 00:09:43,200
+- It played out great.
+
+246
+00:09:43,200 --> 00:09:45,720
+So for initial phase it was wonderful.
+
+247
+00:09:45,720 --> 00:09:48,290
+Quick releases, stable
+reliable in production,
+
+248
+00:09:48,290 --> 00:09:50,310
+it was really fun to work with.
+
+249
+00:09:50,310 --> 00:09:51,840
+But as you expand,
+
+250
+00:09:51,840 --> 00:09:54,180
+all these things kind of
+hit a small bottleneck
+
+251
+00:09:54,180 --> 00:09:56,970
+and we quickly agreed its capabilities.
+
+252
+00:09:56,970 --> 00:09:59,760
+- So you started with a clean,
+straightforward, monolith,
+
+253
+00:09:59,760 --> 00:10:00,990
+served you well at first.
+
+254
+00:10:00,990 --> 00:10:03,510
+What happened when Tipalti began to grow?
+
+255
+00:10:03,510 --> 00:10:05,940
+- When growth happens, it happens fast.
+
+256
+00:10:05,940 --> 00:10:07,050
+And when it does,
+
+257
+00:10:07,050 --> 00:10:09,810
+you need more features, more resilience,
+
+258
+00:10:09,810 --> 00:10:12,240
+and pretty much a lot more of everything.
+
+259
+00:10:12,240 --> 00:10:15,990
+So our single process kind of just evolved
+
+260
+00:10:15,990 --> 00:10:19,170
+to multiple child processes
+from a single parent.
+
+261
+00:10:19,170 --> 00:10:21,150
+And that's kind of
+becoming a little complex
+
+262
+00:10:21,150 --> 00:10:24,690
+when all of them suddenly,
+well, you need to run them,
+
+263
+00:10:24,690 --> 00:10:25,860
+they run on a schedule
+
+264
+00:10:25,860 --> 00:10:28,743
+and sometimes, you know,
+they move out after 18 years.
+
+265
+00:10:29,850 --> 00:10:32,640
+- Well, that growth is pretty common.
+
+266
+00:10:32,640 --> 00:10:35,910
+I bet it'll do some serious
+operational headaches.
+
+267
+00:10:35,910 --> 00:10:37,080
+- Definitely.
+
+268
+00:10:37,080 --> 00:10:39,060
+Headaches is just putting it lightly.
+
+269
+00:10:39,060 --> 00:10:41,490
+Debugging was just a nightmare.
+
+270
+00:10:41,490 --> 00:10:44,340
+Imagine just taking a single
+process out of these hundreds
+
+271
+00:10:44,340 --> 00:10:47,040
+and just figuring out which
+one was actually the culprit.
+
+272
+00:10:47,040 --> 00:10:49,230
+Meanwhile, we're still
+running on EC2 capacity,
+
+273
+00:10:49,230 --> 00:10:51,180
+it was fixed and we had no scaling.
+
+274
+00:10:51,180 --> 00:10:52,430
+It was truly challenging.
+
+275
+00:10:53,310 --> 00:10:56,640
+- So you had your architecture complexity
+
+276
+00:10:56,640 --> 00:10:59,280
+and infrastructure limitations.
+
+277
+00:10:59,280 --> 00:11:01,710
+When did it start impacting the business?
+
+278
+00:11:01,710 --> 00:11:05,040
+- The turning point was when
+our hundreds and thousands
+
+279
+00:11:05,040 --> 00:11:09,270
+of transaction volume just
+exploded into millions.
+
+280
+00:11:09,270 --> 00:11:11,610
+Our systems just struggled to keep up.
+
+281
+00:11:11,610 --> 00:11:13,980
+I mean, we had frequent
+crashes, delayed payments,
+
+282
+00:11:13,980 --> 00:11:16,680
+slow performance, and most
+of all, angry engineers.
+
+283
+00:11:16,680 --> 00:11:18,510
+That's not fun, guys.
+
+284
+00:11:18,510 --> 00:11:21,630
+- Well, that's what every
+scaling company dreads,
+
+285
+00:11:21,630 --> 00:11:24,270
+that the architecture that
+powered the initial success
+
+286
+00:11:24,270 --> 00:11:25,683
+start holding it back.
+
+287
+00:11:28,380 --> 00:11:31,680
+So what Tipalti experienced isn't unique.
+
+288
+00:11:31,680 --> 00:11:36,680
+We see in the companies that
+started as a monolithic,
+
+289
+00:11:37,710 --> 00:11:39,180
+a few common pain points.
+
+290
+00:11:39,180 --> 00:11:42,690
+Well, the first is your application
+
+291
+00:11:42,690 --> 00:11:44,370
+was built for a fixed world.
+
+292
+00:11:44,370 --> 00:11:47,220
+You buy a server, you run
+your application on it,
+
+293
+00:11:47,220 --> 00:11:50,640
+simple, predictable until it isn't.
+
+294
+00:11:50,640 --> 00:11:54,150
+You are overprovision
+just to handle peak loads.
+
+295
+00:11:54,150 --> 00:11:56,700
+And you are wasting resources
+the rest of the time.
+
+296
+00:11:59,040 --> 00:12:01,980
+And if you have any capacity spike,
+
+297
+00:12:01,980 --> 00:12:03,120
+there's no elasticity,
+
+298
+00:12:03,120 --> 00:12:06,780
+your application simply
+wasn't made for it.
+
+299
+00:12:06,780 --> 00:12:08,733
+And then there's the day-to-day.
+
+300
+00:12:10,537 --> 00:12:14,190
+Your deployment that should take minutes,
+
+301
+00:12:14,190 --> 00:12:16,577
+stretch into hours,
+
+302
+00:12:16,577 --> 00:12:18,540
+and you are often flying blind.
+
+303
+00:12:18,540 --> 00:12:21,930
+Troubleshooting feels
+more like a detective work
+
+304
+00:12:21,930 --> 00:12:22,953
+than engineering.
+
+305
+00:12:24,725 --> 00:12:27,780
+And then there's the
+point when the monoliths
+
+306
+00:12:27,780 --> 00:12:29,640
+becomes the bottleneck.
+
+307
+00:12:29,640 --> 00:12:32,340
+Release cycles slow to a crawl.
+
+308
+00:12:32,340 --> 00:12:34,800
+Every component in the
+system is intertwined
+
+309
+00:12:34,800 --> 00:12:37,773
+and every bug can repel
+through the entire system.
+
+310
+00:12:38,700 --> 00:12:43,700
+If you try to adopt modern
+DevOps practices like CI/CD,
+
+311
+00:12:43,710 --> 00:12:45,270
+it becomes an uphill battle.
+
+312
+00:12:45,270 --> 00:12:47,940
+The architecture is not built for it.
+
+313
+00:12:47,940 --> 00:12:50,883
+And what really hurts
+is the business level.
+
+314
+00:12:52,110 --> 00:12:54,670
+The architecture that
+fueled your initial success
+
+315
+00:12:55,950 --> 00:12:59,100
+still simply wasn't built for it.
+
+316
+00:12:59,100 --> 00:13:02,250
+So you are facing with two choices,
+
+317
+00:13:02,250 --> 00:13:06,213
+spend years rewriting or
+live with the constraint.
+
+318
+00:13:07,380 --> 00:13:12,270
+So Danny, what option did
+you consider at Tipalti
+
+319
+00:13:12,270 --> 00:13:16,319
+and how did you arrive to your solution?
+
+320
+00:13:16,319 --> 00:13:18,390
+- We decided that containerization
+was the right way to go.
+
+321
+00:13:18,390 --> 00:13:21,960
+But then we had a choice,
+was it ECS or EKS?
+
+322
+00:13:21,960 --> 00:13:23,220
+Well, we decided on an EKS
+
+323
+00:13:23,220 --> 00:13:25,440
+because it felt a lot more natural for us
+
+324
+00:13:25,440 --> 00:13:27,480
+and we are already heavily invested in it
+
+325
+00:13:27,480 --> 00:13:30,300
+using our Linux workloads.
+
+326
+00:13:30,300 --> 00:13:32,730
+So it was great for us.
+
+327
+00:13:32,730 --> 00:13:35,550
+And then also, it addressed
+the scalability challenge
+
+328
+00:13:35,550 --> 00:13:36,900
+far better.
+
+329
+00:13:36,900 --> 00:13:38,790
+And finally, we needed machine access
+
+330
+00:13:38,790 --> 00:13:40,890
+because, well, let's face
+it, sometimes Windows,
+
+331
+00:13:40,890 --> 00:13:43,020
+you need to understand the
+intricates of the stuff.
+
+332
+00:13:43,020 --> 00:13:45,480
+So we had that, we needed that access.
+
+333
+00:13:45,480 --> 00:13:48,390
+And finally, Windows and Kubernetes
+
+334
+00:13:48,390 --> 00:13:50,280
+is kind of the uncharted territory,
+
+335
+00:13:50,280 --> 00:13:51,630
+so that was fun to go with.
+
+336
+00:13:53,130 --> 00:13:55,800
+- Where did the confidence come from?
+
+337
+00:13:55,800 --> 00:13:57,180
+- Absolutely, from our DevOps team.
+
+338
+00:13:57,180 --> 00:13:58,710
+Those guys were relentless.
+
+339
+00:13:58,710 --> 00:14:00,090
+They just tore it into that stuff
+
+340
+00:14:00,090 --> 00:14:02,823
+and they just really
+remodeled the entire thing.
+
+341
+00:14:03,750 --> 00:14:06,570
+And also, you know, the container
+ecosystem was very mature
+
+342
+00:14:06,570 --> 00:14:07,590
+so it helped out,
+
+343
+00:14:07,590 --> 00:14:08,640
+so it was great.
+
+344
+00:14:08,640 --> 00:14:11,250
+And we decided on a minimal risk approach.
+
+345
+00:14:11,250 --> 00:14:12,990
+We wanted to stay as close as we can
+
+346
+00:14:12,990 --> 00:14:15,480
+so we could focus on the application
+
+347
+00:14:15,480 --> 00:14:17,400
+instead of the platform.
+
+348
+00:14:17,400 --> 00:14:19,683
+So EKS was naturally
+the perfect fit for us.
+
+349
+00:14:21,900 --> 00:14:23,850
+- So basically,
+
+350
+00:14:23,850 --> 00:14:27,780
+when you're ready to containerize
+your Windows application,
+
+351
+00:14:27,780 --> 00:14:29,853
+you get to a fork in the road,
+
+352
+00:14:30,690 --> 00:14:34,560
+do you go with Amazon Elastic
+Kubernetes Service, EKS,
+
+353
+00:14:34,560 --> 00:14:37,747
+or Amazon Elastic Container Service, ECS?
+
+354
+00:14:42,000 --> 00:14:46,230
+Let me just go over both
+and explain what each offers
+
+355
+00:14:46,230 --> 00:14:49,503
+so you will know why
+Tipalti made their choice.
+
+356
+00:14:50,940 --> 00:14:53,343
+So let's start with Amazon ECS.
+
+357
+00:14:54,300 --> 00:14:58,443
+Think of it as AWS knows best approach.
+
+358
+00:14:59,340 --> 00:15:02,760
+We've taken hard one lesson
+from running containers
+
+359
+00:15:02,760 --> 00:15:06,000
+at massive scale and
+baked everything right
+
+360
+00:15:06,000 --> 00:15:07,083
+into the service.
+
+361
+00:15:08,130 --> 00:15:11,400
+And the good thing is that
+you don't have to become
+
+362
+00:15:11,400 --> 00:15:13,953
+an orchestration specialist overnight.
+
+363
+00:15:15,090 --> 00:15:17,230
+ECS is opinionated in the best way
+
+364
+00:15:19,980 --> 00:15:24,980
+and it's relevant for team
+who wants to focus more
+
+365
+00:15:25,890 --> 00:15:30,450
+on the application and
+less on the infrastructure.
+
+366
+00:15:30,450 --> 00:15:32,223
+Now, EKS tells a different story.
+
+367
+00:15:33,660 --> 00:15:36,480
+This is for team who want the full power
+
+368
+00:15:36,480 --> 00:15:39,240
+of Kubernetes experience
+
+369
+00:15:39,240 --> 00:15:41,629
+or maybe for teams like Tipalti
+
+370
+00:15:41,629 --> 00:15:45,063
+who were already running
+Kubernetes on other workloads.
+
+371
+00:15:47,220 --> 00:15:50,760
+You are getting the same
+experience everywhere.
+
+372
+00:15:50,760 --> 00:15:52,620
+So how do you choose?
+
+373
+00:15:52,620 --> 00:15:55,870
+Basically it comes down to your team's DNA
+
+374
+00:15:56,760 --> 00:15:59,010
+and where you want to spend your energy.
+
+375
+00:15:59,010 --> 00:16:03,300
+ECS focus on the application
+and less on the infrastructure
+
+376
+00:16:03,300 --> 00:16:07,890
+while EKS offers you that
+Kubernetes flexibility
+
+377
+00:16:07,890 --> 00:16:11,310
+or when your standardizing
+across environment
+
+378
+00:16:11,310 --> 00:16:12,753
+is part of your strategy.
+
+379
+00:16:14,531 --> 00:16:18,540
+And the good thing is
+that both are 100% ready
+
+380
+00:16:18,540 --> 00:16:21,720
+for Windows production workloads.
+
+381
+00:16:21,720 --> 00:16:24,630
+So the question is not
+which one works better,
+
+382
+00:16:24,630 --> 00:16:27,963
+it's which one fits your team's strategy.
+
+383
+00:16:29,040 --> 00:16:32,490
+So it comes down to
+control versus simplicity.
+
+384
+00:16:32,490 --> 00:16:36,120
+And Tipalti chose
+
+385
+00:16:36,120 --> 00:16:39,960
+because of their
+extensive DevOps expertise
+
+386
+00:16:39,960 --> 00:16:44,960
+and their need for a deep
+debugging of their environment.
+
+387
+00:16:46,410 --> 00:16:50,340
+Now, when it comes to
+.NET application on AWS,
+
+388
+00:16:50,340 --> 00:16:55,050
+this flowchart is here to
+help make the decision.
+
+389
+00:16:55,050 --> 00:16:55,920
+How do we move?
+
+390
+00:16:55,920 --> 00:16:59,580
+So it's kind of a prescriptive
+
+391
+00:16:59,580 --> 00:17:03,870
+and it requires some
+investigation and deep dive,
+
+392
+00:17:03,870 --> 00:17:08,870
+but eventually, there
+are three migration path
+
+393
+00:17:10,620 --> 00:17:13,380
+corresponding to those paths.
+
+394
+00:17:13,380 --> 00:17:16,350
+So the first one is rehost, okay?
+
+395
+00:17:16,350 --> 00:17:19,500
+It's simply moving your application as is
+
+396
+00:17:19,500 --> 00:17:23,280
+to traditional servers
+like Amazon EC2 instances.
+
+397
+00:17:23,280 --> 00:17:27,270
+The second, which is replatform,
+
+398
+00:17:27,270 --> 00:17:31,020
+is making some changes to your application
+
+399
+00:17:31,020 --> 00:17:35,400
+to accommodate the underlying
+platform compute changes,
+
+400
+00:17:35,400 --> 00:17:39,600
+like moving to run on Windows containers.
+
+401
+00:17:39,600 --> 00:17:42,043
+And the third one is refactor,
+
+402
+00:17:43,219 --> 00:17:46,380
+which is re-architecting your application.
+
+403
+00:17:46,380 --> 00:17:51,380
+This pattern help you to
+use cloud native solutions
+
+404
+00:17:54,270 --> 00:17:55,830
+such as serverless
+
+405
+00:17:55,830 --> 00:17:59,490
+or porting your .NET framework application
+
+406
+00:17:59,490 --> 00:18:03,390
+to cross-platform.net and
+run on Linux container.
+
+407
+00:18:03,390 --> 00:18:06,540
+And finally, this is
+the path Tipalti chose,
+
+408
+00:18:06,540 --> 00:18:09,780
+they were already running
+on Amazon EC2 instances
+
+409
+00:18:09,780 --> 00:18:12,060
+and they decided not to spend years
+
+410
+00:18:12,060 --> 00:18:13,920
+rewriting their code base
+
+411
+00:18:13,920 --> 00:18:17,133
+and to move to run on Windows containers.
+
+412
+00:18:18,300 --> 00:18:21,963
+Now, Danny, let's dive
+into the nuts and bolts.
+
+413
+00:18:22,830 --> 00:18:24,960
+Walk us through what it took
+
+414
+00:18:24,960 --> 00:18:28,530
+to get your Windows
+container running on EKS.
+
+415
+00:18:28,530 --> 00:18:31,890
+- So first of all, we
+read every single AWS dock
+
+416
+00:18:31,890 --> 00:18:34,650
+that mentioned Windows and
+Kubernetes in the same breath.
+
+417
+00:18:34,650 --> 00:18:36,540
+And we found out there are
+a couple of key nuances
+
+418
+00:18:36,540 --> 00:18:38,700
+that you have to set up
+right from the start.
+
+419
+00:18:38,700 --> 00:18:40,950
+Now if you don't do that,
+you're probably not gonna have
+
+420
+00:18:40,950 --> 00:18:42,603
+a smooth sailing in the process.
+
+421
+00:18:45,540 --> 00:18:48,720
+- Okay, so once you had
+the lay of the land,
+
+422
+00:18:48,720 --> 00:18:52,050
+what were those setup steps?
+
+423
+00:18:52,050 --> 00:18:56,620
+- Well, the first one is
+actually setting up your VPC CNI.
+
+424
+00:18:58,200 --> 00:19:00,150
+And that's the actual
+component that's responsible
+
+425
+00:19:00,150 --> 00:19:02,250
+to handing out IP addresses to your pods
+
+426
+00:19:02,250 --> 00:19:03,907
+and tying it to your VPC.
+
+427
+00:19:03,907 --> 00:19:07,140
+So we had to tweak it with
+the right flag as you can see.
+
+428
+00:19:07,140 --> 00:19:08,730
+And it was very straightforward.
+
+429
+00:19:08,730 --> 00:19:11,910
+However, unlike Linux nodes,
+
+430
+00:19:11,910 --> 00:19:15,150
+Windows nodes don't run the AWS node pod
+
+431
+00:19:15,150 --> 00:19:16,620
+that actually does the tying
+
+432
+00:19:16,620 --> 00:19:19,590
+for your IP address to your VPC.
+
+433
+00:19:19,590 --> 00:19:21,090
+That actually happens internally.
+
+434
+00:19:21,090 --> 00:19:23,070
+And that's a fact we had
+to really pay attention to
+
+435
+00:19:23,070 --> 00:19:24,720
+going later on.
+
+436
+00:19:24,720 --> 00:19:27,960
+Next, we had to tweak in
+the AWS IAM permissions
+
+437
+00:19:27,960 --> 00:19:29,730
+specifically for Windows nodes.
+
+438
+00:19:29,730 --> 00:19:32,580
+It has a small addition to Linux nodes,
+
+439
+00:19:32,580 --> 00:19:34,200
+so we had to tweak that as well.
+
+440
+00:19:34,200 --> 00:19:37,290
+And that actually used to
+live in AWS auth config,
+
+441
+00:19:37,290 --> 00:19:40,743
+which is now conveniently
+replaced with access entries.
+
+442
+00:19:42,060 --> 00:19:46,233
+- Okay, so once the
+foundation was in place,
+
+443
+00:19:47,190 --> 00:19:49,860
+how did you decide which Windows container
+
+444
+00:19:49,860 --> 00:19:52,530
+or which Windows version
+
+445
+00:19:52,530 --> 00:19:55,110
+or which container setup you want to use?
+
+446
+00:19:55,110 --> 00:19:57,810
+- We decided to stay as
+close to home as we could,
+
+447
+00:19:57,810 --> 00:20:01,710
+so we decided with Windows
+containers Server Core 2019
+
+448
+00:20:01,710 --> 00:20:06,300
+running on Windows Server
+2019 server nodes, right?
+
+449
+00:20:06,300 --> 00:20:08,160
+Very identical, very close to home.
+
+450
+00:20:08,160 --> 00:20:09,960
+At some point we actually tried to match
+
+451
+00:20:09,960 --> 00:20:12,630
+the OS build of Windows,
+
+452
+00:20:12,630 --> 00:20:14,310
+but that proved to be very, very tricky,
+
+453
+00:20:14,310 --> 00:20:16,140
+so we stuck to LTSC versions
+
+454
+00:20:16,140 --> 00:20:18,300
+and it was very, very
+simple for us to do that.
+
+455
+00:20:18,300 --> 00:20:21,480
+- Okay, so that's a pragmatic approach,
+
+456
+00:20:21,480 --> 00:20:23,820
+especially for business
+critical workloads.
+
+457
+00:20:23,820 --> 00:20:28,620
+So compatibility can make
+or break a deployment.
+
+458
+00:20:28,620 --> 00:20:32,430
+So what drove this level of cautions?
+
+459
+00:20:32,430 --> 00:20:34,380
+- It was about risk reduction.
+
+460
+00:20:34,380 --> 00:20:36,210
+So this is a payment platform,
+
+461
+00:20:36,210 --> 00:20:38,430
+zero tolerance for downtime
+or any interruption.
+
+462
+00:20:38,430 --> 00:20:40,410
+So we wanted to stay
+as close and identical
+
+463
+00:20:40,410 --> 00:20:42,480
+to something we already knew was running.
+
+464
+00:20:42,480 --> 00:20:45,540
+And by moving to the
+same setup on Kubernetes,
+
+465
+00:20:45,540 --> 00:20:49,080
+we were actually able to reduce
+operating system overheads.
+
+466
+00:20:49,080 --> 00:20:50,640
+So it played out well for us.
+
+467
+00:20:50,640 --> 00:20:51,900
+But it's only part of the trick.
+
+468
+00:20:51,900 --> 00:20:53,580
+Sometimes you have to pay attention
+
+469
+00:20:53,580 --> 00:20:55,923
+to what Windows images
+you're gonna choose.
+
+470
+00:20:57,330 --> 00:20:58,163
+- You are right.
+
+471
+00:20:58,163 --> 00:21:02,990
+So Microsoft offers four
+container base images,
+
+472
+00:21:03,840 --> 00:21:08,137
+which each one exposing
+different windows API set,
+
+473
+00:21:09,570 --> 00:21:13,800
+and this is what influence on
+the final container image size
+
+474
+00:21:13,800 --> 00:21:15,060
+and on this footprint.
+
+475
+00:21:15,060 --> 00:21:19,893
+So let's start with the
+minimalistical dream, Nano Server.
+
+476
+00:21:22,290 --> 00:21:26,953
+This image expose just enough Windows API
+
+477
+00:21:28,680 --> 00:21:33,270
+to run a cross-platform.net
+
+478
+00:21:33,270 --> 00:21:37,200
+or modern open-source frameworks.
+
+479
+00:21:37,200 --> 00:21:42,200
+So it's excellent for
+building sidecar containers
+
+480
+00:21:43,838 --> 00:21:46,980
+or when every megabyte
+matters in your deployment,
+
+481
+00:21:46,980 --> 00:21:50,340
+it's lean, it's fast,
+and it gets the job done.
+
+482
+00:21:50,340 --> 00:21:52,350
+The next is a Server Core
+
+483
+00:21:52,350 --> 00:21:54,850
+and there's the reason
+this is the crowd favorite.
+
+484
+00:21:56,010 --> 00:21:58,920
+This one strikes the sweet spot
+
+485
+00:21:58,920 --> 00:22:01,830
+between efficiency and functionality.
+
+486
+00:22:01,830 --> 00:22:06,270
+It expose those Windows API sets
+
+487
+00:22:06,270 --> 00:22:08,340
+that support .NET framework
+
+488
+00:22:08,340 --> 00:22:12,783
+and those bread and butter
+Windows Server features like IIS,
+
+489
+00:22:13,740 --> 00:22:18,740
+and it covers the majority of
+enterprise application needs
+
+490
+00:22:19,860 --> 00:22:21,960
+without going overboard.
+
+491
+00:22:21,960 --> 00:22:25,500
+Well, the next one is Server.
+
+492
+00:22:25,500 --> 00:22:30,500
+It's a little smaller than
+the full Windows image,
+
+493
+00:22:30,870 --> 00:22:32,793
+but don't let that fool you.
+
+494
+00:22:33,998 --> 00:22:38,340
+It packs the complete Windows API set.
+
+495
+00:22:38,340 --> 00:22:40,830
+It makes it perfect for applications
+
+496
+00:22:40,830 --> 00:22:45,817
+needing to run DirectX
+graphic capabilities.
+
+497
+00:22:50,100 --> 00:22:51,690
+Like having a compact car
+
+498
+00:22:51,690 --> 00:22:55,293
+with a surprisingly powerful
+engine under the hood.
+
+499
+00:22:56,850 --> 00:23:00,210
+And the last one, the
+heavyweight champion,
+
+500
+00:23:00,210 --> 00:23:03,243
+is the full Windows image.
+
+501
+00:23:04,318 --> 00:23:09,318
+It expose every single
+Windows API you can think of.
+
+502
+00:23:09,330 --> 00:23:11,640
+It's massive,
+
+503
+00:23:11,640 --> 00:23:16,640
+but if you need to run
+graphic-intensive application
+
+504
+00:23:18,480 --> 00:23:22,170
+or cutting edge machine
+learning framework,
+
+505
+00:23:22,170 --> 00:23:23,403
+this is your go-to.
+
+506
+00:23:25,410 --> 00:23:28,710
+So when you come to choose,
+
+507
+00:23:28,710 --> 00:23:32,760
+you need to consider everything
+you bring along with you,
+
+508
+00:23:32,760 --> 00:23:36,480
+those ODBC driver your application calls
+
+509
+00:23:36,480 --> 00:23:40,263
+or those specific APIs you need to run.
+
+510
+00:23:41,758 --> 00:23:43,680
+If you go too small, your
+application won't run.
+
+511
+00:23:43,680 --> 00:23:45,900
+And if you go too big,
+
+512
+00:23:45,900 --> 00:23:48,180
+you're hauling around unnecessary weight,
+
+513
+00:23:48,180 --> 00:23:50,940
+it will slow down your deployments.
+
+514
+00:23:50,940 --> 00:23:55,500
+So Danny, at this point,
+your EKS was configured
+
+515
+00:23:55,500 --> 00:23:59,253
+and ready and what were the next steps?
+
+516
+00:24:01,170 --> 00:24:03,660
+- Well, the first step is encountering
+
+517
+00:24:03,660 --> 00:24:06,030
+our significant first blocker.
+
+518
+00:24:06,030 --> 00:24:08,550
+- Oh, okay, let's talk
+about those blockers.
+
+519
+00:24:08,550 --> 00:24:10,020
+- That's really fun stuff, you know?
+
+520
+00:24:10,020 --> 00:24:12,540
+So the first challenge was about logging.
+
+521
+00:24:12,540 --> 00:24:14,550
+But, you know, launching a container
+
+522
+00:24:14,550 --> 00:24:16,140
+is usually the easy part,
+
+523
+00:24:16,140 --> 00:24:18,930
+and debugging what's
+misbehaving is actually,
+
+524
+00:24:18,930 --> 00:24:21,360
+well, the most interesting
+part about containers.
+
+525
+00:24:21,360 --> 00:24:24,753
+So picture this that you're running on,
+
+526
+00:24:26,220 --> 00:24:27,390
+sorry,
+
+527
+00:24:27,390 --> 00:24:30,120
+picture this that you're
+running on an EC2 machine,
+
+528
+00:24:30,120 --> 00:24:33,360
+and what you'd usually
+use is an XML format,
+
+529
+00:24:33,360 --> 00:24:35,100
+which is standard, reliable,
+
+530
+00:24:35,100 --> 00:24:36,450
+and you'd install a Fluent Bit engine
+
+531
+00:24:36,450 --> 00:24:39,570
+and you'd get those logs right
+into your logging system,
+
+532
+00:24:39,570 --> 00:24:41,640
+which is very easy and very fun to do.
+
+533
+00:24:41,640 --> 00:24:45,090
+But when you go into Kubernetes, Windows
+
+534
+00:24:45,090 --> 00:24:47,400
+and you need JSON format,
+
+535
+00:24:47,400 --> 00:24:49,380
+all that goes out the window.
+
+536
+00:24:49,380 --> 00:24:51,090
+That's not gonna work that easy.
+
+537
+00:24:51,090 --> 00:24:52,410
+So what you're actually gonna do
+
+538
+00:24:52,410 --> 00:24:54,690
+is you're faced with a couple of choices.
+
+539
+00:24:54,690 --> 00:24:57,660
+Do you bake the agent into the Dockerfile?
+
+540
+00:24:57,660 --> 00:24:59,790
+Do you run a sidecar?
+
+541
+00:24:59,790 --> 00:25:02,610
+Do you look for a vendor
+to solve it for you?
+
+542
+00:25:02,610 --> 00:25:05,730
+Or do you rewrite the
+application completely?
+
+543
+00:25:05,730 --> 00:25:06,980
+Just for the logs, right?
+
+544
+00:25:08,340 --> 00:25:09,660
+- So,
+
+545
+00:25:09,660 --> 00:25:12,610
+here's where Windows containers
+
+546
+00:25:13,530 --> 00:25:14,790
+throw you a curve ball
+
+547
+00:25:14,790 --> 00:25:18,450
+that sometimes catches teams off-guard.
+
+548
+00:25:18,450 --> 00:25:23,190
+In the Linux world, logging
+is beautifully simple.
+
+549
+00:25:23,190 --> 00:25:25,710
+Your application, your
+containerized application
+
+550
+00:25:25,710 --> 00:25:28,830
+dumps everything to standard out,
+
+551
+00:25:28,830 --> 00:25:30,900
+the container runtime catches it,
+
+552
+00:25:30,900 --> 00:25:33,990
+and boom, you have logs flying.
+
+553
+00:25:33,990 --> 00:25:35,223
+It works every time.
+
+554
+00:25:36,270 --> 00:25:40,410
+Now, in the Windows world,
+
+555
+00:25:40,410 --> 00:25:44,490
+pods don't generate standard
+out by default, okay?
+
+556
+00:25:44,490 --> 00:25:49,170
+And here comes a solutions
+that's called Log Monitor.
+
+557
+00:25:49,170 --> 00:25:53,100
+Think of it as a universal translator
+
+558
+00:25:53,100 --> 00:25:54,960
+for your Windows login.
+
+559
+00:25:54,960 --> 00:25:56,703
+It formats everything,
+
+560
+00:25:57,690 --> 00:26:01,167
+from ETW, from your Windows Event log
+
+561
+00:26:01,167 --> 00:26:04,020
+and your application-specific logs.
+
+562
+00:26:04,020 --> 00:26:08,430
+And it formats everything
+and pipes it to standard out,
+
+563
+00:26:08,430 --> 00:26:11,460
+something that Linux does by default.
+
+564
+00:26:11,460 --> 00:26:13,530
+It's like a bridge between the two worlds.
+
+565
+00:26:13,530 --> 00:26:17,550
+So how to set up it, it's pretty simple.
+
+566
+00:26:17,550 --> 00:26:19,290
+You take Log Monitor,
+
+567
+00:26:19,290 --> 00:26:24,290
+you integrate it into your
+Windows AMI during the build,
+
+568
+00:26:24,360 --> 00:26:27,810
+you configure your log
+specification as part of,
+
+569
+00:26:27,810 --> 00:26:29,133
+in your pod,
+
+570
+00:26:30,385 --> 00:26:31,440
+you build,
+
+571
+00:26:31,440 --> 00:26:33,660
+you deploy a log forwarder,
+
+572
+00:26:33,660 --> 00:26:35,040
+like a Fluent Bit
+
+573
+00:26:35,040 --> 00:26:39,540
+and configure it to
+send everything onwards,
+
+574
+00:26:39,540 --> 00:26:42,090
+to hopefully, CloudWatch.
+
+575
+00:26:42,090 --> 00:26:42,923
+So,
+
+576
+00:26:44,850 --> 00:26:45,960
+as Danny mentioned,
+
+577
+00:26:45,960 --> 00:26:48,330
+I will share something from experience.
+
+578
+00:26:48,330 --> 00:26:52,290
+So formatting is very important.
+
+579
+00:26:52,290 --> 00:26:54,370
+Always log in
+
+580
+00:26:56,010 --> 00:27:00,300
+structure format like JSON or CSLOG
+
+581
+00:27:00,300 --> 00:27:02,610
+because you will be very grateful
+
+582
+00:27:02,610 --> 00:27:04,830
+if you're debugging at 2:00 AM
+
+583
+00:27:04,830 --> 00:27:07,260
+and you have logs that you can pass.
+
+584
+00:27:07,260 --> 00:27:11,583
+And second thing, less is more
+when it comes to verbosity,
+
+585
+00:27:12,510 --> 00:27:16,230
+keep it quiet unless you
+are actively debugging.
+
+586
+00:27:16,230 --> 00:27:18,843
+Important event can get lost in the noise.
+
+587
+00:27:19,950 --> 00:27:21,303
+So this is the technical.
+
+588
+00:27:22,500 --> 00:27:24,903
+How did it actually played out?
+
+589
+00:27:25,830 --> 00:27:27,600
+- [Danny] Well, we started
+off with Log Monitor,
+
+590
+00:27:27,600 --> 00:27:28,950
+just as you mentioned.
+
+591
+00:27:28,950 --> 00:27:31,290
+And once we plugged it
+in, we actually saw logs.
+
+592
+00:27:31,290 --> 00:27:32,490
+It was great.
+
+593
+00:27:32,490 --> 00:27:33,630
+Worked really well.
+
+594
+00:27:33,630 --> 00:27:37,260
+So we actually were able to
+see our logs within our system
+
+595
+00:27:37,260 --> 00:27:38,880
+and played out pretty well.
+
+596
+00:27:38,880 --> 00:27:40,590
+And it actually confirmed for us,
+
+597
+00:27:40,590 --> 00:27:43,230
+we were able to see a Windows container
+
+598
+00:27:43,230 --> 00:27:44,370
+with a legacy application,
+
+599
+00:27:44,370 --> 00:27:45,780
+and logs flowing through our system.
+
+600
+00:27:45,780 --> 00:27:47,130
+It was good.
+
+601
+00:27:47,130 --> 00:27:49,320
+- [Maya] So seeing the process live logic
+
+602
+00:27:49,320 --> 00:27:52,320
+was kind of pressing, I'm guessing.
+
+603
+00:27:52,320 --> 00:27:56,130
+So did Log Monitor stay
+in your configuration
+
+604
+00:27:56,130 --> 00:27:56,963
+for a long time?
+
+605
+00:27:56,963 --> 00:28:00,000
+- Initially it did, until it didn't.
+
+606
+00:28:00,000 --> 00:28:02,400
+Because we actually found
+out that Log Monitor
+
+607
+00:28:02,400 --> 00:28:05,190
+introduced some unwanted
+baggage and overhead.
+
+608
+00:28:05,190 --> 00:28:07,650
+It kind of made the
+application crash sometimes,
+
+609
+00:28:07,650 --> 00:28:08,970
+it crashed on its own.
+
+610
+00:28:08,970 --> 00:28:11,790
+It wasn't very fun to
+hear and look, of course.
+
+611
+00:28:11,790 --> 00:28:14,100
+And one of the things about it
+
+612
+00:28:14,100 --> 00:28:16,380
+is when you hook one process into another,
+
+613
+00:28:16,380 --> 00:28:19,290
+it's bound to have some
+mysterious activity in it.
+
+614
+00:28:19,290 --> 00:28:21,540
+So it's not very effective.
+
+615
+00:28:21,540 --> 00:28:22,620
+So what we actually did,
+
+616
+00:28:22,620 --> 00:28:24,960
+we modified our application
+logging configuration
+
+617
+00:28:24,960 --> 00:28:26,400
+to log directly to standard out
+
+618
+00:28:26,400 --> 00:28:28,680
+and actually just solve
+the problem for us.
+
+619
+00:28:28,680 --> 00:28:29,520
+And once we did that,
+
+620
+00:28:29,520 --> 00:28:34,320
+we had logging, flowing into
+our centralized logging system
+
+621
+00:28:34,320 --> 00:28:36,330
+and the first challenge was
+just marked as completed.
+
+622
+00:28:36,330 --> 00:28:39,300
+So that was good to go.
+
+623
+00:28:39,300 --> 00:28:41,850
+- So once this hurdle was behind you,
+
+624
+00:28:41,850 --> 00:28:44,340
+what came next in the road
+to production readiness?
+
+625
+00:28:44,340 --> 00:28:47,250
+- Our next challenge was
+a completely different set
+
+626
+00:28:47,250 --> 00:28:48,083
+of difficulties,
+
+627
+00:28:48,083 --> 00:28:50,190
+something completely unexpected.
+
+628
+00:28:50,190 --> 00:28:52,440
+So we were testing various
+application versions,
+
+629
+00:28:52,440 --> 00:28:53,273
+it was great,
+
+630
+00:28:53,273 --> 00:28:56,550
+until we stumbled upon
+something really, really nasty.
+
+631
+00:28:56,550 --> 00:28:57,690
+I mean,
+
+632
+00:28:57,690 --> 00:28:59,790
+what happened was we would
+roll out a new version
+
+633
+00:28:59,790 --> 00:29:03,000
+and we'd saw pod getting
+stuck in terminating state
+
+634
+00:29:03,000 --> 00:29:05,340
+for quite a long time,
+
+635
+00:29:05,340 --> 00:29:06,750
+I mean, like five minutes or something,
+
+636
+00:29:06,750 --> 00:29:08,400
+depending on your configuration,
+
+637
+00:29:08,400 --> 00:29:09,510
+but they were just stuck there
+
+638
+00:29:09,510 --> 00:29:13,170
+instead of just terminating
+process as they should.
+
+639
+00:29:13,170 --> 00:29:14,880
+- So first of all,
+
+640
+00:29:14,880 --> 00:29:16,500
+that sounds very frustrating.
+
+641
+00:29:16,500 --> 00:29:18,990
+Can you tell me what was
+happening under the hood?
+
+642
+00:29:18,990 --> 00:29:19,823
+- Yes.
+
+643
+00:29:19,823 --> 00:29:22,230
+So we actually suspected something
+
+644
+00:29:22,230 --> 00:29:24,930
+between the kubelet and containerd.
+
+645
+00:29:24,930 --> 00:29:28,260
+So in a nutshell, once
+you shut down a container,
+
+646
+00:29:28,260 --> 00:29:31,560
+Kubelet actually sends that
+signal to the container,
+
+647
+00:29:31,560 --> 00:29:33,960
+executes any preStop hooks along the way,
+
+648
+00:29:33,960 --> 00:29:35,910
+and then a container actually shuts down
+
+649
+00:29:35,910 --> 00:29:39,120
+and reports back to kubelet
+that it's gracefully shut down
+
+650
+00:29:39,120 --> 00:29:40,620
+having fun.
+
+651
+00:29:40,620 --> 00:29:43,830
+But actually, for us, it
+wasn't really happening
+
+652
+00:29:43,830 --> 00:29:46,307
+because you see in Linux
+you have the SIGTERM
+
+653
+00:29:46,307 --> 00:29:48,510
+and in Windows you have
+something different,
+
+654
+00:29:48,510 --> 00:29:49,500
+an equivalent of that,
+
+655
+00:29:49,500 --> 00:29:53,250
+which at that point wasn't
+really propagating properly,
+
+656
+00:29:53,250 --> 00:29:54,899
+so we had to really
+investigate to understand
+
+657
+00:29:54,899 --> 00:29:56,223
+what was going on.
+
+658
+00:29:57,107 --> 00:29:59,190
+- So Kubernetes was doing its job,
+
+659
+00:29:59,190 --> 00:30:02,760
+but the signal was not what
+the application was expecting?
+
+660
+00:30:02,760 --> 00:30:04,950
+- Yes, so our application
+was actually coded
+
+661
+00:30:04,950 --> 00:30:08,370
+to handle that specific
+Windows event for shutdown
+
+662
+00:30:08,370 --> 00:30:09,510
+just fine.
+
+663
+00:30:09,510 --> 00:30:11,550
+But Kubernetes tried to send that signal
+
+664
+00:30:11,550 --> 00:30:12,960
+and nothing was happening.
+
+665
+00:30:12,960 --> 00:30:15,900
+So we figured along those lines
+that something was going on.
+
+666
+00:30:15,900 --> 00:30:17,730
+So that stuck period,
+
+667
+00:30:17,730 --> 00:30:20,640
+were actually Kubernetes
+force killing the pod
+
+668
+00:30:20,640 --> 00:30:22,740
+using the graceful termination period.
+
+669
+00:30:22,740 --> 00:30:26,130
+So it was stopping, but not gracefully.
+
+670
+00:30:26,130 --> 00:30:27,363
+Very brutally, in fact.
+
+671
+00:30:28,980 --> 00:30:29,813
+- So,
+
+672
+00:30:31,590 --> 00:30:36,570
+what were you trying to do
+to pinpoint the root cause?
+
+673
+00:30:36,570 --> 00:30:38,580
+- Well, we dug in, well you have to.
+
+674
+00:30:38,580 --> 00:30:42,840
+So we actually found that it
+was a bug in the containerd.
+
+675
+00:30:42,840 --> 00:30:45,120
+At the time, AWS was running
+two different versions
+
+676
+00:30:45,120 --> 00:30:49,560
+for AWS Linux and for Windows.
+
+677
+00:30:49,560 --> 00:30:52,950
+And for Windows, they
+were running Version 166.
+
+678
+00:30:52,950 --> 00:30:54,540
+And apparently in that version
+
+679
+00:30:54,540 --> 00:30:56,760
+a single propagation for
+Windows was not supported,
+
+680
+00:30:56,760 --> 00:30:58,360
+so that's why it wasn't working.
+
+681
+00:31:00,000 --> 00:31:01,170
+- Okay so,
+
+682
+00:31:01,170 --> 00:31:06,083
+this is where Windows
+diverse from Linux again.
+
+683
+00:31:07,890 --> 00:31:12,890
+As Danny said, Kubernetes
+sends a SIGTERM signal
+
+684
+00:31:12,960 --> 00:31:15,630
+the Windows runtime translate
+
+685
+00:31:15,630 --> 00:31:18,450
+to something called control shutdown,
+
+686
+00:31:18,450 --> 00:31:21,120
+which is the Windows native event.
+
+687
+00:31:21,120 --> 00:31:23,220
+If your Windows application
+receives the event,
+
+688
+00:31:23,220 --> 00:31:28,220
+it will just behave normally
+and shut down the application.
+
+689
+00:31:30,300 --> 00:31:34,380
+But the translation is very crucial
+
+690
+00:31:34,380 --> 00:31:37,950
+because Windows applications
+are built to respond only
+
+691
+00:31:37,950 --> 00:31:40,770
+to control shutdown
+event and not to SIGTERM.
+
+692
+00:31:40,770 --> 00:31:44,790
+So the container runtime acts as a bridge
+
+693
+00:31:44,790 --> 00:31:48,300
+between the Kubernetes
+world and the Windows world.
+
+694
+00:31:48,300 --> 00:31:52,980
+So how did you work with
+AWS to handle the gap?
+
+695
+00:31:52,980 --> 00:31:55,509
+- Well, we reached out AWS through GitHub,
+
+696
+00:31:55,509 --> 00:31:56,400
+so it was a great collaboration.
+
+697
+00:31:56,400 --> 00:31:58,410
+We opened an issue and somebody replied.
+
+698
+00:31:58,410 --> 00:32:01,050
+Very straightforward.
+It was very quick to do.
+
+699
+00:32:01,050 --> 00:32:05,100
+And they confirmed that a later
+release fixing that issue,
+
+700
+00:32:05,100 --> 00:32:07,290
+just upgrading a version
+was coming later that year.
+
+701
+00:32:07,290 --> 00:32:09,690
+But unfortunately for us,
+you know, we can't wait.
+
+702
+00:32:09,690 --> 00:32:12,180
+We have to solve these things
+right here and right now.
+
+703
+00:32:12,180 --> 00:32:13,200
+- So you found a workaround?
+
+704
+00:32:13,200 --> 00:32:14,760
+- Of course, we did.
+
+705
+00:32:14,760 --> 00:32:17,070
+What we did, we relied on
+Kubernetes native features.
+
+706
+00:32:17,070 --> 00:32:19,770
+We introduced the lifecycle
+hooks we mentioned earlier,
+
+707
+00:32:19,770 --> 00:32:22,620
+and we tuned in our
+graceful termination period.
+
+708
+00:32:22,620 --> 00:32:25,590
+So we had more control
+over when our application
+
+709
+00:32:25,590 --> 00:32:27,660
+was shutting down and
+how it was shutting down.
+
+710
+00:32:27,660 --> 00:32:29,490
+So it played out well for us.
+
+711
+00:32:29,490 --> 00:32:31,110
+So all we had to do was just sit back
+
+712
+00:32:31,110 --> 00:32:33,990
+and wait till AWS released
+the newer containerd version
+
+713
+00:32:33,990 --> 00:32:35,313
+and we're set to go.
+
+714
+00:32:36,985 --> 00:32:37,818
+- Okay.
+
+715
+00:32:37,818 --> 00:32:40,890
+So once that was behind you
+
+716
+00:32:40,890 --> 00:32:42,900
+and everything was up and running,
+
+717
+00:32:42,900 --> 00:32:45,810
+how did you validate that
+the containerd version
+
+718
+00:32:45,810 --> 00:32:47,580
+was behaving as expected?
+
+719
+00:32:47,580 --> 00:32:49,830
+- We decided on the ultimate
+head-to-head battle.
+
+720
+00:32:49,830 --> 00:32:51,300
+So we compared our EC2 environment
+
+721
+00:32:51,300 --> 00:32:53,220
+to our Kubernetes environment.
+
+722
+00:32:53,220 --> 00:32:54,720
+So they were running side by side,
+
+723
+00:32:54,720 --> 00:32:56,490
+same configuration, same environment.
+
+724
+00:32:56,490 --> 00:32:59,490
+And they were both plugged
+into the same RabbitMQ.
+
+725
+00:32:59,490 --> 00:33:02,520
+And what we saw was a
+mysterious new client
+
+726
+00:33:02,520 --> 00:33:03,960
+just consuming these messages,
+
+727
+00:33:03,960 --> 00:33:06,810
+making our developers actually
+coming over and saying,
+
+728
+00:33:06,810 --> 00:33:08,430
+what is this new container doing?
+
+729
+00:33:08,430 --> 00:33:11,010
+What is this new agent that's
+consuming our messages?
+
+730
+00:33:11,010 --> 00:33:11,843
+And, of course,
+
+731
+00:33:11,843 --> 00:33:14,250
+it was our Windows pod
+just pulling its own way.
+
+732
+00:33:14,250 --> 00:33:17,430
+- So another thing very
+satisfying to watch.
+
+733
+00:33:17,430 --> 00:33:18,263
+- Definitely.
+
+734
+00:33:18,263 --> 00:33:20,250
+Finally we could actually
+see our container,
+
+735
+00:33:20,250 --> 00:33:21,930
+Windows container working properly
+
+736
+00:33:21,930 --> 00:33:25,560
+on real business live logic
+and it was really great to see.
+
+737
+00:33:25,560 --> 00:33:28,560
+So what we did next, we
+bullet-proofed everything.
+
+738
+00:33:28,560 --> 00:33:30,570
+We touched performance,
+we touched the baseline,
+
+739
+00:33:30,570 --> 00:33:32,070
+we continued with testing,
+
+740
+00:33:32,070 --> 00:33:35,280
+and then we're very eager
+to start the next phase.
+
+741
+00:33:35,280 --> 00:33:39,660
+- Okay, so now you are ready
+to test the core premise
+
+742
+00:33:39,660 --> 00:33:44,220
+of cloud native
+transformation, scalability?
+
+743
+00:33:44,220 --> 00:33:45,053
+- Definitely.
+
+744
+00:33:45,053 --> 00:33:46,740
+This is the moment we've
+been waiting for completely
+
+745
+00:33:46,740 --> 00:33:49,440
+because we wanted to test scalability.
+
+746
+00:33:49,440 --> 00:33:50,850
+So what we did,
+
+747
+00:33:50,850 --> 00:33:54,360
+we, of course, plugged in our Windows pods
+
+748
+00:33:54,360 --> 00:33:57,900
+and we tuned them to listen
+to messages on RabbitMQ
+
+749
+00:33:57,900 --> 00:34:01,260
+using Kee-da or KEDA as you prefer.
+
+750
+00:34:01,260 --> 00:34:04,680
+And because we wanted to actually scale
+
+751
+00:34:04,680 --> 00:34:07,530
+based on amount of work to
+be done instead of, you know,
+
+752
+00:34:07,530 --> 00:34:09,000
+just server work,
+
+753
+00:34:09,000 --> 00:34:11,880
+server load, I'm sorry, CPU or memory,
+
+754
+00:34:11,880 --> 00:34:13,890
+which is classic but not enough.
+
+755
+00:34:13,890 --> 00:34:15,450
+Well, not today anyway.
+
+756
+00:34:15,450 --> 00:34:19,470
+And finally, the other half of
+the battle is infrastructure.
+
+757
+00:34:19,470 --> 00:34:20,700
+You can't scale application
+
+758
+00:34:20,700 --> 00:34:22,950
+if your infrastructure doesn't support it.
+
+759
+00:34:22,950 --> 00:34:24,930
+And since we were on Kubernetes
+
+760
+00:34:24,930 --> 00:34:26,220
+and we're already using Karpenter,
+
+761
+00:34:26,220 --> 00:34:28,860
+all we had to do was
+just extend it, right?
+
+762
+00:34:28,860 --> 00:34:30,840
+Just another CRD.
+
+763
+00:34:30,840 --> 00:34:32,820
+- So what kind of result did you see
+
+764
+00:34:32,820 --> 00:34:34,350
+when you tested the scalability?
+
+765
+00:34:34,350 --> 00:34:36,630
+- A great kind of
+results, scaling results.
+
+766
+00:34:36,630 --> 00:34:39,030
+We were actually able to see our pods
+
+767
+00:34:39,030 --> 00:34:43,500
+and our Windows nodes scaling
+up and down very seamlessly
+
+768
+00:34:43,500 --> 00:34:44,550
+and efficiently.
+
+769
+00:34:44,550 --> 00:34:46,530
+So that was a really great
+turning point for us.
+
+770
+00:34:46,530 --> 00:34:48,303
+We enjoyed that spectacle.
+
+771
+00:34:49,920 --> 00:34:51,030
+- Okay so,
+
+772
+00:34:51,030 --> 00:34:53,460
+this is a huge shift from the old model.
+
+773
+00:34:53,460 --> 00:34:55,710
+So beyond the scalability itself,
+
+774
+00:34:55,710 --> 00:34:59,310
+what other improvements did you notice?
+
+775
+00:34:59,310 --> 00:35:01,740
+- We noticed that by running the EC2
+
+776
+00:35:01,740 --> 00:35:03,960
+and the Kubernetes
+equivalent side by side,
+
+777
+00:35:03,960 --> 00:35:07,620
+we actually got a 50% improvement boost.
+
+778
+00:35:07,620 --> 00:35:09,390
+That was completely unexpected.
+
+779
+00:35:09,390 --> 00:35:12,433
+It wasn't just scaling better,
+
+780
+00:35:12,433 --> 00:35:15,720
+it was just actually more
+efficient in how it was working.
+
+781
+00:35:15,720 --> 00:35:18,270
+- And from operational perspective?
+
+782
+00:35:18,270 --> 00:35:19,770
+- That was a real game-changer,
+
+783
+00:35:19,770 --> 00:35:20,700
+because at that point,
+
+784
+00:35:20,700 --> 00:35:22,800
+instead of just debugging
+hundreds of processes,
+
+785
+00:35:22,800 --> 00:35:25,500
+we had a single pod with its own process
+
+786
+00:35:25,500 --> 00:35:28,530
+and we could see logs, traces, metrics,
+
+787
+00:35:28,530 --> 00:35:31,110
+were just beautiful, super
+simple, very straightforward.
+
+788
+00:35:31,110 --> 00:35:31,943
+- So,
+
+789
+00:35:35,490 --> 00:35:38,460
+Karpenter is AWS native,
+
+790
+00:35:38,460 --> 00:35:43,460
+it understands things like spot
+pricing and EC2 commitments.
+
+791
+00:35:43,620 --> 00:35:48,620
+So it can help you not just
+scale up, also to scale down,
+
+792
+00:35:49,830 --> 00:35:54,830
+to consolidate workloads,
+and shut down nodes.
+
+793
+00:35:56,400 --> 00:35:57,233
+So,
+
+794
+00:35:59,550 --> 00:36:02,610
+if we're speaking of costs,
+
+795
+00:36:02,610 --> 00:36:03,960
+let's talk about it,
+
+796
+00:36:03,960 --> 00:36:06,690
+because I think this is
+something that will interest
+
+797
+00:36:06,690 --> 00:36:07,683
+a lot of people.
+
+798
+00:36:09,030 --> 00:36:12,330
+Going to a full-blown Kubernetes cluster,
+
+799
+00:36:12,330 --> 00:36:17,330
+running Windows must have
+its financial trade-offs.
+
+800
+00:36:17,640 --> 00:36:18,473
+- Definitely.
+
+801
+00:36:18,473 --> 00:36:19,350
+I'll be honest about it,
+
+802
+00:36:19,350 --> 00:36:21,360
+because our infrastructure
+
+803
+00:36:21,360 --> 00:36:25,140
+and our cost kind of
+spiked up a little bit,
+
+804
+00:36:25,140 --> 00:36:26,940
+but not by much, you know,
+
+805
+00:36:26,940 --> 00:36:28,230
+on a good note.
+
+806
+00:36:28,230 --> 00:36:30,483
+But it was actually very, very worth it.
+
+807
+00:36:32,009 --> 00:36:34,920
+- How did you justify
+such additional costs?
+
+808
+00:36:34,920 --> 00:36:37,440
+- Well, the operations
+actually weigh out the spend.
+
+809
+00:36:37,440 --> 00:36:38,940
+We got a 50% boost,
+
+810
+00:36:38,940 --> 00:36:41,970
+we got scalability and ease of deployment.
+
+811
+00:36:41,970 --> 00:36:44,340
+I mean, all these things
+when you factor in together,
+
+812
+00:36:44,340 --> 00:36:45,420
+I mean they,
+
+813
+00:36:45,420 --> 00:36:47,520
+well, they kind of justify
+this extra spend, right?
+
+814
+00:36:47,520 --> 00:36:50,640
+So while our server bill
+actually did spike a little bit,
+
+815
+00:36:50,640 --> 00:36:51,960
+factoring our total cost,
+
+816
+00:36:51,960 --> 00:36:54,360
+all the pain and suffering
+we've kind of alleviated
+
+817
+00:36:54,360 --> 00:36:56,960
+from our developers and
+customers was just worth it.
+
+818
+00:36:57,870 --> 00:36:58,703
+- Still,
+
+819
+00:36:58,703 --> 00:37:01,653
+every smart company looks for
+optimization opportunities.
+
+820
+00:37:02,550 --> 00:37:06,180
+What strategies are you exploring,
+
+821
+00:37:06,180 --> 00:37:08,220
+you know, to keep the cost in check?
+
+822
+00:37:08,220 --> 00:37:10,230
+- Well, we tried spot instances,
+
+823
+00:37:10,230 --> 00:37:11,610
+but unfortunately our application
+
+824
+00:37:11,610 --> 00:37:13,590
+couldn't handle the shutdown
+event for two minutes
+
+825
+00:37:13,590 --> 00:37:15,630
+with a notice for spot instances.
+
+826
+00:37:15,630 --> 00:37:16,920
+So that was out the window.
+
+827
+00:37:16,920 --> 00:37:21,920
+Instead, we relied on savings
+plans and reserved instances.
+
+828
+00:37:21,930 --> 00:37:24,570
+For right-sizing, we used
+EC2 Compute Optimizer.
+
+829
+00:37:24,570 --> 00:37:28,020
+And finally, we traced our resource usage
+
+830
+00:37:28,020 --> 00:37:30,030
+using AWS Container Insights
+
+831
+00:37:30,030 --> 00:37:32,760
+to rightsize our actual pod usage.
+
+832
+00:37:32,760 --> 00:37:34,980
+And as you know, the
+cost-efficiency battle
+
+833
+00:37:34,980 --> 00:37:37,350
+and the performance battle never ends.
+
+834
+00:37:37,350 --> 00:37:39,600
+It's an ongoing session.
+
+835
+00:37:39,600 --> 00:37:40,433
+- You are right,
+
+836
+00:37:41,880 --> 00:37:43,230
+it never ends.
+
+837
+00:37:43,230 --> 00:37:45,060
+Just another insight.
+
+838
+00:37:45,060 --> 00:37:49,620
+It's very important to use cost
+explore there is a feature,
+
+839
+00:37:49,620 --> 00:37:54,150
+there is an option to
+enable a cost allocation,
+
+840
+00:37:54,150 --> 00:37:57,060
+split cost allocation
+data, also known as CAD.
+
+841
+00:37:57,060 --> 00:38:01,330
+And you can also leverage
+cloud intelligent dashboards
+
+842
+00:38:02,340 --> 00:38:06,633
+to monitor your container costs.
+
+843
+00:38:07,837 --> 00:38:08,670
+You can set up budgets,
+
+844
+00:38:08,670 --> 00:38:13,670
+you can set up alerts to let you know
+
+845
+00:38:13,727 --> 00:38:17,160
+if you have a cost spike unexpectedly.
+
+846
+00:38:17,160 --> 00:38:19,830
+And as Danny said,
+
+847
+00:38:19,830 --> 00:38:24,690
+the key insight is that cost
+optimization is a journey.
+
+848
+00:38:24,690 --> 00:38:26,890
+It's not a one-time activity
+
+849
+00:38:28,197 --> 00:38:32,940
+and you need to always have
+it in the back of your mind.
+
+850
+00:38:32,940 --> 00:38:37,940
+So what's the long-term impact?
+
+851
+00:38:38,100 --> 00:38:40,140
+- Overall, it's an absolute win.
+
+852
+00:38:40,140 --> 00:38:42,930
+We were able to cut down
+on manual operations,
+
+853
+00:38:42,930 --> 00:38:44,820
+on response times and debugging,
+
+854
+00:38:44,820 --> 00:38:45,870
+and best of all,
+
+855
+00:38:45,870 --> 00:38:48,900
+we're actually able to
+eliminate the infrastructure
+
+856
+00:38:48,900 --> 00:38:51,180
+and bottleneck we had for scalability.
+
+857
+00:38:51,180 --> 00:38:53,520
+And that kind of thing is priceless
+
+858
+00:38:53,520 --> 00:38:55,923
+no matter how you try to go around it.
+
+859
+00:38:57,750 --> 00:38:58,743
+- Okay so,
+
+860
+00:38:59,790 --> 00:39:01,623
+now everything is stable again.
+
+861
+00:39:02,730 --> 00:39:07,470
+What area did you focus on improving next?
+
+862
+00:39:07,470 --> 00:39:09,930
+- We decided to focus on two key areas.
+
+863
+00:39:09,930 --> 00:39:12,210
+One of them being the node creation time
+
+864
+00:39:12,210 --> 00:39:14,640
+and the image pull duration.
+
+865
+00:39:14,640 --> 00:39:15,930
+And if you break it down,
+
+866
+00:39:15,930 --> 00:39:19,050
+then node provisioning actually
+takes around seven minutes
+
+867
+00:39:19,050 --> 00:39:22,020
+from EC2 creation to joining
+the Kubernetes cluster.
+
+868
+00:39:22,020 --> 00:39:26,043
+And images were actually about
+four minutes just to pull.
+
+869
+00:39:29,605 --> 00:39:30,438
+- Okay so,
+
+870
+00:39:31,320 --> 00:39:32,970
+let's focus on the nodes first.
+
+871
+00:39:32,970 --> 00:39:35,760
+Seven minutes is noticeable.
+
+872
+00:39:35,760 --> 00:39:36,593
+- Yeah.
+
+873
+00:39:36,593 --> 00:39:39,150
+So definitely, noticeable.
+
+874
+00:39:39,150 --> 00:39:40,620
+And we dug in,
+
+875
+00:39:40,620 --> 00:39:43,050
+and we saw, of course,
+that EBS configuration
+
+876
+00:39:43,050 --> 00:39:45,510
+was actually the culprit
+for the entire thing.
+
+877
+00:39:45,510 --> 00:39:48,090
+So as you know, the baseline
+when you create an EC2 machine,
+
+878
+00:39:48,090 --> 00:39:52,530
+you get 125 megabytes of
+throughput with IOPS around 3000.
+
+879
+00:39:52,530 --> 00:39:54,480
+That's great for general workloads,
+
+880
+00:39:54,480 --> 00:39:56,850
+normal EC2 machines running, that's fine.
+
+881
+00:39:56,850 --> 00:39:58,110
+But when you're talking about Windows
+
+882
+00:39:58,110 --> 00:40:00,180
+and you want to go
+faster, that's not enough,
+
+883
+00:40:00,180 --> 00:40:02,610
+because Windows needs
+more bootstrapping time
+
+884
+00:40:02,610 --> 00:40:03,750
+and processing.
+
+885
+00:40:03,750 --> 00:40:05,370
+So we did the natural thing.
+
+886
+00:40:05,370 --> 00:40:08,490
+We doubled all the values.
+
+887
+00:40:08,490 --> 00:40:12,420
+And actually it shaved off
+around a minute, even more.
+
+888
+00:40:12,420 --> 00:40:15,750
+So from seven minutes we cut down to six
+
+889
+00:40:15,750 --> 00:40:18,332
+and sometimes even lower than that.
+
+890
+00:40:18,332 --> 00:40:20,250
+And we tried going different directions
+
+891
+00:40:20,250 --> 00:40:22,350
+and trying to explore different values.
+
+892
+00:40:22,350 --> 00:40:23,250
+But that was in vain,
+
+893
+00:40:23,250 --> 00:40:25,530
+unless you're willing
+to go the extra spend
+
+894
+00:40:25,530 --> 00:40:29,340
+and try using io1 volumes, which are,
+
+895
+00:40:29,340 --> 00:40:32,163
+well, you know, very
+expensive and blazing fast.
+
+896
+00:40:33,600 --> 00:40:36,390
+- Okay, so that's a fair
+trade-off eventually.
+
+897
+00:40:36,390 --> 00:40:39,690
+And the second bottleneck,
+the container images,
+
+898
+00:40:39,690 --> 00:40:44,280
+I imagined that around four
+gigabyte of container image
+
+899
+00:40:44,280 --> 00:40:45,723
+is not exactly?
+
+900
+00:40:46,920 --> 00:40:48,480
+- No.
+
+901
+00:40:48,480 --> 00:40:50,730
+So our actual image containers,
+
+902
+00:40:50,730 --> 00:40:52,290
+they wait around four and a half
+
+903
+00:40:52,290 --> 00:40:54,240
+when you take in the baseline image
+
+904
+00:40:54,240 --> 00:40:55,440
+and the application itself.
+
+905
+00:40:55,440 --> 00:40:58,110
+So it turned out to be around 4.5.
+
+906
+00:40:58,110 --> 00:40:59,730
+And when you start pulling it out
+
+907
+00:40:59,730 --> 00:41:01,890
+then it kind of takes a long time.
+
+908
+00:41:01,890 --> 00:41:04,650
+And if you compare it to
+Linux then it's massive,
+
+909
+00:41:04,650 --> 00:41:06,210
+four and a half gigs over to what,
+
+910
+00:41:06,210 --> 00:41:08,190
+a hundred megs on a Linux machine.
+
+911
+00:41:08,190 --> 00:41:11,880
+That's fairly massive.
+
+912
+00:41:11,880 --> 00:41:13,050
+- So what did you do?
+
+913
+00:41:13,050 --> 00:41:15,720
+Did you change the structure
+
+914
+00:41:15,720 --> 00:41:18,900
+or was it something from the AWS side?
+
+915
+00:41:18,900 --> 00:41:21,360
+- Actually, it was a bit of both.
+
+916
+00:41:21,360 --> 00:41:23,580
+We noticed that at some point AWS started
+
+917
+00:41:23,580 --> 00:41:27,330
+pre loading base images onto
+their EKS-optimized AMIs.
+
+918
+00:41:27,330 --> 00:41:29,880
+So after a few AMI version changes,
+
+919
+00:41:29,880 --> 00:41:31,710
+we noticed it was a quiet change
+
+920
+00:41:31,710 --> 00:41:35,100
+and it dropped down from four
+minutes to around 50 seconds.
+
+921
+00:41:35,100 --> 00:41:36,510
+It was great.
+
+922
+00:41:36,510 --> 00:41:37,710
+Yeah, pretty much,
+
+923
+00:41:37,710 --> 00:41:40,440
+but we were not satisfied.
+
+924
+00:41:40,440 --> 00:41:43,713
+We introduced an internal image registry.
+
+925
+00:41:44,610 --> 00:41:45,690
+And by doing so,
+
+926
+00:41:45,690 --> 00:41:48,120
+we were actually able to
+cut down from 50 seconds
+
+927
+00:41:48,120 --> 00:41:53,120
+to 20 seconds, and it's just very fast.
+
+928
+00:41:53,550 --> 00:41:56,400
+- That's a very dramatic improvement.
+
+929
+00:41:56,400 --> 00:41:57,233
+So,
+
+930
+00:41:58,712 --> 00:42:02,190
+what kind of overall impact
+the optimization had?
+
+931
+00:42:02,190 --> 00:42:03,660
+- By combining both results,
+
+932
+00:42:03,660 --> 00:42:06,600
+we were able to slash the
+times from 11, 11 1/2 minutes
+
+933
+00:42:06,600 --> 00:42:08,310
+to around six, sometimes even less,
+
+934
+00:42:08,310 --> 00:42:10,260
+6:30 was being the average.
+
+935
+00:42:10,260 --> 00:42:12,210
+And it actually made all our deployments
+
+936
+00:42:12,210 --> 00:42:14,970
+feel very responsive, very snappy.
+
+937
+00:42:14,970 --> 00:42:16,830
+So it was one of those moments
+
+938
+00:42:16,830 --> 00:42:18,900
+when you invest all this time fine tuning
+
+939
+00:42:18,900 --> 00:42:20,373
+and actually does pay off.
+
+940
+00:42:21,630 --> 00:42:22,463
+- Okay.
+
+941
+00:42:22,463 --> 00:42:26,010
+So things were smooth by then, right?
+
+942
+00:42:26,010 --> 00:42:27,360
+Production was stable?
+
+943
+00:42:27,360 --> 00:42:29,220
+- At that point, yeah,
+we were pretty stable.
+
+944
+00:42:29,220 --> 00:42:31,230
+We were running with four Windows nodes,
+
+945
+00:42:31,230 --> 00:42:33,960
+scaling up and down with 35 Windows pods,
+
+946
+00:42:33,960 --> 00:42:36,570
+with being more services added every day,
+
+947
+00:42:36,570 --> 00:42:38,130
+it was great to look at.
+
+948
+00:42:38,130 --> 00:42:40,440
+And we're actually still running with 50%
+
+949
+00:42:40,440 --> 00:42:42,870
+and improved performance boost
+
+950
+00:42:42,870 --> 00:42:45,690
+and our deployments are
+around six and a half minutes.
+
+951
+00:42:45,690 --> 00:42:46,680
+But the best of all,
+
+952
+00:42:46,680 --> 00:42:51,680
+the dramatic reduction
+in incident response time
+
+953
+00:42:52,470 --> 00:42:56,100
+and all the incidents was just
+blowing us out of the water.
+
+954
+00:42:56,100 --> 00:42:57,286
+- Okay.
+
+955
+00:42:57,286 --> 00:43:01,830
+And what about your team's
+operations day to day?
+
+956
+00:43:01,830 --> 00:43:04,500
+- Well, they shifted from
+actually firefighting all the time
+
+957
+00:43:04,500 --> 00:43:06,480
+to, you know, innovating,
+
+958
+00:43:06,480 --> 00:43:07,980
+writing new features,
+
+959
+00:43:07,980 --> 00:43:11,340
+rewriting, refactoring
+even a bit of the code.
+
+960
+00:43:11,340 --> 00:43:12,173
+- Oh nice.
+
+961
+00:43:12,173 --> 00:43:13,890
+But it wasn't the end, right?
+
+962
+00:43:13,890 --> 00:43:15,120
+- No.
+
+963
+00:43:15,120 --> 00:43:17,013
+Unfortunately, that was not the end.
+
+964
+00:43:17,910 --> 00:43:20,460
+We actually, well,
+
+965
+00:43:20,460 --> 00:43:22,500
+it was a bad ending I have to say.
+
+966
+00:43:22,500 --> 00:43:23,970
+So at this point,
+
+967
+00:43:23,970 --> 00:43:25,560
+we're after the containerd saga,
+
+968
+00:43:25,560 --> 00:43:27,030
+it was very difficult time
+
+969
+00:43:27,030 --> 00:43:29,850
+and then we were finally kind of stable.
+
+970
+00:43:29,850 --> 00:43:30,750
+But at some point,
+
+971
+00:43:30,750 --> 00:43:33,210
+we noticed that when we
+started rolling new versions,
+
+972
+00:43:33,210 --> 00:43:35,550
+the pods really refused to die.
+
+973
+00:43:35,550 --> 00:43:38,340
+You try to force delete
+them, they'd still be there.
+
+974
+00:43:38,340 --> 00:43:39,930
+No termination grace
+period that could help.
+
+975
+00:43:39,930 --> 00:43:41,793
+Nothing. They were just stuck there.
+
+976
+00:43:42,720 --> 00:43:44,920
+At some point, we start
+calling 'em zombies.
+
+977
+00:43:46,080 --> 00:43:46,950
+- I don't know what about you,
+
+978
+00:43:46,950 --> 00:43:48,990
+but I don't like zombies, okay?
+
+979
+00:43:48,990 --> 00:43:50,133
+So,
+
+980
+00:43:51,330 --> 00:43:53,823
+I'm guessing it was very frustrating.
+
+981
+00:43:55,260 --> 00:43:58,380
+How do you begin to hunt it down?
+
+982
+00:43:58,380 --> 00:44:00,570
+- Well, we spent six weeks debugging
+
+983
+00:44:00,570 --> 00:44:02,610
+with AWS Support Team on this.
+
+984
+00:44:02,610 --> 00:44:04,770
+We'd every time get a new theory,
+
+985
+00:44:04,770 --> 00:44:08,550
+understand, see if it
+can work, test it out,
+
+986
+00:44:08,550 --> 00:44:10,260
+no, of course not,
+
+987
+00:44:10,260 --> 00:44:12,930
+and we're just really pulling
+our hair at this point.
+
+988
+00:44:12,930 --> 00:44:15,870
+So we're just hunting it
+down and nothing worked.
+
+989
+00:44:15,870 --> 00:44:19,380
+- So six weeks to hunt is a long time.
+
+990
+00:44:19,380 --> 00:44:22,260
+What did the investigation
+finally turn up?
+
+991
+00:44:22,260 --> 00:44:25,200
+- Well actually, it was
+a critical regression bug
+
+992
+00:44:25,200 --> 00:44:27,420
+at the platform level.
+
+993
+00:44:27,420 --> 00:44:29,280
+It was one of those Windows services,
+
+994
+00:44:29,280 --> 00:44:30,390
+the host networking service,
+
+995
+00:44:30,390 --> 00:44:32,370
+which is actually
+responsible for networking
+
+996
+00:44:32,370 --> 00:44:35,190
+that we have zero visibility into.
+
+997
+00:44:35,190 --> 00:44:37,470
+- So a black box bug?
+
+998
+00:44:37,470 --> 00:44:39,680
+- Yes, definitely a black box bug.
+
+999
+00:44:39,680 --> 00:44:42,780
+- So can you walk me through
+the technical details
+
+1000
+00:44:42,780 --> 00:44:44,970
+of what was actually happening?
+
+1001
+00:44:44,970 --> 00:44:47,310
+- Yes, it turned out to be a nasty,
+
+1002
+00:44:47,310 --> 00:44:49,770
+really nasty race condition.
+
+1003
+00:44:49,770 --> 00:44:51,060
+when one pod was starting
+
+1004
+00:44:51,060 --> 00:44:52,680
+and one was actually shutting down,
+
+1005
+00:44:52,680 --> 00:44:55,200
+it was causing the networking component
+
+1006
+00:44:55,200 --> 00:44:57,450
+to actually create two dual endpoints.
+
+1007
+00:44:57,450 --> 00:44:58,283
+So at one point,
+
+1008
+00:44:58,283 --> 00:45:00,000
+you had a living pod and a dead pod,
+
+1009
+00:45:00,000 --> 00:45:02,460
+kind of, you know,
+Schrodinger's pods if you say.
+
+1010
+00:45:02,460 --> 00:45:04,920
+And that was kind of very
+difficult to understand
+
+1011
+00:45:04,920 --> 00:45:05,910
+how it was working,
+
+1012
+00:45:05,910 --> 00:45:08,733
+but we were able to
+understand and find it.
+
+1013
+00:45:10,290 --> 00:45:11,253
+- Okay so,
+
+1014
+00:45:12,840 --> 00:45:15,150
+what did the AWS do?
+
+1015
+00:45:15,150 --> 00:45:17,610
+- Well, as we were working with AWS,
+
+1016
+00:45:17,610 --> 00:45:19,560
+they decided to, of course,
+
+1017
+00:45:19,560 --> 00:45:21,300
+go into the networking components,
+
+1018
+00:45:21,300 --> 00:45:22,530
+they tore 'em out completely
+
+1019
+00:45:22,530 --> 00:45:26,190
+and traced the bug to a
+recent platform change.
+
+1020
+00:45:26,190 --> 00:45:28,290
+And they fixed it at the AMI level
+
+1021
+00:45:28,290 --> 00:45:29,910
+and they of course coordinate with us.
+
+1022
+00:45:29,910 --> 00:45:30,750
+- Okay so,
+
+1023
+00:45:30,750 --> 00:45:35,250
+but a platform level fix is not
+something that is immediate.
+
+1024
+00:45:35,250 --> 00:45:36,083
+It takes time.
+
+1025
+00:45:36,083 --> 00:45:38,400
+So how did you,
+
+1026
+00:45:38,400 --> 00:45:39,930
+you know,
+
+1027
+00:45:39,930 --> 00:45:41,610
+how did you do in the meantime?
+
+1028
+00:45:41,610 --> 00:45:42,960
+What did you,
+
+1029
+00:45:42,960 --> 00:45:46,110
+when you waited for the
+actual AMI to be released?
+
+1030
+00:45:46,110 --> 00:45:47,610
+- [Danny] We got a little creative.
+
+1031
+00:45:47,610 --> 00:45:50,790
+So we were using Karpenter
+feature to introduce a TTL,
+
+1032
+00:45:50,790 --> 00:45:52,230
+time to live, on our nodes.
+
+1033
+00:45:52,230 --> 00:45:54,300
+So we kind of paved over the problem
+
+1034
+00:45:54,300 --> 00:45:56,790
+by refreshing the nodes every three hours,
+
+1035
+00:45:56,790 --> 00:45:59,700
+meant clearing the bad
+networking state entirely.
+
+1036
+00:45:59,700 --> 00:46:03,300
+And we also introduced some
+manual and automated procedures,
+
+1037
+00:46:03,300 --> 00:46:05,040
+you know, to exercise those demons.
+
+1038
+00:46:05,040 --> 00:46:07,860
+And finally, we added alerts
+just to catch them just enough
+
+1039
+00:46:07,860 --> 00:46:09,540
+or even before it actually happens.
+
+1040
+00:46:09,540 --> 00:46:11,970
+So we could actually tell
+when's it gonna happen.
+
+1041
+00:46:11,970 --> 00:46:12,803
+- [Maya] Okay.
+
+1042
+00:46:12,803 --> 00:46:15,750
+And the final resolution,
+did AMI do the trick?
+
+1043
+00:46:15,750 --> 00:46:16,583
+- [Danny] Definitely.
+
+1044
+00:46:16,583 --> 00:46:18,090
+When AWS released that AMI fixed,
+
+1045
+00:46:18,090 --> 00:46:21,300
+we immediately implemented
+it and it fixed everything.
+
+1046
+00:46:21,300 --> 00:46:23,760
+So we were actually back
+to reliable production,
+
+1047
+00:46:23,760 --> 00:46:26,790
+everything was stable,
+smooth sailing from then.
+
+1048
+00:46:26,790 --> 00:46:27,623
+- [Maya] Okay.
+- And, you know,
+
+1049
+00:46:27,623 --> 00:46:29,550
+it was also a challenging
+time for us as well.
+
+1050
+00:46:29,550 --> 00:46:32,910
+We were working hard with
+AWS and it kind of, you know,
+
+1051
+00:46:32,910 --> 00:46:35,340
+strengthened our partnership deeper.
+
+1052
+00:46:35,340 --> 00:46:37,140
+- That's always good to hear.
+
+1053
+00:46:37,140 --> 00:46:40,380
+So let's zoom out for a minute.
+
+1054
+00:46:40,380 --> 00:46:43,650
+Can you tell me, after all this work,
+
+1055
+00:46:43,650 --> 00:46:48,090
+what did this transformation
+actually achieve for Tipalti?
+
+1056
+00:46:48,090 --> 00:46:48,923
+- Yes.
+
+1057
+00:46:48,923 --> 00:46:51,000
+So definitely our results,
+
+1058
+00:46:51,000 --> 00:46:56,000
+we had a 50% performance boost
+constantly across the board.
+
+1059
+00:46:56,430 --> 00:46:58,440
+When comparing EC2 to Kubernetes,
+
+1060
+00:46:58,440 --> 00:47:01,740
+our scalability just changed completely.
+
+1061
+00:47:01,740 --> 00:47:04,110
+From six hours from creating
+a machine and installing
+
+1062
+00:47:04,110 --> 00:47:06,690
+and everything to just a
+pod running everything.
+
+1063
+00:47:06,690 --> 00:47:08,430
+It meant from six hours to six minutes.
+
+1064
+00:47:08,430 --> 00:47:10,320
+That's incredible on its own.
+
+1065
+00:47:10,320 --> 00:47:12,270
+And also just the installation
+
+1066
+00:47:12,270 --> 00:47:14,430
+and running the pod in the servers itself,
+
+1067
+00:47:14,430 --> 00:47:17,790
+I'm sorry, from running on
+four-minute installation
+
+1068
+00:47:17,790 --> 00:47:21,000
+to just 30 seconds on a
+(indistinct) deployment.
+
+1069
+00:47:21,000 --> 00:47:23,460
+That's a massive improvement for us.
+
+1070
+00:47:23,460 --> 00:47:27,689
+- And how did life change for the team?
+
+1071
+00:47:27,689 --> 00:47:28,920
+- For the better, of course.
+
+1072
+00:47:28,920 --> 00:47:32,760
+So we went from 12-hour
+debugging sessions to just two
+
+1073
+00:47:32,760 --> 00:47:35,550
+because we had clear
+observable telemetry for logs,
+
+1074
+00:47:35,550 --> 00:47:37,920
+traces, and metrics from
+a single pod process
+
+1075
+00:47:37,920 --> 00:47:39,660
+instead of just hundreds of millions
+
+1076
+00:47:39,660 --> 00:47:41,973
+of multiple sub-processes.
+
+1077
+00:47:42,900 --> 00:47:45,660
+- Okay, and from the business side?
+
+1078
+00:47:45,660 --> 00:47:48,480
+- Well, we achieved something
+that was pretty impossible
+
+1079
+00:47:48,480 --> 00:47:49,650
+for us early on.
+
+1080
+00:47:49,650 --> 00:47:51,060
+We had no horizontal scaling
+
+1081
+00:47:51,060 --> 00:47:53,400
+and we actually were able to solve that
+
+1082
+00:47:53,400 --> 00:47:54,600
+using this transition.
+
+1083
+00:47:54,600 --> 00:47:57,723
+So the business impact was
+just incredible for us.
+
+1084
+00:47:58,680 --> 00:48:00,510
+And we employed, of course,
+
+1085
+00:48:00,510 --> 00:48:01,470
+it opened the door, sorry,
+
+1086
+00:48:01,470 --> 00:48:04,980
+it opened the door for
+many modern dose practices
+
+1087
+00:48:04,980 --> 00:48:06,420
+so we can just employ them
+
+1088
+00:48:06,420 --> 00:48:08,553
+and continue innovating our procedures.
+
+1089
+00:48:09,420 --> 00:48:12,990
+- Okay, and when you look
+back on those journeys,
+
+1090
+00:48:12,990 --> 00:48:13,990
+zombie pods and all,
+
+1091
+00:48:14,940 --> 00:48:19,940
+what are the key lessons
+learned you'll share with people
+
+1092
+00:48:20,580 --> 00:48:23,733
+thinking about similar transformation?
+
+1093
+00:48:24,660 --> 00:48:27,150
+- Well, I'll break it
+down into a few key areas
+
+1094
+00:48:27,150 --> 00:48:30,300
+that we actually learned the hard way.
+
+1095
+00:48:30,300 --> 00:48:32,010
+So on a technical perspective,
+
+1096
+00:48:32,010 --> 00:48:34,050
+you gotta start with small changes, okay?
+
+1097
+00:48:34,050 --> 00:48:35,310
+You have to test it out first.
+
+1098
+00:48:35,310 --> 00:48:37,140
+Understand if you can do that.
+
+1099
+00:48:37,140 --> 00:48:38,037
+And by doing so,
+
+1100
+00:48:38,037 --> 00:48:41,100
+you can preserve your
+existing .NET framework
+
+1101
+00:48:41,100 --> 00:48:45,153
+and get modern benefits all the time.
+
+1102
+00:48:46,170 --> 00:48:48,240
+And kind of, you know, when
+you're working with Windows,
+
+1103
+00:48:48,240 --> 00:48:51,240
+just expect some unexpected things,
+
+1104
+00:48:51,240 --> 00:48:53,040
+it's kind of a cliche to say.
+
+1105
+00:48:53,040 --> 00:48:56,100
+But, you know, Windows is
+always behaving like it does.
+
+1106
+00:48:56,100 --> 00:48:59,700
+And from operations perspective,
+engage AWS proactively.
+
+1107
+00:48:59,700 --> 00:49:01,380
+It's saved us so much time
+
+1108
+00:49:01,380 --> 00:49:03,300
+if we would've done that a lot on earlier.
+
+1109
+00:49:03,300 --> 00:49:05,010
+And most of all, document everything.
+
+1110
+00:49:05,010 --> 00:49:07,650
+We documented every single process
+
+1111
+00:49:07,650 --> 00:49:09,900
+and every single execution that we did
+
+1112
+00:49:09,900 --> 00:49:12,123
+just so we have enough
+information to go on.
+
+1113
+00:49:13,320 --> 00:49:16,650
+Strategically, incremental
+monetization works.
+
+1114
+00:49:16,650 --> 00:49:18,720
+It works 100% of the time.
+
+1115
+00:49:18,720 --> 00:49:21,330
+You don't need to rewrite
+your application from scratch,
+
+1116
+00:49:21,330 --> 00:49:22,980
+you can just start small.
+
+1117
+00:49:22,980 --> 00:49:26,310
+And from a crisis management point,
+
+1118
+00:49:26,310 --> 00:49:28,320
+the Schrodinger's pods actually taught us
+
+1119
+00:49:28,320 --> 00:49:30,570
+to be a lot more proactive.
+
+1120
+00:49:30,570 --> 00:49:31,570
+And by doing so,
+
+1121
+00:49:31,570 --> 00:49:34,530
+we're actually able to
+overcome all these issues
+
+1122
+00:49:34,530 --> 00:49:35,363
+that we faced.
+
+1123
+00:49:35,363 --> 00:49:38,880
+So comprehensive monitoring
+definitely is a must,
+
+1124
+00:49:38,880 --> 00:49:41,370
+especially for these types of things.
+
+1125
+00:49:41,370 --> 00:49:44,910
+And you should also have
+mitigation strategies.
+
+1126
+00:49:44,910 --> 00:49:46,500
+Don't just blindly go into something.
+
+1127
+00:49:46,500 --> 00:49:49,260
+You have to think some sort of way
+
+1128
+00:49:49,260 --> 00:49:50,560
+for the unexpected issues.
+
+1129
+00:49:52,290 --> 00:49:53,123
+- So,
+
+1130
+00:49:54,990 --> 00:49:57,750
+there are four critical factors
+
+1131
+00:49:57,750 --> 00:50:02,750
+that usually contribute to
+a successful transformation.
+
+1132
+00:50:03,750 --> 00:50:06,360
+So the first one is executive support.
+
+1133
+00:50:06,360 --> 00:50:10,110
+And I don't just mean someone
+writing off on the check.
+
+1134
+00:50:10,110 --> 00:50:12,960
+Executive support means management.
+
+1135
+00:50:12,960 --> 00:50:17,493
+Understanding that this is
+not just an IT project, okay?
+
+1136
+00:50:19,560 --> 00:50:21,330
+It's a business transformation.
+
+1137
+00:50:21,330 --> 00:50:23,410
+And one of the biggest
+
+1138
+00:50:25,170 --> 00:50:29,070
+transformation killers
+is organizational silos.
+
+1139
+00:50:29,070 --> 00:50:34,070
+Solutions that works on
+perfectly in isolation,
+
+1140
+00:50:34,680 --> 00:50:37,533
+often fail in organizational reality.
+
+1141
+00:50:38,520 --> 00:50:42,960
+So it's very important to
+create the transformation teams
+
+1142
+00:50:42,960 --> 00:50:46,050
+with developers, operations, security,
+
+1143
+00:50:46,050 --> 00:50:47,460
+business stakeholders,
+
+1144
+00:50:47,460 --> 00:50:51,633
+people who had a real
+decision-making authority.
+
+1145
+00:50:52,980 --> 00:50:57,270
+And I'm guessing that if
+you want to containerize,
+
+1146
+00:50:57,270 --> 00:50:58,920
+you want to do it yesterday,
+
+1147
+00:50:58,920 --> 00:51:01,653
+but this is not a race.
+
+1148
+00:51:03,420 --> 00:51:06,843
+It's like you don't want to
+migrate during peak hours.
+
+1149
+00:51:08,130 --> 00:51:11,760
+You need to take it easy
+
+1150
+00:51:11,760 --> 00:51:15,363
+to start with non-critical workloads,
+
+1151
+00:51:17,100 --> 00:51:18,810
+learn from experience,
+
+1152
+00:51:18,810 --> 00:51:22,230
+live enough time for
+testing, for troubleshooting,
+
+1153
+00:51:22,230 --> 00:51:24,480
+and for the unexpected.
+
+1154
+00:51:24,480 --> 00:51:26,700
+And last,
+
+1155
+00:51:26,700 --> 00:51:29,850
+container technology is always evolving.
+
+1156
+00:51:29,850 --> 00:51:34,623
+Successful teams build
+learning into their DNA.
+
+1157
+00:51:35,580 --> 00:51:37,740
+Not just initial training,
+
+1158
+00:51:37,740 --> 00:51:42,713
+but an ongoing education
+program, feedback loops,
+
+1159
+00:51:43,620 --> 00:51:46,920
+best teams leverage support proactively,
+
+1160
+00:51:46,920 --> 00:51:50,190
+using expertise to optimize architecture
+
+1161
+00:51:50,190 --> 00:51:53,520
+and always stay ahead of best practices,
+
+1162
+00:51:53,520 --> 00:51:55,830
+not just fix problems.
+
+1163
+00:51:55,830 --> 00:51:59,850
+And now, Danny,
+
+1164
+00:51:59,850 --> 00:52:02,430
+what's next for Tipalti?
+
+1165
+00:52:02,430 --> 00:52:05,880
+- Well, the improvement game never stops.
+
+1166
+00:52:05,880 --> 00:52:07,230
+So we're gonna continue exploring
+
+1167
+00:52:07,230 --> 00:52:09,030
+how can we make everything much faster
+
+1168
+00:52:09,030 --> 00:52:11,010
+from node provisioning to image pulls,
+
+1169
+00:52:11,010 --> 00:52:14,490
+because we want to be as close
+to Linux speed as possible.
+
+1170
+00:52:14,490 --> 00:52:17,730
+Next, we're gonna be working
+on more cost optimizations
+
+1171
+00:52:17,730 --> 00:52:20,250
+because, you know, like I
+mentioned, this never ends,
+
+1172
+00:52:20,250 --> 00:52:21,720
+and you wanna save as much as you can
+
+1173
+00:52:21,720 --> 00:52:24,870
+so we're gonna be heading
+that direction as well.
+
+1174
+00:52:24,870 --> 00:52:27,090
+We're also gonna be tuning in better
+
+1175
+00:52:27,090 --> 00:52:28,620
+for our scaling policies.
+
+1176
+00:52:28,620 --> 00:52:32,400
+So gonna be better scaling for
+us as well, more proactive.
+
+1177
+00:52:32,400 --> 00:52:35,580
+And all this endeavor actually
+created a great foundation
+
+1178
+00:52:35,580 --> 00:52:36,720
+for our microservices,
+
+1179
+00:52:36,720 --> 00:52:39,360
+so we can port legacy
+applications onto microservices
+
+1180
+00:52:39,360 --> 00:52:41,850
+without a pressure of a complete rewrite.
+
+1181
+00:52:41,850 --> 00:52:45,633
+- And what about your
+broader technology strategy?
+
+1182
+00:52:46,655 --> 00:52:47,905
+- Well, GitOps.
+
+1183
+00:52:50,295 --> 00:52:51,360
+GitOps is the best.
+
+1184
+00:52:51,360 --> 00:52:53,400
+So what we're gonna do
+
+1185
+00:52:53,400 --> 00:52:55,750
+is we're gonna implement
+more GitOps workflows.
+
+1186
+00:52:56,940 --> 00:52:58,850
+And well, by doing so,
+
+1187
+00:52:58,850 --> 00:53:01,320
+it can actually work with better
+
+1188
+00:53:01,320 --> 00:53:04,230
+and more modern DevOps
+applications and practices.
+
+1189
+00:53:04,230 --> 00:53:06,333
+So that's not gonna end anytime soon.
+
+1190
+00:53:07,680 --> 00:53:08,513
+- Okay.
+
+1191
+00:53:14,610 --> 00:53:15,443
+So,
+
+1192
+00:53:17,460 --> 00:53:18,633
+let me just say that,
+
+1193
+00:53:19,470 --> 00:53:22,120
+that's a great example
+what Tipalti did that
+
+1194
+00:53:24,810 --> 00:53:27,270
+a successful transformation
+
+1195
+00:53:27,270 --> 00:53:31,230
+can enable broader modernization effort.
+
+1196
+00:53:31,230 --> 00:53:34,710
+The containerization is not the end goal,
+
+1197
+00:53:34,710 --> 00:53:37,620
+but it helps set the foundations
+
+1198
+00:53:37,620 --> 00:53:39,513
+on continuous modernization.
+
+1199
+00:53:41,223 --> 00:53:43,373
+And that's the real
+value of this approach.
+
+1200
+00:53:46,590 --> 00:53:50,310
+If you want to continue your
+containerization journey,
+
+1201
+00:53:50,310 --> 00:53:53,910
+there are some resources
+we put here to help,
+
+1202
+00:53:53,910 --> 00:53:57,600
+you have the Windows Containers
+on AWS Immersion Day,
+
+1203
+00:53:57,600 --> 00:54:00,810
+Best Practices for Windows on Amazon EKS,
+
+1204
+00:54:00,810 --> 00:54:05,550
+and check out Windows
+Container in Kubernetes.
+
+1205
+00:54:05,550 --> 00:54:08,883
+Take a picture, scan the
+QR and go check it out.
+
+1206
+00:54:10,500 --> 00:54:13,320
+And in addition,
+
+1207
+00:54:13,320 --> 00:54:14,313
+beyond that,
+
+1208
+00:54:15,417 --> 00:54:17,820
+if you don't know, we
+have AWS Skill Builder,
+
+1209
+00:54:17,820 --> 00:54:20,710
+which is your gateway to mastering
+
+1210
+00:54:21,750 --> 00:54:24,750
+all things AWS cloud technology.
+
+1211
+00:54:24,750 --> 00:54:29,750
+There are over a thousand
+free, self-pacing,
+
+1212
+00:54:30,120 --> 00:54:31,980
+expert-led courses.
+
+1213
+00:54:31,980 --> 00:54:33,900
+You can follow guided journeys
+
+1214
+00:54:33,900 --> 00:54:38,343
+or just jump directly to the
+topics that interest you.
+
+1215
+00:54:39,180 --> 00:54:40,920
+And with that,
+
+1216
+00:54:40,920 --> 00:54:44,430
+thank you very much for being here today.
+
+1217
+00:54:44,430 --> 00:54:47,580
+Feel free to reach out and stay tuned,
+
+1218
+00:54:47,580 --> 00:54:51,418
+because the blog post on this
+journey is in the making.
+
+1219
+00:54:51,418 --> 00:54:52,500
+(audience applauding)
+
+1220
+00:54:52,500 --> 00:54:54,143
+- [Danny] Thank you.
+- [Maya] Thank you.
+

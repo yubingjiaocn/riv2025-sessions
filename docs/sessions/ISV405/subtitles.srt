@@ -1,0 +1,5799 @@
+1
+00:00:00,210 --> 00:00:01,360
+- [Peter] Hi everybody.
+
+2
+00:00:02,820 --> 00:00:04,110
+Thanks for being here.
+
+3
+00:00:04,110 --> 00:00:07,350
+We know that investing in travel
+
+4
+00:00:07,350 --> 00:00:10,200
+and investing in being
+here is no small thing.
+
+5
+00:00:10,200 --> 00:00:12,513
+So welcome to Las Vegas.
+Welcome to re:Invent.
+
+6
+00:00:13,770 --> 00:00:17,350
+We know that customers
+have this expectation
+
+7
+00:00:18,300 --> 00:00:20,910
+around where their data is,
+
+8
+00:00:20,910 --> 00:00:25,710
+and ISVs have this insane
+covenant that you are holding
+
+9
+00:00:25,710 --> 00:00:29,670
+and handling customer data
+on behalf of that customer.
+
+10
+00:00:29,670 --> 00:00:31,290
+And if you're doing it on AWS,
+
+11
+00:00:31,290 --> 00:00:33,630
+there are some very definite ways
+
+12
+00:00:33,630 --> 00:00:36,150
+to not only secure customer data,
+
+13
+00:00:36,150 --> 00:00:38,400
+but to provide the necessary assurances
+
+14
+00:00:38,400 --> 00:00:40,410
+and transparency so that customers
+
+15
+00:00:40,410 --> 00:00:42,450
+can form independent opinions
+
+16
+00:00:42,450 --> 00:00:44,973
+that you're doing the
+right thing in over time.
+
+17
+00:00:46,230 --> 00:00:47,460
+My name is Peter O'Donnell.
+
+18
+00:00:47,460 --> 00:00:48,900
+I'm a principal solutions architect.
+
+19
+00:00:48,900 --> 00:00:50,490
+I've been with Amazon Web Services
+
+20
+00:00:50,490 --> 00:00:52,320
+for just about 10 and a half years.
+
+21
+00:00:52,320 --> 00:00:54,030
+This is my 12th re:Invent
+
+22
+00:00:54,030 --> 00:00:57,210
+and I'm joined today by Jenn
+Reed, another principal SA
+
+23
+00:00:57,210 --> 00:00:58,530
+who covers one of our largest
+
+24
+00:00:58,530 --> 00:01:00,813
+and most strategically critical ISVs.
+
+25
+00:01:02,010 --> 00:01:02,970
+So we're gonna talk a little bit
+
+26
+00:01:02,970 --> 00:01:06,450
+about what this means to protect data
+
+27
+00:01:06,450 --> 00:01:08,907
+and where cryptography
+plays a role in that
+
+28
+00:01:08,907 --> 00:01:11,970
+and the history of what
+it means to manage keys.
+
+29
+00:01:11,970 --> 00:01:16,970
+We have come a long way from
+very expensive, hard to manage,
+
+30
+00:01:17,220 --> 00:01:21,480
+cumbersome, single tenant, gigantic HSMs
+
+31
+00:01:21,480 --> 00:01:23,400
+that live in your own building
+
+32
+00:01:23,400 --> 00:01:26,370
+to a much more flexible
+cloud-like capability.
+
+33
+00:01:26,370 --> 00:01:29,550
+With AWS KMS, our key management service,
+
+34
+00:01:29,550 --> 00:01:34,550
+which does still indeed have
+very expensive HSMs behind it.
+
+35
+00:01:35,670 --> 00:01:38,280
+We talk about why customers care
+
+36
+00:01:38,280 --> 00:01:42,733
+about bringing their own
+key and what BYOK means.
+
+37
+00:01:42,733 --> 00:01:44,460
+'Cause as it turns out, we've overloaded
+
+38
+00:01:44,460 --> 00:01:46,113
+that term in our history.
+
+39
+00:01:47,190 --> 00:01:49,710
+We talk about two different
+ways of approaching
+
+40
+00:01:49,710 --> 00:01:51,870
+what it means to protected
+secure customer data
+
+41
+00:01:51,870 --> 00:01:53,250
+with customer keys.
+
+42
+00:01:53,250 --> 00:01:54,930
+And then finally, Jenn's
+gonna show you some
+
+43
+00:01:54,930 --> 00:01:57,450
+really neat software, some
+code that we've developed
+
+44
+00:01:57,450 --> 00:01:59,220
+to give you an example and a taste
+
+45
+00:01:59,220 --> 00:02:01,420
+for what it takes to
+implement these things.
+
+46
+00:02:02,670 --> 00:02:06,210
+So I mentioned that we've
+overloaded the term BYOK.
+
+47
+00:02:06,210 --> 00:02:07,980
+In the beginning we had a very large
+
+48
+00:02:07,980 --> 00:02:09,870
+and important financial services customer
+
+49
+00:02:09,870 --> 00:02:12,180
+who demanded that we create something
+
+50
+00:02:12,180 --> 00:02:16,353
+that was a "big red
+button" in their words.
+
+51
+00:02:17,220 --> 00:02:21,120
+And this became a feature
+known as import key material.
+
+52
+00:02:21,120 --> 00:02:23,130
+If you're familiar with
+KMS, there's this idea
+
+53
+00:02:23,130 --> 00:02:27,030
+of a customer managed key, a CMK.
+
+54
+00:02:27,030 --> 00:02:30,720
+And you think about it as
+a key and it has a key ID
+
+55
+00:02:30,720 --> 00:02:33,660
+and it even has an ARN,
+an Amazon resource name.
+
+56
+00:02:33,660 --> 00:02:36,483
+But the CMK is not the actual key.
+
+57
+00:02:37,440 --> 00:02:39,990
+The key is a notional construct.
+
+58
+00:02:39,990 --> 00:02:42,573
+And there is in fact
+key material within it.
+
+59
+00:02:43,680 --> 00:02:45,630
+The original BYOK feature allowed you
+
+60
+00:02:45,630 --> 00:02:48,807
+to import your own key
+material into that thing.
+
+61
+00:02:48,807 --> 00:02:51,510
+And that was actually
+not the interesting part.
+
+62
+00:02:51,510 --> 00:02:54,360
+The interesting part is
+that we allow you to burn
+
+63
+00:02:54,360 --> 00:02:57,270
+that key material instantaneously
+
+64
+00:02:57,270 --> 00:03:00,783
+while keeping the construct of the CMK.
+
+65
+00:03:01,920 --> 00:03:04,420
+That allows a customer to
+hit that big red button,
+
+66
+00:03:05,340 --> 00:03:08,430
+remove the key material
+from inside of that CMK,
+
+67
+00:03:08,430 --> 00:03:13,430
+but later reimport it and
+undo that big red button.
+
+68
+00:03:14,520 --> 00:03:17,580
+What we're primarily talking
+about today when we say BYOK
+
+69
+00:03:17,580 --> 00:03:21,540
+is allowing customers to
+have their own key material
+
+70
+00:03:21,540 --> 00:03:24,750
+and their own key to protect their data.
+
+71
+00:03:24,750 --> 00:03:27,270
+And that is the high order tenet.
+
+72
+00:03:27,270 --> 00:03:30,600
+The high order tenet is that customer data
+
+73
+00:03:30,600 --> 00:03:34,260
+ought to be protected by customer keys.
+
+74
+00:03:34,260 --> 00:03:37,050
+This is the expectation
+that the engineers have.
+
+75
+00:03:37,050 --> 00:03:39,570
+This is the expectation
+that the executives have.
+
+76
+00:03:39,570 --> 00:03:42,180
+This is the expectation that regulators
+
+77
+00:03:42,180 --> 00:03:44,580
+and other third party
+stakeholders may have.
+
+78
+00:03:44,580 --> 00:03:47,160
+It's a very simple, straightforward idea.
+
+79
+00:03:47,160 --> 00:03:49,590
+If it's customer data,
+it should be protected
+
+80
+00:03:49,590 --> 00:03:51,000
+with customer keys.
+
+81
+00:03:51,000 --> 00:03:53,790
+And indeed we take that
+tenet very seriously
+
+82
+00:03:53,790 --> 00:03:57,360
+in our own services when
+we store and process data
+
+83
+00:03:57,360 --> 00:04:01,200
+on your behalf across
+dozens and dozens and dozens
+
+84
+00:04:01,200 --> 00:04:03,870
+of such services, from
+databases to file systems,
+
+85
+00:04:03,870 --> 00:04:06,300
+to the object store and everything else,
+
+86
+00:04:06,300 --> 00:04:10,030
+we allow our customers to protect
+their data with their keys
+
+87
+00:04:10,890 --> 00:04:15,180
+in some as ISVs, same covenant,
+same set of expectations
+
+88
+00:04:15,180 --> 00:04:16,713
+for largely the same reasons.
+
+89
+00:04:18,090 --> 00:04:20,460
+So Slack was one of the first big ISVs
+
+90
+00:04:20,460 --> 00:04:22,140
+that really got this right.
+
+91
+00:04:22,140 --> 00:04:24,570
+And you could imagine
+if you've used Slack,
+
+92
+00:04:24,570 --> 00:04:25,980
+and we certainly do,
+
+93
+00:04:25,980 --> 00:04:28,290
+there's a lot of
+confidential stuff in Slack,
+
+94
+00:04:28,290 --> 00:04:29,520
+whether it's messages,
+
+95
+00:04:29,520 --> 00:04:32,760
+the contact data itself, exchanging files.
+
+96
+00:04:32,760 --> 00:04:34,680
+And of course Slack these days can do lots
+
+97
+00:04:34,680 --> 00:04:37,290
+of other really interesting
+collaboration things.
+
+98
+00:04:37,290 --> 00:04:41,370
+But this idea of what it
+means to have your own key
+
+99
+00:04:41,370 --> 00:04:44,583
+is often perceived differently
+by different customers.
+
+100
+00:04:45,840 --> 00:04:50,460
+We generally take it to mean
+that it's a customer CMK,
+
+101
+00:04:50,460 --> 00:04:53,490
+in a customer account that is shared
+
+102
+00:04:53,490 --> 00:04:56,970
+cross account to the ISV to make use of,
+
+103
+00:04:56,970 --> 00:04:58,583
+and that's what we're gonna talk about.
+
+104
+00:04:59,430 --> 00:05:01,740
+So when customers think
+about this problem, right,
+
+105
+00:05:01,740 --> 00:05:04,290
+I think it's important as
+ISVs that you understand
+
+106
+00:05:04,290 --> 00:05:05,700
+where they are coming from
+
+107
+00:05:05,700 --> 00:05:08,043
+and why they are asking this of you.
+
+108
+00:05:09,187 --> 00:05:12,540
+"I need to have my keys protect my data."
+
+109
+00:05:12,540 --> 00:05:14,940
+And I mentioned this idea
+of the big red button.
+
+110
+00:05:16,440 --> 00:05:20,220
+That because of this strange
+role where you are handling
+
+111
+00:05:20,220 --> 00:05:22,320
+and processing customer
+data on their behalf,
+
+112
+00:05:22,320 --> 00:05:25,860
+that's core to your business,
+it's a covenant of trust.
+
+113
+00:05:25,860 --> 00:05:28,950
+But customers still
+will very often believe
+
+114
+00:05:28,950 --> 00:05:31,900
+that they need a big red button
+
+115
+00:05:32,850 --> 00:05:34,740
+so that if you have an event
+
+116
+00:05:34,740 --> 00:05:38,580
+or they spill something
+into your software,
+
+117
+00:05:38,580 --> 00:05:41,400
+which depending on what
+you're using, if it's logging,
+
+118
+00:05:41,400 --> 00:05:43,140
+everybody who's in the logging business
+
+119
+00:05:43,140 --> 00:05:44,880
+should know about log spills.
+
+120
+00:05:44,880 --> 00:05:48,000
+The customer will want a mechanism,
+
+121
+00:05:48,000 --> 00:05:51,900
+a mechanism to immediately
+disable access to that data.
+
+122
+00:05:51,900 --> 00:05:54,120
+And that's the big red button.
+
+123
+00:05:54,120 --> 00:05:56,340
+But there's also dimensions of assurance
+
+124
+00:05:56,340 --> 00:05:57,990
+that are required here.
+
+125
+00:05:57,990 --> 00:05:59,790
+Customers want to observe
+
+126
+00:05:59,790 --> 00:06:02,640
+how you are using the
+key material over time
+
+127
+00:06:02,640 --> 00:06:05,850
+and how you are implementing the covenant
+
+128
+00:06:05,850 --> 00:06:07,560
+of what you agreed to on paper
+
+129
+00:06:07,560 --> 00:06:09,810
+or what you agreed to in a meeting.
+
+130
+00:06:09,810 --> 00:06:12,630
+And that's also part of what it means
+
+131
+00:06:12,630 --> 00:06:15,003
+to let them use their own key.
+
+132
+00:06:15,960 --> 00:06:20,960
+On AWS, we log almost all
+of our APIs into CloudTrail.
+
+133
+00:06:21,327 --> 00:06:23,460
+And I say almost all
+
+134
+00:06:23,460 --> 00:06:25,470
+because there are data plane events in S3,
+
+135
+00:06:25,470 --> 00:06:28,080
+that's actually something
+you have to go turn on.
+
+136
+00:06:28,080 --> 00:06:31,920
+But KMS logs everything, all encrypt,
+
+137
+00:06:31,920 --> 00:06:34,380
+decrypt generate data key, describe key,
+
+138
+00:06:34,380 --> 00:06:37,053
+there's a bunch of other
+APIs, are in CloudTrail.
+
+139
+00:06:38,160 --> 00:06:39,840
+What's interesting about KMS
+
+140
+00:06:39,840 --> 00:06:41,590
+is that if you use it cross account
+
+141
+00:06:42,870 --> 00:06:47,580
+that a calling principle
+in one account using S3
+
+142
+00:06:47,580 --> 00:06:49,950
+but references a key in another account,
+
+143
+00:06:49,950 --> 00:06:54,510
+we output two events, identical events,
+
+144
+00:06:54,510 --> 00:06:56,790
+but into two separate trails.
+
+145
+00:06:56,790 --> 00:06:59,160
+The trail of the calling principle,
+
+146
+00:06:59,160 --> 00:07:01,203
+which might be your ISV service account,
+
+147
+00:07:02,130 --> 00:07:05,250
+and the trail that belongs to the account
+
+148
+00:07:05,250 --> 00:07:07,833
+that holds the resource,
+that is to say the key.
+
+149
+00:07:08,760 --> 00:07:11,040
+And customers really like this.
+
+150
+00:07:11,040 --> 00:07:13,620
+So you'll still have your own CloudTrail
+
+151
+00:07:13,620 --> 00:07:16,590
+where you can see your
+use of the customer's key,
+
+152
+00:07:16,590 --> 00:07:18,350
+but because the key
+belongs to the customer
+
+153
+00:07:18,350 --> 00:07:20,880
+in the other account, they
+will get corresponding
+
+154
+00:07:20,880 --> 00:07:22,470
+CloudTrail records as well.
+
+155
+00:07:22,470 --> 00:07:23,820
+And this is very important.
+
+156
+00:07:25,560 --> 00:07:27,180
+I mentioned, you know, this
+idea of the big red button,
+
+157
+00:07:27,180 --> 00:07:29,910
+but disabling and revoking
+access, customers want to be able
+
+158
+00:07:29,910 --> 00:07:32,610
+to also control the lifecycle of that key,
+
+159
+00:07:32,610 --> 00:07:35,673
+maybe give you a new key
+after a period of time.
+
+160
+00:07:36,780 --> 00:07:38,550
+By thinking of this way
+
+161
+00:07:38,550 --> 00:07:42,420
+and building the support into
+your products from the outset,
+
+162
+00:07:42,420 --> 00:07:43,830
+you can support that.
+
+163
+00:07:43,830 --> 00:07:45,810
+Oh, we're gonna start
+using a different key.
+
+164
+00:07:45,810 --> 00:07:48,810
+Sure, go into those settings control panel
+
+165
+00:07:48,810 --> 00:07:51,060
+and change the ARN of the key
+
+166
+00:07:51,060 --> 00:07:53,560
+and of course make sure
+you properly authorize it.
+
+167
+00:07:55,268 --> 00:07:58,230
+And there's also a
+compliance dimension to this.
+
+168
+00:07:58,230 --> 00:08:02,010
+Whether it's compliance
+with an external entity
+
+169
+00:08:02,010 --> 00:08:03,900
+like a regulator or anything else,
+
+170
+00:08:03,900 --> 00:08:06,900
+or even just internal controls compliance,
+
+171
+00:08:06,900 --> 00:08:10,438
+that being able to protect
+the data is not enough,
+
+172
+00:08:10,438 --> 00:08:12,630
+you also must be able to tell that story
+
+173
+00:08:12,630 --> 00:08:14,643
+and provide assurances over time.
+
+174
+00:08:15,840 --> 00:08:19,560
+In the international market,
+the idea of data sovereignty
+
+175
+00:08:19,560 --> 00:08:21,780
+becomes even more important,
+
+176
+00:08:21,780 --> 00:08:23,220
+especially in Europe now
+
+177
+00:08:23,220 --> 00:08:26,730
+and increasingly in
+jurisdictions all over the world.
+
+178
+00:08:26,730 --> 00:08:30,390
+There is again this heightened
+emphasis on the core tenet
+
+179
+00:08:30,390 --> 00:08:33,700
+that my data should be
+protected with my keys
+
+180
+00:08:34,590 --> 00:08:37,263
+and that can help lead to
+data sovereignty outcomes.
+
+181
+00:08:38,820 --> 00:08:42,270
+And third party
+stakeholders also love this.
+
+182
+00:08:42,270 --> 00:08:45,570
+The beginning of my career I
+worked for a very large bank
+
+183
+00:08:45,570 --> 00:08:47,310
+through AWS, I worked for AWS,
+
+184
+00:08:47,310 --> 00:08:49,560
+but they were by big baby, my customer.
+
+185
+00:08:49,560 --> 00:08:51,900
+And they made a clear decision early on
+
+186
+00:08:51,900 --> 00:08:54,390
+that all data in the
+cloud would be encrypted.
+
+187
+00:08:54,390 --> 00:08:57,180
+Today that's a very normal thing to say.
+
+188
+00:08:57,180 --> 00:09:00,240
+10 years ago it was actually
+pretty revolutionary
+
+189
+00:09:00,240 --> 00:09:01,200
+that they were gonna A,
+
+190
+00:09:01,200 --> 00:09:03,270
+move a bank system of
+record to the cloud at all
+
+191
+00:09:03,270 --> 00:09:06,990
+and B, demand that ubiquitous encryption.
+
+192
+00:09:06,990 --> 00:09:09,003
+But today this is table stakes.
+
+193
+00:09:09,960 --> 00:09:12,710
+And if your product doesn't
+support these capabilities,
+
+194
+00:09:13,980 --> 00:09:15,450
+there will be customers who will see that
+
+195
+00:09:15,450 --> 00:09:19,440
+as a gating decision, a
+purchasing gating decision
+
+196
+00:09:19,440 --> 00:09:21,540
+that if they can't have
+their data protected
+
+197
+00:09:21,540 --> 00:09:25,083
+by their keys, they might not buy.
+
+198
+00:09:27,330 --> 00:09:31,110
+So the motivation for
+you is, as I just said,
+
+199
+00:09:31,110 --> 00:09:32,583
+that this is table stakes.
+
+200
+00:09:33,570 --> 00:09:35,040
+Having been here since 2015,
+
+201
+00:09:35,040 --> 00:09:37,800
+I can tell you when this
+wonderful customer of mine,
+
+202
+00:09:37,800 --> 00:09:39,780
+of ours, first said this,
+
+203
+00:09:39,780 --> 00:09:41,820
+ubiquitous encryption was a big idea.
+
+204
+00:09:41,820 --> 00:09:44,970
+We didn't really have ubiquitous
+encryption at the time,
+
+205
+00:09:44,970 --> 00:09:46,140
+in 2015.
+
+206
+00:09:46,140 --> 00:09:47,043
+Today we do.
+
+207
+00:09:48,000 --> 00:09:50,790
+But that also means that
+your products must as well.
+
+208
+00:09:50,790 --> 00:09:53,130
+And even if you support encryption,
+
+209
+00:09:53,130 --> 00:09:55,620
+you need to be able to tell a rich story
+
+210
+00:09:55,620 --> 00:09:58,200
+that if it's just an encrypted file system
+
+211
+00:09:58,200 --> 00:10:00,630
+and there is no separate authorization
+
+212
+00:10:00,630 --> 00:10:02,490
+once the file system is mounted,
+
+213
+00:10:02,490 --> 00:10:05,490
+that that may not solve your
+customer's requirements either.
+
+214
+00:10:06,480 --> 00:10:10,800
+Now the good news is customers
+tend to trust AWS KMS.
+
+215
+00:10:10,800 --> 00:10:13,260
+I can tell you firsthand,
+a lot of the first part
+
+216
+00:10:13,260 --> 00:10:15,177
+of my career here was
+explaining to customers
+
+217
+00:10:15,177 --> 00:10:18,960
+how KMS worked, explaining
+to them the HSMs,
+
+218
+00:10:18,960 --> 00:10:21,600
+the design of the HSMs,
+our regulatory position
+
+219
+00:10:21,600 --> 00:10:23,943
+as it regards FIPS or anything else.
+
+220
+00:10:25,020 --> 00:10:28,320
+And now customers generally support KMS.
+
+221
+00:10:28,320 --> 00:10:29,850
+They like its characteristics,
+
+222
+00:10:29,850 --> 00:10:31,470
+they like that it comes from us,
+
+223
+00:10:31,470 --> 00:10:33,420
+they like that it's FIPS validated now
+
+224
+00:10:33,420 --> 00:10:36,240
+with the 140-3, which is the new program
+
+225
+00:10:36,240 --> 00:10:39,990
+that succeeded dash two and level three.
+
+226
+00:10:39,990 --> 00:10:42,660
+And if you're not a FIPS
+nerd, it doesn't matter.
+
+227
+00:10:42,660 --> 00:10:45,560
+Just know that those are the
+table stakes, but we have it.
+
+228
+00:10:46,770 --> 00:10:48,990
+But achieving this kind
+of compliance coverage
+
+229
+00:10:48,990 --> 00:10:50,940
+is really critical for customers,
+
+230
+00:10:50,940 --> 00:10:54,180
+especially as they tell their own story.
+
+231
+00:10:54,180 --> 00:10:58,743
+Their data that they are
+holding is protected by KMS.
+
+232
+00:10:59,670 --> 00:11:03,330
+Why wouldn't their data
+that you are holding
+
+233
+00:11:03,330 --> 00:11:05,823
+also meet that same bar?
+
+234
+00:11:06,810 --> 00:11:09,480
+Now what's cool is that
+KMS is really flexible
+
+235
+00:11:09,480 --> 00:11:11,460
+and it's lovely and it integrates
+
+236
+00:11:11,460 --> 00:11:12,780
+with all of our managed services
+
+237
+00:11:12,780 --> 00:11:15,750
+and you can integrate it
+with your own software.
+
+238
+00:11:15,750 --> 00:11:17,190
+In the second part of the presentation
+
+239
+00:11:17,190 --> 00:11:19,410
+Jenn will kind of show you what that means
+
+240
+00:11:19,410 --> 00:11:22,470
+because we have built
+some really nice SDKs
+
+241
+00:11:22,470 --> 00:11:24,033
+to make this easier for you.
+
+242
+00:11:24,930 --> 00:11:26,970
+An SDK for database services
+
+243
+00:11:26,970 --> 00:11:29,520
+that even allows a little bit of searching
+
+244
+00:11:29,520 --> 00:11:31,980
+over encrypted data in Dynamo,
+
+245
+00:11:31,980 --> 00:11:35,160
+and an SDK for just general encryption.
+
+246
+00:11:35,160 --> 00:11:37,050
+So general client side encryption,
+
+247
+00:11:37,050 --> 00:11:39,180
+whether it's a blob or anything else.
+
+248
+00:11:39,180 --> 00:11:41,640
+We've got some SDKs
+that integrate with KMS,
+
+249
+00:11:41,640 --> 00:11:44,130
+but they certainly don't lock you into it.
+
+250
+00:11:44,130 --> 00:11:45,240
+One thing that Jenn will show you
+
+251
+00:11:45,240 --> 00:11:48,360
+is that you have alternatives
+for the key provider.
+
+252
+00:11:48,360 --> 00:11:50,310
+Again, it works out of the box with KMS,
+
+253
+00:11:50,310 --> 00:11:51,900
+but if you wanna hook
+it up to something else,
+
+254
+00:11:51,900 --> 00:11:52,803
+you certainly can.
+
+255
+00:11:54,600 --> 00:11:58,080
+And so KMS solves a lot
+of problems for you.
+
+256
+00:11:58,080 --> 00:12:00,420
+The soul of what we do here at AWS
+
+257
+00:12:00,420 --> 00:12:03,300
+is what we call
+undifferentiated heavy lifting.
+
+258
+00:12:03,300 --> 00:12:06,570
+And so we've already figured
+out how to scale KMS,
+
+259
+00:12:06,570 --> 00:12:07,743
+how to keep it healthy.
+
+260
+00:12:08,700 --> 00:12:11,580
+It is our highest level of SLA.
+
+261
+00:12:11,580 --> 00:12:15,450
+We deliver KMS at a SLA of five nines.
+
+262
+00:12:15,450 --> 00:12:17,220
+And in fact the reality is significantly
+
+263
+00:12:17,220 --> 00:12:18,470
+more available than that.
+
+264
+00:12:20,070 --> 00:12:23,760
+There's already transparent
+rotation built into KMS
+
+265
+00:12:23,760 --> 00:12:27,870
+where we will increment
+the underlying key material
+
+266
+00:12:27,870 --> 00:12:31,320
+and just a lot of genuine
+value that comes from the fact
+
+267
+00:12:31,320 --> 00:12:33,003
+that you're integrating with KMS.
+
+268
+00:12:34,890 --> 00:12:38,410
+So there are a couple of
+different kinds of KMS
+
+269
+00:12:39,270 --> 00:12:42,540
+that all has a top layer, the KMS APIs.
+
+270
+00:12:42,540 --> 00:12:44,010
+Then there's a second layer,
+
+271
+00:12:44,010 --> 00:12:45,963
+which is where the keys actually live.
+
+272
+00:12:47,250 --> 00:12:52,230
+The best solution for
+effectively all customers
+
+273
+00:12:52,230 --> 00:12:57,060
+is regular KMS where the key
+material is both generated
+
+274
+00:12:57,060 --> 00:13:00,810
+within and used for
+cryptographic operations
+
+275
+00:13:00,810 --> 00:13:03,870
+within KMS multi-tenant HSMs.
+
+276
+00:13:03,870 --> 00:13:06,360
+And again, these things are the real deal.
+
+277
+00:13:06,360 --> 00:13:09,630
+They are bespoke, they're
+built to our design
+
+278
+00:13:09,630 --> 00:13:11,490
+and they are FIPS validated.
+
+279
+00:13:11,490 --> 00:13:15,330
+And point in fact, the
+entire box is FIPS validated.
+
+280
+00:13:15,330 --> 00:13:16,470
+It's not just a little widget
+
+281
+00:13:16,470 --> 00:13:18,510
+inside of a plain vanilla server.
+
+282
+00:13:18,510 --> 00:13:21,783
+The entire widget is a
+validated FIPS module.
+
+283
+00:13:22,980 --> 00:13:25,020
+But there are some alternatives
+
+284
+00:13:25,020 --> 00:13:27,780
+that will be relevant for your customers.
+
+285
+00:13:27,780 --> 00:13:29,460
+I mentioned earlier that
+the original definition
+
+286
+00:13:29,460 --> 00:13:32,310
+of BYOK allowed for imported key material.
+
+287
+00:13:32,310 --> 00:13:36,060
+We call this an imported
+CMK, where the CMK,
+
+288
+00:13:36,060 --> 00:13:39,090
+the construct, exists at the KMS API,
+
+289
+00:13:39,090 --> 00:13:41,943
+but the key material is
+injected by the customer.
+
+290
+00:13:43,320 --> 00:13:44,617
+Some customers came to us and said,
+
+291
+00:13:44,617 --> 00:13:49,260
+"Well I can't quite convince everybody
+
+292
+00:13:49,260 --> 00:13:52,020
+that a multi-tenant HSM is a good idea.
+
+293
+00:13:52,020 --> 00:13:54,570
+I think it is and I'm
+an expert in this stuff.
+
+294
+00:13:54,570 --> 00:13:55,500
+But sometimes people are like,
+
+295
+00:13:55,500 --> 00:13:57,350
+what do you mean a multi-tenant HSM?"
+
+296
+00:13:58,287 --> 00:13:59,120
+And so we offered an alternative.
+
+297
+00:13:59,120 --> 00:14:00,960
+We have a cloud HSM product
+
+298
+00:14:00,960 --> 00:14:03,180
+that is in fact a single tenant HSM
+
+299
+00:14:03,180 --> 00:14:07,470
+and you can graft that thing
+onto the top layer of KMS
+
+300
+00:14:07,470 --> 00:14:08,877
+and that's called custom key store.
+
+301
+00:14:08,877 --> 00:14:11,340
+And it does exactly what it says.
+
+302
+00:14:11,340 --> 00:14:12,630
+If you've got a stakeholder
+
+303
+00:14:12,630 --> 00:14:14,370
+or a customer stakeholder
+
+304
+00:14:14,370 --> 00:14:18,240
+who absolutely can't
+accept using a regular KMS,
+
+305
+00:14:18,240 --> 00:14:21,183
+you can hook cloud HSM up
+to it and get that outcome.
+
+306
+00:14:22,710 --> 00:14:24,120
+We built another thing
+
+307
+00:14:24,120 --> 00:14:26,620
+that we're sure we don't
+think anybody should use,
+
+308
+00:14:28,770 --> 00:14:31,230
+but we built it because
+customers demanded it of us,
+
+309
+00:14:31,230 --> 00:14:34,260
+which is practically the
+reason we build anything.
+
+310
+00:14:34,260 --> 00:14:36,603
+And that's called XKS,
+the external key store.
+
+311
+00:14:37,710 --> 00:14:40,800
+This allows for sometimes
+what you will hear
+
+312
+00:14:40,800 --> 00:14:45,603
+referred to as HYOK, hold your own key.
+
+313
+00:14:47,100 --> 00:14:48,780
+The cool part about
+the cloud is that we do
+
+314
+00:14:48,780 --> 00:14:53,780
+all of the impossible part,
+from the ground to the concrete,
+
+315
+00:14:53,910 --> 00:14:57,783
+to locking the doors at night,
+all the way up to the stack.
+
+316
+00:14:58,920 --> 00:15:03,150
+Some customers, whether
+because the requirement
+
+317
+00:15:03,150 --> 00:15:04,960
+is placed upon them by a third party
+
+318
+00:15:05,850 --> 00:15:08,790
+or because there's somebody
+in the security org
+
+319
+00:15:08,790 --> 00:15:11,943
+that needs a warm blanket,
+which is an okay reason,
+
+320
+00:15:13,050 --> 00:15:15,390
+believe that that key
+needs to live in a building
+
+321
+00:15:15,390 --> 00:15:16,860
+that they control.
+
+322
+00:15:16,860 --> 00:15:18,930
+It needs to be in my house.
+
+323
+00:15:18,930 --> 00:15:22,113
+Like all right, we'll
+build it and we built it.
+
+324
+00:15:23,430 --> 00:15:24,780
+This allows you to have an HSM
+
+325
+00:15:24,780 --> 00:15:26,640
+that lives in your own office building
+
+326
+00:15:26,640 --> 00:15:29,250
+but is hooked up to the front end of KMS
+
+327
+00:15:29,250 --> 00:15:30,453
+and that's called XKS.
+
+328
+00:15:31,620 --> 00:15:33,990
+Probably don't let people do this.
+
+329
+00:15:33,990 --> 00:15:35,700
+It comes with scaling,
+
+330
+00:15:35,700 --> 00:15:37,830
+it comes with availability characteristics
+
+331
+00:15:37,830 --> 00:15:39,930
+that are gonna be radically different
+
+332
+00:15:39,930 --> 00:15:43,170
+than good old regular KMS
+where we do the scaling
+
+333
+00:15:43,170 --> 00:15:44,550
+and the availability for you.
+
+334
+00:15:44,550 --> 00:15:45,720
+But it is out there.
+
+335
+00:15:45,720 --> 00:15:50,460
+But the good news is as you
+build to integrate it with KMS,
+
+336
+00:15:50,460 --> 00:15:53,490
+your customers still get
+all this flexibility.
+
+337
+00:15:53,490 --> 00:15:55,020
+That you yourself as the ISV,
+
+338
+00:15:55,020 --> 00:15:57,720
+don't really need a
+reason about this part,
+
+339
+00:15:57,720 --> 00:15:59,970
+but it will be relevant
+for the conversation.
+
+340
+00:16:01,740 --> 00:16:04,083
+So let's do a quick primer.
+
+341
+00:16:05,490 --> 00:16:08,010
+I think a lot of people think
+they know what encryption is,
+
+342
+00:16:08,010 --> 00:16:11,103
+but as it turns out, encrypting
+data is the easy part.
+
+343
+00:16:12,240 --> 00:16:15,280
+All you gotta do is combine
+a data key with data
+
+344
+00:16:16,140 --> 00:16:19,200
+and then you get ciphered
+data, encrypted data.
+
+345
+00:16:19,200 --> 00:16:21,093
+That is categorically the easy part.
+
+346
+00:16:22,050 --> 00:16:24,150
+That's what you're probably already doing.
+
+347
+00:16:24,150 --> 00:16:26,700
+But the problem is what do
+I do with this data key?
+
+348
+00:16:27,900 --> 00:16:31,023
+Where do I put it? How do
+I keep it safe over time?
+
+349
+00:16:32,072 --> 00:16:35,370
+And the answer is that
+you combine that data key
+
+350
+00:16:35,370 --> 00:16:37,860
+with another key and you encrypt
+
+351
+00:16:37,860 --> 00:16:40,200
+the key with a different key.
+
+352
+00:16:40,200 --> 00:16:43,440
+This is known as wrapping.
+Wrapping like a present.
+
+353
+00:16:43,440 --> 00:16:46,470
+So you're gonna wrap that
+data key with the KMS key
+
+354
+00:16:46,470 --> 00:16:48,663
+and now you have an encrypted data key.
+
+355
+00:16:49,680 --> 00:16:51,840
+So where do you store that?
+
+356
+00:16:51,840 --> 00:16:53,049
+Well, as it turns out, the right place
+
+357
+00:16:53,049 --> 00:16:55,073
+to store it is just store
+it with the encrypted data.
+
+358
+00:16:56,490 --> 00:16:58,860
+You store the data encryption key,
+
+359
+00:16:58,860 --> 00:17:01,140
+I'm gonna start calling that a DEK.
+
+360
+00:17:01,140 --> 00:17:03,120
+You store the DEK wrapped with the top key
+
+361
+00:17:03,120 --> 00:17:06,450
+that lives in KMS and
+you put it in one package
+
+362
+00:17:06,450 --> 00:17:08,600
+and then you put it
+somewhere safe like S3.
+
+363
+00:17:10,350 --> 00:17:13,090
+The question is, "Well you told me Pete
+
+364
+00:17:14,550 --> 00:17:15,870
+start with the DEK.
+
+365
+00:17:15,870 --> 00:17:17,280
+You got a data encryption key,
+
+366
+00:17:17,280 --> 00:17:19,290
+then you gotta protect
+that with another key.
+
+367
+00:17:19,290 --> 00:17:21,600
+Great. Is it turtles all the way down.
+
+368
+00:17:21,600 --> 00:17:23,280
+What do I do with the KMS key?"
+
+369
+00:17:23,280 --> 00:17:25,530
+And that's where we come
+in. We do the rest of it.
+
+370
+00:17:25,530 --> 00:17:26,490
+And if you wanna learn about
+
+371
+00:17:26,490 --> 00:17:30,000
+all the full key hierarchy of
+KMS, you can find that online.
+
+372
+00:17:30,000 --> 00:17:32,010
+It's actually a pretty interesting story.
+
+373
+00:17:32,010 --> 00:17:33,990
+We take care of all that other hard part.
+
+374
+00:17:33,990 --> 00:17:38,790
+And of course we protect
+your KMS keys at rest
+
+375
+00:17:38,790 --> 00:17:39,930
+by encrypting them again.
+
+376
+00:17:39,930 --> 00:17:41,070
+And then there's a whole thing
+
+377
+00:17:41,070 --> 00:17:43,380
+and it kind of is
+turtles all the way down,
+
+378
+00:17:43,380 --> 00:17:47,070
+but it ends in, you
+know, printed out paper
+
+379
+00:17:47,070 --> 00:17:48,930
+that if we ever lost curb power,
+
+380
+00:17:48,930 --> 00:17:52,230
+we could turn the stack of
+turtles back on the hard way.
+
+381
+00:17:52,230 --> 00:17:54,300
+We've never had that, knock wood,
+
+382
+00:17:54,300 --> 00:17:56,343
+but we do have a plan for that.
+
+383
+00:17:57,360 --> 00:17:59,400
+And so that's what the
+perimeter for encryption is.
+
+384
+00:17:59,400 --> 00:18:03,030
+We call this pattern of unique DEKs
+
+385
+00:18:03,030 --> 00:18:07,020
+that protect data with DEKs
+that are then protected
+
+386
+00:18:07,020 --> 00:18:10,680
+by a high order key, envelope encryption.
+
+387
+00:18:10,680 --> 00:18:14,520
+And this is the way
+all of it works at AWS,
+
+388
+00:18:14,520 --> 00:18:17,190
+and this is the way you
+should probably do it as well.
+
+389
+00:18:17,190 --> 00:18:19,620
+And Jenn's gonna talk about
+this idea of a key ring,
+
+390
+00:18:19,620 --> 00:18:22,410
+about starting your own key hierarchy
+
+391
+00:18:22,410 --> 00:18:24,483
+with a key that you get out of KMS.
+
+392
+00:18:29,700 --> 00:18:32,700
+So that all sounds great.
+
+393
+00:18:32,700 --> 00:18:35,460
+Now we know why customers care.
+
+394
+00:18:35,460 --> 00:18:37,500
+We know what they're looking for
+
+395
+00:18:37,500 --> 00:18:38,730
+and we kind of understand, okay,
+
+396
+00:18:38,730 --> 00:18:42,240
+envelope encryption, how do you do it?
+
+397
+00:18:42,240 --> 00:18:46,770
+How should a customer let
+you use their key material
+
+398
+00:18:46,770 --> 00:18:50,010
+to integrate with your
+software to protect their data
+
+399
+00:18:50,010 --> 00:18:51,723
+that is in your hands?
+
+400
+00:18:53,130 --> 00:18:55,080
+There's a couple simple ways to do this.
+
+401
+00:18:55,080 --> 00:18:57,810
+If you're just writing objects into S3,
+
+402
+00:18:57,810 --> 00:18:59,510
+just do cross account key sharing.
+
+403
+00:19:01,290 --> 00:19:02,123
+End of list.
+
+404
+00:19:03,240 --> 00:19:07,140
+But if you're holding
+a multi-tenant database
+
+405
+00:19:07,140 --> 00:19:10,260
+with individual customer records,
+
+406
+00:19:10,260 --> 00:19:12,960
+it's a lot more complicated
+than just give me the ARN.
+
+407
+00:19:14,220 --> 00:19:16,860
+And depending on the nature of your ISV,
+
+408
+00:19:16,860 --> 00:19:19,470
+if you've got your own data plane
+
+409
+00:19:19,470 --> 00:19:21,870
+and it's not just a relational database
+
+410
+00:19:21,870 --> 00:19:24,750
+but perhaps a much more complex data plane
+
+411
+00:19:24,750 --> 00:19:28,470
+that is itself probably multi-tenant.
+
+412
+00:19:28,470 --> 00:19:32,130
+Now you've got some very
+interesting complexities,
+
+413
+00:19:32,130 --> 00:19:33,901
+complexities around availability,
+
+414
+00:19:33,901 --> 00:19:36,900
+complexities around persistence.
+
+415
+00:19:36,900 --> 00:19:38,700
+'Cause the only thing
+worse than losing data
+
+416
+00:19:38,700 --> 00:19:40,680
+is losing a key 'cause losing a key
+
+417
+00:19:40,680 --> 00:19:43,953
+is like losing data, except even harder.
+
+418
+00:19:45,990 --> 00:19:48,290
+So how do customers share
+their keys with you?
+
+419
+00:19:49,410 --> 00:19:51,060
+So there's three ways to do this.
+
+420
+00:19:51,960 --> 00:19:55,110
+If what you're doing is
+primarily just interacting
+
+421
+00:19:55,110 --> 00:19:59,010
+with AWS resources, that is
+to say you're not in the weeds
+
+422
+00:19:59,010 --> 00:20:01,470
+of your own data plane and
+a multi-tenant data plane.
+
+423
+00:20:01,470 --> 00:20:04,440
+Just do it cross account resource sharing.
+
+424
+00:20:04,440 --> 00:20:07,050
+It's one of the oldest
+tricks from the IAM book.
+
+425
+00:20:07,050 --> 00:20:09,660
+You write a resource policy
+that goes on the key,
+
+426
+00:20:09,660 --> 00:20:11,523
+we call that a key policy.
+
+427
+00:20:12,960 --> 00:20:17,280
+And you delegate effectively,
+a service principle
+
+428
+00:20:17,280 --> 00:20:20,310
+that belongs to you, the ISV.
+
+429
+00:20:20,310 --> 00:20:24,930
+So service.acmecorp.com
+
+430
+00:20:24,930 --> 00:20:28,980
+is allowed to call for encrypt, decrypt,
+
+431
+00:20:28,980 --> 00:20:30,813
+generate data key and describe key.
+
+432
+00:20:32,010 --> 00:20:33,870
+That's the simplest part.
+
+433
+00:20:33,870 --> 00:20:35,370
+Some customers think well
+
+434
+00:20:35,370 --> 00:20:37,560
+or some ISVs think "Well
+no, what I really want,
+
+435
+00:20:37,560 --> 00:20:40,420
+what I really wanna do is
+assume one of their roles
+
+436
+00:20:41,790 --> 00:20:44,490
+and then use that to access the key."
+
+437
+00:20:44,490 --> 00:20:47,280
+No, why would you do that? Don't do that.
+
+438
+00:20:47,280 --> 00:20:49,230
+Just do cross account resource sharing.
+
+439
+00:20:50,190 --> 00:20:52,297
+Now sometimes vendors are like,
+
+440
+00:20:52,297 --> 00:20:55,120
+"Oh well I'll call this BYOK
+
+441
+00:20:57,180 --> 00:20:59,130
+and I'll have all the key material
+
+442
+00:20:59,130 --> 00:21:02,130
+and there's a key for Alice
+and there's a key for Bob."
+
+443
+00:21:02,130 --> 00:21:04,983
+But it's not really bring
+your own key if you do that.
+
+444
+00:21:06,180 --> 00:21:07,740
+Customers don't get the logging visibility
+
+445
+00:21:07,740 --> 00:21:08,573
+that we talked about.
+
+446
+00:21:08,573 --> 00:21:09,406
+They certainly don't get
+
+447
+00:21:09,406 --> 00:21:11,400
+the big red button that we talked about.
+
+448
+00:21:11,400 --> 00:21:13,350
+And so your customer's level of trust
+
+449
+00:21:13,350 --> 00:21:15,000
+in the eventual solution that you're going
+
+450
+00:21:15,000 --> 00:21:18,150
+to market with can be greatly affected
+
+451
+00:21:18,150 --> 00:21:19,983
+by the choices that you make here.
+
+452
+00:21:21,510 --> 00:21:25,770
+We want you to be successful,
+we really want our customers
+
+453
+00:21:25,770 --> 00:21:28,350
+to be successful and you
+guys are our customers.
+
+454
+00:21:28,350 --> 00:21:31,683
+But often your customers are
+also somehow our customers.
+
+455
+00:21:32,790 --> 00:21:34,500
+And so we want you to
+do this the right way,
+
+456
+00:21:34,500 --> 00:21:36,550
+which is why we're here having this talk.
+
+457
+00:21:37,680 --> 00:21:39,360
+So as it turns out,
+cross account key sharing
+
+458
+00:21:39,360 --> 00:21:40,660
+is really straightforward.
+
+459
+00:21:41,850 --> 00:21:45,660
+Resources on AWS have
+their own policy document
+
+460
+00:21:45,660 --> 00:21:47,130
+called a resource policy.
+
+461
+00:21:47,130 --> 00:21:48,570
+And when you're talking about S3,
+
+462
+00:21:48,570 --> 00:21:51,420
+it's often referred to as a bucket policy.
+
+463
+00:21:51,420 --> 00:21:54,120
+If you're talking about KMS,
+it's called a key policy.
+
+464
+00:21:54,960 --> 00:21:57,383
+And as it turns out, this
+is really straightforward.
+
+465
+00:21:58,320 --> 00:22:03,320
+Statement, allow principle
+that belongs to Acme Corp.
+
+466
+00:22:03,390 --> 00:22:06,660
+Action, encrypt, decrypt,
+
+467
+00:22:06,660 --> 00:22:08,643
+generate data key and describe key.
+
+468
+00:22:09,750 --> 00:22:11,200
+Pretty straightforward stuff.
+
+469
+00:22:12,510 --> 00:22:15,090
+It's key to understand, haha pun,
+
+470
+00:22:15,090 --> 00:22:17,250
+it's essential to understand
+
+471
+00:22:17,250 --> 00:22:20,940
+that you're only going to get authorized
+
+472
+00:22:20,940 --> 00:22:22,590
+for the cryptographic operations.
+
+473
+00:22:24,270 --> 00:22:27,810
+That you do not need and
+nor should you ask for
+
+474
+00:22:27,810 --> 00:22:29,523
+other actions on the key.
+
+475
+00:22:30,720 --> 00:22:34,623
+Those ought to belong to the
+key owner, your customer.
+
+476
+00:22:35,937 --> 00:22:37,890
+'Cause some of those actions
+could be really powerful.
+
+477
+00:22:37,890 --> 00:22:40,560
+Disable does exactly what it sounds like.
+
+478
+00:22:40,560 --> 00:22:43,980
+You don't need the ability to
+call for disable on the key
+
+479
+00:22:43,980 --> 00:22:45,513
+and you should not ask for it.
+
+480
+00:22:46,500 --> 00:22:48,390
+There's a couple of other
+very powerful actions.
+
+481
+00:22:48,390 --> 00:22:49,890
+Put key policy.
+
+482
+00:22:49,890 --> 00:22:53,013
+You do not need that and
+nor should you ask for it.
+
+483
+00:22:53,880 --> 00:22:55,860
+And perhaps most powerful of all,
+
+484
+00:22:55,860 --> 00:22:58,593
+there's an API called
+schedule key deletion.
+
+485
+00:22:59,580 --> 00:23:01,830
+We don't actually let
+you delete it right away
+
+486
+00:23:01,830 --> 00:23:04,020
+'cause that's a very serious foot gun.
+
+487
+00:23:04,020 --> 00:23:06,810
+But schedule key deletion,
+you do not need it
+
+488
+00:23:06,810 --> 00:23:08,730
+and you should not ask for it.
+
+489
+00:23:08,730 --> 00:23:11,010
+All you need is very simple.
+
+490
+00:23:11,010 --> 00:23:13,290
+Write on the key, encrypt, decrypt,
+
+491
+00:23:13,290 --> 00:23:15,123
+generate data key and describe key.
+
+492
+00:23:17,100 --> 00:23:19,233
+Now how do you get this going?
+
+493
+00:23:20,490 --> 00:23:24,123
+How do you kind of bootstrap
+this new customer onboarding?
+
+494
+00:23:24,990 --> 00:23:27,543
+It's probably enough to
+just publish some JSON.
+
+495
+00:23:28,380 --> 00:23:30,000
+This is what it needs to look like.
+
+496
+00:23:30,000 --> 00:23:31,893
+Copy and paste it on your key policy.
+
+497
+00:23:32,820 --> 00:23:36,360
+Your sales engineers can probably
+do this for your customer
+
+498
+00:23:36,360 --> 00:23:39,093
+during onboarding or ramping or whatever.
+
+499
+00:23:40,770 --> 00:23:43,650
+You could probably give
+them some cloud formation
+
+500
+00:23:43,650 --> 00:23:45,600
+which would create a key
+
+501
+00:23:45,600 --> 00:23:47,400
+and then put the right policy on it.
+
+502
+00:23:49,350 --> 00:23:51,567
+And lots of other ways
+to think about this.
+
+503
+00:23:51,567 --> 00:23:54,813
+You wanna give 'em a terraform
+thing? Sure, whatever.
+
+504
+00:23:55,920 --> 00:23:58,260
+But you should be reasoning about this
+
+505
+00:23:58,260 --> 00:23:59,970
+'cause it's essential that your customers
+
+506
+00:23:59,970 --> 00:24:02,220
+not only get it right so they can start
+
+507
+00:24:02,220 --> 00:24:04,530
+receiving the benefit of your software.
+
+508
+00:24:04,530 --> 00:24:06,330
+It would be dumb to delay time to value
+
+509
+00:24:06,330 --> 00:24:08,400
+just because it takes a week to figure out
+
+510
+00:24:08,400 --> 00:24:09,900
+what to put on the key policy.
+
+511
+00:24:11,074 --> 00:24:13,320
+And you want your
+customers to get it right
+
+512
+00:24:13,320 --> 00:24:15,330
+for safety and security.
+
+513
+00:24:15,330 --> 00:24:19,590
+Because if they give you allow KMS star,
+
+514
+00:24:19,590 --> 00:24:21,880
+you now have too much ability
+
+515
+00:24:23,010 --> 00:24:24,270
+for all the things I just talked about.
+
+516
+00:24:24,270 --> 00:24:29,270
+Schedule key deletion,
+disable, put key policy.
+
+517
+00:24:29,580 --> 00:24:33,123
+Don't let them give you
+KMS star on the key policy.
+
+518
+00:24:34,230 --> 00:24:36,330
+Only take the actions you need.
+
+519
+00:24:36,330 --> 00:24:38,370
+Everybody knows the
+phrase least privilege.
+
+520
+00:24:38,370 --> 00:24:40,413
+Make sure you get least privilege.
+
+521
+00:24:41,940 --> 00:24:45,030
+So there's a couple different
+patterns, ultimately.
+
+522
+00:24:45,030 --> 00:24:46,770
+What I just described
+is really simple stuff.
+
+523
+00:24:46,770 --> 00:24:48,027
+Like if I'm gonna put an object in S3
+
+524
+00:24:48,027 --> 00:24:50,100
+and I wanna protect it by your key,
+
+525
+00:24:50,100 --> 00:24:53,193
+all I have to say is put
+object, dash, dash key ID.
+
+526
+00:24:54,210 --> 00:24:56,160
+But there are some more interesting
+
+527
+00:24:56,160 --> 00:24:57,170
+and complex ways to do this
+
+528
+00:24:57,170 --> 00:24:58,983
+in this idea of a data key broker.
+
+529
+00:25:00,210 --> 00:25:02,560
+Where you're gonna start
+your own key hierarchy
+
+530
+00:25:03,480 --> 00:25:06,150
+from the customer's KMS key.
+
+531
+00:25:06,150 --> 00:25:09,090
+And then as you say, ingest log files
+
+532
+00:25:09,090 --> 00:25:12,330
+or create, you know, whatever kind of unit
+
+533
+00:25:12,330 --> 00:25:14,853
+of entity in your data plane.
+
+534
+00:25:15,690 --> 00:25:18,360
+You can take that envelope
+encryption pattern
+
+535
+00:25:18,360 --> 00:25:19,533
+and add one more layer.
+
+536
+00:25:20,700 --> 00:25:24,240
+So it's KMS key to customer key,
+
+537
+00:25:24,240 --> 00:25:27,390
+customer key to data keys.
+
+538
+00:25:27,390 --> 00:25:29,040
+And you can add one more layer too,
+
+539
+00:25:29,040 --> 00:25:31,855
+depending on what makes
+the most sense for you.
+
+540
+00:25:31,855 --> 00:25:34,650
+And this effectively,
+again, is a key hierarchy.
+
+541
+00:25:34,650 --> 00:25:36,480
+And the data key broker pattern here
+
+542
+00:25:36,480 --> 00:25:37,983
+is a simple way to do that.
+
+543
+00:25:39,420 --> 00:25:41,670
+So as customers upload data,
+
+544
+00:25:41,670 --> 00:25:43,980
+there is certainly this
+idea of crypto wear out.
+
+545
+00:25:43,980 --> 00:25:45,660
+You don't want to use a single DEK,
+
+546
+00:25:45,660 --> 00:25:49,710
+a single data encryption key
+for a colossal body of data
+
+547
+00:25:49,710 --> 00:25:51,630
+that's got blast radius problems.
+
+548
+00:25:51,630 --> 00:25:54,480
+And at hyperscale there's a theoretical
+
+549
+00:25:54,480 --> 00:25:56,340
+crypto analytic problem with that.
+
+550
+00:25:56,340 --> 00:25:58,170
+Like if you go and
+create petabytes of data
+
+551
+00:25:58,170 --> 00:26:01,410
+with a single DEK, it
+creates an entry point
+
+552
+00:26:01,410 --> 00:26:05,190
+for an adversary to do
+something like reverse the key.
+
+553
+00:26:05,190 --> 00:26:06,930
+It's very easy to avoid that
+
+554
+00:26:06,930 --> 00:26:09,330
+by not encrypting everything
+
+555
+00:26:09,330 --> 00:26:11,030
+with a single data encryption key.
+
+556
+00:26:12,852 --> 00:26:14,861
+And the workflow kind of looks like this.
+
+557
+00:26:14,861 --> 00:26:16,740
+I don't know how visible this is to you,
+
+558
+00:26:16,740 --> 00:26:18,240
+but you know these slides will eventually
+
+559
+00:26:18,240 --> 00:26:20,100
+get published on the internet.
+
+560
+00:26:20,100 --> 00:26:23,490
+But this is effectively
+what the flow looks like
+
+561
+00:26:23,490 --> 00:26:25,173
+for this idea of the broker.
+
+562
+00:26:26,730 --> 00:26:29,460
+So there are some more
+questions about this.
+
+563
+00:26:29,460 --> 00:26:32,070
+How do I request and
+deal with the data keys?
+
+564
+00:26:32,070 --> 00:26:34,140
+How do I deal with multi-tenancy
+
+565
+00:26:34,140 --> 00:26:36,360
+and where does this kind of solve?
+
+566
+00:26:36,360 --> 00:26:39,240
+And again, this is where
+our encryption SEKs come in,
+
+567
+00:26:39,240 --> 00:26:41,760
+they're open source, they're
+available for a handful
+
+568
+00:26:41,760 --> 00:26:45,240
+of very popular languages,
+Java, Python, things like that.
+
+569
+00:26:45,240 --> 00:26:46,860
+And it's awesome.
+
+570
+00:26:46,860 --> 00:26:48,870
+It does right what it says on the tin.
+
+571
+00:26:48,870 --> 00:26:50,910
+It's written by a group of experts
+
+572
+00:26:50,910 --> 00:26:52,620
+and it's open source so
+you can understand it
+
+573
+00:26:52,620 --> 00:26:55,520
+and reason about it and maybe
+even improve it on your own.
+
+574
+00:26:56,790 --> 00:27:00,870
+For client side encryption,
+there are a bunch of questions,
+
+575
+00:27:00,870 --> 00:27:02,700
+how do I properly implement it?
+
+576
+00:27:02,700 --> 00:27:04,140
+What modes should I be using?
+
+577
+00:27:04,140 --> 00:27:07,800
+And again, the SDK is almost definitely
+
+578
+00:27:07,800 --> 00:27:10,293
+the right way to answer
+all these questions.
+
+579
+00:27:11,670 --> 00:27:16,350
+The SDK has a message
+format. It's pretty flexible.
+
+580
+00:27:16,350 --> 00:27:18,300
+You can even get multi-region resiliency
+
+581
+00:27:18,300 --> 00:27:21,420
+by either using multi-region keys,
+
+582
+00:27:21,420 --> 00:27:24,300
+which is a new thing we
+introduced two, three years ago.
+
+583
+00:27:24,300 --> 00:27:28,050
+Or you just take the data
+
+584
+00:27:28,050 --> 00:27:29,547
+and the wrapped data key
+
+585
+00:27:29,547 --> 00:27:31,830
+and it's wrapped under
+two different regions.
+
+586
+00:27:31,830 --> 00:27:35,160
+So if it's in Oregon, you
+can unwrap the DEK in Oregon.
+
+587
+00:27:35,160 --> 00:27:37,110
+There's another version of the same DEK
+
+588
+00:27:37,110 --> 00:27:38,710
+that you can unwrap in Virginia.
+
+589
+00:27:42,870 --> 00:27:44,460
+There are two of these.
+
+590
+00:27:44,460 --> 00:27:46,740
+One is the general purpose ESDK.
+
+591
+00:27:46,740 --> 00:27:49,110
+This is suitable for blobs, right?
+
+592
+00:27:49,110 --> 00:27:51,420
+Whatever it is. A lump.
+
+593
+00:27:51,420 --> 00:27:54,150
+For database-specific applications,
+
+594
+00:27:54,150 --> 00:27:55,470
+particularly Dynamo,
+
+595
+00:27:55,470 --> 00:27:57,660
+which is probably the right
+data store for most things.
+
+596
+00:27:57,660 --> 00:28:00,960
+But it certainly works with the
+relational products as well.
+
+597
+00:28:00,960 --> 00:28:04,080
+The database-specific
+SDK has some additional
+
+598
+00:28:04,080 --> 00:28:05,790
+considerations built into it.
+
+599
+00:28:05,790 --> 00:28:09,330
+And again, these are expert
+level software packages.
+
+600
+00:28:09,330 --> 00:28:11,610
+They're both open source,
+they're maintained
+
+601
+00:28:11,610 --> 00:28:13,510
+by a really brilliant group of people.
+
+602
+00:28:14,520 --> 00:28:17,640
+The ESDK is designed to
+make it easy for portability
+
+603
+00:28:17,640 --> 00:28:20,070
+so that you can deal with these things.
+
+604
+00:28:20,070 --> 00:28:23,160
+There's again, a way to
+register multiple key providers
+
+605
+00:28:23,160 --> 00:28:24,660
+so that if your customer expects you
+
+606
+00:28:24,660 --> 00:28:26,790
+to be available in both
+Oregon and Virginia,
+
+607
+00:28:26,790 --> 00:28:29,253
+just as examples, that
+there's a way to do that.
+
+608
+00:28:30,300 --> 00:28:32,880
+The single message format
+makes it really easy
+
+609
+00:28:32,880 --> 00:28:34,650
+and high speed to deal with.
+
+610
+00:28:34,650 --> 00:28:36,930
+Mention this idea like where
+do I store the wrapped key
+
+611
+00:28:36,930 --> 00:28:38,820
+and where do I store the encrypted data?
+
+612
+00:28:38,820 --> 00:28:40,320
+And I said the answer is put 'em together.
+
+613
+00:28:40,320 --> 00:28:42,060
+Well the ESDK does that.
+
+614
+00:28:42,060 --> 00:28:43,890
+It automatically puts them together.
+
+615
+00:28:43,890 --> 00:28:45,630
+And ultimately you kind of only need
+
+616
+00:28:45,630 --> 00:28:47,490
+to keep track of two things.
+
+617
+00:28:47,490 --> 00:28:50,850
+One that lump, the data,
+
+618
+00:28:50,850 --> 00:28:53,400
+and where the key is, the key provider,
+
+619
+00:28:53,400 --> 00:28:55,920
+which is not the DEK, 'cause
+the DEK is with the lump,
+
+620
+00:28:55,920 --> 00:28:57,090
+the encrypted lump.
+
+621
+00:28:57,090 --> 00:28:59,010
+The key provider is, you know, which KMS?
+
+622
+00:28:59,010 --> 00:29:02,040
+The KMS in Virginia, KMS and Oregon.
+
+623
+00:29:02,040 --> 00:29:04,110
+'Cause of course like most things at AWS,
+
+624
+00:29:04,110 --> 00:29:05,583
+that will be region specific.
+
+625
+00:29:07,530 --> 00:29:10,020
+This is what that kind
+of ends up looking like.
+
+626
+00:29:10,020 --> 00:29:11,820
+This is a little bit of an overview,
+
+627
+00:29:13,200 --> 00:29:14,310
+there's some details left out of this
+
+628
+00:29:14,310 --> 00:29:16,170
+for the simplicity of the diagram,
+
+629
+00:29:16,170 --> 00:29:18,300
+but this is basically
+what that looks like.
+
+630
+00:29:18,300 --> 00:29:22,223
+That you call through to the ESDK.
+
+631
+00:29:22,223 --> 00:29:24,450
+The ESDK calls down to
+the operating system
+
+632
+00:29:24,450 --> 00:29:26,010
+to get the right crypto.
+
+633
+00:29:26,010 --> 00:29:29,100
+Every operating system is
+gonna know how to speak AESGCM,
+
+634
+00:29:29,100 --> 00:29:31,863
+which is an implementation of AES.
+
+635
+00:29:32,700 --> 00:29:34,230
+A mode.
+
+636
+00:29:34,230 --> 00:29:36,665
+And again, we get the blob that comes out,
+
+637
+00:29:36,665 --> 00:29:38,010
+that's in the lower right there,
+
+638
+00:29:38,010 --> 00:29:40,210
+where you get everything
+necessary together.
+
+639
+00:29:41,580 --> 00:29:43,500
+I mentioned this idea of
+a hierarchical key ring
+
+640
+00:29:43,500 --> 00:29:46,170
+and this is where I'm
+gonna turn it over to Jenn.
+
+641
+00:29:46,170 --> 00:29:49,440
+There's a deep explanation of this
+
+642
+00:29:49,440 --> 00:29:50,760
+and practically everything I said
+
+643
+00:29:50,760 --> 00:29:53,790
+is examined very deeply
+in our documentation.
+
+644
+00:29:53,790 --> 00:29:55,800
+So hopefully this is a pretty good primer.
+
+645
+00:29:55,800 --> 00:29:57,030
+This is a code talk
+
+646
+00:29:57,030 --> 00:29:58,890
+and I'm gonna turn it
+over to my friend Jenn
+
+647
+00:29:58,890 --> 00:30:00,480
+who's gonna get into it.
+
+648
+00:30:00,480 --> 00:30:01,313
+Cheers.
+
+649
+00:30:02,790 --> 00:30:03,623
+Break a leg.
+
+650
+00:30:04,980 --> 00:30:06,263
+- [Jenn] I should not tape.
+
+651
+00:30:08,820 --> 00:30:09,653
+Okay.
+
+652
+00:30:11,070 --> 00:30:12,693
+Now for code.
+
+653
+00:30:15,060 --> 00:30:15,893
+Very good.
+
+654
+00:30:16,800 --> 00:30:19,380
+I hope everybody can see that pretty good.
+
+655
+00:30:19,380 --> 00:30:20,213
+Yep.
+
+656
+00:30:21,150 --> 00:30:22,680
+Visual Studio is your friend.
+
+657
+00:30:22,680 --> 00:30:25,503
+So how many people in
+here understand Java?
+
+658
+00:30:27,120 --> 00:30:30,690
+Okay, so this will look familiar to you.
+
+659
+00:30:30,690 --> 00:30:34,770
+So this is basically a Java application
+
+660
+00:30:34,770 --> 00:30:36,780
+that was written called Beer Store,
+
+661
+00:30:36,780 --> 00:30:39,300
+which is an example application.
+
+662
+00:30:39,300 --> 00:30:42,540
+But what has been done here
+is actually constructed it
+
+663
+00:30:42,540 --> 00:30:46,500
+to actually show the hierarchal key.
+
+664
+00:30:46,500 --> 00:30:48,150
+I wanted to start by just looking
+
+665
+00:30:50,789 --> 00:30:54,400
+at how those tenant data keys are created.
+
+666
+00:30:57,930 --> 00:31:01,320
+And then from that we'll take
+a step back to understand
+
+667
+00:31:01,320 --> 00:31:04,770
+where that's stored in Dynamo
+and where that's declared.
+
+668
+00:31:04,770 --> 00:31:08,280
+And then from a step back from
+that, look at the actual KMS
+
+669
+00:31:08,280 --> 00:31:11,010
+so you can understand where the KMS ID
+
+670
+00:31:11,010 --> 00:31:13,380
+and those components are
+configured and declared
+
+671
+00:31:13,380 --> 00:31:15,090
+that then get called down here.
+
+672
+00:31:15,090 --> 00:31:16,890
+But just so that you can
+understand the context,
+
+673
+00:31:16,890 --> 00:31:18,840
+really seeing it from this perspective.
+
+674
+00:31:19,980 --> 00:31:22,440
+So if we look down here,
+
+675
+00:31:22,440 --> 00:31:26,200
+the most important part here is of course
+
+676
+00:31:27,420 --> 00:31:29,040
+you're gonna have KMS credentials,
+
+677
+00:31:29,040 --> 00:31:31,803
+of course, in this implementation.
+
+678
+00:31:34,050 --> 00:31:35,640
+So when you're onboarding a tenant,
+
+679
+00:31:35,640 --> 00:31:39,720
+each tenant's gonna get their own KMS ID,
+
+680
+00:31:39,720 --> 00:31:43,200
+their own client ID and credentials.
+
+681
+00:31:43,200 --> 00:31:45,663
+So this is so that each
+one of your tenants,
+
+682
+00:31:47,160 --> 00:31:51,330
+will be able to understand
+from a process perspective,
+
+683
+00:31:51,330 --> 00:31:52,800
+which one is used for which key.
+
+684
+00:31:52,800 --> 00:31:56,440
+Because for SaaS providers,
+you wanna make sure each
+
+685
+00:31:58,860 --> 00:32:01,350
+customer that you have,
+each tenant that you have
+
+686
+00:32:01,350 --> 00:32:03,870
+are actually being able
+to manage their own keys
+
+687
+00:32:03,870 --> 00:32:06,963
+independently, not all on one cycle.
+
+688
+00:32:08,160 --> 00:32:11,250
+And we scroll down a
+little bit further here
+
+689
+00:32:11,250 --> 00:32:13,920
+on that onboarding process.
+
+690
+00:32:13,920 --> 00:32:17,250
+Each of those is of course
+gonna get a branch key
+
+691
+00:32:17,250 --> 00:32:19,630
+and then it's gonna have their credentials
+
+692
+00:32:20,685 --> 00:32:24,033
+within the application
+that's going to call it.
+
+693
+00:32:25,440 --> 00:32:28,140
+And then when someone is offboarding,
+
+694
+00:32:28,140 --> 00:32:30,370
+because we are gonna cache those in Dynamo
+
+695
+00:32:31,350 --> 00:32:33,450
+and then they will age out.
+
+696
+00:32:33,450 --> 00:32:37,440
+So the caching in default
+here is set to 15 minutes,
+
+697
+00:32:37,440 --> 00:32:40,290
+but it becomes deactivated
+within the application.
+
+698
+00:32:40,290 --> 00:32:41,310
+They can no longer use it.
+
+699
+00:32:41,310 --> 00:32:44,763
+And then it comes out of
+the Dynamo DV system itself.
+
+700
+00:32:45,750 --> 00:32:49,293
+So you can see that
+thereafter it has expired.
+
+701
+00:32:50,610 --> 00:32:52,590
+And if we scroll down here, and of course
+
+702
+00:32:52,590 --> 00:32:55,470
+you're gonna see for the
+rotation of each of the keys.
+
+703
+00:32:55,470 --> 00:32:57,780
+So of course if you're
+going to have customers
+
+704
+00:32:57,780 --> 00:32:59,250
+managing their keys, you want them
+
+705
+00:32:59,250 --> 00:33:01,860
+to manage the rotation of those keys.
+
+706
+00:33:01,860 --> 00:33:03,960
+And each customer's going to, of course,
+
+707
+00:33:03,960 --> 00:33:06,000
+have different expectations of what
+
+708
+00:33:06,000 --> 00:33:08,340
+that rotation cycle should be,
+
+709
+00:33:08,340 --> 00:33:10,740
+based upon what their internal compliance
+
+710
+00:33:10,740 --> 00:33:15,123
+or security program requires
+or compliance program requires.
+
+711
+00:33:16,830 --> 00:33:19,330
+Then scrolling down, we can see
+
+712
+00:33:22,140 --> 00:33:23,920
+how you might want to handle
+
+713
+00:33:25,560 --> 00:33:28,080
+multiple tenants data at a single time.
+
+714
+00:33:28,080 --> 00:33:31,350
+And so here's a key ring,
+
+715
+00:33:31,350 --> 00:33:34,890
+it's a multi-tenant key ring
+handling multiple customers
+
+716
+00:33:34,890 --> 00:33:38,430
+at the same time, but each of
+those are cached separately.
+
+717
+00:33:38,430 --> 00:33:42,930
+And each of those data streams,
+
+718
+00:33:42,930 --> 00:33:43,980
+one can't read the other
+
+719
+00:33:43,980 --> 00:33:45,600
+because each of those data streams,
+
+720
+00:33:45,600 --> 00:33:48,900
+even though it's being
+handled by the same process,
+
+721
+00:33:48,900 --> 00:33:51,780
+each of those data streams
+are only really readable
+
+722
+00:33:51,780 --> 00:33:54,693
+by the encryption and the
+encryption key stored for it.
+
+723
+00:33:55,650 --> 00:33:56,523
+Make sense?
+
+724
+00:33:58,410 --> 00:34:00,840
+And then here at the very bottom
+
+725
+00:34:00,840 --> 00:34:03,810
+is if you have a customer,
+and so you can support
+
+726
+00:34:03,810 --> 00:34:06,390
+both mechanisms because setting up
+
+727
+00:34:06,390 --> 00:34:08,640
+and establishing and maintaining KMS
+
+728
+00:34:08,640 --> 00:34:11,043
+can be a bit of a process bear.
+
+729
+00:34:14,220 --> 00:34:16,740
+From most customer's perspective,
+
+730
+00:34:16,740 --> 00:34:18,840
+when you're setting up key rings
+
+731
+00:34:18,840 --> 00:34:20,190
+and setting up those KMS keys,
+
+732
+00:34:20,190 --> 00:34:22,680
+holding them from a
+multi-tenant perspective,
+
+733
+00:34:22,680 --> 00:34:24,933
+like the upper example here on 208,
+
+734
+00:34:27,180 --> 00:34:28,260
+makes a lot of sense.
+
+735
+00:34:28,260 --> 00:34:29,197
+But if you have a customer's like,
+
+736
+00:34:29,197 --> 00:34:32,610
+"No, I really want my KMS
+to be in a single tenant
+
+737
+00:34:32,610 --> 00:34:36,360
+and it's only ever in the
+process with only my data."
+
+738
+00:34:36,360 --> 00:34:39,780
+Then here's an example of
+that just with a single tenant
+
+739
+00:34:39,780 --> 00:34:42,603
+within that key ring
+being handled at one time.
+
+740
+00:34:43,440 --> 00:34:45,600
+So there's two ways of doing that.
+
+741
+00:34:45,600 --> 00:34:47,400
+Now, if we take a step
+back, remember when I said
+
+742
+00:34:47,400 --> 00:34:52,400
+that in the Dynamo DB handle,
+how that expiration works.
+
+743
+00:34:52,920 --> 00:34:56,590
+So here is actually setting
+up that data key broker
+
+744
+00:34:57,690 --> 00:34:59,700
+for the Dynamo DB table.
+
+745
+00:34:59,700 --> 00:35:04,380
+And so you can see how each of
+those for actually setting up
+
+746
+00:35:04,380 --> 00:35:06,960
+that those data objects is established.
+
+747
+00:35:06,960 --> 00:35:10,830
+And the important part down
+here is really understanding
+
+748
+00:35:10,830 --> 00:35:13,320
+the coordination of those keys
+
+749
+00:35:13,320 --> 00:35:15,780
+for each tenant within Dynamo.
+
+750
+00:35:15,780 --> 00:35:18,660
+And then when you're
+actually rotating them,
+
+751
+00:35:18,660 --> 00:35:21,300
+setting up your intermediate keys.
+
+752
+00:35:21,300 --> 00:35:24,180
+And then of course down here
+
+753
+00:35:24,180 --> 00:35:27,630
+is where you're actually
+setting up your key ID
+
+754
+00:35:27,630 --> 00:35:30,570
+and the branch ID,
+which is per each tenant
+
+755
+00:35:30,570 --> 00:35:32,910
+and then the encryption context
+
+756
+00:35:32,910 --> 00:35:35,850
+and the actual credential
+provider that's being called
+
+757
+00:35:35,850 --> 00:35:38,220
+and can be defined in
+the other Java object
+
+758
+00:35:38,220 --> 00:35:40,110
+we'll go into next.
+
+759
+00:35:40,110 --> 00:35:42,630
+And then for that branch key request,
+
+760
+00:35:42,630 --> 00:35:44,193
+how that's being called.
+
+761
+00:35:45,150 --> 00:35:50,150
+And once again just
+explaining the default time,
+
+762
+00:35:50,280 --> 00:35:53,070
+which is here, how long you're
+gonna hold on that delete.
+
+763
+00:35:53,070 --> 00:35:55,530
+In the actual sample
+application it's 15 minutes.
+
+764
+00:35:55,530 --> 00:35:57,420
+It can be five minutes,
+it can be one minute
+
+765
+00:35:57,420 --> 00:35:59,460
+how long you're gonna hold it cached.
+
+766
+00:35:59,460 --> 00:36:04,460
+And that caching will be,
+if someone deletes it,
+
+767
+00:36:05,130 --> 00:36:08,190
+it will then no longer
+be in Dynamo after that.
+
+768
+00:36:08,190 --> 00:36:11,250
+But it may mean that you're
+going to make the request
+
+769
+00:36:11,250 --> 00:36:14,010
+to Dynamo more frequently
+to refresh your cache.
+
+770
+00:36:14,010 --> 00:36:15,780
+So you have to hit that parameter
+
+771
+00:36:15,780 --> 00:36:17,940
+of how long do you wanna cache for,
+
+772
+00:36:17,940 --> 00:36:20,370
+'cause that will be when something
+it's marked for deletion,
+
+773
+00:36:20,370 --> 00:36:22,770
+when it'll actually disappear from Dynamo.
+
+774
+00:36:22,770 --> 00:36:24,580
+But that also just means you have to
+
+775
+00:36:26,100 --> 00:36:28,600
+be querying Dynamo to
+actually refresh your cache.
+
+776
+00:36:29,760 --> 00:36:32,430
+So it's really like what does
+the application you're doing
+
+777
+00:36:32,430 --> 00:36:34,710
+and what does that mean
+from a deletion perspective?
+
+778
+00:36:34,710 --> 00:36:36,330
+And letting that guide that.
+
+779
+00:36:36,330 --> 00:36:39,480
+Now if you have most of
+your customers are happy
+
+780
+00:36:39,480 --> 00:36:41,760
+with say 15 minutes or five minutes,
+
+781
+00:36:41,760 --> 00:36:44,310
+but you have one customer
+that it needs to be a minute,
+
+782
+00:36:44,310 --> 00:36:45,870
+then in that instance it might make sense
+
+783
+00:36:45,870 --> 00:36:48,450
+to have most of them under
+the multi-tenant aspect
+
+784
+00:36:48,450 --> 00:36:50,730
+and then have the other one
+on the single tenant aspect
+
+785
+00:36:50,730 --> 00:36:53,250
+that has that more reduced time phrase
+
+786
+00:36:53,250 --> 00:36:54,990
+so that you can handle their refresh
+
+787
+00:36:54,990 --> 00:36:56,010
+but not have to be refreshing
+
+788
+00:36:56,010 --> 00:36:59,910
+every tenant's keys at the same cycle.
+
+789
+00:36:59,910 --> 00:37:01,953
+Does that make sense to everyone?
+
+790
+00:37:03,090 --> 00:37:03,963
+Excellent.
+
+791
+00:37:05,880 --> 00:37:08,580
+So if we take a step back from that
+
+792
+00:37:08,580 --> 00:37:10,920
+to actually look at the KMS client.
+
+793
+00:37:10,920 --> 00:37:13,300
+So here you can actually see
+
+794
+00:37:14,430 --> 00:37:18,240
+how it's actually
+establishing from the SDK
+
+795
+00:37:18,240 --> 00:37:23,240
+setting up the individual
+KMS in keys, scrolling down,
+
+796
+00:37:24,570 --> 00:37:27,930
+that then the service
+client will actually use
+
+797
+00:37:27,930 --> 00:37:30,243
+when the application is running.
+
+798
+00:37:31,650 --> 00:37:32,763
+Any questions?
+
+799
+00:37:34,590 --> 00:37:36,630
+It's pretty straightforward.
+
+800
+00:37:36,630 --> 00:37:41,100
+A lot of our security and
+observability customers
+
+801
+00:37:41,100 --> 00:37:44,070
+use this as well as some
+of our business apps.
+
+802
+00:37:48,240 --> 00:37:50,880
+So like Slack or Zoom and some others
+
+803
+00:37:50,880 --> 00:37:53,100
+also use the same sort of concept.
+
+804
+00:37:53,100 --> 00:37:54,930
+And really it's about how do I expose that
+
+805
+00:37:54,930 --> 00:37:58,740
+so the customer's providing
+access appropriately to the KMS
+
+806
+00:37:58,740 --> 00:38:03,003
+so they're not having
+to like plug in the ARN.
+
+807
+00:38:06,720 --> 00:38:08,010
+Peter was explaining earlier
+
+808
+00:38:08,010 --> 00:38:11,940
+how you can give them cloud
+formation scripts to do that,
+
+809
+00:38:11,940 --> 00:38:16,707
+but on November 19th of this year,
+
+810
+00:38:17,850 --> 00:38:22,850
+pre re:Invent the IAM team announced
+
+811
+00:38:23,250 --> 00:38:26,043
+partner-managed delegated permissions.
+
+812
+00:38:27,120 --> 00:38:30,300
+Which actually makes
+this a little bit easier
+
+813
+00:38:30,300 --> 00:38:34,230
+in the fact that within your
+app, your SaaS application,
+
+814
+00:38:34,230 --> 00:38:37,260
+you can make a request via IAM.
+
+815
+00:38:37,260 --> 00:38:39,990
+Now in order to register,
+you have to provide
+
+816
+00:38:39,990 --> 00:38:42,540
+policy boundary templates
+that are approved
+
+817
+00:38:42,540 --> 00:38:44,790
+by AWS to the IAM team.
+
+818
+00:38:44,790 --> 00:38:47,310
+But what that is, is a scope down policy.
+
+819
+00:38:47,310 --> 00:38:50,620
+So then from your SaaS
+platform, you can make a request
+
+820
+00:38:54,446 --> 00:38:57,510
+on the customer's behalf
+to the administrator
+
+821
+00:38:57,510 --> 00:39:00,720
+or the user with the
+appropriate permissions
+
+822
+00:39:00,720 --> 00:39:04,830
+into IAM for that administrator
+to approve or deny.
+
+823
+00:39:04,830 --> 00:39:07,680
+And what that does is then from
+then you can actually update
+
+824
+00:39:07,680 --> 00:39:10,350
+the permissions via cloud
+formation or Terraform
+
+825
+00:39:10,350 --> 00:39:13,440
+leveraging that temporary delegation
+
+826
+00:39:13,440 --> 00:39:18,440
+to actually say deploy a role
+or deploy sharing of KMS.
+
+827
+00:39:19,410 --> 00:39:20,243
+Right?
+
+828
+00:39:20,243 --> 00:39:23,040
+But it can only do that to
+actually do it that one time.
+
+829
+00:39:23,040 --> 00:39:24,340
+But then after that point,
+
+830
+00:39:25,800 --> 00:39:30,450
+I know we talked about encrypt,
+decrypt and generate key,
+
+831
+00:39:30,450 --> 00:39:33,360
+most observability and security providers
+
+832
+00:39:33,360 --> 00:39:35,280
+tend to just need decrypt
+
+833
+00:39:35,280 --> 00:39:37,680
+because they're not encrypting the key.
+
+834
+00:39:37,680 --> 00:39:40,890
+They want to decrypt it
+so that they can read it
+
+835
+00:39:40,890 --> 00:39:44,100
+and then store it on their side
+
+836
+00:39:44,100 --> 00:39:46,020
+in the data store that they're using,
+
+837
+00:39:46,020 --> 00:39:47,820
+but they don't necessarily wanna wrap it
+
+838
+00:39:47,820 --> 00:39:50,130
+in an envelope on their side.
+
+839
+00:39:50,130 --> 00:39:51,750
+Then they make the request back
+
+840
+00:39:51,750 --> 00:39:55,140
+to actually read the data using your key.
+
+841
+00:39:55,140 --> 00:39:57,210
+So using that cross account role,
+
+842
+00:39:57,210 --> 00:40:00,690
+but they never want to do
+actually any physical encrypting
+
+843
+00:40:00,690 --> 00:40:03,150
+or you wouldn't wanna do
+any physical encrypting
+
+844
+00:40:03,150 --> 00:40:05,883
+of additional data because
+that can be a bit risky,
+
+845
+00:40:06,900 --> 00:40:10,590
+or generate the keys using their key.
+
+846
+00:40:10,590 --> 00:40:12,480
+The customer should always
+generate those keys.
+
+847
+00:40:12,480 --> 00:40:14,010
+So there are different
+things you wanna think about
+
+848
+00:40:14,010 --> 00:40:16,500
+from your application's
+perspective in the design.
+
+849
+00:40:16,500 --> 00:40:17,940
+What do you really need
+
+850
+00:40:17,940 --> 00:40:21,030
+and is it something you just
+need in order to set up,
+
+851
+00:40:21,030 --> 00:40:24,630
+in which case you can use a
+partner delegated permission
+
+852
+00:40:24,630 --> 00:40:26,850
+or request for a one-time action,
+
+853
+00:40:26,850 --> 00:40:29,820
+and then with permission boundaries.
+
+854
+00:40:29,820 --> 00:40:32,400
+Or is it something that
+you're going to want
+
+855
+00:40:32,400 --> 00:40:37,400
+a general rule for encrypt
+or decrypt or generate keys?
+
+856
+00:40:38,580 --> 00:40:41,220
+But there are ways you
+can spread that out.
+
+857
+00:40:41,220 --> 00:40:43,860
+So at any one point in time you can give
+
+858
+00:40:43,860 --> 00:40:46,860
+that granular access to your customer.
+
+859
+00:40:46,860 --> 00:40:50,220
+But what I think is really powerful
+
+860
+00:40:50,220 --> 00:40:52,440
+is the ability for you to then make
+
+861
+00:40:52,440 --> 00:40:55,080
+those specific requests
+and policy statements
+
+862
+00:40:55,080 --> 00:40:58,920
+so the customer can make those choices.
+
+863
+00:40:58,920 --> 00:41:02,040
+So you're not having the
+friction of having them
+
+864
+00:41:02,040 --> 00:41:05,010
+go talk to the DevOps
+person to provide the script
+
+865
+00:41:05,010 --> 00:41:06,840
+to the template to the right account.
+
+866
+00:41:06,840 --> 00:41:08,880
+It'll initiate it in
+the appropriate account
+
+867
+00:41:08,880 --> 00:41:11,823
+for that appropriate
+admin to approve or deny.
+
+868
+00:41:13,020 --> 00:41:15,780
+So I think combining these
+capabilities together
+
+869
+00:41:15,780 --> 00:41:19,590
+gives you the ISV, the
+ability to help customers
+
+870
+00:41:19,590 --> 00:41:21,420
+be able to bring their own keys
+
+871
+00:41:21,420 --> 00:41:25,290
+but do it in a way that
+makes the most sense
+
+872
+00:41:25,290 --> 00:41:28,427
+and always encouraging our
+ISV partners to build on AWS
+
+873
+00:41:28,427 --> 00:41:31,740
+so you can use KMS where appropriate.
+
+874
+00:41:31,740 --> 00:41:34,560
+And then still if the customer does have
+
+875
+00:41:34,560 --> 00:41:37,830
+an on-prem key store,
+being able to access that
+
+876
+00:41:37,830 --> 00:41:42,570
+by leveraging the KMS
+construct to import as well.
+
+877
+00:41:42,570 --> 00:41:44,730
+Any other questions?
+
+878
+00:41:44,730 --> 00:41:45,563
+Yes.
+
+879
+00:41:45,563 --> 00:41:47,370
+- [Audience Member] With branch keys,
+
+880
+00:41:47,370 --> 00:41:49,827
+do you see any pushback from customers
+
+881
+00:41:49,827 --> 00:41:52,770
+who are like super hyped
+up on observability
+
+882
+00:41:52,770 --> 00:41:54,780
+where, you know, you're
+kind of caching the key,
+
+883
+00:41:54,780 --> 00:41:56,573
+not showing every (indistinct) logging?
+
+884
+00:42:00,630 --> 00:42:02,430
+- [Peter] I think you can
+have a patient conversation
+
+885
+00:42:02,430 --> 00:42:03,690
+with the customer to explain.
+
+886
+00:42:03,690 --> 00:42:06,780
+So the question there is
+right with branch keys
+
+887
+00:42:06,780 --> 00:42:08,790
+because you're not going
+back to KMS every time,
+
+888
+00:42:08,790 --> 00:42:10,470
+you're not gonna get KMS CloudTrail events
+
+889
+00:42:10,470 --> 00:42:12,030
+for all the cool things.
+
+890
+00:42:12,030 --> 00:42:13,080
+True.
+
+891
+00:42:13,080 --> 00:42:15,300
+I think customers, I'd like to believe,
+
+892
+00:42:15,300 --> 00:42:17,700
+maybe this is me being a
+naive solutions architect
+
+893
+00:42:17,700 --> 00:42:20,100
+who always believes I could convince
+
+894
+00:42:20,100 --> 00:42:21,570
+someone of something if I'm right.
+
+895
+00:42:21,570 --> 00:42:26,190
+But the question is ultimately
+if you want hyperscale
+
+896
+00:42:26,190 --> 00:42:28,530
+and performance, you can't emit logging
+
+897
+00:42:28,530 --> 00:42:30,660
+every time you touch something.
+
+898
+00:42:30,660 --> 00:42:35,340
+I think it shouldn't probably
+be at the top of your list,
+
+899
+00:42:35,340 --> 00:42:37,230
+but you could admit your own logging.
+
+900
+00:42:37,230 --> 00:42:38,063
+- [Jenn] 100%
+
+901
+00:42:38,063 --> 00:42:41,010
+You should always prevent for
+being providing the telemetry.
+
+902
+00:42:41,010 --> 00:42:43,770
+And those actions,
+because it's also in here.
+
+903
+00:42:43,770 --> 00:42:45,300
+I scrolled past it,
+
+904
+00:42:45,300 --> 00:42:48,510
+but you're also logging
+the number of times
+
+905
+00:42:48,510 --> 00:42:51,423
+your application's making use of that key.
+
+906
+00:42:52,650 --> 00:42:54,390
+And then of course that would be
+
+907
+00:42:54,390 --> 00:42:57,390
+emitted in your logs of your application.
+
+908
+00:42:57,390 --> 00:42:58,290
+- [Peter] But I would tell you, you know,
+
+909
+00:42:58,290 --> 00:43:00,197
+the question of caching anything is like,
+
+910
+00:43:00,197 --> 00:43:03,840
+'cause this also maybe undermines
+the big red button, right?
+
+911
+00:43:03,840 --> 00:43:07,110
+If I'm caching, if I
+invented a new top key
+
+912
+00:43:07,110 --> 00:43:09,390
+and I've got that clear top key,
+
+913
+00:43:09,390 --> 00:43:12,090
+the big red button goes away,
+a lot of things go away.
+
+914
+00:43:14,730 --> 00:43:16,710
+Your colleagues in your security team
+
+915
+00:43:16,710 --> 00:43:18,630
+and your application security team
+
+916
+00:43:18,630 --> 00:43:20,820
+and the people that are
+doing your SOC report
+
+917
+00:43:20,820 --> 00:43:23,320
+should all have strong
+opinions about this, right?
+
+918
+00:43:25,650 --> 00:43:28,920
+Caching is one thing,
+committing that top key
+
+919
+00:43:28,920 --> 00:43:31,650
+to non-volatile storage and clear, right?
+
+920
+00:43:31,650 --> 00:43:32,850
+There's a lot of things that
+
+921
+00:43:32,850 --> 00:43:35,103
+of course you should
+not be doing, but yes.
+
+922
+00:43:38,790 --> 00:43:39,897
+- Yes.
+
+923
+00:43:39,897 --> 00:43:43,533
+- I just wanted to add (indistinct).
+
+924
+00:43:43,533 --> 00:43:45,840
+- [Peter] Kevin Lee, one of
+the product managers for KMS.
+
+925
+00:43:45,840 --> 00:43:46,965
+- [Jenn] Yes.
+
+926
+00:43:46,965 --> 00:43:50,632
+(Kevin speaks indistinctly)
+
+927
+00:43:52,530 --> 00:43:55,230
+Make sure that you still
+have permission (indistinct).
+
+928
+00:44:00,175 --> 00:44:03,842
+The time frame (indistinct)
+
+929
+00:44:05,984 --> 00:44:08,280
+- [Peter] Right. Yeah, that's
+a really interesting point.
+
+930
+00:44:08,280 --> 00:44:09,570
+I think the point that
+Kevin's making there
+
+931
+00:44:09,570 --> 00:44:12,330
+is that there are somewhat
+out of band ways to check
+
+932
+00:44:12,330 --> 00:44:13,590
+to see if you still have the authorization
+
+933
+00:44:13,590 --> 00:44:15,600
+in the first place and you
+could use that as a signal
+
+934
+00:44:15,600 --> 00:44:16,623
+to drop the cache.
+
+935
+00:44:17,460 --> 00:44:19,710
+Right. Did I repeat that back okay?
+
+936
+00:44:21,215 --> 00:44:24,810
+(audience member speaks indistinctly)
+
+937
+00:44:24,810 --> 00:44:26,060
+- [Jenn] I couldn't hear.
+
+938
+00:44:27,060 --> 00:44:28,860
+- [Peter] Should we do more questions?
+
+939
+00:44:28,860 --> 00:44:30,180
+- [Jenn] Yeah. Huh?
+
+940
+00:44:30,180 --> 00:44:31,830
+- [Peter] The question is
+should we do more questions?
+
+941
+00:44:31,830 --> 00:44:33,963
+- [Jenn] Yeah, 100%. Ask your questions.
+
+942
+00:44:36,146 --> 00:44:40,646
+(audience member speaks indistinctly)
+
+943
+00:44:46,255 --> 00:44:50,781
+between security key and (indistinct)
+
+944
+00:44:50,781 --> 00:44:55,781
+outside organization
+especially (indistinct).
+
+945
+00:45:03,242 --> 00:45:07,180
+Create your own key (indistinct)
+
+946
+00:45:07,180 --> 00:45:10,680
+Essentially (indistinct).
+
+947
+00:45:12,098 --> 00:45:15,546
+The only way you can provide true security
+
+948
+00:45:15,546 --> 00:45:20,546
+is you hold your own key. (indistinct)
+
+949
+00:45:30,210 --> 00:45:31,980
+- [Jenn] Well, I mean, so like you could,
+
+950
+00:45:31,980 --> 00:45:33,780
+that was one of the
+examples that we showed
+
+951
+00:45:33,780 --> 00:45:38,127
+is you own your own key
+and or hold your own key.
+
+952
+00:45:38,127 --> 00:45:42,270
+And here, each of the
+processes has access to it,
+
+953
+00:45:42,270 --> 00:45:44,070
+but the admins don't have access
+
+954
+00:45:44,070 --> 00:45:46,470
+to the processes themselves.
+
+955
+00:45:46,470 --> 00:45:47,744
+- [Peter] Well said.
+
+956
+00:45:47,744 --> 00:45:50,430
+- [Jenn] (laughs) So it's kind
+of, it's one of these things
+
+957
+00:45:50,430 --> 00:45:55,430
+that, it might be a digression,
+but I happen to do it a lot.
+
+958
+00:45:56,640 --> 00:46:00,420
+It's when we're talking
+about AI and agents,
+
+959
+00:46:00,420 --> 00:46:02,580
+people like to think of them as people
+
+960
+00:46:02,580 --> 00:46:05,010
+and I beg you stop
+thinking of them that way.
+
+961
+00:46:05,010 --> 00:46:07,020
+Think of them as processes.
+
+962
+00:46:07,020 --> 00:46:07,853
+Right?
+
+963
+00:46:07,853 --> 00:46:09,570
+And if you think about them as processes
+
+964
+00:46:09,570 --> 00:46:12,660
+because that's what they
+are, then it's making sure
+
+965
+00:46:12,660 --> 00:46:15,930
+that only that process ever
+has access to that component.
+
+966
+00:46:15,930 --> 00:46:18,750
+And how do I architect
+a solution to ensure
+
+967
+00:46:18,750 --> 00:46:23,750
+that process only has access
+to that data and those keys
+
+968
+00:46:24,090 --> 00:46:25,650
+and another process never has it
+
+969
+00:46:25,650 --> 00:46:27,060
+nor can it hand the data over.
+
+970
+00:46:27,060 --> 00:46:27,893
+- [Peter] Right.
+
+971
+00:46:27,893 --> 00:46:30,450
+I mean the notional idea
+of ownership, right?
+
+972
+00:46:30,450 --> 00:46:34,080
+Without pulling apart the
+ontological concept of ownership.
+
+973
+00:46:34,080 --> 00:46:37,200
+If it's the customer's key
+and the customer's account,
+
+974
+00:46:37,200 --> 00:46:39,930
+that to me is as strong
+of an ownership model
+
+975
+00:46:39,930 --> 00:46:41,910
+as if it's in their own building.
+
+976
+00:46:41,910 --> 00:46:46,110
+You know, I work here but
+I'm very passionate about it.
+
+977
+00:46:46,110 --> 00:46:47,223
+You own your data.
+
+978
+00:46:48,286 --> 00:46:50,250
+So if you put an object into S3,
+
+979
+00:46:50,250 --> 00:46:52,110
+is it any less yours
+
+980
+00:46:52,110 --> 00:46:53,100
+than if that same file
+
+981
+00:46:53,100 --> 00:46:54,540
+was in a file system in your building?
+
+982
+00:46:54,540 --> 00:46:58,020
+No, it's absolutely still yours.
+
+983
+00:46:58,020 --> 00:47:01,740
+I think XKS is, I kind kidded that earlier
+
+984
+00:47:01,740 --> 00:47:02,673
+is a warm blanket,
+
+985
+00:47:04,740 --> 00:47:08,610
+but to me it is still
+very much your own key
+
+986
+00:47:08,610 --> 00:47:10,410
+if it is in your account
+
+987
+00:47:10,410 --> 00:47:12,690
+and the ISV has cross
+account authorization
+
+988
+00:47:12,690 --> 00:47:13,743
+to make use of it.
+
+989
+00:47:15,055 --> 00:47:16,403
+- [Audience Member] My main point is
+
+990
+00:47:16,403 --> 00:47:21,403
+it doesn't give you extra
+security. (indistinct)
+
+991
+00:47:25,085 --> 00:47:30,042
+Doesn't it's secure. (indistinct)
+
+992
+00:47:30,042 --> 00:47:31,800
+- [Peter] But that's a path that leads to,
+
+993
+00:47:31,800 --> 00:47:32,820
+well you don't own your own data
+
+994
+00:47:32,820 --> 00:47:35,010
+if you're hiring an ISV
+to process the data.
+
+995
+00:47:35,010 --> 00:47:36,360
+And that can't be true.
+
+996
+00:47:36,360 --> 00:47:38,370
+'Cause then none of you
+would have businesses, right?
+
+997
+00:47:38,370 --> 00:47:40,690
+Like, so the boundaries of ownership
+
+998
+00:47:41,910 --> 00:47:45,480
+to my taste are if
+you're accepting the idea
+
+999
+00:47:45,480 --> 00:47:49,500
+that you're gonna hire an ISV
+to do stuff with your data,
+
+1000
+00:47:49,500 --> 00:47:52,080
+you are already through
+that looking glass.
+
+1001
+00:47:52,080 --> 00:47:54,720
+You are already asking
+them to touch your data.
+
+1002
+00:47:54,720 --> 00:47:56,726
+- [Jenn] And that's also
+where you start to say,
+
+1003
+00:47:56,726 --> 00:47:58,830
+make sure if they're gonna do
+any processing on that data,
+
+1004
+00:47:58,830 --> 00:48:02,100
+what security and compliance
+have they gone through?
+
+1005
+00:48:02,100 --> 00:48:02,933
+- Right.
+- You know,
+
+1006
+00:48:02,933 --> 00:48:04,410
+do they have ISO certification?
+
+1007
+00:48:04,410 --> 00:48:07,453
+Do they have-
+- A competent SOC 2 program?
+
+1008
+00:48:07,453 --> 00:48:08,430
+- Correct.
+- Yeah.
+
+1009
+00:48:08,430 --> 00:48:09,930
+- [Jenn] I like to go further than SOC 2,
+
+1010
+00:48:09,930 --> 00:48:11,915
+but to each their own.
+- Sure.
+
+1011
+00:48:11,915 --> 00:48:16,800
+But table sticks. Table sticks.
+
+1012
+00:48:16,800 --> 00:48:18,060
+- [Jenn] Because what that does
+
+1013
+00:48:18,060 --> 00:48:19,800
+is you have a third party auditor
+
+1014
+00:48:19,800 --> 00:48:22,901
+coming in and validating those controls
+
+1015
+00:48:22,901 --> 00:48:24,480
+that are put into place
+
+1016
+00:48:24,480 --> 00:48:25,740
+- [Peter] That's right.
+
+1017
+00:48:25,740 --> 00:48:27,000
+- [Jenn] That they're handling the data
+
+1018
+00:48:27,000 --> 00:48:30,550
+and making sure that the
+employees never have access
+
+1019
+00:48:31,950 --> 00:48:34,653
+and the processes themselves
+never write out data,
+
+1020
+00:48:36,094 --> 00:48:38,220
+and not any of that activity is logged in,
+
+1021
+00:48:38,220 --> 00:48:39,990
+which you have that telemetry.
+
+1022
+00:48:39,990 --> 00:48:42,210
+- [Peter] Yeah, but I
+think I heard you say
+
+1023
+00:48:42,210 --> 00:48:45,960
+for so long as the ISV has the
+authorization to use the key,
+
+1024
+00:48:45,960 --> 00:48:47,010
+you've got a security problem.
+
+1025
+00:48:47,010 --> 00:48:48,390
+I can't accept that.
+
+1026
+00:48:48,390 --> 00:48:52,230
+'Cause again, I hired
+the ISV to touch my data.
+
+1027
+00:48:52,230 --> 00:48:53,160
+- [Jenn] Right.
+
+1028
+00:48:53,160 --> 00:48:54,690
+And also that's why I was saying
+
+1029
+00:48:54,690 --> 00:48:56,790
+it depends on what your
+application's doing.
+
+1030
+00:48:56,790 --> 00:49:00,450
+So if I'm writing something
+and I only ever write,
+
+1031
+00:49:00,450 --> 00:49:03,360
+then I should only have encrypt, right?
+
+1032
+00:49:03,360 --> 00:49:05,082
+On behalf of the customer.
+
+1033
+00:49:05,082 --> 00:49:06,220
+- [Peter] And generate data key.
+
+1034
+00:49:06,220 --> 00:49:07,170
+- [Jenn] Right. And generate the key.
+
+1035
+00:49:07,170 --> 00:49:11,430
+If all I'm ever doing is
+reading it from say you're a sim
+
+1036
+00:49:11,430 --> 00:49:13,350
+or detection and response,
+
+1037
+00:49:13,350 --> 00:49:15,888
+I should only ever be able to read it.
+
+1038
+00:49:15,888 --> 00:49:16,740
+- Right.
+- I should never be able
+
+1039
+00:49:16,740 --> 00:49:18,750
+to actually write it or generate
+
+1040
+00:49:18,750 --> 00:49:20,190
+a key for it.
+- That's a great point.
+
+1041
+00:49:20,190 --> 00:49:21,780
+- [Jenn] And so making
+sure that you understand
+
+1042
+00:49:21,780 --> 00:49:23,700
+what the action is
+
+1043
+00:49:23,700 --> 00:49:25,860
+and making sure that you don't
+give permission beyond that
+
+1044
+00:49:25,860 --> 00:49:28,590
+and there's an appropriate
+permission boundary
+
+1045
+00:49:28,590 --> 00:49:30,453
+in place in addition to those things.
+
+1046
+00:49:31,320 --> 00:49:32,320
+- [Peter] Well said.
+
+1047
+00:49:34,380 --> 00:49:37,218
+- Yes. Oh yeah 100%.
+
+1048
+00:49:37,218 --> 00:49:38,487
+- [Audience Member] So how do you deal
+
+1049
+00:49:38,487 --> 00:49:41,137
+with different customers
+with different requirements?
+
+1050
+00:49:42,664 --> 00:49:44,223
+I get that some customers are gonna be,
+
+1051
+00:49:44,223 --> 00:49:45,720
+"Oh, I wanna hold my own key.
+
+1052
+00:49:45,720 --> 00:49:50,040
+I want to do it in KMS
+and I'm an avid AWS user."
+
+1053
+00:49:50,040 --> 00:49:51,180
+So that's fine.
+
+1054
+00:49:51,180 --> 00:49:53,365
+While others are gonna be, "I don't know
+
+1055
+00:49:53,365 --> 00:49:55,740
+what you're talking about
+and I don't use AWS.
+
+1056
+00:49:55,740 --> 00:49:56,990
+I don't have an account."
+
+1057
+00:49:58,350 --> 00:49:59,670
+How do you usually deal with that.
+
+1058
+00:49:59,670 --> 00:50:03,310
+- [Peter] I think my short
+answer to that is build to KMS
+
+1059
+00:50:04,470 --> 00:50:06,810
+and if customers wanna hold their own key,
+
+1060
+00:50:06,810 --> 00:50:08,430
+there's a way to do that with KMS.
+
+1061
+00:50:08,430 --> 00:50:10,950
+- [Jenn] Right. And and
+it's abstracted from you.
+
+1062
+00:50:10,950 --> 00:50:11,783
+- [Peter] Right.
+
+1063
+00:50:13,023 --> 00:50:14,463
+- [Audience Member] Does that impact
+
+1064
+00:50:14,463 --> 00:50:17,735
+how you interact with the APIs?
+
+1065
+00:50:17,735 --> 00:50:21,633
+- [Peter] It doesn't change
+any of the API contracts.
+
+1066
+00:50:23,070 --> 00:50:25,460
+XKS, the external key store
+where it lives in an HSM
+
+1067
+00:50:25,460 --> 00:50:27,813
+in your office building or data center.
+
+1068
+00:50:28,830 --> 00:50:33,090
+It does have implications
+for performance. Right?
+
+1069
+00:50:33,090 --> 00:50:35,610
+If you're operating a petascale data lake
+
+1070
+00:50:35,610 --> 00:50:39,300
+with 1,000 nodes banging on it.
+
+1071
+00:50:39,300 --> 00:50:40,680
+- And globally,
+- Right.
+
+1072
+00:50:40,680 --> 00:50:44,190
+And you have to go back
+to the HSM every time.
+
+1073
+00:50:44,190 --> 00:50:46,380
+- Or you have to go to an on-prem HSM
+
+1074
+00:50:46,380 --> 00:50:47,700
+going for a network connection
+
+1075
+00:50:47,700 --> 00:50:50,100
+and you have a really small caching time.
+
+1076
+00:50:50,100 --> 00:50:51,480
+- Right.
+- Yeah.
+
+1077
+00:50:51,480 --> 00:50:53,520
+- [Jenn] I mean this is where
+it starts to become important.
+
+1078
+00:50:53,520 --> 00:50:54,810
+The caching discussion.
+
+1079
+00:50:54,810 --> 00:50:58,440
+Just like in for a
+database itself, you know,
+
+1080
+00:50:58,440 --> 00:51:01,710
+you sometimes have to cache the
+most frequently asked things
+
+1081
+00:51:01,710 --> 00:51:03,480
+and that's why you set a time to live.
+
+1082
+00:51:03,480 --> 00:51:05,460
+Same thing for DNS.
+
+1083
+00:51:05,460 --> 00:51:06,900
+You set time to live
+
+1084
+00:51:06,900 --> 00:51:09,600
+because I need to cache the
+fully qualified domain names.
+
+1085
+00:51:09,600 --> 00:51:13,440
+Now if I have very dynamic IPs
+
+1086
+00:51:13,440 --> 00:51:15,120
+for load balancers and things like that,
+
+1087
+00:51:15,120 --> 00:51:17,400
+my time to live is probably in seconds.
+
+1088
+00:51:17,400 --> 00:51:18,570
+Right?
+
+1089
+00:51:18,570 --> 00:51:21,390
+But if I'm sitting at the
+top of the name space,
+
+1090
+00:51:21,390 --> 00:51:23,207
+my time to live might be 24 hours.
+
+1091
+00:51:23,207 --> 00:51:24,060
+- Right.
+- Right?
+
+1092
+00:51:24,060 --> 00:51:26,310
+And so it's really understanding
+
+1093
+00:51:26,310 --> 00:51:29,790
+that from a KMS perspective
+
+1094
+00:51:29,790 --> 00:51:33,030
+and architecting that in
+a way that makes sense
+
+1095
+00:51:33,030 --> 00:51:36,840
+based upon where the customer determines
+
+1096
+00:51:36,840 --> 00:51:37,673
+where they want to,
+
+1097
+00:51:37,673 --> 00:51:39,360
+how long and where it's being stored
+
+1098
+00:51:39,360 --> 00:51:40,440
+and you as the provider.
+
+1099
+00:51:40,440 --> 00:51:42,270
+That's why I'm saying like it might be
+
+1100
+00:51:42,270 --> 00:51:43,920
+for that really particular customer,
+
+1101
+00:51:43,920 --> 00:51:45,360
+it's that bottom example.
+
+1102
+00:51:45,360 --> 00:51:48,750
+And that time to live has to
+be longer because it's on-prem.
+
+1103
+00:51:48,750 --> 00:51:51,720
+And I have to take into effect the fact
+
+1104
+00:51:51,720 --> 00:51:53,550
+that every time I clear my cache,
+
+1105
+00:51:53,550 --> 00:51:55,620
+I'm gonna have to pull it back
+
+1106
+00:51:55,620 --> 00:51:57,587
+and then I need to make sure
+it's distributed, right?
+
+1107
+00:51:57,587 --> 00:51:59,937
+And so I have to architect
+to account for that.
+
+1108
+00:52:00,810 --> 00:52:02,763
+- [Peter] But to summarize the answer,
+
+1109
+00:52:05,070 --> 00:52:09,180
+the characteristic of the
+key, XKS, custom key store,
+
+1110
+00:52:09,180 --> 00:52:11,760
+regular KMS, does not
+change API interactions.
+
+1111
+00:52:11,760 --> 00:52:12,987
+- [Jenn] It doesn't. Yeah.
+
+1112
+00:52:12,987 --> 00:52:15,240
+- [Peter] It can change
+performance characteristics.
+
+1113
+00:52:15,240 --> 00:52:18,180
+And availability
+characteristics of the results.
+
+1114
+00:52:18,180 --> 00:52:19,403
+- 100%.
+
+1115
+00:52:20,953 --> 00:52:23,790
+That's why I'm saying that
+the multi-tenant one above,
+
+1116
+00:52:23,790 --> 00:52:25,530
+most of the time that makes sense.
+
+1117
+00:52:25,530 --> 00:52:26,363
+Right?
+
+1118
+00:52:26,363 --> 00:52:27,660
+If I have one that then is
+
+1119
+00:52:27,660 --> 00:52:30,335
+that particular customer
+is gonna be on-prem,
+
+1120
+00:52:30,335 --> 00:52:32,280
+they wanna hold their own key,
+
+1121
+00:52:32,280 --> 00:52:35,670
+I am not having that
+impact the other tenants.
+
+1122
+00:52:35,670 --> 00:52:36,600
+Does that make sense?
+
+1123
+00:52:36,600 --> 00:52:38,670
+- [Audience Member] Oh yeah,
+yeah, yeah. (indistinct)
+
+1124
+00:52:38,670 --> 00:52:40,620
+Probably on the onboarding side
+
+1125
+00:52:40,620 --> 00:52:42,447
+there's gonna be lots
+of different processes
+
+1126
+00:52:42,447 --> 00:52:44,610
+for different requirements.
+
+1127
+00:52:44,610 --> 00:52:46,580
+- Yeah. Yeah.
+- And onboarding a new client.
+
+1128
+00:52:46,580 --> 00:52:47,747
+- [Jenn] Yeah.
+
+1129
+00:52:50,700 --> 00:52:51,533
+Yes.
+
+1130
+00:52:52,500 --> 00:52:54,873
+- I have a question.
+- Please.
+
+1131
+00:52:55,830 --> 00:53:00,119
+- [Audience Member] So I'm used
+to thinking in terms of data
+
+1132
+00:53:00,119 --> 00:53:01,410
+and key encrypt.
+
+1133
+00:53:01,410 --> 00:53:02,760
+So now my data's encrypted.
+
+1134
+00:53:04,260 --> 00:53:08,079
+We talked about rotation (indistinct)
+
+1135
+00:53:08,079 --> 00:53:10,372
+and I'm having trouble getting past that.
+
+1136
+00:53:10,372 --> 00:53:12,622
+That hurdle of now I've
+got a petabyte of data
+
+1137
+00:53:12,622 --> 00:53:13,610
+that's been encrypted.
+
+1138
+00:53:13,610 --> 00:53:15,540
+- [Peter] So we are very opinionated about
+
+1139
+00:53:15,540 --> 00:53:18,210
+what rotation is and what it is not.
+
+1140
+00:53:18,210 --> 00:53:21,360
+A lot of people think of
+rotation as if I rotate,
+
+1141
+00:53:21,360 --> 00:53:23,940
+then I'm gonna destroy the previous key,
+
+1142
+00:53:23,940 --> 00:53:26,970
+which necessitates
+re-encrypting all the data
+
+1143
+00:53:26,970 --> 00:53:28,980
+so that it's now protected by the new key.
+
+1144
+00:53:28,980 --> 00:53:30,393
+That is not how we do it.
+
+1145
+00:53:31,710 --> 00:53:34,050
+Historically, again, I'm very
+opinionated bit about this.
+
+1146
+00:53:34,050 --> 00:53:36,120
+So let me get through this quickly.
+
+1147
+00:53:36,120 --> 00:53:38,580
+Historically you rotated for two reasons.
+
+1148
+00:53:38,580 --> 00:53:40,770
+Number one, humans had access to it.
+
+1149
+00:53:40,770 --> 00:53:42,930
+And now that human left the building.
+
+1150
+00:53:42,930 --> 00:53:44,940
+We don't have that problem with KMS.
+
+1151
+00:53:44,940 --> 00:53:47,460
+Nobody ever touches
+those keys. Not even us.
+
+1152
+00:53:47,460 --> 00:53:50,160
+There is no way for us to
+access your key material.
+
+1153
+00:53:50,160 --> 00:53:52,620
+The other reason you
+rotate is crypto wear out.
+
+1154
+00:53:52,620 --> 00:53:55,320
+I used the same key for all this data
+
+1155
+00:53:55,320 --> 00:53:57,300
+and now I need another one.
+
+1156
+00:53:57,300 --> 00:54:01,650
+The envelope encryption pattern
+addresses both problems.
+
+1157
+00:54:01,650 --> 00:54:03,900
+That the blast radius of an individual key
+
+1158
+00:54:03,900 --> 00:54:06,360
+is necessarily very, very narrow,
+
+1159
+00:54:06,360 --> 00:54:10,110
+'cause it's typically per
+resource or per file or whatever.
+
+1160
+00:54:10,110 --> 00:54:15,110
+And there is no such thing as
+getting the key out of KMS.
+
+1161
+00:54:15,300 --> 00:54:16,170
+Like there's no API
+
+1162
+00:54:16,170 --> 00:54:17,633
+to dematerial.
+- You can't export.
+
+1163
+00:54:19,650 --> 00:54:20,483
+- [Peter] And even if you could,
+
+1164
+00:54:20,483 --> 00:54:22,290
+you couldn't make use of it.
+
+1165
+00:54:22,290 --> 00:54:25,800
+What we do when we rotate
+is, I mentioned earlier
+
+1166
+00:54:25,800 --> 00:54:28,740
+that the idea of the CMK, the ARN
+
+1167
+00:54:28,740 --> 00:54:31,773
+is itself effectively a vessel,
+
+1168
+00:54:32,970 --> 00:54:35,040
+inside of that is the real key material.
+
+1169
+00:54:35,040 --> 00:54:39,000
+If you turn on rotation
+on a periodic basis,
+
+1170
+00:54:39,000 --> 00:54:41,370
+I think by default a year.
+
+1171
+00:54:41,370 --> 00:54:43,870
+And did we ever lower the
+period for that? We did?
+
+1172
+00:54:44,879 --> 00:54:47,160
+- 30 days to 7 years.
+- There you go.
+
+1173
+00:54:47,160 --> 00:54:48,633
+30 days to 7 years.
+
+1174
+00:54:50,940 --> 00:54:52,440
+This whole week there's
+gonna be new things.
+
+1175
+00:54:52,440 --> 00:54:53,690
+And it's hard for us too.
+
+1176
+00:54:55,680 --> 00:54:58,950
+At that rotation period
+we create new key material
+
+1177
+00:54:58,950 --> 00:55:01,740
+that will be used for future encrypt
+
+1178
+00:55:01,740 --> 00:55:03,120
+and generate data key events.
+
+1179
+00:55:03,120 --> 00:55:04,570
+We keep the old key material.
+
+1180
+00:55:05,790 --> 00:55:07,890
+Because if we didn't, we would have
+
+1181
+00:55:07,890 --> 00:55:11,490
+to go re-encrypt a giant body
+of data, which is expensive
+
+1182
+00:55:11,490 --> 00:55:14,250
+and time consuming and
+really hard to get right
+
+1183
+00:55:14,250 --> 00:55:15,900
+because of edge cases.
+
+1184
+00:55:15,900 --> 00:55:18,443
+And if we got rid of the key material,
+
+1185
+00:55:18,443 --> 00:55:19,350
+it would be very dangerous.
+
+1186
+00:55:19,350 --> 00:55:22,563
+So when we rotate, we just
+generate new key material
+
+1187
+00:55:22,563 --> 00:55:25,500
+that is used for new
+cryptographic operations,
+
+1188
+00:55:25,500 --> 00:55:26,580
+but we keep the old one.
+
+1189
+00:55:26,580 --> 00:55:27,756
+- [Jenn] Right.
+
+1190
+00:55:27,756 --> 00:55:29,483
+And it's really important because if ever,
+
+1191
+00:55:30,360 --> 00:55:33,870
+that's why the retention for seven years,
+
+1192
+00:55:33,870 --> 00:55:36,390
+is if you ever have to go back in time
+
+1193
+00:55:36,390 --> 00:55:38,760
+to go look at data from a period of time
+
+1194
+00:55:38,760 --> 00:55:39,930
+where it was previously written,
+
+1195
+00:55:39,930 --> 00:55:41,822
+you need to be able to read that.
+
+1196
+00:55:41,822 --> 00:55:42,655
+- [Peter] That's right.
+
+1197
+00:55:42,655 --> 00:55:43,488
+- [Jenn] And so that might be something
+
+1198
+00:55:43,488 --> 00:55:44,940
+that's historically stored in Glacier,
+
+1199
+00:55:44,940 --> 00:55:47,760
+but it's still attached to that older key
+
+1200
+00:55:47,760 --> 00:55:49,140
+for when it was created.
+
+1201
+00:55:49,140 --> 00:55:50,400
+So then when you need to access it,
+
+1202
+00:55:50,400 --> 00:55:52,980
+you as the owner of it
+
+1203
+00:55:52,980 --> 00:55:55,560
+when the application's
+making the call can still,
+
+1204
+00:55:55,560 --> 00:55:57,417
+it can go look back on that point in time.
+
+1205
+00:55:57,417 --> 00:55:59,130
+- [Peter] But let me restate the two big
+
+1206
+00:55:59,130 --> 00:56:00,780
+punchlines though to this topic.
+
+1207
+00:56:00,780 --> 00:56:02,970
+Number one, the envelope
+encryption pattern
+
+1208
+00:56:02,970 --> 00:56:04,950
+takes away-
+- All that complexity.
+
+1209
+00:56:04,950 --> 00:56:06,030
+- [Peter] Off the table the reasons
+
+1210
+00:56:06,030 --> 00:56:08,310
+to even think about rotation ever.
+
+1211
+00:56:08,310 --> 00:56:09,330
+Full stop.
+
+1212
+00:56:09,330 --> 00:56:11,310
+Number two, we have a rotation thing
+
+1213
+00:56:11,310 --> 00:56:14,193
+that you can turn on and
+make somebody in audit happy.
+
+1214
+00:56:16,800 --> 00:56:18,420
+- [Jenn] And you don't need to worry about
+
+1215
+00:56:18,420 --> 00:56:20,040
+how do I then go back in time
+
+1216
+00:56:20,040 --> 00:56:23,070
+and use the key that
+goes back and does that.
+
+1217
+00:56:23,070 --> 00:56:24,510
+It's being taken care of for you.
+
+1218
+00:56:24,510 --> 00:56:25,343
+- [Peter] Right.
+
+1219
+00:56:25,343 --> 00:56:27,367
+But if you encounter a colleague who says,
+
+1220
+00:56:27,367 --> 00:56:30,630
+"No, we need new data encryption keys
+
+1221
+00:56:30,630 --> 00:56:33,897
+and we're gonna rewrap
+and rekey all the data."
+
+1222
+00:56:35,940 --> 00:56:37,053
+That person is wrong.
+
+1223
+00:56:41,804 --> 00:56:46,387
+(audience member speaks indistinctly)
+
+1224
+00:57:14,112 --> 00:57:18,445
+So what I'm asking is (indistinct).
+
+1225
+00:57:26,011 --> 00:57:30,067
+So what is the solution
+for that? (indistinct)
+
+1226
+00:57:30,067 --> 00:57:32,050
+- [Peter] So what I think I heard was
+
+1227
+00:57:32,910 --> 00:57:36,000
+you've got a kind of set of
+competing interests, right?
+
+1228
+00:57:36,000 --> 00:57:37,260
+You want to encrypt everything,
+
+1229
+00:57:37,260 --> 00:57:40,500
+but there are trade-offs
+that you want to work around.
+
+1230
+00:57:40,500 --> 00:57:42,180
+Let's talk about some of those trade-offs.
+
+1231
+00:57:42,180 --> 00:57:44,880
+The classic one is searching, right?
+
+1232
+00:57:44,880 --> 00:57:46,380
+That's the biggest problem.
+
+1233
+00:57:46,380 --> 00:57:49,140
+If I wanna have a column
+in a relational data store
+
+1234
+00:57:49,140 --> 00:57:52,263
+of taxpayer ID, social security
+number in this country.
+
+1235
+00:57:53,610 --> 00:57:57,600
+But I also wanna look up
+customers by taxpayer.
+
+1236
+00:57:57,600 --> 00:57:58,950
+It's not a great way to do that.
+
+1237
+00:57:58,950 --> 00:58:03,270
+There are vanguard, cutting edge
+
+1238
+00:58:03,270 --> 00:58:06,540
+homomorphic encryption options
+
+1239
+00:58:06,540 --> 00:58:11,070
+that are just finally starting
+to really become real.
+
+1240
+00:58:11,070 --> 00:58:12,390
+There were some talks this week.
+
+1241
+00:58:12,390 --> 00:58:14,820
+We hired a trio of cryptographers,
+
+1242
+00:58:14,820 --> 00:58:16,590
+this lovely interesting group of people
+
+1243
+00:58:16,590 --> 00:58:18,480
+that have worked together for 20 years.
+
+1244
+00:58:18,480 --> 00:58:20,223
+Tal Rabin, Hugo,
+
+1245
+00:58:22,290 --> 00:58:24,480
+I'm gonna blank on their
+names, which is embarrassing.
+
+1246
+00:58:24,480 --> 00:58:27,228
+- [Jenn] There's people
+like Robert Alcorn and Avni
+
+1247
+00:58:27,228 --> 00:58:28,061
+over on the crypto team.
+
+1248
+00:58:28,061 --> 00:58:28,894
+- [Peter] Yeah.
+
+1249
+00:58:28,894 --> 00:58:31,200
+But the searchable encryption
+thing is out there.
+
+1250
+00:58:31,200 --> 00:58:34,863
+You can kind of search across
+encrypted fields these days.
+
+1251
+00:58:35,730 --> 00:58:38,220
+It's not super high performance.
+
+1252
+00:58:38,220 --> 00:58:39,900
+I wouldn't put it in the hot path
+
+1253
+00:58:39,900 --> 00:58:42,840
+for a really high TPS application.
+
+1254
+00:58:42,840 --> 00:58:44,520
+But there are some ways to do that.
+
+1255
+00:58:44,520 --> 00:58:48,480
+Deterministic encryption for
+particularly narrow key spaces
+
+1256
+00:58:48,480 --> 00:58:51,360
+like a social security number,
+like a credit card number,
+
+1257
+00:58:51,360 --> 00:58:53,430
+can be super dangerous
+
+1258
+00:58:53,430 --> 00:58:58,200
+because social security
+numbers are super predictable.
+
+1259
+00:58:58,200 --> 00:59:02,010
+If you know when and
+where someone was born,
+
+1260
+00:59:02,010 --> 00:59:04,260
+you've already lost half of
+the social security number,
+
+1261
+00:59:04,260 --> 00:59:05,460
+it's very predictable.
+
+1262
+00:59:05,460 --> 00:59:06,750
+Same with credit card numbers.
+
+1263
+00:59:06,750 --> 00:59:09,180
+Because of CVV too, there's
+like an internal check sum
+
+1264
+00:59:09,180 --> 00:59:11,610
+to the format of a credit card number
+
+1265
+00:59:11,610 --> 00:59:14,580
+and the first six digits belong to banks.
+
+1266
+00:59:14,580 --> 00:59:17,190
+And so the key spaces get
+really narrow really fast,
+
+1267
+00:59:17,190 --> 00:59:20,130
+which means it's trivial
+to create a rainbow table
+
+1268
+00:59:20,130 --> 00:59:23,010
+of all possible values.
+
+1269
+00:59:23,010 --> 00:59:25,860
+So you gotta be very careful
+at deterministic encryption.
+
+1270
+00:59:27,761 --> 00:59:32,261
+(audience member speaks indistinctly)
+
+1271
+00:59:39,570 --> 00:59:41,400
+It's getting there. It's getting there.
+
+1272
+00:59:41,400 --> 00:59:44,850
+But again, the larger the field is
+
+1273
+00:59:44,850 --> 00:59:48,210
+and if the cardinality of the field blooms
+
+1274
+00:59:48,210 --> 00:59:52,320
+like a free text field, then
+all the promises fall apart.
+
+1275
+00:59:52,320 --> 00:59:56,940
+If the cardinality of
+the encrypted payload
+
+1276
+00:59:56,940 --> 00:59:57,990
+that you're attempting to search across
+
+1277
+00:59:57,990 --> 01:00:00,990
+is relatively finite, the
+solution works much better.
+
+1278
+01:00:00,990 --> 01:00:04,200
+But if it's like, I want
+to encrypt all the notes
+
+1279
+01:00:04,200 --> 01:00:06,900
+from the call center, but still search it,
+
+1280
+01:00:06,900 --> 01:00:08,550
+no, that's not gonna happen.
+
+1281
+01:00:08,550 --> 01:00:13,140
+But could I encrypt addresses
+and still search across it?
+
+1282
+01:00:13,140 --> 01:00:14,640
+Yeah, probably.
+
+1283
+01:00:14,640 --> 01:00:15,690
+And the database,
+
+1284
+01:00:15,690 --> 01:00:19,500
+SDK implements this for
+Dynamo, that's available today.
+
+1285
+01:00:19,500 --> 01:00:22,050
+Searchable encryption in
+Dynamo is available today.
+
+1286
+01:00:23,520 --> 01:00:25,290
+Again, it comes with a pile of asterisks
+
+1287
+01:00:25,290 --> 01:00:28,110
+that you and your engineering
+team should investigate.
+
+1288
+01:00:28,110 --> 01:00:30,120
+But it's cool and it works.
+
+1289
+01:00:30,120 --> 01:00:31,932
+We have customers using it.
+
+1290
+01:00:31,932 --> 01:00:35,730
+(audience member speaks indistinctly)
+
+1291
+01:00:35,730 --> 01:00:38,703
+- [Peter] With the AWS
+database encryption SDK.
+
+1292
+01:00:40,320 --> 01:00:41,883
+Yeah. It's pretty cool.
+
+1293
+01:00:43,410 --> 01:00:45,990
+And you should have your
+account team follow up with us.
+
+1294
+01:00:45,990 --> 01:00:49,560
+Like the team that is working
+on this kind of vanguard
+
+1295
+01:00:49,560 --> 01:00:52,200
+of exploring stuff is
+very interested in talking
+
+1296
+01:00:52,200 --> 01:00:55,593
+to customers and hearing use cases, right?
+
+1297
+01:00:57,141 --> 01:01:01,641
+(audience member speaks indistinctly)
+
+1298
+01:01:04,842 --> 01:01:05,910
+Tell your account team you're interested
+
+1299
+01:01:05,910 --> 01:01:07,770
+in having a conversation
+about homomorphic encryption.
+
+1300
+01:01:07,770 --> 01:01:10,503
+If you search the session
+catalog for homomorphic,
+
+1301
+01:01:12,270 --> 01:01:14,400
+you'll find the sessions.
+
+1302
+01:01:14,400 --> 01:01:17,400
+I'm pretty sure Tal and Raj
+are talking about it this week.
+
+1303
+01:01:17,400 --> 01:01:19,263
+Tal Rabin, who leads that trio.
+
+1304
+01:01:20,730 --> 01:01:22,890
+This trio of cryptographers,
+they all have Wikipedia pages,
+
+1305
+01:01:22,890 --> 01:01:24,060
+if that helps contextualize
+
+1306
+01:01:24,060 --> 01:01:25,860
+who they are and what they're about.
+
+1307
+01:01:26,880 --> 01:01:29,460
+Yeah, we're doing some
+really cool stuff there.
+
+1308
+01:01:29,460 --> 01:01:31,650
+- [Jenn] All right. So we've
+reached the end of the time.
+
+1309
+01:01:31,650 --> 01:01:33,270
+The red light is flashing.
+
+1310
+01:01:33,270 --> 01:01:35,400
+So thank you all for coming.
+
+1311
+01:01:35,400 --> 01:01:38,220
+Hope you found this very informative.
+
+1312
+01:01:38,220 --> 01:01:39,630
+Please fill out the survey
+
+1313
+01:01:39,630 --> 01:01:42,630
+and let us know how you liked it,
+
+1314
+01:01:42,630 --> 01:01:46,230
+and we look forward to
+talking to you guys more.
+
+1315
+01:01:46,230 --> 01:01:49,553
+- [Peter] Cool.
+(audience applauding)
+

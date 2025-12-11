@@ -1,0 +1,5404 @@
+1
+00:00:00,629 --> 00:00:01,750
+Good morning everybody.
+
+2
+00:00:02,189 --> 00:00:04,169
+And the last thing between you and lunch, I suspect.
+
+3
+00:00:04,750 --> 00:00:06,780
+I'm Ryan, I'm a principal product manager at
+
+4
+00:00:06,780 --> 00:00:08,858
+Amazon. I'm joined by my colleague Nick, who's gonna
+
+5
+00:00:08,858 --> 00:00:10,329
+come up here about halfway through.
+
+6
+00:00:11,259 --> 00:00:13,300
+I've been really looking forward to talking to you all
+
+7
+00:00:13,300 --> 00:00:15,419
+week. I lost my voice yesterday
+
+8
+00:00:15,419 --> 00:00:17,539
+though, so please bear with me if you feel
+
+9
+00:00:17,539 --> 00:00:18,559
+my voice break or
+
+10
+00:00:18,818 --> 00:00:20,000
+I stop for some water.
+
+11
+00:00:20,539 --> 00:00:22,658
+I'm, Nick and I are both from the Strand's
+
+12
+00:00:22,658 --> 00:00:23,280
+agents team.
+
+13
+00:00:24,670 --> 00:00:26,870
+We've been really looking forward to talking to you about
+
+14
+00:00:26,870 --> 00:00:29,228
+strands at this conference. Many of you maybe
+
+15
+00:00:29,228 --> 00:00:30,289
+have seen our booth,
+
+16
+00:00:30,870 --> 00:00:33,189
+um, and today we're here to talk about our newest
+
+17
+00:00:33,189 --> 00:00:35,429
+release TypeScript, some of the other releases around
+
+18
+00:00:35,429 --> 00:00:37,539
+it, and, uh, I'm gonna spend some
+
+19
+00:00:37,539 --> 00:00:39,329
+time talking about
+
+20
+00:00:39,630 --> 00:00:41,709
+this simple interface for building
+
+21
+00:00:41,709 --> 00:00:43,490
+an agent, and I'm gonna talk about
+
+22
+00:00:44,109 --> 00:00:46,109
+what that, what's behind that? What does it mean to
+
+23
+00:00:46,109 --> 00:00:46,789
+build an agent?
+
+24
+00:00:47,090 --> 00:00:48,829
+Um, in a few lines of code.
+
+25
+00:00:49,209 --> 00:00:51,289
+This code sample actually will run if
+
+26
+00:00:51,289 --> 00:00:53,329
+you have installed the strands and
+
+27
+00:00:53,329 --> 00:00:55,569
+the strands tools packages from Pi Pii.
+
+28
+00:00:56,509 --> 00:00:58,548
+If you have the default model provider
+
+29
+00:00:58,548 --> 00:00:59,289
+of Bedrock,
+
+30
+00:00:59,590 --> 00:01:01,529
+you can run this and run the agent loop.
+
+31
+00:01:02,109 --> 00:01:04,260
+So I'm gonna walk you through kind of how that works,
+
+32
+00:01:04,400 --> 00:01:06,659
+why it works, and then of course, um,
+
+33
+00:01:06,709 --> 00:01:09,000
+we're gonna talk a bit about the TypeScript release.
+
+34
+00:01:09,269 --> 00:01:11,510
+Nick's gonna come up and talk about how we've built it.
+
+35
+00:01:12,299 --> 00:01:14,980
+And so we'll follow through here, uh, strands,
+
+36
+00:01:15,230 --> 00:01:16,349
+the TypeScript release,
+
+37
+00:01:16,629 --> 00:01:18,549
+the model-driven approach to an agent loop,
+
+38
+00:01:18,870 --> 00:01:19,528
+and so on.
+
+39
+00:01:22,359 --> 00:01:24,588
+So first, I just wanna get this out of the way since
+
+40
+00:01:24,588 --> 00:01:26,659
+many of you are coming here to join us
+
+41
+00:01:26,659 --> 00:01:27,778
+now that we're releasing
+
+42
+00:01:28,069 --> 00:01:29,829
+as of yesterday into TypeScript.
+
+43
+00:01:30,430 --> 00:01:32,569
+Very excited about this. It's a preview release,
+
+44
+00:01:32,709 --> 00:01:35,168
+meaning 0.1 on GitHub
+
+45
+00:01:35,168 --> 00:01:36,370
+and NPM.
+
+46
+00:01:37,909 --> 00:01:39,989
+Same style of strands though. We've worked really
+
+47
+00:01:39,989 --> 00:01:42,150
+hard to bring everything we've had since
+
+48
+00:01:42,150 --> 00:01:43,969
+May when we released the Python SDK
+
+49
+00:01:44,379 --> 00:01:45,290
+into TypeScript.
+
+50
+00:01:46,180 --> 00:01:48,338
+That's the same simple interface, a few lines of
+
+51
+00:01:48,338 --> 00:01:50,120
+code, run an agent loop.
+
+52
+00:01:50,579 --> 00:01:52,659
+There are some limitations though in this preview release as
+
+53
+00:01:52,659 --> 00:01:55,058
+we get to a 1.0 that is on parity
+
+54
+00:01:55,058 --> 00:01:56,879
+with Python. So just note,
+
+55
+00:01:57,269 --> 00:01:59,299
+this is about building single agent systems
+
+56
+00:01:59,299 --> 00:02:01,379
+today. We haven't added in our multi-agent
+
+57
+00:02:01,379 --> 00:02:03,418
+patterns. Some other functionality might
+
+58
+00:02:03,418 --> 00:02:04,099
+be missing.
+
+59
+00:02:04,379 --> 00:02:06,379
+We're gonna fast follow here in a few weeks with
+
+60
+00:02:06,379 --> 00:02:08,199
+things like open telemetry,
+
+61
+00:02:08,838 --> 00:02:11,258
+um, but today you can use our basic features
+
+62
+00:02:11,258 --> 00:02:13,419
+like Bedrock and open AI models.
+
+63
+00:02:14,319 --> 00:02:16,649
+You can use the async and
+
+64
+00:02:16,919 --> 00:02:18,618
+non-Async with streaming.
+
+65
+00:02:20,330 --> 00:02:22,800
+You can do full agent state and
+
+66
+00:02:22,800 --> 00:02:24,808
+conversation management, so for multi-t agents, of
+
+67
+00:02:24,808 --> 00:02:25,389
+course,
+
+68
+00:02:25,969 --> 00:02:28,129
+and hooks to inspect and change
+
+69
+00:02:28,129 --> 00:02:30,149
+that life cycle if you've started to play with strands.
+
+70
+00:02:30,250 --> 00:02:32,028
+Hooks are a powerful feature for
+
+71
+00:02:32,330 --> 00:02:34,669
+both observing and, and changing behavior
+
+72
+00:02:34,808 --> 00:02:36,210
+at different points of the life cycle.
+
+73
+00:02:39,860 --> 00:02:42,050
+So, let me step back and talk about for both
+
+74
+00:02:42,050 --> 00:02:44,689
+of these languages, for Python and for TypeScript,
+
+75
+00:02:44,969 --> 00:02:47,050
+what does it mean to have a model-driven agent?
+
+76
+00:02:48,129 --> 00:02:50,240
+And I'm sure some of you are building agents right
+
+77
+00:02:50,240 --> 00:02:52,250
+now. This is old news to you, but
+
+78
+00:02:52,250 --> 00:02:54,689
+for those of you who haven't yet gotten into this, it's
+
+79
+00:02:54,689 --> 00:02:56,949
+worth pausing on because I think a lot of folks
+
+80
+00:02:57,449 --> 00:02:59,610
+think about agents as what if you just
+
+81
+00:02:59,610 --> 00:03:01,610
+had LLM calls and you've given
+
+82
+00:03:01,610 --> 00:03:03,960
+them internal external tools like with MCP.
+
+83
+00:03:04,528 --> 00:03:06,849
+That's not quite agentic. It's a very broad
+
+84
+00:03:06,849 --> 00:03:08,569
+term. I think the industry is still defining it.
+
+85
+00:03:08,929 --> 00:03:11,159
+Our definition here is that agents run tools
+
+86
+00:03:11,159 --> 00:03:12,788
+in a loop to solve a goal.
+
+87
+00:03:13,758 --> 00:03:15,889
+And the designing those behind strands that I'll talk
+
+88
+00:03:15,889 --> 00:03:16,808
+through as we go,
+
+89
+00:03:17,169 --> 00:03:18,879
+is all about enabling that loop.
+
+90
+00:03:20,159 --> 00:03:22,719
+So you can think about strands as governing that identic
+
+91
+00:03:22,719 --> 00:03:23,558
+loop up top,
+
+92
+00:03:23,838 --> 00:03:26,300
+where the input that you give that loop
+
+93
+00:03:26,300 --> 00:03:27,300
+is the prompt.
+
+94
+00:03:27,838 --> 00:03:29,929
+And that's both system prompt, and of course what your
+
+95
+00:03:29,929 --> 00:03:32,139
+users are prompting your application with.
+
+96
+00:03:32,919 --> 00:03:35,338
+And what you're getting back is the end result.
+
+97
+00:03:36,808 --> 00:03:37,808
+In the loop,
+
+98
+00:03:38,210 --> 00:03:39,919
+you have a powerful reasoning model
+
+99
+00:03:40,210 --> 00:03:42,210
+that's equipped with tools, and
+
+100
+00:03:42,210 --> 00:03:44,189
+the goal you've assigned it through the system prompt.
+
+101
+00:03:45,360 --> 00:03:47,399
+And it's going through its own reasoning to
+
+102
+00:03:47,399 --> 00:03:49,819
+figure out how to use those tools.
+
+103
+00:03:50,599 --> 00:03:52,719
+Whether the information it's gotten back is sufficient
+
+104
+00:03:52,719 --> 00:03:53,879
+for solving that goal.
+
+105
+00:03:54,278 --> 00:03:56,520
+It might run more tools if it needs to.
+
+106
+00:03:57,368 --> 00:03:59,960
+And it completes that cycle as many times as
+
+107
+00:03:59,960 --> 00:04:01,990
+necessary to return a satisfying response
+
+108
+00:04:01,990 --> 00:04:02,849
+to the user.
+
+109
+00:04:04,449 --> 00:04:05,770
+Throughout this life cycle,
+
+110
+00:04:06,179 --> 00:04:08,338
+we're gonna talk through how you can control it,
+
+111
+00:04:08,538 --> 00:04:09,939
+how you can add in, you know,
+
+112
+00:04:10,300 --> 00:04:12,729
+you know, ways to steer the model, ways to constrain
+
+113
+00:04:12,729 --> 00:04:13,360
+the model.
+
+114
+00:04:14,058 --> 00:04:16,059
+But that in a nutshell is it.
+
+115
+00:04:16,379 --> 00:04:18,889
+And you'll get really far, really fast
+
+116
+00:04:18,889 --> 00:04:20,899
+by just embracing this architecture where you
+
+117
+00:04:20,899 --> 00:04:22,899
+let the model come up with its own workflow.
+
+118
+00:04:23,178 --> 00:04:24,519
+And I'm gonna share more about that.
+
+119
+00:04:25,439 --> 00:04:27,439
+But first to kind of contextualize what's inside
+
+120
+00:04:27,439 --> 00:04:28,920
+that agent loop a bit more.
+
+121
+00:04:30,879 --> 00:04:32,879
+First of all, it's a model. That's
+
+122
+00:04:32,879 --> 00:04:34,798
+kind of the number one thing that you need.
+
+123
+00:04:35,079 --> 00:04:37,119
+And specifically a reasoning model that can
+
+124
+00:04:37,119 --> 00:04:37,920
+use tools.
+
+125
+00:04:38,769 --> 00:04:40,769
+These days, that's many, many choices. It
+
+126
+00:04:40,769 --> 00:04:42,119
+hasn't always been that case.
+
+127
+00:04:42,410 --> 00:04:44,439
+So think, you know, of course, the, the big
+
+128
+00:04:44,439 --> 00:04:45,488
+AI labs,
+
+129
+00:04:46,019 --> 00:04:48,129
+you can use Gemini, OpenAI, anthropic
+
+130
+00:04:48,129 --> 00:04:50,410
+models. You can use the latest reasoning
+
+131
+00:04:50,410 --> 00:04:51,588
+model from Nova.
+
+132
+00:04:53,048 --> 00:04:55,108
+Many of these models are available on Bedrock.
+
+133
+00:04:55,959 --> 00:04:58,189
+But Strands is designed to work with any
+
+134
+00:04:58,189 --> 00:05:00,649
+model provider. So you can go directly to OpenAI
+
+135
+00:05:00,649 --> 00:05:03,088
+or anthropics, first party API is an example.
+
+136
+00:05:03,410 --> 00:05:05,470
+Many more providers have that same interface.
+
+137
+00:05:06,928 --> 00:05:09,470
+You can also bring your own custom gateway.
+
+138
+00:05:10,088 --> 00:05:12,369
+So for instance, there's light LLM support integrated
+
+139
+00:05:12,369 --> 00:05:14,528
+in with strands in the Python library today. We'll
+
+140
+00:05:14,528 --> 00:05:15,838
+be adding that over time,
+
+141
+00:05:16,129 --> 00:05:17,988
+uh, into the TypeScript interface.
+
+142
+00:05:18,548 --> 00:05:20,600
+Many customers will bring their own gateway
+
+143
+00:05:20,600 --> 00:05:22,488
+as well. It doesn't have to be light LLM.
+
+144
+00:05:22,970 --> 00:05:25,250
+And there's a whole abstraction that we call the custom model
+
+145
+00:05:25,250 --> 00:05:25,759
+provider,
+
+146
+00:05:26,129 --> 00:05:28,088
+where in Python or TypeScript,
+
+147
+00:05:28,608 --> 00:05:30,608
+you can just define how to interact with that
+
+148
+00:05:30,608 --> 00:05:31,428
+gateway product
+
+149
+00:05:31,769 --> 00:05:33,689
+or another model provider that comes on the market.
+
+150
+00:05:33,980 --> 00:05:36,019
+And many open source contributions
+
+151
+00:05:36,019 --> 00:05:37,420
+to strands have been
+
+152
+00:05:37,699 --> 00:05:39,699
+uh model providers by users of
+
+153
+00:05:39,699 --> 00:05:41,759
+those models or the vendors themselves,
+
+154
+00:05:41,928 --> 00:05:43,980
+adding support to use strands with
+
+155
+00:05:43,980 --> 00:05:44,778
+those models.
+
+156
+00:05:45,809 --> 00:05:48,199
+And then finally, you could think of that top layer as like the reasoning
+
+157
+00:05:48,199 --> 00:05:49,189
+model choice,
+
+158
+00:05:49,769 --> 00:05:51,769
+but it doesn't have to just be reasoning model. So for
+
+159
+00:05:51,769 --> 00:05:53,540
+example, a very common pattern
+
+160
+00:05:54,410 --> 00:05:57,178
+is like, let's say you pick sonnet 45
+
+161
+00:05:57,178 --> 00:05:58,988
+as your reasoning model for the agent loop.
+
+162
+00:05:59,809 --> 00:06:01,269
+You can assign as a tool,
+
+163
+00:06:01,809 --> 00:06:04,000
+say, a stability image generating model,
+
+164
+00:06:04,009 --> 00:06:06,298
+that's one of the tools available in our community
+
+165
+00:06:06,298 --> 00:06:08,528
+package contributed by the stability team.
+
+166
+00:06:09,278 --> 00:06:11,298
+And that then reasoning model can use
+
+167
+00:06:11,298 --> 00:06:13,319
+other models that aren't reasoning models that
+
+168
+00:06:13,319 --> 00:06:15,548
+are designed for other purposes like generating images.
+
+169
+00:06:15,838 --> 00:06:17,838
+And you can mix and match within the same agent
+
+170
+00:06:17,838 --> 00:06:18,500
+that way.
+
+171
+00:06:18,879 --> 00:06:21,149
+You can call out to many models within the agent.
+
+172
+00:06:23,949 --> 00:06:26,358
+And then for equipping the agent
+
+173
+00:06:26,369 --> 00:06:28,449
+outside, we just embrace open standards.
+
+174
+00:06:28,528 --> 00:06:30,809
+I'll tell you a little bit more about our design principles in a moment.
+
+175
+00:06:31,480 --> 00:06:33,689
+But in a nutshell, you could bring any MCP
+
+176
+00:06:33,689 --> 00:06:36,209
+server, you can use A2A
+
+177
+00:06:36,209 --> 00:06:38,209
+for agent communication. All
+
+178
+00:06:38,209 --> 00:06:40,209
+the traces and trajectories can go off to
+
+179
+00:06:40,209 --> 00:06:40,750
+your favorite
+
+180
+00:06:41,048 --> 00:06:43,108
+open telemetry provider through Otel.
+
+181
+00:06:45,528 --> 00:06:47,649
+I, because tools are so important to the agent loop,
+
+182
+00:06:47,730 --> 00:06:49,920
+I just kind of wanna pause on like, what are the choices.
+
+183
+00:06:50,129 --> 00:06:51,509
+So obviously there's MCP.
+
+184
+00:06:52,488 --> 00:06:54,588
+You can use any MCP server
+
+185
+00:06:54,850 --> 00:06:56,879
+with strands as an MCP client, all the different
+
+186
+00:06:56,879 --> 00:06:57,528
+off types.
+
+187
+00:06:57,809 --> 00:07:00,009
+We continue to evolve our client implementation
+
+188
+00:07:00,009 --> 00:07:01,709
+as the MCP spec does as well.
+
+189
+00:07:02,838 --> 00:07:05,428
+And then in both Python and in TypeScript,
+
+190
+00:07:05,639 --> 00:07:07,399
+uh, you can bring your own function
+
+191
+00:07:08,600 --> 00:07:09,759
+and use that as a tool.
+
+192
+00:07:10,119 --> 00:07:12,358
+So if you've already got software or you just wanna pull in
+
+193
+00:07:12,358 --> 00:07:14,608
+some library that you wanna use and expose that
+
+194
+00:07:14,608 --> 00:07:16,639
+to a as a tool to your agent, you can do
+
+195
+00:07:16,639 --> 00:07:17,480
+that really simply.
+
+196
+00:07:18,970 --> 00:07:21,329
+We're providing in the Python package a
+
+197
+00:07:21,329 --> 00:07:23,088
+whole bunch of built-in tools.
+
+198
+00:07:23,399 --> 00:07:25,449
+TypeScript has just a few of them, and we'll be
+
+199
+00:07:25,449 --> 00:07:27,079
+expanding those over time as well.
+
+200
+00:07:27,369 --> 00:07:29,449
+But those are the similar deal. It's like
+
+201
+00:07:29,449 --> 00:07:31,608
+as if you've built your own tool as a function,
+
+202
+00:07:31,649 --> 00:07:33,809
+and now you can just install it via a package and import
+
+203
+00:07:33,809 --> 00:07:36,040
+it. And
+
+204
+00:07:36,040 --> 00:07:38,059
+I pause on that agent as tools pattern because I,
+
+205
+00:07:38,160 --> 00:07:39,178
+I think it's often,
+
+206
+00:07:39,639 --> 00:07:41,639
+uh, overlooked as a way to build
+
+207
+00:07:41,639 --> 00:07:43,639
+an agent. You may have heard of
+
+208
+00:07:43,639 --> 00:07:46,000
+this as the supervisor pattern in orchestration
+
+209
+00:07:46,000 --> 00:07:46,829
+contexts.
+
+210
+00:07:47,278 --> 00:07:49,399
+Think of this as like you're building strands, this, you
+
+211
+00:07:49,399 --> 00:07:51,519
+know, big powerful reasoning model, and
+
+212
+00:07:51,519 --> 00:07:53,678
+you may say, OK, I wanna build a,
+
+213
+00:07:53,720 --> 00:07:55,829
+an agent that's really good at interacting with
+
+214
+00:07:55,829 --> 00:07:57,139
+some back-end system.
+
+215
+00:07:57,519 --> 00:07:59,670
+So for example, I've had a customer who uses,
+
+216
+00:07:59,678 --> 00:08:01,720
+uh, the MCP server from
+
+217
+00:08:01,959 --> 00:08:03,540
+Atlassian for Jira.
+
+218
+00:08:04,259 --> 00:08:06,439
+And they wanted to specialize a whole agent on
+
+219
+00:08:06,439 --> 00:08:08,889
+understanding how to interact with their Jira system,
+
+220
+00:08:09,160 --> 00:08:11,199
+and they'll use features and strands like hooks
+
+221
+00:08:11,199 --> 00:08:13,069
+to parse out the tool calls,
+
+222
+00:08:13,399 --> 00:08:15,399
+um, because a Jira story might be so large that
+
+223
+00:08:15,399 --> 00:08:17,100
+it overwhelms the context window.
+
+224
+00:08:17,678 --> 00:08:20,230
+And that agent's whole job is to kind of understand what's
+
+225
+00:08:20,230 --> 00:08:22,379
+interesting about this story that I wanna return.
+
+226
+00:08:22,899 --> 00:08:25,000
+They've encapsulated that all as this sub
+
+227
+00:08:25,000 --> 00:08:25,559
+agent.
+
+228
+00:08:26,619 --> 00:08:29,059
+And they exposed that to that higher level orchestrator,
+
+229
+00:08:29,139 --> 00:08:30,858
+the supervisor agent, as a tool.
+
+230
+00:08:31,639 --> 00:08:33,538
+You get some modularity in that approach,
+
+231
+00:08:33,840 --> 00:08:36,119
+and then you don't have to always use a deterministic
+
+232
+00:08:36,119 --> 00:08:37,058
+tool, is my point.
+
+233
+00:08:37,330 --> 00:08:39,320
+An agent itself can be a tool.
+
+234
+00:08:42,178 --> 00:08:42,840
+OK.
+
+235
+00:08:43,830 --> 00:08:45,840
+So I'm gonna talk, I'm gonna start telling you a little bit of a story
+
+236
+00:08:45,840 --> 00:08:47,840
+of why we built strands and
+
+237
+00:08:47,840 --> 00:08:48,940
+the history behind that,
+
+238
+00:08:49,320 --> 00:08:50,759
+but to set the stage for that,
+
+239
+00:08:51,119 --> 00:08:53,359
+these are just the snapshot of contributing
+
+240
+00:08:53,359 --> 00:08:55,440
+guidelines, um, you can find in
+
+241
+00:08:55,440 --> 00:08:57,658
+our repos, specifically the tenets
+
+242
+00:08:57,840 --> 00:08:59,879
+that go along with how to contribute
+
+243
+00:08:59,879 --> 00:09:00,599
+to strands.
+
+244
+00:09:01,359 --> 00:09:03,359
+Uh, so I've summarized them here on the slide. They're
+
+245
+00:09:03,359 --> 00:09:04,719
+all available in the GitHub repo,
+
+246
+00:09:05,080 --> 00:09:07,239
+but, uh, if you're unfamiliar with Amazon's
+
+247
+00:09:07,239 --> 00:09:09,389
+processes, we're really big on tenants. These are ways of
+
+248
+00:09:09,389 --> 00:09:11,440
+defining how we make decisions.
+
+249
+00:09:11,519 --> 00:09:13,599
+They're meant to add tension with one another so
+
+250
+00:09:13,599 --> 00:09:15,599
+that when we as a team or as an open source
+
+251
+00:09:15,599 --> 00:09:16,500
+community contributing
+
+252
+00:09:16,918 --> 00:09:19,029
+to strands are making decisions, we
+
+253
+00:09:19,029 --> 00:09:21,340
+can use them as a guide to help us decide
+
+254
+00:09:21,340 --> 00:09:22,139
+about trade-offs.
+
+255
+00:09:22,908 --> 00:09:25,469
+I, and they also, I think, tell the story of
+
+256
+00:09:25,469 --> 00:09:27,629
+how we tried to build this software for you.
+
+257
+00:09:27,908 --> 00:09:29,250
+One is just simple,
+
+258
+00:09:29,668 --> 00:09:31,788
+and really importantly, simple for the same
+
+259
+00:09:31,788 --> 00:09:32,928
+abstractions from
+
+260
+00:09:33,308 --> 00:09:34,629
+your laptop prototyping.
+
+261
+00:09:35,538 --> 00:09:36,899
+All the way to running it in production.
+
+262
+00:09:37,619 --> 00:09:39,849
+So in other words, getting that simple agent
+
+263
+00:09:39,849 --> 00:09:41,509
+loop running should be very simple.
+
+264
+00:09:42,048 --> 00:09:44,250
+Integrating telemetry and logging later
+
+265
+00:09:44,250 --> 00:09:46,009
+should also be just as simple.
+
+266
+00:09:47,229 --> 00:09:49,349
+We've talked a little bit about extensions already.
+
+267
+00:09:49,479 --> 00:09:51,668
+So model providers, a good example of extensions,
+
+268
+00:09:51,830 --> 00:09:54,149
+tools, another good example of extensions, but this applies
+
+269
+00:09:54,149 --> 00:09:54,969
+to everything.
+
+270
+00:09:55,710 --> 00:09:57,869
+So hooks are a mechanism
+
+271
+00:09:57,869 --> 00:10:00,149
+to basically take over
+
+272
+00:10:00,149 --> 00:10:02,239
+control at a specific life cycle point,
+
+273
+00:10:02,349 --> 00:10:04,750
+before, after tool calls, before, after
+
+274
+00:10:04,750 --> 00:10:06,969
+model calls, that kind of stuff.
+
+275
+00:10:07,590 --> 00:10:09,710
+And then you can plug in your own hook. We
+
+276
+00:10:09,710 --> 00:10:10,629
+provide some as well.
+
+277
+00:10:10,950 --> 00:10:13,239
+For instance, there's a built-in hook to help you capture
+
+278
+00:10:13,239 --> 00:10:15,619
+retries from bedrock models for transient
+
+279
+00:10:15,619 --> 00:10:16,229
+failures.
+
+280
+00:10:16,859 --> 00:10:19,658
+I'm, so take on those kinds of extensibilities,
+
+281
+00:10:19,808 --> 00:10:21,580
+we apply that everywhere we can.
+
+282
+00:10:22,320 --> 00:10:24,239
+And then they're of course all meant to work together.
+
+283
+00:10:25,808 --> 00:10:27,849
+They're all meant to lead you down the right path.
+
+284
+00:10:28,080 --> 00:10:30,158
+As you start layering on more functionality,
+
+285
+00:10:30,609 --> 00:10:32,808
+the defaults built into our abstractions
+
+286
+00:10:32,808 --> 00:10:34,330
+are meant to give you a good time.
+
+287
+00:10:34,969 --> 00:10:36,830
+And you can customize a lot of this.
+
+288
+00:10:38,250 --> 00:10:40,570
+And accessible to humans and agents is kind of an emerging
+
+289
+00:10:40,570 --> 00:10:42,808
+one. a good tangible examples of this,
+
+290
+00:10:42,969 --> 00:10:44,889
+if you go to strands agents.com,
+
+291
+00:10:45,210 --> 00:10:47,690
+you can actually add lash latest/
+
+292
+00:10:47,690 --> 00:10:49,729
+LLMs.txt and
+
+293
+00:10:49,729 --> 00:10:52,009
+get this format of markdown
+
+294
+00:10:52,009 --> 00:10:53,450
+table of contents, basically
+
+295
+00:10:53,729 --> 00:10:55,769
+this LMs LLMs.text
+
+296
+00:10:55,769 --> 00:10:57,769
+or LMst.org, I think is the URL
+
+297
+00:10:57,769 --> 00:10:58,469
+for this standard.
+
+298
+00:10:59,349 --> 00:11:01,599
+And it's a way of exposing to coding
+
+299
+00:11:01,599 --> 00:11:03,399
+assistance or model training
+
+300
+00:11:03,690 --> 00:11:05,690
+documentation that is a HTML to
+
+301
+00:11:05,690 --> 00:11:07,580
+a markdown twin.
+
+302
+00:11:07,918 --> 00:11:10,080
+So as a human, you're reading an HTML document on our
+
+303
+00:11:10,080 --> 00:11:12,500
+website, we expose markdown for models,
+
+304
+00:11:12,519 --> 00:11:14,599
+and we make that available over a standard protocol that
+
+305
+00:11:14,599 --> 00:11:15,580
+models know or
+
+306
+00:11:15,879 --> 00:11:17,580
+systems around models know how to find.
+
+307
+00:11:20,229 --> 00:11:22,399
+We've talked about common standards already. That's just
+
+308
+00:11:22,399 --> 00:11:24,719
+as things emerge, we'll be adding those in. We
+
+309
+00:11:24,719 --> 00:11:26,259
+already support the major ones today.
+
+310
+00:11:28,239 --> 00:11:30,440
+So back to the storytelling then, I mentioned that that
+
+311
+00:11:30,440 --> 00:11:32,019
+Nick and I are from the Strands team.
+
+312
+00:11:32,759 --> 00:11:34,918
+I'm before that we were part of
+
+313
+00:11:34,918 --> 00:11:37,210
+the Q and and what is now known as Quiro
+
+314
+00:11:37,210 --> 00:11:39,719
+teams at Amazon and specifically
+
+315
+00:11:39,719 --> 00:11:42,219
+we were working on a project to help enable
+
+316
+00:11:42,479 --> 00:11:44,599
+other Amazon teams to extend Que.
+
+317
+00:11:44,879 --> 00:11:47,119
+You can imagine that it's not just one team
+
+318
+00:11:47,119 --> 00:11:49,239
+building these, you know, super agents at Amazon.
+
+319
+00:11:49,269 --> 00:11:51,759
+It's many teams collaborating together, sharing
+
+320
+00:11:51,759 --> 00:11:53,139
+their disparate expertise.
+
+321
+00:11:53,940 --> 00:11:54,889
+And this is,
+
+322
+00:11:55,178 --> 00:11:57,178
+what is it, Nick, over 1 year ago now, almost
+
+323
+00:11:57,178 --> 00:11:57,729
+2.
+
+324
+00:11:58,099 --> 00:12:00,479
+It's a long time ago we were doing this, so this is,
+
+325
+00:12:00,779 --> 00:12:02,899
+well, you know, at the very early days of Agentic.
+
+326
+00:12:04,658 --> 00:12:06,538
+And we were observing many teams,
+
+327
+00:12:06,889 --> 00:12:08,969
+uh, either building their own solutions around
+
+328
+00:12:08,969 --> 00:12:10,979
+the converse API or, or other APIs
+
+329
+00:12:10,979 --> 00:12:13,210
+right they're just doing LM calls, uh, in a loop
+
+330
+00:12:13,210 --> 00:12:14,759
+around some workflow they built,
+
+331
+00:12:15,269 --> 00:12:17,619
+or they were using off the shelf frameworks that were simpler
+
+332
+00:12:17,619 --> 00:12:18,288
+than that,
+
+333
+00:12:18,580 --> 00:12:20,779
+but still weren't really agentic. They certainly didn't
+
+334
+00:12:20,779 --> 00:12:22,899
+have the agentic loop that we're talking about today.
+
+335
+00:12:23,178 --> 00:12:25,200
+They really required you to spend a lot of time
+
+336
+00:12:25,200 --> 00:12:26,658
+in deterministic workflow.
+
+337
+00:12:27,509 --> 00:12:29,548
+That meant that any engineer who had a good
+
+338
+00:12:29,548 --> 00:12:31,548
+idea, any product team that wanted to build
+
+339
+00:12:31,548 --> 00:12:32,058
+something,
+
+340
+00:12:32,389 --> 00:12:34,548
+they were spending months getting something off
+
+341
+00:12:34,548 --> 00:12:36,548
+the ground, so from idea to
+
+342
+00:12:36,548 --> 00:12:38,548
+prototype and longer getting
+
+343
+00:12:38,548 --> 00:12:39,149
+it into production.
+
+344
+00:12:40,629 --> 00:12:42,629
+And so what we focused on is,
+
+345
+00:12:42,710 --> 00:12:44,710
+of course, because our demand was to onboard
+
+346
+00:12:44,710 --> 00:12:46,859
+dozens of teams to bring agentic
+
+347
+00:12:46,859 --> 00:12:49,109
+functionality into one sort of customer
+
+348
+00:12:49,109 --> 00:12:49,690
+experience,
+
+349
+00:12:50,029 --> 00:12:51,729
+we started working on another way.
+
+350
+00:12:52,359 --> 00:12:54,359
+And that's what led to these results, uh,
+
+351
+00:12:54,440 --> 00:12:57,099
+for example, from the Quiro team for these experiences
+
+352
+00:12:57,320 --> 00:12:59,479
+where they could go from concept
+
+353
+00:12:59,479 --> 00:13:00,928
+to production in weeks,
+
+354
+00:13:01,239 --> 00:13:03,320
+and that was our driving goal. We kept iterating on
+
+355
+00:13:03,320 --> 00:13:05,558
+this internal framework to achieve those goals,
+
+356
+00:13:05,639 --> 00:13:07,639
+adding the right functionality, figure out the right
+
+357
+00:13:07,639 --> 00:13:09,700
+developer experience, and resulted
+
+358
+00:13:09,879 --> 00:13:12,519
+in helping these teams and other teams across the Amazon
+
+359
+00:13:12,840 --> 00:13:13,940
+move really, really fast.
+
+360
+00:13:15,769 --> 00:13:18,178
+In May of this year, we brought it into
+
+361
+00:13:18,178 --> 00:13:18,798
+the public.
+
+362
+00:13:19,259 --> 00:13:21,519
+That was the initial preview release of Strands.
+
+363
+00:13:22,178 --> 00:13:24,408
+We've had, um, notable names,
+
+364
+00:13:24,700 --> 00:13:27,219
+um, giving us very generous, uh, mentions
+
+365
+00:13:27,219 --> 00:13:28,399
+on social media.
+
+366
+00:13:28,739 --> 00:13:30,979
+Um, we've been very lucky to have over
+
+367
+00:13:30,979 --> 00:13:33,099
+5 million downloads, as Swami mentioned
+
+368
+00:13:33,099 --> 00:13:35,379
+yesterday, um, 5 million downloads of the
+
+369
+00:13:35,379 --> 00:13:37,298
+Python SDK on PiPiyi.
+
+370
+00:13:37,619 --> 00:13:39,759
+Obviously we're just getting started with TypeScript and we're
+
+371
+00:13:39,759 --> 00:13:41,558
+hoping it, it helps all of you as well.
+
+372
+00:13:43,009 --> 00:13:45,210
+I, and I've been meeting with a lot of you. Part
+
+373
+00:13:45,210 --> 00:13:46,548
+of why I lost my voice.
+
+374
+00:13:46,889 --> 00:13:49,048
+I'm talking about strands and the agents
+
+375
+00:13:49,048 --> 00:13:51,168
+you're building, and so I, I'm so thrilled to
+
+376
+00:13:51,168 --> 00:13:53,369
+start seeing the signal from our initial
+
+377
+00:13:53,369 --> 00:13:55,408
+release in May through now that you all
+
+378
+00:13:55,408 --> 00:13:57,548
+are all building much faster because we,
+
+379
+00:13:57,599 --> 00:13:59,609
+we made strands available to you and seeing the
+
+380
+00:13:59,609 --> 00:14:01,070
+gains that that we were able to build
+
+381
+00:14:01,609 --> 00:14:02,989
+for customers inside the building.
+
+382
+00:14:05,250 --> 00:14:07,678
+So, let me come back then, um,
+
+383
+00:14:07,690 --> 00:14:09,989
+to the model-driven approach in this architecture.
+
+384
+00:14:12,408 --> 00:14:13,750
+So just to summarize,
+
+385
+00:14:14,330 --> 00:14:16,529
+the point here is that you as a developer
+
+386
+00:14:16,529 --> 00:14:18,349
+are thinking about very few things.
+
+387
+00:14:18,849 --> 00:14:20,808
+You're thinking about the goal you want the agent to do,
+
+388
+00:14:21,210 --> 00:14:23,369
+system prompt, and we'll talk about some techniques in a moment
+
+389
+00:14:23,369 --> 00:14:25,149
+for being more fine-grained there.
+
+390
+00:14:26,298 --> 00:14:28,558
+You're thinking about the tools to equip that agent with,
+
+391
+00:14:28,779 --> 00:14:30,859
+which can themselves be agents and
+
+392
+00:14:30,859 --> 00:14:33,219
+give you this modularity where you can break down
+
+393
+00:14:33,219 --> 00:14:34,080
+complexity that way.
+
+394
+00:14:35,619 --> 00:14:38,149
+And you're plugging this into an
+
+395
+00:14:38,149 --> 00:14:40,320
+application, prompting it, getting a result.
+
+396
+00:14:41,649 --> 00:14:42,548
+That's the agent loop.
+
+397
+00:14:42,969 --> 00:14:45,330
+I'm, and I wanted to differentiate that
+
+398
+00:14:45,330 --> 00:14:47,070
+from this sort of.
+
+399
+00:14:48,168 --> 00:14:50,210
+Very big spectrum in the market
+
+400
+00:14:50,210 --> 00:14:53,250
+today on choices either from UDIY
+
+401
+00:14:53,250 --> 00:14:54,139
+or from
+
+402
+00:14:54,450 --> 00:14:56,609
+uh frameworks that you can get from
+
+403
+00:14:56,609 --> 00:14:58,729
+any open source uh
+
+404
+00:14:58,729 --> 00:14:59,308
+provider.
+
+405
+00:15:00,979 --> 00:15:01,908
+It's the
+
+406
+00:15:02,239 --> 00:15:04,570
+shift between workflow driven and model-driven,
+
+407
+00:15:04,580 --> 00:15:05,298
+is how I coined it.
+
+408
+00:15:06,168 --> 00:15:07,399
+And the difference here is
+
+409
+00:15:07,769 --> 00:15:09,989
+who is defining the steps
+
+410
+00:15:10,250 --> 00:15:12,408
+that need to be taken to break down that goal
+
+411
+00:15:12,408 --> 00:15:13,320
+into a plan,
+
+412
+00:15:13,690 --> 00:15:15,808
+to make tool calls, analyze results
+
+413
+00:15:15,808 --> 00:15:16,849
+of those tool calls,
+
+414
+00:15:17,129 --> 00:15:18,509
+decide whether more are necessary.
+
+415
+00:15:19,500 --> 00:15:21,580
+And iterate on that loop until a
+
+416
+00:15:21,580 --> 00:15:22,940
+result is given back to the customer.
+
+417
+00:15:23,340 --> 00:15:24,340
+Who does that work,
+
+418
+00:15:24,619 --> 00:15:26,700
+right? So that what what we grew up with on the
+
+419
+00:15:26,700 --> 00:15:28,820
+Q team was all these development teams
+
+420
+00:15:28,820 --> 00:15:31,349
+were doing that work describing these workflows,
+
+421
+00:15:31,619 --> 00:15:33,690
+using the abstractions given to them by
+
+422
+00:15:33,690 --> 00:15:35,000
+these open source frameworks
+
+423
+00:15:35,259 --> 00:15:37,710
+or that they were building as their own homegrown systems.
+
+424
+00:15:37,940 --> 00:15:39,158
+They were doing all that work.
+
+425
+00:15:39,979 --> 00:15:42,058
+And what that leads to is a pretty
+
+426
+00:15:42,058 --> 00:15:44,099
+brittle system that also took you a
+
+427
+00:15:44,099 --> 00:15:45,259
+lot of time to build.
+
+428
+00:15:46,450 --> 00:15:48,908
+Developers had to anticipate new scenarios,
+
+429
+00:15:49,009 --> 00:15:51,048
+maybe a new category of customer question and a
+
+430
+00:15:51,048 --> 00:15:52,168
+chat experience.
+
+431
+00:15:52,690 --> 00:15:55,548
+More workflow is needed to be authored and maintained
+
+432
+00:15:55,969 --> 00:15:57,250
+to meet that use case.
+
+433
+00:15:58,210 --> 00:16:00,418
+And if it broke, you had to troubleshoot these different
+
+434
+00:16:00,418 --> 00:16:00,969
+steps.
+
+435
+00:16:01,859 --> 00:16:03,889
+The model-driven approach, and it's not just
+
+436
+00:16:03,889 --> 00:16:06,090
+strands approach, just to be fair, there's a lot of frameworks
+
+437
+00:16:06,090 --> 00:16:08,178
+that came out this year alongside strands that
+
+438
+00:16:08,178 --> 00:16:09,200
+help you with that approach.
+
+439
+00:16:10,229 --> 00:16:12,279
+So you push all that work into the LM
+
+440
+00:16:12,979 --> 00:16:15,379
+and then shift where you spend your energy steering
+
+441
+00:16:15,379 --> 00:16:17,058
+that LLM into different functions.
+
+442
+00:16:18,308 --> 00:16:20,500
+So let me go walk you through a practical example in case this isn't
+
+443
+00:16:20,500 --> 00:16:23,308
+clicking. So
+
+444
+00:16:23,308 --> 00:16:24,788
+think of like early chat GPT.
+
+445
+00:16:26,889 --> 00:16:28,969
+You come into a chat experience, and you
+
+446
+00:16:28,969 --> 00:16:30,969
+had a pretty powerful thing, right? If I was in
+
+447
+00:16:30,969 --> 00:16:33,129
+this scenario, I'm, I'm trying to debug why
+
+448
+00:16:33,129 --> 00:16:35,210
+I can't connect to a remote instance
+
+449
+00:16:35,609 --> 00:16:36,808
+in EC2, let's say.
+
+450
+00:16:38,070 --> 00:16:40,219
+I had a pretty good experience going into chat
+
+451
+00:16:40,219 --> 00:16:42,229
+GPD and asking a question about how to do
+
+452
+00:16:42,229 --> 00:16:44,710
+this, and I got sort of a natural language
+
+453
+00:16:44,710 --> 00:16:46,928
+set of questions or basically a tutorial.
+
+454
+00:16:47,509 --> 00:16:49,830
+Might have been better than reading through different docs, reading
+
+455
+00:16:49,830 --> 00:16:51,950
+through different blogs. I got a much
+
+456
+00:16:51,950 --> 00:16:54,109
+nicer response, but it wasn't personalized at all, right?
+
+457
+00:16:54,149 --> 00:16:56,349
+I think this is all old hat. You're all kind of getting
+
+458
+00:16:56,349 --> 00:16:58,820
+there. This was the pre-agenttic era.
+
+459
+00:16:59,070 --> 00:17:01,288
+I got asked the question. I got steps back.
+
+460
+00:17:01,509 --> 00:17:02,788
+Maybe those helped me, maybe they didn't.
+
+461
+00:17:04,719 --> 00:17:07,039
+So when agentic, and again, defining agentic
+
+462
+00:17:07,039 --> 00:17:09,439
+here is using tools with an agent,
+
+463
+00:17:09,559 --> 00:17:11,680
+letting it figure out its own work, I'm,
+
+464
+00:17:11,799 --> 00:17:13,818
+you could still go down this path where,
+
+465
+00:17:14,189 --> 00:17:16,559
+let's say in a Python framework, you're describing
+
+466
+00:17:16,559 --> 00:17:18,640
+the steps of the LLM calls and you're breaking your
+
+467
+00:17:18,640 --> 00:17:20,529
+agent down into specific calls,
+
+468
+00:17:20,959 --> 00:17:22,959
+you might then anticipate, OK, the
+
+469
+00:17:22,959 --> 00:17:25,279
+first step, let's check network connectivity.
+
+470
+00:17:26,299 --> 00:17:28,660
+And you're making a direct call to the tool
+
+471
+00:17:28,900 --> 00:17:29,598
+that handles,
+
+472
+00:17:29,900 --> 00:17:31,979
+you know, VPC APIs
+
+473
+00:17:31,979 --> 00:17:34,039
+or security groups or other things like that,
+
+474
+00:17:34,170 --> 00:17:36,318
+and you're, you're iterating down that workflow.
+
+475
+00:17:37,500 --> 00:17:39,049
+Until you get a response.
+
+476
+00:17:40,049 --> 00:17:41,250
+That works great. Like,
+
+477
+00:17:41,769 --> 00:17:43,769
+no harm done if you have an agent that works
+
+478
+00:17:43,769 --> 00:17:44,390
+like this.
+
+479
+00:17:44,769 --> 00:17:46,809
+The challenge is you had to do a lot of upfront work
+
+480
+00:17:46,809 --> 00:17:48,078
+to describe those steps.
+
+481
+00:17:48,410 --> 00:17:50,489
+You have to then parse the tool results and kind of figure
+
+482
+00:17:50,489 --> 00:17:52,088
+out, do I need to move on or not?
+
+483
+00:17:52,449 --> 00:17:54,449
+Maybe you kind of found yourself in a hybrid mode where
+
+484
+00:17:54,449 --> 00:17:56,489
+you're letting the model figure out whether to move on or not,
+
+485
+00:17:56,568 --> 00:17:58,608
+but you're still describing what the next step is.
+
+486
+00:18:00,328 --> 00:18:02,368
+If you decided, oh, I want this
+
+487
+00:18:02,368 --> 00:18:04,509
+experience that I'm building here to support
+
+488
+00:18:04,608 --> 00:18:05,400
+container,
+
+489
+00:18:05,689 --> 00:18:08,328
+uh, connectivity or maybe an off-premise
+
+490
+00:18:08,328 --> 00:18:10,318
+compute solution, not easy to,
+
+491
+00:18:10,608 --> 00:18:12,799
+you have to then not just add new tools,
+
+492
+00:18:12,809 --> 00:18:14,890
+you have to add new workflow steps and you have to incorporate
+
+493
+00:18:14,890 --> 00:18:16,108
+it into the flow you've built.
+
+494
+00:18:16,650 --> 00:18:18,930
+That's, that's the sort of gist of a workflow-driven
+
+495
+00:18:18,930 --> 00:18:22,299
+agent. Conceptually,
+
+496
+00:18:22,380 --> 00:18:23,868
+the model-driven agent is much simpler.
+
+497
+00:18:24,868 --> 00:18:27,368
+Just give it the goal, give it the tools.
+
+498
+00:18:27,868 --> 00:18:29,979
+That's it. I saw that from my,
+
+499
+00:18:30,140 --> 00:18:32,239
+uh, you know, initial example of the International Space Station.
+
+500
+00:18:32,318 --> 00:18:33,299
+We had the example of
+
+501
+00:18:33,640 --> 00:18:34,598
+weather in,
+
+502
+00:18:34,880 --> 00:18:36,160
+um, Las Vegas.
+
+503
+00:18:36,598 --> 00:18:38,598
+Those are examples of very simple agents,
+
+504
+00:18:38,640 --> 00:18:40,098
+mind you, but they work
+
+505
+00:18:40,559 --> 00:18:42,759
+and they work because all you're doing is setting this
+
+506
+00:18:42,759 --> 00:18:43,299
+up
+
+507
+00:18:43,818 --> 00:18:45,939
+using an orchestration framework like STRANs.
+
+508
+00:18:48,059 --> 00:18:50,160
+Now, It does
+
+509
+00:18:50,160 --> 00:18:52,160
+sound too simple to be true, and to some extent it is.
+
+510
+00:18:52,229 --> 00:18:54,039
+You can get a prototype going really fast,
+
+511
+00:18:54,358 --> 00:18:56,400
+but the number one question I'll get when I meet with
+
+512
+00:18:56,400 --> 00:18:57,500
+you in a customer meeting.
+
+513
+00:18:58,189 --> 00:18:59,848
+OK, but I wanna give it
+
+514
+00:19:00,189 --> 00:19:02,309
+better instructions. I want more predictability out
+
+515
+00:19:02,309 --> 00:19:04,699
+of the workflow. I maybe I want it to go faster,
+
+516
+00:19:04,949 --> 00:19:06,549
+maybe be more cost efficient,
+
+517
+00:19:06,828 --> 00:19:08,088
+uh, in terms of token usage.
+
+518
+00:19:08,959 --> 00:19:09,500
+I'm maybe
+
+519
+00:19:10,108 --> 00:19:12,189
+there are some dangerous outcomes that the model
+
+520
+00:19:12,189 --> 00:19:14,509
+might take. I really wanna make sure it can't
+
+521
+00:19:14,868 --> 00:19:16,459
+create those dangerous outcomes.
+
+522
+00:19:16,789 --> 00:19:18,789
+How do I steer it? How do I constrain
+
+523
+00:19:18,789 --> 00:19:20,789
+it? So my story
+
+524
+00:19:20,789 --> 00:19:21,348
+here.
+
+525
+00:19:22,880 --> 00:19:24,348
+Think about this as a spectrum.
+
+526
+00:19:25,078 --> 00:19:27,078
+And think about where you're shifting your
+
+527
+00:19:27,078 --> 00:19:29,160
+work, and how big are those chunks
+
+528
+00:19:29,160 --> 00:19:29,739
+of work.
+
+529
+00:19:30,838 --> 00:19:32,989
+So if you're thinking in a workflow driven agent,
+
+530
+00:19:33,239 --> 00:19:35,239
+you're doing a lot of work upfront to define the
+
+531
+00:19:35,239 --> 00:19:37,309
+workflow, then you're iterating on that workflow,
+
+532
+00:19:37,559 --> 00:19:39,598
+and your controls are intermingled to the
+
+533
+00:19:39,598 --> 00:19:41,799
+workflow. Your guidance and steering and
+
+534
+00:19:41,799 --> 00:19:43,920
+prompting, your tool use, your, your
+
+535
+00:19:43,920 --> 00:19:46,219
+parsing of tool results, that's all intermingled,
+
+536
+00:19:46,239 --> 00:19:47,420
+and it's all monolithic.
+
+537
+00:19:48,868 --> 00:19:51,039
+A model-driven approach says, forget all of that,
+
+538
+00:19:51,318 --> 00:19:53,390
+start with just giving the model free reign to
+
+539
+00:19:53,390 --> 00:19:54,818
+figure out its own workflow.
+
+540
+00:19:55,519 --> 00:19:57,598
+And then, as situations require
+
+541
+00:19:57,598 --> 00:20:00,029
+it, layer on other controls.
+
+542
+00:20:00,400 --> 00:20:02,559
+And you can do that at finer granularity
+
+543
+00:20:02,559 --> 00:20:03,880
+for specific situations.
+
+544
+00:20:04,670 --> 00:20:05,939
+So let me try to break that down.
+
+545
+00:20:07,098 --> 00:20:09,348
+The left side of the spectrum, pure autonomy.
+
+546
+00:20:09,709 --> 00:20:11,739
+You give the model its goal, you give it tools, it
+
+547
+00:20:11,739 --> 00:20:12,489
+does its job.
+
+548
+00:20:13,420 --> 00:20:15,500
+Your tools in this situation are really your system
+
+549
+00:20:15,500 --> 00:20:17,809
+prompt. I'm
+
+550
+00:20:18,068 --> 00:20:19,289
+try to make it really good.
+
+551
+00:20:19,828 --> 00:20:22,078
+My advice is always make it goal-oriented.
+
+552
+00:20:22,229 --> 00:20:23,689
+Models love achieving a goal.
+
+553
+00:20:24,309 --> 00:20:26,549
+Tell it what success looks like. It'll probably
+
+554
+00:20:26,549 --> 00:20:27,489
+do a pretty good job
+
+555
+00:20:27,868 --> 00:20:29,568
+of finding success for you.
+
+556
+00:20:30,150 --> 00:20:32,259
+Research assistants are a good example of this,
+
+557
+00:20:32,469 --> 00:20:34,410
+right? Models have all the sort of knowledge they need.
+
+558
+00:20:34,910 --> 00:20:36,949
+You can give them external sources, you can tell them
+
+559
+00:20:36,949 --> 00:20:38,989
+what you, what format you want. They'll do a
+
+560
+00:20:38,989 --> 00:20:39,689
+pretty good job.
+
+561
+00:20:39,989 --> 00:20:42,068
+And then you can layer in things in strands like
+
+562
+00:20:42,068 --> 00:20:42,890
+structured output.
+
+563
+00:20:43,828 --> 00:20:45,130
+There's a mechanism where you say,
+
+564
+00:20:45,430 --> 00:20:46,328
+hey, I wanna force,
+
+565
+00:20:46,588 --> 00:20:48,318
+maybe it's a markdown format you want,
+
+566
+00:20:48,618 --> 00:20:50,630
+maybe you want JSON to come out so you can
+
+567
+00:20:50,630 --> 00:20:51,848
+fold it into a front-end application.
+
+568
+00:20:52,890 --> 00:20:55,059
+I'm, that's something you can layer in at the left end of the
+
+569
+00:20:55,059 --> 00:20:55,670
+spectrum,
+
+570
+00:20:56,049 --> 00:20:58,130
+that doesn't require you to think about the workflow
+
+571
+00:20:58,130 --> 00:20:59,969
+and where that output is coming from.
+
+572
+00:21:00,250 --> 00:21:01,939
+You're just saying like, hey, at the end,
+
+573
+00:21:02,568 --> 00:21:04,568
+my abstraction framework strands is
+
+574
+00:21:04,568 --> 00:21:06,608
+forcing structured output, and it's working with the
+
+575
+00:21:06,608 --> 00:21:09,108
+model to regenerate until it matches my schema.
+
+576
+00:21:09,318 --> 00:21:11,358
+That's all taken care of for me. And now I have a
+
+577
+00:21:11,358 --> 00:21:13,549
+model-driven approach that returns output I want.
+
+578
+00:21:15,140 --> 00:21:17,078
+OK, but what if you need a little more guidance?
+
+579
+00:21:17,509 --> 00:21:19,689
+So when we talk about steering and SOPs.
+
+580
+00:21:20,150 --> 00:21:22,189
+I'm, maybe you've seen last
+
+581
+00:21:22,189 --> 00:21:24,509
+week, we launched a new repository on strands
+
+582
+00:21:24,509 --> 00:21:25,509
+called SOPs.
+
+583
+00:21:26,390 --> 00:21:28,430
+Uh, if you haven't, check that out. I'll have a link
+
+584
+00:21:28,430 --> 00:21:29,489
+at the end of the session.
+
+585
+00:21:30,029 --> 00:21:32,348
+This is really just a technique for
+
+586
+00:21:32,348 --> 00:21:34,348
+prompting, for system prompting in particular,
+
+587
+00:21:34,789 --> 00:21:37,170
+that we've developed inside Amazon. There's a
+
+588
+00:21:37,170 --> 00:21:39,390
+very large community outside the Strands team
+
+589
+00:21:39,390 --> 00:21:41,189
+that have been working on this technique,
+
+590
+00:21:41,670 --> 00:21:43,699
+and then we've decided to deliver it through Strands,
+
+591
+00:21:43,709 --> 00:21:45,828
+and it's very helpful in this use case. Nick's gonna walk
+
+592
+00:21:45,828 --> 00:21:47,049
+you through it in detail.
+
+593
+00:21:47,519 --> 00:21:49,529
+I'm, but that's an approach
+
+594
+00:21:49,529 --> 00:21:51,989
+of just saying, OK, make your prompt more structured,
+
+595
+00:21:52,309 --> 00:21:54,318
+give it a specific set of steps in
+
+596
+00:21:54,318 --> 00:21:56,400
+the prompt that you suggest the
+
+597
+00:21:56,400 --> 00:21:57,239
+agent take,
+
+598
+00:21:57,559 --> 00:21:59,719
+and you can use keywords like they must do this,
+
+599
+00:21:59,799 --> 00:22:01,098
+they should do that,
+
+600
+00:22:01,519 --> 00:22:03,900
+and the model does a great job both
+
+601
+00:22:04,239 --> 00:22:05,660
+following your guidance.
+
+602
+00:22:06,269 --> 00:22:08,439
+And adapting, right? And that's a big
+
+603
+00:22:08,439 --> 00:22:10,680
+part because it may sound like you're back in the workflow
+
+604
+00:22:10,680 --> 00:22:11,500
+driven approach again,
+
+605
+00:22:11,880 --> 00:22:14,219
+but what if a remote API failed,
+
+606
+00:22:14,559 --> 00:22:16,640
+your workflow would have to account for that if you're just making
+
+607
+00:22:16,640 --> 00:22:18,640
+LM calls, or the model
+
+608
+00:22:18,640 --> 00:22:20,838
+could figure out how to do a retry or another
+
+609
+00:22:20,838 --> 00:22:22,140
+data source it can call upon
+
+610
+00:22:22,509 --> 00:22:24,559
+while still achieving the steps you described in
+
+611
+00:22:24,559 --> 00:22:25,180
+your prompt.
+
+612
+00:22:27,229 --> 00:22:28,640
+Then on the far side.
+
+613
+00:22:29,660 --> 00:22:31,779
+You're thinking about how to apply
+
+614
+00:22:31,779 --> 00:22:33,400
+constraints to a model.
+
+615
+00:22:33,858 --> 00:22:36,170
+And that's where you're really trying to protect around sensitive
+
+616
+00:22:36,170 --> 00:22:36,759
+outcomes.
+
+617
+00:22:38,059 --> 00:22:40,219
+I'm hooks are an example of this
+
+618
+00:22:40,219 --> 00:22:41,469
+in strands itself.
+
+619
+00:22:41,858 --> 00:22:44,019
+So you can inspect after a tool call, make
+
+620
+00:22:44,019 --> 00:22:46,219
+sure the results, um, maybe passed
+
+621
+00:22:46,219 --> 00:22:48,689
+through a PII guard rail, um,
+
+622
+00:22:48,818 --> 00:22:50,640
+maybe you're parsing for certain information.
+
+623
+00:22:51,689 --> 00:22:54,108
+Um, that can all happen as part of strands hooks
+
+624
+00:22:54,108 --> 00:22:56,140
+where you get to basically eject from the agent
+
+625
+00:22:56,140 --> 00:22:58,219
+loop, do some work, hand back to the agent
+
+626
+00:22:58,219 --> 00:23:01,160
+loop. Another
+
+627
+00:23:01,160 --> 00:23:02,989
+example of this is, um,
+
+628
+00:23:03,250 --> 00:23:05,769
+external to strands, uh, the policy
+
+629
+00:23:05,769 --> 00:23:07,828
+engine feature that's shipped as part of,
+
+630
+00:23:07,838 --> 00:23:09,390
+uh, Agent Core's gateway product.
+
+631
+00:23:09,769 --> 00:23:12,229
+So this is like a hosted MCP server
+
+632
+00:23:12,229 --> 00:23:14,568
+situation where you can either, you can have an MCP endpoint
+
+633
+00:23:14,568 --> 00:23:16,598
+for remote targets. Those targets can be
+
+634
+00:23:16,598 --> 00:23:19,318
+APIs, they can be lambda functions.
+
+635
+00:23:19,848 --> 00:23:22,449
+You can now assert deterministic policies
+
+636
+00:23:22,449 --> 00:23:23,789
+to those gateways
+
+637
+00:23:24,170 --> 00:23:24,769
+and in other words,
+
+638
+00:23:25,170 --> 00:23:27,170
+protect the data sources before a
+
+639
+00:23:27,170 --> 00:23:28,108
+tool is called.
+
+640
+00:23:28,549 --> 00:23:30,549
+And also externalize that logic from
+
+641
+00:23:30,549 --> 00:23:31,348
+the agent,
+
+642
+00:23:31,868 --> 00:23:33,868
+where the agent can be treated as untrustworthy.
+
+643
+00:23:34,949 --> 00:23:37,189
+And the gateway is providing you deterministic
+
+644
+00:23:37,189 --> 00:23:38,368
+controls for let's say
+
+645
+00:23:38,949 --> 00:23:41,170
+can an agent call this particular,
+
+646
+00:23:41,279 --> 00:23:43,650
+you know, API for refunds,
+
+647
+00:23:43,858 --> 00:23:46,108
+um, before the customer was deemed eligible
+
+648
+00:23:46,108 --> 00:23:48,229
+and you have a token that that specifies they, they
+
+649
+00:23:48,229 --> 00:23:50,390
+are, right? Like don't let the model try to figure
+
+650
+00:23:50,390 --> 00:23:51,368
+out how to game the system.
+
+651
+00:23:51,630 --> 00:23:53,750
+You can actually block the model from making any tool
+
+652
+00:23:53,750 --> 00:23:55,868
+calls until it's providing the proof that you need it
+
+653
+00:23:55,868 --> 00:23:56,489
+to provide.
+
+654
+00:23:57,380 --> 00:23:59,618
+So think along that spectrum. That's the long story
+
+655
+00:23:59,618 --> 00:24:01,500
+short here. There's controls along the way.
+
+656
+00:24:01,779 --> 00:24:03,858
+We'll walk you through that in our website if you start
+
+657
+00:24:03,858 --> 00:24:05,920
+building agents on strandsagents.com.
+
+658
+00:24:06,380 --> 00:24:08,420
+Um, and I'm gonna transition to telling you just a
+
+659
+00:24:08,420 --> 00:24:10,539
+couple of those examples that we launched in the last
+
+660
+00:24:10,539 --> 00:24:13,380
+few weeks. So
+
+661
+00:24:13,380 --> 00:24:14,650
+I mentioned SOPs.
+
+662
+00:24:15,059 --> 00:24:17,318
+Nick's gonna go into depth on these, but just to reiterate,
+
+663
+00:24:17,660 --> 00:24:19,239
+it's natural language instructions.
+
+664
+00:24:20,420 --> 00:24:22,739
+They fit in, um, whether it's via
+
+665
+00:24:22,739 --> 00:24:24,739
+Python import in the, in this case, or
+
+666
+00:24:24,739 --> 00:24:26,759
+an MCP server, which you can use with TypeScript today,
+
+667
+00:24:27,259 --> 00:24:29,380
+um, and the format looks like this upper
+
+668
+00:24:29,380 --> 00:24:31,358
+half, this is kind of, this is not one file.
+
+669
+00:24:31,779 --> 00:24:33,660
+Upper half is an example of an SOP.
+
+670
+00:24:34,098 --> 00:24:36,380
+Bottom half is how an example in the Python
+
+671
+00:24:36,380 --> 00:24:38,348
+SDK of how you load the SOP.
+
+672
+00:24:40,189 --> 00:24:42,630
+Look specifically to these steps. Obviously they are truncated,
+
+673
+00:24:42,670 --> 00:24:44,709
+but you can give it these headings of step one
+
+674
+00:24:44,709 --> 00:24:46,900
+is a setup step, step two is this, and
+
+675
+00:24:46,900 --> 00:24:49,189
+then within that these keywords, these RFC,
+
+676
+00:24:49,269 --> 00:24:51,410
+I think it's 2519,
+
+677
+00:24:52,189 --> 00:24:54,670
+2119, RFC 2119.
+
+678
+00:24:54,750 --> 00:24:56,858
+These are just like standard keywords that of course models are
+
+679
+00:24:56,858 --> 00:24:58,108
+exposed to in training data.
+
+680
+00:24:58,799 --> 00:25:01,160
+The SOP mechanism is really kind of exploiting
+
+681
+00:25:01,160 --> 00:25:03,199
+that that knowledge that a model has,
+
+682
+00:25:03,400 --> 00:25:05,779
+and it follows these keywords quite well.
+
+683
+00:25:06,279 --> 00:25:08,400
+This has been something we've been experimenting with a long
+
+684
+00:25:08,400 --> 00:25:10,439
+time inside Amazon, and you really just
+
+685
+00:25:10,439 --> 00:25:12,469
+follow this. You give it the steps, you give it the
+
+686
+00:25:12,469 --> 00:25:14,759
+constraint keywords within those steps, the
+
+687
+00:25:14,759 --> 00:25:15,959
+model's gonna do a good job.
+
+688
+00:25:17,818 --> 00:25:19,779
+We're also trying to figure out, OK,
+
+689
+00:25:20,140 --> 00:25:21,209
+if that works,
+
+690
+00:25:21,539 --> 00:25:23,539
+you're, you're off to a good path, but
+
+691
+00:25:23,539 --> 00:25:25,578
+you're gonna end up with a large prompt.
+
+692
+00:25:26,568 --> 00:25:28,868
+So what we're starting to experiment with, and this shipped,
+
+693
+00:25:28,890 --> 00:25:31,059
+uh, this week as an experimental feature
+
+694
+00:25:31,059 --> 00:25:32,209
+in the Python SDK.
+
+695
+00:25:33,920 --> 00:25:36,299
+Is what I think of as modular prompting.
+
+696
+00:25:36,559 --> 00:25:38,299
+We call it steering is the name of the feature.
+
+697
+00:25:39,630 --> 00:25:42,068
+And it's a way of kind of breaking down
+
+698
+00:25:42,068 --> 00:25:44,189
+the critical bits of instructions, and then
+
+699
+00:25:44,189 --> 00:25:46,348
+injecting them in those life cycle hooks I keep
+
+700
+00:25:46,348 --> 00:25:47,130
+talking about.
+
+701
+00:25:47,858 --> 00:25:50,180
+And the mechanism is, is really
+
+702
+00:25:50,180 --> 00:25:52,868
+a, one of those extensible engines and strands
+
+703
+00:25:53,180 --> 00:25:55,299
+where you can say, use an LLM as judge
+
+704
+00:25:55,299 --> 00:25:57,420
+or a deterministic Python library, you could
+
+705
+00:25:57,420 --> 00:25:59,259
+bring in cedar if you wanted to,
+
+706
+00:25:59,779 --> 00:26:01,900
+and use those external to
+
+707
+00:26:01,900 --> 00:26:02,640
+the agent
+
+708
+00:26:02,900 --> 00:26:04,979
+to judge the trajectories that
+
+709
+00:26:04,979 --> 00:26:07,160
+the agent's taking. So it looks at their traces,
+
+710
+00:26:07,618 --> 00:26:09,680
+you can pass in basically the whole agent state.
+
+711
+00:26:11,009 --> 00:26:11,949
+Examine it
+
+712
+00:26:12,368 --> 00:26:14,449
+against, let's say your LM as judge
+
+713
+00:26:14,449 --> 00:26:15,189
+prompt is,
+
+714
+00:26:15,449 --> 00:26:17,930
+um, is the tone and voice of this
+
+715
+00:26:17,930 --> 00:26:20,068
+response from the model appropriate
+
+716
+00:26:20,068 --> 00:26:21,630
+for these brand guidelines?
+
+717
+00:26:22,559 --> 00:26:24,959
+And then you give it a response of like yes, no,
+
+718
+00:26:25,039 --> 00:26:25,779
+and the feedback.
+
+719
+00:26:26,949 --> 00:26:29,189
+And so the strands will basically pause
+
+720
+00:26:29,189 --> 00:26:29,969
+at the agent loop.
+
+721
+00:26:30,608 --> 00:26:32,390
+Interpret those instructions
+
+722
+00:26:32,729 --> 00:26:34,769
+and then if the agent is compliant with
+
+723
+00:26:34,769 --> 00:26:37,150
+those instructions, it just returns control of the agent
+
+724
+00:26:37,410 --> 00:26:39,568
+and if it's not um compliant,
+
+725
+00:26:39,848 --> 00:26:41,809
+it returns feedback to the agent
+
+726
+00:26:42,170 --> 00:26:44,348
+as part of return of of control
+
+727
+00:26:44,769 --> 00:26:46,979
+and the agent absorbs that feedback, tries again,
+
+728
+00:26:47,009 --> 00:26:48,108
+goes back through the hook.
+
+729
+00:26:48,809 --> 00:26:50,848
+So that's the that's the way to think of steering and
+
+730
+00:26:50,848 --> 00:26:53,209
+that's um I, I think it's gonna be a pretty
+
+731
+00:26:53,209 --> 00:26:55,670
+interesting place for us to go if it works out
+
+732
+00:26:55,670 --> 00:26:57,729
+it's gonna give you um.
+
+733
+00:26:59,039 --> 00:27:01,559
+Fewer instructions to give the model upfront,
+
+734
+00:27:01,900 --> 00:27:04,130
+so bigger context windows to work with, less
+
+735
+00:27:04,130 --> 00:27:05,509
+chances of the model
+
+736
+00:27:06,049 --> 00:27:07,969
+getting too much steering data upfront.
+
+737
+00:27:09,118 --> 00:27:10,699
+More token efficient over time.
+
+738
+00:27:11,039 --> 00:27:13,150
+And then we're also experimenting with plugging
+
+739
+00:27:13,150 --> 00:27:15,199
+this into episodic memory systems,
+
+740
+00:27:15,650 --> 00:27:17,759
+so that that feedback loop can happen
+
+741
+00:27:17,759 --> 00:27:20,299
+once for a particular agent's life cycle,
+
+742
+00:27:20,519 --> 00:27:22,750
+and it just gets better over time at following
+
+743
+00:27:22,750 --> 00:27:25,078
+those instructions without needing that external
+
+744
+00:27:25,078 --> 00:27:25,650
+hook.
+
+745
+00:27:28,439 --> 00:27:30,449
+Another launch that we, we made this
+
+746
+00:27:30,449 --> 00:27:32,650
+week is an evaluations library, and
+
+747
+00:27:32,650 --> 00:27:34,729
+this is a little tangentially related to my talk
+
+748
+00:27:34,729 --> 00:27:36,789
+track of like, uh, controlling your agents, but I
+
+749
+00:27:36,789 --> 00:27:37,949
+think it's useful because
+
+750
+00:27:38,358 --> 00:27:40,449
+you need to evaluate your agents at some point in
+
+751
+00:27:40,449 --> 00:27:42,559
+their life cycle once you get past the prototyping
+
+752
+00:27:42,559 --> 00:27:44,880
+stage. And we've had this gap in strands
+
+753
+00:27:44,880 --> 00:27:47,029
+for a while, not giving you the libraries you need
+
+754
+00:27:47,368 --> 00:27:49,650
+to quickly take your agent and build evaluators
+
+755
+00:27:49,650 --> 00:27:50,209
+against them.
+
+756
+00:27:50,750 --> 00:27:52,750
+We're also adding in features with a
+
+757
+00:27:52,750 --> 00:27:54,828
+strands-based agent that will help you
+
+758
+00:27:54,828 --> 00:27:56,868
+generate synthetic data set that's relevant to your
+
+759
+00:27:56,868 --> 00:27:58,868
+use case, and then build your evaluators
+
+760
+00:27:58,868 --> 00:27:59,828
+around that data set.
+
+761
+00:28:01,380 --> 00:28:03,410
+I'm, you can come in with custom evaluators.
+
+762
+00:28:03,459 --> 00:28:04,709
+There's some built-ins,
+
+763
+00:28:04,979 --> 00:28:07,140
+and this is designed to work with an
+
+764
+00:28:07,140 --> 00:28:08,759
+online evaluation system of your choice,
+
+765
+00:28:09,019 --> 00:28:11,140
+including agent core evaluation system, which was launched
+
+766
+00:28:11,140 --> 00:28:13,118
+this week, or others that you might be using.
+
+767
+00:28:13,779 --> 00:28:15,858
+I'm, and really just pair that
+
+768
+00:28:15,858 --> 00:28:17,598
+build time story on your laptop,
+
+769
+00:28:18,019 --> 00:28:20,358
+something that's really native to the SDK experience
+
+770
+00:28:20,660 --> 00:28:22,779
+with those online systems where you're doing large
+
+771
+00:28:22,779 --> 00:28:24,118
+scale evaluations.
+
+772
+00:28:26,930 --> 00:28:28,108
+OK, so,
+
+773
+00:28:28,489 --> 00:28:30,229
+we're finally done talking to me.
+
+774
+00:28:30,719 --> 00:28:31,250
+I
+
+775
+00:28:31,769 --> 00:28:34,309
+teeing up the strands type script.
+
+776
+00:28:34,650 --> 00:28:36,769
+I'm, we launched that this week, available
+
+777
+00:28:36,769 --> 00:28:38,890
+in preview, and it was a
+
+778
+00:28:38,890 --> 00:28:40,930
+bit non-traditional in a couple of ways that I'm
+
+779
+00:28:40,930 --> 00:28:42,410
+excited for Nick to talk to you about.
+
+780
+00:28:42,799 --> 00:28:44,949
+First, we build it with strands.
+
+781
+00:28:45,809 --> 00:28:47,809
+But it wasn't vibe coded, it was actually
+
+782
+00:28:47,809 --> 00:28:48,769
+quite nuanced,
+
+783
+00:28:49,049 --> 00:28:51,170
+and it was a collaborative experience as
+
+784
+00:28:51,170 --> 00:28:53,489
+well between the Strand's team and
+
+785
+00:28:53,489 --> 00:28:54,088
+agents.
+
+786
+00:28:54,410 --> 00:28:55,469
+I'm, and so
+
+787
+00:28:56,009 --> 00:28:58,289
+for that, I wanna bring Nick up and talk about
+
+788
+00:28:58,289 --> 00:29:00,289
+how we built it and how some of these features
+
+789
+00:29:00,289 --> 00:29:02,420
+helped. Thanks, Ryan.
+
+790
+00:29:06,039 --> 00:29:06,900
+Hi everybody.
+
+791
+00:29:07,338 --> 00:29:08,338
+Thanks for coming today.
+
+792
+00:29:08,858 --> 00:29:09,759
+My name is Nick.
+
+793
+00:29:10,160 --> 00:29:12,568
+I'm a senior software engineer at AWS
+
+794
+00:29:12,719 --> 00:29:14,759
+and I was the technical lead for
+
+795
+00:29:14,759 --> 00:29:16,750
+building and developing the TypeScript SDK.
+
+796
+00:29:18,380 --> 00:29:19,479
+Like Ryan said,
+
+797
+00:29:19,818 --> 00:29:21,858
+as a part of this presentation, I want to talk
+
+798
+00:29:21,858 --> 00:29:24,219
+about how we actually went about building out this
+
+799
+00:29:24,219 --> 00:29:26,299
+uh new feature, this new language for
+
+800
+00:29:26,299 --> 00:29:27,000
+strands.
+
+801
+00:29:28,239 --> 00:29:29,910
+When we decided to
+
+802
+00:29:30,250 --> 00:29:32,189
+support a new language in strands,
+
+803
+00:29:32,608 --> 00:29:34,809
+we wanted to be intentional about how we went
+
+804
+00:29:34,809 --> 00:29:36,269
+about building out the language.
+
+805
+00:29:37,430 --> 00:29:39,549
+We wanted to reflect on our experience building
+
+806
+00:29:39,549 --> 00:29:40,559
+out the Python SDK
+
+807
+00:29:41,309 --> 00:29:43,509
+and specific, and not
+
+808
+00:29:43,509 --> 00:29:45,739
+necessarily just focus on the easy DevE
+
+809
+00:29:45,739 --> 00:29:47,299
+that Ryan has explained,
+
+810
+00:29:47,588 --> 00:29:49,489
+writing an agent and a few lines of code,
+
+811
+00:29:50,068 --> 00:29:52,259
+but we really wanted to focus on the
+
+812
+00:29:52,259 --> 00:29:54,029
+developer's experience writing that code.
+
+813
+00:29:56,318 --> 00:29:58,400
+We spent a lot of time developing and writing
+
+814
+00:29:58,400 --> 00:30:00,519
+code for Python, so we wanted to
+
+815
+00:30:00,519 --> 00:30:01,739
+reflect on that experience
+
+816
+00:30:02,078 --> 00:30:03,680
+and see how we could improve it.
+
+817
+00:30:05,029 --> 00:30:07,140
+Python was originally written by a group of
+
+818
+00:30:07,140 --> 00:30:08,989
+dedicated engineers in Amazon,
+
+819
+00:30:09,469 --> 00:30:11,549
+who built the Python SDK
+
+820
+00:30:11,549 --> 00:30:12,949
+as a prototype originally.
+
+821
+00:30:14,019 --> 00:30:16,059
+They used a lot of these early Gen AI
+
+822
+00:30:16,059 --> 00:30:18,059
+tools to bootstrap their
+
+823
+00:30:18,059 --> 00:30:18,640
+development,
+
+824
+00:30:18,900 --> 00:30:20,979
+to help them write code faster to get
+
+825
+00:30:20,979 --> 00:30:23,059
+this uh up off the ground and
+
+826
+00:30:23,059 --> 00:30:24,140
+have a working agent loop.
+
+827
+00:30:25,500 --> 00:30:27,618
+We spent a lot of time with these early
+
+828
+00:30:27,618 --> 00:30:29,779
+AI generated coding tools to
+
+829
+00:30:29,779 --> 00:30:31,979
+write all of the code for us, but the problem
+
+830
+00:30:31,979 --> 00:30:32,739
+was they,
+
+831
+00:30:33,019 --> 00:30:35,019
+a lot of it was vibe coding. It wasn't very
+
+832
+00:30:35,019 --> 00:30:37,059
+high quality code that came out of using
+
+833
+00:30:37,059 --> 00:30:37,838
+these tools.
+
+834
+00:30:39,979 --> 00:30:42,019
+I spent a lot of time, we spent a lot
+
+835
+00:30:42,019 --> 00:30:43,969
+of time as engineers reviewing,
+
+836
+00:30:44,420 --> 00:30:46,739
+understanding, guiding, steering these agents
+
+837
+00:30:46,739 --> 00:30:48,799
+to get them to write code that we were comfortable
+
+838
+00:30:48,799 --> 00:30:51,059
+shipping and bringing out to production for
+
+839
+00:30:51,059 --> 00:30:51,959
+everybody else to use.
+
+840
+00:30:52,670 --> 00:30:55,338
+And I recently went back and uh
+
+841
+00:30:55,338 --> 00:30:57,439
+analyzed the initial release of strands for
+
+842
+00:30:57,439 --> 00:30:59,519
+Python, and it was about 15,000 lines of
+
+843
+00:30:59,519 --> 00:31:00,759
+code. So,
+
+844
+00:31:01,118 --> 00:31:02,348
+coming into TypeScript,
+
+845
+00:31:02,779 --> 00:31:03,338
+we were
+
+846
+00:31:04,118 --> 00:31:06,459
+going to be building a, a code base of a similar size.
+
+847
+00:31:06,759 --> 00:31:09,180
+So we wanted to be intentional about how we actually
+
+848
+00:31:09,358 --> 00:31:11,098
+helped our developers write all of this code.
+
+849
+00:31:12,318 --> 00:31:13,180
+Specifically,
+
+850
+00:31:13,439 --> 00:31:15,910
+we wanted to figure out how we can use agents
+
+851
+00:31:15,910 --> 00:31:18,000
+to write code better and faster.
+
+852
+00:31:18,759 --> 00:31:21,279
+And I break it into these two pieces
+
+853
+00:31:21,279 --> 00:31:23,390
+because we came up with interesting solutions on how to
+
+854
+00:31:23,390 --> 00:31:24,180
+do each of those.
+
+855
+00:31:24,979 --> 00:31:25,640
+So,
+
+856
+00:31:26,140 --> 00:31:27,759
+for writing code better.
+
+857
+00:31:28,650 --> 00:31:30,150
+We looked at agent SOPs.
+
+858
+00:31:30,529 --> 00:31:32,068
+So, Ryan introduced this earlier,
+
+859
+00:31:32,539 --> 00:31:34,229
+and to give a high-level overview,
+
+860
+00:31:34,608 --> 00:31:37,509
+it's a specification for writing agent instructions.
+
+861
+00:31:37,890 --> 00:31:40,430
+It's literally a standard operating procedure
+
+862
+00:31:40,809 --> 00:31:43,009
+that an agent follows in order to accomplish
+
+863
+00:31:43,009 --> 00:31:43,769
+some tasks.
+
+864
+00:31:44,439 --> 00:31:46,900
+And the great thing that we found using agent
+
+865
+00:31:46,900 --> 00:31:47,699
+SOPs
+
+866
+00:31:47,959 --> 00:31:50,439
+is that it's great at steering agents
+
+867
+00:31:50,439 --> 00:31:52,299
+for somewhat repeatable behavior.
+
+868
+00:31:54,118 --> 00:31:56,239
+SOPs were uh initially thought up
+
+869
+00:31:56,239 --> 00:31:58,279
+by one of our principal engineers, James
+
+870
+00:31:58,279 --> 00:32:00,430
+Hood, who was similarly
+
+871
+00:32:00,430 --> 00:32:02,719
+frustrated with these early AI generated
+
+872
+00:32:02,719 --> 00:32:03,539
+coding tools.
+
+873
+00:32:04,420 --> 00:32:06,588
+He would spend a lot of time trying to get good
+
+874
+00:32:06,588 --> 00:32:08,588
+code written out of them and spend a lot of
+
+875
+00:32:08,588 --> 00:32:10,088
+time debugging and
+
+876
+00:32:10,828 --> 00:32:12,209
+trying to get good results.
+
+877
+00:32:12,509 --> 00:32:14,630
+And out of that frustration, he came up with this
+
+878
+00:32:14,630 --> 00:32:16,328
+idea of agent SOPs,
+
+879
+00:32:16,670 --> 00:32:18,828
+and he shared it with the internal Amazon
+
+880
+00:32:18,828 --> 00:32:19,769
+builder community.
+
+881
+00:32:20,318 --> 00:32:21,358
+And it was
+
+882
+00:32:21,670 --> 00:32:23,449
+super, super successful.
+
+883
+00:32:23,868 --> 00:32:26,108
+The last time that I checked, we had over 5000
+
+884
+00:32:26,108 --> 00:32:28,229
+of these authored internally, used all over
+
+885
+00:32:28,229 --> 00:32:28,809
+the place.
+
+886
+00:32:29,529 --> 00:32:31,430
+Internal Amazonians love this idea.
+
+887
+00:32:31,848 --> 00:32:33,848
+And like Ryan said, we wanted to release it
+
+888
+00:32:33,848 --> 00:32:35,910
+as a part of strands because we wanted to share it.
+
+889
+00:32:35,969 --> 00:32:38,088
+It, it has been so successful to help
+
+890
+00:32:38,088 --> 00:32:39,670
+engineers guide and steer agents.
+
+891
+00:32:41,769 --> 00:32:43,799
+So, here's an example of the SOP again,
+
+892
+00:32:43,848 --> 00:32:45,890
+you saw earlier with Ryan, but I want to
+
+893
+00:32:45,890 --> 00:32:47,890
+get, go a little bit more in depth in how
+
+894
+00:32:47,890 --> 00:32:48,410
+it works.
+
+895
+00:32:48,769 --> 00:32:50,920
+So, you have the overview, you have the parameters,
+
+896
+00:32:50,930 --> 00:32:52,969
+and you have the list of steps that the agent
+
+897
+00:32:52,969 --> 00:32:55,469
+is going to follow in order to
+
+898
+00:32:55,469 --> 00:32:56,289
+complete its task.
+
+899
+00:32:57,108 --> 00:32:58,509
+Like I said, it's
+
+900
+00:32:58,789 --> 00:33:00,789
+really easy to understand why
+
+901
+00:33:00,789 --> 00:33:01,328
+this
+
+902
+00:33:01,670 --> 00:33:03,739
+gives an agent repeatable behavior. It's
+
+903
+00:33:03,739 --> 00:33:05,789
+really obvious what the agent is doing when it's following
+
+904
+00:33:05,789 --> 00:33:07,489
+these steps to accomplish some goal.
+
+905
+00:33:08,068 --> 00:33:10,068
+And as a developer who's trying
+
+906
+00:33:10,068 --> 00:33:12,390
+to write these agents to accomplish some tasks,
+
+907
+00:33:12,868 --> 00:33:14,900
+this means that this SOP is debuggable to
+
+908
+00:33:14,900 --> 00:33:16,910
+me. If an agent is going
+
+909
+00:33:16,910 --> 00:33:19,029
+through these steps, and at step 3, it goes off
+
+910
+00:33:19,029 --> 00:33:20,410
+and does something unexpected,
+
+911
+00:33:20,828 --> 00:33:22,900
+as a developer, I know that I need to go in at step
+
+912
+00:33:22,900 --> 00:33:24,029
+3 and give it more instruction.
+
+913
+00:33:25,059 --> 00:33:27,259
+We've worked on a couple of teams at Amazon where we were
+
+914
+00:33:27,259 --> 00:33:29,259
+writing the system prompts for these agents and
+
+915
+00:33:29,259 --> 00:33:31,309
+developers were worried or afraid that
+
+916
+00:33:31,459 --> 00:33:32,739
+if they messed with the,
+
+917
+00:33:33,180 --> 00:33:35,180
+the authoring or the, the writing or the wording of
+
+918
+00:33:35,180 --> 00:33:36,358
+the system prompt, it would
+
+919
+00:33:36,779 --> 00:33:38,559
+make the agent do unexpected things.
+
+920
+00:33:38,858 --> 00:33:41,059
+But using SOPs, it makes it obvious
+
+921
+00:33:41,059 --> 00:33:43,180
+and clear, it makes it much
+
+922
+00:33:43,180 --> 00:33:45,180
+easier for the developer to go in and
+
+923
+00:33:45,180 --> 00:33:47,259
+update this and have confidence that their
+
+924
+00:33:47,259 --> 00:33:48,699
+changes won't break the system.
+
+925
+00:33:49,259 --> 00:33:51,279
+Uh, I'm gonna be showing, uh, a video
+
+926
+00:33:51,279 --> 00:33:53,380
+a little bit later where we've actually done this in
+
+927
+00:33:53,380 --> 00:33:55,059
+our development of our agents for TypeScript.
+
+928
+00:33:56,098 --> 00:33:58,479
+So, like I said, this was, uh,
+
+929
+00:33:58,858 --> 00:34:01,219
+this idea of agent SOPs was very
+
+930
+00:34:01,219 --> 00:34:03,549
+successful in the internal Amazon builder community.
+
+931
+00:34:03,858 --> 00:34:06,318
+And some of the ones that we released are prompt-driven
+
+932
+00:34:06,318 --> 00:34:07,739
+development and codesist.
+
+933
+00:34:08,509 --> 00:34:10,588
+These were two of the most popular SOPs
+
+934
+00:34:10,588 --> 00:34:12,668
+because they figured out ways to guide agents
+
+935
+00:34:12,668 --> 00:34:13,867
+in really impressive ways.
+
+936
+00:34:15,269 --> 00:34:16,329
+Prompt-driven development
+
+937
+00:34:16,898 --> 00:34:19,019
+is an SOP that has an agent
+
+938
+00:34:19,019 --> 00:34:21,148
+guide you through a question and answer process
+
+939
+00:34:21,148 --> 00:34:23,228
+to refine an idea into an implementable
+
+940
+00:34:23,228 --> 00:34:25,329
+state. The agent will
+
+941
+00:34:25,329 --> 00:34:27,340
+ask you questions to disambiguate a
+
+942
+00:34:27,340 --> 00:34:27,918
+problem.
+
+943
+00:34:28,378 --> 00:34:30,539
+If it doesn't understand a certain aspect
+
+944
+00:34:30,539 --> 00:34:32,739
+of what you're asking it, it'll do research using its
+
+945
+00:34:32,739 --> 00:34:35,139
+tools or if it's in a codebase, it'll explore the codebase,
+
+946
+00:34:35,500 --> 00:34:37,579
+and it'll take the progress as it goes along, so you
+
+947
+00:34:37,579 --> 00:34:39,039
+know what it's thought and done along the way.
+
+948
+00:34:41,208 --> 00:34:43,208
+The really good thing about this is what we
+
+949
+00:34:43,208 --> 00:34:45,289
+found in the early Gen AI coding tools is
+
+950
+00:34:45,289 --> 00:34:47,489
+the agent likes to take the shortest path possible
+
+951
+00:34:47,489 --> 00:34:48,590
+to solving a problem.
+
+952
+00:34:49,079 --> 00:34:51,250
+And the shortest path poss the shortest
+
+953
+00:34:51,250 --> 00:34:52,090
+path possible
+
+954
+00:34:52,409 --> 00:34:54,489
+isn't necessarily the one that I want
+
+955
+00:34:54,489 --> 00:34:55,128
+it to take.
+
+956
+00:34:56,438 --> 00:34:58,478
+Sometimes I want to guide it to write code in a way
+
+957
+00:34:58,478 --> 00:35:00,548
+that my team is familiar with or use some functions that
+
+958
+00:35:00,548 --> 00:35:02,157
+I've written that it may not be aware of.
+
+959
+00:35:02,548 --> 00:35:04,548
+So, having this back and forth question
+
+960
+00:35:04,548 --> 00:35:07,108
+and answer process with an agent helps me disambiguate
+
+961
+00:35:07,108 --> 00:35:09,148
+the problem. It makes it very clear to the
+
+962
+00:35:09,148 --> 00:35:11,188
+agent of what it needs to do aligns
+
+963
+00:35:11,188 --> 00:35:12,289
+with what I want it to do.
+
+964
+00:35:14,300 --> 00:35:17,000
+Like I said, the output of this SOP is an implementable
+
+965
+00:35:17,000 --> 00:35:19,179
+task. It's a markdown file for how to
+
+966
+00:35:19,179 --> 00:35:20,619
+implement a feature in a codebase.
+
+967
+00:35:21,059 --> 00:35:23,059
+And we developed another agent SOP which
+
+968
+00:35:23,059 --> 00:35:24,010
+is Code Assist,
+
+969
+00:35:24,340 --> 00:35:26,360
+which takes this task and actually implements it.
+
+970
+00:35:27,489 --> 00:35:29,610
+So, it follows the test-driven development
+
+971
+00:35:29,610 --> 00:35:31,809
+methodology for writing code where you write the unit
+
+972
+00:35:31,809 --> 00:35:32,708
+tests first,
+
+973
+00:35:33,250 --> 00:35:35,389
+and then after that, you write the application code.
+
+974
+00:35:35,898 --> 00:35:37,079
+And we found that
+
+975
+00:35:37,409 --> 00:35:38,969
+guiding agents to write code like this,
+
+976
+00:35:39,530 --> 00:35:41,050
+again, writes much better code.
+
+977
+00:35:42,148 --> 00:35:44,179
+After it's written the features, I can go in,
+
+978
+00:35:44,478 --> 00:35:46,550
+uh, take a look at all of the code that it's written, and
+
+979
+00:35:46,550 --> 00:35:48,559
+then give it feedback on how to update and fix it to
+
+980
+00:35:48,559 --> 00:35:49,739
+better align with what I want.
+
+981
+00:35:50,188 --> 00:35:52,280
+After a couple of iterations, when I say it's done, the
+
+982
+00:35:52,280 --> 00:35:54,300
+agent can go ahead and commit this code.
+
+983
+00:35:54,800 --> 00:35:56,938
+So, using these two agent SOPs
+
+984
+00:35:56,938 --> 00:35:59,000
+together, we've essentially solved that problem
+
+985
+00:35:59,000 --> 00:36:01,039
+of how we can get agents to write code better.
+
+986
+00:36:02,110 --> 00:36:04,179
+The second part of the problem, which is how we can get agents to
+
+987
+00:36:04,179 --> 00:36:05,090
+write code faster.
+
+988
+00:36:06,070 --> 00:36:07,750
+We solved in another interesting way.
+
+989
+00:36:09,519 --> 00:36:12,159
+So, developers on my team typically
+
+990
+00:36:12,159 --> 00:36:13,309
+develop and write software uh
+
+991
+00:36:14,168 --> 00:36:15,699
+in a way like this, where,
+
+992
+00:36:16,110 --> 00:36:18,239
+uh, on one side, you have the team of developers
+
+993
+00:36:18,239 --> 00:36:20,519
+who are communicating with the individual developer
+
+994
+00:36:20,519 --> 00:36:21,320
+through GitHub,
+
+995
+00:36:21,809 --> 00:36:23,909
+and the individual developer might be
+
+996
+00:36:23,909 --> 00:36:25,659
+creating pull requests or issues
+
+997
+00:36:25,958 --> 00:36:28,000
+to track the progress of the code that they're writing.
+
+998
+00:36:28,519 --> 00:36:30,559
+They're gonna create and update pull requests
+
+999
+00:36:30,559 --> 00:36:32,679
+and they're gonna coordinate the feedback that they
+
+1000
+00:36:32,679 --> 00:36:34,360
+get from their team to their local IDE
+
+1001
+00:36:34,878 --> 00:36:37,478
+maybe they're running Kiro, CLI claud code, etc.
+
+1002
+00:36:37,760 --> 00:36:40,090
+and they're doing that communication. They're a middleman in this
+
+1003
+00:36:40,090 --> 00:36:42,360
+process for informing the agent
+
+1004
+00:36:42,360 --> 00:36:44,360
+on, uh, what feedback needs to be done
+
+1005
+00:36:44,360 --> 00:36:46,398
+in order to incorporate and get this change
+
+1006
+00:36:46,398 --> 00:36:47,378
+approved by the team.
+
+1007
+00:36:47,958 --> 00:36:50,139
+But we're spending a lot of time doing
+
+1008
+00:36:50,139 --> 00:36:52,398
+that, staging the local repository
+
+1009
+00:36:52,398 --> 00:36:54,019
+or staging your local code base,
+
+1010
+00:36:54,398 --> 00:36:54,958
+um.
+
+1011
+00:36:55,469 --> 00:36:56,110
+Understanding,
+
+1012
+00:36:56,389 --> 00:36:58,050
+reflecting and responding to the feedback,
+
+1013
+00:36:58,469 --> 00:36:59,809
+writing all of the test cases
+
+1014
+00:37:00,188 --> 00:37:02,228
+for the code as well. So, instead,
+
+1015
+00:37:02,550 --> 00:37:03,809
+we wanted to shift this
+
+1016
+00:37:04,070 --> 00:37:04,789
+and
+
+1017
+00:37:05,260 --> 00:37:07,469
+have GitHub become a member of the team.
+
+1018
+00:37:08,409 --> 00:37:09,550
+So we've essentially,
+
+1019
+00:37:10,030 --> 00:37:12,289
+we've taken advantage of GitHub's uh action
+
+1020
+00:37:12,289 --> 00:37:13,719
+feature, a GitHub workflow,
+
+1021
+00:37:14,050 --> 00:37:14,628
+which
+
+1022
+00:37:15,050 --> 00:37:17,050
+is triggered off of certain events on pull
+
+1023
+00:37:17,050 --> 00:37:18,148
+requests and issues
+
+1024
+00:37:18,409 --> 00:37:20,708
+to trigger a strands agent.
+
+1025
+00:37:21,090 --> 00:37:23,510
+Like Ryan said, we have strands writing strands code.
+
+1026
+00:37:23,889 --> 00:37:25,469
+We have our GitHub workflows
+
+1027
+00:37:25,728 --> 00:37:28,168
+triggering a Python strands agent to contribute
+
+1028
+00:37:28,168 --> 00:37:29,809
+code to our TypeScript repository.
+
+1029
+00:37:30,090 --> 00:37:32,329
+The Python code is now writing code for us for TypeScript.
+
+1030
+00:37:33,059 --> 00:37:33,610
+And
+
+1031
+00:37:34,148 --> 00:37:34,889
+using the system,
+
+1032
+00:37:35,510 --> 00:37:37,550
+we're essentially adding a new member to our team
+
+1033
+00:37:37,550 --> 00:37:38,219
+through GitHub.
+
+1034
+00:37:38,668 --> 00:37:40,708
+The agent is acting as another contributor on our
+
+1035
+00:37:40,708 --> 00:37:43,050
+team, and I no longer have to be the middleman,
+
+1036
+00:37:43,829 --> 00:37:45,750
+understanding my team's feedback and passing it to the agent.
+
+1037
+00:37:46,449 --> 00:37:48,070
+Instead, the agent is doing that itself.
+
+1038
+00:37:48,648 --> 00:37:51,110
+It's reading through the GitHub issues, GitHub pull requests
+
+1039
+00:37:51,250 --> 00:37:53,110
+to do that coordination, so I don't need to.
+
+1040
+00:37:54,619 --> 00:37:56,619
+And this is how we solved the writing
+
+1041
+00:37:56,619 --> 00:37:58,699
+code faster. I'm not being the middleman anymore.
+
+1042
+00:37:58,780 --> 00:37:59,938
+The agent is doing that for me.
+
+1043
+00:38:01,219 --> 00:38:03,539
+So, using this new paradigm of an agent
+
+1044
+00:38:03,539 --> 00:38:04,208
+in GitHub,
+
+1045
+00:38:04,659 --> 00:38:06,909
+we had to rework the SOPs that I mentioned earlier,
+
+1046
+00:38:07,059 --> 00:38:08,820
+prompt-driven development and codesist.
+
+1047
+00:38:10,010 --> 00:38:12,050
+What we came up with are these two agents, which I'm
+
+1048
+00:38:12,050 --> 00:38:13,860
+calling the refiner and the implementer.
+
+1049
+00:38:14,369 --> 00:38:16,809
+And there are slight variations
+
+1050
+00:38:16,809 --> 00:38:18,809
+of the prompt-driven development and codesist
+
+1051
+00:38:19,168 --> 00:38:21,719
+SOPs tuned towards GitHub.
+
+1052
+00:38:22,449 --> 00:38:24,228
+So, the way that the refiner works
+
+1053
+00:38:24,570 --> 00:38:26,610
+is given an issue with a general feature
+
+1054
+00:38:26,610 --> 00:38:28,228
+that I want to implement in the codebase,
+
+1055
+00:38:28,809 --> 00:38:30,978
+it will read that issue, it'll have the
+
+1056
+00:38:30,978 --> 00:38:33,668
+repository checked out and it can explore that repository
+
+1057
+00:38:34,398 --> 00:38:36,398
+to understand the implications of implementing
+
+1058
+00:38:36,398 --> 00:38:37,648
+that feature in the code base.
+
+1059
+00:38:38,250 --> 00:38:40,280
+It'll then come up with a list of questions and
+
+1060
+00:38:40,280 --> 00:38:42,449
+then post that as a comment on the issue for me
+
+1061
+00:38:42,449 --> 00:38:43,128
+to go in,
+
+1062
+00:38:43,449 --> 00:38:44,090
+uh, review,
+
+1063
+00:38:44,389 --> 00:38:46,789
+update, and give it instruction on what to do next.
+
+1064
+00:38:47,369 --> 00:38:49,579
+We repeat that process of question and answer through comments
+
+1065
+00:38:49,579 --> 00:38:50,269
+on the issue
+
+1066
+00:38:50,610 --> 00:38:52,789
+until the agent determines that it's ready to implement,
+
+1067
+00:38:53,250 --> 00:38:55,599
+and then we can give that issue over to the implementer
+
+1068
+00:38:55,599 --> 00:38:57,648
+agent. The implementer
+
+1069
+00:38:57,648 --> 00:38:59,648
+agent, just like Codesist takes that
+
+1070
+00:38:59,648 --> 00:39:01,349
+implementable task, which is an issue,
+
+1071
+00:39:01,969 --> 00:39:02,789
+creates a,
+
+1072
+00:39:03,168 --> 00:39:04,610
+a branch in GitHub.
+
+1073
+00:39:05,559 --> 00:39:07,679
+It has the code base checked out, and then it goes
+
+1074
+00:39:07,679 --> 00:39:09,800
+about implementing that code, that feature using
+
+1075
+00:39:09,800 --> 00:39:10,739
+test-driven development,
+
+1076
+00:39:11,159 --> 00:39:13,239
+and it makes a commit to the branch and creates a pull
+
+1077
+00:39:13,239 --> 00:39:15,239
+request. On that pull request,
+
+1078
+00:39:15,398 --> 00:39:17,398
+again, just like any other member of the team, I can
+
+1079
+00:39:17,398 --> 00:39:19,438
+leave the feedback on the pull request, and it'll go ahead
+
+1080
+00:39:19,438 --> 00:39:21,478
+and read that, and then update the code for me.
+
+1081
+00:39:21,639 --> 00:39:23,159
+And again, now I'm just iterating.
+
+1082
+00:39:24,059 --> 00:39:26,090
+The really great efficiency here is that
+
+1083
+00:39:26,090 --> 00:39:28,179
+I don't have to sit down, write and debug code for
+
+1084
+00:39:28,179 --> 00:39:30,260
+a half hour. I can let the agent do that and I can
+
+1085
+00:39:30,260 --> 00:39:31,639
+go do something else that an agent
+
+1086
+00:39:32,019 --> 00:39:32,668
+can't do.
+
+1087
+00:39:33,179 --> 00:39:35,239
+And again, that's where we're really getting the efficiency
+
+1088
+00:39:35,688 --> 00:39:37,139
+of writing code faster with agents.
+
+1089
+00:39:38,039 --> 00:39:40,039
+So, I want to walk through a couple of examples
+
+1090
+00:39:40,039 --> 00:39:42,119
+of how we've actually used this to write code in our
+
+1091
+00:39:42,119 --> 00:39:42,878
+TypeScript repo.
+
+1092
+00:39:44,340 --> 00:39:46,489
+Here, you can see the, uh, the
+
+1093
+00:39:46,489 --> 00:39:48,760
+issue of an overview of a,
+
+1094
+00:39:48,889 --> 00:39:50,978
+a task that I want, I want to implement in the
+
+1095
+00:39:50,978 --> 00:39:52,079
+TypeScript codebase.
+
+1096
+00:39:53,280 --> 00:39:55,409
+And as a developer, I know how I
+
+1097
+00:39:55,409 --> 00:39:56,610
+might want to go about doing this.
+
+1098
+00:39:56,929 --> 00:39:59,050
+But if I were to give this to an agent, it would take the shortest
+
+1099
+00:39:59,050 --> 00:40:01,250
+path possible to implementing this feature, and that's
+
+1100
+00:40:01,250 --> 00:40:03,050
+essentially what we're calling vibe coding.
+
+1101
+00:40:03,728 --> 00:40:05,860
+To avoid this, I type in a slash strands
+
+1102
+00:40:05,860 --> 00:40:08,019
+command to kick off a GitHub action to trigger
+
+1103
+00:40:08,019 --> 00:40:09,059
+the refiner agent.
+
+1104
+00:40:10,099 --> 00:40:12,179
+You'll see in a second, a label will be added
+
+1105
+00:40:12,179 --> 00:40:14,360
+to the issue to indicate that this agent is running.
+
+1106
+00:40:15,469 --> 00:40:17,570
+And the agent will be dropped in a codebase
+
+1107
+00:40:17,570 --> 00:40:19,750
+with this issue as instructions to go
+
+1108
+00:40:19,750 --> 00:40:21,869
+about and explore and understand how that issue
+
+1109
+00:40:21,869 --> 00:40:23,030
+should be implemented.
+
+1110
+00:40:23,389 --> 00:40:24,530
+It leaves a comment here
+
+1111
+00:40:24,949 --> 00:40:27,070
+with clarifying questions on how it should go
+
+1112
+00:40:27,070 --> 00:40:28,250
+about implementing that feature.
+
+1113
+00:40:29,389 --> 00:40:31,429
+Now, while it's done that, I've gone off and done something
+
+1114
+00:40:31,429 --> 00:40:32,769
+else, and I can come back
+
+1115
+00:40:33,269 --> 00:40:35,309
+and answer its clarifying
+
+1116
+00:40:35,309 --> 00:40:37,829
+questions. So here I go, 12345,
+
+1117
+00:40:37,909 --> 00:40:39,128
+answering all of the questions.
+
+1118
+00:40:39,519 --> 00:40:41,590
+And when I'm done, I can go ahead and type
+
+1119
+00:40:41,590 --> 00:40:43,250
+in slash strands again to
+
+1120
+00:40:43,510 --> 00:40:45,550
+trigger the refiner agent, and we keep doing
+
+1121
+00:40:45,550 --> 00:40:47,750
+this until the task is ready to be implemented.
+
+1122
+00:40:48,559 --> 00:40:50,599
+This takes a couple of minutes, um.
+
+1123
+00:40:51,708 --> 00:40:53,949
+And once it's done, it'll trigger the agent again.
+
+1124
+00:40:55,000 --> 00:40:57,199
+And the agent again is dropped in the code base.
+
+1125
+00:40:57,639 --> 00:40:59,889
+It's able to read my updated comment,
+
+1126
+00:41:00,239 --> 00:41:02,398
+and it ultimately decides that the feature
+
+1127
+00:41:02,398 --> 00:41:03,739
+is ready to be implemented.
+
+1128
+00:41:04,110 --> 00:41:05,739
+And it leaves a comment for that,
+
+1129
+00:41:06,360 --> 00:41:07,519
+which you'll see in just a second.
+
+1130
+00:41:12,360 --> 00:41:12,918
+There we go.
+
+1131
+00:41:14,010 --> 00:41:16,128
+So, the agent has responded with a comment
+
+1132
+00:41:16,128 --> 00:41:18,168
+on the pull request, and then it's also updated
+
+1133
+00:41:18,168 --> 00:41:19,409
+the issue description
+
+1134
+00:41:19,809 --> 00:41:22,168
+for the implementable task. And you'll see I'll refresh
+
+1135
+00:41:22,168 --> 00:41:22,869
+the page,
+
+1136
+00:41:23,329 --> 00:41:23,989
+and
+
+1137
+00:41:24,409 --> 00:41:26,688
+the agent has actually made the edit
+
+1138
+00:41:26,688 --> 00:41:27,648
+to the description here.
+
+1139
+00:41:29,059 --> 00:41:31,300
+So, using this refiner agent, I've essentially
+
+1140
+00:41:31,300 --> 00:41:33,340
+disambiguated the task for an agent to go ahead and
+
+1141
+00:41:33,340 --> 00:41:34,398
+start the implementation here.
+
+1142
+00:41:35,349 --> 00:41:36,949
+Now, in this next video.
+
+1143
+00:41:38,168 --> 00:41:40,239
+I'm going to go ahead and trigger the implementation
+
+1144
+00:41:40,239 --> 00:41:42,449
+agent. And it's really simple. I
+
+1145
+00:41:42,449 --> 00:41:43,969
+type in slash strands implement,
+
+1146
+00:41:44,239 --> 00:41:46,239
+and we're using the GitHub action again to trigger a new
+
+1147
+00:41:46,239 --> 00:41:48,360
+agent, which is the implementer, to kick off the
+
+1148
+00:41:48,360 --> 00:41:49,469
+implementation process.
+
+1149
+00:41:52,260 --> 00:41:54,389
+Uh, again, we add the label, we create
+
+1150
+00:41:54,389 --> 00:41:56,469
+a branch, we drop the agent in there, and it's gonna follow
+
+1151
+00:41:56,469 --> 00:41:58,168
+this test-driven development methodology
+
+1152
+00:41:58,510 --> 00:42:00,550
+to go ahead and start writing the code in our codebase.
+
+1153
+00:42:01,418 --> 00:42:03,500
+I think this one takes about 30 minutes. And again, this
+
+1154
+00:42:03,500 --> 00:42:05,648
+is where the efficiency comes in. I can go off and do something
+
+1155
+00:42:05,648 --> 00:42:07,559
+else while the agent is doing that.
+
+1156
+00:42:08,059 --> 00:42:10,059
+I don't need to sit there code and debug. I'm
+
+1157
+00:42:10,059 --> 00:42:12,139
+just doing the review and uh bar raising for the code
+
+1158
+00:42:12,139 --> 00:42:13,199
+that comes into our codebase.
+
+1159
+00:42:14,320 --> 00:42:16,429
+So, here it's created the issue, but
+
+1160
+00:42:16,429 --> 00:42:18,800
+something interesting I want to point out, which is about that steering
+
+1161
+00:42:18,800 --> 00:42:20,918
+and refining the agent SOP is
+
+1162
+00:42:21,119 --> 00:42:23,260
+the agent wasn't actually able to create a pull request.
+
+1163
+00:42:23,760 --> 00:42:24,619
+We found that when
+
+1164
+00:42:24,918 --> 00:42:26,958
+designing these agents, in some cases, the
+
+1165
+00:42:26,958 --> 00:42:29,360
+agent didn't have permission to do it and needed the developer
+
+1166
+00:42:29,360 --> 00:42:30,519
+GitHub token to do it.
+
+1167
+00:42:30,878 --> 00:42:32,458
+So we added an extra instruction
+
+1168
+00:42:33,079 --> 00:42:35,079
+to the, uh, the SOP to
+
+1169
+00:42:35,079 --> 00:42:37,159
+tell it to give me a link so I can do it on your
+
+1170
+00:42:37,159 --> 00:42:38,780
+behalf. And that's how we've
+
+1171
+00:42:39,159 --> 00:42:40,719
+essentially debugged these SOPs.
+
+1172
+00:42:41,458 --> 00:42:43,769
+So here, I've gone ahead and clicked into the
+
+1173
+00:42:43,769 --> 00:42:45,478
+issue or the pull request, I've created it.
+
+1174
+00:42:45,739 --> 00:42:47,478
+And you can see this is the code that the
+
+1175
+00:42:47,938 --> 00:42:50,139
+agent has created on my behalf. I haven't
+
+1176
+00:42:50,139 --> 00:42:50,860
+done any of this.
+
+1177
+00:42:51,789 --> 00:42:53,728
+So, I'm gonna skip ahead here a little bit.
+
+1178
+00:42:54,469 --> 00:42:56,610
+Now, I've instructed the agent to
+
+1179
+00:42:56,610 --> 00:42:58,628
+update the description. Again, I'm not doing any of this. I'm telling
+
+1180
+00:42:58,628 --> 00:42:59,530
+the agent to do it.
+
+1181
+00:42:59,869 --> 00:43:01,128
+You'll see the comment just below.
+
+1182
+00:43:01,628 --> 00:43:03,840
+And I've also spent a little bit of time
+
+1183
+00:43:03,840 --> 00:43:06,309
+leaving a a couple of pieces of feedback on the poll,
+
+1184
+00:43:06,458 --> 00:43:07,500
+on the poll request
+
+1185
+00:43:07,918 --> 00:43:10,208
+for how I want the agent to update the code.
+
+1186
+00:43:10,668 --> 00:43:12,829
+There were a couple of things I didn't quite like. I wanted to change
+
+1187
+00:43:12,829 --> 00:43:14,409
+the naming of a discriminated union.
+
+1188
+00:43:14,989 --> 00:43:17,309
+And I'm going to go ahead again and trigger the agent.
+
+1189
+00:43:18,489 --> 00:43:20,570
+And after a couple more minutes, it's going to
+
+1190
+00:43:20,570 --> 00:43:22,659
+go off, write the code, update the pull request.
+
+1191
+00:43:23,519 --> 00:43:24,820
+And leave a comment.
+
+1192
+00:43:27,148 --> 00:43:29,628
+We've refined this SOP a bit as well to
+
+1193
+00:43:29,628 --> 00:43:31,800
+not just leave comments, it's also gonna respond to the report
+
+1194
+00:43:31,800 --> 00:43:32,938
+request comments that I've given
+
+1195
+00:43:33,309 --> 00:43:35,628
+and give insightful responses on how
+
+1196
+00:43:35,628 --> 00:43:38,289
+to do it. If it's confused about how to go ahead
+
+1197
+00:43:38,289 --> 00:43:40,300
+and implement a feature, it'll ask me that for
+
+1198
+00:43:40,300 --> 00:43:42,179
+clarification before it actually goes and does that.
+
+1199
+00:43:42,469 --> 00:43:44,708
+That's again that um refinement of
+
+1200
+00:43:44,708 --> 00:43:45,289
+ideas.
+
+1201
+00:43:45,789 --> 00:43:47,789
+And you can see here, it's responded to the comments that
+
+1202
+00:43:47,789 --> 00:43:49,869
+I've given it saying that done, I've implemented this feature, done,
+
+1203
+00:43:49,949 --> 00:43:50,789
+I've done that one.
+
+1204
+00:43:51,228 --> 00:43:53,340
+And I'm gonna scroll up and take a look at the code
+
+1205
+00:43:53,340 --> 00:43:53,938
+as well
+
+1206
+00:43:54,269 --> 00:43:56,269
+to show that it's actually implemented this
+
+1207
+00:43:56,269 --> 00:43:58,168
+feature. So
+
+1208
+00:43:59,478 --> 00:44:00,219
+Using the system,
+
+1209
+00:44:00,519 --> 00:44:02,639
+the team has been really excited and really
+
+1210
+00:44:02,639 --> 00:44:04,679
+motivated to write code, and we found a lot
+
+1211
+00:44:04,679 --> 00:44:06,760
+of efficiencies out of this. It's not just
+
+1212
+00:44:06,760 --> 00:44:08,119
+me using it, it's our whole team,
+
+1213
+00:44:08,478 --> 00:44:10,898
+and a lot of us are getting really good results.
+
+1214
+00:44:11,909 --> 00:44:14,099
+I showed the system to my team's principal engineer,
+
+1215
+00:44:14,110 --> 00:44:15,889
+Aaron, and he gave me feedback
+
+1216
+00:44:16,590 --> 00:44:17,250
+of this.
+
+1217
+00:44:17,628 --> 00:44:19,750
+I spent 1 hour of my time over 3 short
+
+1218
+00:44:19,750 --> 00:44:21,188
+20 minute sessions total,
+
+1219
+00:44:21,668 --> 00:44:23,708
+instead of perhaps half a day writing code.
+
+1220
+00:44:24,679 --> 00:44:26,260
+Put it another way, I
+
+1221
+00:44:26,599 --> 00:44:28,679
+saved my principal engineer about
+
+1222
+00:44:28,679 --> 00:44:30,760
+4 hours of time and instead he was able to implement the
+
+1223
+00:44:30,760 --> 00:44:32,840
+feature in about 1 hour. And I've
+
+1224
+00:44:32,840 --> 00:44:35,179
+essentially 4xed the efficiency of my principal engineer.
+
+1225
+00:44:36,478 --> 00:44:38,559
+It's not always quite this
+
+1226
+00:44:38,559 --> 00:44:41,019
+efficient or quite so time saving,
+
+1227
+00:44:41,320 --> 00:44:43,398
+but we are finding more and more efficiencies
+
+1228
+00:44:43,398 --> 00:44:44,418
+on how to use the system.
+
+1229
+00:44:45,039 --> 00:44:47,469
+Like I said, the real benefit here is the asynchronous
+
+1230
+00:44:47,469 --> 00:44:49,478
+nature. I can go ahead and kick off an agent
+
+1231
+00:44:49,478 --> 00:44:51,699
+or multiple agents to implement multiple features
+
+1232
+00:44:51,840 --> 00:44:53,760
+while I go off and do something else in the meantime.
+
+1233
+00:44:54,728 --> 00:44:56,728
+Things that agents aren't quite, uh, yet
+
+1234
+00:44:56,728 --> 00:44:57,469
+able to do.
+
+1235
+00:44:57,809 --> 00:45:00,050
+And we typically find that low to medium
+
+1236
+00:45:00,050 --> 00:45:02,050
+complexity tasks are the best ones for agents to pick
+
+1237
+00:45:02,050 --> 00:45:04,199
+up. As a developer, I'm going to focus
+
+1238
+00:45:04,199 --> 00:45:06,590
+on the high complexity things and break them down into
+
+1239
+00:45:06,849 --> 00:45:09,269
+medium and lower, so I can again delegate that to agents.
+
+1240
+00:45:10,590 --> 00:45:12,570
+A graph that I really love is this next one.
+
+1241
+00:45:12,989 --> 00:45:15,228
+We've actually kept track of the contributions that the agent
+
+1242
+00:45:15,228 --> 00:45:16,728
+has made to our code base.
+
+1243
+00:45:16,989 --> 00:45:19,349
+And you can see that our agent is the, the largest contributor
+
+1244
+00:45:19,349 --> 00:45:19,909
+of code.
+
+1245
+00:45:21,119 --> 00:45:23,119
+It, so, uh, my username is on
+
+1246
+00:45:23,119 --> 00:45:25,239
+the top right. I have 43 commits in about, what
+
+1247
+00:45:25,239 --> 00:45:26,648
+is that, 14,000 lines.
+
+1248
+00:45:26,958 --> 00:45:29,079
+The agent has, is just a bit
+
+1249
+00:45:29,079 --> 00:45:29,699
+ahead of me,
+
+1250
+00:45:30,079 --> 00:45:31,860
+and is the, the biggest contributor.
+
+1251
+00:45:32,239 --> 00:45:34,478
+And all of our engineers are using the system
+
+1252
+00:45:34,478 --> 00:45:35,378
+to contribute code.
+
+1253
+00:45:36,139 --> 00:45:38,239
+But I also want to highlight that as engineers,
+
+1254
+00:45:38,250 --> 00:45:40,639
+we're still writing code, the, the agents aren't writing
+
+1255
+00:45:40,639 --> 00:45:41,869
+everything for us because there's still
+
+1256
+00:45:42,369 --> 00:45:44,610
+complex tasks that the agent aren't necessarily able to do,
+
+1257
+00:45:44,849 --> 00:45:47,128
+but we're finding efficiencies and really good ways
+
+1258
+00:45:47,128 --> 00:45:48,829
+to utilize these agents
+
+1259
+00:45:49,289 --> 00:45:50,389
+and help,
+
+1260
+00:45:50,688 --> 00:45:52,688
+help us speed up the development of TypeScript.
+
+1261
+00:45:55,079 --> 00:45:57,079
+So, some closing notes that I wanted
+
+1262
+00:45:57,079 --> 00:45:59,059
+to give here was that.
+
+1263
+00:46:00,010 --> 00:46:02,409
+We've learned to spend less time writing code as
+
+1264
+00:46:02,409 --> 00:46:04,369
+engineers and offloading that to agents.
+
+1265
+00:46:05,070 --> 00:46:07,309
+If I were to pick up a feature for a code base, I have to
+
+1266
+00:46:07,309 --> 00:46:08,409
+check out the repository,
+
+1267
+00:46:08,949 --> 00:46:10,869
+do some context switching to understand what the feature
+
+1268
+00:46:11,458 --> 00:46:13,510
+is that I need to implement, go through the
+
+1269
+00:46:13,510 --> 00:46:15,550
+code place, the code base, write the code,
+
+1270
+00:46:15,628 --> 00:46:17,628
+debug it. Once I'm done debugging it, I have
+
+1271
+00:46:17,628 --> 00:46:19,228
+to write the tests for it, etc.
+
+1272
+00:46:19,668 --> 00:46:21,708
+And instead of spending all of that time doing that,
+
+1273
+00:46:21,869 --> 00:46:23,369
+I can offload that to the agent.
+
+1274
+00:46:23,869 --> 00:46:25,949
+My time is much more valuable spent
+
+1275
+00:46:25,949 --> 00:46:27,889
+reviewing, refining and bar raising that code,
+
+1276
+00:46:28,148 --> 00:46:30,510
+and giving high-level guidance on the direction
+
+1277
+00:46:30,708 --> 00:46:32,789
+and design that these agents should implement the code
+
+1278
+00:46:32,789 --> 00:46:34,909
+in. We're figuring out how
+
+1279
+00:46:34,909 --> 00:46:37,208
+to paralyze parallellyze our time
+
+1280
+00:46:37,389 --> 00:46:39,829
+offloading that coding and debugging
+
+1281
+00:46:39,829 --> 00:46:41,898
+process to agents, and I can go do things that agents aren't
+
+1282
+00:46:41,898 --> 00:46:42,530
+able to do.
+
+1283
+00:46:43,329 --> 00:46:43,840
+And
+
+1284
+00:46:44,168 --> 00:46:45,168
+using the system,
+
+1285
+00:46:45,429 --> 00:46:47,760
+we've essentially learned how to treat these agents
+
+1286
+00:46:47,760 --> 00:46:48,949
+as members of our team.
+
+1287
+00:46:49,329 --> 00:46:51,449
+If you remember back to that diagram that I showed of
+
+1288
+00:46:51,449 --> 00:46:53,760
+the, the GitHub flow of us con contributing
+
+1289
+00:46:53,760 --> 00:46:55,889
+to GitHub, the agent is just another member
+
+1290
+00:46:55,889 --> 00:46:56,628
+of the team.
+
+1291
+00:46:56,969 --> 00:46:59,250
+It's the, it's for TypeScript, it's the highest contributor
+
+1292
+00:46:59,250 --> 00:47:00,909
+of code in our team right now.
+
+1293
+00:47:01,329 --> 00:47:01,909
+And
+
+1294
+00:47:02,530 --> 00:47:03,708
+I think that's really exciting.
+
+1295
+00:47:04,489 --> 00:47:06,699
+We're gonna keep on working and developing the system and you can
+
+1296
+00:47:06,699 --> 00:47:08,869
+track our progress on our TypeScript SDK repo.
+
+1297
+00:47:09,250 --> 00:47:10,239
+Um, but
+
+1298
+00:47:10,530 --> 00:47:12,628
+this is how we built TypeScripts. I'm really excited
+
+1299
+00:47:12,628 --> 00:47:14,688
+to explain how we built it, and I'm really excited for all of
+
+1300
+00:47:14,688 --> 00:47:15,469
+you to give it a shot
+
+1301
+00:47:15,929 --> 00:47:16,708
+and try it out.
+
+1302
+00:47:17,090 --> 00:47:19,398
+And I'm gonna hand it back to Ryan for some closing
+
+1303
+00:47:19,398 --> 00:47:22,360
+notes. Thanks,
+
+1304
+00:47:22,398 --> 00:47:25,398
+Nick. Uh,
+
+1305
+00:47:25,639 --> 00:47:27,648
+yeah, well, I hope you learned a lot from us today
+
+1306
+00:47:27,648 --> 00:47:29,969
+about what Strands is, how it can help you.
+
+1307
+00:47:30,168 --> 00:47:32,208
+Obviously our team's been using it to get
+
+1308
+00:47:32,208 --> 00:47:34,010
+efficiencies on code-based agents.
+
+1309
+00:47:34,329 --> 00:47:36,369
+We've been working with customers who are building chat
+
+1310
+00:47:36,369 --> 00:47:38,728
+experiences, data processing pipelines,
+
+1311
+00:47:39,090 --> 00:47:40,050
+research assistance.
+
+1312
+00:47:40,398 --> 00:47:42,409
+Strands is very flexible for all these use
+
+1313
+00:47:42,409 --> 00:47:43,030
+cases
+
+1314
+00:47:43,289 --> 00:47:45,590
+in TypeScript. Now you can get even closer
+
+1315
+00:47:45,590 --> 00:47:47,590
+to applications running in your browser,
+
+1316
+00:47:47,949 --> 00:47:49,378
+running in your client. Applications.
+
+1317
+00:47:50,260 --> 00:47:52,300
+One of the things we didn't mention today, this week
+
+1318
+00:47:52,300 --> 00:47:54,418
+we worked with the fine folks at Co-Pilot Kit.
+
+1319
+00:47:54,648 --> 00:47:56,699
+They implemented an AGI integration for
+
+1320
+00:47:56,699 --> 00:47:57,398
+strands
+
+1321
+00:47:57,659 --> 00:47:59,458
+that's available on our website as well.
+
+1322
+00:47:59,739 --> 00:48:02,840
+Um, so the QR code takes you to strands agents.com.
+
+1323
+00:48:03,099 --> 00:48:05,219
+You can also find all the repos that we talked about
+
+1324
+00:48:05,219 --> 00:48:07,340
+today. So SOPs, evals, of course,
+
+1325
+00:48:07,458 --> 00:48:09,780
+the SDKs for Python and TypeScript
+
+1326
+00:48:09,978 --> 00:48:12,478
+at GitHub.com strands agents.
+
+1327
+00:48:14,648 --> 00:48:15,208
+I'm
+
+1328
+00:48:16,478 --> 00:48:18,559
+Nick and I will be around for it looks like another
+
+1329
+00:48:18,559 --> 00:48:21,079
+10 minutes if you'd like to ask any
+
+1330
+00:48:21,079 --> 00:48:23,239
+questions, um, we also have a
+
+1331
+00:48:23,239 --> 00:48:24,438
+few strand stickers.
+
+1332
+00:48:24,719 --> 00:48:27,188
+Uh, if any of you are going back to the Venetian
+
+1333
+00:48:27,188 --> 00:48:29,398
+Expo hall today, there is a Strands booth.
+
+1334
+00:48:29,429 --> 00:48:31,958
+You'll find it in the big, uh, AWS
+
+1335
+00:48:31,958 --> 00:48:34,099
+square in the middle of the expo hall.
+
+1336
+00:48:34,458 --> 00:48:36,329
+Um, we've got in a, uh,
+
+1337
+00:48:36,599 --> 00:48:38,728
+hot red orange excavator
+
+1338
+00:48:39,309 --> 00:48:41,309
+running around that has an agent running on
+
+1339
+00:48:41,309 --> 00:48:43,438
+it, so strands running on local
+
+1340
+00:48:43,438 --> 00:48:44,050
+compute
+
+1341
+00:48:44,349 --> 00:48:46,349
+managing sensors and then connected to
+
+1342
+00:48:46,349 --> 00:48:47,648
+a cloud-based environment
+
+1343
+00:48:47,909 --> 00:48:50,110
+to do, uh, an industrial manufacturing
+
+1344
+00:48:50,110 --> 00:48:52,188
+use case and, and, uh, excavation.
+
+1345
+00:48:52,869 --> 00:48:55,030
+Uh, so have a look at the booth if you're around.
+
+1346
+00:48:55,070 --> 00:48:57,269
+You can get some more stickers and swag there
+
+1347
+00:48:57,269 --> 00:48:59,349
+and have a chat with our fine folks about anything
+
+1348
+00:48:59,349 --> 00:49:01,619
+you need. Uh, otherwise, yeah, come and, come
+
+1349
+00:49:01,619 --> 00:49:03,769
+join Nick and I, and thank you for spending time with us today.
+
+1350
+00:49:04,090 --> 00:49:07,378
+Thank you so much. Great
+
+1351
+00:49:07,378 --> 00:49:07,739
+job.
+

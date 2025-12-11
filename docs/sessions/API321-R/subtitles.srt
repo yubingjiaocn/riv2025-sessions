@@ -1,0 +1,5017 @@
+1
+00:00:00,090 --> 00:00:01,746
+- [Pawan] Time, good evening, everyone.
+
+2
+00:00:01,746 --> 00:00:03,496
+- [Audience] Good evening.
+
+3
+00:00:03,496 --> 00:00:07,110
+- [Pawan] Cool, thank you
+for joining this session.
+
+4
+00:00:07,110 --> 00:00:08,130
+My name is Pawan.
+
+5
+00:00:08,130 --> 00:00:11,070
+I'm one of the principal
+serverless specialists.
+
+6
+00:00:11,070 --> 00:00:13,980
+And here, we're going to talk about,
+
+7
+00:00:13,980 --> 00:00:17,760
+you know, it's a code talk
+about the observability mystery
+
+8
+00:00:17,760 --> 00:00:18,593
+using Step Functions.
+
+9
+00:00:18,593 --> 00:00:21,240
+And I'm joined here by my colleague.
+
+10
+00:00:21,240 --> 00:00:22,650
+Diego, if you wanna introduce yourself?
+
+11
+00:00:22,650 --> 00:00:24,120
+- [Diego] Yeah, my name is Diego.
+
+12
+00:00:24,120 --> 00:00:27,300
+I'm a principal engineer on
+the AWS Step Functions team.
+
+13
+00:00:27,300 --> 00:00:29,250
+Been working with Step
+Functions for a few years,
+
+14
+00:00:29,250 --> 00:00:31,560
+and I'm very happy to be here with Pawan
+
+15
+00:00:31,560 --> 00:00:33,210
+to talk about Step Functions
+
+16
+00:00:33,210 --> 00:00:35,520
+and that tricky thing just to understand
+
+17
+00:00:35,520 --> 00:00:37,740
+what's going on with my execution
+
+18
+00:00:37,740 --> 00:00:40,920
+and where should I look at, mostly,
+
+19
+00:00:40,920 --> 00:00:43,833
+and also talk about the new
+metrics that we just launched.
+
+20
+00:00:44,850 --> 00:00:46,380
+- [Pawan] Amazing.
+
+21
+00:00:46,380 --> 00:00:48,090
+How many of you are using Step Functions
+
+22
+00:00:48,090 --> 00:00:48,923
+in production today?
+
+23
+00:00:48,923 --> 00:00:50,640
+Just raise, show of hands.
+
+24
+00:00:50,640 --> 00:00:54,697
+Okay, how many of you have not
+used Step Functions at all?
+
+25
+00:00:56,230 --> 00:00:57,873
+Okay, cool, nice.
+
+26
+00:00:58,710 --> 00:01:02,190
+So yeah, in terms of the
+agenda, what it looks like,
+
+27
+00:01:02,190 --> 00:01:04,830
+so we're going to start
+with like building something
+
+28
+00:01:04,830 --> 00:01:06,750
+on Step Functions, so we
+will see like, you know,
+
+29
+00:01:06,750 --> 00:01:08,190
+how do you start off.
+
+30
+00:01:08,190 --> 00:01:10,770
+And then we're going to
+slightly increase the level
+
+31
+00:01:10,770 --> 00:01:12,090
+or the complexity, like, you know,
+
+32
+00:01:12,090 --> 00:01:13,680
+we'll show about some
+of the observability,
+
+33
+00:01:13,680 --> 00:01:15,180
+how do you actually debug it,
+
+34
+00:01:15,180 --> 00:01:16,710
+talks about the important concepts
+
+35
+00:01:16,710 --> 00:01:19,200
+that you would probably
+want to keep in mind
+
+36
+00:01:19,200 --> 00:01:21,700
+while building these Step
+Functions in production.
+
+37
+00:01:22,800 --> 00:01:26,040
+So with that, we'll get started.
+
+38
+00:01:26,040 --> 00:01:27,420
+So we have four demos.
+
+39
+00:01:27,420 --> 00:01:29,490
+So the first one.
+
+40
+00:01:29,490 --> 00:01:31,740
+So this use case is around building
+
+41
+00:01:31,740 --> 00:01:34,680
+or analyzing the wind speed data.
+
+42
+00:01:34,680 --> 00:01:37,080
+So for this particular
+demo, we are actually going
+
+43
+00:01:37,080 --> 00:01:40,320
+to use one of the open-source dataset
+
+44
+00:01:40,320 --> 00:01:43,740
+for which it actually shows
+what are the wind speed metrics
+
+45
+00:01:43,740 --> 00:01:47,040
+is across the globe for
+each of the station.
+
+46
+00:01:47,040 --> 00:01:50,520
+So let me quickly show the dataset.
+
+47
+00:01:50,520 --> 00:01:54,570
+So this is the dataset
+that we're going to use.
+
+48
+00:01:54,570 --> 00:01:57,930
+And as you see, it includes, you know,
+
+49
+00:01:57,930 --> 00:01:59,910
+all of these parameters in here,
+
+50
+00:01:59,910 --> 00:02:03,480
+like, you know, the mean
+temperature, dew point, sea level,
+
+51
+00:02:03,480 --> 00:02:05,220
+and various other things.
+
+52
+00:02:05,220 --> 00:02:07,500
+What we're interested is into looking
+
+53
+00:02:07,500 --> 00:02:09,420
+at the wind speed data.
+
+54
+00:02:09,420 --> 00:02:10,950
+The nice thing is it actually gives you
+
+55
+00:02:10,950 --> 00:02:13,020
+this single line of command
+where you can actually
+
+56
+00:02:13,020 --> 00:02:15,570
+copy this dataset into an S3 bucket.
+
+57
+00:02:15,570 --> 00:02:18,123
+In terms of what it looks
+like in the S3 bucket,
+
+58
+00:02:19,980 --> 00:02:22,233
+let's open that up.
+
+59
+00:02:25,650 --> 00:02:29,640
+So the dataset itself
+is partitioned by year
+
+60
+00:02:29,640 --> 00:02:32,520
+and then it's also partitioned
+further into like, you know,
+
+61
+00:02:32,520 --> 00:02:34,290
+the station ID.
+
+62
+00:02:34,290 --> 00:02:36,090
+So you can see that, you
+know, it includes data
+
+63
+00:02:36,090 --> 00:02:37,360
+all the way from 1929
+
+64
+00:02:39,240 --> 00:02:41,940
+and goes up to like 2024, '25.
+
+65
+00:02:43,050 --> 00:02:45,360
+And if I opening one of
+these, you know, buckets,
+
+66
+00:02:45,360 --> 00:02:47,250
+sorted into Objects, like you can see
+
+67
+00:02:47,250 --> 00:02:50,250
+these are the different station IDs,
+
+68
+00:02:50,250 --> 00:02:54,420
+and the data inside that
+looks something like this.
+
+69
+00:02:54,420 --> 00:02:56,670
+So let me zoom this up a bit
+
+70
+00:02:56,670 --> 00:03:01,410
+so you can see that it has the station ID
+
+71
+00:03:01,410 --> 00:03:04,230
+and then the date parameter,
+the latitude, longitude,
+
+72
+00:03:04,230 --> 00:03:07,470
+where exactly the station is.
+
+73
+00:03:07,470 --> 00:03:10,920
+And we're interested in
+looking at these parameters.
+
+74
+00:03:10,920 --> 00:03:12,843
+In terms of the end product,
+
+75
+00:03:13,680 --> 00:03:15,480
+what it actually looks like is, you know,
+
+76
+00:03:15,480 --> 00:03:18,210
+we have this particular dashboard
+
+77
+00:03:18,210 --> 00:03:20,670
+which actually shows the mean wind speed
+
+78
+00:03:20,670 --> 00:03:23,250
+across all of these different, you know,
+
+79
+00:03:23,250 --> 00:03:25,110
+the stations across the globe.
+
+80
+00:03:25,110 --> 00:03:28,740
+And if I click on one of these points,
+
+81
+00:03:28,740 --> 00:03:31,380
+it's actually going to show where exactly
+
+82
+00:03:31,380 --> 00:03:32,613
+it is also located.
+
+83
+00:03:33,630 --> 00:03:34,730
+So let me...
+
+84
+00:03:41,490 --> 00:03:42,810
+Let's try that again.
+
+85
+00:03:42,810 --> 00:03:45,390
+So if I click on one of these points,
+
+86
+00:03:45,390 --> 00:03:46,620
+it's going to show that, you know,
+
+87
+00:03:46,620 --> 00:03:48,090
+this is located over here.
+
+88
+00:03:48,090 --> 00:03:51,330
+And then also if I mouse over,
+it shows what does that mean,
+
+89
+00:03:51,330 --> 00:03:53,583
+average wind speed in
+that location as well.
+
+90
+00:03:54,840 --> 00:03:56,340
+Cool, so with that in mind,
+
+91
+00:03:56,340 --> 00:03:58,320
+let's go ahead and build this.
+
+92
+00:03:58,320 --> 00:04:01,590
+You know, let's see how do you
+actually build this workflow.
+
+93
+00:04:01,590 --> 00:04:05,280
+So Step Functions, go to
+the Step Functions Console.
+
+94
+00:04:05,280 --> 00:04:07,500
+Let's create a state machine.
+
+95
+00:04:07,500 --> 00:04:11,340
+Let's give it a name
+called windspeed-analysis.
+
+96
+00:04:11,340 --> 00:04:15,300
+For this type, I'm going to
+choose the Standard workflow.
+
+97
+00:04:15,300 --> 00:04:16,530
+Now, for those who have actually
+
+98
+00:04:16,530 --> 00:04:18,900
+not used the Step Functions before,
+
+99
+00:04:18,900 --> 00:04:20,370
+so for you to get started,
+
+100
+00:04:20,370 --> 00:04:23,040
+the Step Function Console
+actually gives you a very nice way
+
+101
+00:04:23,040 --> 00:04:24,660
+to get started, right?
+
+102
+00:04:24,660 --> 00:04:26,940
+Under the hood, it actually uses something
+
+103
+00:04:26,940 --> 00:04:28,860
+called as the Amazon State Language.
+
+104
+00:04:28,860 --> 00:04:30,300
+So if you're new to it, like,
+
+105
+00:04:30,300 --> 00:04:32,880
+probably it might be a
+bit of a learning curve.
+
+106
+00:04:32,880 --> 00:04:34,980
+So the console actually
+gives you a great place
+
+107
+00:04:34,980 --> 00:04:36,600
+to get started with.
+
+108
+00:04:36,600 --> 00:04:39,480
+So the first thing that
+you would do is drag
+
+109
+00:04:39,480 --> 00:04:42,000
+and drop the Map state here.
+
+110
+00:04:43,170 --> 00:04:45,600
+Let's give it a name for this.
+
+111
+00:04:45,600 --> 00:04:47,520
+Let's call it as DMap.
+
+112
+00:04:47,520 --> 00:04:51,030
+And since we're working with
+the distributed map here,
+
+113
+00:04:51,030 --> 00:04:52,620
+so what is distributed map?
+
+114
+00:04:52,620 --> 00:04:55,800
+So distributed map is ideal for scenarios
+
+115
+00:04:55,800 --> 00:04:58,440
+where you want to
+process large-scale data,
+
+116
+00:04:58,440 --> 00:05:00,870
+like things of, think in
+the order of like millions
+
+117
+00:05:00,870 --> 00:05:03,000
+of objects that, perhaps, are there in S3,
+
+118
+00:05:03,000 --> 00:05:05,730
+and then you want to like,
+you know, process them.
+
+119
+00:05:05,730 --> 00:05:08,490
+So the distributed map
+can really scale massively
+
+120
+00:05:08,490 --> 00:05:11,040
+and then help in processing this data.
+
+121
+00:05:11,040 --> 00:05:14,280
+The dataset that you
+saw, the wind speed data,
+
+122
+00:05:14,280 --> 00:05:16,890
+just to give you an
+idea, we have about close
+
+123
+00:05:16,890 --> 00:05:20,100
+to 600,000 objects in the S3 bucket,
+
+124
+00:05:20,100 --> 00:05:23,583
+close to about 70 odd, 70GB worth of data.
+
+125
+00:05:25,140 --> 00:05:27,780
+So let's go ahead and
+click the Processing mode.
+
+126
+00:05:27,780 --> 00:05:29,040
+So there are two modes here.
+
+127
+00:05:29,040 --> 00:05:31,650
+So either it can be like
+Inline or Distributed.
+
+128
+00:05:31,650 --> 00:05:33,210
+So I'm going to choose Distributed.
+
+129
+00:05:33,210 --> 00:05:36,150
+And then you can pass in
+the, you know, the source.
+
+130
+00:05:36,150 --> 00:05:38,610
+So either it can be passed in as an input,
+
+131
+00:05:38,610 --> 00:05:40,980
+that's basically the state
+input that you see here,
+
+132
+00:05:40,980 --> 00:05:43,233
+or in our case, we're going to use S3.
+
+133
+00:05:44,850 --> 00:05:46,657
+And then I have this dropdown
+where I can choose, like,
+
+134
+00:05:46,657 --> 00:05:48,870
+you know, which particular item source
+
+135
+00:05:48,870 --> 00:05:50,490
+that I'm going to use.
+
+136
+00:05:50,490 --> 00:05:51,960
+So this is really, you know,
+
+137
+00:05:51,960 --> 00:05:53,670
+this list has actually grown recently.
+
+138
+00:05:53,670 --> 00:05:57,240
+So we introduced the Parquet format,
+
+139
+00:05:57,240 --> 00:05:59,643
+the support for Athena
+data manifest as well.
+
+140
+00:06:00,600 --> 00:06:04,380
+So in our case, I'm just going
+to choose the S3 object list,
+
+141
+00:06:04,380 --> 00:06:07,980
+and I'm going to point it to the bucket
+
+142
+00:06:07,980 --> 00:06:09,663
+where the data resides.
+
+143
+00:06:10,680 --> 00:06:13,383
+So let's choose the bucket.
+
+144
+00:06:18,900 --> 00:06:22,230
+And then the next configuration
+that I want to do is like,
+
+145
+00:06:22,230 --> 00:06:25,980
+you know, because the way
+how this processing works
+
+146
+00:06:25,980 --> 00:06:27,540
+is it'll pick up one object at a time,
+
+147
+00:06:27,540 --> 00:06:30,240
+and that's probably may
+not be very efficient.
+
+148
+00:06:30,240 --> 00:06:31,650
+You know, it's recommended
+
+149
+00:06:31,650 --> 00:06:33,600
+that you would enable the batching
+
+150
+00:06:33,600 --> 00:06:36,720
+and then, you know, you can say how,
+
+151
+00:06:36,720 --> 00:06:37,670
+what's the batch size that you want
+
+152
+00:06:37,670 --> 00:06:41,610
+to take these objects
+together and process them.
+
+153
+00:06:41,610 --> 00:06:44,664
+So for this use case,
+let's give it as 500,
+
+154
+00:06:44,664 --> 00:06:46,500
+500 objects at a time.
+
+155
+00:06:46,500 --> 00:06:48,300
+You could either batch it by the number
+
+156
+00:06:48,300 --> 00:06:51,693
+or you can batch it by the
+maximum bytes per batch.
+
+157
+00:06:53,940 --> 00:06:55,740
+The next is the concurrency limit.
+
+158
+00:06:55,740 --> 00:06:58,590
+This is a powerful feature
+of the distributed map.
+
+159
+00:06:58,590 --> 00:07:00,900
+So this basically tells,
+you know, this is basically
+
+160
+00:07:00,900 --> 00:07:02,610
+where it actually, the scale comes in,
+
+161
+00:07:02,610 --> 00:07:04,710
+the scale of processing comes into play.
+
+162
+00:07:04,710 --> 00:07:07,170
+So you can set the
+concurrency limit as thousand
+
+163
+00:07:07,170 --> 00:07:09,840
+as a default, but it can actually
+go all the way to 10,000.
+
+164
+00:07:09,840 --> 00:07:13,080
+So think of, you know, your child workflow
+
+165
+00:07:13,080 --> 00:07:16,200
+scaling concurrently 10,000
+times like in a prompt,
+
+166
+00:07:16,200 --> 00:07:18,663
+you know, in terms of
+the concurrency size.
+
+167
+00:07:20,430 --> 00:07:22,950
+So I'll leave it as 1,000,
+
+168
+00:07:22,950 --> 00:07:24,480
+and then I can choose whether I want
+
+169
+00:07:24,480 --> 00:07:27,030
+to use the Standard
+execution or the Express.
+
+170
+00:07:27,030 --> 00:07:28,233
+So leave it as default.
+
+171
+00:07:29,310 --> 00:07:31,590
+In terms of the Additional parameters,
+
+172
+00:07:31,590 --> 00:07:34,500
+I'm just going to set the
+Tolerated failure threshold.
+
+173
+00:07:34,500 --> 00:07:38,550
+So this is in case if my execution
+fails for whatever reason
+
+174
+00:07:38,550 --> 00:07:40,740
+and that threshold crosses 5%,
+
+175
+00:07:40,740 --> 00:07:44,973
+then I want to deem it as the
+entire workflow to be failed.
+
+176
+00:07:46,620 --> 00:07:48,750
+And finally, the last step is for the,
+
+177
+00:07:48,750 --> 00:07:50,340
+in terms of configuring
+the distributed map,
+
+178
+00:07:50,340 --> 00:07:53,310
+I'm just going to say where
+should this particular
+
+179
+00:07:53,310 --> 00:07:55,470
+processing output the data into.
+
+180
+00:07:55,470 --> 00:07:59,520
+So I'm going to provide the
+S3 bucket for that as well.
+
+181
+00:07:59,520 --> 00:08:01,120
+So let me choose
+
+182
+00:08:04,170 --> 00:08:05,163
+the bucket.
+
+183
+00:08:07,622 --> 00:08:09,872
+And then I'm going to
+prefix it with as demo.
+
+184
+00:08:13,230 --> 00:08:16,290
+So that's in terms of the distributed map.
+
+185
+00:08:16,290 --> 00:08:19,680
+Now, let's me configure,
+like, this is where,
+
+186
+00:08:19,680 --> 00:08:20,910
+basically, I need to say, okay,
+
+187
+00:08:20,910 --> 00:08:23,580
+what should happen inside
+the distributed map.
+
+188
+00:08:23,580 --> 00:08:26,520
+So this is where my business
+logic comes into play.
+
+189
+00:08:26,520 --> 00:08:28,440
+So in case of this wind
+speed, like, you know,
+
+190
+00:08:28,440 --> 00:08:32,490
+it's going to process that
+wind speed dataset, right?
+
+191
+00:08:32,490 --> 00:08:34,590
+So my Lambda function, which
+is already pre-created,
+
+192
+00:08:34,590 --> 00:08:36,510
+what it actually does
+is it goes into these
+
+193
+00:08:36,510 --> 00:08:39,780
+individual date object, and
+then looks up all the data,
+
+194
+00:08:39,780 --> 00:08:41,580
+and then calculates
+the mean average speed.
+
+195
+00:08:41,580 --> 00:08:44,100
+It's a very simple Lambda function.
+
+196
+00:08:44,100 --> 00:08:47,980
+So I'm going to try to choose the analysis
+
+197
+00:08:49,200 --> 00:08:50,343
+Lambda function here.
+
+198
+00:08:51,510 --> 00:08:53,910
+And then I'm going to also drag
+
+199
+00:08:53,910 --> 00:08:55,260
+and drop another Lambda function.
+
+200
+00:08:55,260 --> 00:08:57,510
+So think of this workflow
+as like a map reducer,
+
+201
+00:08:57,510 --> 00:08:58,950
+like, you know, the first Lambda function
+
+202
+00:08:58,950 --> 00:09:00,960
+does the map processing,
+
+203
+00:09:00,960 --> 00:09:03,780
+so I'm going to call it
+as analysis function.
+
+204
+00:09:03,780 --> 00:09:06,090
+And the second one is going
+to be more of like a reducer.
+
+205
+00:09:06,090 --> 00:09:07,680
+So once you have collected all the data,
+
+206
+00:09:07,680 --> 00:09:11,223
+it's going to consolidate
+and generate the output.
+
+207
+00:09:16,560 --> 00:09:21,180
+Let's choose the reducer function here.
+
+208
+00:09:21,180 --> 00:09:23,770
+So that's pretty much it,
+like in terms of what my
+
+209
+00:09:24,810 --> 00:09:26,490
+distributed map looks like.
+
+210
+00:09:26,490 --> 00:09:29,130
+Now, one of the other things
+that this dataset actually
+
+211
+00:09:29,130 --> 00:09:31,800
+has is, if you notice, all
+of these wind speed data
+
+212
+00:09:31,800 --> 00:09:35,610
+is provided, you know, the
+unit of measure is in knots.
+
+213
+00:09:35,610 --> 00:09:38,190
+What if, you know, I have a
+use case where I don't want it
+
+214
+00:09:38,190 --> 00:09:39,480
+to be in knots but convert it
+
+215
+00:09:39,480 --> 00:09:42,330
+into like maybe miles per hour.
+
+216
+00:09:42,330 --> 00:09:44,580
+So I'm going to use
+another Lambda function,
+
+217
+00:09:44,580 --> 00:09:48,483
+which can help me out to
+do that, so convert_mph.
+
+218
+00:09:54,960 --> 00:09:58,350
+Let's configure that Lambda function.
+
+219
+00:09:58,350 --> 00:09:59,970
+And pretty much that's it.
+
+220
+00:09:59,970 --> 00:10:01,500
+Now you may ask or wonder like,
+
+221
+00:10:01,500 --> 00:10:04,380
+do I need another Lambda function
+just to do a convert here?
+
+222
+00:10:04,380 --> 00:10:05,550
+Not necessary.
+
+223
+00:10:05,550 --> 00:10:08,720
+You know, the Step Functions
+also supports the JSONata.
+
+224
+00:10:08,720 --> 00:10:11,370
+So you could pretty much use
+the math expression to do that.
+
+225
+00:10:11,370 --> 00:10:13,860
+So you already started
+thinking about like, you know,
+
+226
+00:10:13,860 --> 00:10:16,080
+optimizing this particular workflow.
+
+227
+00:10:16,080 --> 00:10:18,450
+So it doesn't necessarily have to be
+
+228
+00:10:18,450 --> 00:10:20,043
+a Lambda function doing this.
+
+229
+00:10:21,750 --> 00:10:22,590
+That's pretty much it.
+
+230
+00:10:22,590 --> 00:10:25,290
+And then let's go ahead and create it.
+
+231
+00:10:25,290 --> 00:10:28,380
+And if you see this screen,
+it actually prompts you
+
+232
+00:10:28,380 --> 00:10:30,110
+with what the Step Functions
+
+233
+00:10:30,110 --> 00:10:32,760
+of the state mission has
+identified as, you know,
+
+234
+00:10:32,760 --> 00:10:34,470
+based on the workflow it's defined.
+
+235
+00:10:34,470 --> 00:10:36,420
+It needs the permissions
+and the policy set.
+
+236
+00:10:36,420 --> 00:10:37,860
+So it's actually giving you that visit
+
+237
+00:10:37,860 --> 00:10:41,100
+that it's going to create all
+of these permissions for you.
+
+238
+00:10:41,100 --> 00:10:42,843
+So let's go ahead and say Confirm.
+
+239
+00:10:43,680 --> 00:10:48,063
+And it's created the state machine.
+
+240
+00:10:48,990 --> 00:10:50,310
+It's also, you know, you can also go
+
+241
+00:10:50,310 --> 00:10:53,640
+and look at the IAM permissions
+that it has created.
+
+242
+00:10:53,640 --> 00:10:55,740
+Now, let's go and execute
+this particular workflow.
+
+243
+00:10:55,740 --> 00:10:58,560
+So in my case, I don't
+need to pass an input,
+
+244
+00:10:58,560 --> 00:11:02,090
+but, you know, it's in case
+if your state Step Functions
+
+245
+00:11:02,090 --> 00:11:03,773
+or the distributed map needs
+an input like, you know,
+
+246
+00:11:03,773 --> 00:11:06,180
+you can pass it in here to test it out.
+
+247
+00:11:06,180 --> 00:11:08,310
+So I'm just going to click on Start
+
+248
+00:11:08,310 --> 00:11:10,620
+and wait for the execution.
+
+249
+00:11:10,620 --> 00:11:14,610
+So now you can see the nice
+part about in the console,
+
+250
+00:11:14,610 --> 00:11:17,640
+where you can see that
+it has actually started,
+
+251
+00:11:17,640 --> 00:11:19,473
+you know, the Map Run state.
+
+252
+00:11:25,380 --> 00:11:27,810
+So inside the Map Run, you know,
+
+253
+00:11:27,810 --> 00:11:30,100
+these are some of the observability things
+
+254
+00:11:30,954 --> 00:11:32,583
+that is made visible to you to see,
+
+255
+00:11:32,583 --> 00:11:35,400
+like how this state machine is actually
+
+256
+00:11:35,400 --> 00:11:36,420
+preparing your dataset.
+
+257
+00:11:36,420 --> 00:11:38,580
+So what you see here is,
+in the Pending state,
+
+258
+00:11:38,580 --> 00:11:41,880
+is the distributed map is actually reading
+
+259
+00:11:41,880 --> 00:11:45,000
+or iterating over that
+list of objects in the S3
+
+260
+00:11:45,000 --> 00:11:46,863
+and preparing it for the execution.
+
+261
+00:11:48,000 --> 00:11:49,680
+I also want you to keep an eye
+
+262
+00:11:49,680 --> 00:11:52,080
+on this particular duration
+metrics to see, you know,
+
+263
+00:11:52,080 --> 00:11:55,410
+how fast it actually takes to
+complete this entire execution
+
+264
+00:11:55,410 --> 00:11:57,813
+of like 600,000 objects.
+
+265
+00:12:00,300 --> 00:12:02,610
+- [Diego] Yeah, one thing that you can see
+
+266
+00:12:02,610 --> 00:12:07,323
+is that after we read all of
+your contents from your bucket,
+
+267
+00:12:08,221 --> 00:12:10,650
+we start just batching the executions.
+
+268
+00:12:10,650 --> 00:12:13,410
+So the difference from the
+inline to the distributed map
+
+269
+00:12:13,410 --> 00:12:15,660
+is that each iteration of your map
+
+270
+00:12:15,660 --> 00:12:18,477
+becomes a new workflow execution.
+
+271
+00:12:18,477 --> 00:12:21,930
+And this way, you can parallelize
+higher than just being,
+
+272
+00:12:21,930 --> 00:12:24,210
+having a contention on one execution,
+
+273
+00:12:24,210 --> 00:12:27,360
+and then you may face limits
+with the execution history
+
+274
+00:12:27,360 --> 00:12:30,450
+and so on, so the distributed
+map gives you that option
+
+275
+00:12:30,450 --> 00:12:34,590
+of each iteration of my
+map is its own execution
+
+276
+00:12:34,590 --> 00:12:36,420
+with its own limits.
+
+277
+00:12:36,420 --> 00:12:37,620
+And then here you can see that
+
+278
+00:12:37,620 --> 00:12:39,930
+after it started just
+batching the executions,
+
+279
+00:12:39,930 --> 00:12:41,880
+it's moving over to the Running,
+
+280
+00:12:41,880 --> 00:12:45,750
+and then the executions
+are there on that list.
+
+281
+00:12:45,750 --> 00:12:48,810
+And we keep track of how many are failing
+
+282
+00:12:48,810 --> 00:12:52,140
+because if you set tolerant
+threshold on failures,
+
+283
+00:12:52,140 --> 00:12:54,390
+in this case, we'll set it to 5%,
+
+284
+00:12:54,390 --> 00:12:55,980
+we abort the security,
+
+285
+00:12:55,980 --> 00:12:57,363
+and then we fail the state.
+
+286
+00:12:58,230 --> 00:13:01,890
+Also, you can also set a
+tolerance threshold on count.
+
+287
+00:13:01,890 --> 00:13:03,120
+If you don't wanna use percentage,
+
+288
+00:13:03,120 --> 00:13:06,243
+you can say if 100 failed,
+then I just wanna abort.
+
+289
+00:13:08,220 --> 00:13:10,770
+So one part that it starts getting tricky
+
+290
+00:13:10,770 --> 00:13:14,070
+is that everything that's
+happening here is asynchronous.
+
+291
+00:13:14,070 --> 00:13:17,490
+And then customers ask
+us, "It's very tricky
+
+292
+00:13:17,490 --> 00:13:21,060
+to understand why some of my iterations
+
+293
+00:13:21,060 --> 00:13:23,967
+are getting delayed to
+happen in the future."
+
+294
+00:13:26,340 --> 00:13:27,990
+- Cool?
+- Yep.
+
+295
+00:13:27,990 --> 00:13:29,820
+- [Pawan] Yeah, if you see that, you know,
+
+296
+00:13:29,820 --> 00:13:33,420
+it's taken about two, roughly
+two minutes, 15 seconds
+
+297
+00:13:33,420 --> 00:13:34,890
+to complete all the executions.
+
+298
+00:13:34,890 --> 00:13:36,840
+And each of these executions, you can see
+
+299
+00:13:36,840 --> 00:13:40,980
+that it has taken 500 items
+at a batch and processed it.
+
+300
+00:13:40,980 --> 00:13:44,400
+Now, if I go into the S3 bucket
+
+301
+00:13:44,400 --> 00:13:46,650
+where we have the results,
+
+302
+00:13:46,650 --> 00:13:48,660
+so you can look at the demo.
+
+303
+00:13:48,660 --> 00:13:51,470
+And then in this execution,
+you have the output CSV file
+
+304
+00:13:51,470 --> 00:13:53,430
+that it has created.
+
+305
+00:13:53,430 --> 00:13:56,460
+Now, I can use the, you
+know, the visualization tool
+
+306
+00:13:56,460 --> 00:13:59,580
+like you know, the QuickSight
+and show this on the screen.
+
+307
+00:13:59,580 --> 00:14:03,120
+So this is how, you know, you
+can build a Step Functions
+
+308
+00:14:03,120 --> 00:14:06,450
+distributed map to process,
+you know, large-scale data.
+
+309
+00:14:06,450 --> 00:14:09,000
+- [Diego] Yeah, and if you
+were to have any failures,
+
+310
+00:14:09,000 --> 00:14:10,810
+you would see a separate file here
+
+311
+00:14:11,910 --> 00:14:14,760
+with the one that says, "Succeeded."
+
+312
+00:14:14,760 --> 00:14:16,170
+And then that gives you the option
+
+313
+00:14:16,170 --> 00:14:18,360
+to reprocess just the items that failed
+
+314
+00:14:18,360 --> 00:14:20,880
+instead of reprocessing the entire thing.
+
+315
+00:14:20,880 --> 00:14:22,980
+So you can even connect that specific file
+
+316
+00:14:22,980 --> 00:14:24,490
+to another distributed map
+
+317
+00:14:25,324 --> 00:14:26,157
+to redrive the ones that failed.
+
+318
+00:14:28,782 --> 00:14:30,420
+- [Pawan] Before we
+move to the next topic,
+
+319
+00:14:30,420 --> 00:14:31,253
+are there any questions?
+
+320
+00:14:31,253 --> 00:14:34,703
+We can take maybe a
+couple of questions, yeah!
+
+321
+00:14:34,703 --> 00:14:37,357
+- [Attendee] So here, actually,
+you had like set a limit
+
+322
+00:14:37,357 --> 00:14:39,550
+of 1,000, right, of concurrency limit?
+
+323
+00:14:39,550 --> 00:14:40,702
+- Yeah.
+- In that case,
+
+324
+00:14:40,702 --> 00:14:43,350
+of all 1,000 Lambdas, which is the limit
+
+325
+00:14:43,350 --> 00:14:45,725
+actually given on AWS as well,
+
+326
+00:14:45,725 --> 00:14:48,346
+if it's all exhausted, like
+you had done the floor,
+
+327
+00:14:48,346 --> 00:14:51,170
+like you had like, you
+know, other Lambdas,
+
+328
+00:14:51,170 --> 00:14:53,130
+so will they even get
+an opportunity to run
+
+329
+00:14:53,130 --> 00:14:54,765
+or like will it be processed?
+
+330
+00:14:54,765 --> 00:14:57,328
+Or what goes on there?
+
+331
+00:14:57,328 --> 00:15:00,090
+- [Diego] Yeah, so the question
+is the default concurrency
+
+332
+00:15:00,090 --> 00:15:03,360
+was set to 1,000, which
+is usually the default
+
+333
+00:15:03,360 --> 00:15:05,220
+for the Lambda functions.
+
+334
+00:15:05,220 --> 00:15:07,110
+So if that number was higher,
+
+335
+00:15:07,110 --> 00:15:10,470
+would the Lambda functions
+even have the chance to run?
+
+336
+00:15:10,470 --> 00:15:14,490
+Okay, so on Step Functions,
+when you configure your state
+
+337
+00:15:14,490 --> 00:15:16,950
+and then as you're doing the
+drag and drop in configuration,
+
+338
+00:15:16,950 --> 00:15:19,050
+there's an option to handle failures.
+
+339
+00:15:19,050 --> 00:15:21,090
+So you can catch ThrottlingExceptions
+
+340
+00:15:21,090 --> 00:15:22,890
+and retry with backoff.
+
+341
+00:15:22,890 --> 00:15:24,810
+And then the workflow
+will take care of you
+
+342
+00:15:24,810 --> 00:15:25,893
+of rerunning them.
+
+343
+00:15:27,780 --> 00:15:29,580
+I believe there's a few reception types
+
+344
+00:15:29,580 --> 00:15:31,130
+that you can catch from Lambda,
+
+345
+00:15:31,980 --> 00:15:35,070
+but if you start more than
+what your downstream service
+
+346
+00:15:35,070 --> 00:15:37,080
+can handle, usually they throttle you,
+
+347
+00:15:37,080 --> 00:15:40,560
+and then you can catch and
+manage on your state machine.
+
+348
+00:15:40,560 --> 00:15:41,760
+- [Pawan] And just another point
+
+349
+00:15:41,760 --> 00:15:43,560
+on the Lambda concurrency limit,
+
+350
+00:15:43,560 --> 00:15:45,630
+that limit is a soft limit to begin with.
+
+351
+00:15:45,630 --> 00:15:47,400
+Like you can always
+open up a support case,
+
+352
+00:15:47,400 --> 00:15:50,400
+and it'll be, you know,
+approved in a few minutes' time.
+
+353
+00:15:50,400 --> 00:15:52,730
+So it's not a hard limit as such.
+
+354
+00:15:52,730 --> 00:15:53,670
+- [Attendee] Okay.
+
+355
+00:15:53,670 --> 00:15:56,463
+- [Pawan] Cool, we'll
+move on to the next one.
+
+356
+00:15:58,170 --> 00:16:00,000
+So Diego, question to you.
+
+357
+00:16:00,000 --> 00:16:03,723
+So now, we have seen an
+example of the Map Run, right?
+
+358
+00:16:04,890 --> 00:16:06,840
+What sort of like visibility are there
+
+359
+00:16:06,840 --> 00:16:09,840
+from an observability
+standpoint of customers can use
+
+360
+00:16:09,840 --> 00:16:12,780
+in order to get like, you
+know, more deeper insight?
+
+361
+00:16:12,780 --> 00:16:15,450
+- [Diego] Yeah, usually when
+you're investigating things
+
+362
+00:16:15,450 --> 00:16:19,380
+that are asynchronous, you
+don't directly see failures
+
+363
+00:16:19,380 --> 00:16:22,650
+because they're just
+running somewhere out there.
+
+364
+00:16:22,650 --> 00:16:27,570
+And then after operating
+the service for some time,
+
+365
+00:16:27,570 --> 00:16:29,730
+we noticed that would be great
+
+366
+00:16:29,730 --> 00:16:31,380
+if we launched new
+metrics for our customers,
+
+367
+00:16:31,380 --> 00:16:33,330
+and we did a few months ago.
+
+368
+00:16:33,330 --> 00:16:35,610
+So now, you can track the limit
+
+369
+00:16:35,610 --> 00:16:37,230
+that you have applied on your account
+
+370
+00:16:37,230 --> 00:16:40,500
+for the amount of open execution
+
+371
+00:16:40,500 --> 00:16:44,340
+for open Map Runs that runs concurrently.
+
+372
+00:16:44,340 --> 00:16:48,880
+We also publish how many
+you have approximate
+
+373
+00:16:49,830 --> 00:16:52,470
+running at that specific point of time.
+
+374
+00:16:52,470 --> 00:16:54,570
+And another one is backlog.
+
+375
+00:16:54,570 --> 00:16:57,570
+So let's say we're trying
+to start more Map Runs,
+
+376
+00:16:57,570 --> 00:17:00,810
+but because of your limit,
+we cannot start more.
+
+377
+00:17:00,810 --> 00:17:03,210
+So one thing that's great
+about Step Functions
+
+378
+00:17:03,210 --> 00:17:05,430
+is that it doesn't fail.
+
+379
+00:17:05,430 --> 00:17:06,750
+So even if you're getting throttled,
+
+380
+00:17:06,750 --> 00:17:09,450
+those things get scared
+to happen in the future.
+
+381
+00:17:09,450 --> 00:17:11,940
+And as soon as something completes,
+
+382
+00:17:11,940 --> 00:17:13,650
+the other one just takes the limit
+
+383
+00:17:13,650 --> 00:17:15,840
+and it starts running again.
+
+384
+00:17:15,840 --> 00:17:19,080
+But one thing that was tricky
+is how big is my backlog?
+
+385
+00:17:19,080 --> 00:17:22,620
+'Cause I don't know how far
+or how far are they along
+
+386
+00:17:22,620 --> 00:17:26,250
+or how longer do I need
+to complete all of them?
+
+387
+00:17:26,250 --> 00:17:30,090
+And we recently launched
+those three metrics.
+
+388
+00:17:30,090 --> 00:17:32,370
+And maybe you can show us
+
+389
+00:17:32,370 --> 00:17:34,980
+how it looks like on the CloudWatch.
+
+390
+00:17:34,980 --> 00:17:38,040
+- [Pawan] Yeah, so let me
+switch over to the demo.
+
+391
+00:17:38,040 --> 00:17:39,780
+So while Diego was start talking,
+
+392
+00:17:39,780 --> 00:17:43,860
+what I did was I have another load-test,
+
+393
+00:17:43,860 --> 00:17:46,350
+Lambda load test Step Functions here.
+
+394
+00:17:46,350 --> 00:17:47,790
+So if I just quickly show you,
+
+395
+00:17:47,790 --> 00:17:50,670
+so what it actually does is
+pretty much takes the input
+
+396
+00:17:50,670 --> 00:17:52,920
+of like from a CSV file,
+
+397
+00:17:52,920 --> 00:17:55,200
+which has like bunch of random numbers,
+
+398
+00:17:55,200 --> 00:17:57,663
+and then it goes and
+calls this particular,
+
+399
+00:17:58,770 --> 00:18:01,470
+you know, function, the
+another state machine
+
+400
+00:18:01,470 --> 00:18:04,187
+which simulates the OpenMapRunCount.
+
+401
+00:18:06,090 --> 00:18:08,070
+So I have a dashboard here.
+
+402
+00:18:08,070 --> 00:18:12,210
+And if I open, show you the
+metrics that we are monitoring,
+
+403
+00:18:12,210 --> 00:18:14,280
+so these are the metrics
+that Diego was mentioning,
+
+404
+00:18:14,280 --> 00:18:16,590
+which was recently launched.
+
+405
+00:18:16,590 --> 00:18:19,860
+So you have the OpenMapRunLimit,
+which is the maximum,
+
+406
+00:18:19,860 --> 00:18:24,330
+and then you also have the
+current OpenMapRunCount,
+
+407
+00:18:24,330 --> 00:18:26,070
+which shows you the current status,
+
+408
+00:18:26,070 --> 00:18:29,223
+and then you have the
+MapRunBacklogSize as well.
+
+409
+00:18:30,120 --> 00:18:34,470
+So now while the load-test
+is going on, you know, let's,
+
+410
+00:18:34,470 --> 00:18:37,020
+if you wait for a few seconds,
+
+411
+00:18:37,020 --> 00:18:39,123
+we can actually see that, you know,
+
+412
+00:18:40,110 --> 00:18:41,550
+the Map Run limit is exceeded,
+
+413
+00:18:41,550 --> 00:18:45,570
+and then you'll start
+seeing the run backlog size,
+
+414
+00:18:45,570 --> 00:18:47,070
+you know, started to increase.
+
+415
+00:18:48,000 --> 00:18:49,020
+So this, yeah.
+
+416
+00:18:49,020 --> 00:18:52,680
+- [Diego] Yeah, the important
+thing about keeping track
+
+417
+00:18:52,680 --> 00:18:55,380
+of your backlog is that you
+can't even alarm yourself
+
+418
+00:18:55,380 --> 00:18:58,013
+because maybe you don't even
+know that this is happening.
+
+419
+00:18:59,970 --> 00:19:02,190
+And what could happen as well is someone
+
+420
+00:19:02,190 --> 00:19:04,890
+sharing the same account
+goes and deploys something
+
+421
+00:19:04,890 --> 00:19:08,550
+that consumes the limits from
+that's shared across account,
+
+422
+00:19:08,550 --> 00:19:10,590
+and then you can identify,
+"Oh, this is happening,"
+
+423
+00:19:10,590 --> 00:19:12,450
+and then we need to
+identify what's going on
+
+424
+00:19:12,450 --> 00:19:13,830
+and what should we stop
+
+425
+00:19:13,830 --> 00:19:16,230
+or maybe what should we talk to Support
+
+426
+00:19:16,230 --> 00:19:17,760
+and get higher limits.
+
+427
+00:19:17,760 --> 00:19:21,210
+And this is where sometimes you can either
+
+428
+00:19:21,210 --> 00:19:23,880
+just directly talk to Support
+or go to Service Quotas
+
+429
+00:19:23,880 --> 00:19:25,957
+and requesting limit increase,
+
+430
+00:19:25,957 --> 00:19:28,407
+and then you can quickly
+recover from that state.
+
+431
+00:19:30,360 --> 00:19:31,800
+- [Pawan] So I think we've already
+
+432
+00:19:31,800 --> 00:19:33,960
+seen like it's actually exceeded.
+
+433
+00:19:33,960 --> 00:19:37,050
+So if you see the dashboard
+over there, the widget,
+
+434
+00:19:37,050 --> 00:19:39,390
+it's actually already exceeded
+
+435
+00:19:39,390 --> 00:19:42,640
+the number of OpenMapRunCount,
+
+436
+00:19:42,640 --> 00:19:45,670
+and then you'll start
+seeing the MapRunBacklogSize
+
+437
+00:19:46,650 --> 00:19:48,260
+started to build up.
+
+438
+00:19:48,260 --> 00:19:49,470
+So it has a best practice.
+
+439
+00:19:49,470 --> 00:19:50,430
+Like, you know, this is something
+
+440
+00:19:50,430 --> 00:19:53,160
+that you should probably
+set as a threshold
+
+441
+00:19:53,160 --> 00:19:56,310
+and then generate an alarm for your team
+
+442
+00:19:56,310 --> 00:19:58,650
+to like, you know, take an
+action or see what's going on.
+
+443
+00:19:58,650 --> 00:20:01,080
+- [Diego] Right, and keep in
+mind that that metric is only
+
+444
+00:20:01,080 --> 00:20:03,450
+published when there is a backlog.
+
+445
+00:20:03,450 --> 00:20:06,690
+So if you don't have a
+backlog, you'll see no metric,
+
+446
+00:20:06,690 --> 00:20:08,250
+but eventually, when they happen,
+
+447
+00:20:08,250 --> 00:20:10,080
+you start seeing the metrics.
+
+448
+00:20:10,080 --> 00:20:11,310
+And if it's growing, you just see
+
+449
+00:20:11,310 --> 00:20:12,660
+it keeps going up and up and up.
+
+450
+00:20:12,660 --> 00:20:15,747
+And then when it starts raining,
+you'll see it going down.
+
+451
+00:20:15,747 --> 00:20:18,663
+And eventually, you'll see
+the no-metric data again.
+
+452
+00:20:22,920 --> 00:20:25,650
+- [Pawan] Okay, probably
+we'll take a question
+
+453
+00:20:25,650 --> 00:20:26,883
+before we move, yeah.
+
+454
+00:20:28,208 --> 00:20:29,790
+- [Attendee] For distributed map state
+
+455
+00:20:29,790 --> 00:20:31,490
+that user selected for processing,
+
+456
+00:20:32,666 --> 00:20:35,190
+if you have like 600,000 files to process
+
+457
+00:20:35,190 --> 00:20:36,780
+with that single length,
+
+458
+00:20:36,780 --> 00:20:38,220
+most accounts have like limitation
+
+459
+00:20:38,220 --> 00:20:40,770
+on asynchronous executions for Lambda,
+
+460
+00:20:40,770 --> 00:20:42,270
+how does this get around that?
+
+461
+00:20:43,500 --> 00:20:46,800
+Like would it just run mass invocations
+
+462
+00:20:46,800 --> 00:20:49,503
+of the Lambda Step Functions
+process it matches?
+
+463
+00:20:51,210 --> 00:20:54,180
+- Do you wanna take that?
+- Yeah, so the question is,
+
+464
+00:20:54,180 --> 00:20:57,600
+in this case, you had
+600,000 files from S3,
+
+465
+00:20:57,600 --> 00:21:00,453
+and then you pass it over to Lambda,
+
+466
+00:21:01,350 --> 00:21:03,180
+how does Lambda handle that volume
+
+467
+00:21:03,180 --> 00:21:05,100
+because the limit is one task?
+
+468
+00:21:05,100 --> 00:21:06,390
+Did I get it right?
+
+469
+00:21:06,390 --> 00:21:07,620
+- [Attendee] Yeah,
+limitation on invocations.
+
+470
+00:21:07,620 --> 00:21:09,390
+- [Diego] Okay, so what happens here
+
+471
+00:21:09,390 --> 00:21:12,780
+is that the first thing we
+did was to set a batching.
+
+472
+00:21:12,780 --> 00:21:15,330
+So the payload that you
+get on your Lambda function
+
+473
+00:21:15,330 --> 00:21:17,091
+contains that batching,
+
+474
+00:21:17,091 --> 00:21:20,190
+then you can manage how
+big the batching is.
+
+475
+00:21:20,190 --> 00:21:22,320
+And then on your Lambda
+function, you will handle that.
+
+476
+00:21:22,320 --> 00:21:24,220
+I believe the number was 500.
+- Yeah.
+
+477
+00:21:26,610 --> 00:21:28,650
+- [Diego] And then as you
+run your Lambda function,
+
+478
+00:21:28,650 --> 00:21:30,960
+the invocations will be
+limited to the limits
+
+479
+00:21:30,960 --> 00:21:33,570
+you have on that specific
+function you're calling.
+
+480
+00:21:33,570 --> 00:21:35,430
+And then similar to the previous question,
+
+481
+00:21:35,430 --> 00:21:37,140
+if the Lambda throttles you,
+
+482
+00:21:37,140 --> 00:21:39,660
+you need to catch those errors and retry,
+
+483
+00:21:39,660 --> 00:21:41,100
+and then you can manage the backoff
+
+484
+00:21:41,100 --> 00:21:42,900
+for how long you wanna retry.
+
+485
+00:21:42,900 --> 00:21:45,663
+And then you can even set
+the jitter on the state.
+
+486
+00:21:46,997 --> 00:21:48,382
+- Thank you.
+- You're welcome.
+
+487
+00:21:48,382 --> 00:21:50,910
+- [Pawan] Yeah, and just
+an extension on that point,
+
+488
+00:21:50,910 --> 00:21:55,170
+like the example that we have
+on the Lambda function, right,
+
+489
+00:21:55,170 --> 00:21:57,840
+actually also calls the S3 APIs as well.
+
+490
+00:21:57,840 --> 00:22:00,060
+So sometimes if you're
+exceeding those limits,
+
+491
+00:22:00,060 --> 00:22:01,950
+like you know, you can
+get throttle exceptions
+
+492
+00:22:01,950 --> 00:22:03,000
+on the S3 as well.
+
+493
+00:22:03,000 --> 00:22:04,650
+There's a way to error-handle it
+
+494
+00:22:04,650 --> 00:22:06,510
+on the Step Functions
+itself, like, which is part
+
+495
+00:22:06,510 --> 00:22:08,010
+of your state machine definition.
+
+496
+00:22:08,010 --> 00:22:11,850
+And then you could also like
+have retry mechanisms as well.
+
+497
+00:22:11,850 --> 00:22:15,120
+That's all built on the
+state machine definition.
+
+498
+00:22:15,120 --> 00:22:16,253
+Yeah, yeah.
+- Thank you.
+
+499
+00:22:23,440 --> 00:22:27,990
+- [Pawan] Cool, so we've had
+a look at the open Map Run.
+
+500
+00:22:27,990 --> 00:22:30,270
+So now, there's another scenario
+
+501
+00:22:30,270 --> 00:22:33,240
+that a lot of customers encounter
+
+502
+00:22:33,240 --> 00:22:35,820
+or like, you know, will
+have to keep in mind
+
+503
+00:22:35,820 --> 00:22:37,080
+is the state transition.
+
+504
+00:22:37,080 --> 00:22:40,200
+So Diego, what is state
+transition in this concept?
+
+505
+00:22:40,200 --> 00:22:42,510
+And like what sort of behaviors
+
+506
+00:22:42,510 --> 00:22:44,380
+would you encounter in Step Functions?
+
+507
+00:22:44,380 --> 00:22:46,470
+- [Diego] Yeah, so state transitions,
+
+508
+00:22:46,470 --> 00:22:49,440
+you can assume is when
+the execution starts,
+
+509
+00:22:49,440 --> 00:22:51,120
+and when the execution completes,
+
+510
+00:22:51,120 --> 00:22:54,600
+and when it goes from
+one node to the next one.
+
+511
+00:22:54,600 --> 00:22:57,210
+And when you're talking
+about distributed map,
+
+512
+00:22:57,210 --> 00:22:59,970
+it's each iteration that started.
+
+513
+00:22:59,970 --> 00:23:02,370
+So Step Functions by default,
+
+514
+00:23:02,370 --> 00:23:07,350
+it has a limit of 5,000 per
+second on state transition.
+
+515
+00:23:07,350 --> 00:23:10,150
+So let's say you started
+
+516
+00:23:11,070 --> 00:23:12,960
+a number that's higher than that,
+
+517
+00:23:12,960 --> 00:23:16,530
+Step Functions gives you 5,000 per second.
+
+518
+00:23:16,530 --> 00:23:18,780
+And when you try to run more than that
+
+519
+00:23:18,780 --> 00:23:20,700
+is when you start getting throttled.
+
+520
+00:23:20,700 --> 00:23:22,410
+Usually when it's an API call,
+
+521
+00:23:22,410 --> 00:23:24,330
+you get the error immediately back:
+
+522
+00:23:24,330 --> 00:23:27,090
+429, throttling too many exceptions.
+
+523
+00:23:27,090 --> 00:23:29,940
+But again, as this is
+an asynchronous process
+
+524
+00:23:29,940 --> 00:23:31,590
+and you may not even see.
+
+525
+00:23:31,590 --> 00:23:33,630
+Maybe someone went to the account
+
+526
+00:23:33,630 --> 00:23:36,540
+and started consuming
+the state transitions.
+
+527
+00:23:36,540 --> 00:23:37,983
+This is a shared limit.
+
+528
+00:23:38,910 --> 00:23:40,710
+So you start getting throttled
+
+529
+00:23:40,710 --> 00:23:42,420
+and start affecting the
+other state machines
+
+530
+00:23:42,420 --> 00:23:44,040
+running on the same account.
+
+531
+00:23:44,040 --> 00:23:47,880
+So on the example here, let's
+assume you have a bucket.
+
+532
+00:23:47,880 --> 00:23:52,200
+Every single second, this
+bucket gets refilled.
+
+533
+00:23:52,200 --> 00:23:56,640
+The default limit is
+5,000 in large regions.
+
+534
+00:23:56,640 --> 00:23:59,670
+And then every time there is
+a state transition happening,
+
+535
+00:23:59,670 --> 00:24:02,643
+it consumes one from that bucket.
+
+536
+00:24:03,630 --> 00:24:07,710
+So let's, in this case, just
+to illustrate what's going on,
+
+537
+00:24:07,710 --> 00:24:11,520
+let's say you started a
+huge load on Step Functions.
+
+538
+00:24:11,520 --> 00:24:14,610
+Eventually, this bucket's gonna be empty,
+
+539
+00:24:14,610 --> 00:24:16,050
+you're gonna get throttled.
+
+540
+00:24:16,050 --> 00:24:17,640
+And the good part is that Step Functions
+
+541
+00:24:17,640 --> 00:24:19,080
+doesn't fail your executions.
+
+542
+00:24:19,080 --> 00:24:21,000
+Those state transitions get pushed
+
+543
+00:24:21,000 --> 00:24:24,870
+to happen in the future with a backoff.
+
+544
+00:24:24,870 --> 00:24:27,727
+So let's say the first
+run after one second,
+
+545
+00:24:27,727 --> 00:24:29,670
+then two, and four, and eight,
+
+546
+00:24:29,670 --> 00:24:32,670
+and then it keeps increasing,
+and there is a limit.
+
+547
+00:24:32,670 --> 00:24:34,650
+But then for you as an operator,
+
+548
+00:24:34,650 --> 00:24:37,470
+you go and check your execution,
+
+549
+00:24:37,470 --> 00:24:41,550
+and it looks like nothing
+happened for 30 seconds.
+
+550
+00:24:41,550 --> 00:24:43,020
+So you may assume, "Oh, there's something
+
+551
+00:24:43,020 --> 00:24:45,000
+going on with my execution.
+
+552
+00:24:45,000 --> 00:24:47,280
+Maybe my code is wrong,
+maybe my definition,
+
+553
+00:24:47,280 --> 00:24:49,440
+maybe I'm getting throttled somewhere."
+
+554
+00:24:49,440 --> 00:24:53,460
+So as an operator, where should you check
+
+555
+00:24:53,460 --> 00:24:55,920
+to understand if that's the case for you
+
+556
+00:24:55,920 --> 00:24:58,290
+if you're being affected by this?
+
+557
+00:24:58,290 --> 00:25:00,630
+So maybe Pawan will build something
+
+558
+00:25:00,630 --> 00:25:02,250
+that can show that to us?
+
+559
+00:25:02,250 --> 00:25:05,757
+Maybe have a nice dashboard? (chuckles)
+
+560
+00:25:05,757 --> 00:25:07,007
+- [Pawan] Cool.
+
+561
+00:25:11,940 --> 00:25:15,270
+Cool, so I have an example
+
+562
+00:25:15,270 --> 00:25:18,930
+where you can simulate
+the state transition.
+
+563
+00:25:18,930 --> 00:25:23,760
+So by the way, all the
+samples that we're using here,
+
+564
+00:25:23,760 --> 00:25:25,890
+we'll share it with you in
+case if you want to try it
+
+565
+00:25:25,890 --> 00:25:28,860
+or test it out, so towards the end,
+
+566
+00:25:28,860 --> 00:25:30,510
+there's a link that we'll
+share where you can see,
+
+567
+00:25:30,510 --> 00:25:31,593
+find all these demos.
+
+568
+00:25:32,670 --> 00:25:35,850
+So yeah, this is a state machine
+
+569
+00:25:35,850 --> 00:25:40,230
+that I have which basically
+does loops within a loop.
+
+570
+00:25:40,230 --> 00:25:43,440
+You know, kind of to simulate
+the state transition.
+
+571
+00:25:43,440 --> 00:25:44,910
+So it takes in like the past state
+
+572
+00:25:44,910 --> 00:25:46,860
+and then has this parallel state
+
+573
+00:25:46,860 --> 00:25:50,493
+which calls the other choice
+state and goes on and on.
+
+574
+00:25:51,540 --> 00:25:56,540
+Again, going back to my
+load-test state machine,
+
+575
+00:25:57,793 --> 00:26:01,530
+I have just initiated the load-test
+
+576
+00:26:01,530 --> 00:26:05,373
+on this specific workflow
+that I just showed.
+
+577
+00:26:06,480 --> 00:26:10,170
+Now, if I go back into my dashboard,
+
+578
+00:26:10,170 --> 00:26:12,510
+there is this metrics that's available
+
+579
+00:26:12,510 --> 00:26:15,180
+in terms of the State Transition Quota.
+
+580
+00:26:15,180 --> 00:26:16,710
+So let's just open this to see
+
+581
+00:26:16,710 --> 00:26:18,900
+what are the things that we're monitoring.
+
+582
+00:26:18,900 --> 00:26:21,150
+So as Diego mentioned like,
+you know, these metrics
+
+583
+00:26:21,150 --> 00:26:24,780
+is the BucketSize, the RefillRate,
+
+584
+00:26:24,780 --> 00:26:26,880
+the ConsumedCapacity,
+and the ThrottledEvents.
+
+585
+00:26:26,880 --> 00:26:29,280
+You know, these are all available here.
+
+586
+00:26:29,280 --> 00:26:31,020
+The best way to like
+monitor some of these,
+
+587
+00:26:31,020 --> 00:26:32,400
+like for example, the BucketSize,
+
+588
+00:26:32,400 --> 00:26:35,250
+it's the Maximum statistics
+that you can use.
+
+589
+00:26:35,250 --> 00:26:38,520
+Same as the case with the
+RefillRate, the Max statistics.
+
+590
+00:26:38,520 --> 00:26:39,960
+And then you have the ConsumedCapacity,
+
+591
+00:26:39,960 --> 00:26:43,323
+which can be a sum
+aggregation across a minute.
+
+592
+00:26:45,030 --> 00:26:46,800
+- [Diego] Yeah, one thing to keep in mind
+
+593
+00:26:46,800 --> 00:26:50,280
+is that CloudWatch metrics,
+they're published by minute,
+
+594
+00:26:50,280 --> 00:26:52,320
+but your limits are per second.
+
+595
+00:26:52,320 --> 00:26:55,770
+So it's an average across
+all the seconds in a minute.
+
+596
+00:26:55,770 --> 00:27:00,060
+So sometimes you see that you
+got throttled in a second,
+
+597
+00:27:00,060 --> 00:27:01,350
+and then you see the data points,
+
+598
+00:27:01,350 --> 00:27:03,990
+but then when you look at your limits,
+
+599
+00:27:03,990 --> 00:27:06,600
+it may not correlate
+exactly to the second.
+
+600
+00:27:06,600 --> 00:27:09,450
+It's just because the metrics
+are published every minute.
+
+601
+00:27:12,540 --> 00:27:14,460
+- [Pawan] Yeah, so if
+you see the dashboard,
+
+602
+00:27:14,460 --> 00:27:17,940
+it's already started showing up
+
+603
+00:27:17,940 --> 00:27:19,680
+that there are some
+throttles that are happening,
+
+604
+00:27:19,680 --> 00:27:20,823
+the state transitions.
+
+605
+00:27:21,810 --> 00:27:24,060
+And if you want to find out, you know,
+
+606
+00:27:24,060 --> 00:27:25,470
+which specific state machine
+
+607
+00:27:25,470 --> 00:27:28,380
+perhaps was contributing
+to this, so let's go ahead
+
+608
+00:27:28,380 --> 00:27:33,380
+and try and add this execution metrics.
+
+609
+00:27:39,150 --> 00:27:44,130
+So what I did was selected
+ExecutionThrottled as my metrics,
+
+610
+00:27:44,130 --> 00:27:47,370
+and then I'm going to
+choose all my state machines
+
+611
+00:27:47,370 --> 00:27:49,170
+in my account just to see which one
+
+612
+00:27:49,170 --> 00:27:52,620
+is actually causing the problem.
+
+613
+00:27:52,620 --> 00:27:57,620
+And in terms of the
+statistics, let's choose Sum
+
+614
+00:27:57,690 --> 00:28:00,180
+and the Period as one minute.
+
+615
+00:28:00,180 --> 00:28:01,680
+And let's create it.
+
+616
+00:28:01,680 --> 00:28:04,230
+So now, it's created a dashboard for me,
+
+617
+00:28:04,230 --> 00:28:05,640
+oh, sorry, the widget for me.
+
+618
+00:28:05,640 --> 00:28:10,640
+And in here, I can mouse over,
+
+619
+00:28:10,650 --> 00:28:14,370
+and then I can see which are
+the top two state machines
+
+620
+00:28:14,370 --> 00:28:17,520
+which are actually
+contributed to the throttle.
+
+621
+00:28:17,520 --> 00:28:19,923
+So one is the state
+transition as expected,
+
+622
+00:28:20,880 --> 00:28:23,130
+which is contributing
+to the throttling here.
+
+623
+00:28:24,360 --> 00:28:27,660
+- [Diego] Yeah, and again, it's important
+
+624
+00:28:27,660 --> 00:28:29,700
+to understand that your
+executions will not fail
+
+625
+00:28:29,700 --> 00:28:31,890
+because you're getting throttled.
+
+626
+00:28:31,890 --> 00:28:35,640
+They'll just be running
+somewhere in the future.
+
+627
+00:28:35,640 --> 00:28:37,980
+And then if you encounter this situation,
+
+628
+00:28:37,980 --> 00:28:41,610
+you can just go to Service
+Quotas and request an increase.
+
+629
+00:28:41,610 --> 00:28:44,220
+And depending on the limit, it
+gets automatically approved,
+
+630
+00:28:44,220 --> 00:28:45,960
+and then things will start moving faster,
+
+631
+00:28:45,960 --> 00:28:47,433
+and then you'll recover.
+
+632
+00:28:52,020 --> 00:28:55,397
+- [Pawan] Any questions?
+Anybody has any questions?
+
+633
+00:28:55,397 --> 00:28:58,140
+Maybe we can take couple
+of questions, yeah?
+
+634
+00:28:58,140 --> 00:29:00,298
+- [Attendee] So what's the
+configuration which is off?
+
+635
+00:29:00,298 --> 00:29:02,017
+Even if I got the transactions,
+
+636
+00:29:02,017 --> 00:29:05,940
+is it all unknown or like
+the first limit, what is it?
+
+637
+00:29:05,940 --> 00:29:06,900
+- [Diego] It's a soft limit.
+
+638
+00:29:06,900 --> 00:29:10,053
+It's 5,000 per second in large regions.
+
+639
+00:29:11,130 --> 00:29:12,033
+There's no hard limit.
+
+640
+00:29:12,033 --> 00:29:15,750
+It's usually given and
+provided by use case.
+
+641
+00:29:15,750 --> 00:29:17,017
+So you can just reach out and say,
+
+642
+00:29:17,017 --> 00:29:18,330
+"Hey, I have this use case.
+
+643
+00:29:18,330 --> 00:29:21,207
+I actually need, I don't
+know, 30,000 per second."
+
+644
+00:29:21,207 --> 00:29:24,474
+And then we discuss and decide what.
+
+645
+00:29:24,474 --> 00:29:25,307
+- [Attendee] Is it per
+account or is it per-
+
+646
+00:29:26,370 --> 00:29:27,671
+- [Congregation] It's per account.
+
+647
+00:29:27,671 --> 00:29:28,504
+- Per account?
+- Yeah.
+
+648
+00:29:28,504 --> 00:29:30,724
+- Yeah, so these-
+- It's more just a function
+
+649
+00:29:30,724 --> 00:29:32,220
+that is much easier.
+
+650
+00:29:32,220 --> 00:29:33,053
+- [Diego] Sorry?
+
+651
+00:29:33,053 --> 00:29:34,860
+- [Attendee] So if you
+have more of them running,
+
+652
+00:29:34,860 --> 00:29:36,120
+you can get more?
+- Yeah, you consume
+
+653
+00:29:36,120 --> 00:29:38,070
+more state transitions
+across your account.
+
+654
+00:29:38,070 --> 00:29:39,020
+That's right, yeah.
+
+655
+00:29:39,960 --> 00:29:43,230
+And having a dashboard that
+filters out by state machine
+
+656
+00:29:43,230 --> 00:29:45,240
+is easier to point it
+out which one is the one
+
+657
+00:29:45,240 --> 00:29:46,540
+that's consuming the most.
+
+658
+00:29:51,270 --> 00:29:53,523
+Yeah, so on this case,
+
+659
+00:29:54,990 --> 00:29:56,310
+the limit is different per region.
+
+660
+00:29:56,310 --> 00:29:58,140
+So large regions, 5,000
+
+661
+00:29:58,140 --> 00:30:00,240
+and smaller regions is 800.
+
+662
+00:30:00,240 --> 00:30:02,610
+There are soft limits,
+and we can increase.
+
+663
+00:30:02,610 --> 00:30:05,400
+And with this metric and dashboard,
+
+664
+00:30:05,400 --> 00:30:08,130
+you can easily identify
+why your executions
+
+665
+00:30:08,130 --> 00:30:12,570
+are being delayed for the case
+of state transitions shortly.
+
+666
+00:30:12,570 --> 00:30:13,890
+But there's also another case
+
+667
+00:30:13,890 --> 00:30:17,820
+that understanding what's
+going on behind the scenes
+
+668
+00:30:17,820 --> 00:30:21,180
+can simplify the way you
+design your state machines.
+
+669
+00:30:21,180 --> 00:30:23,310
+And in this case is when you
+
+670
+00:30:23,310 --> 00:30:26,100
+have cross-account integrations.
+
+671
+00:30:26,100 --> 00:30:27,930
+So let's say you're
+building your state machine,
+
+672
+00:30:27,930 --> 00:30:31,350
+and then you go and invoke
+a nested state machine
+
+673
+00:30:31,350 --> 00:30:32,950
+that belongs to another account.
+
+674
+00:30:34,440 --> 00:30:38,040
+If the parent and the nested
+are in the same account,
+
+675
+00:30:38,040 --> 00:30:39,330
+Step Functions create something
+
+676
+00:30:39,330 --> 00:30:42,210
+called managed rules on EventBridge.
+
+677
+00:30:42,210 --> 00:30:44,610
+And then it listens for the events
+
+678
+00:30:44,610 --> 00:30:47,400
+on the nested execution completion.
+
+679
+00:30:47,400 --> 00:30:49,890
+And then automatically
+notifies the parent,
+
+680
+00:30:49,890 --> 00:30:51,810
+completes and move on.
+
+681
+00:30:51,810 --> 00:30:54,660
+But if you're using cross account,
+
+682
+00:30:54,660 --> 00:30:57,270
+your state machine cannot read events
+
+683
+00:30:57,270 --> 00:30:59,340
+from other account by itself.
+
+684
+00:30:59,340 --> 00:31:02,340
+And the way it works is
+by calling the status
+
+685
+00:31:02,340 --> 00:31:04,653
+of that execution that the parent started.
+
+686
+00:31:05,850 --> 00:31:08,310
+So let's say you created
+a parent with a child,
+
+687
+00:31:08,310 --> 00:31:10,230
+it's a cross account, the Step Functions
+
+688
+00:31:10,230 --> 00:31:12,330
+are navigating through your state machine,
+
+689
+00:31:12,330 --> 00:31:15,600
+it reaches a state that
+calls the start executions
+
+690
+00:31:15,600 --> 00:31:18,120
+on a state machine in another account.
+
+691
+00:31:18,120 --> 00:31:19,770
+And it's an asynchronous process.
+
+692
+00:31:19,770 --> 00:31:23,647
+You just get a success
+response back saying,
+
+693
+00:31:23,647 --> 00:31:24,960
+"Hey, I started."
+
+694
+00:31:24,960 --> 00:31:27,300
+And then it's stuck there, right?
+
+695
+00:31:27,300 --> 00:31:30,690
+It needs to wait for the
+child execution to complete,
+
+696
+00:31:30,690 --> 00:31:33,630
+and then you're waiting.
+
+697
+00:31:33,630 --> 00:31:35,730
+Somehow the child completed,
+
+698
+00:31:35,730 --> 00:31:38,550
+and your parent is still
+waiting for the completion.
+
+699
+00:31:38,550 --> 00:31:42,330
+So what could be the reason
+
+700
+00:31:42,330 --> 00:31:44,490
+why the parent didn't get notified
+
+701
+00:31:44,490 --> 00:31:46,833
+from a cross-account invocation?
+
+702
+00:31:48,150 --> 00:31:49,260
+I'll pass it over to Pawan
+
+703
+00:31:49,260 --> 00:31:51,240
+that has an example of this happening,
+
+704
+00:31:51,240 --> 00:31:52,990
+and then we can discuss about this.
+
+705
+00:31:54,330 --> 00:31:56,190
+- [Pawan] So in terms of the setup
+
+706
+00:31:56,190 --> 00:32:00,780
+to show you the demo of
+this particular scenario.
+
+707
+00:32:00,780 --> 00:32:04,590
+So we have an account
+where you have a workflow
+
+708
+00:32:04,590 --> 00:32:05,910
+that looks something like this,
+
+709
+00:32:05,910 --> 00:32:09,210
+where an input, you
+know, take, for example,
+
+710
+00:32:09,210 --> 00:32:11,130
+the product review input,
+
+711
+00:32:11,130 --> 00:32:12,450
+which has like the product ID,
+
+712
+00:32:12,450 --> 00:32:14,880
+maybe your description of the product,
+
+713
+00:32:14,880 --> 00:32:17,190
+and maybe a review of
+that particular product.
+
+714
+00:32:17,190 --> 00:32:19,710
+So it goes through the
+workflow of like, you know,
+
+715
+00:32:19,710 --> 00:32:22,800
+passing through a Bedrock
+API, which then analyzes it
+
+716
+00:32:22,800 --> 00:32:24,330
+to see whether that particular review
+
+717
+00:32:24,330 --> 00:32:26,940
+was actually a fake
+review or a real review.
+
+718
+00:32:26,940 --> 00:32:28,830
+And then there is a choice state to say,
+
+719
+00:32:28,830 --> 00:32:30,120
+okay, you know, if it is a fake,
+
+720
+00:32:30,120 --> 00:32:34,440
+then pass it on to another
+logic which will process it.
+
+721
+00:32:34,440 --> 00:32:37,170
+If it is a real one, then
+you would just bypass it.
+
+722
+00:32:37,170 --> 00:32:40,050
+So that's the workflow that you
+have in the Central Account.
+
+723
+00:32:40,050 --> 00:32:42,757
+Now, then comes maybe
+another team that would say,
+
+724
+00:32:42,757 --> 00:32:44,700
+"Okay, rather than us building this
+
+725
+00:32:44,700 --> 00:32:47,310
+particular workflow
+again in our own account,
+
+726
+00:32:47,310 --> 00:32:48,777
+why don't we make use of like, you know,
+
+727
+00:32:48,777 --> 00:32:50,370
+the cross-account invocations?"
+
+728
+00:32:50,370 --> 00:32:54,540
+Like, you know, from create
+a parent workflow here
+
+729
+00:32:54,540 --> 00:32:56,280
+and then call the child workflow.
+
+730
+00:32:56,280 --> 00:32:57,360
+So this is what you can,
+
+731
+00:32:57,360 --> 00:32:59,973
+when you can use a cross
+account integrations here.
+
+732
+00:33:01,380 --> 00:33:04,110
+Typically, what you would
+use is the .sync method
+
+733
+00:33:04,110 --> 00:33:07,260
+or run a job within the Step Functions
+
+734
+00:33:07,260 --> 00:33:11,220
+naming that you would call
+this particular child workflow.
+
+735
+00:33:11,220 --> 00:33:13,230
+Now, there are few things to keep in mind
+
+736
+00:33:13,230 --> 00:33:15,450
+while you have this
+particular setup, right?
+
+737
+00:33:15,450 --> 00:33:18,360
+Now, first thing is like each of these
+
+738
+00:33:18,360 --> 00:33:19,920
+state machine has its own role.
+
+739
+00:33:19,920 --> 00:33:22,290
+Like in the child
+function has its own role
+
+740
+00:33:22,290 --> 00:33:24,243
+to call Bedrock APIs or maybe other,
+
+741
+00:33:26,040 --> 00:33:28,230
+you know, AWS services in there,
+
+742
+00:33:28,230 --> 00:33:30,870
+and your parent function has its own role.
+
+743
+00:33:30,870 --> 00:33:33,690
+But also, you need to
+establish a trust relationship
+
+744
+00:33:33,690 --> 00:33:36,000
+between, you know, the
+cross-account calls.
+
+745
+00:33:36,000 --> 00:33:37,413
+So what does that look like?
+
+746
+00:33:38,250 --> 00:33:39,930
+So this is an example of what
+
+747
+00:33:39,930 --> 00:33:41,340
+that trust policy will look like.
+
+748
+00:33:41,340 --> 00:33:43,800
+You know, your parent
+would need the permissions
+
+749
+00:33:43,800 --> 00:33:46,083
+to assume role on your child,
+
+750
+00:33:50,082 --> 00:33:51,390
+the role on your second account,
+
+751
+00:33:51,390 --> 00:33:53,250
+which is a child account role.
+
+752
+00:33:53,250 --> 00:33:56,820
+And then on your, the child account,
+
+753
+00:33:56,820 --> 00:34:00,420
+you need to have a principal
+which will make sure
+
+754
+00:34:00,420 --> 00:34:03,360
+that, you know, it's actually
+able to assume the role
+
+755
+00:34:03,360 --> 00:34:05,010
+with the principal of your parent account.
+
+756
+00:34:05,010 --> 00:34:07,260
+And then you're also passing
+this conditional attribute
+
+757
+00:34:07,260 --> 00:34:10,320
+into that just to avoid or
+not run into the problem call
+
+758
+00:34:10,320 --> 00:34:13,470
+as a confused deputy, where
+it is you're saying that only
+
+759
+00:34:13,470 --> 00:34:16,530
+allow the assumption
+in case if it's coming
+
+760
+00:34:16,530 --> 00:34:17,580
+from this particular account
+
+761
+00:34:17,580 --> 00:34:19,480
+or from this particular state machine.
+
+762
+00:34:21,900 --> 00:34:24,870
+So once you do that, you're
+establishing the trust relation.
+
+763
+00:34:24,870 --> 00:34:28,560
+So this is how the setup looks like.
+
+764
+00:34:28,560 --> 00:34:31,110
+So that's what I have in my account.
+
+765
+00:34:31,110 --> 00:34:33,540
+So let me quickly jump to the demo
+
+766
+00:34:33,540 --> 00:34:36,030
+and show you what it looks like.
+
+767
+00:34:36,030 --> 00:34:38,490
+So in my parent account,
+
+768
+00:34:38,490 --> 00:34:43,490
+I have this particular state machine
+
+769
+00:34:47,790 --> 00:34:51,903
+which is calling my, you know,
+
+770
+00:34:53,215 --> 00:34:55,980
+the child workflow that
+you see cross account.
+
+771
+00:34:55,980 --> 00:34:57,360
+And while it's also passing, you know,
+
+772
+00:34:57,360 --> 00:35:00,000
+I'm just also using this target role ARN
+
+773
+00:35:00,000 --> 00:35:02,133
+for the cross-account invocation.
+
+774
+00:35:03,210 --> 00:35:06,360
+In my child, I have this
+
+775
+00:35:06,360 --> 00:35:09,333
+particular nested-process-review workflow.
+
+776
+00:35:20,400 --> 00:35:22,500
+- [Diego] And while things are loading,
+
+777
+00:35:22,500 --> 00:35:24,570
+let me explain how it works
+
+778
+00:35:24,570 --> 00:35:26,850
+behind the scenes on Step Functions.
+
+779
+00:35:26,850 --> 00:35:30,480
+So we added support for cross
+account a few years ago.
+
+780
+00:35:30,480 --> 00:35:33,963
+And the way Step Function does
+it is through role chaining.
+
+781
+00:35:34,860 --> 00:35:38,130
+So you have an execution
+role on your state machine
+
+782
+00:35:38,130 --> 00:35:41,220
+that is used to run its own steps,
+
+783
+00:35:41,220 --> 00:35:44,670
+but because we allow cross account,
+
+784
+00:35:44,670 --> 00:35:47,580
+that execution role
+can assume another role
+
+785
+00:35:47,580 --> 00:35:49,380
+on another account.
+
+786
+00:35:49,380 --> 00:35:51,150
+And that way, you create
+
+787
+00:35:51,150 --> 00:35:53,820
+the trust relationship between them.
+
+788
+00:35:53,820 --> 00:35:56,700
+It's how Pawan created.
+
+789
+00:35:56,700 --> 00:35:58,680
+So you go to the target role,
+
+790
+00:35:58,680 --> 00:36:01,410
+which is the one that
+is used for chaining.
+
+791
+00:36:01,410 --> 00:36:04,560
+And then you say, "I
+trust that state machine
+
+792
+00:36:04,560 --> 00:36:06,480
+that's gonna making the call."
+
+793
+00:36:06,480 --> 00:36:08,040
+And then as the execution
+is going through,
+
+794
+00:36:08,040 --> 00:36:08,970
+it calls some role on that.
+
+795
+00:36:08,970 --> 00:36:12,570
+And with that credentials,
+it makes the API call.
+
+796
+00:36:12,570 --> 00:36:14,700
+And this is not only for a
+Step Functions in nesting,
+
+797
+00:36:14,700 --> 00:36:18,150
+you can make cross account on
+the other services as well,
+
+798
+00:36:18,150 --> 00:36:19,710
+on the other integrations.
+
+799
+00:36:19,710 --> 00:36:22,260
+Just make sure you set the target role
+
+800
+00:36:22,260 --> 00:36:26,010
+because that's what's gonna
+be used for role chaining.
+
+801
+00:36:26,010 --> 00:36:28,380
+And keep in mind that role chaining
+
+802
+00:36:28,380 --> 00:36:31,380
+is not made by Step Functions.
+
+803
+00:36:31,380 --> 00:36:34,920
+When the call happens, it's
+made by the source account.
+
+804
+00:36:34,920 --> 00:36:36,630
+So you can have some controls
+
+805
+00:36:36,630 --> 00:36:38,010
+on the relationship between them.
+
+806
+00:36:38,010 --> 00:36:41,340
+And it's not Step Functions
+making a direct call
+
+807
+00:36:41,340 --> 00:36:43,653
+because maybe the target
+account doesn't even know
+
+808
+00:36:43,653 --> 00:36:46,170
+that this is coming
+through Step Functions.
+
+809
+00:36:46,170 --> 00:36:47,850
+And probably they shouldn't know
+
+810
+00:36:47,850 --> 00:36:50,370
+how you architecture your application.
+
+811
+00:36:50,370 --> 00:36:52,720
+They just receive a call
+from a role you trust.
+
+812
+00:36:55,680 --> 00:36:57,210
+- [Pawan] Cool, so this is what
+
+813
+00:36:57,210 --> 00:36:59,730
+my child workflow looks like.
+
+814
+00:36:59,730 --> 00:37:02,490
+Again, the Bedrock API
+classifies the review,
+
+815
+00:37:02,490 --> 00:37:04,470
+and then passes it on.
+
+816
+00:37:04,470 --> 00:37:07,680
+So let's call the parent workflow here.
+
+817
+00:37:07,680 --> 00:37:10,773
+So let's go and pass in an input.
+
+818
+00:37:11,670 --> 00:37:13,290
+So just for fun, let's give it
+
+819
+00:37:13,290 --> 00:37:17,490
+as the today's date
+timestamp just to validate.
+
+820
+00:37:17,490 --> 00:37:19,260
+And if you see the payload,
+
+821
+00:37:19,260 --> 00:37:22,590
+it basically has an ID, an overall review,
+
+822
+00:37:22,590 --> 00:37:24,150
+a reviewText here,
+
+823
+00:37:24,150 --> 00:37:26,940
+and few other payload information in here.
+
+824
+00:37:26,940 --> 00:37:28,800
+So let's go ahead and start this.
+
+825
+00:37:28,800 --> 00:37:33,800
+And you know, this is
+called the child workflow.
+
+826
+00:37:34,170 --> 00:37:38,280
+And you know, you don't
+see it yet completed.
+
+827
+00:37:38,280 --> 00:37:40,920
+This is the problem that
+Diego was describing.
+
+828
+00:37:40,920 --> 00:37:44,130
+And if I actually go
+into my child workflow,
+
+829
+00:37:44,130 --> 00:37:46,680
+you can see that this particular workflow
+
+830
+00:37:46,680 --> 00:37:48,000
+has received that input
+
+831
+00:37:48,000 --> 00:37:49,650
+and it has completed that execution.
+
+832
+00:37:49,650 --> 00:37:53,250
+And if you notice the,
+you know, the payload,
+
+833
+00:37:53,250 --> 00:37:54,650
+let's refresh it once again,
+
+834
+00:37:55,680 --> 00:37:57,033
+if you see the payload,
+
+835
+00:37:58,800 --> 00:38:00,450
+this is the ID that we passed in.
+
+836
+00:38:01,350 --> 00:38:03,660
+And this has completed,
+and this has succeeded,
+
+837
+00:38:03,660 --> 00:38:06,540
+whereas the parent one execution,
+
+838
+00:38:06,540 --> 00:38:08,310
+it's, you know, if you refresh it,
+
+839
+00:38:08,310 --> 00:38:10,803
+it is still showing in an execution state.
+
+840
+00:38:12,450 --> 00:38:14,651
+So something's going on.
+
+841
+00:38:14,651 --> 00:38:16,920
+- [Diego] Yeah, another
+option is to just click
+
+842
+00:38:16,920 --> 00:38:18,510
+on the execution link that you receive,
+
+843
+00:38:18,510 --> 00:38:20,520
+yes, if you scroll down.
+- Yeah.
+
+844
+00:38:20,520 --> 00:38:23,310
+- [Diego] There's an execution
+link that goes directly
+
+845
+00:38:23,310 --> 00:38:25,323
+to the child execution that was started.
+
+846
+00:38:28,865 --> 00:38:30,780
+- [Pawan] Yeah, I think
+there's same permissions there.
+
+847
+00:38:30,780 --> 00:38:32,550
+- [Diego] Yeah, okay, and
+because it's cross account.
+
+848
+00:38:32,550 --> 00:38:34,380
+So in this case, it
+can't go to someone else.
+
+849
+00:38:34,380 --> 00:38:35,213
+- [Attendee] Yeah, I saw it go there.
+
+850
+00:38:35,213 --> 00:38:36,750
+- Yeah.
+- Yeah.
+
+851
+00:38:36,750 --> 00:38:38,520
+- [Diego] Yeah, but if
+it's on the same account,
+
+852
+00:38:38,520 --> 00:38:40,680
+you can just click there and
+go to the execution to see,
+
+853
+00:38:40,680 --> 00:38:43,350
+oh, it's actually completed.
+
+854
+00:38:43,350 --> 00:38:45,393
+So what's going on with my execution?
+
+855
+00:38:46,890 --> 00:38:49,773
+It goes back to what I explained before.
+
+856
+00:38:50,610 --> 00:38:53,880
+When it's in a different
+account, you call start,
+
+857
+00:38:53,880 --> 00:38:56,430
+and that process is
+started somewhere else,
+
+858
+00:38:56,430 --> 00:38:59,163
+but you don't get events
+happening from that account.
+
+859
+00:39:00,000 --> 00:39:03,360
+The way it works is that you
+need to poll for the status.
+
+860
+00:39:03,360 --> 00:39:07,320
+So it's very common that if
+you are in the situation,
+
+861
+00:39:07,320 --> 00:39:09,960
+and you are not very careful
+
+862
+00:39:09,960 --> 00:39:12,960
+with how you set up the
+permissions and relationship,
+
+863
+00:39:12,960 --> 00:39:14,100
+behind the scenes, Step Functions
+
+864
+00:39:14,100 --> 00:39:17,400
+is trying to get the
+updates for those executions
+
+865
+00:39:17,400 --> 00:39:19,560
+that happen in somebody else's account,
+
+866
+00:39:19,560 --> 00:39:21,010
+but is getting access denied.
+
+867
+00:39:22,260 --> 00:39:24,803
+So in this case, Pawan, how would you
+
+868
+00:39:24,803 --> 00:39:25,700
+investigate this?
+- Yeah,
+
+869
+00:39:25,700 --> 00:39:26,970
+maybe I'll ask a question to the audience,
+
+870
+00:39:26,970 --> 00:39:28,770
+and maybe I'll take some
+help from the audience.
+
+871
+00:39:28,770 --> 00:39:31,163
+Like how would you troubleshoot
+this kind of a problem?
+
+872
+00:39:33,090 --> 00:39:34,947
+What tool or what services would you use?
+
+873
+00:39:36,632 --> 00:39:38,851
+- [Attendee] Ask CloudTrail,
+you go check CloudTrail.
+
+874
+00:39:38,851 --> 00:39:40,290
+- [Pawan] CloudTrail? Okay.
+
+875
+00:39:40,290 --> 00:39:42,634
+Does anybody agree or deny?
+
+876
+00:39:42,634 --> 00:39:45,060
+(Diego chuckling)
+
+877
+00:39:45,060 --> 00:39:47,230
+Okay, let's check CloudTrail.
+- Let's go check CloudTrail.
+
+878
+00:39:47,230 --> 00:39:49,330
+- [Pawan] Yeah, that's a very good option.
+
+879
+00:39:57,850 --> 00:40:02,850
+Okay, and let's maybe filter it by source
+
+880
+00:40:04,500 --> 00:40:05,703
+since it's a state.
+
+881
+00:40:08,010 --> 00:40:11,613
+And let's also filter
+in the last 30 minutes.
+
+882
+00:40:13,140 --> 00:40:16,590
+And yeah.
+- Executing.
+
+883
+00:40:16,590 --> 00:40:18,270
+- [Pawan] So you're right.
+
+884
+00:40:18,270 --> 00:40:21,820
+So you do see that there
+are some AccessDenied
+
+885
+00:40:22,710 --> 00:40:24,450
+that's already showing up there.
+
+886
+00:40:24,450 --> 00:40:28,340
+So if I click on this like,
+you know, GetExecutionHistory.
+
+887
+00:40:28,340 --> 00:40:29,970
+- [Diego] It should be
+the DescribeExecution.
+
+888
+00:40:29,970 --> 00:40:31,763
+- [Pawan] Sorry, yeah, the other one.
+
+889
+00:40:34,650 --> 00:40:36,390
+Yeah, the DescribeExecution.
+
+890
+00:40:36,390 --> 00:40:38,803
+- [Diego] No, that's the
+DescribeStateMachine.
+
+891
+00:40:41,010 --> 00:40:42,660
+It's probably easier if
+you scroll to the right
+
+892
+00:40:42,660 --> 00:40:45,003
+and see the state
+AccessDenied and then yeah.
+
+893
+00:40:49,410 --> 00:40:52,651
+You can also filter by event
+name, DescribeExecution.
+
+894
+00:40:52,651 --> 00:40:57,651
+- [Pawan] Yeah, let's do that.
+
+895
+00:41:04,791 --> 00:41:06,537
+- [Diego] And then you
+pick the AccessDenied.
+
+896
+00:41:06,537 --> 00:41:07,370
+Yeah.
+- Yeah.
+
+897
+00:41:07,370 --> 00:41:09,360
+So if you notice this one,
+
+898
+00:41:09,360 --> 00:41:11,610
+this was related to my execution.
+
+899
+00:41:11,610 --> 00:41:15,150
+And you can clearly see that, you know,
+
+900
+00:41:15,150 --> 00:41:18,990
+this particular role, does
+it have the permissions
+
+901
+00:41:18,990 --> 00:41:22,143
+to describe the execution?
+
+902
+00:41:23,100 --> 00:41:25,263
+So in terms of like fixing this,
+
+903
+00:41:27,000 --> 00:41:28,800
+let's go ahead and try and fix that.
+
+904
+00:41:28,800 --> 00:41:31,290
+- [Diego] And in the
+meantime, what's going on
+
+905
+00:41:31,290 --> 00:41:35,640
+on Step Functions is that
+for the first 10 minutes,
+
+906
+00:41:35,640 --> 00:41:38,190
+it pause every minute.
+
+907
+00:41:38,190 --> 00:41:41,460
+And after, it adds a backoff.
+
+908
+00:41:41,460 --> 00:41:44,310
+So let's say you're on this
+situation, things won't fail.
+
+909
+00:41:45,450 --> 00:41:47,880
+So as soon as you update your IAM roles,
+
+910
+00:41:47,880 --> 00:41:50,730
+and permissions, and relationship,
+if something is wrong,
+
+911
+00:41:51,660 --> 00:41:54,660
+eventually they'll just
+recover and succeed.
+
+912
+00:41:54,660 --> 00:41:56,430
+- [Attendee] Does it poll
+only if it's cross account
+
+913
+00:41:56,430 --> 00:41:58,650
+or does it also poll
+if you do an execution
+
+914
+00:41:58,650 --> 00:41:59,720
+in the same account?
+
+915
+00:41:59,720 --> 00:42:02,610
+- [Diego] It also polls
+if it's the same account,
+
+916
+00:42:02,610 --> 00:42:04,650
+but because it's the same account,
+
+917
+00:42:04,650 --> 00:42:07,215
+events from EventBridge is just faster.
+
+918
+00:42:07,215 --> 00:42:08,400
+- Oh, okay.
+- Yeah, so it rarely
+
+919
+00:42:08,400 --> 00:42:10,200
+completes through the poll,
+
+920
+00:42:10,200 --> 00:42:13,380
+but as when they always said-
+- Minimum waiting as well.
+
+921
+00:42:13,380 --> 00:42:14,737
+- [Diego] Yeah, that's
+when they always say,
+
+922
+00:42:14,737 --> 00:42:16,410
+"Thing fails all the time."
+
+923
+00:42:16,410 --> 00:42:18,810
+So if the event, for some
+reason, is not delivered,
+
+924
+00:42:18,810 --> 00:42:21,420
+some reason, it's lost on the network,
+
+925
+00:42:21,420 --> 00:42:22,803
+the poll is your backup.
+
+926
+00:42:24,000 --> 00:42:25,800
+- [Attendee] So it's event
+driven with a backup call.
+
+927
+00:42:25,800 --> 00:42:27,270
+- [Diego] Yeah, exactly.
+
+928
+00:42:27,270 --> 00:42:29,050
+It's a way to make it more reliable
+
+929
+00:42:29,910 --> 00:42:32,250
+because we don't want to fail
+
+930
+00:42:32,250 --> 00:42:34,620
+if the child succeeded.
+
+931
+00:42:34,620 --> 00:42:37,623
+So the way we do is to
+poll just for guarantees.
+
+932
+00:42:39,593 --> 00:42:43,676
+(attendee speaking indistinctly)
+
+933
+00:42:44,970 --> 00:42:46,980
+So the parent wait...
+
+934
+00:42:46,980 --> 00:42:49,230
+So the question was, it
+doesn't fail the execution,
+
+935
+00:42:49,230 --> 00:42:50,650
+it keeps polling?
+
+936
+00:42:50,650 --> 00:42:52,368
+- [Attendee] Yeah, because
+then actually succeeded.
+
+937
+00:42:52,368 --> 00:42:55,230
+The execution has some,
+you know, latest status.
+
+938
+00:42:55,230 --> 00:42:56,063
+- [Diego] Yeah, that's right.
+
+939
+00:42:56,063 --> 00:42:58,620
+So the parent is still
+waiting for the completion
+
+940
+00:42:58,620 --> 00:42:59,547
+of the child execution,
+
+941
+00:42:59,547 --> 00:43:02,174
+but the child completed a few minutes ago.
+
+942
+00:43:02,174 --> 00:43:03,582
+- [Attendee] Yeah, so
+when you say backoff,
+
+943
+00:43:03,582 --> 00:43:05,523
+it's just like what, within
+the status, it keeps polling?
+
+944
+00:43:05,523 --> 00:43:06,420
+- [Diego] Yes, exactly,
+
+945
+00:43:06,420 --> 00:43:08,190
+because it needs to know what happened.
+
+946
+00:43:08,190 --> 00:43:09,420
+So if you don't have permission
+
+947
+00:43:09,420 --> 00:43:11,193
+to check somebody else's account,
+
+948
+00:43:12,060 --> 00:43:14,340
+you can access that information.
+
+949
+00:43:14,340 --> 00:43:16,350
+And the way it works
+is by the role chaining
+
+950
+00:43:16,350 --> 00:43:19,380
+as it needs the
+DescribedExecution permission
+
+951
+00:43:19,380 --> 00:43:21,030
+so it can get what happened,
+
+952
+00:43:21,030 --> 00:43:23,613
+and then complete your
+own state and move on.
+
+953
+00:43:25,463 --> 00:43:27,363
+- [Attendee] And you'll get a timeout
+
+954
+00:43:27,363 --> 00:43:30,067
+obviously behind the poll, exactly.
+
+955
+00:43:30,067 --> 00:43:33,447
+Possibly failing at some
+point in time, but if you-
+
+956
+00:43:33,447 --> 00:43:35,100
+- [Attendee] But you gotta
+put, you'd put a timeout?
+
+957
+00:43:35,100 --> 00:43:37,980
+- [Diego] Yeah, one option
+is to put the timeout, yeah.
+
+958
+00:43:37,980 --> 00:43:40,020
+- Yeah.
+- Will backoff done though?
+
+959
+00:43:40,020 --> 00:43:41,580
+- [Diego] But then it's
+gonna fail eventually
+
+960
+00:43:41,580 --> 00:43:42,960
+and move on, right?
+
+961
+00:43:42,960 --> 00:43:43,793
+Yeah.
+
+962
+00:43:48,240 --> 00:43:51,420
+- [Pawan] So if you see
+the role permissions
+
+963
+00:43:51,420 --> 00:43:54,300
+on this particular child role,
+
+964
+00:43:54,300 --> 00:43:56,850
+right now, it only has a StartExecution.
+
+965
+00:43:56,850 --> 00:44:00,180
+So what we need to do is we
+add the DescribeExecution
+
+966
+00:44:00,180 --> 00:44:02,100
+as well as the StopExecution.
+
+967
+00:44:02,100 --> 00:44:06,093
+So let's go ahead and
+add those permissions in.
+
+968
+00:44:10,890 --> 00:44:14,400
+- [Diego] Another one
+that's important for nesting
+
+969
+00:44:14,400 --> 00:44:17,790
+in cross account is the
+StopExecution as well
+
+970
+00:44:17,790 --> 00:44:22,590
+if you want the parent to
+stop the child execution
+
+971
+00:44:22,590 --> 00:44:24,540
+if the parent fails.
+
+972
+00:44:24,540 --> 00:44:26,370
+So what happens is you
+have your parents running,
+
+973
+00:44:26,370 --> 00:44:29,700
+it starts a child, the
+child is just running,
+
+974
+00:44:29,700 --> 00:44:32,130
+and let's say you wanna abort the parent.
+
+975
+00:44:32,130 --> 00:44:34,560
+So what Step Function
+does is a best effort
+
+976
+00:44:34,560 --> 00:44:36,840
+to stop the execution as well.
+
+977
+00:44:36,840 --> 00:44:38,190
+But if it doesn't have permission
+
+978
+00:44:38,190 --> 00:44:42,630
+to stop the execution of the
+child, the child execution,
+
+979
+00:44:42,630 --> 00:44:44,310
+then it just moves on.
+
+980
+00:44:44,310 --> 00:44:45,930
+So then you can see the AccessDenied
+
+981
+00:44:45,930 --> 00:44:48,063
+on CloudTrail as well if that's the case.
+
+982
+00:44:51,959 --> 00:44:54,510
+- [Attendee] So will people exactly ask
+
+983
+00:44:54,510 --> 00:44:56,160
+for the specifics of function run
+
+984
+00:44:56,160 --> 00:44:58,560
+because you're using
+the Describe permission.
+
+985
+00:44:58,560 --> 00:45:00,269
+You don't need the List.
+
+986
+00:45:00,269 --> 00:45:01,102
+- [Diego] Yeah, you don't need the List.
+
+987
+00:45:01,102 --> 00:45:02,880
+It's only the Describe
+because you need to know
+
+988
+00:45:02,880 --> 00:45:04,083
+what the output is.
+
+989
+00:45:04,929 --> 00:45:06,150
+- [Attendee] Calling child role.
+
+990
+00:45:06,150 --> 00:45:08,005
+- [Diego] Yeah, that's right.
+
+991
+00:45:08,005 --> 00:45:09,180
+- DescribeExecution only?
+- Yeah, the question was,
+
+992
+00:45:09,180 --> 00:45:10,500
+you don't need the List permission,
+
+993
+00:45:10,500 --> 00:45:12,210
+just the Describe, yeah.
+
+994
+00:45:12,210 --> 00:45:14,580
+And the Describe is the one
+that provides your input,
+
+995
+00:45:14,580 --> 00:45:16,083
+and output, and the state.
+
+996
+00:45:20,619 --> 00:45:23,619
+(attendee coughing)
+
+997
+00:45:25,230 --> 00:45:28,920
+- [Pawan] All right, let's
+add the stop_describe_policy.
+
+998
+00:45:28,920 --> 00:45:32,340
+So that's in here on
+that specific execution
+
+999
+00:45:32,340 --> 00:45:36,300
+related to my demo nested workflow.
+
+1000
+00:45:36,300 --> 00:45:40,953
+And let's go ahead and
+give it another try now.
+
+1001
+00:45:44,281 --> 00:45:45,633
+Okay, let's copy.
+
+1002
+00:46:00,780 --> 00:46:03,060
+Let's give the overall as four,
+
+1003
+00:46:03,060 --> 00:46:05,340
+and then start the execution.
+
+1004
+00:46:10,107 --> 00:46:11,309
+- [Attendee] So you know that,
+
+1005
+00:46:11,309 --> 00:46:13,381
+so this is only a poll method.
+
+1006
+00:46:13,381 --> 00:46:18,381
+So there is no push from
+apart from the (indistinct).
+
+1007
+00:46:21,100 --> 00:46:24,270
+- [Diego] Yeah, the question
+is for cross account,
+
+1008
+00:46:24,270 --> 00:46:25,560
+it's only polling.
+
+1009
+00:46:25,560 --> 00:46:27,000
+Yeah, that's right.
+
+1010
+00:46:27,000 --> 00:46:30,180
+If it's the same account,
+then the events get notified
+
+1011
+00:46:30,180 --> 00:46:33,240
+through the managed rule
+that's created on EventBridge.
+
+1012
+00:46:33,240 --> 00:46:36,147
+And EventBridge sends those
+events to Step Functions,
+
+1013
+00:46:36,147 --> 00:46:38,130
+and Step Functions identifies the event,
+
+1014
+00:46:38,130 --> 00:46:41,130
+and then, oh, this is for
+that execution that's waiting,
+
+1015
+00:46:41,130 --> 00:46:43,110
+and then completes that task and move on.
+
+1016
+00:46:43,110 --> 00:46:44,160
+- [Attendee] It's interesting
+that you have, yeah,
+
+1017
+00:46:44,160 --> 00:46:46,080
+the previous ones are now succeeding
+
+1018
+00:46:46,080 --> 00:46:47,474
+like the first one, yeah.
+- Exactly, yeah.
+
+1019
+00:46:47,474 --> 00:46:48,307
+Exactly, yeah.
+
+1020
+00:46:48,307 --> 00:46:49,800
+- [Diego] So that's
+because on the next run,
+
+1021
+00:46:49,800 --> 00:46:51,960
+because we back off on the next run,
+
+1022
+00:46:51,960 --> 00:46:54,300
+we try to get new credentials to poll.
+
+1023
+00:46:54,300 --> 00:46:55,980
+And then we call the DescribeExecution.
+
+1024
+00:46:55,980 --> 00:46:57,330
+This time, it succeeded.
+
+1025
+00:46:57,330 --> 00:46:59,490
+So we can complete the
+parents that were waiting,
+
+1026
+00:46:59,490 --> 00:47:00,790
+and then it just moves on.
+
+1027
+00:47:11,041 --> 00:47:13,380
+- [Pawan] So yeah, all the
+previous running states
+
+1028
+00:47:13,380 --> 00:47:15,333
+have all completed now.
+
+1029
+00:47:15,333 --> 00:47:16,892
+- [Attendee] So who do
+we talk to to make him
+
+1030
+00:47:16,892 --> 00:47:19,361
+poll a little bit faster for the future?
+
+1031
+00:47:19,361 --> 00:47:21,739
+One minute for the first
+poll is kind of high.
+
+1032
+00:47:21,739 --> 00:47:23,723
+- [Diego] Yeah, you can
+always reach out to us,
+
+1033
+00:47:23,723 --> 00:47:25,473
+and we can customize.
+
+1034
+00:47:26,734 --> 00:47:28,390
+- [Attendee] You know,
+10 seconds, then back up.
+
+1035
+00:47:28,390 --> 00:47:30,120
+You know, it then do again
+or something like that.
+
+1036
+00:47:30,120 --> 00:47:33,090
+- [Diego] Yeah, but usually
+when those things run too fast,
+
+1037
+00:47:33,090 --> 00:47:36,840
+let's say you started tens
+of thousands of executions,
+
+1038
+00:47:36,840 --> 00:47:39,750
+if they're all trying to
+poll, you may get throttled.
+
+1039
+00:47:39,750 --> 00:47:42,000
+So those things have to follow also
+
+1040
+00:47:42,000 --> 00:47:43,930
+a limit increase for the pollers.
+
+1041
+00:47:46,500 --> 00:47:48,690
+And yeah, this is what we discussed.
+
+1042
+00:47:48,690 --> 00:47:53,100
+The resolution on this case
+is because the parent workflow
+
+1043
+00:47:53,100 --> 00:47:55,230
+is trying to poll for the status
+
+1044
+00:47:55,230 --> 00:47:57,630
+to understand what's going
+on with the child execution.
+
+1045
+00:47:57,630 --> 00:47:59,490
+And this is because it's a cross account,
+
+1046
+00:47:59,490 --> 00:48:02,370
+it cannot read events from somebody else
+
+1047
+00:48:02,370 --> 00:48:03,840
+for security reasons.
+
+1048
+00:48:03,840 --> 00:48:06,210
+And what Step Function does
+is, hey, I need permissions
+
+1049
+00:48:06,210 --> 00:48:09,510
+to read information
+from the other account.
+
+1050
+00:48:09,510 --> 00:48:11,700
+And by doing the role chaining,
+
+1051
+00:48:11,700 --> 00:48:13,440
+I'm going to assume a role
+
+1052
+00:48:13,440 --> 00:48:16,560
+using your credentials for that account.
+
+1053
+00:48:16,560 --> 00:48:18,630
+And with the credentials
+from the chaining,
+
+1054
+00:48:18,630 --> 00:48:21,213
+I'm gonna call the DescribeExecution API.
+
+1055
+00:48:22,140 --> 00:48:24,690
+And after we fixed and
+updated the permissions
+
+1056
+00:48:24,690 --> 00:48:27,240
+on the next run, on the next check,
+
+1057
+00:48:27,240 --> 00:48:28,980
+it will just succeed, it'll complete,
+
+1058
+00:48:28,980 --> 00:48:31,140
+and then it will just move on.
+
+1059
+00:48:31,140 --> 00:48:34,110
+So here on these permissions, you can see
+
+1060
+00:48:34,110 --> 00:48:38,460
+the required for nesting
+is Describe and Stop.
+
+1061
+00:48:38,460 --> 00:48:41,730
+And the Stop is if you
+want child executions
+
+1062
+00:48:41,730 --> 00:48:44,910
+to be terminated when the
+parent execution is aborted
+
+1063
+00:48:44,910 --> 00:48:47,760
+or fails, let's say the
+parent execution time is up,
+
+1064
+00:48:47,760 --> 00:48:49,860
+you don't want the child
+execution to keep running.
+
+1065
+00:48:49,860 --> 00:48:52,560
+Maybe there is a use case that you want
+
+1066
+00:48:52,560 --> 00:48:54,450
+to keep them running and succeed.
+
+1067
+00:48:54,450 --> 00:48:55,410
+But in case if you don't,
+
+1068
+00:48:55,410 --> 00:48:57,390
+you can just add the permission to stop,
+
+1069
+00:48:57,390 --> 00:48:59,760
+and Step Functions is
+going to make a best effort
+
+1070
+00:48:59,760 --> 00:49:01,230
+to stop them.
+
+1071
+00:49:01,230 --> 00:49:04,470
+On the event part is
+because there is a feature
+
+1072
+00:49:04,470 --> 00:49:07,050
+from EventBridge called managed rules.
+
+1073
+00:49:07,050 --> 00:49:08,790
+And the Step Functions
+create a managed rule
+
+1074
+00:49:08,790 --> 00:49:10,890
+to read events from your account.
+
+1075
+00:49:10,890 --> 00:49:12,600
+And then those events get delivered,
+
+1076
+00:49:12,600 --> 00:49:14,100
+and Step Functions know exactly how
+
+1077
+00:49:14,100 --> 00:49:16,320
+to write them, route them,
+
+1078
+00:49:16,320 --> 00:49:17,970
+and complete the parent executions
+
+1079
+00:49:17,970 --> 00:49:21,120
+and with specific task that's waiting.
+
+1080
+00:49:21,120 --> 00:49:23,640
+And if you don't have those permissions
+
+1081
+00:49:23,640 --> 00:49:26,220
+that create state machine
+with a .sync integration,
+
+1082
+00:49:26,220 --> 00:49:27,900
+it's going to fail
+
+1083
+00:49:27,900 --> 00:49:30,700
+because we can't create the
+managed rule on your behalf.
+
+1084
+00:49:32,040 --> 00:49:34,020
+- [Attendee] Does it support
+like waitForTaskToken?
+
+1085
+00:49:34,020 --> 00:49:36,840
+'Cause that might be a way that
+you could not have to poll.
+
+1086
+00:49:36,840 --> 00:49:37,710
+- [Diego] Yeah, the question is,
+
+1087
+00:49:37,710 --> 00:49:39,920
+does it support waitForTaskToken?
+
+1088
+00:49:39,920 --> 00:49:42,330
+It does, so you can control yourself.
+
+1089
+00:49:42,330 --> 00:49:45,630
+You can get a token and get it delivered,
+
+1090
+00:49:45,630 --> 00:49:47,820
+and then somewhere else-
+
+1091
+00:49:47,820 --> 00:49:49,737
+- [Attendee] Yeah, the final
+state of now execution can-
+
+1092
+00:49:49,737 --> 00:49:51,360
+- [Diego] Can call it back.
+
+1093
+00:49:51,360 --> 00:49:53,444
+- You can do that, yeah.
+- If can, didn't wanna wait.
+
+1094
+00:49:53,444 --> 00:49:54,277
+- [Diego] Yeah, that's right.
+
+1095
+00:49:54,277 --> 00:49:56,370
+But sometimes you can't modify the child,
+
+1096
+00:49:56,370 --> 00:49:58,470
+so you can't add this extra step.
+
+1097
+00:49:58,470 --> 00:50:01,710
+But if you can, this is a
+faster way of completing.
+
+1098
+00:50:01,710 --> 00:50:03,900
+We just need to make sure you
+have the right permissions
+
+1099
+00:50:03,900 --> 00:50:05,250
+because it will be a cross account.
+
+1100
+00:50:05,250 --> 00:50:08,070
+So you need to assume
+a role on that account
+
+1101
+00:50:08,070 --> 00:50:10,837
+and call this SendTaskSuccess in this case
+
+1102
+00:50:11,888 --> 00:50:13,110
+or SendTaskFailure if it failed,
+
+1103
+00:50:13,110 --> 00:50:15,990
+but then it's not a managed integration
+
+1104
+00:50:15,990 --> 00:50:17,700
+cross account anymore.
+
+1105
+00:50:17,700 --> 00:50:19,503
+And yeah, you have to do it.
+
+1106
+00:50:23,070 --> 00:50:25,023
+Any other questions on this?
+
+1107
+00:50:29,750 --> 00:50:30,583
+Okay.
+
+1108
+00:50:31,800 --> 00:50:35,880
+- [Pawan] Cool, so yeah, just
+to conclude all the demos
+
+1109
+00:50:35,880 --> 00:50:37,170
+that we have done in this session,
+
+1110
+00:50:37,170 --> 00:50:40,080
+you can find it on that GitHub link.
+
+1111
+00:50:40,080 --> 00:50:41,970
+So you can scan this QR code.
+
+1112
+00:50:41,970 --> 00:50:44,553
+It'll take you straight
+into that GitHub page.
+
+1113
+00:50:46,170 --> 00:50:49,450
+Yeah, and you can try it
+out in your own account
+
+1114
+00:50:50,471 --> 00:50:52,110
+and test it out.
+
+1115
+00:50:52,110 --> 00:50:55,110
+There's also a link to
+the Compute blog post.
+
+1116
+00:50:55,110 --> 00:50:58,830
+So this is where we
+would publish, you know,
+
+1117
+00:50:58,830 --> 00:51:01,440
+anything about Step Functions,
+the new releases, launches,
+
+1118
+00:51:01,440 --> 00:51:04,650
+some of the best practices,
+how do you do things at scale,
+
+1119
+00:51:04,650 --> 00:51:06,930
+and things like that, so all
+of those will be published
+
+1120
+00:51:06,930 --> 00:51:08,520
+under the Compute blog.
+
+1121
+00:51:08,520 --> 00:51:10,200
+- [Diego] Yep, and for example,
+
+1122
+00:51:10,200 --> 00:51:12,090
+if you want to run even faster,
+
+1123
+00:51:12,090 --> 00:51:14,970
+you can just either
+increase the batch size
+
+1124
+00:51:14,970 --> 00:51:17,070
+or give it more concurrency.
+
+1125
+00:51:17,070 --> 00:51:19,470
+Just be aware that if you get throttled,
+
+1126
+00:51:19,470 --> 00:51:20,490
+things may get delayed,
+
+1127
+00:51:20,490 --> 00:51:22,803
+and then you need to
+request a limit increase.
+
+1128
+00:51:23,670 --> 00:51:26,100
+But those metrics that
+we launched recently
+
+1129
+00:51:26,100 --> 00:51:29,100
+for distributed map, they
+do help on these cases
+
+1130
+00:51:29,100 --> 00:51:30,900
+that you can just see what's going on
+
+1131
+00:51:30,900 --> 00:51:33,180
+and see, "Oh, I really
+have a backlog here.
+
+1132
+00:51:33,180 --> 00:51:34,330
+I need to handle that."
+

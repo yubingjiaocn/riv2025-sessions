@@ -1,0 +1,3796 @@
+1
+00:00:00,739 --> 00:00:01,739
+Welcome to Thursday
+
+2
+00:00:03,298 --> 00:00:05,698
+Thank you guys for making it all this way on a
+
+3
+00:00:05,698 --> 00:00:06,469
+Thursday.
+
+4
+00:00:06,738 --> 00:00:08,880
+This may or may not be your last session, but
+
+5
+00:00:09,179 --> 00:00:10,358
+you saved the best for last.
+
+6
+00:00:11,528 --> 00:00:12,698
+Uh, my name is Steven,
+
+7
+00:00:13,130 --> 00:00:15,589
+principal architect here at ScaleOps, and
+
+8
+00:00:15,589 --> 00:00:17,559
+really excited to get through some, uh,
+
+9
+00:00:17,888 --> 00:00:19,929
+reactive scaling that we've seen
+
+10
+00:00:19,929 --> 00:00:21,989
+firsthand with many of our customers
+
+11
+00:00:22,289 --> 00:00:23,769
+and really what we can do to help.
+
+12
+00:00:25,190 --> 00:00:25,899
+So with that
+
+13
+00:00:27,888 --> 00:00:29,929
+Some of the things and the topics we're gonna talk about
+
+14
+00:00:29,929 --> 00:00:32,130
+today is really what is the impossible
+
+15
+00:00:32,130 --> 00:00:34,130
+triangle and what we're always trying to
+
+16
+00:00:34,130 --> 00:00:34,810
+solve for.
+
+17
+00:00:36,079 --> 00:00:37,579
+What are the fundamental
+
+18
+00:00:38,039 --> 00:00:40,340
+foundations to resource management?
+
+19
+00:00:41,478 --> 00:00:42,590
+We're also gonna look at
+
+20
+00:00:42,889 --> 00:00:45,689
+what are the different types of elements that you can size
+
+21
+00:00:45,689 --> 00:00:46,750
+within those containers.
+
+22
+00:00:48,020 --> 00:00:50,090
+How you start to overlay things like
+
+23
+00:00:50,090 --> 00:00:51,429
+horizontal pot auto scaling.
+
+24
+00:00:52,590 --> 00:00:54,090
+And then once you start introducing
+
+25
+00:00:54,348 --> 00:00:56,668
+the node layer and how you can adopt
+
+26
+00:00:56,668 --> 00:00:58,029
+more spot instances.
+
+27
+00:00:59,439 --> 00:01:01,439
+And then we're gonna get into how you can do this at
+
+28
+00:01:01,439 --> 00:01:03,418
+scale. This is all gonna involve
+
+29
+00:01:03,759 --> 00:01:04,980
+custom resources
+
+30
+00:01:05,260 --> 00:01:07,638
+as well as policies driven based
+
+31
+00:01:07,638 --> 00:01:09,680
+on those specific workloads needs
+
+32
+00:01:09,680 --> 00:01:10,638
+or demands,
+
+33
+00:01:11,079 --> 00:01:12,719
+and then what is the solution look like?
+
+34
+00:01:14,260 --> 00:01:14,778
+So with that,
+
+35
+00:01:15,528 --> 00:01:17,650
+What is the impossible triangle that we're all
+
+36
+00:01:17,650 --> 00:01:18,750
+trying to solve for?
+
+37
+00:01:19,370 --> 00:01:21,730
+Well, it really boils down to these
+
+38
+00:01:21,730 --> 00:01:24,000
+three pillars reliability,
+
+39
+00:01:24,448 --> 00:01:25,838
+performance, and cost.
+
+40
+00:01:26,329 --> 00:01:28,730
+And within Kubernetes, as you begin to scale,
+
+41
+00:01:29,168 --> 00:01:31,400
+you're not able to always achieve each
+
+42
+00:01:31,400 --> 00:01:32,338
+and every one of them.
+
+43
+00:01:32,730 --> 00:01:34,730
+You end up sacrificing one over
+
+44
+00:01:34,730 --> 00:01:37,040
+the other. So,
+
+45
+00:01:37,278 --> 00:01:38,769
+let's take a simple example.
+
+46
+00:01:39,040 --> 00:01:40,959
+When we start with just 10 pods,
+
+47
+00:01:41,359 --> 00:01:43,439
+it's very easy to do each and every one of these.
+
+48
+00:01:44,189 --> 00:01:46,480
+But as you start to scale
+
+49
+00:01:46,480 --> 00:01:47,909
+to 1000 pods,
+
+50
+00:01:48,329 --> 00:01:50,540
+you start to introduce more waste
+
+51
+00:01:50,959 --> 00:01:53,040
+because you're not able to size each and every one of
+
+52
+00:01:53,040 --> 00:01:54,359
+those applications correctly.
+
+53
+00:01:55,430 --> 00:01:57,480
+And if we go even further and
+
+54
+00:01:57,480 --> 00:01:59,808
+start talking about thousands and thousands
+
+55
+00:01:59,808 --> 00:02:00,558
+of pods,
+
+56
+00:02:00,959 --> 00:02:03,239
+you now start seeing node fragmentation,
+
+57
+00:02:03,680 --> 00:02:05,719
+things that are going to cause even more
+
+58
+00:02:05,719 --> 00:02:08,278
+waste and cause more strain
+
+59
+00:02:08,558 --> 00:02:10,778
+on hitting each and every one of these pillars.
+
+60
+00:02:12,508 --> 00:02:13,028
+So
+
+61
+00:02:13,770 --> 00:02:16,169
+I talked a little bit about how do we
+
+62
+00:02:16,169 --> 00:02:17,788
+see efficiency today.
+
+63
+00:02:18,169 --> 00:02:20,250
+Well, one of the major ways
+
+64
+00:02:20,250 --> 00:02:22,278
+to check for efficiency of the
+
+65
+00:02:22,278 --> 00:02:24,088
+hardware that you're requesting
+
+66
+00:02:24,409 --> 00:02:26,929
+is really gonna be request versus
+
+67
+00:02:26,929 --> 00:02:27,490
+usage.
+
+68
+00:02:28,330 --> 00:02:30,069
+And as you kind of see in this graphic,
+
+69
+00:02:30,849 --> 00:02:32,889
+really the developers will
+
+70
+00:02:32,889 --> 00:02:34,569
+request more than what they need.
+
+71
+00:02:35,460 --> 00:02:36,169
+But the usage
+
+72
+00:02:36,868 --> 00:02:38,210
+is much, much lower.
+
+73
+00:02:39,050 --> 00:02:41,110
+And you may be jumping up and down and saying
+
+74
+00:02:41,729 --> 00:02:43,838
+I have my nodes fully allocated,
+
+75
+00:02:44,210 --> 00:02:46,429
+but in reality this phantom waste
+
+76
+00:02:46,679 --> 00:02:48,939
+begins. So with that,
+
+77
+00:02:50,460 --> 00:02:52,569
+What is fragmentation and what
+
+78
+00:02:52,849 --> 00:02:53,949
+do we mean by that?
+
+79
+00:02:54,389 --> 00:02:56,659
+It really means that as you begin to scale out,
+
+80
+00:02:56,929 --> 00:02:58,929
+these are conditions that are
+
+81
+00:02:58,929 --> 00:03:00,689
+used only during consolidation.
+
+82
+00:03:01,629 --> 00:03:04,020
+But they're not factored in when you're doing
+
+83
+00:03:04,020 --> 00:03:04,679
+scheduling.
+
+84
+00:03:05,719 --> 00:03:07,778
+So as you begin to scale out,
+
+85
+00:03:07,939 --> 00:03:10,118
+there are constraints that will block
+
+86
+00:03:10,118 --> 00:03:10,919
+these nodes.
+
+87
+00:03:11,479 --> 00:03:13,538
+So you may have 60%
+
+88
+00:03:13,719 --> 00:03:15,960
+utilization on many of your nodes,
+
+89
+00:03:16,399 --> 00:03:18,639
+but at scale 40% is a lot.
+
+90
+00:03:19,550 --> 00:03:21,710
+So what is the solution today?
+
+91
+00:03:21,909 --> 00:03:24,189
+There are things like the D-scheduler
+
+92
+00:03:24,189 --> 00:03:26,469
+that you can use to try to help
+
+93
+00:03:26,469 --> 00:03:27,219
+address this,
+
+94
+00:03:27,588 --> 00:03:29,788
+but that is very manual and creates
+
+95
+00:03:29,788 --> 00:03:30,449
+a lot of
+
+96
+00:03:31,008 --> 00:03:31,629
+overhead.
+
+97
+00:03:33,679 --> 00:03:36,038
+So again to kind of recap, this is the dilemma
+
+98
+00:03:36,038 --> 00:03:38,159
+that we're going to talk about today and we're gonna
+
+99
+00:03:38,159 --> 00:03:39,338
+dive deep into
+
+100
+00:03:39,719 --> 00:03:41,758
+what are some of the options that are available today
+
+101
+00:03:41,758 --> 00:03:42,550
+out of the box
+
+102
+00:03:42,960 --> 00:03:45,439
+and really what are some of the challenges that those
+
+103
+00:03:45,439 --> 00:03:49,258
+introduce. So
+
+104
+00:03:49,629 --> 00:03:51,788
+what are some of the foundational ways that you guys
+
+105
+00:03:51,788 --> 00:03:53,830
+can manage resources? I'm sure all
+
+106
+00:03:53,830 --> 00:03:56,050
+of you know here, so I'm gonna breeze through this
+
+107
+00:03:56,580 --> 00:03:58,729
+request and limits some of the foundational
+
+108
+00:03:59,110 --> 00:04:01,349
+topics of how you can define your
+
+109
+00:04:01,349 --> 00:04:03,830
+resources. But
+
+110
+00:04:03,830 --> 00:04:04,969
+many people don't realize
+
+111
+00:04:05,588 --> 00:04:07,610
+is requests are just as
+
+112
+00:04:07,610 --> 00:04:08,849
+important as limits
+
+113
+00:04:09,149 --> 00:04:10,770
+limits are your boundaries,
+
+114
+00:04:11,058 --> 00:04:13,110
+but requests is really what the scheduler
+
+115
+00:04:13,110 --> 00:04:15,159
+is going to use to define
+
+116
+00:04:15,429 --> 00:04:16,829
+what note it can be placed on.
+
+117
+00:04:18,579 --> 00:04:20,079
+When you start to see contention
+
+118
+00:04:20,379 --> 00:04:22,480
+on a node, meaning nodes begin
+
+119
+00:04:22,480 --> 00:04:24,778
+to become heavily utilized,
+
+120
+00:04:25,019 --> 00:04:27,059
+is when you'll start to see the
+
+121
+00:04:27,059 --> 00:04:29,139
+Linux kernel come in and
+
+122
+00:04:29,139 --> 00:04:29,798
+play a role.
+
+123
+00:04:30,819 --> 00:04:32,819
+But these all factor into the
+
+124
+00:04:32,819 --> 00:04:34,899
+eviction logic that we're gonna talk about in
+
+125
+00:04:34,899 --> 00:04:35,519
+a moment
+
+126
+00:04:35,858 --> 00:04:38,160
+and that's all around the quality of service.
+
+127
+00:04:39,399 --> 00:04:41,439
+Quality of service is not
+
+128
+00:04:41,439 --> 00:04:43,528
+used for scheduling
+
+129
+00:04:43,639 --> 00:04:45,959
+it's actually used for eviction
+
+130
+00:04:45,959 --> 00:04:48,199
+when and if there's contention, and
+
+131
+00:04:48,199 --> 00:04:50,278
+I can tell you at scale there
+
+132
+00:04:50,278 --> 00:04:52,379
+will be. So what are those is
+
+133
+00:04:52,379 --> 00:04:54,000
+a quick recap. There's 3
+
+134
+00:04:54,540 --> 00:04:56,778
+quality of service you have best effort.
+
+135
+00:04:57,139 --> 00:04:58,040
+This is really when
+
+136
+00:04:58,540 --> 00:05:00,850
+you've defined no requests and no limits.
+
+137
+00:05:01,178 --> 00:05:02,250
+You have burstable,
+
+138
+00:05:02,619 --> 00:05:04,678
+meaning you've defined at least
+
+139
+00:05:04,738 --> 00:05:06,858
+a request and a limit, but they are
+
+140
+00:05:06,858 --> 00:05:07,759
+not the same.
+
+141
+00:05:08,298 --> 00:05:09,699
+And then lastly you have guaranteed
+
+142
+00:05:09,980 --> 00:05:11,480
+your requests and limits match.
+
+143
+00:05:12,790 --> 00:05:13,939
+So with that,
+
+144
+00:05:14,220 --> 00:05:16,079
+what is really the difference between
+
+145
+00:05:16,379 --> 00:05:18,619
+Kubernetes and Linux and how do those
+
+146
+00:05:18,619 --> 00:05:19,519
+two play a role?
+
+147
+00:05:20,738 --> 00:05:22,170
+A lot of people don't realize
+
+148
+00:05:23,108 --> 00:05:24,928
+requests within Kubernete's is
+
+149
+00:05:25,309 --> 00:05:26,088
+Mil of course.
+
+150
+00:05:27,028 --> 00:05:27,629
+But
+
+151
+00:05:28,040 --> 00:05:29,399
+Linux operating system
+
+152
+00:05:29,678 --> 00:05:31,329
+doesn't necessarily use cores.
+
+153
+00:05:32,160 --> 00:05:33,619
+It uses time.
+
+154
+00:05:34,588 --> 00:05:37,000
+And this is one of the biggest uh
+
+155
+00:05:37,000 --> 00:05:39,319
+complications for many organizations
+
+156
+00:05:39,319 --> 00:05:39,858
+is
+
+157
+00:05:40,199 --> 00:05:41,980
+you can't just look at everything
+
+158
+00:05:42,238 --> 00:05:44,480
+in just resources on
+
+159
+00:05:44,480 --> 00:05:45,970
+what the node is reporting.
+
+160
+00:05:46,559 --> 00:05:47,850
+There are runtime.
+
+161
+00:05:49,069 --> 00:05:51,129
+Constraints such as
+
+162
+00:05:51,129 --> 00:05:53,290
+this time you are allotted amount
+
+163
+00:05:53,290 --> 00:05:55,298
+of time that the CPU
+
+164
+00:05:55,298 --> 00:05:57,660
+will run your task thread or
+
+165
+00:05:57,660 --> 00:05:59,790
+process. So those are
+
+166
+00:05:59,790 --> 00:06:01,410
+typically called time slices,
+
+167
+00:06:01,869 --> 00:06:03,488
+and today the default
+
+168
+00:06:03,790 --> 00:06:04,988
+is 100 milliseconds.
+
+169
+00:06:06,250 --> 00:06:08,410
+So when workloads with larger
+
+170
+00:06:08,410 --> 00:06:09,028
+requests.
+
+171
+00:06:09,869 --> 00:06:11,988
+They will be allocated
+
+172
+00:06:11,988 --> 00:06:14,088
+more time of that CPU.
+
+173
+00:06:14,428 --> 00:06:16,009
+Think of it as proportional.
+
+174
+00:06:16,819 --> 00:06:19,048
+And really this only matters when you start to
+
+175
+00:06:19,048 --> 00:06:19,899
+face contention.
+
+176
+00:06:20,759 --> 00:06:23,358
+So when a note is heavily allocated.
+
+177
+00:06:24,079 --> 00:06:26,519
+Then the time will be allotted
+
+178
+00:06:26,519 --> 00:06:28,678
+more to the one the workload
+
+179
+00:06:28,678 --> 00:06:29,889
+with the higher request,
+
+180
+00:06:30,439 --> 00:06:32,759
+and this is what the challenge becomes at scale
+
+181
+00:06:32,759 --> 00:06:33,819
+is now you're not only
+
+182
+00:06:34,199 --> 00:06:36,459
+ensuring that the requests are set correctly
+
+183
+00:06:36,759 --> 00:06:37,730
+but also your limits.
+
+184
+00:06:39,480 --> 00:06:40,678
+So as I kinda mentioned,
+
+185
+00:06:41,119 --> 00:06:43,199
+there are C groups, these are
+
+186
+00:06:43,199 --> 00:06:45,319
+what really enforce these boundaries
+
+187
+00:06:45,319 --> 00:06:47,439
+that are defined within the pod spec.
+
+188
+00:06:48,528 --> 00:06:50,619
+And depending on if you're using C Group V1
+
+189
+00:06:50,619 --> 00:06:51,379
+or V2,
+
+190
+00:06:51,778 --> 00:06:54,019
+you will see there will be shares and
+
+191
+00:06:54,019 --> 00:06:54,600
+weights
+
+192
+00:06:54,899 --> 00:06:57,119
+or periods and or quotas.
+
+193
+00:06:57,858 --> 00:06:59,980
+Uh, I'm not gonna dive too deep on them, but these
+
+194
+00:06:59,980 --> 00:07:02,139
+are what the Linux kernel is
+
+195
+00:07:02,139 --> 00:07:03,149
+going to use
+
+196
+00:07:03,619 --> 00:07:05,920
+when monitoring each and every process
+
+197
+00:07:05,970 --> 00:07:06,858
+of that container.
+
+198
+00:07:08,850 --> 00:07:10,670
+So we talked a little bit about
+
+199
+00:07:10,949 --> 00:07:11,829
+Kubernetes
+
+200
+00:07:12,119 --> 00:07:14,389
+versus the Linux operating system
+
+201
+00:07:14,389 --> 00:07:15,189
+and the kernel.
+
+202
+00:07:15,850 --> 00:07:18,048
+How does the scheduler all play with this?
+
+203
+00:07:18,528 --> 00:07:20,869
+Well, the s the scheduler is really
+
+204
+00:07:21,809 --> 00:07:23,959
+important for placing the pods
+
+205
+00:07:23,959 --> 00:07:26,129
+on the nodes that have that capacity,
+
+206
+00:07:26,608 --> 00:07:27,750
+but it has no
+
+207
+00:07:28,838 --> 00:07:30,470
+concept of this time
+
+208
+00:07:30,889 --> 00:07:33,119
+that's really gonna be managed by the Kublet
+
+209
+00:07:33,119 --> 00:07:34,709
+that is running on each of those nodes.
+
+210
+00:07:37,588 --> 00:07:39,759
+So we talked a little bit
+
+211
+00:07:39,759 --> 00:07:41,329
+about pod preemption
+
+212
+00:07:41,778 --> 00:07:43,350
+priorities and
+
+213
+00:07:43,809 --> 00:07:44,790
+quality of service.
+
+214
+00:07:45,129 --> 00:07:46,389
+Let's put all these together
+
+215
+00:07:46,649 --> 00:07:48,290
+to understand what they introduce.
+
+216
+00:07:49,259 --> 00:07:51,420
+First, the scheduler if you're using
+
+217
+00:07:51,420 --> 00:07:53,420
+a priority class a priority class
+
+218
+00:07:53,420 --> 00:07:54,278
+is gonna really help
+
+219
+00:07:54,858 --> 00:07:57,160
+decide which pod should be placed first.
+
+220
+00:07:58,379 --> 00:08:00,439
+But when we think of that in terms
+
+221
+00:08:00,439 --> 00:08:01,608
+of evictions,
+
+222
+00:08:02,059 --> 00:08:02,920
+it's actually
+
+223
+00:08:03,178 --> 00:08:05,500
+not responsible for using
+
+224
+00:08:05,500 --> 00:08:07,778
+anything with the quality of service it's actually
+
+225
+00:08:07,778 --> 00:08:10,100
+looking for workloads that have
+
+226
+00:08:10,100 --> 00:08:11,278
+a lower priority
+
+227
+00:08:11,660 --> 00:08:14,059
+to evict it and that's being done by the scheduler.
+
+228
+00:08:15,000 --> 00:08:15,699
+On the other hand,
+
+229
+00:08:16,399 --> 00:08:18,439
+the klet is what's actually going to be
+
+230
+00:08:18,439 --> 00:08:20,379
+enforcing that quality of service.
+
+231
+00:08:21,119 --> 00:08:23,269
+So again, only if there's node
+
+232
+00:08:23,269 --> 00:08:24,829
+pressure or contention,
+
+233
+00:08:25,149 --> 00:08:27,309
+whether that's CPU memory, GPU,
+
+234
+00:08:27,350 --> 00:08:28,009
+you name it,
+
+235
+00:08:28,470 --> 00:08:30,629
+that is when that quality of service comes into play.
+
+236
+00:08:31,338 --> 00:08:32,379
+It's going to
+
+237
+00:08:32,700 --> 00:08:34,229
+go through an eviction
+
+238
+00:08:34,580 --> 00:08:36,239
+logic that's going to decide
+
+239
+00:08:36,979 --> 00:08:38,489
+what should be evicted first.
+
+240
+00:08:39,019 --> 00:08:41,808
+So as you saw earlier when it was a guaranteed,
+
+241
+00:08:42,219 --> 00:08:44,259
+those are going to be the last to be
+
+242
+00:08:44,259 --> 00:08:46,460
+evicted in the event there's stress.
+
+243
+00:08:47,379 --> 00:08:49,500
+All of these are again to highlight the
+
+244
+00:08:49,500 --> 00:08:51,678
+challenges that are introduced when you have
+
+245
+00:08:51,820 --> 00:08:52,558
+scale
+
+246
+00:08:52,859 --> 00:08:55,219
+and many, many different developers defining different
+
+247
+00:08:55,219 --> 00:08:55,798
+needs
+
+248
+00:08:56,119 --> 00:08:57,619
+knowingly or unknowingly.
+
+249
+00:08:58,690 --> 00:08:59,759
+So just to recap,
+
+250
+00:09:00,250 --> 00:09:01,788
+priority class is when
+
+251
+00:09:02,048 --> 00:09:03,710
+a pod is going to be scheduled,
+
+252
+00:09:04,330 --> 00:09:06,369
+whereas quality of service is
+
+253
+00:09:06,369 --> 00:09:08,450
+gonna say which pod is going to
+
+254
+00:09:08,450 --> 00:09:10,649
+be evicted should there be contention.
+
+255
+00:09:13,219 --> 00:09:15,719
+So let's give a quick example,
+
+256
+00:09:16,500 --> 00:09:17,678
+try to put all of this
+
+257
+00:09:18,190 --> 00:09:19,090
+into practice.
+
+258
+00:09:19,820 --> 00:09:21,940
+I have a note here that has 4
+
+259
+00:09:21,940 --> 00:09:23,889
+cores. And
+
+260
+00:09:24,308 --> 00:09:25,070
+at the moment
+
+261
+00:09:25,469 --> 00:09:27,529
+let's say in this fictitious node
+
+262
+00:09:27,908 --> 00:09:29,769
+I have exactly 4 pods
+
+263
+00:09:30,109 --> 00:09:31,649
+and each pod is requesting
+
+264
+00:09:32,058 --> 00:09:32,590
+1 chord.
+
+265
+00:09:33,500 --> 00:09:35,729
+And each of these has
+
+266
+00:09:35,729 --> 00:09:38,149
+an ability to consume
+
+267
+00:09:38,149 --> 00:09:38,869
+4 threads.
+
+268
+00:09:39,950 --> 00:09:41,950
+Well, I'm gonna go ahead and do my load
+
+269
+00:09:41,950 --> 00:09:43,288
+testing like any
+
+270
+00:09:43,590 --> 00:09:44,969
+good person should be doing
+
+271
+00:09:45,389 --> 00:09:46,729
+and what ends up happening
+
+272
+00:09:46,989 --> 00:09:49,509
+is I go ahead and run that load test and
+
+273
+00:09:49,509 --> 00:09:51,859
+one of those cores becomes busy.
+
+274
+00:09:53,009 --> 00:09:55,200
+The other three pods
+
+275
+00:09:55,330 --> 00:09:56,229
+are idle.
+
+276
+00:09:56,489 --> 00:09:57,288
+Nothing's happening.
+
+277
+00:09:58,989 --> 00:10:01,210
+Everybody thinks, OK, we're good.
+
+278
+00:10:01,629 --> 00:10:02,969
+What people don't realize is
+
+279
+00:10:03,308 --> 00:10:04,830
+going back to that CPU time.
+
+280
+00:10:06,489 --> 00:10:08,019
+This one process
+
+281
+00:10:08,658 --> 00:10:10,808
+because it has multiple threads can actually
+
+282
+00:10:10,808 --> 00:10:13,058
+consume the full CPU time
+
+283
+00:10:13,418 --> 00:10:14,969
+up to all four cores.
+
+284
+00:10:17,229 --> 00:10:18,729
+Now why is that really a problem?
+
+285
+00:10:19,190 --> 00:10:19,779
+Well,
+
+286
+00:10:20,269 --> 00:10:22,330
+the problem is you've done your benchmarking
+
+287
+00:10:22,710 --> 00:10:25,109
+with. The ability
+
+288
+00:10:25,109 --> 00:10:26,690
+to burst and consume all four.
+
+289
+00:10:29,158 --> 00:10:31,158
+So you move to production where you don't have
+
+290
+00:10:31,158 --> 00:10:32,879
+these idle workloads.
+
+291
+00:10:33,639 --> 00:10:35,750
+So exact same
+
+292
+00:10:35,750 --> 00:10:37,750
+situation, same exact node, same 4
+
+293
+00:10:37,750 --> 00:10:38,908
+pods this time,
+
+294
+00:10:39,250 --> 00:10:40,298
+they're all
+
+295
+00:10:40,759 --> 00:10:42,759
+busy. You now only
+
+296
+00:10:42,759 --> 00:10:44,950
+have 25% of that same
+
+297
+00:10:44,950 --> 00:10:47,038
+time. And
+
+298
+00:10:47,038 --> 00:10:49,298
+this is the challenge you start to see
+
+299
+00:10:49,599 --> 00:10:51,820
+app degradation or performance
+
+300
+00:10:51,879 --> 00:10:53,960
+that is completely different than what you
+
+301
+00:10:53,960 --> 00:10:56,048
+just did in Dev or QA.
+
+302
+00:10:58,119 --> 00:10:58,700
+Now,
+
+303
+00:10:59,139 --> 00:11:00,460
+some people may say, OK,
+
+304
+00:11:00,759 --> 00:11:03,219
+if I need 4 threads, let's ask for 4 quarters,
+
+305
+00:11:03,719 --> 00:11:04,779
+but when it's idle,
+
+306
+00:11:05,320 --> 00:11:07,389
+you're now left with wasted CPU
+
+307
+00:11:07,389 --> 00:11:07,940
+cycles.
+
+308
+00:11:08,840 --> 00:11:10,979
+And this is the conundrum and the challenge
+
+309
+00:11:11,119 --> 00:11:13,298
+that we must face day in and day out when it comes
+
+310
+00:11:13,298 --> 00:11:14,158
+to Kubernetes.
+
+311
+00:11:15,210 --> 00:11:17,250
+So that's why it's important to realize that you're
+
+312
+00:11:17,250 --> 00:11:18,629
+not looking at just
+
+313
+00:11:19,009 --> 00:11:21,168
+CPU resources in the form
+
+314
+00:11:21,168 --> 00:11:21,889
+of cores,
+
+315
+00:11:22,210 --> 00:11:24,129
+but you also have to factor in time.
+
+316
+00:11:26,629 --> 00:11:28,668
+So to kind of put all of that in
+
+317
+00:11:28,668 --> 00:11:29,769
+a nice graphic here.
+
+318
+00:11:30,700 --> 00:11:32,519
+Really we're trying to find that sweet spot.
+
+319
+00:11:33,210 --> 00:11:34,070
+At what point
+
+320
+00:11:34,450 --> 00:11:36,509
+is saturation no longer a problem?
+
+321
+00:11:37,908 --> 00:11:38,450
+So
+
+322
+00:11:38,869 --> 00:11:40,889
+you find if you were underprovisioned
+
+323
+00:11:41,308 --> 00:11:42,168
+you have
+
+324
+00:11:42,950 --> 00:11:44,989
+basically not enough resources to
+
+325
+00:11:44,989 --> 00:11:47,109
+complete the task and you end up spinning up
+
+326
+00:11:47,109 --> 00:11:48,729
+maybe more replicas
+
+327
+00:11:49,029 --> 00:11:50,609
+or more threads
+
+328
+00:11:50,869 --> 00:11:51,830
+to try to solve it.
+
+329
+00:11:53,379 --> 00:11:55,960
+When you're at that sweet spot you're able to
+
+330
+00:11:56,340 --> 00:11:57,639
+finish the tasks
+
+331
+00:11:58,099 --> 00:12:00,359
+without dropping the packets hitting
+
+332
+00:12:00,359 --> 00:12:02,500
+that latency or really what I like to
+
+333
+00:12:02,500 --> 00:12:04,139
+call the saturation threshold.
+
+334
+00:12:05,369 --> 00:12:06,849
+And this is what you're
+
+335
+00:12:07,109 --> 00:12:08,548
+always trying to
+
+336
+00:12:08,820 --> 00:12:09,548
+look for
+
+337
+00:12:09,849 --> 00:12:11,609
+when you're sizing your applications.
+
+338
+00:12:12,489 --> 00:12:15,168
+This is before we talk about HPA's
+
+339
+00:12:15,168 --> 00:12:16,359
+scaling in or out.
+
+340
+00:12:16,690 --> 00:12:19,009
+This is fundamentally just scaling a single
+
+341
+00:12:19,009 --> 00:12:19,548
+container.
+
+342
+00:12:20,918 --> 00:12:21,899
+Without this,
+
+343
+00:12:22,558 --> 00:12:24,798
+you're just going to exasperate the problem
+
+344
+00:12:24,918 --> 00:12:27,479
+once you introduce things like an HPA.
+
+345
+00:12:28,690 --> 00:12:30,928
+So What does
+
+346
+00:12:30,928 --> 00:12:32,139
+this introduce? Well,
+
+347
+00:12:32,538 --> 00:12:33,529
+predictability,
+
+348
+00:12:33,869 --> 00:12:34,469
+consistently.
+
+349
+00:12:35,779 --> 00:12:37,820
+You're not able to consistently generate
+
+350
+00:12:37,820 --> 00:12:40,139
+the same performance outputs
+
+351
+00:12:40,570 --> 00:12:42,658
+when you start to have
+
+352
+00:12:42,658 --> 00:12:43,678
+these different
+
+353
+00:12:44,038 --> 00:12:46,080
+environments that have different
+
+354
+00:12:46,359 --> 00:12:47,320
+CPU time
+
+355
+00:12:47,599 --> 00:12:50,099
+as well as different usage patterns
+
+356
+00:12:50,099 --> 00:12:51,099
+across your workloads.
+
+357
+00:12:52,428 --> 00:12:54,548
+You may think, let's add bigger notes that
+
+358
+00:12:54,548 --> 00:12:56,279
+will solve the problem, more resources.
+
+359
+00:12:57,070 --> 00:12:58,229
+Right, just double it.
+
+360
+00:12:58,590 --> 00:13:00,830
+Well, large nodes do
+
+361
+00:13:00,830 --> 00:13:03,109
+give you higher percentages in
+
+362
+00:13:03,109 --> 00:13:04,710
+terms of usable space,
+
+363
+00:13:05,349 --> 00:13:07,029
+but this leads to overpacking.
+
+364
+00:13:07,940 --> 00:13:10,210
+And now the saturation is even higher.
+
+365
+00:13:11,418 --> 00:13:13,460
+So what are some mechanisms that were
+
+366
+00:13:13,460 --> 00:13:15,538
+introduced to be able to help
+
+367
+00:13:15,538 --> 00:13:16,279
+solve for this?
+
+368
+00:13:16,619 --> 00:13:18,739
+Well, one that I talked a little bit
+
+369
+00:13:18,739 --> 00:13:20,099
+about this earlier,
+
+370
+00:13:20,580 --> 00:13:21,418
+the de-scheduler.
+
+371
+00:13:21,779 --> 00:13:23,479
+This is going to help
+
+372
+00:13:23,859 --> 00:13:25,599
+look for opportunities,
+
+373
+00:13:26,019 --> 00:13:27,840
+uh, after pods are scheduled
+
+374
+00:13:28,340 --> 00:13:30,379
+to consolidate them and
+
+375
+00:13:30,379 --> 00:13:32,700
+reschedule them because today the scheduler
+
+376
+00:13:32,700 --> 00:13:33,599
+is only
+
+377
+00:13:33,979 --> 00:13:36,879
+factoring these constraints during initial
+
+378
+00:13:37,058 --> 00:13:37,820
+creation time.
+
+379
+00:13:39,418 --> 00:13:41,580
+In Kubernetes 1.33 they've
+
+380
+00:13:41,580 --> 00:13:43,840
+also introduced in place so if you've made
+
+381
+00:13:44,099 --> 00:13:46,210
+uh the wrong settings
+
+382
+00:13:46,379 --> 00:13:48,700
+it's much easier to adjust them
+
+383
+00:13:48,979 --> 00:13:51,099
+because Kubernetes has now made them mutable
+
+384
+00:13:51,099 --> 00:13:51,798
+fields
+
+385
+00:13:52,259 --> 00:13:53,080
+within the pod spec.
+
+386
+00:13:54,418 --> 00:13:57,149
+And then lastly, if you're using anything like sidecars
+
+387
+00:13:57,149 --> 00:13:58,219
+and nick containers,
+
+388
+00:13:58,538 --> 00:14:01,099
+you can now set pod pod
+
+389
+00:14:01,099 --> 00:14:02,210
+level resources,
+
+390
+00:14:02,658 --> 00:14:04,678
+meaning that these can be
+
+391
+00:14:04,678 --> 00:14:07,080
+constraints on the entire pod versus
+
+392
+00:14:07,700 --> 00:14:08,840
+individual containers within
+
+393
+00:14:09,139 --> 00:14:09,739
+that pod.
+
+394
+00:14:11,009 --> 00:14:12,229
+Now all of this has been
+
+395
+00:14:12,609 --> 00:14:14,369
+focused mainly around CPU and memory.
+
+396
+00:14:15,139 --> 00:14:17,798
+But what about if we start introducing
+
+397
+00:14:18,219 --> 00:14:19,479
+extended resources,
+
+398
+00:14:20,058 --> 00:14:21,320
+something like GPUs.
+
+399
+00:14:22,889 --> 00:14:24,340
+GPUs today
+
+400
+00:14:24,609 --> 00:14:25,788
+have some limitations.
+
+401
+00:14:27,009 --> 00:14:29,229
+Out of the box when you install the GPU driver.
+
+402
+00:14:30,000 --> 00:14:31,178
+It's gonna tell the node
+
+403
+00:14:31,519 --> 00:14:33,519
+exactly how many GPU units you
+
+404
+00:14:33,519 --> 00:14:35,969
+have. But
+
+405
+00:14:36,298 --> 00:14:37,200
+there are many
+
+406
+00:14:37,538 --> 00:14:39,899
+other opportunities that we have today
+
+407
+00:14:39,899 --> 00:14:40,599
+with CPU.
+
+408
+00:14:40,940 --> 00:14:41,759
+I can
+
+409
+00:14:42,058 --> 00:14:43,678
+make the CPU fractional.
+
+410
+00:14:44,058 --> 00:14:46,298
+I can consume and context switch
+
+411
+00:14:46,298 --> 00:14:47,340
+between that time.
+
+412
+00:14:47,940 --> 00:14:48,940
+How can I do that
+
+413
+00:14:49,259 --> 00:14:49,979
+with GPUs?
+
+414
+00:14:51,019 --> 00:14:53,058
+Well, though it's not out of the
+
+415
+00:14:53,058 --> 00:14:55,178
+box, there are a few things that you can actually
+
+416
+00:14:55,178 --> 00:14:56,580
+do and there's a few different approaches.
+
+417
+00:14:57,609 --> 00:14:59,690
+One is you can install the Nvidia
+
+418
+00:14:59,690 --> 00:15:01,750
+drivers that allow for time slicing.
+
+419
+00:15:02,369 --> 00:15:04,529
+However, there are some complexities with this
+
+420
+00:15:04,529 --> 00:15:05,558
+because it's static.
+
+421
+00:15:06,048 --> 00:15:07,349
+You set a percentage
+
+422
+00:15:08,129 --> 00:15:08,908
+for each,
+
+423
+00:15:09,330 --> 00:15:11,460
+uh, what, what that GPU means to you,
+
+424
+00:15:11,769 --> 00:15:12,869
+and then you can allot
+
+425
+00:15:13,450 --> 00:15:14,489
+that fractional unit.
+
+426
+00:15:15,609 --> 00:15:16,668
+You could also use
+
+427
+00:15:17,250 --> 00:15:18,590
+the Nvidia MGG,
+
+428
+00:15:18,869 --> 00:15:21,308
+which is basically a hard petition
+
+429
+00:15:21,690 --> 00:15:23,808
+of that GPU into a
+
+430
+00:15:23,808 --> 00:15:25,389
+maximum of 7 units.
+
+431
+00:15:25,960 --> 00:15:28,320
+Again, this is also very static,
+
+432
+00:15:28,529 --> 00:15:30,469
+and it is done at the node level.
+
+433
+00:15:31,408 --> 00:15:33,609
+And then lastly there is Nvidia's
+
+434
+00:15:33,609 --> 00:15:35,168
+NPS which is
+
+435
+00:15:35,460 --> 00:15:36,830
+really around using
+
+436
+00:15:37,168 --> 00:15:38,629
+their CUDA to
+
+437
+00:15:39,009 --> 00:15:40,408
+dynamically set
+
+438
+00:15:40,808 --> 00:15:42,210
+what that proportion should be.
+
+439
+00:15:43,408 --> 00:15:45,509
+All of these have their own pros and cons,
+
+440
+00:15:45,849 --> 00:15:46,908
+but the key is
+
+441
+00:15:47,330 --> 00:15:49,678
+this introduces some of the same
+
+442
+00:15:49,678 --> 00:15:51,710
+benefits that we talked about earlier and how do
+
+443
+00:15:51,710 --> 00:15:53,889
+you maximize both the resources
+
+444
+00:15:53,889 --> 00:15:54,899
+and the time
+
+445
+00:15:55,369 --> 00:15:56,149
+for these
+
+446
+00:15:56,529 --> 00:15:57,808
+expensive compute units.
+
+447
+00:16:00,330 --> 00:16:00,849
+So,
+
+448
+00:16:01,168 --> 00:16:02,908
+with all of that now we have
+
+449
+00:16:03,469 --> 00:16:04,668
+time to scale this out.
+
+450
+00:16:05,450 --> 00:16:07,729
+Right, we have 3 major dimensions
+
+451
+00:16:07,729 --> 00:16:09,469
+that, uh, are really
+
+452
+00:16:09,889 --> 00:16:12,408
+heavily used today in any large
+
+453
+00:16:12,408 --> 00:16:14,529
+organization with Kubernetes. You have your vertical
+
+454
+00:16:14,529 --> 00:16:15,590
+pot auto scaler
+
+455
+00:16:16,009 --> 00:16:18,389
+changing the size of each and every container.
+
+456
+00:16:19,190 --> 00:16:21,450
+Your HPA scaling in and out whether
+
+457
+00:16:21,450 --> 00:16:22,269
+that is with
+
+458
+00:16:22,649 --> 00:16:25,168
+the V2 or with something like CTA
+
+459
+00:16:25,168 --> 00:16:26,109
+using events
+
+460
+00:16:26,590 --> 00:16:28,629
+and then you have your node scaling, the
+
+461
+00:16:28,629 --> 00:16:30,918
+layer 7 or layer 4 in this case,
+
+462
+00:16:31,250 --> 00:16:33,250
+to make sure that you're having the exact
+
+463
+00:16:33,250 --> 00:16:35,369
+number of nodes and the correct size of
+
+464
+00:16:35,369 --> 00:16:37,418
+nodes. But with all
+
+465
+00:16:37,418 --> 00:16:38,119
+of that
+
+466
+00:16:38,418 --> 00:16:39,678
+it's very isolated
+
+467
+00:16:40,178 --> 00:16:42,298
+we talked a lot about some of these, but
+
+468
+00:16:42,668 --> 00:16:44,859
+you start off with, OK, I have my
+
+469
+00:16:44,859 --> 00:16:45,519
+VPA
+
+470
+00:16:45,989 --> 00:16:48,178
+and then later down the road I
+
+471
+00:16:48,178 --> 00:16:50,298
+decide it's time to introduce an HPA to scale
+
+472
+00:16:50,298 --> 00:16:52,428
+out. I introduced my
+
+473
+00:16:52,428 --> 00:16:53,408
+ID scheduler
+
+474
+00:16:53,979 --> 00:16:56,428
+and now I wanna start adopting more spot.
+
+475
+00:16:57,099 --> 00:16:59,759
+Well, all of these are individual components
+
+476
+00:16:59,840 --> 00:17:00,529
+that
+
+477
+00:17:00,989 --> 00:17:02,149
+don't really talk to one another.
+
+478
+00:17:03,090 --> 00:17:05,118
+And they start to
+
+479
+00:17:05,539 --> 00:17:07,979
+uh overlap and cause
+
+480
+00:17:07,979 --> 00:17:09,680
+a lot of grief
+
+481
+00:17:09,939 --> 00:17:11,979
+when trying to achieve those
+
+482
+00:17:11,979 --> 00:17:13,660
+three pillars mentioned earlier.
+
+483
+00:17:14,449 --> 00:17:16,640
+So a good working environment
+
+484
+00:17:16,799 --> 00:17:18,219
+is gonna have all of these
+
+485
+00:17:18,759 --> 00:17:20,118
+that work with one another.
+
+486
+00:17:21,539 --> 00:17:23,818
+So some of the challenges with VPA
+
+487
+00:17:23,818 --> 00:17:26,019
+specifically is it relies on historical
+
+488
+00:17:26,019 --> 00:17:28,078
+data. It's looking at
+
+489
+00:17:28,259 --> 00:17:29,559
+trends and patterns
+
+490
+00:17:29,900 --> 00:17:32,239
+and makes it very hard to react
+
+491
+00:17:32,239 --> 00:17:34,578
+to specific changes or
+
+492
+00:17:34,578 --> 00:17:36,630
+bursty dynamic workloads.
+
+493
+00:17:37,059 --> 00:17:39,358
+You have a peak or a
+
+494
+00:17:39,519 --> 00:17:41,779
+bunch of traffic that comes in at any given time.
+
+495
+00:17:42,459 --> 00:17:44,699
+And this VPA is not able to
+
+496
+00:17:44,699 --> 00:17:46,779
+set those requests correctly.
+
+497
+00:17:47,479 --> 00:17:49,529
+In turn, you have less CPU
+
+498
+00:17:49,529 --> 00:17:51,868
+time and now you're hit with latency.
+
+499
+00:17:52,489 --> 00:17:54,650
+These are all things that you're now trying
+
+500
+00:17:54,650 --> 00:17:55,608
+to combat
+
+501
+00:17:56,049 --> 00:17:57,500
+on a 1,000+
+
+502
+00:17:57,848 --> 00:18:00,118
+environment. So
+
+503
+00:18:00,118 --> 00:18:01,199
+what are some of the challenges?
+
+504
+00:18:01,519 --> 00:18:03,660
+Well, Some
+
+505
+00:18:03,660 --> 00:18:04,900
+applications behave differently.
+
+506
+00:18:05,729 --> 00:18:07,848
+Maybe I can use my P90.
+
+507
+00:18:08,009 --> 00:18:09,568
+Should I use a P99?
+
+508
+00:18:10,088 --> 00:18:12,049
+When should I not use averages at all?
+
+509
+00:18:12,449 --> 00:18:14,568
+These are all questions that come in time and
+
+510
+00:18:14,568 --> 00:18:16,430
+time again when trying to decide
+
+511
+00:18:16,809 --> 00:18:18,809
+how should I do a one size fits
+
+512
+00:18:18,809 --> 00:18:20,900
+all. Do I have
+
+513
+00:18:20,900 --> 00:18:23,059
+the same configurations in prod as in
+
+514
+00:18:23,059 --> 00:18:25,299
+Dev? We just saw an example earlier
+
+515
+00:18:25,299 --> 00:18:27,680
+that that's not the best idea because
+
+516
+00:18:27,900 --> 00:18:30,519
+not all of your workloads are running at the same caliber
+
+517
+00:18:30,519 --> 00:18:31,118
+or
+
+518
+00:18:31,858 --> 00:18:33,269
+processing the same amount of data.
+
+519
+00:18:34,670 --> 00:18:37,029
+What if I wanna have specific environments
+
+520
+00:18:37,029 --> 00:18:38,910
+name spaces for load balancing?
+
+521
+00:18:39,989 --> 00:18:42,299
+And this really just limits the ability
+
+522
+00:18:42,299 --> 00:18:44,380
+to have that one size fits all.
+
+523
+00:18:45,709 --> 00:18:46,390
+So with that
+
+524
+00:18:47,209 --> 00:18:49,368
+We talked a little bit about one of the new approaches
+
+525
+00:18:49,368 --> 00:18:50,828
+and 1.34 was,
+
+526
+00:18:51,618 --> 00:18:54,250
+you know, I don't need to set per container
+
+527
+00:18:54,250 --> 00:18:56,469
+resources. Why not do a per pod
+
+528
+00:18:57,088 --> 00:18:57,630
+setting?
+
+529
+00:18:58,209 --> 00:19:00,289
+Well, today that's not supported
+
+530
+00:19:00,289 --> 00:19:01,939
+with VPA as as well.
+
+531
+00:19:02,868 --> 00:19:04,250
+So with all of that
+
+532
+00:19:04,670 --> 00:19:06,709
+you then start introducing the idea of
+
+533
+00:19:06,709 --> 00:19:08,049
+custom controllers.
+
+534
+00:19:08,430 --> 00:19:10,469
+I wanna run my Git lab or
+
+535
+00:19:10,469 --> 00:19:12,229
+GitHub runners locally.
+
+536
+00:19:12,789 --> 00:19:14,789
+I want to have airflow, my
+
+537
+00:19:14,789 --> 00:19:16,799
+Dags, my Jenkins, you name it,
+
+538
+00:19:17,118 --> 00:19:18,049
+and all of these
+
+539
+00:19:18,539 --> 00:19:20,630
+are custom top level
+
+540
+00:19:20,630 --> 00:19:22,809
+controllers. These are controllers that are not
+
+541
+00:19:22,949 --> 00:19:25,189
+out of the box deployment, staple sets,
+
+542
+00:19:25,309 --> 00:19:26,689
+stamen sets, you name it,
+
+543
+00:19:27,150 --> 00:19:29,650
+and these all have their own unique challenges.
+
+544
+00:19:30,108 --> 00:19:32,368
+How do we group them? Is every
+
+545
+00:19:32,828 --> 00:19:34,449
+Jenkins job the same?
+
+546
+00:19:34,868 --> 00:19:35,828
+Is every DA
+
+547
+00:19:36,348 --> 00:19:38,608
+going to have similar profile or
+
+548
+00:19:38,608 --> 00:19:39,529
+similar metrics?
+
+549
+00:19:40,390 --> 00:19:41,489
+The answer is no,
+
+550
+00:19:42,160 --> 00:19:43,959
+so all of this to say
+
+551
+00:19:44,400 --> 00:19:46,519
+the performance is really
+
+552
+00:19:46,519 --> 00:19:48,559
+has not been tested and is not easy
+
+553
+00:19:48,559 --> 00:19:50,719
+to do in large clusters with many
+
+554
+00:19:50,719 --> 00:19:51,880
+dynamic workloads.
+
+555
+00:19:53,828 --> 00:19:55,959
+So let's put those two
+
+556
+00:19:55,959 --> 00:19:56,890
+topics together.
+
+557
+00:19:57,269 --> 00:19:59,309
+We talked a little bit about the VPA, but we talked
+
+558
+00:19:59,309 --> 00:20:00,910
+also a little bit about de-scheduling.
+
+559
+00:20:02,799 --> 00:20:05,059
+The VPA is gonna go ahead and find an opportunity
+
+560
+00:20:05,059 --> 00:20:06,858
+to right size one of your workloads.
+
+561
+00:20:07,160 --> 00:20:08,019
+It goes ahead,
+
+562
+00:20:08,279 --> 00:20:10,709
+it restarts that pod, assigns the
+
+563
+00:20:10,709 --> 00:20:12,979
+new value. The team
+
+564
+00:20:12,979 --> 00:20:14,680
+decides, oh, time to upgrade my image.
+
+565
+00:20:14,939 --> 00:20:16,259
+I now have a new image version.
+
+566
+00:20:17,299 --> 00:20:18,880
+And then only after the fact
+
+567
+00:20:19,219 --> 00:20:21,219
+the thescheduler comes in and decides
+
+568
+00:20:21,219 --> 00:20:22,680
+to evict it once again
+
+569
+00:20:23,299 --> 00:20:25,858
+just to solve that refragmentation
+
+570
+00:20:25,858 --> 00:20:27,900
+or that node fragmentation we talked about earlier.
+
+571
+00:20:28,759 --> 00:20:31,390
+And you can see the level of interruptions,
+
+572
+00:20:31,519 --> 00:20:33,618
+disruptions across the environment
+
+573
+00:20:34,000 --> 00:20:36,078
+when you're talking about thousands and thousands of pods.
+
+574
+00:20:37,118 --> 00:20:39,598
+So what do you have to do to introduce to
+
+575
+00:20:39,598 --> 00:20:40,358
+prevent this?
+
+576
+00:20:40,680 --> 00:20:42,410
+Well, now you're adding more complexity,
+
+577
+00:20:42,759 --> 00:20:44,029
+time to add PDBs,
+
+578
+00:20:44,318 --> 00:20:45,739
+time to add annotations
+
+579
+00:20:46,000 --> 00:20:47,739
+and try to influence
+
+580
+00:20:48,039 --> 00:20:50,259
+the decisions that these tools are trying to make.
+
+581
+00:20:52,269 --> 00:20:54,430
+So What are we really
+
+582
+00:20:54,430 --> 00:20:55,189
+trying to say
+
+583
+00:20:55,469 --> 00:20:57,618
+is we have to be able to react
+
+584
+00:20:58,029 --> 00:21:00,670
+to any sudden burst or traffic
+
+585
+00:21:01,029 --> 00:21:03,068
+to make sure that there's no latency and there's
+
+586
+00:21:03,068 --> 00:21:04,549
+no packets that are being dropped.
+
+587
+00:21:07,390 --> 00:21:09,088
+Now it's time to scale it out.
+
+588
+00:21:09,750 --> 00:21:12,328
+Once you've fully identified
+
+589
+00:21:12,670 --> 00:21:14,989
+what the resources should be for said workload.
+
+590
+00:21:15,608 --> 00:21:17,769
+It's now time to scale this out with
+
+591
+00:21:17,769 --> 00:21:18,410
+HPAs.
+
+592
+00:21:19,459 --> 00:21:21,670
+And there are a couple different ways you can scale
+
+593
+00:21:21,670 --> 00:21:23,779
+out with HPAs. You have CPU and
+
+594
+00:21:23,779 --> 00:21:25,578
+memory are some of the most common,
+
+595
+00:21:26,029 --> 00:21:28,029
+but you can also use custom metrics.
+
+596
+00:21:28,108 --> 00:21:30,259
+You can connect through adapters,
+
+597
+00:21:30,588 --> 00:21:32,670
+and you can also use external metrics.
+
+598
+00:21:32,868 --> 00:21:34,890
+There's a whole slew of things that give you
+
+599
+00:21:35,229 --> 00:21:36,630
+real intel
+
+600
+00:21:36,989 --> 00:21:39,368
+on when your application needs
+
+601
+00:21:39,750 --> 00:21:40,818
+to meet those demands.
+
+602
+00:21:42,000 --> 00:21:44,000
+Out of the box it's usually every 15 to 30
+
+603
+00:21:44,000 --> 00:21:44,618
+seconds
+
+604
+00:21:44,959 --> 00:21:47,469
+it will calculate what is that threshold.
+
+605
+00:21:47,799 --> 00:21:49,880
+If you're above the threshold scale out if
+
+606
+00:21:49,880 --> 00:21:51,759
+you're below the threshold, scale in.
+
+607
+00:21:53,059 --> 00:21:53,618
+So,
+
+608
+00:21:54,019 --> 00:21:55,489
+let's take a very simple one.
+
+609
+00:21:55,779 --> 00:21:56,799
+Let's take CPU.
+
+610
+00:21:57,549 --> 00:21:59,549
+The Kuble has a sea advisor that
+
+611
+00:21:59,549 --> 00:22:01,209
+is going to report the usage
+
+612
+00:22:01,670 --> 00:22:03,809
+of each and every container on said note.
+
+613
+00:22:04,608 --> 00:22:05,439
+And with that
+
+614
+00:22:05,818 --> 00:22:08,098
+I can then begin to develop what
+
+615
+00:22:08,098 --> 00:22:09,799
+should be my scaling thresholds
+
+616
+00:22:10,098 --> 00:22:11,219
+and what should I do.
+
+617
+00:22:11,779 --> 00:22:12,400
+However,
+
+618
+00:22:13,239 --> 00:22:15,420
+out of the box, if you're not changing
+
+619
+00:22:15,420 --> 00:22:17,019
+any of the caching mechanisms,
+
+620
+00:22:17,459 --> 00:22:20,039
+it's only gonna last for 60 seconds. This isn't
+
+621
+00:22:20,039 --> 00:22:22,400
+going to persist. It's not going to store.
+
+622
+00:22:23,309 --> 00:22:25,309
+Right, this is not Prometheus, this is
+
+623
+00:22:25,309 --> 00:22:26,269
+just metrics.
+
+624
+00:22:27,219 --> 00:22:29,000
+So, what ends up happening
+
+625
+00:22:29,380 --> 00:22:31,660
+is we get into this thrashing loop.
+
+626
+00:22:32,500 --> 00:22:35,219
+So here's an example. I've set my HPA
+
+627
+00:22:35,219 --> 00:22:36,939
+to 70%.
+
+628
+00:22:37,689 --> 00:22:39,979
+Meaning at any time the CPU
+
+629
+00:22:39,979 --> 00:22:42,009
+goes above 70%, let's
+
+630
+00:22:42,009 --> 00:22:42,670
+scale out.
+
+631
+00:22:43,618 --> 00:22:44,380
+Simple enough,
+
+632
+00:22:44,699 --> 00:22:45,630
+should work great,
+
+633
+00:22:45,979 --> 00:22:48,219
+right? I'm saving 30%. I'm
+
+634
+00:22:48,219 --> 00:22:49,680
+saying if it goes above,
+
+635
+00:22:49,939 --> 00:22:51,680
+it's time to add more replicas
+
+636
+00:22:52,130 --> 00:22:53,420
+before it is capped.
+
+637
+00:22:54,338 --> 00:22:56,719
+Well, what we're finding is that
+
+638
+00:22:57,170 --> 00:22:59,180
+in this example if my usage was
+
+639
+00:22:59,180 --> 00:23:00,000
+only 0.8.
+
+640
+00:23:01,140 --> 00:23:03,180
+And I have something like VPA that is
+
+641
+00:23:03,180 --> 00:23:04,900
+dynamically changing those requests.
+
+642
+00:23:06,650 --> 00:23:08,229
+When I first started
+
+643
+00:23:08,729 --> 00:23:10,670
+with that 2 CPU request,
+
+644
+00:23:11,049 --> 00:23:12,009
+it doesn't scale out.
+
+645
+00:23:12,910 --> 00:23:14,049
+It's perfectly fine.
+
+646
+00:23:15,269 --> 00:23:17,318
+But the VPA now decides,
+
+647
+00:23:17,439 --> 00:23:19,559
+you know, you really don't need that. It's time to drop
+
+648
+00:23:19,559 --> 00:23:20,750
+that down to one core.
+
+649
+00:23:21,858 --> 00:23:22,868
+Next thing you know,
+
+650
+00:23:23,420 --> 00:23:25,838
+my 70% utilization is now 80%
+
+651
+00:23:25,838 --> 00:23:26,719
+and it scales out.
+
+652
+00:23:28,338 --> 00:23:31,118
+This is gonna cause potentially going to max replicas
+
+653
+00:23:31,578 --> 00:23:33,699
+and become counterintuitive with what I was
+
+654
+00:23:33,699 --> 00:23:34,949
+originally trying to solve,
+
+655
+00:23:35,779 --> 00:23:37,509
+right? The original purpose was
+
+656
+00:23:37,779 --> 00:23:38,539
+to solve
+
+657
+00:23:38,939 --> 00:23:39,920
+the efficiencies.
+
+658
+00:23:41,059 --> 00:23:43,318
+So, when you change the request,
+
+659
+00:23:43,858 --> 00:23:46,239
+you don't realize, but you're also changing your triggers.
+
+660
+00:23:47,348 --> 00:23:49,390
+Even if the load is exactly the
+
+661
+00:23:49,390 --> 00:23:51,719
+same. So
+
+662
+00:23:51,729 --> 00:23:54,140
+these have to play nice with one another
+
+663
+00:23:54,559 --> 00:23:55,818
+and that's where we say
+
+664
+00:23:56,279 --> 00:23:58,358
+let's go beyond just simply
+
+665
+00:23:58,358 --> 00:23:59,618
+CPU and memory.
+
+666
+00:24:00,318 --> 00:24:00,979
+Can we go
+
+667
+00:24:01,279 --> 00:24:03,318
+and extend this to custom
+
+668
+00:24:03,318 --> 00:24:03,858
+resources?
+
+669
+00:24:04,818 --> 00:24:05,390
+So
+
+670
+00:24:05,739 --> 00:24:07,489
+a popular tool of choice is CA
+
+671
+00:24:07,880 --> 00:24:09,390
+that's gonna allow you to
+
+672
+00:24:09,969 --> 00:24:11,150
+scale on
+
+673
+00:24:11,410 --> 00:24:12,910
+threads or
+
+674
+00:24:13,170 --> 00:24:15,219
+queue SQS
+
+675
+00:24:16,250 --> 00:24:17,868
+requests per second, you name it.
+
+676
+00:24:19,049 --> 00:24:21,049
+So just to summarize, what, what are some of
+
+677
+00:24:21,049 --> 00:24:23,039
+the challenges and where do we see conflicts?
+
+678
+00:24:23,410 --> 00:24:24,029
+Well, really
+
+679
+00:24:24,568 --> 00:24:26,969
+if you're gonna use both VPA and HPA.
+
+680
+00:24:27,588 --> 00:24:29,670
+Either you're gonna need to
+
+681
+00:24:29,670 --> 00:24:31,689
+make sure that they're using custom metrics
+
+682
+00:24:31,828 --> 00:24:33,469
+that is not CPU and memory.
+
+683
+00:24:34,509 --> 00:24:36,559
+You need to make sure that if you are
+
+684
+00:24:36,559 --> 00:24:38,680
+going to do it, you do it manually so
+
+685
+00:24:38,680 --> 00:24:41,118
+that it's safe and meets the actual
+
+686
+00:24:41,118 --> 00:24:41,979
+demands of your application.
+
+687
+00:24:42,809 --> 00:24:43,630
+And then also,
+
+688
+00:24:44,328 --> 00:24:45,568
+you could also just separate them.
+
+689
+00:24:46,229 --> 00:24:48,719
+Any workload managed with HPA
+
+690
+00:24:49,279 --> 00:24:51,559
+that is using CPU or memory opt
+
+691
+00:24:51,559 --> 00:24:52,348
+those out,
+
+692
+00:24:52,640 --> 00:24:55,039
+whereas those with you can
+
+693
+00:24:55,039 --> 00:24:56,640
+safely consume VPA
+
+694
+00:24:57,279 --> 00:24:59,400
+but this does not solve the challenges that we're all
+
+695
+00:24:59,400 --> 00:25:01,000
+here is at scale.
+
+696
+00:25:04,150 --> 00:25:04,769
+Now,
+
+697
+00:25:05,469 --> 00:25:07,789
+great, let's say I do move everything to custom
+
+698
+00:25:07,789 --> 00:25:08,368
+metrics.
+
+699
+00:25:09,489 --> 00:25:11,029
+Now the next challenge is
+
+700
+00:25:11,529 --> 00:25:13,868
+it's still reactive. The fundamental problem
+
+701
+00:25:13,868 --> 00:25:15,108
+with HPAs.
+
+702
+00:25:15,910 --> 00:25:16,578
+Is there
+
+703
+00:25:17,108 --> 00:25:19,459
+going to only react and scale
+
+704
+00:25:19,459 --> 00:25:20,509
+up when needed?
+
+705
+00:25:21,959 --> 00:25:24,650
+But if I have patterns and trends,
+
+706
+00:25:25,279 --> 00:25:26,759
+is there a way to improve that?
+
+707
+00:25:27,039 --> 00:25:29,160
+Can I limit that thrashing?
+
+708
+00:25:30,068 --> 00:25:31,189
+And that's where
+
+709
+00:25:31,939 --> 00:25:34,039
+This is really going to introduce
+
+710
+00:25:34,259 --> 00:25:36,598
+how can we be more proactive
+
+711
+00:25:36,868 --> 00:25:38,009
+with our HPAs
+
+712
+00:25:38,338 --> 00:25:40,578
+and here's a simple kind of timeline to
+
+713
+00:25:40,578 --> 00:25:42,650
+really show you the problem why so
+
+714
+00:25:42,650 --> 00:25:44,739
+many individuals are forced
+
+715
+00:25:44,739 --> 00:25:45,838
+to overprovision
+
+716
+00:25:46,219 --> 00:25:48,500
+or arbitrarily set their min replicas
+
+717
+00:25:48,500 --> 00:25:49,180
+very, very high.
+
+718
+00:25:50,189 --> 00:25:52,568
+Let's say at 9:00 a.m. I have a traffic spike.
+
+719
+00:25:53,338 --> 00:25:55,479
+My HPA takes 30 seconds before
+
+720
+00:25:55,479 --> 00:25:57,858
+it finally sees the utilization
+
+721
+00:25:57,858 --> 00:25:58,920
+has crossed that threshold.
+
+722
+00:25:59,828 --> 00:26:01,910
+So my HPA scales it
+
+723
+00:26:01,910 --> 00:26:04,250
+takes me about 30 seconds to download the image,
+
+724
+00:26:04,509 --> 00:26:05,219
+become healthy,
+
+725
+00:26:05,670 --> 00:26:07,189
+and it's over 1 minute
+
+726
+00:26:07,789 --> 00:26:09,789
+before I can even begin handling and servicing
+
+727
+00:26:09,789 --> 00:26:10,588
+that new traffic.
+
+728
+00:26:12,598 --> 00:26:14,049
+Hm Hm.
+
+729
+00:26:15,279 --> 00:26:15,789
+So
+
+730
+00:26:16,739 --> 00:26:18,828
+Kada will expand what we
+
+731
+00:26:18,828 --> 00:26:19,739
+can scale,
+
+732
+00:26:20,118 --> 00:26:22,400
+but it still can't predict
+
+733
+00:26:22,598 --> 00:26:23,539
+and help us
+
+734
+00:26:24,160 --> 00:26:24,739
+lower
+
+735
+00:26:25,039 --> 00:26:25,900
+that lead time
+
+736
+00:26:26,279 --> 00:26:27,459
+to new pods.
+
+737
+00:26:29,219 --> 00:26:31,019
+Right, so with that,
+
+738
+00:26:31,380 --> 00:26:32,939
+this kind of helps illustrate
+
+739
+00:26:33,618 --> 00:26:35,759
+what we saw when you start to introduce
+
+740
+00:26:36,459 --> 00:26:38,160
+predictive mechanisms
+
+741
+00:26:38,420 --> 00:26:39,578
+into your HPA.
+
+742
+00:26:40,439 --> 00:26:42,890
+Rather than waiting for some
+
+743
+00:26:42,890 --> 00:26:44,279
+lead amount of time.
+
+744
+00:26:45,009 --> 00:26:46,229
+And scaling up
+
+745
+00:26:46,529 --> 00:26:47,410
+being delayed,
+
+746
+00:26:47,890 --> 00:26:50,750
+you get a lot of up and down unnecessary
+
+747
+00:26:50,750 --> 00:26:52,930
+thrashing of that HPA and the number
+
+748
+00:26:52,930 --> 00:26:53,689
+of replicas.
+
+749
+00:26:54,549 --> 00:26:56,640
+You also have to think of the provisioning of
+
+750
+00:26:56,640 --> 00:26:58,880
+the underlying infrastructure such as those
+
+751
+00:26:58,880 --> 00:27:00,930
+nodes. When we're able to
+
+752
+00:27:00,930 --> 00:27:03,150
+predict those trends in advance
+
+753
+00:27:03,199 --> 00:27:05,500
+and scale or warm the replicas,
+
+754
+00:27:05,809 --> 00:27:07,910
+you get a much better outcome,
+
+755
+00:27:08,368 --> 00:27:10,150
+and it allows your other
+
+756
+00:27:10,489 --> 00:27:12,650
+investments in VPA and or
+
+757
+00:27:12,650 --> 00:27:14,680
+node optimization to be much,
+
+758
+00:27:14,729 --> 00:27:15,348
+much better.
+
+759
+00:27:17,799 --> 00:27:18,358
+So,
+
+760
+00:27:18,838 --> 00:27:20,959
+how are we gonna be able to do all of that?
+
+761
+00:27:22,689 --> 00:27:24,858
+Custom resources is a really
+
+762
+00:27:24,858 --> 00:27:25,838
+powerful way
+
+763
+00:27:26,289 --> 00:27:26,900
+to
+
+764
+00:27:27,338 --> 00:27:28,779
+consume operators
+
+765
+00:27:29,219 --> 00:27:29,939
+controllers
+
+766
+00:27:30,299 --> 00:27:32,759
+that can help manage all of this at scale.
+
+767
+00:27:35,160 --> 00:27:37,269
+So custom resources for those that
+
+768
+00:27:37,269 --> 00:27:39,219
+may not know are simply an extension
+
+769
+00:27:39,559 --> 00:27:40,759
+to the Kubernetes API.
+
+770
+00:27:41,868 --> 00:27:43,049
+They can be versioned
+
+771
+00:27:43,469 --> 00:27:45,509
+they can be reconciled so that way
+
+772
+00:27:45,509 --> 00:27:46,529
+things do not drift.
+
+773
+00:27:47,439 --> 00:27:48,108
+And
+
+774
+00:27:48,449 --> 00:27:49,239
+more importantly,
+
+775
+00:27:49,529 --> 00:27:51,529
+it is something that you can repeat across
+
+776
+00:27:51,529 --> 00:27:52,848
+your various environments.
+
+777
+00:27:54,559 --> 00:27:56,630
+This is going to also give you the
+
+778
+00:27:56,630 --> 00:27:58,868
+opportunity to be cluster scoped or name space scoped.
+
+779
+00:27:59,358 --> 00:28:01,358
+Maybe you have specific clusters that
+
+780
+00:28:01,358 --> 00:28:03,719
+need a specific set of policies
+
+781
+00:28:03,719 --> 00:28:04,818
+or definitions
+
+782
+00:28:05,150 --> 00:28:06,019
+compared to maybe
+
+783
+00:28:06,439 --> 00:28:07,779
+specific name spaces.
+
+784
+00:28:09,818 --> 00:28:11,880
+This is really important because
+
+785
+00:28:12,219 --> 00:28:14,618
+every workload has different characteristics.
+
+786
+00:28:15,420 --> 00:28:17,509
+Therefore, they all should have their
+
+787
+00:28:17,509 --> 00:28:19,509
+own custom configuration.
+
+788
+00:28:20,368 --> 00:28:21,868
+And that's as you can see
+
+789
+00:28:22,219 --> 00:28:22,930
+JVM
+
+790
+00:28:23,259 --> 00:28:23,949
+Kafka
+
+791
+00:28:24,209 --> 00:28:25,920
+all have behaviors
+
+792
+00:28:26,219 --> 00:28:28,559
+that can't have a one size fits all approach.
+
+793
+00:28:30,459 --> 00:28:33,039
+So now as we move from
+
+794
+00:28:33,848 --> 00:28:34,578
+application scaling,
+
+795
+00:28:35,098 --> 00:28:37,449
+now we have to start overlaying that with
+
+796
+00:28:37,449 --> 00:28:38,059
+node scaling.
+
+797
+00:28:39,180 --> 00:28:41,469
+And one of the biggest things that people
+
+798
+00:28:41,469 --> 00:28:43,469
+look to jump to right away is
+
+799
+00:28:43,469 --> 00:28:45,209
+how can I consume more spot instances.
+
+800
+00:28:45,939 --> 00:28:47,140
+And you may say, oh.
+
+801
+00:28:48,150 --> 00:28:49,088
+Go to carpenter,
+
+802
+00:28:49,670 --> 00:28:50,549
+flip the switch,
+
+803
+00:28:51,180 --> 00:28:52,289
+I'm consuming spot.
+
+804
+00:28:52,989 --> 00:28:55,229
+But what about some of those lift and shift
+
+805
+00:28:55,229 --> 00:28:57,309
+applications that maybe aren't ready for spot?
+
+806
+00:28:58,219 --> 00:29:00,598
+Now you're looking to do something like this.
+
+807
+00:29:00,858 --> 00:29:03,098
+I want some of my nodes to be on spot, some
+
+808
+00:29:03,098 --> 00:29:04,459
+of my nodes to be on demand.
+
+809
+00:29:05,108 --> 00:29:07,130
+And though that can be attained
+
+810
+00:29:07,670 --> 00:29:08,430
+or achieved.
+
+811
+00:29:09,189 --> 00:29:11,410
+Really that only is governing the
+
+812
+00:29:11,410 --> 00:29:13,549
+infrastructure layer. How do you make sure
+
+813
+00:29:13,549 --> 00:29:15,670
+that the apps themselves respect that
+
+814
+00:29:15,670 --> 00:29:16,608
+same ratio?
+
+815
+00:29:17,269 --> 00:29:18,130
+For example,
+
+816
+00:29:18,469 --> 00:29:20,009
+I have 10 replicas.
+
+817
+00:29:20,430 --> 00:29:22,430
+I want 8 of those replicas to always
+
+818
+00:29:22,430 --> 00:29:24,509
+be on the spot and 2 of them to always
+
+819
+00:29:24,509 --> 00:29:25,189
+be on demand.
+
+820
+00:29:25,910 --> 00:29:28,209
+By just forcing 8 nodes
+
+821
+00:29:28,670 --> 00:29:30,410
+to be on the spot does not mean
+
+822
+00:29:30,989 --> 00:29:33,189
+I will actually get that desired ratio.
+
+823
+00:29:34,939 --> 00:29:37,279
+So what is available today?
+
+824
+00:29:37,660 --> 00:29:39,729
+Well, within Carpenter,
+
+825
+00:29:40,019 --> 00:29:42,199
+you can go ahead and define
+
+826
+00:29:42,699 --> 00:29:44,598
+node selectors that can be used
+
+827
+00:29:44,858 --> 00:29:46,699
+for topology spread constraints.
+
+828
+00:29:48,088 --> 00:29:49,709
+This is obviously
+
+829
+00:29:50,009 --> 00:29:52,009
+going to introduce some complexity
+
+830
+00:29:52,009 --> 00:29:54,259
+because now on every single one of your workloads
+
+831
+00:29:54,529 --> 00:29:56,689
+that are maybe you want a fifty-fifty
+
+832
+00:29:56,689 --> 00:29:58,568
+blend and 80/20 blend
+
+833
+00:29:58,890 --> 00:29:59,910
+you're adding these
+
+834
+00:30:00,358 --> 00:30:02,699
+topology spread constraints, the SKUs,
+
+835
+00:30:02,890 --> 00:30:04,269
+and what you're comfortable with.
+
+836
+00:30:04,920 --> 00:30:07,150
+And you can imagine the overhead of trying to
+
+837
+00:30:07,150 --> 00:30:09,318
+implement this to thousands and thousands
+
+838
+00:30:09,318 --> 00:30:10,338
+of pods within your
+
+839
+00:30:10,799 --> 00:30:13,439
+environment. So,
+
+840
+00:30:13,858 --> 00:30:16,239
+what are some of the risks and why do I bring this up?
+
+841
+00:30:16,660 --> 00:30:19,199
+Well, Pod depletion
+
+842
+00:30:19,500 --> 00:30:21,500
+or the pool can be depleted of
+
+843
+00:30:21,500 --> 00:30:23,608
+spot instances. Yes, it can fall back,
+
+844
+00:30:24,088 --> 00:30:26,180
+but if you have these topology spread constraints
+
+845
+00:30:26,180 --> 00:30:27,608
+that are hard requirements,
+
+846
+00:30:28,059 --> 00:30:30,459
+you run into the risk of your workloads
+
+847
+00:30:30,459 --> 00:30:31,078
+becoming
+
+848
+00:30:31,338 --> 00:30:32,160
+unschedulable.
+
+849
+00:30:33,660 --> 00:30:35,660
+Rebalancing today Carpenter
+
+850
+00:30:35,660 --> 00:30:37,719
+does not support rebalancing
+
+851
+00:30:37,979 --> 00:30:39,979
+of spot instances out of the box,
+
+852
+00:30:40,328 --> 00:30:42,068
+meaning as time goes on
+
+853
+00:30:42,338 --> 00:30:44,420
+you fall into that same node fragmentation
+
+854
+00:30:44,420 --> 00:30:45,519
+that we talked about earlier.
+
+855
+00:30:46,410 --> 00:30:48,449
+You can use tools like the
+
+856
+00:30:48,890 --> 00:30:50,229
+no disruption handler
+
+857
+00:30:50,489 --> 00:30:52,289
+to try and improve some of this.
+
+858
+00:30:53,049 --> 00:30:55,650
+But really all of this is gonna
+
+859
+00:30:55,650 --> 00:30:57,259
+require manual orchestration.
+
+860
+00:30:58,068 --> 00:30:59,750
+On the development team.
+
+861
+00:31:01,799 --> 00:31:04,000
+So, what's the ideal world?
+
+862
+00:31:04,279 --> 00:31:05,739
+Well, the ideal world would be
+
+863
+00:31:06,118 --> 00:31:08,309
+you define the ratio that makes
+
+864
+00:31:08,309 --> 00:31:10,598
+sense to improve the adoption of
+
+865
+00:31:10,598 --> 00:31:11,500
+spot instances
+
+866
+00:31:11,920 --> 00:31:13,180
+and do it at the pod level.
+
+867
+00:31:13,939 --> 00:31:15,318
+If you need 80/20,
+
+868
+00:31:15,618 --> 00:31:17,318
+80% of those replicas
+
+869
+00:31:17,578 --> 00:31:19,660
+will have the correct affinities to be
+
+870
+00:31:19,660 --> 00:31:20,939
+assigned appropriately.
+
+871
+00:31:23,509 --> 00:31:25,170
+So, to kind of
+
+872
+00:31:25,469 --> 00:31:26,549
+put all this together.
+
+873
+00:31:27,660 --> 00:31:29,799
+Today there are many, many native tools.
+
+874
+00:31:30,539 --> 00:31:32,848
+That are available to help solve a lot of these.
+
+875
+00:31:33,949 --> 00:31:36,250
+But they have to work with one another.
+
+876
+00:31:37,449 --> 00:31:39,449
+VPA and HPA have many
+
+877
+00:31:39,449 --> 00:31:41,809
+race conditions if not thought about
+
+878
+00:31:41,809 --> 00:31:42,328
+carefully.
+
+879
+00:31:43,598 --> 00:31:44,539
+Your scheduler
+
+880
+00:31:44,880 --> 00:31:47,180
+today is an append only meaning
+
+881
+00:31:47,239 --> 00:31:49,500
+I'm going to just add more pods.
+
+882
+00:31:49,719 --> 00:31:51,799
+It is not interested in looking at can I
+
+883
+00:31:51,799 --> 00:31:54,140
+go back and look and review
+
+884
+00:31:54,140 --> 00:31:56,239
+those previous opportunities for better ones.
+
+885
+00:31:57,608 --> 00:31:59,420
+How do I help with spot management?
+
+886
+00:32:01,219 --> 00:32:03,529
+Next would be predictive versus
+
+887
+00:32:03,529 --> 00:32:04,289
+reactive.
+
+888
+00:32:04,660 --> 00:32:05,799
+Reactive scaling
+
+889
+00:32:06,180 --> 00:32:08,650
+is really what leads to a lot of these challenges.
+
+890
+00:32:09,539 --> 00:32:11,900
+Uh, once you introduce predictive scaling,
+
+891
+00:32:12,380 --> 00:32:14,420
+you're able to ease a lot of
+
+892
+00:32:14,420 --> 00:32:17,059
+the burdens and inefficiencies
+
+893
+00:32:17,059 --> 00:32:17,598
+that come
+
+894
+00:32:18,019 --> 00:32:19,500
+with some of these other approaches.
+
+895
+00:32:21,039 --> 00:32:23,338
+How do you coordinate across all of these
+
+896
+00:32:23,660 --> 00:32:24,920
+in a continuous manner?
+
+897
+00:32:27,979 --> 00:32:29,660
+So That
+
+898
+00:32:29,959 --> 00:32:30,699
+is where.
+
+899
+00:32:31,809 --> 00:32:32,400
+We come in
+
+900
+00:32:34,209 --> 00:32:36,250
+So scaleoffs exists today to
+
+901
+00:32:36,250 --> 00:32:38,410
+do all of those things that
+
+902
+00:32:38,410 --> 00:32:39,529
+we just mentioned today.
+
+903
+00:32:40,469 --> 00:32:41,729
+We're context aware
+
+904
+00:32:42,150 --> 00:32:44,269
+we're looking at every single layer
+
+905
+00:32:44,269 --> 00:32:45,088
+of scaling
+
+906
+00:32:45,348 --> 00:32:47,108
+that you have within your cluster.
+
+907
+00:32:48,118 --> 00:32:50,390
+And we're gonna make sure that we're auto detecting
+
+908
+00:32:50,568 --> 00:32:52,680
+the specific workload characteristics to
+
+909
+00:32:52,680 --> 00:32:54,769
+define the most appropriate policy to
+
+910
+00:32:54,769 --> 00:32:56,848
+meet the needs of said application.
+
+911
+00:32:57,969 --> 00:32:59,799
+And then lastly we really wanna make sure
+
+912
+00:33:00,259 --> 00:33:02,160
+that during any
+
+913
+00:33:02,539 --> 00:33:03,170
+contention
+
+914
+00:33:03,500 --> 00:33:05,500
+that there's a way to not only heal
+
+915
+00:33:05,939 --> 00:33:08,170
+but also react to those sudden bursts
+
+916
+00:33:08,170 --> 00:33:09,358
+or changes in traffic.
+
+917
+00:33:10,779 --> 00:33:12,578
+And you don't have to believe me,
+
+918
+00:33:13,289 --> 00:33:15,299
+believe any of our customers that are running in
+
+919
+00:33:15,299 --> 00:33:16,019
+full production.
+
+920
+00:33:16,779 --> 00:33:18,420
+With this at scale.
+
+921
+00:33:19,578 --> 00:33:21,689
+So to kind of wrap up and
+
+922
+00:33:21,689 --> 00:33:22,709
+summarize here.
+
+923
+00:33:23,529 --> 00:33:25,750
+There's a lot more than what I could cover
+
+924
+00:33:25,750 --> 00:33:26,640
+in this session,
+
+925
+00:33:27,130 --> 00:33:29,170
+but it's all around how we can
+
+926
+00:33:29,170 --> 00:33:31,338
+help size each and every
+
+927
+00:33:31,338 --> 00:33:33,400
+container in each and every one of your
+
+928
+00:33:33,400 --> 00:33:34,219
+workloads,
+
+929
+00:33:34,769 --> 00:33:36,828
+how we can influence the scheduler
+
+930
+00:33:36,828 --> 00:33:38,900
+to place pods more intelligently
+
+931
+00:33:39,088 --> 00:33:40,729
+and reduce node fragmentation.
+
+932
+00:33:41,519 --> 00:33:43,670
+How we can help you guys adopt AI
+
+933
+00:33:43,670 --> 00:33:46,358
+infrastructure whether that's GPUs,
+
+934
+00:33:46,368 --> 00:33:48,059
+time slicing, etc.
+
+935
+00:33:48,598 --> 00:33:51,239
+and then what we can do with replica optimization,
+
+936
+00:33:51,358 --> 00:33:53,509
+introducing predictive mechanisms
+
+937
+00:33:53,759 --> 00:33:56,019
+so that way you guys can scale
+
+938
+00:33:56,328 --> 00:33:58,479
+more consistently
+
+939
+00:33:58,680 --> 00:33:59,358
+and safely.
+
+940
+00:34:01,299 --> 00:34:03,539
+So I know uh the conference
+
+941
+00:34:03,539 --> 00:34:04,880
+floor is probably closed,
+
+942
+00:34:05,900 --> 00:34:08,019
+but if you guys have questions, I'll
+
+943
+00:34:08,019 --> 00:34:09,780
+be happy to answer
+
+944
+00:34:10,208 --> 00:34:12,260
+any here. I'll stay for the next
+
+945
+00:34:12,260 --> 00:34:14,570
+15 minutes to help address
+
+946
+00:34:14,570 --> 00:34:16,500
+anything that uh you guys might have.
+
+947
+00:34:16,860 --> 00:34:17,659
+Otherwise,
+
+948
+00:34:17,938 --> 00:34:19,938
+I, I appreciate you guys taking the time
+
+949
+00:34:19,938 --> 00:34:21,340
+and coming out all the way over here.
+

@@ -1,0 +1,4369 @@
+1
+00:00:00,090 --> 00:00:02,583
+- Good morning. Welcome to re:Invent.
+
+2
+00:00:04,350 --> 00:00:06,660
+Oh yeah, definitely put on the,
+
+3
+00:00:06,660 --> 00:00:08,940
+actually you don't have
+to, whatever you want.
+
+4
+00:00:08,940 --> 00:00:10,200
+If you do put on the headphones
+
+5
+00:00:10,200 --> 00:00:11,940
+and I'm speaking too loud or too softly,
+
+6
+00:00:11,940 --> 00:00:14,553
+you have a volume button
+on the right side, I think.
+
+7
+00:00:17,010 --> 00:00:18,630
+So,
+
+8
+00:00:18,630 --> 00:00:21,720
+let's say we're building a game.
+
+9
+00:00:21,720 --> 00:00:25,440
+All of us are starting
+a new gaming startup
+
+10
+00:00:25,440 --> 00:00:29,130
+and we are going to create a
+massive online multiplayer game
+
+11
+00:00:29,130 --> 00:00:30,990
+that if we're successful,
+
+12
+00:00:30,990 --> 00:00:35,190
+is going to support hundreds
+of thousands of users.
+
+13
+00:00:35,190 --> 00:00:38,040
+So we are going to need massive scale,
+
+14
+00:00:38,040 --> 00:00:41,223
+probably millions of requests per second.
+
+15
+00:00:42,120 --> 00:00:45,090
+And we are going to have to
+maintain very low latency
+
+16
+00:00:45,090 --> 00:00:49,650
+for our users to have a
+consistently responsive game.
+
+17
+00:00:49,650 --> 00:00:51,900
+Otherwise, they probably
+won't play our game.
+
+18
+00:00:52,830 --> 00:00:55,890
+We are going to use ElastiCache
+Serverless for Valkey
+
+19
+00:00:55,890 --> 00:01:00,750
+because it provides
+predictably low latency
+
+20
+00:01:00,750 --> 00:01:03,123
+and supports the massive
+scale that we need.
+
+21
+00:01:07,170 --> 00:01:10,530
+Now, my name is Elad. This is Yaron.
+
+22
+00:01:10,530 --> 00:01:12,363
+We both work for ElastiCache.
+
+23
+00:01:13,410 --> 00:01:16,150
+And ElastiCache Serverless does take away
+
+24
+00:01:17,070 --> 00:01:20,400
+many concerns that you have
+as a developer or DevOps.
+
+25
+00:01:20,400 --> 00:01:22,350
+For instance, you don't
+have to worry about
+
+26
+00:01:22,350 --> 00:01:24,360
+security patching, you
+don't have to worry about
+
+27
+00:01:24,360 --> 00:01:25,560
+version upgrades.
+
+28
+00:01:25,560 --> 00:01:28,500
+But most importantly, you
+don't have to worry about
+
+29
+00:01:28,500 --> 00:01:31,770
+sizing your cluster and
+you don't have to scale it
+
+30
+00:01:31,770 --> 00:01:33,813
+when your application load increases.
+
+31
+00:01:36,390 --> 00:01:40,547
+This session is going to
+talk about optimizations
+
+32
+00:01:40,547 --> 00:01:41,380
+that are relevant
+
+33
+00:01:41,380 --> 00:01:44,160
+for very, very high
+performance applications.
+
+34
+00:01:44,160 --> 00:01:46,950
+And optimizations are going to be relevant
+
+35
+00:01:46,950 --> 00:01:49,080
+both for ElastiCache Serverless,
+
+36
+00:01:49,080 --> 00:01:51,960
+also for self design clusters,
+
+37
+00:01:51,960 --> 00:01:54,570
+or even if you're
+self-managing your own fleet
+
+38
+00:01:54,570 --> 00:01:57,977
+of Open Source Redis or Valkey.
+
+39
+00:02:01,500 --> 00:02:03,990
+Valkey, in case you're
+not familiar with Valkey,
+
+40
+00:02:03,990 --> 00:02:06,900
+it's an open source in-memory database.
+
+41
+00:02:06,900 --> 00:02:11,670
+It was fork out of Redis when
+they change their license.
+
+42
+00:02:11,670 --> 00:02:15,810
+And Valkey has been adopted
+by the Linux Foundation
+
+43
+00:02:15,810 --> 00:02:19,620
+and it's maintained by
+a very big community,
+
+44
+00:02:19,620 --> 00:02:23,400
+very active community,
+including some industry leaders
+
+45
+00:02:23,400 --> 00:02:26,463
+and a few cloud providers including AWS.
+
+46
+00:02:29,820 --> 00:02:31,120
+Let's go back to our game.
+
+47
+00:02:32,214 --> 00:02:34,710
+So let's start with the
+POC of our game, right?
+
+48
+00:02:34,710 --> 00:02:36,303
+We are just in our labs now.
+
+49
+00:02:37,290 --> 00:02:39,480
+We are taking a few, a couple of clients,
+
+50
+00:02:39,480 --> 00:02:41,850
+connected them to a Node.js server, right?
+
+51
+00:02:41,850 --> 00:02:43,200
+Node.js, that's easy.
+
+52
+00:02:43,200 --> 00:02:45,303
+That's, that's fun.
+
+53
+00:02:46,290 --> 00:02:50,280
+So we'll probably just store all the state
+
+54
+00:02:50,280 --> 00:02:52,770
+of our game in memory, right?
+
+55
+00:02:52,770 --> 00:02:55,860
+That would include things
+like where our users are,
+
+56
+00:02:55,860 --> 00:02:57,180
+where the monsters are,
+
+57
+00:02:57,180 --> 00:02:59,030
+maybe their health, things like that.
+
+58
+00:03:00,155 --> 00:03:02,340
+And we are going to use some disk
+
+59
+00:03:02,340 --> 00:03:05,970
+if you wanna store some
+more persistent resources.
+
+60
+00:03:05,970 --> 00:03:09,718
+For instance, our game
+maps, our castle map,
+
+61
+00:03:09,718 --> 00:03:12,210
+things like that, that
+don't change that often.
+
+62
+00:03:12,210 --> 00:03:13,090
+And so
+
+63
+00:03:15,360 --> 00:03:17,211
+our users on the POC,
+
+64
+00:03:17,211 --> 00:03:19,080
+our users are probably
+going to have terrific,
+
+65
+00:03:19,080 --> 00:03:20,793
+just terrific latency, right?
+
+66
+00:03:21,910 --> 00:03:23,820
+Within the lab, what would you expect
+
+67
+00:03:23,820 --> 00:03:25,233
+in the lab for latency?
+
+68
+00:03:28,680 --> 00:03:29,523
+Any ideas?
+
+69
+00:03:31,590 --> 00:03:34,230
+Okay, so usually when latency,
+
+70
+00:03:34,230 --> 00:03:36,792
+when networking is very,
+
+71
+00:03:36,792 --> 00:03:37,680
+is not a concern,
+
+72
+00:03:37,680 --> 00:03:38,760
+you would see latencies
+
+73
+00:03:38,760 --> 00:03:42,570
+of around 100 microseconds round trips.
+
+74
+00:03:42,570 --> 00:03:45,840
+Most of these latency would
+come from the operating system,
+
+75
+00:03:45,840 --> 00:03:47,520
+the network stack, the kernel,
+
+76
+00:03:47,520 --> 00:03:49,560
+communicating with user node, right?
+
+77
+00:03:49,560 --> 00:03:51,240
+So it's not really network latency here,
+
+78
+00:03:51,240 --> 00:03:54,180
+it's mostly just the operating system.
+
+79
+00:03:54,180 --> 00:03:57,240
+And when we go and access memory
+
+80
+00:03:57,240 --> 00:03:59,620
+for our state management, right?
+
+81
+00:03:59,620 --> 00:04:02,580
+Reading state, changing state,
+
+82
+00:04:02,580 --> 00:04:04,630
+we're probably going to have access times
+
+83
+00:04:05,693 --> 00:04:07,350
+of a few tens of micro, of nanoseconds.
+
+84
+00:04:07,350 --> 00:04:08,760
+Sorry, nanoseconds.
+
+85
+00:04:08,760 --> 00:04:10,170
+So that means that we can actually
+
+86
+00:04:10,170 --> 00:04:13,800
+go to the, go to memory many, many times
+
+87
+00:04:13,800 --> 00:04:18,009
+before it actually impacts
+significant latency, right?
+
+88
+00:04:18,009 --> 00:04:20,400
+We could do it hundreds of
+time on a single user request,
+
+89
+00:04:20,400 --> 00:04:24,063
+maybe even thousands of times
+without it impacting latency.
+
+90
+00:04:25,020 --> 00:04:27,900
+This is very different when we talk about
+
+91
+00:04:27,900 --> 00:04:29,670
+disk latencies, right?
+
+92
+00:04:29,670 --> 00:04:33,660
+Even if you have the best, the best SSD,
+
+93
+00:04:33,660 --> 00:04:34,980
+it's going to be a little less
+
+94
+00:04:34,980 --> 00:04:37,350
+than one millisecond probably,
+
+95
+00:04:37,350 --> 00:04:39,360
+but it's going to vary, right?
+
+96
+00:04:39,360 --> 00:04:40,320
+Why is it going to vary?
+
+97
+00:04:40,320 --> 00:04:42,494
+Because when you read an object from disk,
+
+98
+00:04:42,494 --> 00:04:43,980
+you are not just doing a single access.
+
+99
+00:04:43,980 --> 00:04:46,080
+Sometimes you're doing multiple accesses
+
+100
+00:04:46,080 --> 00:04:50,250
+because disk store objects
+on different blocks, right?
+
+101
+00:04:50,250 --> 00:04:54,390
+So disk latency is usually very variable,
+
+102
+00:04:54,390 --> 00:04:56,880
+which we probably want in our application.
+
+103
+00:04:56,880 --> 00:04:57,843
+Yes, no?
+
+104
+00:05:01,140 --> 00:05:02,610
+No, probably no, right?
+
+105
+00:05:02,610 --> 00:05:04,966
+We don't want this variability.
+
+106
+00:05:04,966 --> 00:05:06,780
+And so I mean for our, for our game POC,
+
+107
+00:05:06,780 --> 00:05:08,760
+we can probably just load all the maps
+
+108
+00:05:08,760 --> 00:05:11,100
+when we start keeping 'em in memory
+
+109
+00:05:11,100 --> 00:05:13,100
+and then you just use them there, right?
+
+110
+00:05:14,520 --> 00:05:16,353
+But when we take this to production,
+
+111
+00:05:17,190 --> 00:05:19,725
+it's going to be a little bit different.
+
+112
+00:05:19,725 --> 00:05:21,693
+So now our users are on the internet,
+
+113
+00:05:22,890 --> 00:05:25,260
+we're using multiple
+instances of our application
+
+114
+00:05:25,260 --> 00:05:29,130
+because we want scale and we
+also want high availability.
+
+115
+00:05:29,130 --> 00:05:30,750
+We'll probably use a bunch
+
+116
+00:05:30,750 --> 00:05:33,090
+of availability zones to get that.
+
+117
+00:05:33,090 --> 00:05:35,584
+And our resources, instead of disk,
+
+118
+00:05:35,584 --> 00:05:38,823
+are going to be naturally
+placed in some database.
+
+119
+00:05:40,140 --> 00:05:43,980
+So, but when we read the database,
+
+120
+00:05:43,980 --> 00:05:47,190
+latency is going to be,
+again, very variable.
+
+121
+00:05:47,190 --> 00:05:50,220
+Somewhere, probably
+typically one millisecond
+
+122
+00:05:50,220 --> 00:05:51,990
+to a hundred milliseconds.
+
+123
+00:05:51,990 --> 00:05:54,990
+And that's because traditional databases,
+
+124
+00:05:54,990 --> 00:05:57,120
+whether it's a relational database
+
+125
+00:05:57,120 --> 00:05:58,770
+or a document database,
+
+126
+00:05:58,770 --> 00:06:02,100
+I mean those usually use a combination
+
+127
+00:06:02,100 --> 00:06:05,910
+of both memory and disk
+to deliver queries.
+
+128
+00:06:05,910 --> 00:06:07,440
+And it's very hard to control
+
+129
+00:06:07,440 --> 00:06:10,050
+where your queries are serviced from.
+
+130
+00:06:10,050 --> 00:06:12,873
+It's hard to say, hey,
+everything must come from memory.
+
+131
+00:06:13,899 --> 00:06:17,130
+And I guess that's where
+Valkey becomes very, very handy
+
+132
+00:06:17,130 --> 00:06:20,970
+because Valkey uses exclusively memory
+
+133
+00:06:20,970 --> 00:06:22,380
+to serve your queries.
+
+134
+00:06:22,380 --> 00:06:25,110
+It provides you with predictable latency.
+
+135
+00:06:25,110 --> 00:06:27,240
+And I think that's what
+we want for our game,
+
+136
+00:06:27,240 --> 00:06:28,650
+by the way, for any application,
+
+137
+00:06:28,650 --> 00:06:30,750
+doesn't have to be a game, right?
+
+138
+00:06:30,750 --> 00:06:33,930
+We chose the game because games are fun.
+
+139
+00:06:33,930 --> 00:06:35,880
+But any application that needs
+
+140
+00:06:35,880 --> 00:06:38,230
+millions and millions
+of requests per second
+
+141
+00:06:39,240 --> 00:06:41,700
+on strict latency requirements,
+
+142
+00:06:41,700 --> 00:06:43,110
+Valkey is very useful.
+
+143
+00:06:43,110 --> 00:06:45,933
+Again, because of the low variability.
+
+144
+00:06:48,300 --> 00:06:50,640
+I mean, Valkey uses memory,
+
+145
+00:06:50,640 --> 00:06:52,503
+so most of the latency you'll see,
+
+146
+00:06:53,430 --> 00:06:55,470
+it's not even coming from Valkey usually.
+
+147
+00:06:55,470 --> 00:06:58,410
+The most dominant factor
+with Valkey latency
+
+148
+00:06:58,410 --> 00:07:02,010
+is probably going to
+be the network, right?
+
+149
+00:07:02,010 --> 00:07:05,660
+And so if you are on the same AZ
+
+150
+00:07:06,630 --> 00:07:09,150
+as your Valkey, know
+that you're accessing,
+
+151
+00:07:09,150 --> 00:07:12,360
+you'll probably have latencies
+far below one millisecond,
+
+152
+00:07:12,360 --> 00:07:13,743
+sub-millisecond latency.
+
+153
+00:07:14,940 --> 00:07:17,970
+Now, it may be that your application
+
+154
+00:07:17,970 --> 00:07:20,788
+needs to go from another AZ and access
+
+155
+00:07:20,788 --> 00:07:22,260
+a Valkey node on a different AZ,
+
+156
+00:07:22,260 --> 00:07:26,310
+and then latency increases,
+increases slightly.
+
+157
+00:07:26,310 --> 00:07:29,283
+And I'll dive deeper into
+these latencies in a minute.
+
+158
+00:07:31,980 --> 00:07:33,840
+But what if, right?
+
+159
+00:07:33,840 --> 00:07:37,080
+What if, if we could manage application
+
+160
+00:07:37,080 --> 00:07:40,950
+such that we are reading
+from a replica node
+
+161
+00:07:40,950 --> 00:07:42,570
+that's on the same AZ?
+
+162
+00:07:42,570 --> 00:07:45,063
+That way we can maintain
+at least for our reads,
+
+163
+00:07:46,100 --> 00:07:47,340
+we can maintain low latency
+
+164
+00:07:47,340 --> 00:07:50,970
+for all of our application instances,
+
+165
+00:07:50,970 --> 00:07:54,003
+lowering our p50 and our average
+latencies for application.
+
+166
+00:08:05,130 --> 00:08:05,963
+Sorry.
+
+167
+00:08:07,380 --> 00:08:09,240
+Let's dive deeper into latencies.
+
+168
+00:08:09,240 --> 00:08:10,770
+So we're going to talk about,
+
+169
+00:08:10,770 --> 00:08:12,450
+we're talking about milliseconds,
+
+170
+00:08:12,450 --> 00:08:14,910
+we're going to talk about microseconds
+
+171
+00:08:14,910 --> 00:08:16,680
+and we're talking about nanoseconds.
+
+172
+00:08:16,680 --> 00:08:18,080
+That's the world we live in.
+
+173
+00:08:19,710 --> 00:08:21,600
+Let's start off with your users.
+
+174
+00:08:21,600 --> 00:08:24,643
+When you have users
+coming over the internet,
+
+175
+00:08:24,643 --> 00:08:25,920
+connecting to your application,
+
+176
+00:08:25,920 --> 00:08:28,530
+usually or typically you'll
+see latencies somewhere
+
+177
+00:08:28,530 --> 00:08:32,640
+between 20 milliseconds
+up to 100 milliseconds,
+
+178
+00:08:32,640 --> 00:08:34,050
+maybe even 150.
+
+179
+00:08:34,050 --> 00:08:36,510
+It really depends on where
+your users are, right?
+
+180
+00:08:36,510 --> 00:08:38,250
+They could be very
+close to the data center
+
+181
+00:08:38,250 --> 00:08:40,980
+with an excellent internet connection,
+
+182
+00:08:40,980 --> 00:08:42,900
+and they could be very far away.
+
+183
+00:08:42,900 --> 00:08:45,060
+They could be on another continent.
+
+184
+00:08:45,060 --> 00:08:47,103
+So that's the variability we'll see.
+
+185
+00:08:48,300 --> 00:08:52,740
+When we continue into the data center,
+
+186
+00:08:52,740 --> 00:08:53,640
+if you are communicating
+
+187
+00:08:53,640 --> 00:08:56,820
+between two servers in
+the same data center,
+
+188
+00:08:56,820 --> 00:08:58,740
+latencies are going to be very, very low.
+
+189
+00:08:58,740 --> 00:09:02,400
+It's very similar to the
+lab we discussed before.
+
+190
+00:09:02,400 --> 00:09:06,420
+So network latency is going
+to be nanoseconds usually,
+
+191
+00:09:06,420 --> 00:09:09,103
+and it's going to be around 75,
+
+192
+00:09:10,108 --> 00:09:11,310
+100 microsecond round trips.
+
+193
+00:09:11,310 --> 00:09:15,930
+Again, usually because of
+operating systems, right?
+
+194
+00:09:15,930 --> 00:09:19,440
+You can optimize that
+using tools like DPDK maybe
+
+195
+00:09:19,440 --> 00:09:22,200
+that optimize this kernel
+to user node latency.
+
+196
+00:09:22,200 --> 00:09:23,950
+But usually that's what you'll see.
+
+197
+00:09:24,828 --> 00:09:26,828
+And these are very low latencies anyway.
+
+198
+00:09:28,890 --> 00:09:31,830
+Now, when we go from one data center
+
+199
+00:09:31,830 --> 00:09:33,633
+to another on the same AZ,
+
+200
+00:09:34,890 --> 00:09:38,760
+we can expect latencies
+of up to one millisecond.
+
+201
+00:09:38,760 --> 00:09:41,310
+In case you're not familiar with this,
+
+202
+00:09:41,310 --> 00:09:44,310
+AZs usually have one or more data centers.
+
+203
+00:09:44,310 --> 00:09:46,500
+They're not just a single data center.
+
+204
+00:09:46,500 --> 00:09:49,980
+And these data centers can
+be miles and miles apart.
+
+205
+00:09:49,980 --> 00:09:52,353
+So latency is slightly higher.
+
+206
+00:09:53,910 --> 00:09:56,380
+And when you go, when you go over
+
+207
+00:09:57,330 --> 00:09:58,653
+the AZ to another AZ,
+
+208
+00:09:59,880 --> 00:10:04,080
+those data centers are
+even more far apart, right?
+
+209
+00:10:04,080 --> 00:10:06,780
+And then latency can in some regions,
+
+210
+00:10:06,780 --> 00:10:08,463
+oh sorry, can be,
+
+211
+00:10:08,463 --> 00:10:10,410
+can be milliseconds.
+
+212
+00:10:10,410 --> 00:10:14,580
+Now the most dominant factor
+here is distance, right?
+
+213
+00:10:14,580 --> 00:10:17,580
+We have to carry this
+signal over fiber optics
+
+214
+00:10:17,580 --> 00:10:20,160
+from point A to point B and back, right?
+
+215
+00:10:20,160 --> 00:10:22,590
+So we are bound by the speed of light.
+
+216
+00:10:22,590 --> 00:10:24,670
+That's the, that's the thing.
+
+217
+00:10:24,670 --> 00:10:26,340
+So if they're closed, it's
+going to be good latency.
+
+218
+00:10:26,340 --> 00:10:29,013
+If they're farther apart,
+it's going to be higher.
+
+219
+00:10:31,650 --> 00:10:34,020
+Let me share some real life examples.
+
+220
+00:10:34,020 --> 00:10:36,063
+I hope you can read this.
+
+221
+00:10:37,003 --> 00:10:38,880
+I'll try and read this aloud.
+
+222
+00:10:38,880 --> 00:10:42,630
+What we're looking at are actual latencies
+
+223
+00:10:42,630 --> 00:10:45,300
+from US-EAST-1 region.
+
+224
+00:10:45,300 --> 00:10:48,000
+I took this a few days ago
+when I prepared the slides.
+
+225
+00:10:49,350 --> 00:10:51,378
+And these are cross-AZ latencies,
+
+226
+00:10:51,378 --> 00:10:53,278
+latencies from AZa to Azb, AZ1 to AZ2,
+
+227
+00:10:55,004 --> 00:10:56,430
+AZ2 to, AZ1 to AZ3,
+
+228
+00:10:56,430 --> 00:10:59,700
+just a few measurements.
+
+229
+00:10:59,700 --> 00:11:02,610
+And you can see if you're
+unable to read this,
+
+230
+00:11:02,610 --> 00:11:05,220
+most of these latencies are far below
+
+231
+00:11:05,220 --> 00:11:08,520
+700 microseconds, right?
+
+232
+00:11:08,520 --> 00:11:10,023
+These are the cross-AZ ones.
+
+233
+00:11:10,860 --> 00:11:13,260
+So we said they could be
+millisecond, in this case,
+
+234
+00:11:13,260 --> 00:11:17,103
+in this particular region,
+an AZ is the far lower.
+
+235
+00:11:18,210 --> 00:11:19,170
+Let's zoom in.
+
+236
+00:11:19,170 --> 00:11:21,283
+Now what happens inside each AZ.
+
+237
+00:11:24,458 --> 00:11:26,100
+Latencies that are coming,
+
+238
+00:11:26,100 --> 00:11:28,440
+that are comparing inside each AZ,
+
+239
+00:11:28,440 --> 00:11:31,830
+so there's a latency from
+two points inside AZ1
+
+240
+00:11:31,830 --> 00:11:36,830
+and other latency from two
+points to machines in Azb.
+
+241
+00:11:36,990 --> 00:11:39,090
+These latencies are much lower
+
+242
+00:11:39,090 --> 00:11:41,250
+as you can probably spot, right?
+
+243
+00:11:41,250 --> 00:11:45,273
+And most of them are around
+or below 100 microseconds.
+
+244
+00:11:46,200 --> 00:11:48,213
+So excellent latency in this case.
+
+245
+00:11:51,240 --> 00:11:53,160
+There's some variance here.
+
+246
+00:11:53,160 --> 00:11:55,410
+It depends on which region you use
+
+247
+00:11:55,410 --> 00:11:58,500
+and which AZs, where they are,
+
+248
+00:11:58,500 --> 00:12:00,930
+where those placed, the
+distance between them.
+
+249
+00:12:00,930 --> 00:12:02,310
+What you could do,
+
+250
+00:12:02,310 --> 00:12:05,490
+these charts are not
+something internal to AWS.
+
+251
+00:12:05,490 --> 00:12:06,780
+You can all view them.
+
+252
+00:12:06,780 --> 00:12:09,085
+I see nodding heads, you know this.
+
+253
+00:12:09,085 --> 00:12:13,140
+So you can check out something
+called the network manager,
+
+254
+00:12:13,140 --> 00:12:16,535
+it's available on your AWS
+console, of course the APIs.
+
+255
+00:12:16,535 --> 00:12:18,360
+And you can actually take
+a look at all the latencies
+
+256
+00:12:18,360 --> 00:12:22,023
+between different regions,
+different AZs in those regions.
+
+257
+00:12:22,905 --> 00:12:24,150
+And then you can look at your application
+
+258
+00:12:24,150 --> 00:12:28,470
+and consider the factors that,
+that around latency here.
+
+259
+00:12:28,470 --> 00:12:30,300
+What latency can we expect between AZs?
+
+260
+00:12:30,300 --> 00:12:32,790
+What latency can we
+expect between regions?
+
+261
+00:12:32,790 --> 00:12:34,140
+Any use case that you have.
+
+262
+00:12:43,830 --> 00:12:44,663
+Moving on.
+
+263
+00:12:46,050 --> 00:12:47,013
+So,
+
+264
+00:12:48,960 --> 00:12:50,320
+you folks have tasked me
+
+265
+00:12:51,270 --> 00:12:54,150
+with creating our first
+microservice for the game.
+
+266
+00:12:54,150 --> 00:12:57,450
+And I didn't do an amazing job, spoilers.
+
+267
+00:12:57,450 --> 00:13:01,350
+And I created this microservice
+for getting user profiles.
+
+268
+00:13:01,350 --> 00:13:03,660
+Now, this is not a good practice.
+
+269
+00:13:03,660 --> 00:13:05,523
+See if you can spot my mistake here.
+
+270
+00:13:08,010 --> 00:13:09,840
+Okay, I see some smiley faces,
+
+271
+00:13:09,840 --> 00:13:12,720
+don't laugh at me, right?
+
+272
+00:13:12,720 --> 00:13:15,930
+So let's cover what
+we're doing here, right?
+
+273
+00:13:15,930 --> 00:13:19,290
+This is a very simplified HTTP server.
+
+274
+00:13:19,290 --> 00:13:20,940
+Whenever there's a new request,
+
+275
+00:13:20,940 --> 00:13:22,290
+the first thing that it does,
+
+276
+00:13:22,290 --> 00:13:26,280
+it goes and creates a new Valkey client,
+
+277
+00:13:26,280 --> 00:13:30,420
+calls connect, and then
+does a get for the profile
+
+278
+00:13:30,420 --> 00:13:31,680
+that we actually need.
+
+279
+00:13:31,680 --> 00:13:34,500
+Now the problem here,
+you can probably see it
+
+280
+00:13:34,500 --> 00:13:36,930
+is whenever we have a request,
+
+281
+00:13:36,930 --> 00:13:40,440
+we are doing all these
+things just to get a single,
+
+282
+00:13:40,440 --> 00:13:42,262
+a single key, right?
+
+283
+00:13:42,262 --> 00:13:43,095
+We get a new connection.
+
+284
+00:13:43,095 --> 00:13:44,250
+That means DNS query.
+
+285
+00:13:44,250 --> 00:13:47,040
+It means TCP handshake,
+
+286
+00:13:47,040 --> 00:13:50,760
+TLS initialization, it
+means cluster discovery,
+
+287
+00:13:50,760 --> 00:13:51,750
+doing cluster slots,
+
+288
+00:13:51,750 --> 00:13:53,880
+understanding where everything is placed
+
+289
+00:13:53,880 --> 00:13:55,110
+on the cluster, right?
+
+290
+00:13:55,110 --> 00:13:57,450
+And then finally what we actually wanted,
+
+291
+00:13:57,450 --> 00:14:01,650
+which was getting the key,
+doing the GET command.
+
+292
+00:14:01,650 --> 00:14:06,210
+So I'm sure most of you
+have already know this,
+
+293
+00:14:06,210 --> 00:14:10,034
+but the good practice is to
+use persistent connections.
+
+294
+00:14:10,034 --> 00:14:12,480
+And that means just taking
+this connection initialization
+
+295
+00:14:12,480 --> 00:14:15,543
+part, taking it outside,
+oh, sorry about that.
+
+296
+00:14:18,000 --> 00:14:19,920
+Now I'm sure you know this,
+
+297
+00:14:19,920 --> 00:14:22,910
+but persistent connections
+are extremely important
+
+298
+00:14:22,910 --> 00:14:24,120
+and you can actually do them
+
+299
+00:14:24,120 --> 00:14:27,150
+even if your compute is lambda.
+
+300
+00:14:27,150 --> 00:14:28,800
+Some people don't realize it,
+
+301
+00:14:28,800 --> 00:14:31,500
+but lambdas, I mean they don't actually
+
+302
+00:14:31,500 --> 00:14:34,080
+get torn down after each call, right?
+
+303
+00:14:34,080 --> 00:14:35,430
+They persist.
+
+304
+00:14:35,430 --> 00:14:38,280
+If you have more quality, they remain hot.
+
+305
+00:14:38,280 --> 00:14:39,780
+So persistent are definitely useful
+
+306
+00:14:39,780 --> 00:14:44,040
+both for EC2, ECS, Kubernetes
+
+307
+00:14:44,040 --> 00:14:45,543
+or on the use cases.
+
+308
+00:14:46,891 --> 00:14:47,724
+But
+
+309
+00:14:50,700 --> 00:14:53,320
+another important point about connections
+
+310
+00:14:54,330 --> 00:14:56,580
+is to understand what happens
+
+311
+00:14:56,580 --> 00:14:59,163
+when we do this good practice, right?
+
+312
+00:15:00,540 --> 00:15:03,300
+So pipelining is another important factor
+
+313
+00:15:03,300 --> 00:15:06,720
+that can influence performance,
+especially when you are,
+
+314
+00:15:06,720 --> 00:15:08,670
+when you have a high
+performance application.
+
+315
+00:15:08,670 --> 00:15:09,503
+Let me explain.
+
+316
+00:15:11,010 --> 00:15:11,850
+Pipelining, by the way,
+
+317
+00:15:11,850 --> 00:15:15,000
+it means sending out multiple requests
+
+318
+00:15:15,000 --> 00:15:19,680
+on the same TCP connection
+without waiting for responses.
+
+319
+00:15:19,680 --> 00:15:23,310
+And this is exactly what's going
+to happen in our web server
+
+320
+00:15:23,310 --> 00:15:24,690
+because take a look,
+
+321
+00:15:24,690 --> 00:15:26,730
+what happens when a user,
+
+322
+00:15:26,730 --> 00:15:31,550
+user one sends a request
+and the server reads it?
+
+323
+00:15:31,550 --> 00:15:34,350
+It tell the request is going to shoot out
+
+324
+00:15:34,350 --> 00:15:37,140
+a GET command to our Valkey, right?
+
+325
+00:15:37,140 --> 00:15:39,510
+Now, this is asynchronous, right?
+
+326
+00:15:39,510 --> 00:15:40,920
+We are doing in a wait here,
+
+327
+00:15:40,920 --> 00:15:43,380
+that means that execution waits,
+
+328
+00:15:43,380 --> 00:15:45,360
+but the server is not blocked, right?
+
+329
+00:15:45,360 --> 00:15:49,590
+It can continue servicing
+more requests in the meantime.
+
+330
+00:15:49,590 --> 00:15:53,280
+So another request is read
+from user2 and what happens?
+
+331
+00:15:53,280 --> 00:15:55,839
+It gets sent well and user3,
+
+332
+00:15:55,839 --> 00:15:58,020
+and it gets sent as well.
+
+333
+00:15:58,020 --> 00:16:00,510
+So now we have a pipeline,
+
+334
+00:16:00,510 --> 00:16:03,570
+even though I haven't
+written the word pipeline
+
+335
+00:16:03,570 --> 00:16:06,240
+anywhere on this code, right?
+
+336
+00:16:06,240 --> 00:16:08,940
+It's kind of an implicit pipeline.
+
+337
+00:16:08,940 --> 00:16:09,960
+And that's what happened.
+
+338
+00:16:09,960 --> 00:16:13,143
+And don't try to get me
+wrong, pipelines are great.
+
+339
+00:16:14,070 --> 00:16:17,280
+Pipelining is an excellent
+way to increase latency
+
+340
+00:16:17,280 --> 00:16:19,560
+with Valkey or Open Source Redis
+
+341
+00:16:19,560 --> 00:16:23,070
+because it's kind of even
+you send things in batches.
+
+342
+00:16:23,070 --> 00:16:25,590
+The server has to do less work
+
+343
+00:16:25,590 --> 00:16:26,970
+in order to service them, right?
+
+344
+00:16:26,970 --> 00:16:28,980
+Less IO, maybe they can read
+
+345
+00:16:28,980 --> 00:16:31,293
+all the requests in a single IO operation.
+
+346
+00:16:32,430 --> 00:16:35,040
+I think the problem is
+when these pipelines,
+
+347
+00:16:35,040 --> 00:16:36,450
+when you have very high performance
+
+348
+00:16:36,450 --> 00:16:39,690
+and our game is going to
+have millions of requests
+
+349
+00:16:39,690 --> 00:16:41,730
+and the concurrencies
+going to be very high
+
+350
+00:16:41,730 --> 00:16:45,180
+for each of these application web server.
+
+351
+00:16:45,180 --> 00:16:48,600
+And then what happens if
+this is not three requests
+
+352
+00:16:48,600 --> 00:16:51,210
+at the same time but 1,000?
+
+353
+00:16:51,210 --> 00:16:55,230
+And that's where things
+get a little bit dicey.
+
+354
+00:16:55,230 --> 00:16:57,810
+Let's zoom into the TCP connection.
+
+355
+00:16:57,810 --> 00:17:00,900
+So we had request number
+one, user number one,
+
+356
+00:17:00,900 --> 00:17:03,960
+request for user number two,
+request for user number three.
+
+357
+00:17:03,960 --> 00:17:06,450
+Now the rest protocol for both Valkey
+
+358
+00:17:06,450 --> 00:17:09,780
+and Open Source Redis is ordered.
+
+359
+00:17:09,780 --> 00:17:13,500
+That means that responses
+must arrive in the same order
+
+360
+00:17:13,500 --> 00:17:15,780
+as the request that we send.
+
+361
+00:17:15,780 --> 00:17:18,270
+So very susceptible to
+head of line blocking.
+
+362
+00:17:18,270 --> 00:17:19,870
+What happens if user one
+
+363
+00:17:21,900 --> 00:17:24,330
+requested a very, very large profile?
+
+364
+00:17:24,330 --> 00:17:27,540
+We have to read all the
+response for user one
+
+365
+00:17:27,540 --> 00:17:31,140
+before we read the response
+for user two and three.
+
+366
+00:17:31,140 --> 00:17:31,973
+And so
+
+367
+00:17:33,566 --> 00:17:36,270
+that response for user one is literally
+
+368
+00:17:36,270 --> 00:17:39,393
+holding the head of the line for us.
+
+369
+00:17:40,260 --> 00:17:41,820
+And again, with small numbers
+
+370
+00:17:41,820 --> 00:17:45,720
+it's not significant, with
+large numbers more so.
+
+371
+00:17:45,720 --> 00:17:47,686
+And there's another problem.
+
+372
+00:17:47,686 --> 00:17:49,736
+What happens if you run into packet loss?
+
+373
+00:17:51,300 --> 00:17:53,610
+Should we even, I mean we're using TCP,
+
+374
+00:17:53,610 --> 00:17:56,043
+I mean, should we even
+worry about packet loss?
+
+375
+00:17:58,500 --> 00:17:59,523
+No, yes?
+
+376
+00:18:00,660 --> 00:18:03,813
+So I mean, TCP does guarantee delivery.
+
+377
+00:18:04,740 --> 00:18:08,340
+The only problem is that
+retransmissions in TCP
+
+378
+00:18:08,340 --> 00:18:13,340
+take at least 200
+microseconds to happen, right?
+
+379
+00:18:13,590 --> 00:18:16,380
+That's hardcoded on the Linux kernel.
+
+380
+00:18:16,380 --> 00:18:19,117
+It's not something you
+can do without rebuilding
+
+381
+00:18:19,117 --> 00:18:19,950
+it yourself or something.
+
+382
+00:18:19,950 --> 00:18:22,830
+So if we are having this large request
+
+383
+00:18:22,830 --> 00:18:26,700
+or just a request, it's not large.
+
+384
+00:18:26,700 --> 00:18:27,803
+And there's 1,000,
+
+385
+00:18:28,762 --> 00:18:30,180
+1,000 requests waiting behind it
+
+386
+00:18:30,180 --> 00:18:31,980
+and there's a packet loss.
+
+387
+00:18:31,980 --> 00:18:34,650
+All these requests, all
+these users are going
+
+388
+00:18:34,650 --> 00:18:36,633
+to have a major impact.
+
+389
+00:18:38,520 --> 00:18:41,880
+Now, packet loss is fact of life
+
+390
+00:18:41,880 --> 00:18:44,670
+when you have a distributed system, right?
+
+391
+00:18:44,670 --> 00:18:46,320
+We cannot avoid it,
+
+392
+00:18:46,320 --> 00:18:50,463
+but we definitely want to reduce
+the impact when it happens.
+
+393
+00:18:51,420 --> 00:18:56,070
+And the way to do that is to
+use more connections, right?
+
+394
+00:18:56,070 --> 00:18:59,013
+We can use more connections
+from the same application,
+
+395
+00:18:59,910 --> 00:19:04,200
+thus limiting the concurrency
+on each of these connections.
+
+396
+00:19:04,200 --> 00:19:06,450
+And that helps us
+minimize the blast radius,
+
+397
+00:19:06,450 --> 00:19:09,240
+whenever there's a large
+response or something like that.
+
+398
+00:19:09,240 --> 00:19:12,000
+I mean, we can even
+think about things like,
+
+399
+00:19:12,000 --> 00:19:16,770
+hey, if I know this type of
+request is going to be slower,
+
+400
+00:19:16,770 --> 00:19:19,650
+I can maybe place it on
+a dedicated connection.
+
+401
+00:19:19,650 --> 00:19:21,450
+That's another idea we can consider.
+
+402
+00:19:22,710 --> 00:19:24,720
+By the way, another very easy way
+
+403
+00:19:24,720 --> 00:19:28,530
+to reduce concurrency on each connection
+
+404
+00:19:28,530 --> 00:19:30,900
+is just to scale out
+your application, right?
+
+405
+00:19:30,900 --> 00:19:33,360
+The more application instances we have,
+
+406
+00:19:33,360 --> 00:19:36,690
+the less work each of them
+needs to do concurrently.
+
+407
+00:19:36,690 --> 00:19:38,643
+Of course that comes with a cost.
+
+408
+00:19:40,050 --> 00:19:41,850
+Let's talk about connection pooling.
+
+409
+00:19:42,810 --> 00:19:46,080
+So connection pooling means
+using multiple connections
+
+410
+00:19:46,080 --> 00:19:48,300
+from the same application instance.
+
+411
+00:19:48,300 --> 00:19:51,330
+Some Valkey and Redis clients
+
+412
+00:19:51,330 --> 00:19:53,823
+have connection pools built in,
+
+413
+00:19:55,170 --> 00:19:56,970
+but many of these clients,
+
+414
+00:19:56,970 --> 00:19:59,310
+especially the are
+synchronous ones, don't.
+
+415
+00:19:59,310 --> 00:20:01,440
+They actually use a single connection
+
+416
+00:20:01,440 --> 00:20:05,643
+and kind of multiplex
+request in that connection.
+
+417
+00:20:06,690 --> 00:20:09,000
+And so what we could do
+
+418
+00:20:09,000 --> 00:20:11,460
+if we actually need
+high concurrency, right?
+
+419
+00:20:11,460 --> 00:20:15,056
+If you're talking about millions
+of requests for application
+
+420
+00:20:15,056 --> 00:20:17,400
+and we have high concurrency
+over a single connection,
+
+421
+00:20:17,400 --> 00:20:19,890
+we can actually build them ourselves.
+
+422
+00:20:19,890 --> 00:20:22,560
+And for our game we can
+build something like this.
+
+423
+00:20:22,560 --> 00:20:23,973
+Notice what I'm doing here,
+
+424
+00:20:25,080 --> 00:20:27,060
+instead of creating one
+persistent connection,
+
+425
+00:20:27,060 --> 00:20:30,810
+I've just looped and
+created a bunch of them.
+
+426
+00:20:30,810 --> 00:20:33,330
+And whenever I want to use the connection,
+
+427
+00:20:33,330 --> 00:20:35,011
+I need to pick one, right?
+
+428
+00:20:35,011 --> 00:20:35,844
+I can choose.
+
+429
+00:20:35,844 --> 00:20:37,590
+So in my case, if you'll notice here,
+
+430
+00:20:37,590 --> 00:20:40,090
+I've done a module over the user id
+
+431
+00:20:41,043 --> 00:20:43,410
+just to kind of load balance
+between these connections.
+
+432
+00:20:43,410 --> 00:20:47,280
+But you can do randomization as well.
+
+433
+00:20:47,280 --> 00:20:48,633
+You can do round-robin,
+
+434
+00:20:49,753 --> 00:20:50,760
+you can module over something else
+
+435
+00:20:50,760 --> 00:20:52,643
+that makes sense for your application.
+
+436
+00:21:04,410 --> 00:21:09,240
+Okay, so everything is fine.
+
+437
+00:21:09,240 --> 00:21:10,833
+Our game runs perfectly.
+
+438
+00:21:11,670 --> 00:21:13,320
+Our cluster is very healthy,
+
+439
+00:21:13,320 --> 00:21:16,440
+it has a lot of total resources, right?
+
+440
+00:21:16,440 --> 00:21:18,180
+We have enough total memory,
+
+441
+00:21:18,180 --> 00:21:19,260
+enough total CPU,
+
+442
+00:21:19,260 --> 00:21:20,810
+enough total network bandwidth,
+
+443
+00:21:22,890 --> 00:21:24,420
+everything is peachy
+
+444
+00:21:24,420 --> 00:21:26,850
+and then suddenly it's not, right?
+
+445
+00:21:26,850 --> 00:21:29,973
+Even though we have enough resources,
+
+446
+00:21:31,200 --> 00:21:34,320
+we have an alarm, our latency is spiking,
+
+447
+00:21:34,320 --> 00:21:37,260
+our throughput is reducing
+
+448
+00:21:37,260 --> 00:21:40,350
+and going to scramble to
+figure out what happened.
+
+449
+00:21:40,350 --> 00:21:42,360
+And a lot of cases,
+
+450
+00:21:42,360 --> 00:21:45,690
+what happens is that we
+can run into hotspots.
+
+451
+00:21:45,690 --> 00:21:50,220
+Hotspots mean that a lot
+of your traffic are hitting
+
+452
+00:21:50,220 --> 00:21:53,670
+one particular node in the cluster, right?
+
+453
+00:21:53,670 --> 00:21:56,460
+And that's usually
+because you have hot keys.
+
+454
+00:21:56,460 --> 00:21:58,830
+So you have a key that's very popular
+
+455
+00:21:58,830 --> 00:22:00,840
+and you need to read it a lot of times.
+
+456
+00:22:00,840 --> 00:22:03,060
+But with Valkey and Redis,
+
+457
+00:22:03,060 --> 00:22:06,480
+doesn't matter if it's
+serverless or not serverless,
+
+458
+00:22:06,480 --> 00:22:09,240
+each shard actually owns, sorry,
+
+459
+00:22:09,240 --> 00:22:11,523
+each key is owned by a single shard.
+
+460
+00:22:12,750 --> 00:22:15,330
+And so, I mean, if this weren't,
+
+461
+00:22:15,330 --> 00:22:17,491
+if we're diving into the,
+
+462
+00:22:17,491 --> 00:22:19,562
+in the metrics to understand
+what the problem is.
+
+463
+00:22:19,562 --> 00:22:21,510
+Let's say we all went through the metrics,
+
+464
+00:22:21,510 --> 00:22:23,490
+we reached the network bandwidth case,
+
+465
+00:22:23,490 --> 00:22:26,406
+we see all of the shards,
+
+466
+00:22:26,406 --> 00:22:27,239
+that's all of the shards
+
+467
+00:22:27,239 --> 00:22:29,313
+do kind of moderate bandwidth network,
+
+468
+00:22:30,340 --> 00:22:32,940
+network bandwidth and one of
+them is significantly higher.
+
+469
+00:22:32,940 --> 00:22:35,973
+And that's probably a good
+indication of a hotspot.
+
+470
+00:22:37,380 --> 00:22:38,613
+Now what happens here?
+
+471
+00:22:39,630 --> 00:22:43,165
+When we, all of us dove into
+
+472
+00:22:43,165 --> 00:22:44,100
+and debugged our situation,
+
+473
+00:22:44,100 --> 00:22:47,133
+we found that we have particular
+castle map in the game.
+
+474
+00:22:48,447 --> 00:22:50,235
+That's 100 kilobytes in size,
+
+475
+00:22:50,235 --> 00:22:51,720
+so not very huge, right?
+
+476
+00:22:51,720 --> 00:22:54,150
+And it's very popular. Users love it.
+
+477
+00:22:54,150 --> 00:22:58,440
+That's a good thing and we
+have to read it a lot of times.
+
+478
+00:22:58,440 --> 00:23:01,730
+But the problem is that
+say we didn't choose
+
+479
+00:23:01,730 --> 00:23:03,480
+ElastiCache Serverless for
+this particular example,
+
+480
+00:23:03,480 --> 00:23:05,940
+we chose an, for our nodes,
+
+481
+00:23:05,940 --> 00:23:10,940
+which has 937 megabytes per
+second bandwidth, right?
+
+482
+00:23:11,190 --> 00:23:14,340
+If you calculate and you
+divide it by 100 kilobytes,
+
+483
+00:23:14,340 --> 00:23:17,250
+you can only do around
+1,000 requests per second
+
+484
+00:23:17,250 --> 00:23:18,093
+for this object.
+
+485
+00:23:18,960 --> 00:23:21,360
+I mean, that's extremely
+low for Valkey, right?
+
+486
+00:23:21,360 --> 00:23:23,733
+Just 1,000 requests per second.
+
+487
+00:23:24,720 --> 00:23:27,660
+And, and so the most obvious thing
+
+488
+00:23:27,660 --> 00:23:29,500
+that we can do in these cases
+
+489
+00:23:30,360 --> 00:23:34,830
+is probably to just scale
+up our nodes, right?
+
+490
+00:23:34,830 --> 00:23:36,480
+We take the nodes, we replace them
+
+491
+00:23:36,480 --> 00:23:38,760
+with larger instance types,
+
+492
+00:23:38,760 --> 00:23:40,740
+let's say twice as large.
+
+493
+00:23:40,740 --> 00:23:43,200
+So we get twice the bandwidth
+
+494
+00:23:43,200 --> 00:23:45,300
+and we can do instead of 1,000,
+
+495
+00:23:45,300 --> 00:23:46,893
+we can do 2,000.
+
+496
+00:23:47,760 --> 00:23:50,253
+But of course this comes with a cost.
+
+497
+00:23:51,600 --> 00:23:54,000
+And also by the way, with serverless
+
+498
+00:23:54,000 --> 00:23:55,950
+you don't have to worry
+about this particular,
+
+499
+00:23:55,950 --> 00:23:59,640
+about scale up because
+serverless automatically scales
+
+500
+00:23:59,640 --> 00:24:02,450
+your instances up in place.
+
+501
+00:24:02,450 --> 00:24:05,343
+And Yaron is going to dive
+deeper into that in a minute.
+
+502
+00:24:06,750 --> 00:24:08,670
+But I mean even with serverless,
+
+503
+00:24:08,670 --> 00:24:11,250
+what if you don't want x2?
+
+504
+00:24:11,250 --> 00:24:13,050
+What if you want x4?
+
+505
+00:24:13,050 --> 00:24:13,900
+What if you want,
+
+506
+00:24:15,020 --> 00:24:17,820
+actually what if you
+want x10 or x50 or x100?
+
+507
+00:24:17,820 --> 00:24:19,440
+We are not gonna find an instance types
+
+508
+00:24:19,440 --> 00:24:21,660
+with that much network, right?
+
+509
+00:24:21,660 --> 00:24:23,130
+Just doesn't exist.
+
+510
+00:24:23,130 --> 00:24:24,123
+So what can we do?
+
+511
+00:24:25,950 --> 00:24:28,440
+One ice mitigation that we can try
+
+512
+00:24:28,440 --> 00:24:30,630
+is we can duplicate our object, right?
+
+513
+00:24:30,630 --> 00:24:32,073
+We can take our castle map,
+
+514
+00:24:32,937 --> 00:24:34,337
+all of our castle maps
+
+515
+00:24:34,337 --> 00:24:35,940
+and we can create copies of them.
+
+516
+00:24:35,940 --> 00:24:38,310
+Now because each copy is a different key.
+
+517
+00:24:38,310 --> 00:24:40,500
+It get placed in a different shard.
+
+518
+00:24:40,500 --> 00:24:44,250
+And now whenever we read a
+castle map from application,
+
+519
+00:24:44,250 --> 00:24:46,590
+we can choose which copy to get
+
+520
+00:24:46,590 --> 00:24:48,300
+and now we we're spreading the load,
+
+521
+00:24:48,300 --> 00:24:49,740
+the kind of load balancing,
+
+522
+00:24:49,740 --> 00:24:51,930
+the load of reading these objects
+
+523
+00:24:51,930 --> 00:24:54,090
+between different shards.
+
+524
+00:24:54,090 --> 00:24:58,050
+Now think about it, with
+serverless it automatically scales.
+
+525
+00:24:58,050 --> 00:24:59,070
+Scales, sorry.
+
+526
+00:24:59,070 --> 00:25:01,413
+And it can reach hundreds of nodes.
+
+527
+00:25:02,559 --> 00:25:04,860
+That means that if you do
+100 copies of your object,
+
+528
+00:25:04,860 --> 00:25:06,750
+if you need, if you need 100 copies,
+
+529
+00:25:06,750 --> 00:25:10,443
+you'll get 100 times your throughput.
+
+530
+00:25:12,960 --> 00:25:14,400
+Another thing that we of course can do,
+
+531
+00:25:14,400 --> 00:25:16,020
+we can read from replicas, right?
+
+532
+00:25:16,020 --> 00:25:18,060
+If we can read from replicas,
+
+533
+00:25:18,060 --> 00:25:22,023
+we have more nodes kind
+participating in our load balancing.
+
+534
+00:25:24,030 --> 00:25:26,770
+Let me show you a very naive example
+
+535
+00:25:27,720 --> 00:25:30,360
+of code for this.
+
+536
+00:25:30,360 --> 00:25:32,480
+We have our CastleCache
+
+537
+00:25:34,195 --> 00:25:35,850
+and when we read, what we need to do
+
+538
+00:25:35,850 --> 00:25:38,940
+is to choose one of our copies, right?
+
+539
+00:25:38,940 --> 00:25:40,410
+So we're choosing a copy
+
+540
+00:25:40,410 --> 00:25:45,003
+and here to modular over
+the application worker id.
+
+541
+00:25:45,840 --> 00:25:48,750
+It helps me maybe with data consistency,
+
+542
+00:25:48,750 --> 00:25:52,350
+but you can randomize,
+you can do round-robin,
+
+543
+00:25:52,350 --> 00:25:54,990
+you can do whatever business logic
+
+544
+00:25:54,990 --> 00:25:56,690
+makes sense for your applications.
+
+545
+00:26:02,520 --> 00:26:05,130
+Do you folks already see the caveat here?
+
+546
+00:26:05,130 --> 00:26:07,680
+What happens when we want
+to update the castle map?
+
+547
+00:26:08,610 --> 00:26:11,670
+We have to go and update
+all the copies, right?
+
+548
+00:26:11,670 --> 00:26:13,680
+So if there's 10 copies or 100 copies,
+
+549
+00:26:13,680 --> 00:26:15,630
+we have to do 100 writes.
+
+550
+00:26:15,630 --> 00:26:17,247
+So,
+
+551
+00:26:17,247 --> 00:26:20,040
+and this really works great
+
+552
+00:26:20,040 --> 00:26:22,770
+for situations when
+you have a lot of reads
+
+553
+00:26:22,770 --> 00:26:26,670
+but not as many writes.
+
+554
+00:26:26,670 --> 00:26:28,170
+That's a very common use case, right?
+
+555
+00:26:28,170 --> 00:26:30,390
+This is very, this is super helpful
+
+556
+00:26:30,390 --> 00:26:31,223
+or it can be.
+
+557
+00:26:32,520 --> 00:26:34,620
+But if you do have to do a lot of reads
+
+558
+00:26:34,620 --> 00:26:37,710
+and writes at the same
+kind of frequencies,
+
+559
+00:26:37,710 --> 00:26:38,910
+this won't work for you.
+
+560
+00:26:40,477 --> 00:26:43,050
+So we have another
+mitigation that we can try.
+
+561
+00:26:43,050 --> 00:26:46,170
+It's a little bit more
+work on application,
+
+562
+00:26:46,170 --> 00:26:47,550
+but we can actually split,
+
+563
+00:26:47,550 --> 00:26:50,343
+break apart our object into smaller ones.
+
+564
+00:26:51,570 --> 00:26:55,080
+So for our game, we can take each castle
+
+565
+00:26:55,080 --> 00:26:58,353
+and maybe break it down
+into rooms or areas.
+
+566
+00:26:59,702 --> 00:27:01,530
+And now when we want to read them,
+
+567
+00:27:01,530 --> 00:27:06,240
+we can actually pipeline multiple reads,
+
+568
+00:27:06,240 --> 00:27:08,580
+get all the parts for our castle
+
+569
+00:27:08,580 --> 00:27:11,550
+and then assemble them
+on the application side.
+
+570
+00:27:11,550 --> 00:27:15,600
+And now see how the load is again
+
+571
+00:27:15,600 --> 00:27:18,543
+spread over more shards,
+
+572
+00:27:19,830 --> 00:27:22,350
+kind of mitigating the hotspot.
+
+573
+00:27:22,350 --> 00:27:26,390
+And if we can do further
+optimizations for application,
+
+574
+00:27:26,390 --> 00:27:29,220
+we can maybe, maybe we can down the line
+
+575
+00:27:29,220 --> 00:27:32,250
+write logic that we don't
+need to get all the rooms
+
+576
+00:27:32,250 --> 00:27:35,460
+for a particular user,
+
+577
+00:27:35,460 --> 00:27:37,680
+we can just get a subset
+of things like that.
+
+578
+00:27:37,680 --> 00:27:41,414
+And of course you can use
+your imagination outside
+
+579
+00:27:41,414 --> 00:27:43,500
+of this game example to
+see how you can break apart
+
+580
+00:27:43,500 --> 00:27:46,113
+your object and your application.
+
+581
+00:27:51,930 --> 00:27:54,570
+Right, now let me turn over to Yaron
+
+582
+00:27:54,570 --> 00:27:56,653
+who is going to tell you
+
+583
+00:27:56,653 --> 00:27:58,350
+how we designed ElastiCache Serverless,
+
+584
+00:27:58,350 --> 00:28:00,570
+how we're doing all
+this automatic scaling?
+
+585
+00:28:00,570 --> 00:28:01,403
+Thank you.
+
+586
+00:28:02,910 --> 00:28:03,843
+- Thank you, Elad.
+
+587
+00:28:06,540 --> 00:28:08,790
+So a moment before I dive
+deep into the serverless
+
+588
+00:28:08,790 --> 00:28:11,850
+and the way that we
+build all the technology
+
+589
+00:28:11,850 --> 00:28:12,933
+behind the scenes.
+
+590
+00:28:14,268 --> 00:28:16,818
+Elad mentioned multiple
+challenges that we need to,
+
+591
+00:28:17,910 --> 00:28:19,350
+to take care when we build an application,
+
+592
+00:28:19,350 --> 00:28:22,053
+specifically for build
+them for high scale.
+
+593
+00:28:23,010 --> 00:28:24,630
+So I want to tell you with
+ElastiCache Serverless,
+
+594
+00:28:24,630 --> 00:28:27,660
+you don't need to worry
+about capacity planning
+
+595
+00:28:27,660 --> 00:28:29,160
+or rightsizing your cluster.
+
+596
+00:28:29,160 --> 00:28:33,210
+You can still achieve
+millions request per second
+
+597
+00:28:33,210 --> 00:28:35,883
+with the sub-milliseconds response time,
+
+598
+00:28:36,990 --> 00:28:40,710
+just using by ElastiCache Serverless.
+
+599
+00:28:40,710 --> 00:28:44,640
+Now when you create an endpoint
+to ElastiCache Serverless,
+
+600
+00:28:44,640 --> 00:28:48,990
+automatically we are distributing
+all the infrastructure
+
+601
+00:28:48,990 --> 00:28:52,353
+of the serverless across
+multiple availability zone.
+
+602
+00:28:53,280 --> 00:28:57,780
+We do that first for high
+resiliency, high availability,
+
+603
+00:28:57,780 --> 00:29:01,710
+but we also do that to achieve
+a very good performance
+
+604
+00:29:01,710 --> 00:29:04,050
+and to reduce the latency.
+
+605
+00:29:04,050 --> 00:29:07,140
+I will show you in a
+moment how it's happening.
+
+606
+00:29:07,140 --> 00:29:11,670
+So once you create your endpoint
+to ElastiCache Serverless,
+
+607
+00:29:11,670 --> 00:29:15,570
+you connect from your
+VPC using VPC endpoint
+
+608
+00:29:15,570 --> 00:29:18,450
+to the ElastiCache Serverless VPC.
+
+609
+00:29:18,450 --> 00:29:22,400
+At the beginning you are
+going to reach the NLB,
+
+610
+00:29:22,400 --> 00:29:24,540
+and the NLB responsible
+
+611
+00:29:24,540 --> 00:29:29,013
+to balance the traffic
+across the serverless proxy.
+
+612
+00:29:30,240 --> 00:29:33,564
+Now I'm going to talk about the
+proxy in the next few slides
+
+613
+00:29:33,564 --> 00:29:35,250
+and to explain why we build the proxy,
+
+614
+00:29:35,250 --> 00:29:37,020
+but overall the main job of the proxy
+
+615
+00:29:37,020 --> 00:29:41,403
+is to route your request
+to the correct cache node.
+
+616
+00:29:42,240 --> 00:29:46,390
+Now we also know to locate your
+
+617
+00:29:47,749 --> 00:29:50,670
+local proxy that sit on
+the same availability zone
+
+618
+00:29:50,670 --> 00:29:53,520
+so you can reach the minimum latency
+
+619
+00:29:53,520 --> 00:29:57,110
+while you connect to
+ElastiCache Serverless.
+
+620
+00:29:58,260 --> 00:30:00,660
+So as I mentioned, the proxy responsible
+
+621
+00:30:00,660 --> 00:30:04,050
+to route the request to
+the correct cache node
+
+622
+00:30:04,050 --> 00:30:06,570
+and you know to do it
+very, very effectively.
+
+623
+00:30:06,570 --> 00:30:08,820
+The reason that you know
+to do it effectively
+
+624
+00:30:10,690 --> 00:30:12,600
+is because we are using a
+multiplex in technology,
+
+625
+00:30:12,600 --> 00:30:14,373
+multiplex in protocol.
+
+626
+00:30:15,268 --> 00:30:17,400
+We actually use a TCP, single TCP channel
+
+627
+00:30:17,400 --> 00:30:20,250
+to connect the cache node
+while we are moving on
+
+628
+00:30:20,250 --> 00:30:25,250
+that TCP channel multiple
+different connections of clients.
+
+629
+00:30:25,290 --> 00:30:28,650
+And in that way we are reducing
+the number of connection
+
+630
+00:30:28,650 --> 00:30:32,520
+and we also reducing the number
+
+631
+00:30:32,520 --> 00:30:37,473
+of system call upon every
+network transaction.
+
+632
+00:30:39,090 --> 00:30:42,600
+Now I want to move back
+to the cache node itself.
+
+633
+00:30:42,600 --> 00:30:45,713
+We are running on a
+multi-tenant environment,
+
+634
+00:30:45,713 --> 00:30:47,760
+we're running on a physical host
+
+635
+00:30:47,760 --> 00:30:51,210
+that we are constantly
+monitoring all the time.
+
+636
+00:30:51,210 --> 00:30:55,590
+We have service that we
+call it heat management
+
+637
+00:30:55,590 --> 00:30:58,830
+and the job of the heat
+management is to monitoring
+
+638
+00:30:58,830 --> 00:31:02,433
+the cache node, all the
+physical host across our fleet.
+
+639
+00:31:03,300 --> 00:31:06,360
+Now because we are running on
+a multi-tenant environment,
+
+640
+00:31:06,360 --> 00:31:10,653
+we are sharing resources like
+CPU, memory and networking.
+
+641
+00:31:12,300 --> 00:31:15,330
+And the cache nodes running inside the VM
+
+642
+00:31:15,330 --> 00:31:17,970
+within the physical host.
+
+643
+00:31:17,970 --> 00:31:22,083
+And as you can see, each cache
+node has a different size.
+
+644
+00:31:23,190 --> 00:31:25,401
+And the reason for that is
+
+645
+00:31:25,401 --> 00:31:29,747
+because each cache node has a
+different workload to digest.
+
+646
+00:31:30,870 --> 00:31:33,730
+Now our job as a
+serverless is to make sure
+
+647
+00:31:34,869 --> 00:31:36,840
+that you have the enough extra capacity
+
+648
+00:31:36,840 --> 00:31:38,973
+to run your workload.
+
+649
+00:31:40,290 --> 00:31:42,600
+So I mentioned before that
+we have the heat management
+
+650
+00:31:42,600 --> 00:31:46,560
+process that run and consolidate
+all the physical host
+
+651
+00:31:46,560 --> 00:31:48,123
+status across our fleet.
+
+652
+00:31:49,440 --> 00:31:51,870
+And because we are constantly monitoring
+
+653
+00:31:51,870 --> 00:31:54,000
+and making sure that we don't,
+
+654
+00:31:54,000 --> 00:31:57,093
+you do have enough resource
+to run your workloads,
+
+655
+00:31:58,380 --> 00:32:01,950
+we are in some situation
+we can find a physical loss
+
+656
+00:32:01,950 --> 00:32:04,860
+that reach to some threshold.
+
+657
+00:32:04,860 --> 00:32:06,530
+For example, in here what you see,
+
+658
+00:32:06,530 --> 00:32:10,150
+we reach to some threshold
+of memory and network
+
+659
+00:32:11,364 --> 00:32:13,971
+and we need to start to think how to move,
+
+660
+00:32:13,971 --> 00:32:17,070
+to evict some of the cache
+node from this physical host
+
+661
+00:32:17,070 --> 00:32:19,083
+to a more available physical host.
+
+662
+00:32:22,440 --> 00:32:26,416
+So we are running the, we
+are using the algorithm
+
+663
+00:32:26,416 --> 00:32:27,780
+of the power of the two random choices.
+
+664
+00:32:27,780 --> 00:32:29,197
+We actually picking two,
+
+665
+00:32:30,111 --> 00:32:32,940
+the two most hottest cache node
+
+666
+00:32:32,940 --> 00:32:36,000
+and we are choose to
+move only the second one.
+
+667
+00:32:36,000 --> 00:32:38,065
+The reason that we are choosing
+
+668
+00:32:38,065 --> 00:32:38,910
+to move only the second one
+
+669
+00:32:38,910 --> 00:32:42,540
+is because we don't want to
+interrupt the most busy one
+
+670
+00:32:42,540 --> 00:32:44,370
+that probably going under heavy load
+
+671
+00:32:44,370 --> 00:32:48,429
+and start to with maybe
+scaling operations.
+
+672
+00:32:48,429 --> 00:32:49,410
+So we want to let them succeed
+
+673
+00:32:49,410 --> 00:32:51,690
+but we still want to move the one
+
+674
+00:32:51,690 --> 00:32:54,240
+that will release enough resources
+
+675
+00:32:54,240 --> 00:32:58,500
+once we move them to a
+more available cache node.
+
+676
+00:32:58,500 --> 00:33:01,982
+Now Elad before that explain
+you why it's so important
+
+677
+00:33:01,982 --> 00:33:03,090
+to have a persistent connection.
+
+678
+00:33:03,090 --> 00:33:05,700
+There is a cost when you
+create a new connection
+
+679
+00:33:05,700 --> 00:33:09,120
+and with the proxy, we promise
+you while all the changes
+
+680
+00:33:09,120 --> 00:33:12,180
+happening behind the scene
+to store your connection
+
+681
+00:33:12,180 --> 00:33:16,053
+and to have it persistent to
+the ElastiCache Serverless.
+
+682
+00:33:17,520 --> 00:33:20,070
+Of course the proxy will also responsible
+
+683
+00:33:20,070 --> 00:33:24,700
+to move the connection to the
+new created the cache node,
+
+684
+00:33:24,700 --> 00:33:26,790
+the one that we moved to
+a different physical host.
+
+685
+00:33:26,790 --> 00:33:30,570
+And in that way we are keeping
+all the fleets very balanced
+
+686
+00:33:30,570 --> 00:33:33,093
+with all the enough
+resources that is required.
+
+687
+00:33:36,090 --> 00:33:38,670
+Now there are some situation
+that you cannot wait
+
+688
+00:33:38,670 --> 00:33:41,190
+for the heat management
+to free enough resources
+
+689
+00:33:41,190 --> 00:33:43,860
+for your workload and you need
+something more drastically.
+
+690
+00:33:43,860 --> 00:33:48,090
+You need to handle a burst of a workload
+
+691
+00:33:48,090 --> 00:33:50,010
+that kicks in because of event
+
+692
+00:33:50,010 --> 00:33:53,400
+or something that now is
+happening in your business.
+
+693
+00:33:53,400 --> 00:33:56,460
+And for that we build
+a very nice technology
+
+694
+00:33:56,460 --> 00:33:59,550
+in the ElastiCache
+Serverless to support that.
+
+695
+00:33:59,550 --> 00:34:02,910
+We are actually using
+a platform technology
+
+696
+00:34:02,910 --> 00:34:06,570
+that does not have a fixed
+memory or CPU footprint
+
+697
+00:34:06,570 --> 00:34:10,653
+and can be rescaled up
+and down very instantly.
+
+698
+00:34:12,840 --> 00:34:15,300
+We are using the technology that,
+
+699
+00:34:15,300 --> 00:34:17,700
+this technology based on a
+multi-talented environment
+
+700
+00:34:17,700 --> 00:34:20,643
+so we can keep the cost very minimal.
+
+701
+00:34:22,320 --> 00:34:26,970
+So our, this technology allow us
+
+702
+00:34:26,970 --> 00:34:30,390
+actually to scale up very quickly
+
+703
+00:34:30,390 --> 00:34:34,950
+and to use the more cause
+and memory that we have
+
+704
+00:34:34,950 --> 00:34:36,213
+on the physical host.
+
+705
+00:34:37,218 --> 00:34:40,680
+And actually we can support
+eight time more throughput
+
+706
+00:34:40,680 --> 00:34:44,370
+on demand while once there are kicks in
+
+707
+00:34:44,370 --> 00:34:49,063
+into the serverless technology,
+serverless endpoint.
+
+708
+00:34:50,490 --> 00:34:54,120
+Now because we start with scale up,
+
+709
+00:34:54,120 --> 00:34:57,513
+now we have time to start the
+scale horizontally, scale out.
+
+710
+00:34:58,839 --> 00:35:01,440
+And the way we do that
+there are three main stages.
+
+711
+00:35:01,440 --> 00:35:04,713
+We have the detection which
+is happening very quickly.
+
+712
+00:35:05,580 --> 00:35:08,400
+We also have the ability to project
+
+713
+00:35:08,400 --> 00:35:11,250
+the income in the upcoming workloads
+
+714
+00:35:11,250 --> 00:35:14,160
+because we are constantly
+monitoring your workloads.
+
+715
+00:35:14,160 --> 00:35:18,351
+And we know to predict
+what would be the workload
+
+716
+00:35:18,351 --> 00:35:19,973
+in the next coming minutes.
+
+717
+00:35:19,973 --> 00:35:22,140
+So we can prescale your
+cluster behind the scene
+
+718
+00:35:22,140 --> 00:35:27,090
+and be ready for the
+workloads that can come.
+
+719
+00:35:27,090 --> 00:35:31,770
+Now the second stage is the provisioning.
+
+720
+00:35:31,770 --> 00:35:34,110
+To provision a new node is very costly,
+
+721
+00:35:34,110 --> 00:35:36,960
+but we are using a warm pool.
+
+722
+00:35:36,960 --> 00:35:41,960
+Warm pool is list of cache
+node predefined, preinstalled
+
+723
+00:35:42,120 --> 00:35:46,413
+that waiting to be attached
+very quickly to the cluster.
+
+724
+00:35:47,610 --> 00:35:49,500
+Now once we use the warm pool,
+
+725
+00:35:49,500 --> 00:35:51,780
+we are attaching them to the cluster
+
+726
+00:35:51,780 --> 00:35:55,080
+and the next, the last
+phase that now is required
+
+727
+00:35:55,080 --> 00:35:58,950
+is to move the data
+from the original shards
+
+728
+00:35:58,950 --> 00:36:01,263
+to the new shards that we just attached.
+
+729
+00:36:03,082 --> 00:36:04,200
+So for that we are doing,
+
+730
+00:36:04,200 --> 00:36:07,530
+we are monitoring the data within the slot
+
+731
+00:36:07,530 --> 00:36:09,330
+and we are capable to determine
+
+732
+00:36:09,330 --> 00:36:12,390
+which of the slots are considered as hot
+
+733
+00:36:12,390 --> 00:36:13,680
+and which of them are cold.
+
+734
+00:36:13,680 --> 00:36:15,480
+And based on that we can decide which slot
+
+735
+00:36:15,480 --> 00:36:17,820
+we want to move to which target.
+
+736
+00:36:17,820 --> 00:36:20,310
+We can do that in
+parallel within the slot.
+
+737
+00:36:20,310 --> 00:36:22,650
+So we can move them very quickly
+
+738
+00:36:22,650 --> 00:36:25,800
+and we can do it in parallel
+between the different targets.
+
+739
+00:36:25,800 --> 00:36:30,180
+So we can actually assign
+multiple targets to our cluster
+
+740
+00:36:30,180 --> 00:36:33,030
+and to transfer the data in parallel.
+
+741
+00:36:33,030 --> 00:36:35,640
+So the scale out happens so quickly
+
+742
+00:36:35,640 --> 00:36:39,303
+so we can double the cluster
+throughput every two minutes.
+
+743
+00:36:42,840 --> 00:36:45,834
+Now I promised that I
+will speak about proxy
+
+744
+00:36:45,834 --> 00:36:48,150
+and the reason why we build it.
+
+745
+00:36:48,150 --> 00:36:49,440
+First we decided to build,
+
+746
+00:36:49,440 --> 00:36:52,110
+to have a single logical entry point
+
+747
+00:36:52,110 --> 00:36:54,310
+to the serverless cluster
+
+748
+00:36:55,320 --> 00:36:56,850
+and for that we build the proxy.
+
+749
+00:36:56,850 --> 00:37:00,720
+The proxy main job is to route the request
+
+750
+00:37:00,720 --> 00:37:04,410
+from the client application
+to the cache node.
+
+751
+00:37:04,410 --> 00:37:07,620
+So it's actually encapsulate
+all the underlying cluster
+
+752
+00:37:07,620 --> 00:37:11,520
+topology, everything
+that related to failover,
+
+753
+00:37:11,520 --> 00:37:13,743
+disconnection, scaling,
+
+754
+00:37:15,360 --> 00:37:17,460
+everything that happened behind the scene.
+
+755
+00:37:18,500 --> 00:37:20,940
+So your application can consist
+with a single connection
+
+756
+00:37:20,940 --> 00:37:24,510
+to the proxy while the proxy
+will maintain thousands
+
+757
+00:37:24,510 --> 00:37:28,170
+of connection behind the
+scene to the cluster.
+
+758
+00:37:28,170 --> 00:37:30,810
+And you don't need to be careful about
+
+759
+00:37:30,810 --> 00:37:33,990
+because you can scale your throughput
+
+760
+00:37:33,990 --> 00:37:36,780
+very instantly using this proxy technology
+
+761
+00:37:36,780 --> 00:37:38,370
+and all the scaling that I mentioned.
+
+762
+00:37:38,370 --> 00:37:41,160
+So you can jump from 0 to 5 million
+
+763
+00:37:41,160 --> 00:37:44,343
+request per second in only 12 minutes.
+
+764
+00:37:49,320 --> 00:37:53,850
+Now if your application
+is latency sensitive
+
+765
+00:37:53,850 --> 00:37:57,840
+and you don't have a strong
+consistency requirement,
+
+766
+00:37:57,840 --> 00:38:02,220
+you can use the read
+form that we also have it
+
+767
+00:38:02,220 --> 00:38:04,833
+on ElastiCache Serverless.
+
+768
+00:38:05,670 --> 00:38:06,970
+Every time that you create
+
+769
+00:38:09,480 --> 00:38:11,700
+without. (faintly speaking)
+
+770
+00:38:11,700 --> 00:38:14,130
+We create one primary
+
+771
+00:38:14,130 --> 00:38:16,863
+and two replica as a
+beginning of the shard.
+
+772
+00:38:17,970 --> 00:38:20,490
+Now if you want to connect to the replica,
+
+773
+00:38:20,490 --> 00:38:22,901
+the only thing that you need to do
+
+774
+00:38:22,901 --> 00:38:24,510
+is to flag the connection that you want
+
+775
+00:38:24,510 --> 00:38:26,940
+to read the data from the replica
+
+776
+00:38:26,940 --> 00:38:29,400
+and the proxy will do it for you.
+
+777
+00:38:29,400 --> 00:38:33,180
+Another thing that the proxy
+will always make sure to do
+
+778
+00:38:33,180 --> 00:38:37,413
+is to read always from the
+local availability zone.
+
+779
+00:38:38,462 --> 00:38:40,440
+So regardless if it's primary or replica,
+
+780
+00:38:40,440 --> 00:38:42,810
+the proxy will make sure to read the data
+
+781
+00:38:42,810 --> 00:38:45,690
+from the local AZ so you
+can achieve the microseconds
+
+782
+00:38:45,690 --> 00:38:46,523
+response time.
+
+783
+00:38:48,120 --> 00:38:51,170
+Now let's take a look
+how to build the code
+
+784
+00:38:51,170 --> 00:38:52,960
+so we can see how simple is it
+
+785
+00:38:53,910 --> 00:38:56,130
+to work with ElastiCache Serverless.
+
+786
+00:38:56,130 --> 00:38:58,687
+So here in my code I'm just connecting
+
+787
+00:38:58,687 --> 00:39:00,660
+to my ElastiCache Serverless.
+
+788
+00:39:01,740 --> 00:39:04,680
+I'm using TLS enabled because
+always when we running
+
+789
+00:39:04,680 --> 00:39:08,580
+on serverless we support
+only TLS connection.
+
+790
+00:39:08,580 --> 00:39:11,700
+And here I'm flagging on
+that specific connection.
+
+791
+00:39:11,700 --> 00:39:12,990
+I'm telling to the proxy,
+
+792
+00:39:12,990 --> 00:39:15,630
+I want this connection
+also to read the data
+
+793
+00:39:15,630 --> 00:39:19,200
+from the replication so I can
+scale the read throughput.
+
+794
+00:39:19,200 --> 00:39:22,353
+And I can also achieve the
+sub-milliseconds response time.
+
+795
+00:39:24,780 --> 00:39:27,870
+Here I have three very
+simple block of codes.
+
+796
+00:39:27,870 --> 00:39:31,590
+The first one just populate
+a few keys to my cache nodes,
+
+797
+00:39:31,590 --> 00:39:33,810
+to my cache serverless.
+
+798
+00:39:33,810 --> 00:39:37,500
+The second one is a fall loop
+that I'm fetching the data
+
+799
+00:39:37,500 --> 00:39:39,393
+for my cache node.
+
+800
+00:39:40,530 --> 00:39:44,100
+And the third one is pretty
+the same just with pipeline.
+
+801
+00:39:44,100 --> 00:39:46,140
+I'm doing a batch of multiple keys
+
+802
+00:39:46,140 --> 00:39:48,300
+that are running altogether.
+
+803
+00:39:48,300 --> 00:39:52,009
+Now as simple as that is that we are going
+
+804
+00:39:52,009 --> 00:39:52,942
+through the proxy.
+
+805
+00:39:52,942 --> 00:39:56,040
+Now the proxy will make sure
+that to spread the request
+
+806
+00:39:56,040 --> 00:39:57,940
+to the correct shard behind the scene.
+
+807
+00:39:58,825 --> 00:39:59,658
+It will also promise me
+
+808
+00:39:59,658 --> 00:40:02,160
+that if there is any disconnection scaling
+
+809
+00:40:02,160 --> 00:40:04,830
+that happened in parallel, fail over,
+
+810
+00:40:04,830 --> 00:40:07,053
+nothing will disrupt my connection.
+
+811
+00:40:07,950 --> 00:40:08,820
+Everything is happening
+
+812
+00:40:08,820 --> 00:40:10,870
+because the proxy will take care of that.
+
+813
+00:40:11,949 --> 00:40:14,400
+And the most important is
+that the proxy will promise me
+
+814
+00:40:14,400 --> 00:40:18,210
+to read the data from my
+local availability zone.
+
+815
+00:40:18,210 --> 00:40:20,640
+As you can see the beautiful thing here
+
+816
+00:40:20,640 --> 00:40:22,440
+is that my code stay clean.
+
+817
+00:40:22,440 --> 00:40:24,630
+I don't need to worry about that,
+
+818
+00:40:24,630 --> 00:40:28,260
+I don't need to put any
+special code to do that.
+
+819
+00:40:28,260 --> 00:40:31,473
+Everything is happening and
+doing and managed by the proxy.
+
+820
+00:40:33,870 --> 00:40:37,967
+Now, I want to go back to Valkey.
+
+821
+00:40:37,967 --> 00:40:40,002
+Elad talked about Valkey, all the example,
+
+822
+00:40:40,002 --> 00:40:41,400
+all the technology that we build here
+
+823
+00:40:41,400 --> 00:40:42,723
+is based on the Valkey.
+
+824
+00:40:43,830 --> 00:40:45,780
+And I want to show you
+
+825
+00:40:45,780 --> 00:40:48,780
+how we leverage the Valkey technology
+
+826
+00:40:48,780 --> 00:40:52,680
+even to improve the serverless scaling
+
+827
+00:40:52,680 --> 00:40:55,560
+that we offer today for our customers.
+
+828
+00:40:55,560 --> 00:40:57,390
+So I want to go back in time
+
+829
+00:40:57,390 --> 00:41:00,330
+and to see how Valkey started.
+
+830
+00:41:00,330 --> 00:41:04,500
+Valkey designed as a
+single threaded process
+
+831
+00:41:04,500 --> 00:41:07,413
+and the main reason for
+that it was simplicity.
+
+832
+00:41:08,430 --> 00:41:10,230
+Because there is no race condition,
+
+833
+00:41:10,230 --> 00:41:15,230
+no synchronization is needed
+and you can still scale out
+
+834
+00:41:15,510 --> 00:41:17,490
+and to use the share nothing architecture
+
+835
+00:41:17,490 --> 00:41:19,240
+and to improve the cache coherency.
+
+836
+00:41:21,413 --> 00:41:22,620
+With this technology,
+
+837
+00:41:22,620 --> 00:41:24,690
+with this technology we can achieve
+
+838
+00:41:24,690 --> 00:41:28,590
+around 190K request per second
+
+839
+00:41:28,590 --> 00:41:31,080
+and 50% of the time we are going
+
+840
+00:41:31,080 --> 00:41:33,513
+to be busy on the IO, on read and write.
+
+841
+00:41:34,800 --> 00:41:38,640
+Now to simulate that we
+have the main thread.
+
+842
+00:41:38,640 --> 00:41:42,720
+Every time that another
+workloads comes in,
+
+843
+00:41:42,720 --> 00:41:45,977
+it's wait on the pipeline
+for the main threads
+
+844
+00:41:45,977 --> 00:41:47,650
+to finish the processing of the
+
+845
+00:41:49,890 --> 00:41:51,213
+workloads on the queue.
+
+846
+00:41:52,148 --> 00:41:53,130
+Which eventually what's happening
+
+847
+00:41:53,130 --> 00:41:55,380
+is that we have kind of
+head of line blocking
+
+848
+00:41:56,240 --> 00:41:57,640
+that Elad showed you before.
+
+849
+00:41:59,310 --> 00:42:02,460
+Later Valkey introduced the IO threads
+
+850
+00:42:02,460 --> 00:42:04,830
+and the main idea behind the IO threads
+
+851
+00:42:04,830 --> 00:42:09,723
+was to offload all the IO
+requests to the IO threads itself.
+
+852
+00:42:11,040 --> 00:42:13,170
+Simple idea, does the job,
+
+853
+00:42:13,170 --> 00:42:14,970
+double the performance,
+
+854
+00:42:14,970 --> 00:42:18,270
+almost close to 400K request per second.
+
+855
+00:42:18,270 --> 00:42:20,730
+And this time we are now more busy
+
+856
+00:42:20,730 --> 00:42:22,950
+on the process command.
+
+857
+00:42:22,950 --> 00:42:26,610
+50% of the time the
+process itself was busy
+
+858
+00:42:26,610 --> 00:42:29,043
+on that stage.
+
+859
+00:42:31,050 --> 00:42:34,980
+Last year, specifically AWS and my team
+
+860
+00:42:34,980 --> 00:42:37,080
+contribute to Valkey,
+
+861
+00:42:37,080 --> 00:42:40,200
+the new IO threads architecture.
+
+862
+00:42:40,200 --> 00:42:41,280
+The idea is very simple.
+
+863
+00:42:41,280 --> 00:42:44,790
+We have the main thread that
+orchestrate all the jobs
+
+864
+00:42:44,790 --> 00:42:47,220
+that span the IO threads.
+
+865
+00:42:47,220 --> 00:42:50,040
+Now we ensure that there
+is no race condition
+
+866
+00:42:50,040 --> 00:42:53,054
+and the number of IO threads can be adjust
+
+867
+00:42:53,054 --> 00:42:55,140
+according to the workloads that running
+
+868
+00:42:55,140 --> 00:42:57,303
+on the hardware itself.
+
+869
+00:42:58,320 --> 00:43:00,960
+Now despite of the dynamic
+nature of the IO threads,
+
+870
+00:43:00,960 --> 00:43:04,890
+the main thread also
+responsible for the affinity.
+
+871
+00:43:04,890 --> 00:43:08,760
+And it also always make sure
+that the data is assigned
+
+872
+00:43:08,760 --> 00:43:10,230
+to the specific thread.
+
+873
+00:43:10,230 --> 00:43:14,820
+So we can also enjoy from cache locality
+
+874
+00:43:14,820 --> 00:43:17,160
+and to improve the performance.
+
+875
+00:43:17,160 --> 00:43:19,170
+So with this ability we
+can achieve even more
+
+876
+00:43:19,170 --> 00:43:23,130
+than 1 million requests per
+second for single instance.
+
+877
+00:43:23,130 --> 00:43:25,743
+That was a huge win for Valkey.
+
+878
+00:43:27,840 --> 00:43:30,000
+So just to simulate that.
+
+879
+00:43:30,000 --> 00:43:32,190
+Now we have the main thread running
+
+880
+00:43:32,190 --> 00:43:35,280
+and every time that we
+need to spawn an IO thread
+
+881
+00:43:35,280 --> 00:43:38,310
+when a workload is coming
+in, we just spawn it out.
+
+882
+00:43:38,310 --> 00:43:39,143
+We can
+
+883
+00:43:40,710 --> 00:43:43,890
+process the workloads in parallel
+
+884
+00:43:43,890 --> 00:43:47,803
+and we can remove some of the IO threads
+
+885
+00:43:47,803 --> 00:43:50,730
+and to release some of
+the compute once the data,
+
+886
+00:43:50,730 --> 00:43:52,383
+once the workload is relaxed.
+
+887
+00:43:54,960 --> 00:43:57,813
+Now let's see how everything
+is playing altogether.
+
+888
+00:43:58,680 --> 00:44:00,841
+We talked about the warm pool,
+
+889
+00:44:00,841 --> 00:44:01,980
+we talked about the proxy itself,
+
+890
+00:44:01,980 --> 00:44:04,180
+we talked about the physical host
+
+891
+00:44:04,180 --> 00:44:06,270
+that we run in on a
+multi-talent environment.
+
+892
+00:44:06,270 --> 00:44:09,133
+And here in my example I have a cache node
+
+893
+00:44:09,133 --> 00:44:10,800
+running with two calls, two IO threads.
+
+894
+00:44:10,800 --> 00:44:12,930
+Because we're running a very steady state
+
+895
+00:44:12,930 --> 00:44:15,960
+of 30K request per second,
+this is the throughput.
+
+896
+00:44:15,960 --> 00:44:19,480
+But now let's assume that we
+have some events that kicks in
+
+897
+00:44:20,610 --> 00:44:25,410
+and our customers expecting us to grow
+
+898
+00:44:25,410 --> 00:44:28,470
+and our instances very instantly.
+
+899
+00:44:28,470 --> 00:44:31,620
+So immediately we can scale
+our throughput by eight time
+
+900
+00:44:31,620 --> 00:44:33,630
+because we assign more codes,
+
+901
+00:44:33,630 --> 00:44:37,800
+we are spawning more IO
+threads to the cache node.
+
+902
+00:44:37,800 --> 00:44:40,420
+And in that way we can
+scale up in parallel
+
+903
+00:44:42,197 --> 00:44:44,040
+in the midway, we are just
+
+904
+00:44:44,040 --> 00:44:47,580
+assigning more cache node
+to the existing cluster
+
+905
+00:44:47,580 --> 00:44:49,890
+because we are using the warm pool.
+
+906
+00:44:49,890 --> 00:44:52,503
+The proxy automatically
+going to detect that.
+
+907
+00:44:53,616 --> 00:44:55,984
+And all that happening in parallel
+
+908
+00:44:55,984 --> 00:44:58,110
+because encapsulated from
+the, our application.
+
+909
+00:44:58,110 --> 00:45:00,495
+We started to move the
+data from the old shard
+
+910
+00:45:00,495 --> 00:45:01,860
+to the new shard.
+
+911
+00:45:01,860 --> 00:45:04,920
+And in that way we can
+scale the throughput,
+
+912
+00:45:04,920 --> 00:45:07,710
+double the cluster
+capacity every two minutes
+
+913
+00:45:07,710 --> 00:45:12,710
+and achieve a very seamless
+serverless experience.
+
+914
+00:45:15,930 --> 00:45:20,370
+Now I have a, I have here
+a prerecord demo, nice demo
+
+915
+00:45:20,370 --> 00:45:25,080
+that we started with our
+adding more workloads
+
+916
+00:45:25,080 --> 00:45:27,333
+to the cache serverless nodes.
+
+917
+00:45:28,530 --> 00:45:33,060
+As you can see I started
+with 250K requests
+
+918
+00:45:33,060 --> 00:45:36,450
+per second and I'm going to
+add more and more clients
+
+919
+00:45:36,450 --> 00:45:39,570
+and workloads to the,
+
+920
+00:45:39,570 --> 00:45:42,030
+my cache serverless nodes.
+
+921
+00:45:42,030 --> 00:45:43,830
+Now in the meanwhile,
+
+922
+00:45:43,830 --> 00:45:47,820
+while you see that the
+throughput is growing,
+
+923
+00:45:47,820 --> 00:45:52,020
+my p50 latency is stayed
+below the milliseconds
+
+924
+00:45:52,020 --> 00:45:53,340
+response time.
+
+925
+00:45:53,340 --> 00:45:55,830
+Which mean we are still
+having the microseconds
+
+926
+00:45:55,830 --> 00:45:59,730
+response time even when
+we pushing more workloads
+
+927
+00:45:59,730 --> 00:46:00,870
+to the cache node.
+
+928
+00:46:00,870 --> 00:46:04,153
+As you can see, I'm always
+already achieved 100,
+
+929
+00:46:04,153 --> 00:46:04,986
+1 million,
+
+930
+00:46:06,870 --> 00:46:09,210
+more than 1 million requests per second.
+
+931
+00:46:09,210 --> 00:46:13,200
+And the p99 is going to
+jump to three milliseconds.
+
+932
+00:46:13,200 --> 00:46:15,686
+And this is because we started
+
+933
+00:46:15,686 --> 00:46:17,547
+to move things, we are
+using more IO threads,
+
+934
+00:46:17,547 --> 00:46:18,720
+we're using more hardware resources.
+
+935
+00:46:18,720 --> 00:46:22,980
+So it might impact the p99 latency,
+
+936
+00:46:22,980 --> 00:46:27,333
+but the p50 will stay behind
+below the microseconds.
+
+937
+00:46:28,570 --> 00:46:31,170
+And the p99 will saturated while we finish
+
+938
+00:46:31,170 --> 00:46:33,960
+with all the scaling process.
+
+939
+00:46:33,960 --> 00:46:36,810
+So the demo will run until
+we reach to 3 million
+
+940
+00:46:36,810 --> 00:46:38,763
+but we don't need to wait until that.
+
+941
+00:46:41,070 --> 00:46:42,000
+Now I want to recap and to talk about
+
+942
+00:46:42,000 --> 00:46:45,273
+few best practices that
+we learned for today.
+
+943
+00:46:48,210 --> 00:46:50,973
+So we talked about connection pools,
+
+944
+00:46:52,020 --> 00:46:53,193
+persistent connection.
+
+945
+00:46:54,512 --> 00:46:56,070
+Every time that we
+establish a new connection
+
+946
+00:46:56,070 --> 00:46:58,240
+is in order of magnitude
+
+947
+00:46:59,640 --> 00:47:03,570
+more expensive compared
+to simple GET and SET
+
+948
+00:47:03,570 --> 00:47:05,100
+command of Valkey.
+
+949
+00:47:05,100 --> 00:47:07,620
+So using a connection pool,
+
+950
+00:47:07,620 --> 00:47:09,750
+using a persistent connection,
+
+951
+00:47:09,750 --> 00:47:11,750
+long-lived connection is very important.
+
+952
+00:47:12,630 --> 00:47:15,270
+We talked about reading
+from replica to achieve
+
+953
+00:47:15,270 --> 00:47:17,460
+to scale the read throughput to achieve
+
+954
+00:47:17,460 --> 00:47:19,293
+high availability and resiliency.
+
+955
+00:47:20,747 --> 00:47:21,600
+And specifically for serverless,
+
+956
+00:47:21,600 --> 00:47:25,353
+it'll benefit you to
+achieve the microseconds
+
+957
+00:47:25,353 --> 00:47:26,553
+read response time.
+
+958
+00:47:29,768 --> 00:47:30,653
+We talked about hotspot.
+
+959
+00:47:31,590 --> 00:47:33,693
+We have two mitigation for that,
+
+960
+00:47:34,945 --> 00:47:36,185
+specifically we talked about,
+
+961
+00:47:36,185 --> 00:47:37,920
+Elad mentioned about the key duplication
+
+962
+00:47:37,920 --> 00:47:40,380
+that you can duplicate the keys and read,
+
+963
+00:47:40,380 --> 00:47:42,450
+and use all the hardware resources
+
+964
+00:47:42,450 --> 00:47:44,070
+that you have on your cluster.
+
+965
+00:47:44,070 --> 00:47:45,450
+We talked about the key splitting
+
+966
+00:47:45,450 --> 00:47:49,410
+that you can split specific
+key across your shards
+
+967
+00:47:49,410 --> 00:47:54,410
+and to read even more
+throughput on that specific key.
+
+968
+00:47:54,480 --> 00:47:56,343
+And related to that we also,
+
+969
+00:47:57,270 --> 00:48:01,230
+as a key principle we say
+limit your size of your object.
+
+970
+00:48:01,230 --> 00:48:02,820
+Because eventually if you have a large,
+
+971
+00:48:02,820 --> 00:48:06,750
+very large object, it'll
+consume processing time and CPU.
+
+972
+00:48:06,750 --> 00:48:08,100
+And also the payload itself,
+
+973
+00:48:08,100 --> 00:48:11,070
+it can also reach you to a situation
+
+974
+00:48:11,070 --> 00:48:14,853
+that you're going to exceed
+the network baseline.
+
+975
+00:48:17,670 --> 00:48:19,533
+Because we are talking about caching,
+
+976
+00:48:20,400 --> 00:48:22,110
+one of the most important principle,
+
+977
+00:48:22,110 --> 00:48:27,030
+how you can save your
+memory, more freshness,
+
+978
+00:48:27,030 --> 00:48:28,980
+more close to the original
+
+979
+00:48:28,980 --> 00:48:31,950
+without a stale data and also specifically
+
+980
+00:48:31,950 --> 00:48:36,330
+with serverless it can also
+help you to reduce the cost.
+
+981
+00:48:36,330 --> 00:48:39,120
+So time to leave expiry is the one
+
+982
+00:48:39,120 --> 00:48:41,310
+of the way to do that.
+
+983
+00:48:41,310 --> 00:48:45,660
+You explicitly assign them
+to a key or set of keys
+
+984
+00:48:45,660 --> 00:48:48,963
+and you can use a relative
+time or absolute time.
+
+985
+00:48:50,250 --> 00:48:52,950
+But one of the most important
+if you're going to use it,
+
+986
+00:48:52,950 --> 00:48:56,130
+try to use the random
+jitter when you delete them
+
+987
+00:48:56,130 --> 00:48:59,970
+because once they all going to be deleted,
+
+988
+00:48:59,970 --> 00:49:03,420
+we don't want them to be deleted
+on the same period of time,
+
+989
+00:49:03,420 --> 00:49:07,260
+make your Valkey very busy with that,
+
+990
+00:49:07,260 --> 00:49:10,623
+we want to spread it across time window.
+
+991
+00:49:13,800 --> 00:49:14,670
+That was all today.
+
+992
+00:49:14,670 --> 00:49:15,720
+Hope you enjoyed the session.
+
+993
+00:49:15,720 --> 00:49:17,610
+Thank you very much.
+
+994
+00:49:17,610 --> 00:49:19,860
+Me and Elad will stay
+around, you can talk with us
+
+995
+00:49:19,860 --> 00:49:22,410
+and ask question and
+I hope you enjoy that.
+
+996
+00:49:22,410 --> 00:49:23,940
+Please fill the survey
+
+997
+00:49:23,940 --> 00:49:26,250
+and tell us how you enjoy for the session.
+
+998
+00:49:26,250 --> 00:49:27,460
+Thank you.
+
+999
+00:49:27,460 --> 00:49:30,460
+(attendees applaud)
+

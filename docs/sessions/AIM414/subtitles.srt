@@ -1,0 +1,4448 @@
+1
+00:00:00,000 --> 00:00:01,260
+- [Scott] ... everybody.
+
+2
+00:00:01,260 --> 00:00:02,820
+Welcome to this afternoon session,
+
+3
+00:00:02,820 --> 00:00:06,510
+this is AIM414, "How to
+Optimize your LLM with NKI".
+
+4
+00:00:06,510 --> 00:00:08,550
+My name's Scott Perry,
+I'm a solutions architect
+
+5
+00:00:08,550 --> 00:00:10,500
+on the Annapurna Labs team at AWS,
+
+6
+00:00:10,500 --> 00:00:12,450
+where we work directly with customers
+
+7
+00:00:12,450 --> 00:00:16,020
+on our AI/ML Accelerators
+training Inferentia.
+
+8
+00:00:16,020 --> 00:00:18,120
+And joining me today, I have my colleague.
+
+9
+00:00:18,120 --> 00:00:19,680
+- [Sadaf] Hey everyone, this is Sadaf.
+
+10
+00:00:19,680 --> 00:00:23,250
+I'm also a solutions
+architect at AWS Trainium.
+
+11
+00:00:23,250 --> 00:00:26,550
+I'm primarily focused on
+AI/ML performance on Neuron,
+
+12
+00:00:26,550 --> 00:00:28,080
+and we both are super excited
+
+13
+00:00:28,080 --> 00:00:30,300
+to have you here today for this session.
+
+14
+00:00:30,300 --> 00:00:31,590
+- [Scott] Yeah, thanks for coming out.
+
+15
+00:00:31,590 --> 00:00:33,330
+So this is a code talk,
+so we're gonna spend
+
+16
+00:00:33,330 --> 00:00:34,770
+most of the session digging into
+
+17
+00:00:34,770 --> 00:00:37,140
+a terminal editor and code editor,
+
+18
+00:00:37,140 --> 00:00:39,270
+running some scripts and
+doing all of this live,
+
+19
+00:00:39,270 --> 00:00:41,220
+so hopefully it goes well.
+
+20
+00:00:41,220 --> 00:00:42,930
+But before we do that, we
+do have to just go through
+
+21
+00:00:42,930 --> 00:00:45,150
+a few background slides, just
+to give everybody an idea
+
+22
+00:00:45,150 --> 00:00:47,190
+of what neuron and NKI's all about.
+
+23
+00:00:47,190 --> 00:00:48,840
+So bear with us for a few slides,
+
+24
+00:00:48,840 --> 00:00:50,490
+and then we'll get right into it.
+
+25
+00:00:52,110 --> 00:00:53,160
+So to give you some context,
+
+26
+00:00:53,160 --> 00:00:55,200
+you know, for many years
+customers have been doing
+
+27
+00:00:55,200 --> 00:00:56,910
+machine learning workloads on AWS,
+
+28
+00:00:56,910 --> 00:00:58,970
+and some of the early feedback
+that we got from customers
+
+29
+00:00:58,970 --> 00:01:00,690
+is that they wanted some choice,
+
+30
+00:01:00,690 --> 00:01:03,450
+and they wanted to see
+improved price performance
+
+31
+00:01:03,450 --> 00:01:05,820
+for running their ML workloads on AWS.
+
+32
+00:01:05,820 --> 00:01:09,120
+So back in about 2019,
+we actually invested
+
+33
+00:01:09,120 --> 00:01:12,750
+in designing a purpose-built
+machine learning accelerator
+
+34
+00:01:12,750 --> 00:01:16,530
+that we would offer via
+EC2 instances in AWS.
+
+35
+00:01:16,530 --> 00:01:19,440
+And that first generation
+was called AWS Inferentia.
+
+36
+00:01:19,440 --> 00:01:20,730
+So this is Inferentia one,
+
+37
+00:01:20,730 --> 00:01:23,340
+if you're used to the EC2 instances.
+
+38
+00:01:23,340 --> 00:01:25,230
+And this was a smaller accelerator
+
+39
+00:01:25,230 --> 00:01:27,630
+designed for the deep
+learning models of the time.
+
+40
+00:01:27,630 --> 00:01:30,270
+This was kind of like Bert and
+YOLO, and that sort of thing.
+
+41
+00:01:30,270 --> 00:01:31,530
+Since then, we've actually released
+
+42
+00:01:31,530 --> 00:01:34,020
+the second generation, Inferentia2,
+
+43
+00:01:34,020 --> 00:01:35,580
+and maybe more interestingly
+
+44
+00:01:35,580 --> 00:01:37,140
+we've also released three versions
+
+45
+00:01:37,140 --> 00:01:38,550
+of the AWS Trainium chip,
+
+46
+00:01:38,550 --> 00:01:41,130
+with the third generation
+launching just yesterday.
+
+47
+00:01:41,130 --> 00:01:44,190
+So AWS Trainium is actually
+a more powerful chip
+
+48
+00:01:44,190 --> 00:01:46,500
+capable of being used
+for distributed training
+
+49
+00:01:46,500 --> 00:01:47,673
+as well as inference.
+
+50
+00:01:51,570 --> 00:01:53,400
+So at the heart of the Trainium
+
+51
+00:01:53,400 --> 00:01:57,270
+and Inferentia accelerator
+chips are the neuron cores.
+
+52
+00:01:57,270 --> 00:02:00,060
+So in a given instance you
+might have multiple chips,
+
+53
+00:02:00,060 --> 00:02:01,680
+and within each chip you can actually have
+
+54
+00:02:01,680 --> 00:02:02,970
+multiple neuron cores.
+
+55
+00:02:02,970 --> 00:02:05,730
+So today we're gonna be
+working with a Trn2 instance.
+
+56
+00:02:05,730 --> 00:02:08,940
+It actually has eight physical
+cores within the chip,
+
+57
+00:02:08,940 --> 00:02:09,990
+we're gonna be using one of them
+
+58
+00:02:09,990 --> 00:02:11,520
+for the examples here today.
+
+59
+00:02:11,520 --> 00:02:13,860
+But within that core, this
+is a high-level schematic
+
+60
+00:02:13,860 --> 00:02:15,390
+of what's actually involved.
+
+61
+00:02:15,390 --> 00:02:17,430
+So what's really interesting
+about this architecture is,
+
+62
+00:02:17,430 --> 00:02:18,780
+as I mentioned, it's purpose-built
+
+63
+00:02:18,780 --> 00:02:21,000
+for machine learning workloads.
+
+64
+00:02:21,000 --> 00:02:23,490
+So if you see, we have four
+specific compute engines
+
+65
+00:02:23,490 --> 00:02:24,750
+within the neuron core.
+
+66
+00:02:24,750 --> 00:02:25,890
+Starting with the tensor engine,
+
+67
+00:02:25,890 --> 00:02:27,060
+this is focused on things like
+
+68
+00:02:27,060 --> 00:02:29,820
+matrix multiplications and transposes.
+
+69
+00:02:29,820 --> 00:02:32,730
+We have the vector engine that you can use
+
+70
+00:02:32,730 --> 00:02:35,130
+for max pool, average pool-type layers.
+
+71
+00:02:35,130 --> 00:02:37,680
+There's the scaler engine
+for things like activations.
+
+72
+00:02:37,680 --> 00:02:40,140
+And we also have a
+general-purpose compute engine
+
+73
+00:02:40,140 --> 00:02:41,370
+with general-purpose cores,
+
+74
+00:02:41,370 --> 00:02:43,950
+that can be reprogrammed for maybe layers
+
+75
+00:02:43,950 --> 00:02:45,960
+that aren't covered in
+the other three engines.
+
+76
+00:02:45,960 --> 00:02:47,640
+So here we have four compute engines
+
+77
+00:02:47,640 --> 00:02:50,520
+that you can actually use
+in parallel on this chip
+
+78
+00:02:50,520 --> 00:02:52,443
+to maximize compute utilization.
+
+79
+00:02:53,370 --> 00:02:56,220
+Also worth noting here is we
+have a couple on-chip SRAMs,
+
+80
+00:02:56,220 --> 00:02:58,290
+you see the SBUF and the PSUM.
+
+81
+00:02:58,290 --> 00:03:00,180
+So these are obviously on-chip,
+
+82
+00:03:00,180 --> 00:03:01,500
+so they're very close to the compute,
+
+83
+00:03:01,500 --> 00:03:04,740
+offering high bandwidth
+but maybe lower capacity.
+
+84
+00:03:04,740 --> 00:03:08,010
+We have a DMA, or a set of
+DMA engines for moving data,
+
+85
+00:03:08,010 --> 00:03:10,200
+and we also have high-bandwidth memory
+
+86
+00:03:10,200 --> 00:03:11,880
+as part of the device.
+
+87
+00:03:11,880 --> 00:03:13,890
+And because these are offered via EC2
+
+88
+00:03:13,890 --> 00:03:15,600
+we also have access to the host memory,
+
+89
+00:03:15,600 --> 00:03:19,470
+in this case it would be
+DRAM associated with the CPU.
+
+90
+00:03:19,470 --> 00:03:21,480
+So I'll call it, you
+know, there's three levels
+
+91
+00:03:21,480 --> 00:03:23,640
+of the memory hierarchy
+that we care about, right.
+
+92
+00:03:23,640 --> 00:03:24,900
+There's that on-chip SRAM,
+
+93
+00:03:24,900 --> 00:03:28,290
+this is the lower capacity
+but very high-bandwidth memory
+
+94
+00:03:28,290 --> 00:03:30,120
+that we would love all
+of our data to live on
+
+95
+00:03:30,120 --> 00:03:31,620
+all the time if it could.
+
+96
+00:03:31,620 --> 00:03:34,560
+We also, at the bottom of the
+tiers, have the host memory,
+
+97
+00:03:34,560 --> 00:03:36,930
+which is high capacity
+but lower bandwidth.
+
+98
+00:03:36,930 --> 00:03:39,600
+And in between we have, you
+know, a bit of a compromise,
+
+99
+00:03:39,600 --> 00:03:42,000
+which is the HBM, moderate capacity
+
+100
+00:03:42,000 --> 00:03:43,770
+and pretty good bandwidth.
+
+101
+00:03:43,770 --> 00:03:44,970
+And one of the major struggles
+
+102
+00:03:44,970 --> 00:03:45,930
+when you're trying to optimize
+
+103
+00:03:45,930 --> 00:03:47,460
+your machine learning workloads is,
+
+104
+00:03:47,460 --> 00:03:49,110
+you know, how do you place data,
+
+105
+00:03:49,110 --> 00:03:51,750
+get it as close to the compute
+exactly when you need it,
+
+106
+00:03:51,750 --> 00:03:55,083
+and how do you juggle moving
+between the tiers otherwise?
+
+107
+00:03:59,435 --> 00:04:00,268
+(Scott sniffing)
+
+108
+00:04:00,268 --> 00:04:01,740
+And when we talk about optimizing
+
+109
+00:04:01,740 --> 00:04:02,730
+machine learning workloads,
+
+110
+00:04:02,730 --> 00:04:04,740
+one way of kind of
+representing a given workload
+
+111
+00:04:04,740 --> 00:04:06,270
+is the roof line model.
+
+112
+00:04:06,270 --> 00:04:08,523
+Has anybody seen roof line model before?
+
+113
+00:04:09,604 --> 00:04:10,890
+(attendee speaking faintly)
+
+114
+00:04:10,890 --> 00:04:13,290
+Okay, just take a quick refresher then.
+
+115
+00:04:13,290 --> 00:04:15,000
+So as part of the roof line model,
+
+116
+00:04:15,000 --> 00:04:16,530
+basically for any given algorithm,
+
+117
+00:04:16,530 --> 00:04:19,230
+any given machine learning, say, model,
+
+118
+00:04:19,230 --> 00:04:21,540
+there's gonna be an arithmetic intensity
+
+119
+00:04:21,540 --> 00:04:23,760
+intrinsic to that model,
+
+120
+00:04:23,760 --> 00:04:26,370
+like an algorithmic arithmetic intensity.
+
+121
+00:04:26,370 --> 00:04:29,190
+So, basically, whatever the
+mathematical operations are
+
+122
+00:04:29,190 --> 00:04:32,430
+for that given model, it's gonna consume
+
+123
+00:04:32,430 --> 00:04:34,230
+and there's gonna be a
+certain amount of operations
+
+124
+00:04:34,230 --> 00:04:36,960
+that you have to do per
+byte of memory that's read.
+
+125
+00:04:36,960 --> 00:04:38,580
+But for a given accelerator chip,
+
+126
+00:04:38,580 --> 00:04:41,190
+you're gonna have a
+finite memory bandwidth
+
+127
+00:04:41,190 --> 00:04:42,210
+and you're gonna have a finite,
+
+128
+00:04:42,210 --> 00:04:45,540
+you know, maximum compute
+throughput that you can achieve.
+
+129
+00:04:45,540 --> 00:04:49,020
+And if it turns out that your
+achieved arithmetic intensity
+
+130
+00:04:49,020 --> 00:04:51,960
+for a given workload falls
+on the left-hand side,
+
+131
+00:04:51,960 --> 00:04:54,270
+meaning that there's low ops per byte,
+
+132
+00:04:54,270 --> 00:04:55,740
+you're gonna be memory bound.
+
+133
+00:04:55,740 --> 00:04:57,120
+And we don't really want to be there,
+
+134
+00:04:57,120 --> 00:04:58,350
+'cause if we're in that case,
+
+135
+00:04:58,350 --> 00:05:00,090
+it means that we're limited by
+
+136
+00:05:00,090 --> 00:05:01,980
+how fast we can read from memory
+
+137
+00:05:01,980 --> 00:05:04,350
+for the workload that
+we're actually operating.
+
+138
+00:05:04,350 --> 00:05:05,940
+What we would like to
+do is try to push things
+
+139
+00:05:05,940 --> 00:05:08,850
+to the right-hand side of the
+graph and be compute bound,
+
+140
+00:05:08,850 --> 00:05:10,410
+meaning that we're doing multiple,
+
+141
+00:05:10,410 --> 00:05:12,540
+many, many ops per byte of memory read,
+
+142
+00:05:12,540 --> 00:05:15,900
+so we can take full advantage
+of the compute accelerators.
+
+143
+00:05:15,900 --> 00:05:17,700
+So the difference between algorithmic,
+
+144
+00:05:17,700 --> 00:05:20,550
+kind of theoretical arithmetic intensity
+
+145
+00:05:20,550 --> 00:05:21,990
+and achieved is basically,
+
+146
+00:05:21,990 --> 00:05:23,670
+you know, the implementation, right.
+
+147
+00:05:23,670 --> 00:05:25,440
+So how can we improve performance
+
+148
+00:05:25,440 --> 00:05:28,863
+and kind of shift the graph to the right?
+
+149
+00:05:29,760 --> 00:05:31,740
+So we can do things like
+pipelining operations.
+
+150
+00:05:31,740 --> 00:05:33,420
+So if you have a major workload,
+
+151
+00:05:33,420 --> 00:05:35,910
+sometimes you can chunk
+it up into smaller bits
+
+152
+00:05:35,910 --> 00:05:38,250
+and actually run multiple
+parts of the workload
+
+153
+00:05:38,250 --> 00:05:40,620
+at any given time and keep
+the engines a little busier
+
+154
+00:05:40,620 --> 00:05:42,810
+than they would be otherwise.
+
+155
+00:05:42,810 --> 00:05:44,850
+There's things like
+minimizing data movement.
+
+156
+00:05:44,850 --> 00:05:46,410
+So if you're doing a lot of DMAs,
+
+157
+00:05:46,410 --> 00:05:49,260
+moving a lot of data
+unnecessarily at the wrong time,
+
+158
+00:05:49,260 --> 00:05:51,180
+that's also gonna reduce your performance,
+
+159
+00:05:51,180 --> 00:05:53,073
+so we wanna try to avoid that.
+
+160
+00:05:54,420 --> 00:05:55,830
+We wanna maximize data throughput.
+
+161
+00:05:55,830 --> 00:05:57,930
+So in some cases you might
+be sending small messages
+
+162
+00:05:57,930 --> 00:05:59,490
+or moving small bits of data around,
+
+163
+00:05:59,490 --> 00:06:01,170
+is there some way maybe
+we can coalesce that
+
+164
+00:06:01,170 --> 00:06:03,873
+into larger chunks and
+improve data throughput?
+
+165
+00:06:05,070 --> 00:06:08,190
+And if we're in a
+distributed setting, sorry,
+
+166
+00:06:08,190 --> 00:06:09,690
+we might have multiple train chips
+
+167
+00:06:09,690 --> 00:06:12,210
+that we need to communicate
+across sometimes,
+
+168
+00:06:12,210 --> 00:06:15,210
+so say synchronize
+gradients during training.
+
+169
+00:06:15,210 --> 00:06:17,010
+And when that happens, it would be nice
+
+170
+00:06:17,010 --> 00:06:18,510
+if we could overlap the collectives
+
+171
+00:06:18,510 --> 00:06:20,160
+with some type of
+compute or data movement,
+
+172
+00:06:20,160 --> 00:06:21,120
+so we're not just sitting there
+
+173
+00:06:21,120 --> 00:06:23,613
+waiting for the collectives to take place.
+
+174
+00:06:25,860 --> 00:06:28,260
+Okay, so, you know, this is why we,
+
+175
+00:06:28,260 --> 00:06:30,240
+and maybe how we would
+try to improve performance
+
+176
+00:06:30,240 --> 00:06:32,790
+but what does it mean
+for Trainium and Neuron?
+
+177
+00:06:32,790 --> 00:06:33,790
+How do we get there?
+
+178
+00:06:36,240 --> 00:06:38,400
+So to work with the Trainium
+and the Inferentia chips,
+
+179
+00:06:38,400 --> 00:06:39,630
+we have the neuron SDK,
+
+180
+00:06:39,630 --> 00:06:41,070
+and this is the software development kit
+
+181
+00:06:41,070 --> 00:06:44,130
+that includes all of the
+various layers of the stack.
+
+182
+00:06:44,130 --> 00:06:48,450
+So we have a compiler, runtime, driver,
+
+183
+00:06:48,450 --> 00:06:50,070
+and user tools that allow customers
+
+184
+00:06:50,070 --> 00:06:51,940
+to work with Trainium and Inferentia.
+
+185
+00:06:51,940 --> 00:06:54,520
+And, you know, we typically look at
+
+186
+00:06:55,500 --> 00:06:56,850
+our customers as three personas.
+
+187
+00:06:56,850 --> 00:06:58,980
+We have ML developers, data scientists,
+
+188
+00:06:58,980 --> 00:07:00,330
+and performance engineers,
+
+189
+00:07:00,330 --> 00:07:02,610
+and lots of folks kind of
+fall between the lines,
+
+190
+00:07:02,610 --> 00:07:03,840
+but for today we're focused more
+
+191
+00:07:03,840 --> 00:07:06,450
+on the performance engineer persona.
+
+192
+00:07:06,450 --> 00:07:07,920
+And within the Neuron SDK
+
+193
+00:07:07,920 --> 00:07:09,390
+we have a certain set of tools
+
+194
+00:07:09,390 --> 00:07:12,120
+that are gonna be applicable
+to performance engineers.
+
+195
+00:07:12,120 --> 00:07:13,890
+So the one that we want
+to focus the most on today
+
+196
+00:07:13,890 --> 00:07:16,563
+is called the Neuron
+Kernel Interface, NKI.
+
+197
+00:07:18,060 --> 00:07:21,573
+Has anybody worked with NKI
+before or heard about it?
+
+198
+00:07:22,530 --> 00:07:24,033
+Okay, awesome.
+
+199
+00:07:25,830 --> 00:07:26,940
+So what is NKI?
+
+200
+00:07:26,940 --> 00:07:29,010
+So NKI is essentially a Python-based
+
+201
+00:07:29,010 --> 00:07:31,350
+domain-specific language
+for writing kernels
+
+202
+00:07:31,350 --> 00:07:33,030
+for Trainium and Inferentia.
+
+203
+00:07:33,030 --> 00:07:36,360
+So before we had NKI,
+basically you could write your
+
+204
+00:07:36,360 --> 00:07:39,000
+machine learning model
+maybe in PyTorch and JAX,
+
+205
+00:07:39,000 --> 00:07:40,380
+run it through the neuron compiler,
+
+206
+00:07:40,380 --> 00:07:42,750
+which takes the compute
+graphs from your model,
+
+207
+00:07:42,750 --> 00:07:45,300
+optimizes them to run on
+Trainium or Inferentia,
+
+208
+00:07:45,300 --> 00:07:46,560
+and then you could run
+your model that way.
+
+209
+00:07:46,560 --> 00:07:47,730
+But you're putting a lot of faith
+
+210
+00:07:47,730 --> 00:07:50,220
+in that the general-purpose
+kind of neuron compiler
+
+211
+00:07:50,220 --> 00:07:52,500
+was gonna perfectly optimize your model.
+
+212
+00:07:52,500 --> 00:07:54,930
+And as we see with our accelerators
+and other accelerators,
+
+213
+00:07:54,930 --> 00:07:57,810
+oftentimes customers need
+a lower-level access.
+
+214
+00:07:57,810 --> 00:08:00,030
+They want to be able to
+really fine-tune the model
+
+215
+00:08:00,030 --> 00:08:02,490
+to take full advantage of
+the underlying hardware,
+
+216
+00:08:02,490 --> 00:08:04,680
+and that's what NKI offers you.
+
+217
+00:08:04,680 --> 00:08:07,050
+So if you're familiar with OpenAI Triton,
+
+218
+00:08:07,050 --> 00:08:09,360
+this is not quite Triton,
+this is a little bit different
+
+219
+00:08:09,360 --> 00:08:11,190
+but this is our kind of flavor
+
+220
+00:08:11,190 --> 00:08:14,613
+of writing low-level kernels
+for our accelerators.
+
+221
+00:08:16,200 --> 00:08:19,710
+So it integrates directly
+with PyTorch, JAX, and NumPy.
+
+222
+00:08:19,710 --> 00:08:22,860
+It directly emits Neuron ISA instructions,
+
+223
+00:08:22,860 --> 00:08:25,710
+so the actual hardware instructions
+that exist on the chips
+
+224
+00:08:25,710 --> 00:08:28,830
+get emitted from this platform.
+
+225
+00:08:28,830 --> 00:08:30,901
+And we have a couple
+namespaces within NKI.
+
+226
+00:08:30,901 --> 00:08:31,800
+We have the NKI Lang,
+
+227
+00:08:31,800 --> 00:08:34,020
+which is higher-level
+constructs to help you out,
+
+228
+00:08:34,020 --> 00:08:35,280
+helper functions, that kind of thing.
+
+229
+00:08:35,280 --> 00:08:38,190
+But we also have direct
+Neuron ISA instructions
+
+230
+00:08:38,190 --> 00:08:40,437
+as part of the NKI ISA namespace.
+
+231
+00:08:40,437 --> 00:08:42,240
+And on the left-hand
+side you do see a kernel.
+
+232
+00:08:42,240 --> 00:08:44,160
+We're gonna actually hop
+into that in a minute here
+
+233
+00:08:44,160 --> 00:08:45,210
+and go through it line by line,
+
+234
+00:08:45,210 --> 00:08:48,150
+and show you what it's like
+to build a basic kernel
+
+235
+00:08:48,150 --> 00:08:50,900
+before we get into the actual
+benchmarking and whatnot.
+
+236
+00:08:52,140 --> 00:08:53,490
+Okay, so for today's session,
+
+237
+00:08:53,490 --> 00:08:56,280
+what are we looking to
+achieve here in record time?
+
+238
+00:08:56,280 --> 00:08:57,900
+We're gonna start off, we want to start by
+
+239
+00:08:57,900 --> 00:08:59,820
+benchmarking and profiling an LOM.
+
+240
+00:08:59,820 --> 00:09:02,190
+In this case it's gonna be Qwen3.
+
+241
+00:09:02,190 --> 00:09:04,980
+So we're gonna run that using
+Hugging Face Transformers
+
+242
+00:09:04,980 --> 00:09:07,230
+and the Neuron SDK, so it's gonna compile
+
+243
+00:09:07,230 --> 00:09:10,410
+the basic Qwen implementation
+to run on Trainium as is,
+
+244
+00:09:10,410 --> 00:09:11,550
+using naive attention.
+
+245
+00:09:11,550 --> 00:09:13,230
+That's just gonna be our baseline.
+
+246
+00:09:13,230 --> 00:09:14,310
+So we'll look at the performance
+
+247
+00:09:14,310 --> 00:09:15,810
+and look at a basic profile.
+
+248
+00:09:15,810 --> 00:09:17,190
+Then Sadaf's gonna walk us through
+
+249
+00:09:17,190 --> 00:09:20,430
+an actual NKI kernel
+implementation of attention.
+
+250
+00:09:20,430 --> 00:09:22,410
+He's gonna add that into the Qwen3 model
+
+251
+00:09:22,410 --> 00:09:23,850
+that we had previously run,
+
+252
+00:09:23,850 --> 00:09:26,370
+and we're gonna redo the
+benchmarking and the profiling
+
+253
+00:09:26,370 --> 00:09:29,040
+to see what the performance
+gains hopefully are
+
+254
+00:09:29,040 --> 00:09:30,300
+at the end of the session.
+
+255
+00:09:30,300 --> 00:09:32,580
+And then we'll obviously
+give you guys some time
+
+256
+00:09:32,580 --> 00:09:33,830
+for questions at the end.
+
+257
+00:09:34,693 --> 00:09:38,040
+(Scott sniffing)
+
+258
+00:09:38,040 --> 00:09:39,090
+And the technology stack
+
+259
+00:09:39,090 --> 00:09:40,590
+we're using specifically here today,
+
+260
+00:09:40,590 --> 00:09:42,330
+so we're using AWS Trainium2,
+
+261
+00:09:42,330 --> 00:09:44,580
+the second generation of our chip.
+
+262
+00:09:44,580 --> 00:09:46,440
+On a smaller instance,
+we're gonna be using
+
+263
+00:09:46,440 --> 00:09:48,480
+one of the neuron cores out of eight
+
+264
+00:09:48,480 --> 00:09:49,710
+that exist on the chip today,
+
+265
+00:09:49,710 --> 00:09:52,710
+just to kind of keep things
+a little bit more consumable.
+
+266
+00:09:52,710 --> 00:09:54,120
+We're gonna be using the Neuron STK
+
+267
+00:09:54,120 --> 00:09:56,223
+to both compile and run our models.
+
+268
+00:09:57,090 --> 00:10:00,180
+In our case, today we're using Qwen3-0.6B,
+
+269
+00:10:00,180 --> 00:10:01,740
+an embedding model.
+
+270
+00:10:01,740 --> 00:10:03,420
+And this is available via the
+
+271
+00:10:03,420 --> 00:10:05,120
+Hugging Face Transformers library.
+
+272
+00:10:06,930 --> 00:10:09,150
+Okay, so with that, why don't
+we just take a quick look
+
+273
+00:10:09,150 --> 00:10:11,130
+at that example kernel
+that I put on the slide
+
+274
+00:10:11,130 --> 00:10:12,690
+in a code editor, we'll go through it,
+
+275
+00:10:12,690 --> 00:10:14,520
+and then we'll get right
+into the benchmarking
+
+276
+00:10:14,520 --> 00:10:16,653
+and show you that vanilla implementation.
+
+277
+00:10:20,580 --> 00:10:24,513
+Okay. Awesome.
+
+278
+00:10:26,670 --> 00:10:28,890
+Okay, so here we can
+see a very basic kernel,
+
+279
+00:10:28,890 --> 00:10:31,380
+in this case it's called
+nki_tensor_add_kernel.
+
+280
+00:10:31,380 --> 00:10:33,630
+This is just a basic kernel that takes two
+
+281
+00:10:33,630 --> 00:10:35,520
+similarly shaped tensors,
+
+282
+00:10:35,520 --> 00:10:38,040
+and it does element-wise addition of them.
+
+283
+00:10:38,040 --> 00:10:39,360
+The first thing I want you to notice here
+
+284
+00:10:39,360 --> 00:10:42,900
+is this is just defined as a
+basic Python function, right,
+
+285
+00:10:42,900 --> 00:10:45,600
+so the only thing that's really
+special about this function
+
+286
+00:10:45,600 --> 00:10:47,610
+is that we decorate it with nki.jit,
+
+287
+00:10:47,610 --> 00:10:49,170
+just to let the neuron compiler know
+
+288
+00:10:49,170 --> 00:10:50,833
+that this is basically intended to be
+
+289
+00:10:50,833 --> 00:10:53,313
+a NKI kernel that we want to compile.
+
+290
+00:10:54,510 --> 00:10:55,830
+And there's a specific constraint
+
+291
+00:10:55,830 --> 00:10:57,720
+around the NKI kernels today.
+
+292
+00:10:57,720 --> 00:10:59,790
+So the inputs and the outputs,
+
+293
+00:10:59,790 --> 00:11:01,290
+you can see the A input, B input,
+
+294
+00:11:01,290 --> 00:11:03,210
+these are the two tensors
+that will be added
+
+295
+00:11:03,210 --> 00:11:04,170
+as well as the output.
+
+296
+00:11:04,170 --> 00:11:06,450
+These need to exist on HBM, right,
+
+297
+00:11:06,450 --> 00:11:08,820
+so we talked about the three
+kind of tiers of memory
+
+298
+00:11:08,820 --> 00:11:10,800
+that we're gonna be focused on.
+
+299
+00:11:10,800 --> 00:11:12,960
+The input and outputs
+actually have to exist
+
+300
+00:11:12,960 --> 00:11:16,650
+on the on-device memory but
+not on the on-chip SRAM.
+
+301
+00:11:16,650 --> 00:11:18,840
+And the framework is
+gonna handle that for us,
+
+302
+00:11:18,840 --> 00:11:20,460
+so we'll be using PyTorch today.
+
+303
+00:11:20,460 --> 00:11:22,200
+So if we just run through
+kind of line by line
+
+304
+00:11:22,200 --> 00:11:23,880
+what this is doing, we pass in two inputs
+
+305
+00:11:23,880 --> 00:11:25,410
+that we want to add together.
+
+306
+00:11:25,410 --> 00:11:27,420
+There's a basic check to make
+sure they're the same shape,
+
+307
+00:11:27,420 --> 00:11:30,510
+otherwise the element
+wise edition won't work.
+
+308
+00:11:30,510 --> 00:11:32,400
+And here we're gonna see
+there's a similar flow
+
+309
+00:11:32,400 --> 00:11:33,900
+that exists in all NKI Kernels,
+
+310
+00:11:33,900 --> 00:11:35,610
+so the first step is we need to allocate
+
+311
+00:11:35,610 --> 00:11:38,370
+some space on the on-chip SRAMs.
+
+312
+00:11:38,370 --> 00:11:40,050
+So here we're allocating some space
+
+313
+00:11:40,050 --> 00:11:42,960
+for both the A input tensor
+and the B input tensor,
+
+314
+00:11:42,960 --> 00:11:45,420
+using this sbuf.view.
+
+315
+00:11:45,420 --> 00:11:48,060
+And SBUF is one of our on-chip SRAMs.
+
+316
+00:11:48,060 --> 00:11:50,520
+And the next step is we
+actually use an ISA instruction.
+
+317
+00:11:50,520 --> 00:11:53,070
+This is a DMA copy where we specify
+
+318
+00:11:53,070 --> 00:11:57,090
+that we want a copy from the A
+input and B input HBM tensors
+
+319
+00:11:57,090 --> 00:12:01,140
+to the on-chip tensors, okay.
+
+320
+00:12:01,140 --> 00:12:03,210
+And, similarly, we actually
+do something similar,
+
+321
+00:12:03,210 --> 00:12:05,250
+we allocate some space for the result.
+
+322
+00:12:05,250 --> 00:12:06,780
+In this case we call it c_tile.
+
+323
+00:12:06,780 --> 00:12:07,790
+And, again, this is on SBUF,
+
+324
+00:12:07,790 --> 00:12:10,950
+we use sbuf.view to allocate
+the space for the tensor,
+
+325
+00:12:10,950 --> 00:12:15,450
+and then we use the ISA
+tensor_tensor instruction
+
+326
+00:12:15,450 --> 00:12:17,010
+to actually do the addition for us.
+
+327
+00:12:17,010 --> 00:12:20,940
+So here you can specify
+that this tensor_tensor op
+
+328
+00:12:20,940 --> 00:12:23,190
+is using the addition operator.
+
+329
+00:12:23,190 --> 00:12:24,660
+The two inputs are the two tiles
+
+330
+00:12:24,660 --> 00:12:27,540
+that we had basically passed
+in and copied to SRAM,
+
+331
+00:12:27,540 --> 00:12:29,580
+and then we're opening the
+results to the destination,
+
+332
+00:12:29,580 --> 00:12:30,690
+which is the c_tile.
+
+333
+00:12:30,690 --> 00:12:33,000
+And then, lastly, because we
+need to get the outputs back
+
+334
+00:12:33,000 --> 00:12:36,810
+to HBM to return back to the framework,
+
+335
+00:12:36,810 --> 00:12:40,140
+we use HBM view to allocate
+an HBM-hosted tensor,
+
+336
+00:12:40,140 --> 00:12:41,760
+and then again we use a DMA copy
+
+337
+00:12:41,760 --> 00:12:46,110
+to get the results back to HBM
+before we return the result.
+
+338
+00:12:46,110 --> 00:12:47,520
+So, again, this is a
+bit of a trivial kernel
+
+339
+00:12:47,520 --> 00:12:49,020
+just to kind of give
+you the high-level flow,
+
+340
+00:12:49,020 --> 00:12:52,650
+but you can see that this is,
+you know, fairly low level
+
+341
+00:12:52,650 --> 00:12:55,260
+if you've been used to working
+with PyTorch and whatnot.
+
+342
+00:12:55,260 --> 00:12:57,240
+But, you know, if you're
+really looking to squeeze
+
+343
+00:12:57,240 --> 00:12:58,920
+the best bang for buck out of your model
+
+344
+00:12:58,920 --> 00:13:01,080
+and make the best use of the hardware,
+
+345
+00:13:01,080 --> 00:13:02,400
+there's gonna be cases
+where you might need to
+
+346
+00:13:02,400 --> 00:13:05,583
+actually get this deep into the space.
+
+347
+00:13:07,170 --> 00:13:08,940
+Okay, with that, let's take a quick look
+
+348
+00:13:08,940 --> 00:13:11,100
+at the benchmarking script here.
+
+349
+00:13:11,100 --> 00:13:12,840
+So I didn't want to just
+blindly run a script,
+
+350
+00:13:12,840 --> 00:13:14,100
+so I am gonna run through the code
+
+351
+00:13:14,100 --> 00:13:14,933
+a little bit with you here,
+
+352
+00:13:14,933 --> 00:13:16,290
+just to show you what we're running.
+
+353
+00:13:16,290 --> 00:13:18,180
+But this is just a basic Python script,
+
+354
+00:13:18,180 --> 00:13:21,240
+it uses Hugging Face
+Transformers and the Qwen3 model,
+
+355
+00:13:21,240 --> 00:13:25,380
+and essentially we load the
+Qwen3 model on CPU first,
+
+356
+00:13:25,380 --> 00:13:26,670
+we're gonna compile it for neuron
+
+357
+00:13:26,670 --> 00:13:28,140
+and then we're gonna run
+a bunch of inferences
+
+358
+00:13:28,140 --> 00:13:30,180
+and kind of time latency,
+
+359
+00:13:30,180 --> 00:13:31,830
+and measure the throughput that way.
+
+360
+00:13:31,830 --> 00:13:33,960
+And we'll also do a
+sanity check against CPU
+
+361
+00:13:33,960 --> 00:13:38,163
+to make sure that the model
+results are the same as CPU.
+
+362
+00:13:39,000 --> 00:13:41,460
+Okay, so if we skip over the imports,
+
+363
+00:13:41,460 --> 00:13:42,870
+there's a little bit of environment setup
+
+364
+00:13:42,870 --> 00:13:44,790
+that we use for neuron for the runtime.
+
+365
+00:13:44,790 --> 00:13:46,020
+In this case, we want to specify
+
+366
+00:13:46,020 --> 00:13:48,780
+that we're just using a
+single core, for example.
+
+367
+00:13:48,780 --> 00:13:51,030
+We're also, because we're going
+to be doing some profiling,
+
+368
+00:13:51,030 --> 00:13:54,184
+we enable some profiling,
+
+369
+00:13:54,184 --> 00:13:55,620
+enabling environment variables here
+
+370
+00:13:55,620 --> 00:13:58,343
+just to make sure that we
+capture the metrics that we need.
+
+371
+00:14:01,050 --> 00:14:03,960
+Okay, so we do wrap the
+model in a basic class here.
+
+372
+00:14:03,960 --> 00:14:05,790
+This is just to make
+it a little bit easier
+
+373
+00:14:05,790 --> 00:14:08,880
+to get the last hidden state
+from this embedding model,
+
+374
+00:14:08,880 --> 00:14:09,810
+just to kind of make things
+
+375
+00:14:09,810 --> 00:14:12,150
+a little bit easier for the demo today.
+
+376
+00:14:12,150 --> 00:14:14,010
+But the class, you can see,
+it doesn't really do anything
+
+377
+00:14:14,010 --> 00:14:15,720
+other than do a forward pass
+
+378
+00:14:15,720 --> 00:14:18,093
+with the outputting only
+the last hidden state.
+
+379
+00:14:19,020 --> 00:14:20,220
+We also have a helper function
+
+380
+00:14:20,220 --> 00:14:21,870
+that encodes some example text
+
+381
+00:14:21,870 --> 00:14:24,900
+and returns a repeating tensor
+
+382
+00:14:24,900 --> 00:14:26,640
+based on the batch size that we specify.
+
+383
+00:14:26,640 --> 00:14:28,110
+So it's just gonna be the same text
+
+384
+00:14:28,110 --> 00:14:30,030
+kind of repeated over and over
+
+385
+00:14:30,030 --> 00:14:32,843
+based on the batch size that
+we need, just to help us out.
+
+386
+00:14:34,320 --> 00:14:36,090
+And we have a few arguments that we use
+
+387
+00:14:36,090 --> 00:14:38,010
+to control the behavior
+of the benchmark script.
+
+388
+00:14:38,010 --> 00:14:39,570
+Obviously, like controlling things like
+
+389
+00:14:39,570 --> 00:14:40,710
+batch size and max length,
+
+390
+00:14:40,710 --> 00:14:42,420
+it's nice to be able to tweak that
+
+391
+00:14:42,420 --> 00:14:43,950
+as you're doing the executions.
+
+392
+00:14:43,950 --> 00:14:45,450
+But we also have a NKI flag here
+
+393
+00:14:45,450 --> 00:14:47,160
+that we use to specify
+
+394
+00:14:47,160 --> 00:14:49,200
+whether or not the benchmarking script
+
+395
+00:14:49,200 --> 00:14:50,700
+should use the NKI implementation
+
+396
+00:14:50,700 --> 00:14:53,200
+that Sadaf is gonna add
+for us a little bit later.
+
+397
+00:14:54,090 --> 00:14:55,710
+Okay, so here you can see this is where
+
+398
+00:14:55,710 --> 00:14:58,460
+we actually load the model
+for the first time onto CPU.
+
+399
+00:14:59,370 --> 00:15:01,260
+We do truncate the model
+to four layers here,
+
+400
+00:15:01,260 --> 00:15:02,160
+just to speed things up
+
+401
+00:15:02,160 --> 00:15:05,400
+and get this done in
+45 minutes here today.
+
+402
+00:15:05,400 --> 00:15:07,320
+But essentially the performance for,
+
+403
+00:15:07,320 --> 00:15:08,280
+you know, a handful of layers
+
+404
+00:15:08,280 --> 00:15:12,690
+should be similar to the
+performance for the full model,
+
+405
+00:15:12,690 --> 00:15:14,740
+you just have to scale it up accordingly.
+
+406
+00:15:15,900 --> 00:15:18,560
+Okay, and if we skip
+down a little bit here...
+
+407
+00:15:20,370 --> 00:15:23,070
+So this is where we actually
+get into the meat of it.
+
+408
+00:15:23,070 --> 00:15:24,780
+So if we've previously run the script
+
+409
+00:15:24,780 --> 00:15:26,130
+for this configuration,
+
+410
+00:15:26,130 --> 00:15:29,460
+we're gonna cache the Neuron
+compiled model on disk
+
+411
+00:15:29,460 --> 00:15:32,280
+just to save time in case
+we wanna run it again.
+
+412
+00:15:32,280 --> 00:15:33,867
+But if it isn't compiled, we use this
+
+413
+00:15:33,867 --> 00:15:36,720
+torch_neuronx.trace call.
+
+414
+00:15:36,720 --> 00:15:37,890
+And this is what actually triggers
+
+415
+00:15:37,890 --> 00:15:39,630
+the neuron compiler to take the code.
+
+416
+00:15:39,630 --> 00:15:41,580
+In this case it's just
+the vanilla implementation
+
+417
+00:15:41,580 --> 00:15:43,680
+of Qwen3 with naive attention.
+
+418
+00:15:43,680 --> 00:15:45,960
+It's gonna pass that
+into the Neuron compiler,
+
+419
+00:15:45,960 --> 00:15:48,420
+the Neuron compiler
+will extract the graphs,
+
+420
+00:15:48,420 --> 00:15:49,770
+compile them to run on Neuron
+
+421
+00:15:49,770 --> 00:15:51,750
+using the example inputs
+that we've provided,
+
+422
+00:15:51,750 --> 00:15:55,560
+and it returns a PyTorch loadable model
+
+423
+00:15:55,560 --> 00:15:58,980
+that we can then save to disk,
+and we cache it out to disk.
+
+424
+00:15:58,980 --> 00:16:00,930
+Okay, so if we haven't
+compiled it we compile it,
+
+425
+00:16:00,930 --> 00:16:03,630
+and if it's already on
+disk we just load it in.
+
+426
+00:16:03,630 --> 00:16:05,220
+We do a quick warmup inference,
+
+427
+00:16:05,220 --> 00:16:07,500
+we run through an iteration
+of five inferences
+
+428
+00:16:07,500 --> 00:16:09,510
+measuring the inference time,
+
+429
+00:16:09,510 --> 00:16:13,710
+and then we calculate the
+accuracy compared to CPU
+
+430
+00:16:13,710 --> 00:16:15,420
+and output the results.
+
+431
+00:16:15,420 --> 00:16:17,280
+Okay, so it should be
+pretty straightforward
+
+432
+00:16:17,280 --> 00:16:18,840
+if you've worked with Hugging Face before.
+
+433
+00:16:18,840 --> 00:16:20,610
+But, again, I just wanted
+to show you the code
+
+434
+00:16:20,610 --> 00:16:23,280
+so it wasn't a mystery.
+
+435
+00:16:23,280 --> 00:16:24,390
+And why don't we actually run this
+
+436
+00:16:24,390 --> 00:16:26,343
+and get into the heart of it here?
+
+437
+00:16:27,480 --> 00:16:29,370
+Okay, so if you open up the terminal here,
+
+438
+00:16:29,370 --> 00:16:32,490
+I'm logged into a TRN2 three XL instance,
+
+439
+00:16:32,490 --> 00:16:34,950
+and we have a Neuron SDK environment
+
+440
+00:16:34,950 --> 00:16:36,660
+already available to us, right,
+
+441
+00:16:36,660 --> 00:16:40,590
+so we can run commands like
+neuron-ls, for example,
+
+442
+00:16:40,590 --> 00:16:42,360
+to get a quick breakdown
+of what's available
+
+443
+00:16:42,360 --> 00:16:44,220
+on this instance type.
+
+444
+00:16:44,220 --> 00:16:47,185
+But let's just run the
+benchmarking script here, Python...
+
+445
+00:16:47,185 --> 00:16:50,602
+(keyboard keys clacking)
+
+446
+00:16:54,835 --> 00:16:55,830
+Okay, and what we should see is
+
+447
+00:16:55,830 --> 00:16:58,200
+that it detects that
+the previous CPU outputs
+
+448
+00:16:58,200 --> 00:17:00,540
+are saved on disk to save
+time, and it loads those,
+
+449
+00:17:00,540 --> 00:17:03,120
+and it also loads the
+pre-compiled Neuron model for us.
+
+450
+00:17:03,120 --> 00:17:05,370
+Again, just to save a couple minutes.
+
+451
+00:17:05,370 --> 00:17:07,350
+And within a few seconds
+we should start to see this
+
+452
+00:17:07,350 --> 00:17:09,963
+executing the model on the Neuron core.
+
+453
+00:17:14,820 --> 00:17:17,160
+So, again, this is Qwen3-0.6B,
+
+454
+00:17:17,160 --> 00:17:18,900
+it's a four-layer version of that model
+
+455
+00:17:18,900 --> 00:17:20,943
+using a 16K sequence length.
+
+456
+00:17:23,880 --> 00:17:25,920
+Okay, and it's just about done running,
+
+457
+00:17:25,920 --> 00:17:28,650
+and now we get the accuracy,
+just to prove it to you.
+
+458
+00:17:28,650 --> 00:17:32,370
+So the MSE Loss and the cosine similarity
+
+459
+00:17:32,370 --> 00:17:33,330
+are what we would expect.
+
+460
+00:17:33,330 --> 00:17:36,000
+So the outputs of this
+neuron compiled model
+
+461
+00:17:36,000 --> 00:17:38,760
+that didn't run on CPU, it
+actually ran on the accelerator,
+
+462
+00:17:38,760 --> 00:17:41,820
+they 100% match the CPU
+outputs, which is great.
+
+463
+00:17:41,820 --> 00:17:44,160
+But on the performance side,
+you can see that this is not
+
+464
+00:17:44,160 --> 00:17:46,410
+a very performant model
+out of the box, right?
+
+465
+00:17:46,410 --> 00:17:48,810
+We're only getting .35 prompts a second
+
+466
+00:17:48,810 --> 00:17:50,460
+with latency around three seconds.
+
+467
+00:17:50,460 --> 00:17:53,910
+So I think there's definitely
+room for improvement there,
+
+468
+00:17:53,910 --> 00:17:56,400
+and one of the areas where we often look
+
+469
+00:17:56,400 --> 00:17:58,440
+to improve performance
+for transformer models
+
+470
+00:17:58,440 --> 00:17:59,760
+is the attention block.
+
+471
+00:17:59,760 --> 00:18:02,130
+So we'll take a look at that shortly.
+
+472
+00:18:02,130 --> 00:18:03,840
+But before we do that,
+I did want to show you
+
+473
+00:18:03,840 --> 00:18:05,700
+that we can actually look
+at the profiling results
+
+474
+00:18:05,700 --> 00:18:07,440
+that we captured here as well.
+
+475
+00:18:07,440 --> 00:18:08,820
+So sometimes what you'll see is that,
+
+476
+00:18:08,820 --> 00:18:11,430
+you know, maybe you're actually
+getting great device time,
+
+477
+00:18:11,430 --> 00:18:13,020
+the model's actually
+running well on Trainium
+
+478
+00:18:13,020 --> 00:18:15,694
+but there's something else
+going on at the PyTorch layer
+
+479
+00:18:15,694 --> 00:18:17,220
+that's slowing things down.
+
+480
+00:18:17,220 --> 00:18:19,860
+So if we get a system level
+view, a system profile here,
+
+481
+00:18:19,860 --> 00:18:22,230
+we'll be able to see did
+this model actually run
+
+482
+00:18:22,230 --> 00:18:24,330
+kind of best we could expect for right now
+
+483
+00:18:24,330 --> 00:18:25,503
+before we add NKI.
+
+484
+00:18:26,370 --> 00:18:29,130
+So as part of the Neuron STK
+we do have Neuron Profile,
+
+485
+00:18:29,130 --> 00:18:30,693
+which is the profiling tool.
+
+486
+00:18:33,090 --> 00:18:34,470
+There's different interfaces for this.
+
+487
+00:18:34,470 --> 00:18:37,020
+Today we're just gonna output
+the system level profile
+
+488
+00:18:37,020 --> 00:18:38,970
+in a Perfetto compatible format
+
+489
+00:18:38,970 --> 00:18:41,310
+so that we can quickly
+load it up in Perfetto,
+
+490
+00:18:41,310 --> 00:18:43,410
+which is an open-source visualization tool
+
+491
+00:18:43,410 --> 00:18:44,670
+that you're probably familiar with.
+
+492
+00:18:44,670 --> 00:18:47,190
+So we'll do neuron-profile view,
+
+493
+00:18:47,190 --> 00:18:49,860
+we specify the directory that
+contains the profiling data,
+
+494
+00:18:49,860 --> 00:18:54,553
+and we'll tell it to use
+--output-format perfetto.
+
+495
+00:18:54,553 --> 00:18:58,152
+(keyboard keys clacking)
+
+496
+00:18:58,152 --> 00:19:01,050
+Okay. And now if we look in the directory,
+
+497
+00:19:01,050 --> 00:19:02,820
+it's created the system profile for us
+
+498
+00:19:02,820 --> 00:19:04,620
+so we'll just quickly download that.
+
+499
+00:19:12,690 --> 00:19:15,360
+And let's hop into the
+browser and this is Perfetto,
+
+500
+00:19:15,360 --> 00:19:17,550
+has anybody used proto
+before for any kind of-
+
+501
+00:19:17,550 --> 00:19:19,530
+Okay, awesome. So you're familiar.
+
+502
+00:19:19,530 --> 00:19:21,630
+Yeah, so we'll just open up the trace file
+
+503
+00:19:23,531 --> 00:19:25,200
+and we'll take a quick look here.
+
+504
+00:19:25,200 --> 00:19:27,030
+Awesome. So if you're not familiar,
+
+505
+00:19:27,030 --> 00:19:28,830
+this is just showing
+the execution timeline,
+
+506
+00:19:28,830 --> 00:19:31,290
+starting on the left, kind
+of scrolling to the right.
+
+507
+00:19:31,290 --> 00:19:33,930
+You can see the first thing
+that happened, there's NRT load.
+
+508
+00:19:33,930 --> 00:19:36,390
+This is actually the neuron runtime
+
+509
+00:19:36,390 --> 00:19:39,183
+loading the weights of the model into HBM.
+
+510
+00:19:40,020 --> 00:19:42,900
+And then beyond that you see
+all these NRT execute calls,
+
+511
+00:19:42,900 --> 00:19:44,460
+and what's nice is we can actually see
+
+512
+00:19:44,460 --> 00:19:46,590
+exactly what's happening
+within the neuron runtime.
+
+513
+00:19:46,590 --> 00:19:47,970
+So here it's executing the model,
+
+514
+00:19:47,970 --> 00:19:50,910
+you can see there's
+basically seven executions
+
+515
+00:19:50,910 --> 00:19:51,990
+in the model here.
+
+516
+00:19:51,990 --> 00:19:53,520
+So our benchmarking loop was five,
+
+517
+00:19:53,520 --> 00:19:56,520
+but we also did one execution
+for the accuracy check
+
+518
+00:19:56,520 --> 00:20:00,720
+and one is a quick warmup,
+so that's why there's seven.
+
+519
+00:20:00,720 --> 00:20:02,520
+But if we click on any
+of these executions,
+
+520
+00:20:02,520 --> 00:20:04,050
+you can actually see some metadata
+
+521
+00:20:04,050 --> 00:20:06,120
+associated with the execution,
+
+522
+00:20:06,120 --> 00:20:08,400
+which for this model may
+be not that interesting
+
+523
+00:20:08,400 --> 00:20:10,440
+but for a larger model
+or maybe an execution
+
+524
+00:20:10,440 --> 00:20:13,350
+where you had multiple graphs
+executing on different cores,
+
+525
+00:20:13,350 --> 00:20:14,820
+this would be very helpful.
+
+526
+00:20:14,820 --> 00:20:16,770
+So here we can see the
+exact name of the graph,
+
+527
+00:20:16,770 --> 00:20:19,350
+which is the compiled version
+of the model for Neuron,
+
+528
+00:20:19,350 --> 00:20:22,800
+and we can see, you know, which
+Neuron Core it's running on,
+
+529
+00:20:22,800 --> 00:20:23,633
+those sorts of things.
+
+530
+00:20:23,633 --> 00:20:24,900
+And on the left-hand side, you can see,
+
+531
+00:20:24,900 --> 00:20:27,000
+you know, the duration of the execution
+
+532
+00:20:27,000 --> 00:20:29,640
+is pretty much what we saw
+from our benchmarking script.
+
+533
+00:20:29,640 --> 00:20:32,880
+It's just under three
+seconds execution latency,
+
+534
+00:20:32,880 --> 00:20:34,800
+which is, you know, I'd say not great.
+
+535
+00:20:34,800 --> 00:20:37,320
+So hopefully we can improve on that.
+
+536
+00:20:37,320 --> 00:20:38,370
+But, yeah, with that being said,
+
+537
+00:20:38,370 --> 00:20:39,570
+this is the baseline performance.
+
+538
+00:20:39,570 --> 00:20:43,230
+So we did take that original
+Qwen3 model from Hugging Face,
+
+539
+00:20:43,230 --> 00:20:44,700
+we compiled it to run on their own,
+
+540
+00:20:44,700 --> 00:20:47,490
+we executed it on train and
+got those baseline results.
+
+541
+00:20:47,490 --> 00:20:51,210
+And now let's see if Sadaf can
+improve on that, using NKI.
+
+542
+00:20:51,210 --> 00:20:53,970
+- [Sadaf] Sure. Thanks, Scott.
+
+543
+00:20:53,970 --> 00:20:55,800
+Thanks for setting up the stage.
+
+544
+00:20:55,800 --> 00:20:58,080
+Hey everyone, this is Sadaf again.
+
+545
+00:20:58,080 --> 00:20:59,973
+How many of you have lunch already?
+
+546
+00:21:01,410 --> 00:21:02,820
+Oh man, so sorry.
+
+547
+00:21:02,820 --> 00:21:06,210
+Not a good time to talk about
+the code after lunch, (laughs)
+
+548
+00:21:06,210 --> 00:21:10,140
+but I promise you we will try to make it
+
+549
+00:21:10,140 --> 00:21:14,010
+as exciting and promising as possible.
+
+550
+00:21:14,010 --> 00:21:15,480
+Just bear with us.
+
+551
+00:21:15,480 --> 00:21:17,763
+What we are trying to
+do here essentially is,
+
+552
+00:21:19,350 --> 00:21:23,043
+as we have seen performance
+for this Qwen3 model,
+
+553
+00:21:24,780 --> 00:21:26,040
+we got the performance numbers
+
+554
+00:21:26,040 --> 00:21:27,570
+and we got the timeline as well,
+
+555
+00:21:27,570 --> 00:21:29,910
+and we'll try to see if NKI,
+
+556
+00:21:29,910 --> 00:21:33,150
+which is Neuron Kernel
+Interface, as Scott mentioned,
+
+557
+00:21:33,150 --> 00:21:35,880
+can help us to improve this performance.
+
+558
+00:21:35,880 --> 00:21:37,770
+So in this part of the talk,
+
+559
+00:21:37,770 --> 00:21:40,440
+we are going to focus on
+three major objectives.
+
+560
+00:21:40,440 --> 00:21:43,290
+Number one, I would like to show you
+
+561
+00:21:43,290 --> 00:21:44,940
+how quick and convenient it is
+
+562
+00:21:44,940 --> 00:21:48,183
+to integrate NKI kernels
+in our existing model code.
+
+563
+00:21:49,650 --> 00:21:53,820
+Number two, what are the
+performance impacts of the same?
+
+564
+00:21:53,820 --> 00:21:55,920
+And number three, which is going to be
+
+565
+00:21:55,920 --> 00:21:57,720
+more like food for thought,
+
+566
+00:21:57,720 --> 00:22:01,800
+like from the extensibility
+and applications point of view,
+
+567
+00:22:01,800 --> 00:22:04,920
+is there a way we can
+use those NKI kernels
+
+568
+00:22:04,920 --> 00:22:07,383
+in our respective workloads
+when we go back home?
+
+569
+00:22:08,400 --> 00:22:09,900
+So these are the three major objectives
+
+570
+00:22:09,900 --> 00:22:14,900
+that we are going to address
+in this part of the talk.
+
+571
+00:22:15,810 --> 00:22:16,800
+Are you with me? We are going to do
+
+572
+00:22:16,800 --> 00:22:18,690
+a little bit of code, as I promised,
+
+573
+00:22:18,690 --> 00:22:21,060
+I'll try not to make
+it very boring for you
+
+574
+00:22:21,060 --> 00:22:22,740
+but we'll do our best.
+
+575
+00:22:22,740 --> 00:22:25,980
+We good? Awesome.
+
+576
+00:22:25,980 --> 00:22:27,780
+All right, so there are a couple of things
+
+577
+00:22:27,780 --> 00:22:30,990
+that I think are worth noting from
+
+578
+00:22:30,990 --> 00:22:33,273
+the profiling that we have done so far.
+
+579
+00:22:34,560 --> 00:22:35,970
+We see, like for each iteration,
+
+580
+00:22:35,970 --> 00:22:39,390
+it's taking approximately two
+seconds, 812 milliseconds.
+
+581
+00:22:39,390 --> 00:22:43,980
+On a rough basis we can
+just say it's three seconds.
+
+582
+00:22:43,980 --> 00:22:46,080
+Are you able to hear me there?
+
+583
+00:22:46,080 --> 00:22:48,153
+Awesome. That is one.
+
+584
+00:22:49,140 --> 00:22:52,770
+Second, as Scott was trying to show,
+
+585
+00:22:52,770 --> 00:22:54,630
+the throughput that we are seeing here
+
+586
+00:22:54,630 --> 00:22:57,480
+is 0.35 prompts per second.
+
+587
+00:22:57,480 --> 00:23:00,240
+So technically it means
+that it takes approximately
+
+588
+00:23:00,240 --> 00:23:02,883
+three seconds to just process one prompt.
+
+589
+00:23:03,720 --> 00:23:04,920
+We good?
+
+590
+00:23:04,920 --> 00:23:09,240
+So when we are talking about
+NKI, and as Scott mentioned,
+
+591
+00:23:09,240 --> 00:23:12,120
+like how does it help us
+to improve the performance?
+
+592
+00:23:12,120 --> 00:23:14,820
+And the reason it can do that,
+
+593
+00:23:14,820 --> 00:23:18,120
+because it works at the very low level,
+
+594
+00:23:18,120 --> 00:23:20,040
+which is very close to the hardware,
+
+595
+00:23:20,040 --> 00:23:23,280
+and it takes care of all the optimizations
+
+596
+00:23:23,280 --> 00:23:25,620
+that are available on the table
+
+597
+00:23:25,620 --> 00:23:28,260
+so that we can get the maximum performance
+
+598
+00:23:28,260 --> 00:23:30,330
+from the underlying hardware,
+
+599
+00:23:30,330 --> 00:23:32,610
+which is Trainium in this case.
+
+600
+00:23:32,610 --> 00:23:37,050
+So we are very proud and excited about
+
+601
+00:23:37,050 --> 00:23:41,010
+that yesterday we
+launched the NKI Library,
+
+602
+00:23:41,010 --> 00:23:43,080
+which Scott is going to
+talk about in a minute,
+
+603
+00:23:43,080 --> 00:23:47,160
+and we are exposing some of the kernels,
+
+604
+00:23:47,160 --> 00:23:49,140
+predefined, pre-implemented kernels,
+
+605
+00:23:49,140 --> 00:23:51,570
+which can be plugged into your models
+
+606
+00:23:51,570 --> 00:23:55,080
+just like we are going to
+say in this Qwen3 model,
+
+607
+00:23:55,080 --> 00:23:56,610
+and we can just take advantage
+
+608
+00:23:56,610 --> 00:23:58,650
+of the performance on Trainium.
+
+609
+00:23:58,650 --> 00:24:00,100
+So let's have a look at that.
+
+610
+00:24:01,170 --> 00:24:03,150
+People who have worked with
+
+611
+00:24:03,150 --> 00:24:05,460
+Hugging Face Transformers Library before,
+
+612
+00:24:05,460 --> 00:24:08,670
+we would know for each model directory
+
+613
+00:24:08,670 --> 00:24:10,290
+we have different model-specific files.
+
+614
+00:24:10,290 --> 00:24:13,560
+So in the case of Qwen3 we
+have a configuration file here,
+
+615
+00:24:13,560 --> 00:24:16,440
+we have a modeling file,
+modular file, and so on.
+
+616
+00:24:16,440 --> 00:24:20,340
+The very first file that I'm
+super interested in right now
+
+617
+00:24:20,340 --> 00:24:22,230
+is this modeling file.
+
+618
+00:24:22,230 --> 00:24:25,683
+Let me try to make this
+screen a little bit better.
+
+619
+00:24:29,310 --> 00:24:31,432
+Sorry, there's a question.
+
+620
+00:24:31,432 --> 00:24:34,290
+(attendee speaking faintly)
+
+621
+00:24:34,290 --> 00:24:36,780
+We'll talk about that, yes.
+
+622
+00:24:36,780 --> 00:24:41,340
+So the reason I'm interested
+in this modeling Qwen3 file,
+
+623
+00:24:41,340 --> 00:24:45,000
+because this file, essentially,
+
+624
+00:24:45,000 --> 00:24:48,000
+which is given by Hugging
+Face Transformers Library,
+
+625
+00:24:48,000 --> 00:24:52,320
+tells us the complete implementation
+of Qwen3 model, right.
+
+626
+00:24:52,320 --> 00:24:53,700
+If I want to understand
+
+627
+00:24:53,700 --> 00:24:56,580
+what the RMS norm looks
+like for Qwen3, it is here.
+
+628
+00:24:56,580 --> 00:24:59,430
+If I want to understand what
+MLP looks like for Qwen3,
+
+629
+00:24:59,430 --> 00:25:00,600
+it is here.
+
+630
+00:25:00,600 --> 00:25:02,677
+And how the rotary embedding looks like
+
+631
+00:25:02,677 --> 00:25:06,030
+or how it is implemented,
+everything is here.
+
+632
+00:25:06,030 --> 00:25:09,450
+And one part that we are
+super interested today
+
+633
+00:25:09,450 --> 00:25:11,043
+is attention.
+
+634
+00:25:12,270 --> 00:25:16,110
+Everybody heard about
+transformer-based models?
+
+635
+00:25:16,110 --> 00:25:18,600
+Everybody heard about attention, right?
+
+636
+00:25:18,600 --> 00:25:21,960
+So that's what we are going to see today.
+
+637
+00:25:21,960 --> 00:25:25,890
+We have this eager
+attention forward method
+
+638
+00:25:25,890 --> 00:25:28,770
+that has been provided by
+
+639
+00:25:28,770 --> 00:25:32,670
+the Hugging Face Transformers
+Library itself for this model,
+
+640
+00:25:32,670 --> 00:25:34,080
+and what we are going to do is
+
+641
+00:25:34,080 --> 00:25:35,550
+we are trying to see if there's a way
+
+642
+00:25:35,550 --> 00:25:40,550
+we can replace this with
+NKI attention, right?
+
+643
+00:25:40,770 --> 00:25:42,360
+And we will see what is the
+
+644
+00:25:42,360 --> 00:25:44,520
+performance implication of the same.
+
+645
+00:25:44,520 --> 00:25:46,740
+So that is one module
+that we are going to be
+
+646
+00:25:46,740 --> 00:25:48,330
+super interested in today.
+
+647
+00:25:48,330 --> 00:25:53,330
+What I'm going to do is, let me first...
+
+648
+00:25:55,170 --> 00:25:57,150
+I'm going to take this attention,
+
+649
+00:25:57,150 --> 00:25:59,010
+eager attention forward here,
+
+650
+00:25:59,010 --> 00:26:04,010
+and I'm just going to paste it.
+
+651
+00:26:05,910 --> 00:26:08,490
+Everybody can see the code,
+do I need to maximize it?
+
+652
+00:26:08,490 --> 00:26:09,930
+Are we good?
+
+653
+00:26:09,930 --> 00:26:13,200
+Awesome. So I just copy-pasted
+that eager_attention,
+
+654
+00:26:13,200 --> 00:26:15,540
+and let's give it a meaningful name.
+
+655
+00:26:15,540 --> 00:26:19,560
+Let's call it, like,
+nki_attention_forward, right.
+
+656
+00:26:19,560 --> 00:26:21,990
+And I'll not touch the input arguments
+
+657
+00:26:21,990 --> 00:26:24,750
+but I'm going to, of course,
+get rid of this implementation
+
+658
+00:26:24,750 --> 00:26:27,480
+because we are going to write
+our own implementation here.
+
+659
+00:26:27,480 --> 00:26:29,850
+And we'll return the attention output,
+
+660
+00:26:29,850 --> 00:26:31,590
+and because it's inference
+
+661
+00:26:31,590 --> 00:26:34,040
+we don't need to return
+the beats, so we're good.
+
+662
+00:26:35,880 --> 00:26:39,540
+Step number one of my
+objective is to showcase
+
+663
+00:26:39,540 --> 00:26:43,980
+how easy and convenient it
+is to integrate NKI Kernels
+
+664
+00:26:43,980 --> 00:26:45,210
+in our existing models.
+
+665
+00:26:45,210 --> 00:26:47,850
+That's what we are going
+to look at right now.
+
+666
+00:26:47,850 --> 00:26:50,610
+So we have this attention
+forward.py file here,
+
+667
+00:26:50,610 --> 00:26:53,370
+and we can go into the detail in a minute,
+
+668
+00:26:53,370 --> 00:26:56,670
+but what it has is it
+has the implementation,
+
+669
+00:26:56,670 --> 00:26:58,440
+the NKI implementation
+
+670
+00:26:58,440 --> 00:27:01,110
+for different flavors of attention, right.
+
+671
+00:27:01,110 --> 00:27:03,060
+So as we know, we have SDP attention,
+
+672
+00:27:03,060 --> 00:27:05,910
+we have sliding window attention,
+we have flash attention,
+
+673
+00:27:05,910 --> 00:27:07,710
+and so many other variations of that.
+
+674
+00:27:07,710 --> 00:27:11,640
+It has the implementation
+for the majority of those
+
+675
+00:27:11,640 --> 00:27:14,970
+profound implement attention mechanisms,
+
+676
+00:27:14,970 --> 00:27:18,090
+and we are going to use one of them.
+
+677
+00:27:18,090 --> 00:27:19,770
+In this case, we are going to leverage
+
+678
+00:27:19,770 --> 00:27:22,803
+flash attention for Qwen3.
+
+679
+00:27:24,060 --> 00:27:25,560
+So what this file does,
+
+680
+00:27:25,560 --> 00:27:27,570
+what this implementation file does, is
+
+681
+00:27:27,570 --> 00:27:30,720
+on top of that it provides
+me kind of an adapter,
+
+682
+00:27:30,720 --> 00:27:34,170
+or you can just think of
+like an interface function.
+
+683
+00:27:34,170 --> 00:27:36,660
+And what it does is it will
+take all the inputs from me,
+
+684
+00:27:36,660 --> 00:27:38,670
+it will try to make sure basic hygiene,
+
+685
+00:27:38,670 --> 00:27:41,820
+like I'm giving the right
+shapes, formats, data types,
+
+686
+00:27:41,820 --> 00:27:44,520
+and then it'll invoke
+the right kernel for us.
+
+687
+00:27:44,520 --> 00:27:47,910
+We definitely are going to
+look into that kernel as well,
+
+688
+00:27:47,910 --> 00:27:50,020
+but before that let's invoke this kernel
+
+689
+00:27:51,060 --> 00:27:53,283
+from our modeling_qwen3.py.
+
+690
+00:27:54,870 --> 00:27:59,870
+All right, so my attention
+output will be coming from here
+
+691
+00:28:01,860 --> 00:28:05,730
+and I'm going to call this one.
+
+692
+00:28:05,730 --> 00:28:07,620
+But as we were looking at it,
+
+693
+00:28:07,620 --> 00:28:10,803
+and we can go through this
+provided documentation as well,
+
+694
+00:28:11,640 --> 00:28:14,490
+because it's a NKI
+implementation of the kernel
+
+695
+00:28:14,490 --> 00:28:18,210
+it expects us to provide the QKV tensors
+
+696
+00:28:18,210 --> 00:28:21,750
+in a specific format or
+specific shapes, right,
+
+697
+00:28:21,750 --> 00:28:23,040
+because very close to the hardware
+
+698
+00:28:23,040 --> 00:28:24,960
+it expects us to do that little bit of,
+
+699
+00:28:24,960 --> 00:28:27,540
+you know, massaging, reshaping before,
+
+700
+00:28:27,540 --> 00:28:29,610
+and then give those tens back to NKI
+
+701
+00:28:29,610 --> 00:28:31,920
+so that it can perform its operations.
+
+702
+00:28:31,920 --> 00:28:35,760
+So for that we need to make
+a little bit of reshaping
+
+703
+00:28:35,760 --> 00:28:38,343
+for our QKV tensors right now.
+
+704
+00:28:39,360 --> 00:28:43,440
+So for query, the first
+thing I'm going to do is,
+
+705
+00:28:43,440 --> 00:28:48,440
+we know if I expose the shape of my query,
+
+706
+00:28:50,310 --> 00:28:53,883
+or key or value in this case,
+I will get the batch size,
+
+707
+00:28:55,110 --> 00:28:59,730
+number of heads, sequence
+length, and head dimension.
+
+708
+00:28:59,730 --> 00:29:01,580
+That's what it's going to give to me.
+
+709
+00:29:03,360 --> 00:29:08,360
+This kernel, the attention
+kernel, it expects the query.
+
+710
+00:29:08,640 --> 00:29:10,350
+I'm going to write it as a comment here
+
+711
+00:29:10,350 --> 00:29:12,660
+so that we keep track of it.
+
+712
+00:29:12,660 --> 00:29:16,080
+So it says, "Okay, you are
+in this format right now,
+
+713
+00:29:16,080 --> 00:29:20,817
+but I expect you to give me
+the query in this format."
+
+714
+00:29:22,710 --> 00:29:24,087
+Just a little bit of reshaping, permute,
+
+715
+00:29:24,087 --> 00:29:26,580
+and all these classical NumPy operations
+
+716
+00:29:26,580 --> 00:29:28,200
+that we are going to perform here.
+
+717
+00:29:28,200 --> 00:29:30,330
+Okay, so what we are going to do is
+
+718
+00:29:30,330 --> 00:29:32,790
+from b, h, s, d, to bXh, d, s,
+
+719
+00:29:32,790 --> 00:29:34,380
+essentially we are
+contracting two dimensions
+
+720
+00:29:34,380 --> 00:29:36,900
+to one dimension and then
+changing the sequence
+
+721
+00:29:36,900 --> 00:29:38,910
+of SD and DS. That's it.
+
+722
+00:29:38,910 --> 00:29:42,110
+So what we can do is, first
+of all, we do a permute
+
+723
+00:29:42,110 --> 00:29:47,110
+to switch S and D, or
+swap the sequence length
+
+724
+00:29:48,030 --> 00:29:49,530
+and the head dimension.
+
+725
+00:29:49,530 --> 00:29:54,240
+So we will make it first b, h, d, s,
+
+726
+00:29:54,240 --> 00:29:58,200
+and then I think it'll be easy from there
+
+727
+00:29:58,200 --> 00:30:00,423
+to make it bXh d, s.
+
+728
+00:30:01,500 --> 00:30:02,640
+So let's do that.
+
+729
+00:30:02,640 --> 00:30:07,570
+So query = query.clone.permute.
+
+730
+00:30:11,580 --> 00:30:12,540
+And the reason we are doing it,
+
+731
+00:30:12,540 --> 00:30:15,780
+because we need to change
+the sequence of the shapes,
+
+732
+00:30:15,780 --> 00:30:17,910
+b, h, s, d to b, h, d, s.
+
+733
+00:30:17,910 --> 00:30:20,910
+So zero will remain zero,
+one will remain one,
+
+734
+00:30:20,910 --> 00:30:23,550
+two will become three,
+and three will become two.
+
+735
+00:30:23,550 --> 00:30:24,690
+So far good.
+
+736
+00:30:24,690 --> 00:30:27,720
+So we have achieved b, h, d, s,
+
+737
+00:30:27,720 --> 00:30:31,287
+and then we will reshape it to bXh, d, s.
+
+738
+00:30:35,460 --> 00:30:37,980
+As simple as that, and
+we will ask to give us
+
+739
+00:30:37,980 --> 00:30:42,120
+contiguous memory location
+so that's optimized.
+
+740
+00:30:42,120 --> 00:30:42,990
+Fair enough.
+
+741
+00:30:42,990 --> 00:30:46,080
+We just reshaped our
+query tensors, that's it.
+
+742
+00:30:46,080 --> 00:30:50,283
+Now, similarly, we can do the
+same for key tensors as well.
+
+743
+00:30:52,740 --> 00:30:55,560
+So our key is exactly in the same shapes,
+
+744
+00:30:55,560 --> 00:30:59,613
+so we just need to make the
+change to my tensor names here,
+
+745
+00:31:02,400 --> 00:31:05,223
+key states, and everything
+remains the same.
+
+746
+00:31:06,150 --> 00:31:08,283
+For values, it's even simpler.
+
+747
+00:31:09,480 --> 00:31:14,480
+For values, it says give me bXh, s, d.
+
+748
+00:31:16,920 --> 00:31:19,800
+So we don't need to do the permute here,
+
+749
+00:31:19,800 --> 00:31:22,233
+we can simply just reshape.
+
+750
+00:31:23,280 --> 00:31:26,310
+And then, since we don't have to permute
+
+751
+00:31:26,310 --> 00:31:29,673
+we can keep the s and d at
+their original positions.
+
+752
+00:31:30,600 --> 00:31:31,920
+Fair enough.
+
+753
+00:31:31,920 --> 00:31:35,160
+And once we have this, it means I'm ready
+
+754
+00:31:35,160 --> 00:31:37,560
+to provide these tensors
+to this adapter kernel,
+
+755
+00:31:37,560 --> 00:31:41,823
+and I'm going to call this
+so we can provide our query,
+
+756
+00:31:43,470 --> 00:31:48,470
+key states, value
+states, and then scaling.
+
+757
+00:31:54,773 --> 00:31:57,090
+(keyboard keys clacking)
+
+758
+00:31:57,090 --> 00:32:02,070
+Yeah. And yeah, just
+change the variable names.
+
+759
+00:32:02,070 --> 00:32:03,570
+Thank you.
+
+760
+00:32:03,570 --> 00:32:06,090
+So that it's not key,
+it's values. Fair enough.
+
+761
+00:32:06,090 --> 00:32:09,630
+So what we have done so far,
+we have changed our QKV shapes.
+
+762
+00:32:09,630 --> 00:32:12,300
+That's it, did not make any
+changes to the tensor values,
+
+763
+00:32:12,300 --> 00:32:14,070
+did not make any other changes,
+
+764
+00:32:14,070 --> 00:32:18,093
+just reshaped them in the
+format that this kernel expects.
+
+765
+00:32:19,200 --> 00:32:21,660
+Once we do that, we would be able
+
+766
+00:32:21,660 --> 00:32:25,920
+to call this attention through NKI,
+
+767
+00:32:25,920 --> 00:32:27,900
+passing out our parameters,
+
+768
+00:32:27,900 --> 00:32:29,490
+and we'll get the attention output.
+
+769
+00:32:29,490 --> 00:32:31,440
+Once we get the attention output,
+
+770
+00:32:31,440 --> 00:32:35,430
+the beauty of it that's going to give us
+
+771
+00:32:35,430 --> 00:32:37,860
+attention output in this format,
+
+772
+00:32:37,860 --> 00:32:42,660
+and we would like to have
+it in the final outcome
+
+773
+00:32:42,660 --> 00:32:46,110
+should be in this format, b, s, h, d.
+
+774
+00:32:46,110 --> 00:32:48,963
+So we need to do the exactly
+same magic here as well.
+
+775
+00:32:51,171 --> 00:32:53,130
+So first of all, we
+are going to reshape it
+
+776
+00:32:53,130 --> 00:32:55,773
+so that it becomes b, h, s, d.
+
+777
+00:32:56,621 --> 00:33:00,038
+(keyboard keys clacking)
+
+778
+00:33:04,530 --> 00:33:07,650
+And then we just need
+to swap s and h, right.
+
+779
+00:33:07,650 --> 00:33:09,900
+So right now we have h, s,
+
+780
+00:33:09,900 --> 00:33:11,850
+then we're gonna make it s, h.
+
+781
+00:33:11,850 --> 00:33:15,810
+So we'll just call our favorite function,
+
+782
+00:33:15,810 --> 00:33:17,250
+which is transfers,
+
+783
+00:33:17,250 --> 00:33:19,440
+and then we will transpose the first index
+
+784
+00:33:19,440 --> 00:33:22,740
+with the second index, contiguous.
+
+785
+00:33:22,740 --> 00:33:25,530
+All right. Awesome.
+
+786
+00:33:25,530 --> 00:33:27,660
+And then we return the attention output.
+
+787
+00:33:27,660 --> 00:33:30,540
+If we look at the implementation of this,
+
+788
+00:33:30,540 --> 00:33:34,800
+we have just swapped query key values-
+
+789
+00:33:34,800 --> 00:33:37,320
+not swapped, reshaped.
+
+790
+00:33:37,320 --> 00:33:40,150
+And once we have reshaped them
+
+791
+00:33:41,070 --> 00:33:44,640
+we have called the attention
+kernel, getting the output,
+
+792
+00:33:44,640 --> 00:33:46,830
+again, reshaping it in the expected format
+
+793
+00:33:46,830 --> 00:33:51,513
+that the function output
+requires, and then using it.
+
+794
+00:33:54,840 --> 00:33:58,623
+Another thing that we have
+to do is we have to switch,
+
+795
+00:34:03,660 --> 00:34:05,250
+because there is a place
+
+796
+00:34:05,250 --> 00:34:07,830
+where we are calling the attention here.
+
+797
+00:34:07,830 --> 00:34:10,680
+What I have done here is
+I have already added this,
+
+798
+00:34:10,680 --> 00:34:13,920
+like if my config has the NKI
+
+799
+00:34:13,920 --> 00:34:17,070
+as an attention implementation,
+call NKI attention forward.
+
+800
+00:34:17,070 --> 00:34:20,460
+So we are switching from eager
+attention to NKI attention,
+
+801
+00:34:20,460 --> 00:34:22,200
+so that we are 100% sure
+
+802
+00:34:22,200 --> 00:34:24,780
+that we are calling the right attention.
+
+803
+00:34:24,780 --> 00:34:28,500
+Fair enough. So let's quickly have a look,
+
+804
+00:34:28,500 --> 00:34:30,360
+I'm going to remove the previous profiles.
+
+805
+00:34:30,360 --> 00:34:32,190
+As we have seen when Scott was running,
+
+806
+00:34:32,190 --> 00:34:33,750
+he was able to get the profiles.
+
+807
+00:34:33,750 --> 00:34:34,740
+I'm going to delete it
+
+808
+00:34:34,740 --> 00:34:38,133
+so that we don't have any
+cache data or something.
+
+809
+00:34:39,660 --> 00:34:43,110
+And then we will try
+to make it run as well,
+
+810
+00:34:43,110 --> 00:34:47,771
+so let's have our terminal open.
+
+811
+00:34:47,771 --> 00:34:49,530
+(attendee coughing)
+
+812
+00:34:49,530 --> 00:34:53,460
+And this time I'm going
+to call the same script
+
+813
+00:34:53,460 --> 00:34:54,870
+which Scott has run,
+
+814
+00:34:54,870 --> 00:34:59,870
+but this time I'm going to
+pass this argument, right.
+
+815
+00:34:59,910 --> 00:35:02,763
+So hope it runs first time.
+
+816
+00:35:03,901 --> 00:35:04,901
+Let's do it.
+
+817
+00:35:08,670 --> 00:35:10,950
+What is going to happen now
+
+818
+00:35:10,950 --> 00:35:14,340
+is because it has found a new attention,
+
+819
+00:35:14,340 --> 00:35:16,320
+it's going to submit the model again
+
+820
+00:35:16,320 --> 00:35:17,640
+for the neuron compiler.
+
+821
+00:35:17,640 --> 00:35:19,020
+Hey, I got this new attention,
+
+822
+00:35:19,020 --> 00:35:22,020
+just compile it for me so that
+I can run on Trainium, right.
+
+823
+00:35:22,020 --> 00:35:24,630
+So this compilation will take
+maybe a couple of minutes.
+
+824
+00:35:24,630 --> 00:35:26,550
+Meanwhile, it's taking
+a couple of minutes,
+
+825
+00:35:26,550 --> 00:35:29,250
+let's have a quick look at
+the actual attention kernel
+
+826
+00:35:29,250 --> 00:35:31,230
+that I promised to you.
+
+827
+00:35:31,230 --> 00:35:34,680
+So I'm, again, going to
+the attention forward py,
+
+828
+00:35:34,680 --> 00:35:38,220
+and here if we look at our adapter kernel
+
+829
+00:35:38,220 --> 00:35:39,657
+I will save all these details for you,
+
+830
+00:35:39,657 --> 00:35:40,860
+you can check it out later,
+
+831
+00:35:40,860 --> 00:35:42,960
+but what essentially I can see,
+
+832
+00:35:42,960 --> 00:35:44,730
+it's calling this attention kernel
+
+833
+00:35:44,730 --> 00:35:46,650
+implementation without swapping.
+
+834
+00:35:46,650 --> 00:35:48,510
+I am more interested to find out
+
+835
+00:35:48,510 --> 00:35:50,880
+where's the definition of this kernel.
+
+836
+00:35:50,880 --> 00:35:54,450
+So here it is, line number 657.
+
+837
+00:35:54,450 --> 00:35:58,140
+And, just to warn you, it's a
+pretty decent implementation,
+
+838
+00:35:58,140 --> 00:35:59,850
+it's like 1,000 lines of code.
+
+839
+00:35:59,850 --> 00:36:03,120
+So I don't want to bore you with that,
+
+840
+00:36:03,120 --> 00:36:06,630
+but what I want to share with you is that
+
+841
+00:36:06,630 --> 00:36:09,240
+because, at the end of the day,
+
+842
+00:36:09,240 --> 00:36:12,180
+attention is nothing but
+
+843
+00:36:12,180 --> 00:36:13,980
+a function of QKVs essentially, right.
+
+844
+00:36:13,980 --> 00:36:16,380
+We are doing QK transpose, softmax,
+
+845
+00:36:16,380 --> 00:36:18,360
+and then multiplying this with V, right.
+
+846
+00:36:18,360 --> 00:36:20,310
+So this is exactly what it is doing,
+
+847
+00:36:20,310 --> 00:36:24,030
+but it is doing it in a
+very hardware aware fashion.
+
+848
+00:36:24,030 --> 00:36:26,940
+What it means, it means with NKI
+
+849
+00:36:26,940 --> 00:36:28,890
+we have this amazing capabilities
+
+850
+00:36:28,890 --> 00:36:30,809
+that we can take the maximum advantage
+
+851
+00:36:30,809 --> 00:36:33,303
+of the underlying hardware,
+which is Trainium.
+
+852
+00:36:34,500 --> 00:36:38,160
+So what it does is it
+employs various memory
+
+853
+00:36:38,160 --> 00:36:40,920
+as well as compute
+optimization techniques.
+
+854
+00:36:40,920 --> 00:36:43,050
+And when I'm saying memory
+optimization techniques,
+
+855
+00:36:43,050 --> 00:36:46,290
+it uses smart DMAs just to ensure
+
+856
+00:36:46,290 --> 00:36:48,570
+we are efficiently using the DMA engines,
+
+857
+00:36:48,570 --> 00:36:51,570
+we are efficiently using the
+DMA package sizes as well.
+
+858
+00:36:51,570 --> 00:36:55,320
+It uses the intelligent tiling concepts,
+
+859
+00:36:55,320 --> 00:36:59,433
+it uses the efficient memory
+layout and allocations.
+
+860
+00:37:00,270 --> 00:37:03,480
+When it comes to compute,
+what it's going to do is
+
+861
+00:37:03,480 --> 00:37:05,520
+it takes advantage of pipelining
+
+862
+00:37:05,520 --> 00:37:07,620
+so that, you know, as Scott was mentioning
+
+863
+00:37:07,620 --> 00:37:08,730
+in one of the slides
+
+864
+00:37:08,730 --> 00:37:10,590
+where we have different compute engines,
+
+865
+00:37:10,590 --> 00:37:12,840
+it makes sure that it is trying to keep
+
+866
+00:37:12,840 --> 00:37:14,790
+all the compute engines
+
+867
+00:37:14,790 --> 00:37:17,910
+as much busy as possible in parallel,
+
+868
+00:37:17,910 --> 00:37:22,910
+so that we can- whatever
+the available compute
+
+869
+00:37:23,280 --> 00:37:26,577
+that we have on the table, we
+can take the best out of that.
+
+870
+00:37:26,577 --> 00:37:29,760
+It also uses the concept of op fusion,
+
+871
+00:37:29,760 --> 00:37:31,470
+like when we are fusing
+
+872
+00:37:31,470 --> 00:37:34,260
+or kind of combining
+multiple operations together
+
+873
+00:37:34,260 --> 00:37:36,750
+so that we don't have to do a lot of DMEs,
+
+874
+00:37:36,750 --> 00:37:38,070
+a lot of memory accesses,
+
+875
+00:37:38,070 --> 00:37:41,160
+we can keep our compute
+engines more and more busy.
+
+876
+00:37:41,160 --> 00:37:43,660
+So it employs all these mechanisms
+
+877
+00:37:45,600 --> 00:37:48,210
+to get the best performance from Trainium,
+
+878
+00:37:48,210 --> 00:37:53,210
+and once you employ all these mechanisms
+
+879
+00:37:55,230 --> 00:37:57,670
+what you get is a super optimized
+
+880
+00:37:59,760 --> 00:38:01,560
+implementation of your model,
+
+881
+00:38:01,560 --> 00:38:04,380
+or a specific module that you're
+talking about that, right.
+
+882
+00:38:04,380 --> 00:38:06,000
+So after a couple of minutes
+
+883
+00:38:06,000 --> 00:38:08,370
+we see the compiler status is passed.
+
+884
+00:38:08,370 --> 00:38:10,620
+Now it's going to run the inference
+
+885
+00:38:10,620 --> 00:38:13,230
+with this new attention implementation.
+
+886
+00:38:13,230 --> 00:38:16,110
+Remember, it's not running
+the naive attention anymore,
+
+887
+00:38:16,110 --> 00:38:20,373
+it is running the NKI attention this time.
+
+888
+00:38:21,270 --> 00:38:22,590
+Fair enough?
+
+889
+00:38:22,590 --> 00:38:26,010
+And this time the performance that we see
+
+890
+00:38:26,010 --> 00:38:28,893
+is 2.99 prompts per second.
+
+891
+00:38:30,000 --> 00:38:31,920
+Can anybody remind me
+what was the performance
+
+892
+00:38:31,920 --> 00:38:34,413
+that we have seen with
+the naive attention?
+
+893
+00:38:36,120 --> 00:38:41,103
+Exactly, 0.352, almost
+three prompts per second.
+
+894
+00:38:42,990 --> 00:38:44,250
+So we are talking about like
+
+895
+00:38:44,250 --> 00:38:48,093
+approximately like six to
+eight times better performance,
+
+896
+00:38:49,200 --> 00:38:53,700
+not six to 8%, six to eight
+x performance boost here.
+
+897
+00:38:53,700 --> 00:38:55,710
+Isn't it amazing, right?
+
+898
+00:38:55,710 --> 00:38:57,390
+So let's have a look
+at the profile as well.
+
+899
+00:38:57,390 --> 00:39:00,870
+So just like Scott has
+generated the profile,
+
+900
+00:39:00,870 --> 00:39:03,210
+we are going to generate
+the profile again.
+
+901
+00:39:03,210 --> 00:39:05,460
+We are going to download
+this system profile,
+
+902
+00:39:08,280 --> 00:39:11,310
+and this time we are going to
+save it with, let's say, NKI.
+
+903
+00:39:15,194 --> 00:39:16,770
+We go to Perfetto again.
+
+904
+00:39:16,770 --> 00:39:17,910
+Remember this time as well,
+
+905
+00:39:17,910 --> 00:39:21,120
+Scott was mentioning two
+seconds, 812 milliseconds,
+
+906
+00:39:21,120 --> 00:39:23,220
+approximately three seconds, right.
+
+907
+00:39:23,220 --> 00:39:26,773
+Now, let's open this NKI trace this time,
+
+908
+00:39:30,870 --> 00:39:35,870
+which we have just got, and
+let's expand it a little bit.
+
+909
+00:39:36,810 --> 00:39:39,627
+Hmm. And let's see the time.
+
+910
+00:39:39,627 --> 00:39:42,270
+Are we ready for that?
+
+911
+00:39:42,270 --> 00:39:47,270
+Now if we go there, the duration
+from almost three seconds
+
+912
+00:39:47,340 --> 00:39:50,973
+to almost a quarter of a second.
+
+913
+00:39:54,600 --> 00:39:58,980
+Right. So the point I'm
+trying to drive over here
+
+914
+00:39:58,980 --> 00:40:01,503
+is that with this performance,
+
+915
+00:40:03,180 --> 00:40:05,460
+with this NKI kernel we are getting almost
+
+916
+00:40:05,460 --> 00:40:10,173
+six to eight x performance
+boost right in front of us.
+
+917
+00:40:11,490 --> 00:40:14,790
+And that was my second objective.
+
+918
+00:40:14,790 --> 00:40:17,010
+First was to showcase how easy it is
+
+919
+00:40:17,010 --> 00:40:18,360
+to integrate a NKI kernel.
+
+920
+00:40:18,360 --> 00:40:19,530
+That's what we have done.
+
+921
+00:40:19,530 --> 00:40:22,290
+And what is the performance implication
+
+922
+00:40:22,290 --> 00:40:24,900
+or performance boost
+that we get out of it.
+
+923
+00:40:24,900 --> 00:40:27,390
+The third objective that
+I was trying to drive is
+
+924
+00:40:27,390 --> 00:40:28,230
+a food for thought.
+
+925
+00:40:28,230 --> 00:40:31,020
+Think about it, it is just a small model
+
+926
+00:40:31,020 --> 00:40:34,950
+with just one attention module
+
+927
+00:40:34,950 --> 00:40:36,210
+or attention part of the model
+
+928
+00:40:36,210 --> 00:40:37,830
+that we have replaced with NKI.
+
+929
+00:40:37,830 --> 00:40:39,600
+Now this model has much more than that.
+
+930
+00:40:39,600 --> 00:40:43,080
+It has MLP also, which
+is super compute bound.
+
+931
+00:40:43,080 --> 00:40:47,997
+It has QKV projections,
+output projections and so on.
+
+932
+00:40:47,997 --> 00:40:49,380
+And Scott will drive us-
+
+933
+00:40:49,380 --> 00:40:51,300
+in a moment he'll help us to understand
+
+934
+00:40:51,300 --> 00:40:53,910
+like we have some of these kernels exposed
+
+935
+00:40:53,910 --> 00:40:56,220
+to the outside world, first time ever.
+
+936
+00:40:56,220 --> 00:40:58,500
+These are the production scale kernels
+
+937
+00:40:58,500 --> 00:41:00,990
+that we can use in our own models
+
+938
+00:41:00,990 --> 00:41:03,333
+and leverage this amazing
+performance boost.
+
+939
+00:41:05,640 --> 00:41:10,640
+So, again, going back
+to the performance gain.
+
+940
+00:41:13,440 --> 00:41:15,810
+From throughput, for the naive attention,
+
+941
+00:41:15,810 --> 00:41:18,240
+we got this one story building
+
+942
+00:41:18,240 --> 00:41:21,600
+to almost 10 story building now,
+
+943
+00:41:21,600 --> 00:41:24,450
+and from the latency's point of view,
+
+944
+00:41:24,450 --> 00:41:26,640
+which we want to be as small as possible,
+
+945
+00:41:26,640 --> 00:41:31,224
+we have come down from there to here.
+
+946
+00:41:31,224 --> 00:41:34,230
+(attendee speaking faintly)
+
+947
+00:41:34,230 --> 00:41:36,268
+Yeah, sorry. Please.
+
+948
+00:41:36,268 --> 00:41:40,351
+(attendee speaking indistinctly)
+
+949
+00:41:41,610 --> 00:41:43,788
+Do we have the profile of what?
+
+950
+00:41:43,788 --> 00:41:44,823
+- [Attendee] For power consumption?
+
+951
+00:41:45,750 --> 00:41:47,580
+- [Sadaf] I don't think we do profiling
+
+952
+00:41:47,580 --> 00:41:49,730
+based on the power
+consumption as of today.
+
+953
+00:41:50,790 --> 00:41:53,820
+Yeah. So with that, I
+leave the floor for Scott.
+
+954
+00:41:53,820 --> 00:41:55,230
+He'll drive us home from here.
+
+955
+00:41:55,230 --> 00:41:57,150
+- Thank you.
+- Awesome. Thank you, Sadaf.
+
+956
+00:41:57,150 --> 00:42:00,270
+So, as you saw, guys,
+we were able to go from
+
+957
+00:42:00,270 --> 00:42:01,410
+not so great performance
+
+958
+00:42:01,410 --> 00:42:03,870
+to pretty impressive performance gains,
+
+959
+00:42:03,870 --> 00:42:06,120
+basically just by adding
+a few lines of code
+
+960
+00:42:06,120 --> 00:42:07,440
+and taking advantage of a kernel
+
+961
+00:42:07,440 --> 00:42:10,830
+that's been built essentially
+by the Annapurna team.
+
+962
+00:42:10,830 --> 00:42:12,900
+What we're really excited
+to talk about, though, is
+
+963
+00:42:12,900 --> 00:42:15,060
+just yesterday we launched NKI Library.
+
+964
+00:42:15,060 --> 00:42:17,100
+So this is an open source project,
+
+965
+00:42:17,100 --> 00:42:19,560
+it contains a number of
+pre optimized NKI kernels
+
+966
+00:42:19,560 --> 00:42:21,120
+that are written by our team,
+
+967
+00:42:21,120 --> 00:42:24,030
+you know, curated, tested,
+and maintained by our team
+
+968
+00:42:24,030 --> 00:42:25,980
+and provided on GitHub.
+
+969
+00:42:25,980 --> 00:42:27,180
+So starting off, there's a number of
+
+970
+00:42:27,180 --> 00:42:28,770
+kernels available there today.
+
+971
+00:42:28,770 --> 00:42:31,770
+You can grab the QR code and take a look.
+
+972
+00:42:31,770 --> 00:42:34,110
+So there's a lot of, you
+know, dense model support
+
+973
+00:42:34,110 --> 00:42:35,190
+kind of in the beginning now,
+
+974
+00:42:35,190 --> 00:42:37,200
+we're gonna add additional models around-
+
+975
+00:42:37,200 --> 00:42:40,080
+or additional kernels
+around mixture of experts
+
+976
+00:42:40,080 --> 00:42:42,690
+and other use cases and workloads as well.
+
+977
+00:42:42,690 --> 00:42:45,090
+But this is super exciting
+because up until now,
+
+978
+00:42:45,930 --> 00:42:47,520
+you know, NKI's still in beta
+
+979
+00:42:47,520 --> 00:42:49,200
+but it gives customers this access
+
+980
+00:42:49,200 --> 00:42:50,850
+to the lower level compute engines
+
+981
+00:42:50,850 --> 00:42:52,410
+that you just didn't have before.
+
+982
+00:42:52,410 --> 00:42:54,540
+Right, so you saw the naive,
+
+983
+00:42:54,540 --> 00:42:56,820
+you know, implementation of
+Qwen when we compiled it.
+
+984
+00:42:56,820 --> 00:42:58,560
+It did run, it gave accurate results,
+
+985
+00:42:58,560 --> 00:43:01,620
+but the performance was really
+lackluster out of the box.
+
+986
+00:43:01,620 --> 00:43:02,880
+But with NKI, we were able to
+
+987
+00:43:02,880 --> 00:43:04,410
+drastically close the gap there
+
+988
+00:43:04,410 --> 00:43:08,610
+and really drive amazing
+performance with this model.
+
+989
+00:43:08,610 --> 00:43:10,380
+And, again, like we
+focused on attention today
+
+990
+00:43:10,380 --> 00:43:12,330
+but there's a lot of other
+aspects of different models,
+
+991
+00:43:12,330 --> 00:43:15,060
+different layers that you
+might be able to apply NKI to.
+
+992
+00:43:15,060 --> 00:43:16,950
+And it's a little bit
+like onion peeling, right?
+
+993
+00:43:16,950 --> 00:43:18,180
+You're gonna get into a workload,
+
+994
+00:43:18,180 --> 00:43:19,860
+you'll do a device level profile,
+
+995
+00:43:19,860 --> 00:43:22,050
+figure out where the bottlenecks are,
+
+996
+00:43:22,050 --> 00:43:24,270
+maybe you tackle some of those with NKI,
+
+997
+00:43:24,270 --> 00:43:26,040
+it moves the bottleneck
+somewhere else, right.
+
+998
+00:43:26,040 --> 00:43:29,520
+And at some point, you know,
+you almost chase it forever,
+
+999
+00:43:29,520 --> 00:43:32,190
+but at least with NKI
+it puts the capabilities
+
+1000
+00:43:32,190 --> 00:43:33,120
+to the customer's hands
+
+1001
+00:43:33,120 --> 00:43:35,250
+that you can actually do
+this performance engineering
+
+1002
+00:43:35,250 --> 00:43:38,583
+that just wasn't possible
+from the PyTorch level before.
+
+1003
+00:43:40,290 --> 00:43:41,503
+So awesome. With that,
+
+1004
+00:43:41,503 --> 00:43:44,160
+I want to thank everybody
+for coming out today.
+
+1005
+00:43:44,160 --> 00:43:46,260
+Really appreciate you coming
+in for an afternoon session
+
+1006
+00:43:46,260 --> 00:43:48,510
+to learn about Trainium and NKI.
+
+1007
+00:43:48,510 --> 00:43:49,620
+We have a number of other
+
+1008
+00:43:49,620 --> 00:43:51,840
+Neuron and Trainium
+sessions today and tomorrow,
+
+1009
+00:43:51,840 --> 00:43:53,460
+if you're interested in checking them out.
+
+1010
+00:43:53,460 --> 00:43:54,990
+And we're open for questions.
+
+1011
+00:43:54,990 --> 00:43:56,699
+Thank you.
+- All right, thanks folks.
+
+1012
+00:43:56,699 --> 00:43:57,892
+(attendees applauding)
+

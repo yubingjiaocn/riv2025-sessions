@@ -1,0 +1,5838 @@
+1
+00:00:01,470 --> 00:00:02,550
+- Hello everyone.
+
+2
+00:00:02,550 --> 00:00:05,160
+Good afternoon and thanks
+for joining us today.
+
+3
+00:00:05,160 --> 00:00:07,590
+Welcome to SAS 305:
+
+4
+00:00:07,590 --> 00:00:10,050
+Using GenAI to profile, scale,
+
+5
+00:00:10,050 --> 00:00:13,053
+and optimize your multi-tenant
+SaaS architecture.
+
+6
+00:00:14,190 --> 00:00:17,100
+So in this session today,
+we're going to look at
+
+7
+00:00:17,100 --> 00:00:21,780
+how you can fast-track your
+SaaS maturity using GenAI
+
+8
+00:00:21,780 --> 00:00:24,330
+to introduce best-of-breed SaaS attributes
+
+9
+00:00:24,330 --> 00:00:25,773
+into your SaaS product.
+
+10
+00:00:26,940 --> 00:00:30,030
+Now, this is a level 300 session.
+
+11
+00:00:30,030 --> 00:00:30,863
+What that means is
+
+12
+00:00:30,863 --> 00:00:34,770
+we're not going to be
+diving into demos and code,
+
+13
+00:00:34,770 --> 00:00:37,470
+but we will be doing a lot
+of architecture patterns
+
+14
+00:00:37,470 --> 00:00:39,240
+and showing you real-world use cases
+
+15
+00:00:39,240 --> 00:00:41,733
+that you can take away and use yourself.
+
+16
+00:00:43,170 --> 00:00:44,580
+My name is Dave Roberts,
+
+17
+00:00:44,580 --> 00:00:46,980
+and with my colleague, Damika Sriyananda,
+
+18
+00:00:46,980 --> 00:00:49,620
+we're both solutions
+architects here at AWS,
+
+19
+00:00:49,620 --> 00:00:51,090
+and we've been working with SaaS
+
+20
+00:00:51,090 --> 00:00:52,860
+for the last couple of years,
+
+21
+00:00:52,860 --> 00:00:56,073
+and in the recent year or
+two with GenAI as well.
+
+22
+00:00:57,810 --> 00:01:00,063
+So what are we going to look at today?
+
+23
+00:01:01,020 --> 00:01:02,640
+Well, first I'm going to look at
+
+24
+00:01:02,640 --> 00:01:04,650
+what makes best-of-breed SaaS
+
+25
+00:01:04,650 --> 00:01:06,300
+and how you can use GenAI
+
+26
+00:01:06,300 --> 00:01:09,063
+to incorporate some of that
+into your control plane.
+
+27
+00:01:09,960 --> 00:01:12,930
+Then Damika is gonna
+look at cost analysis,
+
+28
+00:01:12,930 --> 00:01:16,803
+so things like cost per
+tenant, pricing, forecasting.
+
+29
+00:01:17,700 --> 00:01:20,310
+Then I'm going to look
+into customer behavior,
+
+30
+00:01:20,310 --> 00:01:22,380
+the insights that we can get out of those,
+
+31
+00:01:22,380 --> 00:01:26,640
+customer personas, packaging,
+that sort of thing.
+
+32
+00:01:26,640 --> 00:01:28,740
+And finally, Damika is gonna round us out
+
+33
+00:01:28,740 --> 00:01:31,230
+with looking into resource efficiency,
+
+34
+00:01:31,230 --> 00:01:33,130
+so solving the noisy neighbor problem.
+
+35
+00:01:35,640 --> 00:01:39,450
+So let's start off and look
+at a very common situation.
+
+36
+00:01:39,450 --> 00:01:41,640
+You've just built your SaaS application.
+
+37
+00:01:41,640 --> 00:01:42,473
+It's awesome, right?
+
+38
+00:01:42,473 --> 00:01:45,480
+You're proud of it, you've
+put a lot of work into that,
+
+39
+00:01:45,480 --> 00:01:47,820
+and you've got customers using it.
+
+40
+00:01:47,820 --> 00:01:49,530
+And to operate that, to manage that,
+
+41
+00:01:49,530 --> 00:01:52,590
+you've got some business
+model going on as well.
+
+42
+00:01:52,590 --> 00:01:53,423
+Cool.
+
+43
+00:01:53,423 --> 00:01:54,330
+It's been a couple of years
+
+44
+00:01:54,330 --> 00:01:55,890
+and hopefully you're getting some revenue
+
+45
+00:01:55,890 --> 00:01:58,080
+and making some money.
+
+46
+00:01:58,080 --> 00:02:02,040
+And where you want to go from
+here is to grow your SaaS.
+
+47
+00:02:02,040 --> 00:02:02,940
+So the question is,
+
+48
+00:02:02,940 --> 00:02:05,220
+what do you need to do to grow your SaaS?
+
+49
+00:02:05,220 --> 00:02:08,490
+Well, there's three main
+areas that we can look at.
+
+50
+00:02:08,490 --> 00:02:11,520
+One, we can get more customers, right?
+
+51
+00:02:11,520 --> 00:02:13,560
+More customers equals more revenue,
+
+52
+00:02:13,560 --> 00:02:15,810
+more revenue equals more profit.
+
+53
+00:02:15,810 --> 00:02:16,713
+Great stuff.
+
+54
+00:02:17,760 --> 00:02:18,593
+The other way
+
+55
+00:02:18,593 --> 00:02:21,240
+is that we can look at getting
+more revenue per customer.
+
+56
+00:02:21,240 --> 00:02:24,840
+So moving customers onto
+higher margin packages,
+
+57
+00:02:24,840 --> 00:02:26,490
+that's gonna give us more profit.
+
+58
+00:02:27,420 --> 00:02:28,253
+And of course,
+
+59
+00:02:28,253 --> 00:02:30,720
+the other way is to lower
+our operating costs,
+
+60
+00:02:30,720 --> 00:02:33,633
+so get more resource
+efficiency into there.
+
+61
+00:02:35,280 --> 00:02:37,200
+So these are the things
+that we need to do,
+
+62
+00:02:37,200 --> 00:02:38,880
+but how are we going to do it?
+
+63
+00:02:38,880 --> 00:02:41,730
+Well, let's look at
+best-of-breed SaaS vendors
+
+64
+00:02:41,730 --> 00:02:42,783
+and what they do.
+
+65
+00:02:43,650 --> 00:02:45,510
+And when we talk about best-of-breed,
+
+66
+00:02:45,510 --> 00:02:47,670
+we're talking about those SaaS
+vendors out in the market,
+
+67
+00:02:47,670 --> 00:02:49,410
+you probably know them.
+
+68
+00:02:49,410 --> 00:02:52,290
+They're standing above
+their competitors, right?
+
+69
+00:02:52,290 --> 00:02:53,123
+You can see them
+
+70
+00:02:53,123 --> 00:02:55,290
+and they always seem to be one step ahead
+
+71
+00:02:55,290 --> 00:02:56,673
+and keep pulling forward.
+
+72
+00:02:57,600 --> 00:02:58,710
+So what's their secret?
+
+73
+00:02:58,710 --> 00:03:03,240
+Well, it's not really a
+secret, it's they use data,
+
+74
+00:03:03,240 --> 00:03:06,810
+so they know the cost to
+serve their customers.
+
+75
+00:03:06,810 --> 00:03:08,520
+They've got things like cost per tenant,
+
+76
+00:03:08,520 --> 00:03:11,250
+cost per feature metrics,
+
+77
+00:03:11,250 --> 00:03:13,680
+and they understand what
+their customers are doing.
+
+78
+00:03:13,680 --> 00:03:16,293
+They've got insights into
+their customer behavior.
+
+79
+00:03:17,460 --> 00:03:21,060
+And of course they focus on
+their resource efficiency
+
+80
+00:03:21,060 --> 00:03:24,960
+because when you first go
+live with a SaaS product,
+
+81
+00:03:24,960 --> 00:03:28,350
+you are focused more on
+just getting it going live,
+
+82
+00:03:28,350 --> 00:03:29,760
+getting products going,
+
+83
+00:03:29,760 --> 00:03:30,957
+and you're not really
+thinking about building
+
+84
+00:03:30,957 --> 00:03:34,590
+the most efficient architecture.
+
+85
+00:03:34,590 --> 00:03:36,000
+Now, the problem with that
+
+86
+00:03:36,000 --> 00:03:38,010
+is that you get some resource wastage,
+
+87
+00:03:38,010 --> 00:03:39,540
+and as you scale your SaaS,
+
+88
+00:03:39,540 --> 00:03:42,570
+that resource wastage scales as well.
+
+89
+00:03:42,570 --> 00:03:46,620
+So best-of-breed knows this
+and they focus in on efficiency
+
+90
+00:03:46,620 --> 00:03:50,343
+because those efficiency gains
+are going to scale as well.
+
+91
+00:03:52,208 --> 00:03:54,540
+And this will give them the edge
+
+92
+00:03:54,540 --> 00:03:57,030
+because they're able to use this data
+
+93
+00:03:57,030 --> 00:03:59,970
+to create packages and pricing
+
+94
+00:03:59,970 --> 00:04:02,190
+that the customers are
+going to want, right?
+
+95
+00:04:02,190 --> 00:04:04,740
+Because if you are choosing a SaaS product
+
+96
+00:04:04,740 --> 00:04:06,300
+and you've got a couple of competitors
+
+97
+00:04:06,300 --> 00:04:08,880
+and one of them has exactly what you want
+
+98
+00:04:08,880 --> 00:04:10,200
+at a price that's fit for you,
+
+99
+00:04:10,200 --> 00:04:12,400
+well, that's the one
+you're going to choose.
+
+100
+00:04:13,560 --> 00:04:15,330
+And because they've got these insights,
+
+101
+00:04:15,330 --> 00:04:16,320
+because they have this data,
+
+102
+00:04:16,320 --> 00:04:17,790
+they're able to forecast the revenue
+
+103
+00:04:17,790 --> 00:04:20,190
+that's going to be coming in, right?
+
+104
+00:04:20,190 --> 00:04:22,190
+That's pretty useful as a SaaS business.
+
+105
+00:04:23,280 --> 00:04:25,740
+And because they're
+ultimately more profitable,
+
+106
+00:04:25,740 --> 00:04:28,620
+they have more profit to
+reinvest in themselves.
+
+107
+00:04:28,620 --> 00:04:30,630
+So you get this nice cycle, right?
+
+108
+00:04:30,630 --> 00:04:32,070
+They have more profit to reinvest,
+
+109
+00:04:32,070 --> 00:04:34,803
+they can pull further
+ahead, and so on and so on.
+
+110
+00:04:36,300 --> 00:04:38,310
+So if it's so simple, Dave,
+
+111
+00:04:38,310 --> 00:04:39,780
+why aren't you doing this right now?
+
+112
+00:04:39,780 --> 00:04:43,440
+Well, odds are
+
+113
+00:04:43,440 --> 00:04:46,560
+that you probably have
+other things to do, right?
+
+114
+00:04:46,560 --> 00:04:48,600
+You've gone live with your SaaS,
+
+115
+00:04:48,600 --> 00:04:50,670
+you are onboarding new customers,
+
+116
+00:04:50,670 --> 00:04:52,800
+you're adding new features in.
+
+117
+00:04:52,800 --> 00:04:55,200
+You started off as an architect, right?
+
+118
+00:04:55,200 --> 00:04:56,400
+Then you turned into DevOps
+
+119
+00:04:56,400 --> 00:04:57,840
+as you've got the customers going on,
+
+120
+00:04:57,840 --> 00:04:58,740
+more and more customers.
+
+121
+00:04:58,740 --> 00:04:59,573
+Now you're just ops,
+
+122
+00:04:59,573 --> 00:05:01,290
+you're not even doing
+architecture anymore.
+
+123
+00:05:01,290 --> 00:05:02,970
+So nobody's got time
+
+124
+00:05:02,970 --> 00:05:05,823
+to think about implementing
+these sort of features.
+
+125
+00:05:06,720 --> 00:05:08,880
+And engineering will think
+
+126
+00:05:08,880 --> 00:05:10,230
+this is a business problem, right?
+
+127
+00:05:10,230 --> 00:05:12,060
+So until we have some business people,
+
+128
+00:05:12,060 --> 00:05:14,700
+until your SaaS company scales
+
+129
+00:05:14,700 --> 00:05:17,280
+that you have these business
+functions pushing engineering
+
+130
+00:05:17,280 --> 00:05:18,870
+to deliver them,
+
+131
+00:05:18,870 --> 00:05:21,370
+you're going to focus on
+what's important for you.
+
+132
+00:05:22,410 --> 00:05:24,840
+And ultimately, there's
+a cost to doing this.
+
+133
+00:05:24,840 --> 00:05:26,820
+There's a cost in terms
+of engineering points,
+
+134
+00:05:26,820 --> 00:05:29,370
+there's a cost in terms of your time.
+
+135
+00:05:29,370 --> 00:05:33,240
+So it gets put onto the back burner
+
+136
+00:05:33,240 --> 00:05:35,190
+until you reach a level of SaaS maturity
+
+137
+00:05:35,190 --> 00:05:37,713
+and then start incorporating
+these features.
+
+138
+00:05:39,030 --> 00:05:43,440
+Now the problem with this is
+that as you operate your SaaS,
+
+139
+00:05:43,440 --> 00:05:45,600
+you have to make decisions.
+
+140
+00:05:45,600 --> 00:05:46,620
+And at the moment,
+
+141
+00:05:46,620 --> 00:05:49,440
+you'd be making decisions
+without this data.
+
+142
+00:05:49,440 --> 00:05:51,750
+So you are already behind on the game
+
+143
+00:05:51,750 --> 00:05:53,490
+because your competitors
+
+144
+00:05:53,490 --> 00:05:55,980
+could potentially have these insights.
+
+145
+00:05:55,980 --> 00:05:59,820
+If your competitors understand
+what the customer base wants,
+
+146
+00:05:59,820 --> 00:06:01,470
+well, you are behind in the game.
+
+147
+00:06:02,700 --> 00:06:04,890
+And even more dangerous,
+
+148
+00:06:04,890 --> 00:06:07,260
+you may have unprofitable customers.
+
+149
+00:06:07,260 --> 00:06:10,410
+It's a common scenario that
+I see with SaaS vendors
+
+150
+00:06:10,410 --> 00:06:12,180
+where they've been going for three years,
+
+151
+00:06:12,180 --> 00:06:14,430
+they start looking into
+their cost per tenant,
+
+152
+00:06:14,430 --> 00:06:16,260
+they find out they've got these customers
+
+153
+00:06:16,260 --> 00:06:19,620
+that are unprofitable, they
+are hurting their bottom line.
+
+154
+00:06:19,620 --> 00:06:21,633
+It's not a place that you want to be in.
+
+155
+00:06:22,950 --> 00:06:24,930
+Now, lots of doom and gloom, right?
+
+156
+00:06:24,930 --> 00:06:26,640
+But there is a light at
+the end of the tunnel
+
+157
+00:06:26,640 --> 00:06:28,260
+and that's why you're here today, right?
+
+158
+00:06:28,260 --> 00:06:30,240
+This is what the session is about.
+
+159
+00:06:30,240 --> 00:06:33,930
+Because GenAI can really
+help in this regard.
+
+160
+00:06:33,930 --> 00:06:35,160
+Because all these things,
+
+161
+00:06:35,160 --> 00:06:37,383
+these data that we are talking about,
+
+162
+00:06:37,383 --> 00:06:39,510
+it's all about looking into our data
+
+163
+00:06:39,510 --> 00:06:42,540
+and finding patterns and finding insights.
+
+164
+00:06:42,540 --> 00:06:43,373
+And guess what?
+
+165
+00:06:43,373 --> 00:06:45,930
+This is exactly how LLMs work.
+
+166
+00:06:45,930 --> 00:06:47,913
+They're great for identifying patterns.
+
+167
+00:06:48,900 --> 00:06:50,310
+And not only that,
+
+168
+00:06:50,310 --> 00:06:53,340
+you can use them to get
+some value really quickly.
+
+169
+00:06:53,340 --> 00:06:55,440
+You can get an environment going up,
+
+170
+00:06:55,440 --> 00:06:57,210
+look into the data you have,
+
+171
+00:06:57,210 --> 00:06:59,400
+and get some insights in an afternoon.
+
+172
+00:06:59,400 --> 00:07:00,780
+This is really awesome, right?
+
+173
+00:07:00,780 --> 00:07:02,160
+You don't have to take months
+
+174
+00:07:02,160 --> 00:07:04,500
+to build up this environment,
+
+175
+00:07:04,500 --> 00:07:06,330
+straight away you've got some value.
+
+176
+00:07:06,330 --> 00:07:07,163
+Or not.
+
+177
+00:07:07,163 --> 00:07:08,680
+And if you don't, find something else.
+
+178
+00:07:09,840 --> 00:07:13,350
+And you get this lovely
+natural interface, right?
+
+179
+00:07:13,350 --> 00:07:17,070
+You can use natural language
+to query for these insights,
+
+180
+00:07:17,070 --> 00:07:20,550
+you don't have to be this
+intermediate translation
+
+181
+00:07:20,550 --> 00:07:23,823
+from business question
+into technical requirement.
+
+182
+00:07:24,840 --> 00:07:27,060
+And it also gives us the opportunity
+
+183
+00:07:27,060 --> 00:07:30,570
+to move beyond just solving
+these normal use cases
+
+184
+00:07:30,570 --> 00:07:33,750
+and looking at what we can do
+beyond what's currently now,
+
+185
+00:07:33,750 --> 00:07:36,993
+so things like real-time
+or predictive analysis.
+
+186
+00:07:38,790 --> 00:07:42,180
+So let's look at an example
+SaaS application, right?
+
+187
+00:07:42,180 --> 00:07:44,340
+You've got your application plan there.
+
+188
+00:07:44,340 --> 00:07:46,050
+This is where all the good
+stuff's going on, right?
+
+189
+00:07:46,050 --> 00:07:48,420
+The customers are getting their value.
+
+190
+00:07:48,420 --> 00:07:50,160
+And this is going to scale over time
+
+191
+00:07:50,160 --> 00:07:52,920
+and you're going to need
+to operate and manage that.
+
+192
+00:07:52,920 --> 00:07:56,160
+So you're going to
+introduce a control plane.
+
+193
+00:07:56,160 --> 00:07:59,220
+And inside the control plane,
+we've got a few components.
+
+194
+00:07:59,220 --> 00:08:00,720
+We've got some data sets,
+
+195
+00:08:00,720 --> 00:08:04,290
+so our application metrics,
+for example, our usage metrics.
+
+196
+00:08:04,290 --> 00:08:07,965
+We've got a data set which will
+handle our tenant metadata,
+
+197
+00:08:07,965 --> 00:08:09,240
+and we're gonna talk
+about tenant metadatas,
+
+198
+00:08:09,240 --> 00:08:12,300
+information about our
+tenants, about our customers,
+
+199
+00:08:12,300 --> 00:08:14,550
+like which resources
+are they allocated to,
+
+200
+00:08:14,550 --> 00:08:17,453
+what sort of entitlements do
+they have, that sort of thing.
+
+201
+00:08:18,510 --> 00:08:20,940
+And to do all of our heavy lifting,
+
+202
+00:08:20,940 --> 00:08:22,770
+we have some compute logic, right?
+
+203
+00:08:22,770 --> 00:08:24,030
+These are our workflows.
+
+204
+00:08:24,030 --> 00:08:25,710
+So onboarding new customer,
+
+205
+00:08:25,710 --> 00:08:27,030
+this is where it's going to happen,
+
+206
+00:08:27,030 --> 00:08:30,930
+change an entitlement, update
+our resources, et cetera.
+
+207
+00:08:30,930 --> 00:08:32,250
+And to interface with these,
+
+208
+00:08:32,250 --> 00:08:34,410
+we've got this lovely integration layer.
+
+209
+00:08:34,410 --> 00:08:37,260
+And we can see that we
+have a lot of tools,
+
+210
+00:08:37,260 --> 00:08:40,713
+a lot of resources that
+an agent could utilize.
+
+211
+00:08:41,640 --> 00:08:45,093
+So what would this look
+like as an example?
+
+212
+00:08:46,140 --> 00:08:49,080
+Well, let's say you are inspired.
+
+213
+00:08:49,080 --> 00:08:50,580
+You come and you do the session,
+
+214
+00:08:50,580 --> 00:08:52,500
+you're excited about this and you rush,
+
+215
+00:08:52,500 --> 00:08:53,670
+don't even think about dinner,
+
+216
+00:08:53,670 --> 00:08:55,950
+you just rush back to your hotel room
+
+217
+00:08:55,950 --> 00:08:56,850
+and you wanna start playing.
+
+218
+00:08:56,850 --> 00:09:00,060
+So you get up your nice Kiro environment,
+
+219
+00:09:00,060 --> 00:09:02,460
+get onto the AWS lab site and see,
+
+220
+00:09:02,460 --> 00:09:05,910
+hey, we have this CloudWatch MCP server.
+
+221
+00:09:05,910 --> 00:09:10,170
+All my logs are in CloudWatch,
+I'm going to use that.
+
+222
+00:09:10,170 --> 00:09:12,380
+I'm gonna go ask some question, right?
+
+223
+00:09:12,380 --> 00:09:14,790
+So all my tenants have
+that same usage pattern.
+
+224
+00:09:14,790 --> 00:09:16,740
+That could be interesting.
+
+225
+00:09:16,740 --> 00:09:18,840
+So our little LLM friend
+
+226
+00:09:18,840 --> 00:09:21,480
+is going to go and use their MCP server
+
+227
+00:09:21,480 --> 00:09:24,060
+and hopefully look in the right place.
+
+228
+00:09:24,060 --> 00:09:25,470
+And I say hopefully
+
+229
+00:09:25,470 --> 00:09:29,850
+because your SaaS architecture
+is probably pretty complex
+
+230
+00:09:29,850 --> 00:09:32,100
+and it's hard enough for us to understand,
+
+231
+00:09:32,100 --> 00:09:34,290
+let alone an agent.
+
+232
+00:09:34,290 --> 00:09:37,590
+So we can expose the code
+base and look into there
+
+233
+00:09:37,590 --> 00:09:39,690
+and find how you've
+done your architecture,
+
+234
+00:09:39,690 --> 00:09:40,950
+but it doesn't really tell that much
+
+235
+00:09:40,950 --> 00:09:43,800
+about how you operate as a business.
+
+236
+00:09:43,800 --> 00:09:47,970
+So we want to be kind to
+our future robotic overlords
+
+237
+00:09:47,970 --> 00:09:49,410
+and give it a bit of context,
+
+238
+00:09:49,410 --> 00:09:53,973
+tell it a bit about how
+our SaaS application works.
+
+239
+00:09:54,810 --> 00:09:57,030
+Because the better context
+you're going to provide,
+
+240
+00:09:57,030 --> 00:09:59,760
+the better results that
+you're going to get.
+
+241
+00:09:59,760 --> 00:10:02,910
+So now we add that context,
+ask that same question,
+
+242
+00:10:02,910 --> 00:10:05,190
+beep-boop-beep, we get a result.
+
+243
+00:10:05,190 --> 00:10:06,120
+This is really cool,
+
+244
+00:10:06,120 --> 00:10:08,250
+we should be able to see some insights
+
+245
+00:10:08,250 --> 00:10:10,443
+that potentially we didn't have before.
+
+246
+00:10:11,640 --> 00:10:13,220
+And you're saying, well,
+this is great, right?
+
+247
+00:10:13,220 --> 00:10:14,340
+It didn't take me long
+
+248
+00:10:14,340 --> 00:10:16,380
+and I'm getting some value out of this.
+
+249
+00:10:16,380 --> 00:10:17,580
+So where can I go from this?
+
+250
+00:10:17,580 --> 00:10:20,220
+Well, we can go back to AWS Labs and say,
+
+251
+00:10:20,220 --> 00:10:23,010
+hey, what other MCP servers do we have?
+
+252
+00:10:23,010 --> 00:10:25,350
+There's one for Cost Explorer.
+
+253
+00:10:25,350 --> 00:10:27,180
+Well, that's interesting.
+
+254
+00:10:27,180 --> 00:10:31,380
+Now I know I have got a
+resource to look into the usage
+
+255
+00:10:31,380 --> 00:10:33,150
+of my customers,
+
+256
+00:10:33,150 --> 00:10:36,450
+I know how to find the
+costs for serving that,
+
+257
+00:10:36,450 --> 00:10:38,970
+let's find out our cost per tenant.
+
+258
+00:10:38,970 --> 00:10:39,803
+So we can say,
+
+259
+00:10:39,803 --> 00:10:41,400
+hey, let's just divide that total cost
+
+260
+00:10:41,400 --> 00:10:43,620
+by the number of active tenants.
+
+261
+00:10:43,620 --> 00:10:46,050
+And boom, just like that,
+we've got some data,
+
+262
+00:10:46,050 --> 00:10:47,973
+some insights about cost per tenant.
+
+263
+00:10:48,960 --> 00:10:51,060
+And I talk constantly with customers
+
+264
+00:10:51,060 --> 00:10:54,390
+who have been serving their SaaS for years
+
+265
+00:10:54,390 --> 00:10:56,250
+and they don't have an idea
+about the cost per tenant
+
+266
+00:10:56,250 --> 00:10:57,660
+because it seems so hard.
+
+267
+00:10:57,660 --> 00:11:00,030
+Well, we've done it in less than an hour.
+
+268
+00:11:00,030 --> 00:11:01,260
+Easy, right?
+
+269
+00:11:01,260 --> 00:11:03,450
+And the thing is, it's not perfect,
+
+270
+00:11:03,450 --> 00:11:06,513
+but now you've got some
+figure that you can work with.
+
+271
+00:11:07,500 --> 00:11:10,380
+And we can look at improving
+the accuracy, right?
+
+272
+00:11:10,380 --> 00:11:11,550
+Because at the moment,
+
+273
+00:11:11,550 --> 00:11:14,130
+we're just looking at the
+number of active tenants
+
+274
+00:11:14,130 --> 00:11:15,180
+that we have.
+
+275
+00:11:15,180 --> 00:11:16,890
+Maybe we have some inactive tenants,
+
+276
+00:11:16,890 --> 00:11:19,713
+that's going to change our
+cost per tenant values.
+
+277
+00:11:20,850 --> 00:11:23,250
+And we have information
+on the number of tenants
+
+278
+00:11:23,250 --> 00:11:25,050
+that we have and their subscriptions,
+
+279
+00:11:25,050 --> 00:11:27,210
+it's sitting there in our tenant metadata.
+
+280
+00:11:27,210 --> 00:11:29,400
+We just need a way to expose that
+
+281
+00:11:29,400 --> 00:11:31,293
+so that our agent can use that.
+
+282
+00:11:32,220 --> 00:11:35,130
+So we can go and extend
+our integration layer,
+
+283
+00:11:35,130 --> 00:11:39,390
+add some MCP servers there,
+and add these into our agent,
+
+284
+00:11:39,390 --> 00:11:43,503
+and now we can get a more
+accurate cost per tenant, right?
+
+285
+00:11:44,775 --> 00:11:46,560
+And this is awesome, and all we had to do
+
+286
+00:11:46,560 --> 00:11:49,770
+is expose the control plane a little bit.
+
+287
+00:11:49,770 --> 00:11:53,100
+And that's really not so
+hard because for example,
+
+288
+00:11:53,100 --> 00:11:54,750
+look at our tenant management.
+
+289
+00:11:54,750 --> 00:11:57,510
+This is the tenant management service
+
+290
+00:11:57,510 --> 00:11:59,010
+inside our control plane,
+
+291
+00:11:59,010 --> 00:12:01,980
+we can see our CRUD operations there,
+
+292
+00:12:01,980 --> 00:12:04,650
+or to expose these as MCP servers,
+
+293
+00:12:04,650 --> 00:12:06,990
+we can use something
+like AgentCore Gateway.
+
+294
+00:12:06,990 --> 00:12:09,000
+Makes it really easy, right?
+
+295
+00:12:09,000 --> 00:12:11,220
+We create this tenant management gateway
+
+296
+00:12:11,220 --> 00:12:14,310
+and add some targets
+through to our API methods
+
+297
+00:12:14,310 --> 00:12:15,783
+that we want to expose.
+
+298
+00:12:16,740 --> 00:12:18,330
+And we can repeat this pattern
+
+299
+00:12:18,330 --> 00:12:20,670
+with our other control plane capabilities.
+
+300
+00:12:20,670 --> 00:12:23,790
+So resource management,
+entitlement management, billing,
+
+301
+00:12:23,790 --> 00:12:27,033
+anything that could be useful
+for us to get insights into.
+
+302
+00:12:28,770 --> 00:12:31,080
+And once we've done this
+little proof of concept
+
+303
+00:12:31,080 --> 00:12:32,883
+and seeing that we're
+getting some insights
+
+304
+00:12:32,883 --> 00:12:34,740
+that are valuable for us,
+
+305
+00:12:34,740 --> 00:12:37,260
+either as architects or as a business,
+
+306
+00:12:37,260 --> 00:12:39,300
+then we can decide that
+we want to keep this
+
+307
+00:12:39,300 --> 00:12:41,640
+and make this a permanent capability
+
+308
+00:12:41,640 --> 00:12:43,143
+inside our control plane.
+
+309
+00:12:44,070 --> 00:12:46,140
+So one option is that we could just lift
+
+310
+00:12:46,140 --> 00:12:50,730
+and shift what we have and deploy that,
+
+311
+00:12:50,730 --> 00:12:52,780
+now the other is that we
+could make it a bit better,
+
+312
+00:12:52,780 --> 00:12:54,510
+a bit more accurate.
+
+313
+00:12:54,510 --> 00:12:57,750
+So we want to think about some
+sort of architecture pattern
+
+314
+00:12:57,750 --> 00:12:58,583
+that we can use
+
+315
+00:12:58,583 --> 00:13:00,540
+because we are going to
+be deploying these things
+
+316
+00:13:00,540 --> 00:13:03,510
+over and over as we
+get these new insights.
+
+317
+00:13:03,510 --> 00:13:06,600
+And it's basically going
+to look like this, right?
+
+318
+00:13:06,600 --> 00:13:08,820
+We're going to have the agent itself,
+
+319
+00:13:08,820 --> 00:13:11,460
+we're going to have some
+deterministic tools,
+
+320
+00:13:11,460 --> 00:13:14,130
+because if you want to do X divided by Y,
+
+321
+00:13:14,130 --> 00:13:16,200
+well, create a Lambda, right?
+
+322
+00:13:16,200 --> 00:13:18,990
+It's easier, cheaper than
+getting an agent to do it,
+
+323
+00:13:18,990 --> 00:13:20,223
+and it's reliable.
+
+324
+00:13:21,060 --> 00:13:23,430
+We're going to have a
+data set or data sets.
+
+325
+00:13:23,430 --> 00:13:25,110
+This is going to be the results
+
+326
+00:13:25,110 --> 00:13:28,950
+from anything that we are
+deriving in terms of insights.
+
+327
+00:13:28,950 --> 00:13:32,760
+And some sort of gateway to
+expose those for our end users
+
+328
+00:13:32,760 --> 00:13:34,383
+or other agents.
+
+329
+00:13:35,520 --> 00:13:36,750
+And for example,
+
+330
+00:13:36,750 --> 00:13:40,140
+we might have a
+deterministic tool that says,
+
+331
+00:13:40,140 --> 00:13:42,120
+well, every night, I'm gonna go off,
+
+332
+00:13:42,120 --> 00:13:45,120
+I'm gonna look through our
+metrics, aggregate some results,
+
+333
+00:13:45,120 --> 00:13:47,130
+and put them into our data set.
+
+334
+00:13:47,130 --> 00:13:49,890
+Now I can expose that to our end users,
+
+335
+00:13:49,890 --> 00:13:51,270
+nice simple web interface
+
+336
+00:13:51,270 --> 00:13:54,993
+or maybe some BI tool,
+Amazon QuickSee type-thing,
+
+337
+00:13:56,610 --> 00:13:57,630
+awesome stuff.
+
+338
+00:13:57,630 --> 00:13:59,520
+Now our end users, our business,
+
+339
+00:13:59,520 --> 00:14:02,940
+are able to see the insights
+that we've garnered.
+
+340
+00:14:02,940 --> 00:14:06,060
+We can also expose that
+to some other agent,
+
+341
+00:14:06,060 --> 00:14:08,520
+and some other agent can then
+come through the gateway,
+
+342
+00:14:08,520 --> 00:14:11,340
+through some MCP server
+that we've exposed,
+
+343
+00:14:11,340 --> 00:14:13,410
+and they can access that data.
+
+344
+00:14:13,410 --> 00:14:16,380
+So we can see as we've
+created this capability,
+
+345
+00:14:16,380 --> 00:14:20,010
+we're also able to share those
+insights to have a data set
+
+346
+00:14:20,010 --> 00:14:22,230
+that another capability could utilize
+
+347
+00:14:22,230 --> 00:14:24,273
+to get even further insights.
+
+348
+00:14:25,350 --> 00:14:27,150
+And we can do a similar pattern
+
+349
+00:14:27,150 --> 00:14:29,880
+when we talk about invoking the agent.
+
+350
+00:14:29,880 --> 00:14:33,210
+So we can provide a
+natural language interface
+
+351
+00:14:33,210 --> 00:14:35,400
+for our business to query,
+
+352
+00:14:35,400 --> 00:14:37,680
+or we could expose that
+to some other agent,
+
+353
+00:14:37,680 --> 00:14:38,670
+and this is awesome.
+
+354
+00:14:38,670 --> 00:14:41,010
+And then our agent can use its own tools
+
+355
+00:14:41,010 --> 00:14:44,580
+or some external tools
+to go and do its thing.
+
+356
+00:14:44,580 --> 00:14:47,100
+So we can see by having this nice pattern,
+
+357
+00:14:47,100 --> 00:14:48,720
+it lets us be modular
+
+358
+00:14:48,720 --> 00:14:51,570
+and scale out our insights more and more
+
+359
+00:14:51,570 --> 00:14:55,140
+so we can get more and more
+information about that.
+
+360
+00:14:55,140 --> 00:14:57,720
+And this is a nice pattern,
+you're creating value,
+
+361
+00:14:57,720 --> 00:15:00,870
+and you're creating more
+value and more value.
+
+362
+00:15:00,870 --> 00:15:03,920
+And to give some examples
+of how this would look
+
+363
+00:15:03,920 --> 00:15:05,070
+in another context,
+
+364
+00:15:05,070 --> 00:15:07,740
+I'd like to pass back
+to my colleague, Damika,
+
+365
+00:15:07,740 --> 00:15:10,473
+who's going to look into cost analysis.
+
+366
+00:15:18,510 --> 00:15:19,660
+- Awesome, thanks Dave.
+
+367
+00:15:20,580 --> 00:15:22,800
+Hey, everybody, welcome
+again to the session.
+
+368
+00:15:22,800 --> 00:15:24,240
+Now that you have a better perspective
+
+369
+00:15:24,240 --> 00:15:26,670
+about how GenAI capabilities
+can be leveraged
+
+370
+00:15:26,670 --> 00:15:27,900
+in SaaS applications,
+
+371
+00:15:27,900 --> 00:15:29,460
+let's take a look at some of the examples
+
+372
+00:15:29,460 --> 00:15:31,560
+starting from the cost analysis.
+
+373
+00:15:31,560 --> 00:15:32,460
+Now, in general,
+
+374
+00:15:32,460 --> 00:15:35,070
+cost analysis starts with instrumenting
+
+375
+00:15:35,070 --> 00:15:35,910
+the application plane
+
+376
+00:15:35,910 --> 00:15:38,700
+to meet the consumption
+matrix of the tenants
+
+377
+00:15:38,700 --> 00:15:41,310
+so that we can aggregate
+them in the control plane
+
+378
+00:15:41,310 --> 00:15:44,850
+to get the infrastructure
+cost per tenant attribution.
+
+379
+00:15:44,850 --> 00:15:47,520
+And that helped us to
+understand the tenants
+
+380
+00:15:47,520 --> 00:15:49,680
+who are not making so much
+of a profit in the business
+
+381
+00:15:49,680 --> 00:15:52,260
+so that we could do something about that.
+
+382
+00:15:52,260 --> 00:15:54,750
+Traditionally, this is
+where we all got settled
+
+383
+00:15:54,750 --> 00:15:56,580
+in most of the SaaS applications
+
+384
+00:15:56,580 --> 00:15:58,980
+in terms of the cost analysis.
+
+385
+00:15:58,980 --> 00:16:02,370
+Now, GenAI fundamentally
+changes the situation
+
+386
+00:16:02,370 --> 00:16:04,170
+where while it can provide the automation
+
+387
+00:16:04,170 --> 00:16:05,310
+for the cost analysis,
+
+388
+00:16:05,310 --> 00:16:07,500
+it can also provide the access
+
+389
+00:16:07,500 --> 00:16:09,600
+to advanced cost intelligence much easily.
+
+390
+00:16:10,980 --> 00:16:13,200
+Now, before getting
+into the cost analysis,
+
+391
+00:16:13,200 --> 00:16:15,660
+our story still starts with the
+cost per tenant attribution.
+
+392
+00:16:15,660 --> 00:16:19,830
+Now, Dave will explain how we
+can get some of the quick wins
+
+393
+00:16:19,830 --> 00:16:23,070
+by leveraging GenAI tooling
+in the cost per tenant,
+
+394
+00:16:23,070 --> 00:16:23,940
+but here we will see
+
+395
+00:16:23,940 --> 00:16:26,460
+how we can make it more permanent design
+
+396
+00:16:26,460 --> 00:16:28,260
+in the control plane architecture
+
+397
+00:16:28,260 --> 00:16:30,300
+by using GenAI technologies.
+
+398
+00:16:30,300 --> 00:16:31,710
+Now in the control plane,
+
+399
+00:16:31,710 --> 00:16:33,420
+we already got the consumption matrix
+
+400
+00:16:33,420 --> 00:16:35,940
+and the logs from the tenants.
+
+401
+00:16:35,940 --> 00:16:39,210
+And now instead of having
+hard-coded cost allocation rules
+
+402
+00:16:39,210 --> 00:16:40,800
+and bulky microservices,
+
+403
+00:16:40,800 --> 00:16:45,360
+we are gonna introduce an
+AI agent for the picture.
+
+404
+00:16:45,360 --> 00:16:48,120
+And that agent can be
+triggered using a prompt,
+
+405
+00:16:48,120 --> 00:16:51,660
+and that will be kind of
+orchestrating the entire workflow
+
+406
+00:16:51,660 --> 00:16:53,670
+of the cost per tenant attribution
+
+407
+00:16:53,670 --> 00:16:55,830
+by using the reasoning capabilities
+
+408
+00:16:55,830 --> 00:16:58,830
+of using the large language model.
+
+409
+00:16:58,830 --> 00:17:00,060
+Now, during the workflow,
+
+410
+00:17:00,060 --> 00:17:02,280
+it'll look at the current
+usage of the tenants
+
+411
+00:17:02,280 --> 00:17:04,290
+and then aggregate the matrix out of that
+
+412
+00:17:04,290 --> 00:17:06,990
+so that it'll know the
+list of AWS services
+
+413
+00:17:06,990 --> 00:17:09,720
+that has contributed to the cost,
+
+414
+00:17:09,720 --> 00:17:13,980
+and then work with the
+Cost Explorer MCP server
+
+415
+00:17:13,980 --> 00:17:16,350
+to get the unit cost of these matrices
+
+416
+00:17:16,350 --> 00:17:18,840
+so it can calculate the
+cost per tenant accurately.
+
+417
+00:17:18,840 --> 00:17:20,610
+Now, whenever you are building this
+
+418
+00:17:20,610 --> 00:17:23,850
+for your SaaS application,
+you will feel that,
+
+419
+00:17:23,850 --> 00:17:26,340
+hey, we need more tools,
+more steps in the workflow,
+
+420
+00:17:26,340 --> 00:17:27,510
+that's totally fine.
+
+421
+00:17:27,510 --> 00:17:30,480
+The agent will be able to
+orchestrate them all for you.
+
+422
+00:17:30,480 --> 00:17:31,740
+Now, when I know the cost per tenant,
+
+423
+00:17:31,740 --> 00:17:34,290
+I can easily get the margin
+value as well in the same time,
+
+424
+00:17:34,290 --> 00:17:36,383
+and that's great because
+now I can have the cost
+
+425
+00:17:36,383 --> 00:17:38,910
+and the margin both in the same data set
+
+426
+00:17:38,910 --> 00:17:43,110
+and then save in the control
+plane for the future use.
+
+427
+00:17:43,110 --> 00:17:44,250
+Now this is gonna be the base
+
+428
+00:17:44,250 --> 00:17:46,353
+for our cost analysis architecture.
+
+429
+00:17:47,610 --> 00:17:51,360
+Now, if you look at where the
+cost analysis implementation
+
+430
+00:17:51,360 --> 00:17:54,150
+really get fit into the
+control plane architecture,
+
+431
+00:17:54,150 --> 00:17:55,860
+there are multiple ways of doing that.
+
+432
+00:17:55,860 --> 00:18:00,000
+One of the ways to think is
+to extend the SaaS admin panel
+
+433
+00:18:00,000 --> 00:18:03,630
+and introducing a cost analysis dashboard
+
+434
+00:18:03,630 --> 00:18:06,780
+so that we can populate the insights,
+
+435
+00:18:06,780 --> 00:18:08,280
+the patterns, and the recommendations
+
+436
+00:18:08,280 --> 00:18:11,310
+we are extracting from the
+cost analysis module in there
+
+437
+00:18:11,310 --> 00:18:14,430
+so that the SaaS admins will
+have the access to them.
+
+438
+00:18:14,430 --> 00:18:15,483
+So with that setup,
+
+439
+00:18:17,850 --> 00:18:18,683
+we already have
+
+440
+00:18:18,683 --> 00:18:21,510
+the historical cost
+standard margin data set,
+
+441
+00:18:21,510 --> 00:18:24,690
+came from the previous agentic workflow.
+
+442
+00:18:24,690 --> 00:18:26,990
+Probably one of the low-hanging
+fruits for us to start with
+
+443
+00:18:26,990 --> 00:18:28,740
+is to look at this data set
+
+444
+00:18:28,740 --> 00:18:31,050
+and identify the insights and the pattern,
+
+445
+00:18:31,050 --> 00:18:34,470
+so me as a SaaS provider,
+I have a better perspective
+
+446
+00:18:34,470 --> 00:18:36,690
+about what happened
+during the last few months
+
+447
+00:18:36,690 --> 00:18:39,480
+in terms of cost and the margin.
+
+448
+00:18:39,480 --> 00:18:42,600
+So for that, we'll have a
+cost insight agent here.
+
+449
+00:18:42,600 --> 00:18:44,400
+Very simple workflow it has.
+
+450
+00:18:44,400 --> 00:18:45,863
+It'll look at the last
+12 months of the cost
+
+451
+00:18:45,863 --> 00:18:50,863
+and the margin data set,
+and then leverage the LLM
+
+452
+00:18:51,390 --> 00:18:53,430
+and ask for the insights and the patterns.
+
+453
+00:18:53,430 --> 00:18:55,200
+There's no business logic in here,
+
+454
+00:18:55,200 --> 00:18:57,230
+just the power of the LLM.
+
+455
+00:18:57,230 --> 00:19:00,450
+So during this analysis, I can
+ask for things like trends,
+
+456
+00:19:00,450 --> 00:19:04,500
+margin variations, and temporal
+and the behavioral patterns.
+
+457
+00:19:04,500 --> 00:19:06,660
+And this can be entirely customizable
+
+458
+00:19:06,660 --> 00:19:09,630
+because this is what will go
+to the prompt that we send
+
+459
+00:19:09,630 --> 00:19:11,343
+to the AI agent.
+
+460
+00:19:18,540 --> 00:19:23,540
+Now, the results of that would
+be very much data-driven,
+
+461
+00:19:23,670 --> 00:19:26,880
+deep insights that will
+show me how the margin
+
+462
+00:19:26,880 --> 00:19:30,120
+and the cost has been wearing
+over the last 12 months.
+
+463
+00:19:30,120 --> 00:19:30,953
+This is awesome
+
+464
+00:19:30,953 --> 00:19:33,060
+because now I can even understand
+some of the opportunities
+
+465
+00:19:33,060 --> 00:19:34,950
+that I could have done better
+
+466
+00:19:34,950 --> 00:19:36,750
+to improve my profit margin as well.
+
+467
+00:19:38,430 --> 00:19:41,840
+Now, another feature that we
+can add to the cost analysis
+
+468
+00:19:41,840 --> 00:19:43,023
+is cost forecasting.
+
+469
+00:19:44,340 --> 00:19:45,210
+The idea is simple.
+
+470
+00:19:45,210 --> 00:19:46,590
+You look at the historical data
+
+471
+00:19:46,590 --> 00:19:49,020
+and then predict the future values, right?
+
+472
+00:19:49,020 --> 00:19:52,380
+So for that, we are gonna
+have a cost prediction agent.
+
+473
+00:19:52,380 --> 00:19:54,770
+It will look at pretty
+much the same data data set
+
+474
+00:19:54,770 --> 00:19:55,920
+in this example,
+
+475
+00:19:55,920 --> 00:19:58,620
+like previously the last 12 months data
+
+476
+00:19:58,620 --> 00:20:00,060
+of the cost and the margin,
+
+477
+00:20:00,060 --> 00:20:02,280
+and then do the prediction
+for the next six months.
+
+478
+00:20:02,280 --> 00:20:04,170
+Now, as a SaaS provider,
+
+479
+00:20:04,170 --> 00:20:06,030
+I really want to have this prediction
+
+480
+00:20:06,030 --> 00:20:09,030
+as accurate as possible
+so that I can use them
+
+481
+00:20:09,030 --> 00:20:11,463
+with a high confidence for my, let's say,
+
+482
+00:20:12,319 --> 00:20:14,619
+business decision-making
+and things like that.
+
+483
+00:20:15,780 --> 00:20:17,370
+So in order to do that,
+
+484
+00:20:17,370 --> 00:20:21,090
+I can either go for a library
+or a business logic of my own
+
+485
+00:20:21,090 --> 00:20:24,690
+that will give me the
+accurate prediction as well.
+
+486
+00:20:24,690 --> 00:20:27,600
+Or I can plan to deploy this agent
+
+487
+00:20:27,600 --> 00:20:30,540
+in the Amazon Bedrock AgentCore runtime,
+
+488
+00:20:30,540 --> 00:20:34,230
+and then let it know what
+kind of prediction algorithm
+
+489
+00:20:34,230 --> 00:20:36,000
+and the simulation I wanna have.
+
+490
+00:20:36,000 --> 00:20:41,000
+So the agent will be able to
+generate the code using the LLM
+
+491
+00:20:41,610 --> 00:20:46,050
+and then run that within
+the agent code interpreter
+
+492
+00:20:46,050 --> 00:20:48,990
+so that it will provide
+the prediction data set.
+
+493
+00:20:48,990 --> 00:20:53,460
+So in that case, I'm not even
+managing that business logic,
+
+494
+00:20:53,460 --> 00:20:56,403
+that will be literally
+generated by the agent for me.
+
+495
+00:20:57,510 --> 00:20:59,730
+So likewise, there are many options
+
+496
+00:20:59,730 --> 00:21:01,890
+with the agentic setup like that.
+
+497
+00:21:01,890 --> 00:21:04,590
+So when you got the predicted data set,
+
+498
+00:21:04,590 --> 00:21:06,150
+you're gonna save that for the future use,
+
+499
+00:21:06,150 --> 00:21:08,220
+and then it'll leverage the LLM,
+
+500
+00:21:08,220 --> 00:21:11,100
+asking for the insights and the patterns.
+
+501
+00:21:11,100 --> 00:21:12,570
+Now, during this predictive analysis,
+
+502
+00:21:12,570 --> 00:21:15,780
+I can ask for things
+like forecasting trends,
+
+503
+00:21:15,780 --> 00:21:18,540
+growth patterns, and the cost
+and the margin variations.
+
+504
+00:21:18,540 --> 00:21:21,000
+Now I have a better perspective
+about what's gonna happen
+
+505
+00:21:21,000 --> 00:21:22,380
+in the next six months
+
+506
+00:21:22,380 --> 00:21:25,470
+in terms of the SaaS economics as well.
+
+507
+00:21:25,470 --> 00:21:26,303
+Which is awesome,
+
+508
+00:21:26,303 --> 00:21:28,320
+now we can actually get
+credit for the business
+
+509
+00:21:28,320 --> 00:21:29,793
+in different forms.
+
+510
+00:21:30,840 --> 00:21:31,673
+Now, this is great.
+
+511
+00:21:31,673 --> 00:21:35,010
+I only had the cost per
+tenant value sometime ago,
+
+512
+00:21:35,010 --> 00:21:37,770
+and now with the help of couple of agents,
+
+513
+00:21:37,770 --> 00:21:40,530
+I now have the historical patterns
+
+514
+00:21:40,530 --> 00:21:42,453
+and the predictive analysis as well.
+
+515
+00:21:45,240 --> 00:21:47,010
+Now, before moving ahead,
+
+516
+00:21:47,010 --> 00:21:48,540
+we want to improve our architecture
+
+517
+00:21:48,540 --> 00:21:50,430
+because so far we have been discussing
+
+518
+00:21:50,430 --> 00:21:53,580
+what individual agents
+can offer to us, right?
+
+519
+00:21:53,580 --> 00:21:56,790
+So if you put them all together
+into a SaaS architecture,
+
+520
+00:21:56,790 --> 00:21:59,610
+it's important to look at
+how they work each other
+
+521
+00:21:59,610 --> 00:22:01,740
+as an extendable design.
+
+522
+00:22:01,740 --> 00:22:02,760
+So here we got the insight
+
+523
+00:22:02,760 --> 00:22:05,610
+and the prediction agents
+that we discussed before.
+
+524
+00:22:05,610 --> 00:22:07,590
+So one of the changes I would do here
+
+525
+00:22:07,590 --> 00:22:09,600
+is to introduce the supervisor agent.
+
+526
+00:22:09,600 --> 00:22:12,570
+So it'll kind of orchestrate
+these two agentic workflow
+
+527
+00:22:12,570 --> 00:22:15,300
+and anything that is
+coming up down the line
+
+528
+00:22:15,300 --> 00:22:17,340
+to extract the response
+
+529
+00:22:17,340 --> 00:22:19,170
+for the prompts coming from the front end,
+
+530
+00:22:19,170 --> 00:22:21,003
+in this case, the inside dashboard.
+
+531
+00:22:22,110 --> 00:22:23,580
+And also as a technical decision,
+
+532
+00:22:23,580 --> 00:22:27,510
+probably I'll have the cost
+per tenant workflow separately
+
+533
+00:22:27,510 --> 00:22:31,050
+so that I can individually
+trigger that when I want
+
+534
+00:22:31,050 --> 00:22:33,360
+to get the latest cost
+and the margin values
+
+535
+00:22:33,360 --> 00:22:34,510
+into the control plane.
+
+536
+00:22:36,960 --> 00:22:40,650
+Now with that setup,
+it's really interesting
+
+537
+00:22:40,650 --> 00:22:45,650
+to look at another area
+that is AI recommendation.
+
+538
+00:22:45,690 --> 00:22:49,080
+Can an agent provide
+me some recommendations
+
+539
+00:22:49,080 --> 00:22:52,530
+to optimize the resource utilization
+
+540
+00:22:52,530 --> 00:22:54,333
+to maximize my margin, for example.
+
+541
+00:22:55,170 --> 00:22:56,310
+To check out that,
+
+542
+00:22:56,310 --> 00:22:59,220
+we'll introduce a resource
+optimization agent here,
+
+543
+00:22:59,220 --> 00:23:00,990
+and then I'll provide all the knowledge
+
+544
+00:23:00,990 --> 00:23:03,810
+about the infrastructure of the system
+
+545
+00:23:03,810 --> 00:23:08,810
+and the tenant usage of the
+infrastructure, that dataset,
+
+546
+00:23:09,000 --> 00:23:10,620
+as well as a preloaded knowledge
+
+547
+00:23:10,620 --> 00:23:13,200
+for this agent, so it's
+already configured.
+
+548
+00:23:13,200 --> 00:23:16,290
+And then when that agentic workflow
+
+549
+00:23:16,290 --> 00:23:19,080
+we got triggered from
+the supervisor agent,
+
+550
+00:23:19,080 --> 00:23:22,170
+so this agent can leverage its own LLM,
+
+551
+00:23:22,170 --> 00:23:25,860
+now also with the historical
+and the forecasted cost
+
+552
+00:23:25,860 --> 00:23:27,460
+and the margin data set as well,
+
+553
+00:23:28,320 --> 00:23:30,400
+and asking for the recommendation
+
+554
+00:23:33,330 --> 00:23:38,040
+for critical infrastructure
+changes I need to do
+
+555
+00:23:38,040 --> 00:23:39,723
+to maximize my profit margin.
+
+556
+00:23:40,800 --> 00:23:41,633
+Now this is awesome.
+
+557
+00:23:41,633 --> 00:23:43,680
+Now there's an agent telling me
+
+558
+00:23:43,680 --> 00:23:45,380
+what are the things I can consider
+
+559
+00:23:46,710 --> 00:23:48,810
+in terms of the infrastructure changes
+
+560
+00:23:48,810 --> 00:23:50,403
+to maximize my profit as well.
+
+561
+00:23:57,720 --> 00:23:59,160
+Now, if your main focus here
+
+562
+00:23:59,160 --> 00:24:01,980
+is to improve your profit
+margin in your business,
+
+563
+00:24:01,980 --> 00:24:05,130
+which is in every SaaS application,
+
+564
+00:24:05,130 --> 00:24:06,570
+this is just one side of the story,
+
+565
+00:24:06,570 --> 00:24:07,650
+optimizing the infrastructure.
+
+566
+00:24:07,650 --> 00:24:09,510
+The other side would be the tier pricing,
+
+567
+00:24:09,510 --> 00:24:12,030
+you've got to have the tier
+pricing optimized as well.
+
+568
+00:24:12,030 --> 00:24:13,890
+But if you look at our architecture,
+
+569
+00:24:13,890 --> 00:24:16,320
+there's one important
+dimension that is missing
+
+570
+00:24:16,320 --> 00:24:18,720
+to have recommendations for tier pricing,
+
+571
+00:24:18,720 --> 00:24:21,210
+that is the unit cost for the features,
+
+572
+00:24:21,210 --> 00:24:25,620
+that stands for the average
+infrastructure cost required
+
+573
+00:24:25,620 --> 00:24:28,593
+to host each and every
+feature in the architecture.
+
+574
+00:24:29,430 --> 00:24:30,270
+Why it is important?
+
+575
+00:24:30,270 --> 00:24:33,150
+Because most, like often,
+most of our SaaS applications
+
+576
+00:24:33,150 --> 00:24:35,550
+are driven by product features
+
+577
+00:24:35,550 --> 00:24:37,650
+and then we categorize
+or group these features
+
+578
+00:24:37,650 --> 00:24:41,130
+into different tiers, and
+we provide a pricing value.
+
+579
+00:24:41,130 --> 00:24:42,150
+Because of that,
+
+580
+00:24:42,150 --> 00:24:44,760
+the unit cost of the feature
+will have a direct impact
+
+581
+00:24:44,760 --> 00:24:46,230
+to the tier pricing.
+
+582
+00:24:46,230 --> 00:24:47,490
+But how can we get it?
+
+583
+00:24:47,490 --> 00:24:49,290
+It's actually simpler than we think.
+
+584
+00:24:49,290 --> 00:24:51,420
+We already have the consumption matrix
+
+585
+00:24:51,420 --> 00:24:52,620
+in the application plane
+
+586
+00:24:52,620 --> 00:24:55,230
+that have been metered by the tenant ID.
+
+587
+00:24:55,230 --> 00:24:57,840
+All now what we need to do
+is to identify the features
+
+588
+00:24:57,840 --> 00:25:01,500
+and their workflows along
+the architectural components,
+
+589
+00:25:01,500 --> 00:25:03,550
+and then inject the right feature ID
+
+590
+00:25:04,740 --> 00:25:08,700
+to the consumption matrix
+based on the feature workflow.
+
+591
+00:25:08,700 --> 00:25:09,570
+That's it.
+
+592
+00:25:09,570 --> 00:25:12,060
+And then send them onto the control plane.
+
+593
+00:25:12,060 --> 00:25:13,920
+And in the control plane,
+
+594
+00:25:13,920 --> 00:25:17,670
+I'm gonna aggregate the
+matrix by the feature ID now
+
+595
+00:25:17,670 --> 00:25:20,100
+and then calculate the
+cost, get an average,
+
+596
+00:25:20,100 --> 00:25:22,600
+and then I will get the
+cost per feature data set.
+
+597
+00:25:23,580 --> 00:25:26,010
+Now I can talk about the
+new pricing strategy agent
+
+598
+00:25:26,010 --> 00:25:27,960
+that we are gonna
+introduce into the picture.
+
+599
+00:25:27,960 --> 00:25:30,150
+So this will give us the recommendations
+
+600
+00:25:30,150 --> 00:25:31,800
+to optimize the pricing strategy.
+
+601
+00:25:32,940 --> 00:25:35,280
+For that, I will provide all the knowledge
+
+602
+00:25:35,280 --> 00:25:38,460
+about the current tiering strategy,
+
+603
+00:25:38,460 --> 00:25:41,730
+packaging structure, and
+the cost into this agent.
+
+604
+00:25:41,730 --> 00:25:43,980
+And then when it get triggers,
+
+605
+00:25:43,980 --> 00:25:45,450
+it'll ask for the recommendation.
+
+606
+00:25:45,450 --> 00:25:49,620
+And now it has a rich set of data sets
+
+607
+00:25:49,620 --> 00:25:52,860
+to bring in for getting
+those recommendations
+
+608
+00:25:52,860 --> 00:25:54,810
+such as all the cost
+of the margin data set
+
+609
+00:25:54,810 --> 00:25:56,883
+and the new cost per feature as well.
+
+610
+00:25:57,870 --> 00:25:59,130
+Because of that,
+
+611
+00:25:59,130 --> 00:26:02,490
+these recommendations
+are really comprehensive.
+
+612
+00:26:02,490 --> 00:26:04,920
+It can come in terms of
+the pricing adjustments
+
+613
+00:26:04,920 --> 00:26:07,500
+where the agent will tell you exactly
+
+614
+00:26:07,500 --> 00:26:11,130
+what other prices has to be
+changed to maximize the profit.
+
+615
+00:26:11,130 --> 00:26:12,990
+It could be packaging recommendations
+
+616
+00:26:12,990 --> 00:26:15,480
+where it'll tell you what
+should be the list of features
+
+617
+00:26:15,480 --> 00:26:19,440
+that each and every tier should
+have to maximize the margin,
+
+618
+00:26:19,440 --> 00:26:21,900
+even the new tier opportunities
+
+619
+00:26:21,900 --> 00:26:24,030
+where we can introduce a new tier,
+
+620
+00:26:24,030 --> 00:26:25,470
+what is the price of that?
+
+621
+00:26:25,470 --> 00:26:27,833
+What should be the list of
+features that it has as well?
+
+622
+00:26:29,645 --> 00:26:32,445
+Now I can start optimizing
+the pricing strategy as well.
+
+623
+00:26:33,780 --> 00:26:36,990
+So if you look at our cost
+analysis architecture,
+
+624
+00:26:36,990 --> 00:26:37,823
+the right-hand side,
+
+625
+00:26:37,823 --> 00:26:40,860
+you've got a nice agentic
+workflow that is growing,
+
+626
+00:26:40,860 --> 00:26:43,350
+we can keep on adding new capabilities.
+
+627
+00:26:43,350 --> 00:26:45,990
+You've got the supervisor
+agent orchestrating them all,
+
+628
+00:26:45,990 --> 00:26:50,100
+and then extracting the
+response for the prompts
+
+629
+00:26:50,100 --> 00:26:51,570
+coming from the front end,
+
+630
+00:26:51,570 --> 00:26:53,490
+which is the dashboard in this case.
+
+631
+00:26:53,490 --> 00:26:57,840
+And like easy feature that
+we can actually implement
+
+632
+00:26:57,840 --> 00:27:01,170
+in here is, of course, the
+natural language interface.
+
+633
+00:27:01,170 --> 00:27:04,020
+So now that SaaS admins are not limited
+
+634
+00:27:04,020 --> 00:27:06,210
+by what has been shown in the dashboard,
+
+635
+00:27:06,210 --> 00:27:08,310
+they can even have a conversation
+
+636
+00:27:08,310 --> 00:27:10,230
+or interaction with the agentic workflow
+
+637
+00:27:10,230 --> 00:27:12,210
+and get to know more about the insights
+
+638
+00:27:12,210 --> 00:27:14,400
+and the recommendations as well.
+
+639
+00:27:14,400 --> 00:27:15,237
+Now, whenever you are building this
+
+640
+00:27:15,237 --> 00:27:17,490
+for your SaaS application,
+I have two recommendations.
+
+641
+00:27:17,490 --> 00:27:21,420
+Number one, you don't have to
+start with everything, right?
+
+642
+00:27:21,420 --> 00:27:23,610
+Start small but have
+extendable architecture
+
+643
+00:27:23,610 --> 00:27:27,120
+so that you can keep on adding
+new features, new agents,
+
+644
+00:27:27,120 --> 00:27:28,050
+without being worried
+
+645
+00:27:28,050 --> 00:27:30,630
+about how do you integrate
+that to SaaS architecture.
+
+646
+00:27:30,630 --> 00:27:32,910
+And then work backwards from
+your business requirements
+
+647
+00:27:32,910 --> 00:27:35,550
+so that you know what you
+need from the front end,
+
+648
+00:27:35,550 --> 00:27:38,430
+whether it's a dashboard or
+a AI bot or something else
+
+649
+00:27:38,430 --> 00:27:42,150
+so that you can prioritize
+the relevant agentic workflow
+
+650
+00:27:42,150 --> 00:27:43,500
+at the backend.
+
+651
+00:27:43,500 --> 00:27:45,720
+I hope this will help you to start off
+
+652
+00:27:45,720 --> 00:27:48,633
+with your cost analysis workflow
+in your SaaS application.
+
+653
+00:27:50,160 --> 00:27:51,720
+So like cost analysis,
+
+654
+00:27:51,720 --> 00:27:54,510
+customer insights takes high
+priority in SaaS application
+
+655
+00:27:54,510 --> 00:27:56,700
+where GenAI can help a lot as well.
+
+656
+00:27:56,700 --> 00:27:59,100
+To talk about that, let
+me turn it back to Dave.
+
+657
+00:28:01,314 --> 00:28:02,314
+- Awesome.
+
+658
+00:28:02,314 --> 00:28:04,140
+Awesome, thanks Damika.
+
+659
+00:28:04,140 --> 00:28:08,700
+So customer insights, knowing
+what your customers are doing,
+
+660
+00:28:08,700 --> 00:28:11,400
+it was one of the big
+promises of SaaS, right?
+
+661
+00:28:11,400 --> 00:28:12,750
+You were all on-premise,
+
+662
+00:28:12,750 --> 00:28:14,220
+you didn't know what your
+customers were doing,
+
+663
+00:28:14,220 --> 00:28:17,820
+well, let's operate and manage
+this on our own environment
+
+664
+00:28:17,820 --> 00:28:20,670
+and we're gonna get insights
+into our customer behavior,
+
+665
+00:28:20,670 --> 00:28:23,040
+we're gonna understand what they're doing.
+
+666
+00:28:23,040 --> 00:28:24,660
+Awesome, let's do it.
+
+667
+00:28:24,660 --> 00:28:28,470
+Now, the reality is, I see
+this with a lot of customers,
+
+668
+00:28:28,470 --> 00:28:31,620
+is they're not getting
+these insights, right?
+
+669
+00:28:31,620 --> 00:28:33,420
+And this is a bad place to be
+
+670
+00:28:33,420 --> 00:28:36,723
+because our customer insights
+are really important.
+
+671
+00:28:37,710 --> 00:28:39,420
+And why are they so important?
+
+672
+00:28:39,420 --> 00:28:42,720
+Well, basically, they
+grow our SaaS, right?
+
+673
+00:28:42,720 --> 00:28:46,710
+Because if we know what
+customers are using,
+
+674
+00:28:46,710 --> 00:28:49,110
+well, we can spend our engineering points
+
+675
+00:28:49,110 --> 00:28:51,513
+and make our strengths even stronger.
+
+676
+00:28:52,530 --> 00:28:54,600
+And something that I've
+seen more than once
+
+677
+00:28:54,600 --> 00:28:56,700
+is where we have a customer
+
+678
+00:28:56,700 --> 00:28:59,130
+starting to look into their insights
+
+679
+00:28:59,130 --> 00:29:01,320
+to find out what their
+customers are using,
+
+680
+00:29:01,320 --> 00:29:04,560
+and they find that their
+customer base are using features
+
+681
+00:29:04,560 --> 00:29:06,540
+which aren't really the core product.
+
+682
+00:29:06,540 --> 00:29:08,190
+And so they decide to pivot
+
+683
+00:29:08,190 --> 00:29:11,190
+and focus in those
+aspects of their product
+
+684
+00:29:11,190 --> 00:29:13,240
+and they become more successful that way.
+
+685
+00:29:14,430 --> 00:29:17,580
+And the other side is, it
+lets you sell in the way
+
+686
+00:29:17,580 --> 00:29:19,680
+that customers want to consume, right?
+
+687
+00:29:19,680 --> 00:29:20,820
+Because if I'm going out there
+
+688
+00:29:20,820 --> 00:29:22,020
+and I'm looking for SaaS products,
+
+689
+00:29:22,020 --> 00:29:24,480
+well, I'm gonna choose the
+one that has the package
+
+690
+00:29:24,480 --> 00:29:28,380
+and the pricing that relates
+to what I want to use.
+
+691
+00:29:28,380 --> 00:29:30,870
+And you can use this packaging and pricing
+
+692
+00:29:30,870 --> 00:29:33,330
+to create these conversion
+journeys as well.
+
+693
+00:29:33,330 --> 00:29:36,480
+So creating a way to get
+someone from a basic tier
+
+694
+00:29:36,480 --> 00:29:38,430
+that gets value from your core product
+
+695
+00:29:38,430 --> 00:29:41,463
+into a more premium tier
+with higher margins.
+
+696
+00:29:42,690 --> 00:29:45,690
+So we can explore customer behavior
+
+697
+00:29:45,690 --> 00:29:48,480
+if we go back into our
+nice Kiro environment
+
+698
+00:29:48,480 --> 00:29:50,760
+with some context like we had before,
+
+699
+00:29:50,760 --> 00:29:53,160
+or we can ask some basic questions, right?
+
+700
+00:29:53,160 --> 00:29:57,150
+Do we have different customer
+personas based on our usage?
+
+701
+00:29:57,150 --> 00:30:00,150
+And our little LLM friend
+is going to do his thing,
+
+702
+00:30:00,150 --> 00:30:03,300
+beep-boop-beep, and give us some data.
+
+703
+00:30:03,300 --> 00:30:06,240
+And these insights could be useful, right?
+
+704
+00:30:06,240 --> 00:30:07,980
+For example, we can see here
+
+705
+00:30:07,980 --> 00:30:11,490
+that we've got a bunch of
+customers here with low usage.
+
+706
+00:30:11,490 --> 00:30:13,500
+Now that could be
+interesting for our business
+
+707
+00:30:13,500 --> 00:30:16,440
+because those customers
+could potentially leave.
+
+708
+00:30:16,440 --> 00:30:17,400
+We don't want that, right?
+
+709
+00:30:17,400 --> 00:30:19,830
+We don't want to lose the revenue.
+
+710
+00:30:19,830 --> 00:30:20,730
+And on the other side,
+
+711
+00:30:20,730 --> 00:30:24,180
+we've got a bunch of
+customers with high usage,
+
+712
+00:30:24,180 --> 00:30:27,150
+also an interesting thing
+from a business perspective
+
+713
+00:30:27,150 --> 00:30:29,490
+because these customers could be moved
+
+714
+00:30:29,490 --> 00:30:32,193
+into a higher paying,
+more performant tier.
+
+715
+00:30:33,450 --> 00:30:36,720
+So we'd like to get a few
+more insights into this,
+
+716
+00:30:36,720 --> 00:30:38,400
+but we need to add some more dimensions,
+
+717
+00:30:38,400 --> 00:30:41,400
+we need to look into feature usage, right?
+
+718
+00:30:41,400 --> 00:30:44,040
+What features are the customers using?
+
+719
+00:30:44,040 --> 00:30:45,870
+So we come up with a problem of,
+
+720
+00:30:45,870 --> 00:30:48,033
+where do we get that feature usage from?
+
+721
+00:30:49,050 --> 00:30:52,170
+And a common conversation
+I've had with SaaS vendors
+
+722
+00:30:52,170 --> 00:30:55,860
+is that they're going down
+and looking into feature usage
+
+723
+00:30:55,860 --> 00:30:56,820
+but they think that
+
+724
+00:30:56,820 --> 00:30:58,710
+they have to instrument
+their whole application.
+
+725
+00:30:58,710 --> 00:31:00,300
+And this becomes this roadblock, right?
+
+726
+00:31:00,300 --> 00:31:02,787
+It's a lots of instrument,
+you never get data out,
+
+727
+00:31:02,787 --> 00:31:05,490
+and when you do, it's incomplete views.
+
+728
+00:31:05,490 --> 00:31:07,560
+But it doesn't have to be so hard, right?
+
+729
+00:31:07,560 --> 00:31:11,700
+Because we're building our
+applications on the cloud, right?
+
+730
+00:31:11,700 --> 00:31:14,400
+And you need some sort of way
+to access your application,
+
+731
+00:31:14,400 --> 00:31:19,080
+and this ingress is the perfect
+place to take feature usage.
+
+732
+00:31:19,080 --> 00:31:22,020
+So let's say for example,
+if I'm using an API,
+
+733
+00:31:22,020 --> 00:31:26,580
+well, most of our APIs are
+gonna have some opportunities
+
+734
+00:31:26,580 --> 00:31:28,380
+for access logs,
+
+735
+00:31:28,380 --> 00:31:31,920
+and most likely each feature
+is gonna have their own path.
+
+736
+00:31:31,920 --> 00:31:33,660
+So we can use a path per feature
+
+737
+00:31:33,660 --> 00:31:36,600
+as a way to get feature usage dimensions.
+
+738
+00:31:36,600 --> 00:31:38,280
+Boom, nice and easy, right?
+
+739
+00:31:38,280 --> 00:31:39,630
+Didn't take any time at all
+
+740
+00:31:39,630 --> 00:31:42,900
+and now we're getting insights
+into our feature usage.
+
+741
+00:31:42,900 --> 00:31:46,200
+And we can get more
+granularity this way as well
+
+742
+00:31:46,200 --> 00:31:50,910
+because our operations
+within that service feature
+
+743
+00:31:50,910 --> 00:31:54,180
+are probably gonna be different
+based on the HTTP method.
+
+744
+00:31:54,180 --> 00:31:56,520
+So we can use this as another method
+
+745
+00:31:56,520 --> 00:31:58,350
+of getting some more granularity in there.
+
+746
+00:31:58,350 --> 00:31:59,250
+And straight away,
+
+747
+00:31:59,250 --> 00:32:01,950
+we're getting a lot of
+insights into feature usage
+
+748
+00:32:01,950 --> 00:32:04,143
+and didn't really have to do much there.
+
+749
+00:32:05,610 --> 00:32:07,830
+Now, this doesn't apply to every use case.
+
+750
+00:32:07,830 --> 00:32:08,940
+Maybe your product
+
+751
+00:32:08,940 --> 00:32:12,420
+is taking millions of
+requests per minute or second
+
+752
+00:32:12,420 --> 00:32:14,717
+and you don't really want
+to turn on those access logs
+
+753
+00:32:14,717 --> 00:32:17,430
+'cause your bill is going to explode.
+
+754
+00:32:17,430 --> 00:32:19,290
+So then you need to look at
+
+755
+00:32:19,290 --> 00:32:22,260
+actually instrumenting your code.
+
+756
+00:32:22,260 --> 00:32:25,530
+Now this is going to give us
+a bit more complexity, right?
+
+757
+00:32:25,530 --> 00:32:27,930
+Because we actually have
+to go into our application,
+
+758
+00:32:27,930 --> 00:32:29,010
+touch the code.
+
+759
+00:32:29,010 --> 00:32:31,710
+And if you've got multiple feature teams,
+
+760
+00:32:31,710 --> 00:32:32,670
+you have to think about
+
+761
+00:32:32,670 --> 00:32:35,627
+how you're going to standardize
+across the teams, right?
+
+762
+00:32:35,627 --> 00:32:37,710
+'Cause you want some
+sort of standardization
+
+763
+00:32:37,710 --> 00:32:40,743
+because standardization scales, SaaS.
+
+764
+00:32:41,760 --> 00:32:43,260
+But the benefit to this
+
+765
+00:32:43,260 --> 00:32:46,200
+is that you're able to get
+much richer insights, right?
+
+766
+00:32:46,200 --> 00:32:48,930
+Because you can instrument
+for the dimensions
+
+767
+00:32:48,930 --> 00:32:52,620
+and the metrics that are
+relevant for your business.
+
+768
+00:32:52,620 --> 00:32:54,630
+So we have to think about that trade off
+
+769
+00:32:54,630 --> 00:32:57,300
+and balancing that
+higher engineering costs
+
+770
+00:32:57,300 --> 00:32:58,893
+with these deeper insights.
+
+771
+00:33:00,180 --> 00:33:02,670
+And there's a place for
+both approaches, right?
+
+772
+00:33:02,670 --> 00:33:04,920
+And my general advice is to say,
+
+773
+00:33:04,920 --> 00:33:07,620
+start off by getting that feature usage
+
+774
+00:33:07,620 --> 00:33:10,200
+with your ingress logs, right?
+
+775
+00:33:10,200 --> 00:33:11,280
+Get some data on the table,
+
+776
+00:33:11,280 --> 00:33:13,920
+stuff that you can work
+with straight away.
+
+777
+00:33:13,920 --> 00:33:15,840
+And then when you need deeper insights
+
+778
+00:33:15,840 --> 00:33:16,860
+into particular areas,
+
+779
+00:33:16,860 --> 00:33:20,613
+then start instrumenting your
+application code from there.
+
+780
+00:33:22,170 --> 00:33:23,790
+So now we know how to get feature usage,
+
+781
+00:33:23,790 --> 00:33:27,900
+let's add that as some context
+for our little agent friend.
+
+782
+00:33:27,900 --> 00:33:29,730
+And now we can ask some questions, right?
+
+783
+00:33:29,730 --> 00:33:31,950
+What features are my customer's using?
+
+784
+00:33:31,950 --> 00:33:35,820
+Does its thing, beep-boop-beep,
+and gives us some results.
+
+785
+00:33:35,820 --> 00:33:38,310
+And because it's a natural
+language interface,
+
+786
+00:33:38,310 --> 00:33:40,200
+we can follow this up, right?
+
+787
+00:33:40,200 --> 00:33:42,780
+We can say, well, based
+on that feature usage,
+
+788
+00:33:42,780 --> 00:33:44,613
+do we see some different personas?
+
+789
+00:33:45,600 --> 00:33:49,200
+Because customer personas
+are really strong.
+
+790
+00:33:49,200 --> 00:33:51,960
+And when we talk about customer personas,
+
+791
+00:33:51,960 --> 00:33:52,860
+what we mean is
+
+792
+00:33:52,860 --> 00:33:55,590
+it's just a group or a
+subset of our customers
+
+793
+00:33:55,590 --> 00:33:58,170
+that we can market to because
+they have similar attributes,
+
+794
+00:33:58,170 --> 00:34:00,303
+they use our product in a similar way.
+
+795
+00:34:01,530 --> 00:34:03,570
+Because it would be nice
+
+796
+00:34:03,570 --> 00:34:05,970
+if all of our customers were the same,
+
+797
+00:34:05,970 --> 00:34:09,120
+but just like the real world,
+customers are different
+
+798
+00:34:09,120 --> 00:34:10,410
+so we need to find out
+
+799
+00:34:10,410 --> 00:34:12,753
+what sort of different customers we have.
+
+800
+00:34:13,650 --> 00:34:16,230
+And once we know what
+different customers we have,
+
+801
+00:34:16,230 --> 00:34:18,213
+we can find out their profitability.
+
+802
+00:34:19,050 --> 00:34:21,210
+Because it would be really interesting
+
+803
+00:34:21,210 --> 00:34:24,420
+to understand which ones are profitable
+
+804
+00:34:24,420 --> 00:34:27,510
+or more profitable or unprofitable
+
+805
+00:34:27,510 --> 00:34:30,870
+because we can use that data
+to set our strategy, right?
+
+806
+00:34:30,870 --> 00:34:32,670
+If we are planning our
+customer acquisition
+
+807
+00:34:32,670 --> 00:34:33,990
+for the next quarter,
+
+808
+00:34:33,990 --> 00:34:35,430
+we're gonna be spending
+this sort of money,
+
+809
+00:34:35,430 --> 00:34:38,880
+well, what personas are we gonna target?
+
+810
+00:34:38,880 --> 00:34:40,410
+I'm probably gonna choose for the ones
+
+811
+00:34:40,410 --> 00:34:42,570
+that are more profitable personally.
+
+812
+00:34:42,570 --> 00:34:44,763
+But now we have some data to do that.
+
+813
+00:34:45,900 --> 00:34:48,390
+And we can explore these personas
+
+814
+00:34:48,390 --> 00:34:50,790
+by building up these
+capability sets as well, right?
+
+815
+00:34:50,790 --> 00:34:55,110
+So I've created this
+persona analysis capability,
+
+816
+00:34:55,110 --> 00:34:56,160
+I'm getting good at it, right?
+
+817
+00:34:56,160 --> 00:34:59,280
+I've created ones for
+usage and cost analysis,
+
+818
+00:34:59,280 --> 00:35:02,670
+and the agent's just doing half
+of this work for me anyway.
+
+819
+00:35:02,670 --> 00:35:04,830
+And now when I go and query that,
+
+820
+00:35:04,830 --> 00:35:06,390
+what's that cost per persona?
+
+821
+00:35:06,390 --> 00:35:09,060
+It can use these other
+capabilities recursively, right?
+
+822
+00:35:09,060 --> 00:35:11,580
+It's going to go and ask
+what personas we have,
+
+823
+00:35:11,580 --> 00:35:14,160
+what sort of feature
+usage those personas do,
+
+824
+00:35:14,160 --> 00:35:16,440
+and then we can use that cost per feature
+
+825
+00:35:16,440 --> 00:35:19,200
+to get some insights there.
+
+826
+00:35:19,200 --> 00:35:21,360
+Ask which ones are profitable,
+
+827
+00:35:21,360 --> 00:35:24,390
+ask do we have any
+unprofitable ones, right?
+
+828
+00:35:24,390 --> 00:35:27,030
+So we're getting this
+information that we can use
+
+829
+00:35:27,030 --> 00:35:30,600
+as data for creating more decisions.
+
+830
+00:35:30,600 --> 00:35:33,270
+And part of those decisions
+and their strategy
+
+831
+00:35:33,270 --> 00:35:35,493
+is looking at our packaging, right?
+
+832
+00:35:36,930 --> 00:35:39,750
+And here we're creating
+packages for the personas
+
+833
+00:35:39,750 --> 00:35:41,700
+that we've discovered, right?
+
+834
+00:35:41,700 --> 00:35:45,150
+Because you can target
+your customers better.
+
+835
+00:35:45,150 --> 00:35:49,200
+And we can plan these
+packages to foster an upsell,
+
+836
+00:35:49,200 --> 00:35:51,630
+to foster a conversion journey.
+
+837
+00:35:51,630 --> 00:35:54,450
+Another common conversation
+I've had with customers
+
+838
+00:35:54,450 --> 00:35:58,050
+is they create this awesome SaaS product,
+
+839
+00:35:58,050 --> 00:36:00,510
+it's solving this great use case,
+
+840
+00:36:00,510 --> 00:36:02,190
+but they only have one service tier
+
+841
+00:36:02,190 --> 00:36:03,900
+and it's really expensive.
+
+842
+00:36:03,900 --> 00:36:05,850
+So they can't get new customers on
+
+843
+00:36:05,850 --> 00:36:09,120
+because their market
+base is a small subset
+
+844
+00:36:09,120 --> 00:36:11,400
+of enterprises that have all that money.
+
+845
+00:36:11,400 --> 00:36:13,860
+And you need to think about,
+
+846
+00:36:13,860 --> 00:36:16,290
+well, how can I create
+this basic value tier
+
+847
+00:36:16,290 --> 00:36:18,720
+that gets customers onto my product,
+
+848
+00:36:18,720 --> 00:36:20,490
+getting value out of that,
+
+849
+00:36:20,490 --> 00:36:22,620
+integrated into their business workflows
+
+850
+00:36:22,620 --> 00:36:26,340
+and then pushing them
+into more higher value
+
+851
+00:36:26,340 --> 00:36:28,470
+for the customer and higher margin for you
+
+852
+00:36:28,470 --> 00:36:29,670
+as the SaaS vendor,
+
+853
+00:36:29,670 --> 00:36:32,463
+packages in the premium tier.
+
+854
+00:36:33,300 --> 00:36:35,850
+And once you're planning these packages,
+
+855
+00:36:35,850 --> 00:36:39,030
+you can forecast the
+cost per package as well.
+
+856
+00:36:39,030 --> 00:36:40,950
+And this is going to be really important.
+
+857
+00:36:40,950 --> 00:36:44,460
+If we go back to that customer
+acquisition example, right?
+
+858
+00:36:44,460 --> 00:36:47,460
+If I know which personas
+I'm going to target
+
+859
+00:36:47,460 --> 00:36:49,890
+and I have an idea on
+what a cost to serve at
+
+860
+00:36:49,890 --> 00:36:52,680
+and some sort of conversion rate success,
+
+861
+00:36:52,680 --> 00:36:56,610
+well, I can forecast what
+sort of return on investment
+
+862
+00:36:56,610 --> 00:36:59,853
+I'm going to get by spending
+in customer acquisition.
+
+863
+00:37:00,720 --> 00:37:02,670
+Or maybe you have some RFQs,
+
+864
+00:37:02,670 --> 00:37:05,850
+if you're a public sector,
+RFQs are really common,
+
+865
+00:37:05,850 --> 00:37:08,640
+well, you need to understand
+how low you can go
+
+866
+00:37:08,640 --> 00:37:12,540
+in terms of your offer and
+also make an acceptable margin.
+
+867
+00:37:12,540 --> 00:37:14,700
+Well, now you've got that data, right?
+
+868
+00:37:14,700 --> 00:37:17,733
+And you can increase your
+revenue with this approach.
+
+869
+00:37:18,720 --> 00:37:19,553
+And there are other ways
+
+870
+00:37:19,553 --> 00:37:22,380
+of increasing revenue per customer, right?
+
+871
+00:37:22,380 --> 00:37:24,690
+One way is by reducing churn.
+
+872
+00:37:24,690 --> 00:37:27,360
+Because when a customer
+leaves, it's a bad thing.
+
+873
+00:37:27,360 --> 00:37:29,250
+Because not only are they leaving
+
+874
+00:37:29,250 --> 00:37:32,550
+and they're taking their
+revenue stream with them,
+
+875
+00:37:32,550 --> 00:37:34,980
+but they probably still have the core need
+
+876
+00:37:34,980 --> 00:37:36,270
+why they came to you in the first place
+
+877
+00:37:36,270 --> 00:37:38,550
+so they're probably
+looking at a competitor.
+
+878
+00:37:38,550 --> 00:37:40,770
+Now that competitor has
+that revenue stream,
+
+879
+00:37:40,770 --> 00:37:43,560
+they're reinvesting that
+to get better than you.
+
+880
+00:37:43,560 --> 00:37:44,940
+Don't wanna be in that place, right?
+
+881
+00:37:44,940 --> 00:37:48,870
+So this is why best-of-breed
+SaaS vendors have this
+
+882
+00:37:48,870 --> 00:37:52,593
+as a core mechanism to retain customers.
+
+883
+00:37:53,760 --> 00:37:56,790
+And the other way by increasing
+revenue is upsell, right?
+
+884
+00:37:56,790 --> 00:37:58,110
+We talked about that,
+
+885
+00:37:58,110 --> 00:38:00,070
+planning this conversion
+journey, upselling.
+
+886
+00:38:00,070 --> 00:38:02,940
+Well, you need to look
+and find the customers
+
+887
+00:38:02,940 --> 00:38:05,280
+that have potential for upsell.
+
+888
+00:38:05,280 --> 00:38:08,100
+And again, best-of-breed
+SaaS, they know this as well,
+
+889
+00:38:08,100 --> 00:38:09,180
+and they build this
+
+890
+00:38:09,180 --> 00:38:12,543
+as core components inside
+their business models.
+
+891
+00:38:14,370 --> 00:38:15,900
+So if you're in an early stage,
+
+892
+00:38:15,900 --> 00:38:18,090
+you don't have big teams that can do this,
+
+893
+00:38:18,090 --> 00:38:21,003
+well, how can our little
+agent friends help us here?
+
+894
+00:38:22,500 --> 00:38:26,040
+Well, if we come back to these
+capabilities that we created,
+
+895
+00:38:26,040 --> 00:38:28,680
+let's look at how we can detect churn.
+
+896
+00:38:28,680 --> 00:38:29,970
+I can go and ask,
+
+897
+00:38:29,970 --> 00:38:33,570
+set up some scheduled
+automated request to say,
+
+898
+00:38:33,570 --> 00:38:36,270
+every night, go and look for
+low usage customers, right?
+
+899
+00:38:36,270 --> 00:38:39,090
+It's gonna go check our usage metrics.
+
+900
+00:38:39,090 --> 00:38:43,410
+And if it finds some, it
+needs to know what to do.
+
+901
+00:38:43,410 --> 00:38:46,440
+Now this is then a decision
+for you as a business, right?
+
+902
+00:38:46,440 --> 00:38:48,780
+Because this is ultimately
+a business process, right?
+
+903
+00:38:48,780 --> 00:38:51,300
+What do we do with potential churn risk?
+
+904
+00:38:51,300 --> 00:38:52,470
+It could be you say,
+
+905
+00:38:52,470 --> 00:38:55,590
+well, how important is that
+customer to my business?
+
+906
+00:38:55,590 --> 00:38:57,150
+Because if they're really important,
+
+907
+00:38:57,150 --> 00:38:59,250
+well, we need to get feet
+on the ground, right?
+
+908
+00:38:59,250 --> 00:39:00,930
+We need to be out shaking hands,
+
+909
+00:39:00,930 --> 00:39:02,220
+finding why they're not happy
+
+910
+00:39:02,220 --> 00:39:04,740
+and making sure we can retain them.
+
+911
+00:39:04,740 --> 00:39:07,980
+But that doesn't always scale,
+so we end up building in
+
+912
+00:39:07,980 --> 00:39:10,830
+some sort of automated workflow, right?
+
+913
+00:39:10,830 --> 00:39:12,990
+Reach out with some templated email.
+
+914
+00:39:12,990 --> 00:39:14,700
+We've seen these in our inbox, right?
+
+915
+00:39:14,700 --> 00:39:19,290
+You get this email saying,
+oh, please stay, customer.
+
+916
+00:39:19,290 --> 00:39:21,243
+Here's a 10% discount, whatever.
+
+917
+00:39:22,980 --> 00:39:25,830
+Very non-personal but it's
+got a rate of success, right?
+
+918
+00:39:25,830 --> 00:39:27,810
+That's why we do it.
+
+919
+00:39:27,810 --> 00:39:29,130
+But we can improve that, right?
+
+920
+00:39:29,130 --> 00:39:31,740
+We can invoke our usage
+analysis agent and say,
+
+921
+00:39:31,740 --> 00:39:35,070
+hey, this is the customer
+that's at risk of leaving.
+
+922
+00:39:35,070 --> 00:39:36,690
+Based on their persona and their usage,
+
+923
+00:39:36,690 --> 00:39:39,540
+what would be a good way
+to try and retain them?
+
+924
+00:39:39,540 --> 00:39:43,440
+So we get a personalized
+response for their customer,
+
+925
+00:39:43,440 --> 00:39:45,933
+and this should yield a
+better retention rate.
+
+926
+00:39:47,010 --> 00:39:49,500
+So this is cool, right?
+
+927
+00:39:49,500 --> 00:39:51,930
+But we can also improve this as well.
+
+928
+00:39:51,930 --> 00:39:53,940
+We can turn that customer reach-out
+
+929
+00:39:53,940 --> 00:39:55,893
+into a customer success function.
+
+930
+00:39:56,790 --> 00:39:58,020
+And that customer success,
+
+931
+00:39:58,020 --> 00:40:00,180
+this capability is going to
+do the same thing, all right?
+
+932
+00:40:00,180 --> 00:40:02,370
+It's gonna create that
+personalized response,
+
+933
+00:40:02,370 --> 00:40:03,900
+reach out to the customer,
+
+934
+00:40:03,900 --> 00:40:07,440
+but now it's tracking these
+customer interactions,
+
+935
+00:40:07,440 --> 00:40:10,950
+it's seeing which ones are
+more successful than others.
+
+936
+00:40:10,950 --> 00:40:15,843
+Basically learning from itself over time.
+
+937
+00:40:17,130 --> 00:40:18,510
+And we can do a similar approach
+
+938
+00:40:18,510 --> 00:40:20,280
+by looking at new customers, right?
+
+939
+00:40:20,280 --> 00:40:21,990
+Because when a new
+customer comes on board,
+
+940
+00:40:21,990 --> 00:40:24,330
+we wanna make sure that they
+get a short time to value,
+
+941
+00:40:24,330 --> 00:40:25,913
+they want to get them using your product,
+
+942
+00:40:25,913 --> 00:40:28,410
+getting that value locked in.
+
+943
+00:40:28,410 --> 00:40:30,690
+So we can do the same thing,
+
+944
+00:40:30,690 --> 00:40:32,040
+that same approach and just say,
+
+945
+00:40:32,040 --> 00:40:33,630
+well, if they have low usage
+
+946
+00:40:33,630 --> 00:40:35,190
+and they're a brand new customer,
+
+947
+00:40:35,190 --> 00:40:37,650
+we'll send them something that's
+maybe more of a quick start
+
+948
+00:40:37,650 --> 00:40:39,453
+than trying to retain them, right?
+
+949
+00:40:40,980 --> 00:40:44,850
+And we can use these
+same tools for upselling,
+
+950
+00:40:44,850 --> 00:40:48,240
+except now instead of looking
+for low usage customers,
+
+951
+00:40:48,240 --> 00:40:49,860
+we're looking for high usage customers,
+
+952
+00:40:49,860 --> 00:40:52,860
+or maybe customers that
+use specific feature sets.
+
+953
+00:40:52,860 --> 00:40:55,830
+And again, once we see an opportunity,
+
+954
+00:40:55,830 --> 00:40:57,150
+we follow that same approach,
+
+955
+00:40:57,150 --> 00:40:59,940
+reach out to our customer
+success capability
+
+956
+00:40:59,940 --> 00:41:01,590
+and create this personalized approach,
+
+957
+00:41:01,590 --> 00:41:04,560
+except now we are looking
+to upgrade the customer
+
+958
+00:41:04,560 --> 00:41:06,153
+instead of retaining them.
+
+959
+00:41:08,076 --> 00:41:09,060
+And these capabilities,
+
+960
+00:41:09,060 --> 00:41:10,410
+these aren't brand new things, right?
+
+961
+00:41:10,410 --> 00:41:12,480
+I didn't invent customer success.
+
+962
+00:41:12,480 --> 00:41:14,370
+If you've been in the
+SaaS field for a while,
+
+963
+00:41:14,370 --> 00:41:16,110
+you know that customer success
+
+964
+00:41:16,110 --> 00:41:19,320
+is a standard business
+unit, standard capability.
+
+965
+00:41:19,320 --> 00:41:21,120
+And things like usage analysis,
+
+966
+00:41:21,120 --> 00:41:22,710
+that's been done by product owners
+
+967
+00:41:22,710 --> 00:41:24,750
+since product owners started.
+
+968
+00:41:24,750 --> 00:41:26,370
+But the difference is that
+
+969
+00:41:26,370 --> 00:41:28,890
+now you're able to
+implement these with agents
+
+970
+00:41:28,890 --> 00:41:30,600
+without having to build up head count,
+
+971
+00:41:30,600 --> 00:41:34,080
+without having to build up
+physical teams to do this.
+
+972
+00:41:34,080 --> 00:41:37,620
+And this is really, really
+awesome because that means
+
+973
+00:41:37,620 --> 00:41:39,600
+that you can start getting
+these best-of-breed,
+
+974
+00:41:39,600 --> 00:41:42,933
+these mature SaaS attributes
+straight from day one.
+
+975
+00:41:43,800 --> 00:41:45,143
+And we can see that
+
+976
+00:41:45,143 --> 00:41:47,490
+not only is GenAI fundamentally changing
+
+977
+00:41:47,490 --> 00:41:50,040
+how we build our SaaS products,
+
+978
+00:41:50,040 --> 00:41:51,660
+it's also fundamentally changing
+
+979
+00:41:51,660 --> 00:41:54,900
+how we operate them as well.
+
+980
+00:41:54,900 --> 00:41:57,120
+And to give another example of this,
+
+981
+00:41:57,120 --> 00:41:59,700
+I'd like to pass back to Damika,
+
+982
+00:41:59,700 --> 00:42:02,040
+who's going to look at resource management
+
+983
+00:42:02,040 --> 00:42:03,363
+and resource efficiency.
+
+984
+00:42:09,120 --> 00:42:10,770
+- Thanks Dave.
+
+985
+00:42:10,770 --> 00:42:14,010
+So resource management in SaaS
+is always a balancing act.
+
+986
+00:42:14,010 --> 00:42:17,730
+You provision too little,
+it'll impact the performance.
+
+987
+00:42:17,730 --> 00:42:19,800
+If you end up provision
+too much of infrastructure,
+
+988
+00:42:19,800 --> 00:42:22,800
+it'll kill be profit margins, right?
+
+989
+00:42:22,800 --> 00:42:24,000
+So that's why it's critical
+
+990
+00:42:24,000 --> 00:42:27,273
+but also very challenging
+control plane service to have.
+
+991
+00:42:27,273 --> 00:42:30,690
+So this is where GenAI can
+help a lot to automate,
+
+992
+00:42:30,690 --> 00:42:31,980
+to improve the operational efficiency,
+
+993
+00:42:31,980 --> 00:42:34,173
+and also the agility
+of the overall module.
+
+994
+00:42:35,460 --> 00:42:36,720
+Resource management always starts
+
+995
+00:42:36,720 --> 00:42:37,890
+with the resource monitoring.
+
+996
+00:42:37,890 --> 00:42:39,600
+If you look at how we used to do that
+
+997
+00:42:39,600 --> 00:42:41,373
+in traditional SaaS applications,
+
+998
+00:42:42,750 --> 00:42:44,430
+we already had the consumption matrix
+
+999
+00:42:44,430 --> 00:42:48,120
+and the access logs of the
+tenants in the control plane.
+
+1000
+00:42:48,120 --> 00:42:51,390
+And then we define the
+service level objectives
+
+1001
+00:42:51,390 --> 00:42:53,520
+for the solution, SLOs.
+
+1002
+00:42:53,520 --> 00:42:58,520
+This stands for the
+infrastructure level thresholds
+
+1003
+00:42:58,830 --> 00:43:02,310
+that the tenants are allowed
+to use at the maximum level.
+
+1004
+00:43:02,310 --> 00:43:05,430
+And then we had the
+monitoring microservice
+
+1005
+00:43:05,430 --> 00:43:07,950
+constantly looking at the tenant usage
+
+1006
+00:43:07,950 --> 00:43:10,500
+and checking if there
+is any SLO violations.
+
+1007
+00:43:10,500 --> 00:43:14,130
+If so, there is a notification
+to the DevOps team.
+
+1008
+00:43:14,130 --> 00:43:15,780
+So the DevOps team comes in,
+
+1009
+00:43:15,780 --> 00:43:17,670
+identify the issue, identify the fix,
+
+1010
+00:43:17,670 --> 00:43:19,680
+and then verify once the fix is done,
+
+1011
+00:43:19,680 --> 00:43:21,780
+the whole bunch of manual work down there.
+
+1012
+00:43:22,920 --> 00:43:24,810
+So if you really wanna
+bring some acceleration
+
+1013
+00:43:24,810 --> 00:43:26,790
+and quick wins using GenAI,
+
+1014
+00:43:26,790 --> 00:43:31,790
+you can always lean into a
+preloaded AI agent like Kiro CLI,
+
+1015
+00:43:31,860 --> 00:43:32,760
+provide the context,
+
+1016
+00:43:32,760 --> 00:43:34,080
+let it know how the solution works,
+
+1017
+00:43:34,080 --> 00:43:37,680
+and brainstorm about the notification
+
+1018
+00:43:37,680 --> 00:43:38,550
+that you may have received
+
+1019
+00:43:38,550 --> 00:43:42,780
+or about anything directly
+about the attendance as well,
+
+1020
+00:43:42,780 --> 00:43:44,280
+it will provide some guidance.
+
+1021
+00:43:45,360 --> 00:43:48,240
+But if you really want
+to make this automated
+
+1022
+00:43:48,240 --> 00:43:50,130
+as a part of the SaaS architecture,
+
+1023
+00:43:50,130 --> 00:43:51,480
+one of the first things that you wanna do
+
+1024
+00:43:51,480 --> 00:43:55,170
+is to understand how the
+SaaS resource monitoring
+
+1025
+00:43:55,170 --> 00:43:59,163
+and the management workflow
+would work, like is,
+
+1026
+00:44:00,000 --> 00:44:02,250
+and so that, how can you automate that?
+
+1027
+00:44:02,250 --> 00:44:04,830
+So everything starts with
+the resource monitoring.
+
+1028
+00:44:04,830 --> 00:44:05,931
+Why?
+
+1029
+00:44:05,931 --> 00:44:06,930
+Because then we can
+understand the anomalies,
+
+1030
+00:44:06,930 --> 00:44:10,740
+which are the suspicious tenant activities
+
+1031
+00:44:10,740 --> 00:44:15,330
+that ideally, they are still
+violations, but with GenAI,
+
+1032
+00:44:15,330 --> 00:44:18,300
+you will see that there is
+a broader scope than that.
+
+1033
+00:44:18,300 --> 00:44:20,460
+So once we know the anomalies,
+
+1034
+00:44:20,460 --> 00:44:23,130
+then we need to figure out
+whether they are actually,
+
+1035
+00:44:23,130 --> 00:44:25,680
+if they are leading
+into anything critical,
+
+1036
+00:44:25,680 --> 00:44:26,760
+any critical conditions,
+
+1037
+00:44:26,760 --> 00:44:28,830
+anything concerning such as noise enablers
+
+1038
+00:44:28,830 --> 00:44:33,830
+or resource misuses or API
+spikes and things like that.
+
+1039
+00:44:34,680 --> 00:44:36,360
+So for that, with GenAI,
+
+1040
+00:44:36,360 --> 00:44:39,780
+we can leverage pattern recognition.
+
+1041
+00:44:39,780 --> 00:44:42,150
+So once we know the
+potential critical condition,
+
+1042
+00:44:42,150 --> 00:44:46,260
+then we can focus GenAI
+components looking at them
+
+1043
+00:44:46,260 --> 00:44:48,420
+and identify the corrective actions,
+
+1044
+00:44:48,420 --> 00:44:49,950
+which are the infrastructure level changes
+
+1045
+00:44:49,950 --> 00:44:52,470
+that we need to do to
+mitigate those conditions.
+
+1046
+00:44:52,470 --> 00:44:55,620
+And then we can go and
+fix them, monitor them,
+
+1047
+00:44:55,620 --> 00:44:58,890
+and then verify if the
+condition has been resolved.
+
+1048
+00:44:58,890 --> 00:45:01,590
+Now when you want to automate this
+
+1049
+00:45:01,590 --> 00:45:02,940
+for your SaaS application,
+
+1050
+00:45:02,940 --> 00:45:04,830
+certainly there will be
+more steps coming up,
+
+1051
+00:45:04,830 --> 00:45:07,500
+but I would consider
+this as the bare minimal
+
+1052
+00:45:07,500 --> 00:45:09,480
+that you need to automate anyway.
+
+1053
+00:45:09,480 --> 00:45:11,700
+So let's see how this
+flow can be implemented
+
+1054
+00:45:11,700 --> 00:45:13,620
+using GenAI technologies.
+
+1055
+00:45:13,620 --> 00:45:14,460
+Now for the anomalies,
+
+1056
+00:45:14,460 --> 00:45:16,290
+we are gonna implement an
+anomaly detection agent
+
+1057
+00:45:16,290 --> 00:45:19,620
+that can be triggered using
+a prompt simple workflow.
+
+1058
+00:45:19,620 --> 00:45:23,700
+It'll take the current usage
+of the tenants, and then SLOs,
+
+1059
+00:45:23,700 --> 00:45:27,000
+and leverage to the LLM
+ask for any anomalies.
+
+1060
+00:45:27,000 --> 00:45:28,510
+So in the prompt you can ask
+
+1061
+00:45:30,120 --> 00:45:33,870
+to crosscheck the current
+usage with the SLOs
+
+1062
+00:45:33,870 --> 00:45:36,660
+and also any additional
+considerations as well,
+
+1063
+00:45:36,660 --> 00:45:39,600
+such as consider on the business impact,
+
+1064
+00:45:39,600 --> 00:45:43,350
+consider on the tier configuration
+of this particular tenant
+
+1065
+00:45:43,350 --> 00:45:45,930
+and the impact to the
+other tenants of the tier,
+
+1066
+00:45:45,930 --> 00:45:47,550
+and things like that.
+
+1067
+00:45:47,550 --> 00:45:49,080
+So based on your SaaS application,
+
+1068
+00:45:49,080 --> 00:45:51,330
+you can keep on adding more
+and more considerations.
+
+1069
+00:45:51,330 --> 00:45:53,370
+So what happens is now the agent
+
+1070
+00:45:53,370 --> 00:45:58,200
+is having better and bigger
+scope to identify the anomalies
+
+1071
+00:45:58,200 --> 00:45:59,900
+without missing out anything else.
+
+1072
+00:46:02,040 --> 00:46:03,390
+So once we know the anomalies,
+
+1073
+00:46:03,390 --> 00:46:04,770
+at this stage we are gonna log them
+
+1074
+00:46:04,770 --> 00:46:06,780
+into the resource analysis data store
+
+1075
+00:46:06,780 --> 00:46:08,670
+and then move on to the next step.
+
+1076
+00:46:08,670 --> 00:46:10,710
+If you look at these anomalies,
+
+1077
+00:46:10,710 --> 00:46:13,140
+they are filled with data points
+
+1078
+00:46:13,140 --> 00:46:17,430
+that justifies why the agent
+thought this would be anomaly,
+
+1079
+00:46:17,430 --> 00:46:18,960
+such as the statistical analysis
+
+1080
+00:46:18,960 --> 00:46:20,670
+of the threshold violations,
+
+1081
+00:46:20,670 --> 00:46:22,110
+and also the LLM analysis
+
+1082
+00:46:22,110 --> 00:46:24,453
+will also provide some level of details.
+
+1083
+00:46:25,950 --> 00:46:27,810
+So once we know these anomalies,
+
+1084
+00:46:27,810 --> 00:46:28,980
+next is to identify
+
+1085
+00:46:28,980 --> 00:46:31,650
+whether these are leading
+into anything critical,
+
+1086
+00:46:31,650 --> 00:46:33,450
+any critical conditions.
+
+1087
+00:46:33,450 --> 00:46:34,283
+So for that,
+
+1088
+00:46:34,283 --> 00:46:37,353
+we are gonna add a pattern
+recognition agent in here.
+
+1089
+00:46:40,680 --> 00:46:43,200
+Now for the pattern recognition agent,
+
+1090
+00:46:43,200 --> 00:46:48,200
+we will provide the knowledge
+to the agent upfront
+
+1091
+00:46:48,780 --> 00:46:51,420
+about the potential critical condition
+
+1092
+00:46:51,420 --> 00:46:53,490
+that could have happened
+in the SaaS architecture.
+
+1093
+00:46:53,490 --> 00:46:56,250
+For example, how do you
+define a noise enabler?
+
+1094
+00:46:56,250 --> 00:46:59,670
+And how do you identify a resource misuse
+
+1095
+00:46:59,670 --> 00:47:01,470
+and security issues and things like that?
+
+1096
+00:47:01,470 --> 00:47:04,110
+So that knowledge is already
+there with the agent.
+
+1097
+00:47:04,110 --> 00:47:09,110
+So with that, when it gets
+executed with the workflow,
+
+1098
+00:47:09,990 --> 00:47:12,100
+first take the anomaly that was identified
+
+1099
+00:47:12,960 --> 00:47:15,570
+and then get the tenant ID or tenant,
+
+1100
+00:47:15,570 --> 00:47:20,570
+and then get all the current
+and the historical usage data
+
+1101
+00:47:20,790 --> 00:47:22,260
+from the control plane.
+
+1102
+00:47:22,260 --> 00:47:24,330
+And then leverage to the LLM,
+
+1103
+00:47:24,330 --> 00:47:27,033
+and then ask for potential
+critical conditions.
+
+1104
+00:47:28,110 --> 00:47:28,950
+Now through the prompt,
+
+1105
+00:47:28,950 --> 00:47:33,950
+we can specifically mention
+to conduct the usage temporal
+
+1106
+00:47:35,070 --> 00:47:37,320
+and the behavioral pattern recognition
+
+1107
+00:47:37,320 --> 00:47:38,610
+of this given anomaly
+
+1108
+00:47:38,610 --> 00:47:42,690
+against the historical
+or the usage data set,
+
+1109
+00:47:42,690 --> 00:47:45,960
+so the agent will know how
+many times this anomaly
+
+1110
+00:47:45,960 --> 00:47:48,210
+or something similar to this
+anomaly has been repeated
+
+1111
+00:47:48,210 --> 00:47:49,043
+in the past
+
+1112
+00:47:49,043 --> 00:47:51,090
+and what is the criticality
+and the importance of that
+
+1113
+00:47:51,090 --> 00:47:53,010
+so that it can map the anomaly
+
+1114
+00:47:53,010 --> 00:47:55,443
+into a critical condition that's given.
+
+1115
+00:47:56,940 --> 00:48:00,240
+So once we identify any
+potential patterns like that,
+
+1116
+00:48:00,240 --> 00:48:01,470
+we will log them in here,
+
+1117
+00:48:01,470 --> 00:48:04,920
+in the resource analysis
+data store and move forward.
+
+1118
+00:48:04,920 --> 00:48:07,410
+And these potential patterns
+will clearly mention
+
+1119
+00:48:07,410 --> 00:48:10,890
+what is the condition that is concerning.
+
+1120
+00:48:10,890 --> 00:48:13,800
+For example, in this case,
+Tenant 004 has been identified
+
+1121
+00:48:13,800 --> 00:48:15,930
+as a potential noisy neighbor.
+
+1122
+00:48:15,930 --> 00:48:16,800
+Why?
+
+1123
+00:48:16,800 --> 00:48:20,820
+That anomaly has been
+repeated about 100-plus times
+
+1124
+00:48:20,820 --> 00:48:22,716
+during last few days,
+
+1125
+00:48:22,716 --> 00:48:25,920
+70% of which has been
+during the last two hours.
+
+1126
+00:48:25,920 --> 00:48:29,880
+And also the agent has
+predicted that 80% of that
+
+1127
+00:48:29,880 --> 00:48:33,390
+will likely to happen in the
+next three hours as well.
+
+1128
+00:48:33,390 --> 00:48:37,170
+It relates to heavy CPU and resource usage
+
+1129
+00:48:37,170 --> 00:48:38,790
+during the off-peak time,
+
+1130
+00:48:38,790 --> 00:48:41,553
+certainly someone has to
+look into this immediately.
+
+1131
+00:48:43,380 --> 00:48:45,480
+However, if you look at our architecture,
+
+1132
+00:48:45,480 --> 00:48:47,970
+we are not yet ready to process
+those critical conditions,
+
+1133
+00:48:47,970 --> 00:48:49,710
+we just have a couple of agents only,
+
+1134
+00:48:49,710 --> 00:48:51,510
+so it needs some improvement.
+
+1135
+00:48:51,510 --> 00:48:53,550
+First improvement, we are
+gonna have a supervisor agent
+
+1136
+00:48:53,550 --> 00:48:56,340
+for the orchestration,
+and then we will introduce
+
+1137
+00:48:56,340 --> 00:48:59,190
+a condition specific agentic layer
+
+1138
+00:48:59,190 --> 00:49:01,650
+where there will be a dedicated agent
+
+1139
+00:49:01,650 --> 00:49:04,020
+per critical condition.
+
+1140
+00:49:04,020 --> 00:49:07,410
+One for noise neighbors, one
+for handling resource misuses,
+
+1141
+00:49:07,410 --> 00:49:09,600
+maybe one for security as well
+
+1142
+00:49:09,600 --> 00:49:11,640
+who will be handling cases like
+
+1143
+00:49:11,640 --> 00:49:14,433
+unauthorized cross-tenant
+data access and so on.
+
+1144
+00:49:15,360 --> 00:49:16,320
+So the advantage is that
+
+1145
+00:49:16,320 --> 00:49:19,170
+now I can provide focused knowledge,
+
+1146
+00:49:19,170 --> 00:49:22,260
+the tools, and the capabilities agent-wise
+
+1147
+00:49:22,260 --> 00:49:25,470
+based on their focus area,
+
+1148
+00:49:25,470 --> 00:49:28,380
+based on the condition
+that they're focusing on
+
+1149
+00:49:28,380 --> 00:49:30,750
+so that their decision-making capabilities
+
+1150
+00:49:30,750 --> 00:49:33,453
+will be much more advanced and accurate.
+
+1151
+00:49:34,920 --> 00:49:38,060
+So maybe the final enhancement
+to the architecture
+
+1152
+00:49:38,060 --> 00:49:38,893
+at this stage is
+
+1153
+00:49:38,893 --> 00:49:41,130
+if you look at the resource
+analysis data store,
+
+1154
+00:49:41,130 --> 00:49:43,020
+we have been keep on
+adding all the anomalies,
+
+1155
+00:49:43,020 --> 00:49:45,450
+the patterns, critical conditions,
+
+1156
+00:49:45,450 --> 00:49:46,590
+and down the line you will see
+
+1157
+00:49:46,590 --> 00:49:48,390
+we'll add all the corrective actions
+
+1158
+00:49:48,390 --> 00:49:50,400
+and the actual fixes that we are doing
+
+1159
+00:49:50,400 --> 00:49:52,080
+into the same data store.
+
+1160
+00:49:52,080 --> 00:49:53,850
+So over time,
+
+1161
+00:49:53,850 --> 00:49:56,700
+this data source is gonna be
+the single source of truth
+
+1162
+00:49:56,700 --> 00:49:58,920
+that represent the entire SaaS monitoring
+
+1163
+00:49:58,920 --> 00:50:02,250
+and the management module
+of the SaaS application.
+
+1164
+00:50:02,250 --> 00:50:04,290
+It's a huge amount of knowledge.
+
+1165
+00:50:04,290 --> 00:50:07,080
+So what we can do is
+I'm gonna connote this
+
+1166
+00:50:07,080 --> 00:50:10,140
+into a vector store and build
+a knowledge base out of that,
+
+1167
+00:50:10,140 --> 00:50:11,490
+and then inject that knowledge
+
+1168
+00:50:11,490 --> 00:50:14,550
+to each and every specialist
+agent that I have.
+
+1169
+00:50:14,550 --> 00:50:16,950
+So now they are more capable,
+
+1170
+00:50:16,950 --> 00:50:19,440
+the addition making would
+be much more accurate
+
+1171
+00:50:19,440 --> 00:50:21,933
+with the historical knowledge as well.
+
+1172
+00:50:23,130 --> 00:50:23,963
+Now with this,
+
+1173
+00:50:23,963 --> 00:50:26,970
+if you move on to the architecture
+
+1174
+00:50:26,970 --> 00:50:28,920
+and then see if you have a noisy neighbor,
+
+1175
+00:50:28,920 --> 00:50:31,350
+potential noisy neighbor to handle,
+
+1176
+00:50:31,350 --> 00:50:33,270
+like in our previous example,
+
+1177
+00:50:33,270 --> 00:50:35,790
+the supervisor agent just need to trigger
+
+1178
+00:50:35,790 --> 00:50:36,630
+the noisy neighbor agent
+
+1179
+00:50:36,630 --> 00:50:39,570
+which is already configured
+with the knowledge and the tools
+
+1180
+00:50:39,570 --> 00:50:42,990
+and it'll refer to the potential pattern
+
+1181
+00:50:42,990 --> 00:50:46,653
+and then ask for two things from the LLM,
+
+1182
+00:50:48,030 --> 00:50:50,430
+can you confirm whether this
+is actually a noisy neighbor?
+
+1183
+00:50:50,430 --> 00:50:53,310
+So the agent will use
+the existing knowledge
+
+1184
+00:50:53,310 --> 00:50:56,130
+to decide whether that is
+a noisy neighbor or not.
+
+1185
+00:50:56,130 --> 00:50:59,730
+If yes, what are the corrective
+actions we need to do
+
+1186
+00:50:59,730 --> 00:51:01,113
+to mitigate the situation?
+
+1187
+00:51:02,880 --> 00:51:04,443
+So if you look at the output,
+
+1188
+00:51:06,240 --> 00:51:08,520
+it will clearly mention the confirmation
+
+1189
+00:51:08,520 --> 00:51:10,920
+and also the corrective
+actions that we need to do
+
+1190
+00:51:10,920 --> 00:51:12,483
+at the infrastructure level.
+
+1191
+00:51:13,500 --> 00:51:17,910
+So this format will be same
+for all the critical conditions
+
+1192
+00:51:17,910 --> 00:51:20,073
+that you're gonna have in our solution.
+
+1193
+00:51:23,520 --> 00:51:24,780
+Now this is great, right?
+
+1194
+00:51:24,780 --> 00:51:25,613
+This is great.
+
+1195
+00:51:25,613 --> 00:51:28,290
+But the big question is
+who's gonna verify this?
+
+1196
+00:51:28,290 --> 00:51:29,580
+Who's gonna do this?
+
+1197
+00:51:29,580 --> 00:51:31,620
+Traditionally, we had
+our DevOps team coming in
+
+1198
+00:51:31,620 --> 00:51:33,570
+and doing these infrastructural changes,
+
+1199
+00:51:33,570 --> 00:51:36,150
+but now we have an agentic layer
+
+1200
+00:51:36,150 --> 00:51:37,290
+doing most of the stuff for us.
+
+1201
+00:51:37,290 --> 00:51:40,680
+So where we have to lean in in this case.
+
+1202
+00:51:40,680 --> 00:51:42,120
+So there are many options.
+
+1203
+00:51:42,120 --> 00:51:43,300
+So my recommendation is
+
+1204
+00:51:44,280 --> 00:51:46,710
+when you have these kind
+of corrective actions
+
+1205
+00:51:46,710 --> 00:51:50,100
+or critical conditions found
+in your SaaS application,
+
+1206
+00:51:50,100 --> 00:51:52,530
+prompt that to a natural
+language interface
+
+1207
+00:51:52,530 --> 00:51:54,810
+and have a human in the loop.
+
+1208
+00:51:54,810 --> 00:51:59,340
+Ideally an expert in the house
+on DevOps who can come in
+
+1209
+00:51:59,340 --> 00:52:01,200
+and review these critical conditions
+
+1210
+00:52:01,200 --> 00:52:03,750
+at the corrective actions.
+
+1211
+00:52:03,750 --> 00:52:07,200
+And then maybe ask questions
+from the agentic layer
+
+1212
+00:52:07,200 --> 00:52:09,930
+about these options, get to know them more
+
+1213
+00:52:09,930 --> 00:52:13,260
+and verify what needs to
+be executed out of these,
+
+1214
+00:52:13,260 --> 00:52:14,580
+if not all.
+
+1215
+00:52:14,580 --> 00:52:17,820
+And then use the existing
+DevOps and the GenAI tools
+
+1216
+00:52:17,820 --> 00:52:19,710
+to do the fixes
+
+1217
+00:52:19,710 --> 00:52:21,810
+and let the supervisor agent know about it
+
+1218
+00:52:23,160 --> 00:52:26,040
+so that it can self-generate a prompt
+
+1219
+00:52:26,040 --> 00:52:28,710
+that will trigger the existing pipeline,
+
+1220
+00:52:28,710 --> 00:52:31,500
+but this time only for
+this particular tenant
+
+1221
+00:52:31,500 --> 00:52:36,123
+and only to verify the fixes
+for the critical condition.
+
+1222
+00:52:37,020 --> 00:52:37,853
+That's it.
+
+1223
+00:52:37,853 --> 00:52:42,660
+So that way we are kind of
+reusing the same workflow,
+
+1224
+00:52:42,660 --> 00:52:45,510
+same pipeline without having any,
+
+1225
+00:52:45,510 --> 00:52:49,230
+without needing to have any
+additional instrumentation
+
+1226
+00:52:49,230 --> 00:52:50,910
+for monitor and verify.
+
+1227
+00:52:50,910 --> 00:52:53,760
+What we can do is we can even
+have a verification window
+
+1228
+00:52:53,760 --> 00:52:56,430
+during which we will run
+this prompt few times
+
+1229
+00:52:56,430 --> 00:53:00,393
+just to absolutely make
+sure that the fix worked.
+
+1230
+00:53:01,920 --> 00:53:02,753
+All right.
+
+1231
+00:53:02,753 --> 00:53:06,150
+So again, when you
+wanna kind of adopt this
+
+1232
+00:53:06,150 --> 00:53:07,170
+to a new SaaS application,
+
+1233
+00:53:07,170 --> 00:53:11,160
+I highly recommend to have
+the human in the loop option
+
+1234
+00:53:11,160 --> 00:53:13,260
+that will improve the confidence
+
+1235
+00:53:13,260 --> 00:53:16,050
+of the infrastructure level
+changes that you are doing
+
+1236
+00:53:16,050 --> 00:53:17,010
+in your production system.
+
+1237
+00:53:17,010 --> 00:53:20,340
+And also it'll help you to
+understand overall accuracy
+
+1238
+00:53:20,340 --> 00:53:22,170
+of the output of the agentic layer
+
+1239
+00:53:22,170 --> 00:53:25,170
+so any improvements can be identified.
+
+1240
+00:53:25,170 --> 00:53:28,620
+So you can keep on
+modernizing the agentic layer
+
+1241
+00:53:28,620 --> 00:53:31,860
+until you have a better
+confidence about the output
+
+1242
+00:53:31,860 --> 00:53:33,990
+so that you can even plan to pass
+
+1243
+00:53:33,990 --> 00:53:36,660
+or hand off some of the responsibilities
+
+1244
+00:53:36,660 --> 00:53:38,283
+to the agentic layer as well.
+
+1245
+00:53:39,390 --> 00:53:40,590
+Hope this will help you
+
+1246
+00:53:40,590 --> 00:53:43,305
+to entirely automate your SaaS monitoring
+
+1247
+00:53:43,305 --> 00:53:48,243
+and the management layer by
+using GenAI technologies.
+
+1248
+00:53:49,350 --> 00:53:53,070
+All right, so we talked
+a lot about GenAI today
+
+1249
+00:53:53,070 --> 00:53:54,780
+and how we can bring
+the GenAI capabilities
+
+1250
+00:53:54,780 --> 00:53:56,180
+into the SaaS control plane.
+
+1251
+00:53:57,240 --> 00:53:59,880
+We took a lot of examples
+in explaining that as well.
+
+1252
+00:53:59,880 --> 00:54:03,210
+So in summary as key takeaways,
+
+1253
+00:54:03,210 --> 00:54:07,620
+if you are early into
+the process, start small.
+
+1254
+00:54:07,620 --> 00:54:09,360
+There are enough preloaded AI agents
+
+1255
+00:54:09,360 --> 00:54:11,100
+and MCP service out there
+
+1256
+00:54:11,100 --> 00:54:12,690
+that you can use to put together,
+
+1257
+00:54:12,690 --> 00:54:13,980
+get something up and running,
+
+1258
+00:54:13,980 --> 00:54:16,950
+that show some results real
+quick in your control plane.
+
+1259
+00:54:16,950 --> 00:54:20,280
+So always lead your teams
+to that to start with.
+
+1260
+00:54:20,280 --> 00:54:22,350
+If you are there already,
+
+1261
+00:54:22,350 --> 00:54:24,150
+identify a few areas
+that you can modernize
+
+1262
+00:54:24,150 --> 00:54:27,720
+in your control plane and bring
+the agentic capabilities in.
+
+1263
+00:54:27,720 --> 00:54:28,590
+I highly recommend
+
+1264
+00:54:28,590 --> 00:54:32,010
+you have a closer look at
+Amazon Bedrock AgentCore service
+
+1265
+00:54:32,010 --> 00:54:34,893
+and its features, it has
+a lot to offer to you.
+
+1266
+00:54:36,780 --> 00:54:39,060
+Feel free to bring the right tools
+
+1267
+00:54:39,060 --> 00:54:40,830
+and bring the right
+capabilities to the agent
+
+1268
+00:54:40,830 --> 00:54:43,830
+so that their decision making
+capabilities will be higher.
+
+1269
+00:54:43,830 --> 00:54:45,900
+And also always start with the data.
+
+1270
+00:54:45,900 --> 00:54:50,190
+If you don't see the right data
+set that an agent requires,
+
+1271
+00:54:50,190 --> 00:54:52,290
+start from instrumenting
+the application plane
+
+1272
+00:54:52,290 --> 00:54:54,960
+and bring the data set
+first into the control plane
+
+1273
+00:54:54,960 --> 00:54:57,633
+so that you can then talk
+about the agentic workflow.
+
+1274
+00:54:58,590 --> 00:55:00,450
+So finally take the leadership
+
+1275
+00:55:00,450 --> 00:55:04,170
+to kind of provide the
+guidance required to your team
+
+1276
+00:55:04,170 --> 00:55:06,450
+and the organization to
+bring the GenAI capabilities
+
+1277
+00:55:06,450 --> 00:55:07,770
+into this control plane.
+
+1278
+00:55:07,770 --> 00:55:09,060
+Now that you know,
+
+1279
+00:55:09,060 --> 00:55:11,760
+it's not only the automation
+and the operational efficiency,
+
+1280
+00:55:11,760 --> 00:55:14,100
+but it can also help things
+
+1281
+00:55:14,100 --> 00:55:16,590
+like maximizing the profit margin
+
+1282
+00:55:16,590 --> 00:55:18,190
+of the SaaS application as well.
+
+1283
+00:55:21,540 --> 00:55:24,270
+Now we went through these
+three use cases much deeply
+
+1284
+00:55:24,270 --> 00:55:26,160
+in terms of the design and implementation
+
+1285
+00:55:26,160 --> 00:55:29,250
+just to showcase you what is
+possible and how it is done.
+
+1286
+00:55:29,250 --> 00:55:32,760
+So I highly recommend that
+you plan to implement them
+
+1287
+00:55:32,760 --> 00:55:34,170
+in your SAS application,
+
+1288
+00:55:34,170 --> 00:55:36,870
+and in general my call to
+action for you all would be,
+
+1289
+00:55:36,870 --> 00:55:41,730
+identify the remaining
+control plane services as well
+
+1290
+00:55:41,730 --> 00:55:44,430
+that you wanna modernize and
+feel free to bring the agents
+
+1291
+00:55:44,430 --> 00:55:48,993
+and the GenAI capabilities into
+the implementation as well.
+
+1292
+00:55:49,920 --> 00:55:50,753
+All right everybody,
+
+1293
+00:55:50,753 --> 00:55:51,750
+so this is the kind of content
+
+1294
+00:55:51,750 --> 00:55:53,190
+that we want to share with you all.
+
+1295
+00:55:53,190 --> 00:55:55,410
+I hope this is what you expected
+from the session as well,
+
+1296
+00:55:55,410 --> 00:55:57,870
+and I believe now you
+have a better perspective,
+
+1297
+00:55:57,870 --> 00:56:00,210
+better confidence about bringing GenAI
+
+1298
+00:56:00,210 --> 00:56:04,200
+and the agentic capabilities
+into the control plane.
+
+1299
+00:56:04,200 --> 00:56:06,870
+Just a quick couple of
+things before wrapping up.
+
+1300
+00:56:06,870 --> 00:56:08,310
+These are some of the SaaS sessions
+
+1301
+00:56:08,310 --> 00:56:11,490
+that our team is hosting
+during next few days
+
+1302
+00:56:11,490 --> 00:56:12,323
+in the re:Invent as well.
+
+1303
+00:56:12,323 --> 00:56:15,030
+So if you're interested,
+please take a note of it.
+
+1304
+00:56:15,030 --> 00:56:17,700
+There are some workshops
+and the builder sessions
+
+1305
+00:56:17,700 --> 00:56:20,163
+that will be very hands-on as well.
+
+1306
+00:56:22,860 --> 00:56:24,960
+And finally, there should be a survey link
+
+1307
+00:56:24,960 --> 00:56:26,970
+for this particular
+session in your mobile lab.
+
+1308
+00:56:26,970 --> 00:56:29,910
+So please let us know your
+feedback, super important.
+
+1309
+00:56:29,910 --> 00:56:31,800
+We will be looking at
+them with high interest
+
+1310
+00:56:31,800 --> 00:56:33,030
+to learn from you
+
+1311
+00:56:33,030 --> 00:56:36,840
+and also to shape up our future
+re:Invent sessions as well.
+
+1312
+00:56:36,840 --> 00:56:37,980
+All right, everybody,
+
+1313
+00:56:37,980 --> 00:56:39,930
+a huge thank you to all of you
+
+1314
+00:56:39,930 --> 00:56:41,280
+for being here in this evening.
+
+1315
+00:56:41,280 --> 00:56:43,500
+Thanks Dave for co-presenting
+with me as well.
+
+1316
+00:56:43,500 --> 00:56:45,570
+I wish you all have a
+awesome remaining part
+
+1317
+00:56:45,570 --> 00:56:46,800
+of the re:Invent, everybody.
+
+1318
+00:56:46,800 --> 00:56:48,688
+Have a wonderful evening.
+
+1319
+00:56:48,688 --> 00:56:49,908
+(audience applauds)
+

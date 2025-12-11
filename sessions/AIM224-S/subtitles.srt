@@ -1,0 +1,1352 @@
+1
+00:00:00,089 --> 00:00:00,708
+Hello.
+
+2
+00:00:01,409 --> 00:00:03,649
+Hi, uh, very nice to meet you all. Uh,
+
+3
+00:00:03,729 --> 00:00:06,049
+my name is Patrick Gritzka. I am a senior
+
+4
+00:00:06,049 --> 00:00:08,169
+solutions architect at Cloudflare, specifically
+
+5
+00:00:08,169 --> 00:00:08,909
+covering our,
+
+6
+00:00:09,169 --> 00:00:10,489
+uh, developer platform.
+
+7
+00:00:10,839 --> 00:00:11,470
+Um,
+
+8
+00:00:12,500 --> 00:00:14,569
+our developer platform is essentially
+
+9
+00:00:14,569 --> 00:00:16,600
+focused around offerings like workers.
+
+10
+00:00:16,870 --> 00:00:18,239
+It is a
+
+11
+00:00:18,769 --> 00:00:21,239
+serverless edge-based, um,
+
+12
+00:00:21,850 --> 00:00:23,949
+basically compute offering that, that gives you both
+
+13
+00:00:24,170 --> 00:00:26,469
+storage as well as, uh,
+
+14
+00:00:27,089 --> 00:00:29,289
+workflow and compute primitives. Um.
+
+15
+00:00:29,899 --> 00:00:32,219
+What I'll be presenting to you today is
+
+16
+00:00:32,219 --> 00:00:33,560
+essentially a session around
+
+17
+00:00:33,899 --> 00:00:35,259
+building MCP servers.
+
+18
+00:00:35,569 --> 00:00:36,118
+Um,
+
+19
+00:00:36,380 --> 00:00:38,500
+we have worked with a lot of companies to help them
+
+20
+00:00:38,500 --> 00:00:40,819
+bring their first production MCP servers,
+
+21
+00:00:41,130 --> 00:00:43,139
+uh, live this year. Um,
+
+22
+00:00:43,259 --> 00:00:45,478
+we did, we worked with a large batch of companies
+
+23
+00:00:45,899 --> 00:00:47,899
+earlier in about April or March
+
+24
+00:00:47,899 --> 00:00:48,899
+of this year to,
+
+25
+00:00:49,259 --> 00:00:52,039
+to push things forward in a nice wave. Um,
+
+26
+00:00:53,298 --> 00:00:55,459
+we'll, we'll start, I guess, at the very
+
+27
+00:00:55,459 --> 00:00:56,520
+start in terms of
+
+28
+00:00:57,340 --> 00:00:58,219
+what is MCP.
+
+29
+00:00:58,590 --> 00:01:00,829
+Uh, MCP was defined late last
+
+30
+00:01:00,829 --> 00:01:01,908
+year by Anthropic.
+
+31
+00:01:02,228 --> 00:01:04,299
+Uh, MCP is model context
+
+32
+00:01:04,299 --> 00:01:04,930
+protocol.
+
+33
+00:01:05,349 --> 00:01:05,918
+Um,
+
+34
+00:01:06,838 --> 00:01:08,870
+MCP servers essentially are
+
+35
+00:01:08,870 --> 00:01:10,659
+acting as almost like a
+
+36
+00:01:11,599 --> 00:01:13,819
+similar to, to what you might have
+
+37
+00:01:13,989 --> 00:01:16,239
+looked at for APIs in the past
+
+38
+00:01:16,239 --> 00:01:17,299
+as a means of
+
+39
+00:01:17,918 --> 00:01:20,379
+allowing interoperability between
+
+40
+00:01:20,480 --> 00:01:22,698
+siloed data among different
+
+41
+00:01:22,698 --> 00:01:24,838
+applications. Um, what MCPs
+
+42
+00:01:24,838 --> 00:01:25,750
+now serve as
+
+43
+00:01:26,040 --> 00:01:28,799
+are essentially an interface that allows
+
+44
+00:01:28,799 --> 00:01:29,459
+for
+
+45
+00:01:29,799 --> 00:01:31,900
+your LLM based agents
+
+46
+00:01:32,159 --> 00:01:33,299
+to interact with.
+
+47
+00:01:34,230 --> 00:01:35,638
+That otherwise siloed data.
+
+48
+00:01:35,948 --> 00:01:37,948
+So, if you want to have an agent
+
+49
+00:01:37,948 --> 00:01:38,969
+be able to
+
+50
+00:01:39,549 --> 00:01:41,028
+update a Slack message,
+
+51
+00:01:41,308 --> 00:01:42,308
+update a Jira ticket,
+
+52
+00:01:42,588 --> 00:01:44,709
+update uh any of this content that's
+
+53
+00:01:44,709 --> 00:01:45,829
+available across
+
+54
+00:01:46,230 --> 00:01:47,379
+specific services,
+
+55
+00:01:47,668 --> 00:01:49,790
+an MCP server can act as
+
+56
+00:01:49,790 --> 00:01:50,489
+essentially
+
+57
+00:01:50,790 --> 00:01:52,010
+that interface
+
+58
+00:01:52,278 --> 00:01:54,299
+for providing tools,
+
+59
+00:01:54,430 --> 00:01:56,349
+and a tool will be,
+
+60
+00:01:56,668 --> 00:01:58,739
+um, depending on the complexity of it,
+
+61
+00:01:58,790 --> 00:02:01,260
+it can be something as simple as surfacing
+
+62
+00:02:01,260 --> 00:02:01,849
+up again.
+
+63
+00:02:02,308 --> 00:02:03,528
+An existing API,
+
+64
+00:02:03,948 --> 00:02:05,948
+but it can also be more complex. It can have
+
+65
+00:02:05,948 --> 00:02:08,028
+more custom logic, and it can also
+
+66
+00:02:08,028 --> 00:02:10,069
+have more flexibility because you can still
+
+67
+00:02:10,069 --> 00:02:11,729
+rely on an LLM to
+
+68
+00:02:12,028 --> 00:02:12,729
+not only
+
+69
+00:02:13,110 --> 00:02:14,129
+call an individual.
+
+70
+00:02:15,800 --> 00:02:17,520
+You know, an individual API,
+
+71
+00:02:17,879 --> 00:02:19,979
+but to actually make plans and to
+
+72
+00:02:20,338 --> 00:02:22,860
+to really execute more complex tasks.
+
+73
+00:02:25,278 --> 00:02:25,849
+So
+
+74
+00:02:26,830 --> 00:02:27,588
+We believe that
+
+75
+00:02:27,868 --> 00:02:29,939
+we have a pretty compelling offering and way for
+
+76
+00:02:29,939 --> 00:02:31,990
+you to launch MCP servers
+
+77
+00:02:31,990 --> 00:02:34,460
+that allow you to both move quickly,
+
+78
+00:02:35,949 --> 00:02:37,528
+maintain maintain developer velocity,
+
+79
+00:02:37,800 --> 00:02:40,360
+while minimalizing operational overhead.
+
+80
+00:02:40,588 --> 00:02:42,710
+Um, I think there are some varying
+
+81
+00:02:42,710 --> 00:02:43,969
+opinions in terms of
+
+82
+00:02:45,439 --> 00:02:47,588
+what the future looks like in terms of how many MCP
+
+83
+00:02:47,588 --> 00:02:49,429
+servers organizations may run.
+
+84
+00:02:49,758 --> 00:02:51,149
+Um, we.
+
+85
+00:02:51,740 --> 00:02:54,258
+Uh, just of, of our own kind of cloud flare,
+
+86
+00:02:54,550 --> 00:02:56,588
+uh, remote MCP offerings have,
+
+87
+00:02:56,669 --> 00:02:58,710
+I think, about 13 of them that run, run the
+
+88
+00:02:58,710 --> 00:02:59,649
+gamut from
+
+89
+00:02:59,909 --> 00:03:01,949
+observability MCPs that surface up your
+
+90
+00:03:01,949 --> 00:03:04,469
+logs to your coding agents to documentation
+
+91
+00:03:04,469 --> 00:03:06,169
+ones, to ones that even offer up,
+
+92
+00:03:06,429 --> 00:03:08,550
+um, some of our services like radar as
+
+93
+00:03:08,550 --> 00:03:09,889
+availability. And
+
+94
+00:03:10,330 --> 00:03:12,210
+I think there will be an aspect where
+
+95
+00:03:12,788 --> 00:03:14,368
+giving customers the ability to make.
+
+96
+00:03:15,189 --> 00:03:17,308
+Granular choices in terms of what features
+
+97
+00:03:17,308 --> 00:03:19,538
+and functionality they want to incorporate into their
+
+98
+00:03:19,788 --> 00:03:21,649
+workloads is probably going to be
+
+99
+00:03:22,389 --> 00:03:24,288
+a bit of a winning strategy there.
+
+100
+00:03:24,629 --> 00:03:25,149
+Um.
+
+101
+00:03:26,080 --> 00:03:28,199
+Touching back on our initial demo day earlier
+
+102
+00:03:28,199 --> 00:03:30,758
+this year, uh, companies like PayPal,
+
+103
+00:03:30,919 --> 00:03:33,639
+Stripe, Webflow, Block, Atlassian,
+
+104
+00:03:33,879 --> 00:03:36,169
+uh, all worked with us to launch their first MCP
+
+105
+00:03:36,169 --> 00:03:37,528
+servers. Um,
+
+106
+00:03:37,800 --> 00:03:38,860
+it's also why
+
+107
+00:03:39,278 --> 00:03:41,439
+we feel very confident saying that we're one of the
+
+108
+00:03:41,439 --> 00:03:43,479
+fastest places where you can build an MCP
+
+109
+00:03:43,479 --> 00:03:45,558
+server. Um, PayPal worked with us
+
+110
+00:03:45,558 --> 00:03:47,929
+to within 3 days go from a concept
+
+111
+00:03:47,929 --> 00:03:50,080
+of what can they deliver
+
+112
+00:03:50,080 --> 00:03:52,360
+to essentially having a production ready MCP
+
+113
+00:03:52,360 --> 00:03:55,099
+server for their invoicing scenarios.
+
+114
+00:03:57,308 --> 00:03:59,050
+Um, in terms of
+
+115
+00:04:00,349 --> 00:04:02,409
+what you get with an MCP server on our platform,
+
+116
+00:04:02,710 --> 00:04:04,719
+uh, you can use our agents SDK.
+
+117
+00:04:05,710 --> 00:04:07,538
+An MCP server is not a
+
+118
+00:04:07,909 --> 00:04:09,990
+kind of packaged product. It is built on
+
+119
+00:04:09,990 --> 00:04:11,649
+top of our primitives. So
+
+120
+00:04:12,000 --> 00:04:12,528
+you'll
+
+121
+00:04:12,868 --> 00:04:15,028
+essentially your MCP server will be an abstraction
+
+122
+00:04:15,028 --> 00:04:15,939
+on top of,
+
+123
+00:04:16,230 --> 00:04:18,470
+uh, services like our durable objects.
+
+124
+00:04:18,709 --> 00:04:21,329
+Our durable objects offer Serverless
+
+125
+00:04:21,329 --> 00:04:23,449
+compute tied with stateful storage.
+
+126
+00:04:23,769 --> 00:04:26,127
+So that allows you to have both scale
+
+127
+00:04:26,127 --> 00:04:27,668
+to zero compute for
+
+128
+00:04:27,927 --> 00:04:28,627
+the actual,
+
+129
+00:04:28,889 --> 00:04:29,449
+um,
+
+130
+00:04:29,848 --> 00:04:32,228
+the actual calls that are made to your, to your server,
+
+131
+00:04:32,449 --> 00:04:34,519
+while still maintaining a state full back end
+
+132
+00:04:34,519 --> 00:04:35,988
+that is able to maintain
+
+133
+00:04:36,288 --> 00:04:38,408
+both your short-term and long-term memory for
+
+134
+00:04:38,408 --> 00:04:40,269
+your ongoing conversations.
+
+135
+00:04:40,877 --> 00:04:41,389
+Um,
+
+136
+00:04:41,889 --> 00:04:44,098
+this also runs on our distributed architecture,
+
+137
+00:04:44,168 --> 00:04:45,548
+so you get the benefit of,
+
+138
+00:04:45,848 --> 00:04:48,220
+uh, Having a single global
+
+139
+00:04:48,220 --> 00:04:50,220
+data plane. So regardless of if you have
+
+140
+00:04:50,220 --> 00:04:51,949
+users coming in from
+
+141
+00:04:52,459 --> 00:04:53,379
+the United States,
+
+142
+00:04:53,730 --> 00:04:55,298
+Europe, Asia, um,
+
+143
+00:04:55,819 --> 00:04:58,230
+without having to manage separate control clusters,
+
+144
+00:04:58,500 --> 00:05:00,850
+uh, manage separate updates across regions
+
+145
+00:05:00,850 --> 00:05:03,019
+or availability zones, uh, you get the benefit
+
+146
+00:05:03,019 --> 00:05:05,019
+of having localized compute for each of them
+
+147
+00:05:05,019 --> 00:05:07,358
+and localized as well as storage for their
+
+148
+00:05:07,410 --> 00:05:08,798
+conversations, uh, without,
+
+149
+00:05:09,189 --> 00:05:10,778
+again, operational overhead.
+
+150
+00:05:12,928 --> 00:05:15,858
+Um MCP
+
+151
+00:05:15,858 --> 00:05:16,619
+is,
+
+152
+00:05:16,980 --> 00:05:19,139
+well, many of you probably already
+
+153
+00:05:19,139 --> 00:05:21,379
+have, have many conversations around MCP,
+
+154
+00:05:21,420 --> 00:05:23,699
+but part of the reason for the excitement
+
+155
+00:05:23,699 --> 00:05:26,059
+is that this feels like a new channel. This
+
+156
+00:05:26,059 --> 00:05:28,759
+feels like a means of now making
+
+157
+00:05:29,459 --> 00:05:31,939
+services available through essentially
+
+158
+00:05:32,048 --> 00:05:34,399
+agentic interactions. It feels like
+
+159
+00:05:34,858 --> 00:05:36,980
+if companies, if, you
+
+160
+00:05:36,980 --> 00:05:39,059
+know, whether those are public services
+
+161
+00:05:39,059 --> 00:05:39,600
+like
+
+162
+00:05:39,939 --> 00:05:40,738
+um,
+
+163
+00:05:41,750 --> 00:05:43,608
+Like, you know, even public sector,
+
+164
+00:05:43,869 --> 00:05:46,579
+uh, interfaces, or even if those are, uh,
+
+165
+00:05:46,588 --> 00:05:48,790
+more like e-commerce, uh, interactions,
+
+166
+00:05:48,869 --> 00:05:49,608
+it feels like
+
+167
+00:05:49,910 --> 00:05:52,088
+if companies aren't surfacing up
+
+168
+00:05:52,428 --> 00:05:54,548
+their products, their offerings,
+
+169
+00:05:54,670 --> 00:05:55,769
+their means of
+
+170
+00:05:56,069 --> 00:05:58,189
+completing conversions and completing transactions
+
+171
+00:05:58,189 --> 00:06:00,230
+and surfacing up information through an MCP
+
+172
+00:06:00,230 --> 00:06:02,309
+server, they may be passed
+
+173
+00:06:02,309 --> 00:06:04,548
+by because to a degree, this is, this
+
+174
+00:06:05,069 --> 00:06:05,769
+feels like.
+
+175
+00:06:07,369 --> 00:06:09,809
+How information is going to be surfaced up through this
+
+176
+00:06:10,048 --> 00:06:11,670
+interface that seems to be
+
+177
+00:06:12,129 --> 00:06:14,750
+kind of encroaching on what search has traditionally,
+
+178
+00:06:14,910 --> 00:06:15,470
+um,
+
+179
+00:06:16,358 --> 00:06:17,619
+search has traditionally covered.
+
+180
+00:06:19,369 --> 00:06:20,189
+OK.
+
+181
+00:06:24,399 --> 00:06:27,209
+You know. OK.
+
+182
+00:06:27,519 --> 00:06:29,678
+So, here, uh, I have just a simple
+
+183
+00:06:29,678 --> 00:06:31,949
+chat interface that plugs into one of our MCP
+
+184
+00:06:31,949 --> 00:06:32,579
+servers.
+
+185
+00:06:32,838 --> 00:06:33,459
+Um,
+
+186
+00:06:34,119 --> 00:06:36,160
+what this MCP server is doing is
+
+187
+00:06:36,160 --> 00:06:37,949
+it is interacting with,
+
+188
+00:06:38,278 --> 00:06:38,879
+um,
+
+189
+00:06:39,278 --> 00:06:41,389
+within the durable object. It has access to
+
+190
+00:06:41,389 --> 00:06:42,470
+all of our services.
+
+191
+00:06:42,798 --> 00:06:45,000
+So it is able to make use of services
+
+192
+00:06:45,000 --> 00:06:46,319
+like our
+
+193
+00:06:47,019 --> 00:06:47,879
+Um,
+
+194
+00:06:49,769 --> 00:06:51,838
+Like our browser rendering services,
+
+195
+00:06:52,040 --> 00:06:54,088
+in order to actually interact with web pages.
+
+196
+00:06:54,290 --> 00:06:56,329
+So, um, your agents
+
+197
+00:06:56,329 --> 00:06:58,689
+may not always have clearly defined APIs
+
+198
+00:06:58,689 --> 00:07:00,528
+that they can call and interact with,
+
+199
+00:07:00,850 --> 00:07:01,509
+um,
+
+200
+00:07:02,178 --> 00:07:04,028
+but using options like
+
+201
+00:07:04,809 --> 00:07:06,850
+essentially browser rendering, which gives you
+
+202
+00:07:06,850 --> 00:07:08,689
+a headless browser and allows you to then
+
+203
+00:07:09,079 --> 00:07:11,199
+Uh, both scrape content from
+
+204
+00:07:11,199 --> 00:07:13,238
+it in HTML, Markdown,
+
+205
+00:07:13,358 --> 00:07:14,309
+JSON format,
+
+206
+00:07:14,600 --> 00:07:16,720
+but also have puppeteer-style interactions
+
+207
+00:07:16,720 --> 00:07:17,540
+in terms of
+
+208
+00:07:17,798 --> 00:07:20,379
+clicking buttons, entering text
+
+209
+00:07:20,379 --> 00:07:22,480
+content. Um, you're able to, to
+
+210
+00:07:22,480 --> 00:07:24,519
+actually, again, interface with pages and
+
+211
+00:07:24,519 --> 00:07:26,899
+allow your agent to plan interactions
+
+212
+00:07:27,278 --> 00:07:28,449
+without needing to
+
+213
+00:07:28,838 --> 00:07:29,358
+beforehand.
+
+214
+00:07:30,309 --> 00:07:31,528
+Fully, fully,
+
+215
+00:07:31,829 --> 00:07:33,949
+essentially have, have API key
+
+216
+00:07:33,949 --> 00:07:35,980
+access to, to the system you're interacting with.
+
+217
+00:07:37,338 --> 00:07:38,439
+Um, here,
+
+218
+00:07:39,048 --> 00:07:41,220
+uh, specifically, I'm just going to go ahead and ask
+
+219
+00:07:41,220 --> 00:07:42,238
+it to
+
+220
+00:07:42,579 --> 00:07:44,778
+make a booking for me for a
+
+221
+00:07:44,778 --> 00:07:46,079
+given time slot.
+
+222
+00:07:46,540 --> 00:07:48,540
+So this, uh, this interface is just meant to be
+
+223
+00:07:48,540 --> 00:07:49,199
+a little
+
+224
+00:07:50,048 --> 00:07:52,338
+showcase of, uh, court availabilities
+
+225
+00:07:52,338 --> 00:07:52,920
+across
+
+226
+00:07:53,259 --> 00:07:55,759
+courts, let's say 123456
+
+227
+00:07:55,759 --> 00:07:56,678
+for a given park.
+
+228
+00:07:57,689 --> 00:07:59,889
+I'm just going to go ahead and ask it
+
+229
+00:07:59,889 --> 00:08:00,608
+to.
+
+230
+00:08:19,559 --> 00:08:20,500
+OK.
+
+231
+00:08:22,230 --> 00:08:22,819
+I don't know what
+
+232
+00:08:23,899 --> 00:08:28,059
+Uh And
+
+233
+00:08:28,059 --> 00:08:30,170
+I can do a little bit of a showcase here,
+
+234
+00:08:30,579 --> 00:08:32,940
+so. Here,
+
+235
+00:08:33,029 --> 00:08:35,070
+uh, we can see that it's, it's passing in
+
+236
+00:08:35,070 --> 00:08:36,369
+the information that's available.
+
+237
+00:08:37,070 --> 00:08:39,149
+Um, I can also,
+
+238
+00:08:39,349 --> 00:08:40,269
+uh,
+
+239
+00:08:41,349 --> 00:08:42,168
+uh.
+
+240
+00:08:48,080 --> 00:08:50,779
+I. Um
+
+241
+00:08:58,950 --> 00:09:01,129
+There. OK,
+
+242
+00:09:01,330 --> 00:09:03,269
+so that should finally come through,
+
+243
+00:09:03,529 --> 00:09:04,048
+um.
+
+244
+00:09:05,879 --> 00:09:07,259
+In terms of like,
+
+245
+00:09:08,000 --> 00:09:09,899
+interesting bits, that largely just
+
+246
+00:09:10,359 --> 00:09:11,899
+is meant to showcase that you can
+
+247
+00:09:12,279 --> 00:09:14,259
+have these interactions, not just go through
+
+248
+00:09:14,719 --> 00:09:17,038
+tailored paths, like a path that's well defined
+
+249
+00:09:17,038 --> 00:09:17,759
+through an API
+
+250
+00:09:18,158 --> 00:09:19,739
+but you can actually have your agents
+
+251
+00:09:20,239 --> 00:09:21,859
+dynamically kind of pull in
+
+252
+00:09:22,239 --> 00:09:23,658
+what is the structure of a page
+
+253
+00:09:23,918 --> 00:09:24,619
+and
+
+254
+00:09:25,359 --> 00:09:27,359
+make it, make it actually interact with a, with a
+
+255
+00:09:27,359 --> 00:09:29,440
+given UI interface. Um,
+
+256
+00:09:29,599 --> 00:09:30,580
+in terms of,
+
+257
+00:09:30,918 --> 00:09:33,320
+like, Underlying value
+
+258
+00:09:33,320 --> 00:09:34,700
+that you get from the solution.
+
+259
+00:09:35,080 --> 00:09:36,219
+Um,
+
+260
+00:09:37,279 --> 00:09:39,320
+it really does in my mind, come down to
+
+261
+00:09:39,320 --> 00:09:41,320
+the fact that like a durable object is going to be able
+
+262
+00:09:41,320 --> 00:09:42,259
+to offer you
+
+263
+00:09:43,580 --> 00:09:45,769
+Remarkable horizontal scalability to where
+
+264
+00:09:46,548 --> 00:09:48,190
+each uh each session, so each,
+
+265
+00:09:48,469 --> 00:09:49,009
+sorry,
+
+266
+00:09:49,428 --> 00:09:51,048
+each of those like little
+
+267
+00:09:52,529 --> 00:09:54,729
+Each of those interfaces that come up for
+
+268
+00:09:54,729 --> 00:09:56,979
+a chat is tied to a single durable
+
+269
+00:09:56,979 --> 00:09:57,769
+object instance.
+
+270
+00:09:58,048 --> 00:10:00,048
+A durable object can instantiate
+
+271
+00:10:00,048 --> 00:10:01,080
+across IDs,
+
+272
+00:10:01,369 --> 00:10:02,590
+so programmatically,
+
+273
+00:10:02,849 --> 00:10:04,428
+every conversation that we're having
+
+274
+00:10:04,769 --> 00:10:06,928
+gets its own sharded compute, sharded
+
+275
+00:10:06,928 --> 00:10:07,599
+storage,
+
+276
+00:10:07,889 --> 00:10:09,928
+so you don't have to worry about
+
+277
+00:10:09,928 --> 00:10:11,928
+suddenly scaling that out when there's more traffic
+
+278
+00:10:11,928 --> 00:10:14,369
+coming in. You don't have to worry about scaling
+
+279
+00:10:14,369 --> 00:10:16,210
+out your, you know,
+
+280
+00:10:16,529 --> 00:10:17,908
+memory and storage when.
+
+281
+00:10:18,509 --> 00:10:20,509
+The millionth conversation has started to
+
+282
+00:10:20,509 --> 00:10:22,899
+become because that is automatically kind of horizontally
+
+283
+00:10:22,899 --> 00:10:25,469
+scaling across your newly instantiated
+
+284
+00:10:25,469 --> 00:10:25,989
+resources.
+
+285
+00:10:26,269 --> 00:10:28,428
+Um, it also gives you a decent bit of flexibility
+
+286
+00:10:28,428 --> 00:10:30,629
+where that memory is still tied to that individual
+
+287
+00:10:30,629 --> 00:10:31,989
+durable object instance.
+
+288
+00:10:32,349 --> 00:10:34,979
+So if you're looking to have
+
+289
+00:10:34,979 --> 00:10:36,859
+conversations tied to a single user,
+
+290
+00:10:37,149 --> 00:10:39,349
+you can, you can have that easily implemented
+
+291
+00:10:39,349 --> 00:10:41,009
+by having them tied to a single ID,
+
+292
+00:10:41,269 --> 00:10:43,428
+but you can also have multiple individuals
+
+293
+00:10:43,428 --> 00:10:45,489
+interacting with a single agent conversation
+
+294
+00:10:45,750 --> 00:10:47,090
+just by tying their.
+
+295
+00:10:47,500 --> 00:10:49,859
+Essentially a conversation back to the same ID
+
+296
+00:10:50,219 --> 00:10:52,580
+so you get the the ability and flexibility
+
+297
+00:10:52,580 --> 00:10:53,239
+to have
+
+298
+00:10:53,538 --> 00:10:55,038
+various interaction patterns,
+
+299
+00:10:55,418 --> 00:10:57,538
+while also having an easy
+
+300
+00:10:57,538 --> 00:10:59,538
+kind of routing method if you do decide
+
+301
+00:10:59,538 --> 00:11:01,580
+to make multi-agenttic kind
+
+302
+00:11:01,580 --> 00:11:02,759
+of interfaces for
+
+303
+00:11:03,219 --> 00:11:05,288
+having them interact with, with separate
+
+304
+00:11:05,288 --> 00:11:06,918
+instances. Um,
+
+305
+00:11:07,460 --> 00:11:09,558
+yeah, if there are any questions that kind of
+
+306
+00:11:09,700 --> 00:11:11,279
+come up throughout, like,
+
+307
+00:11:12,139 --> 00:11:14,418
+uh, um, I don't know, implementation
+
+308
+00:11:14,418 --> 00:11:16,820
+or, or approach, um,
+
+309
+00:11:17,529 --> 00:11:19,769
+There's quite a bit of content that we have
+
+310
+00:11:19,769 --> 00:11:22,288
+regarding um various SDKs
+
+311
+00:11:22,288 --> 00:11:24,960
+and various tooling that we have to improve uh agent,
+
+312
+00:11:25,250 --> 00:11:27,629
+agent workloads. So, uh,
+
+313
+00:11:27,639 --> 00:11:30,009
+beyond just browser rendering, we now have also dynamic
+
+314
+00:11:30,009 --> 00:11:30,989
+worker loaders.
+
+315
+00:11:31,250 --> 00:11:33,250
+Uh, dynamic worker loaders allow you
+
+316
+00:11:33,250 --> 00:11:35,450
+to dynamically provide, whether it's
+
+317
+00:11:35,450 --> 00:11:37,269
+JavaScript or TypeScript code,
+
+318
+00:11:37,529 --> 00:11:38,109
+um,
+
+319
+00:11:38,489 --> 00:11:40,710
+that It is ideal for scenarios
+
+320
+00:11:40,710 --> 00:11:42,830
+where you may be actually generating code that you want
+
+321
+00:11:42,830 --> 00:11:44,308
+to execute yourselves,
+
+322
+00:11:44,590 --> 00:11:45,109
+um,
+
+323
+00:11:45,389 --> 00:11:47,538
+that can be provided to a a dynamic worker
+
+324
+00:11:47,538 --> 00:11:48,058
+loader,
+
+325
+00:11:48,509 --> 00:11:49,739
+have an execution with,
+
+326
+00:11:50,710 --> 00:11:52,830
+again, the same performance you get from a worker. So
+
+327
+00:11:52,830 --> 00:11:54,989
+near zero millisecond cold start
+
+328
+00:11:54,989 --> 00:11:56,590
+times, um,
+
+329
+00:11:56,989 --> 00:11:59,330
+to the millisecond, uh, uh,
+
+330
+00:11:59,750 --> 00:12:00,750
+compute billing,
+
+331
+00:12:01,029 --> 00:12:03,168
+um, so very attractive for
+
+332
+00:12:03,869 --> 00:12:06,099
+Both sandboxing use cases, but really that
+
+333
+00:12:06,099 --> 00:12:07,969
+execution of untrusted, um,
+
+334
+00:12:08,279 --> 00:12:09,960
+agentically generated code.
+
+335
+00:12:10,219 --> 00:12:11,090
+Um,
+
+336
+00:12:11,619 --> 00:12:13,808
+yeah, thank you so much for your time and, uh,
+
+337
+00:12:13,820 --> 00:12:16,058
+let me know if, if there are any questions about our
+
+338
+00:12:16,058 --> 00:12:16,599
+offerings.
+

@@ -1,0 +1,6320 @@
+1
+00:00:07,809 --> 00:00:08,750
+Good afternoon everyone.
+
+2
+00:00:09,948 --> 00:00:12,089
+It's the afternoon before replay, so I'm
+
+3
+00:00:12,310 --> 00:00:13,960
+glad to see so many of you still here.
+
+4
+00:00:15,099 --> 00:00:17,658
+Uh, today we're going to talk about how AWS
+
+5
+00:00:17,658 --> 00:00:18,859
+turns DDoS
+
+6
+00:00:19,339 --> 00:00:19,870
+into
+
+7
+00:00:20,138 --> 00:00:21,559
+a defensive advantage.
+
+8
+00:00:22,019 --> 00:00:24,138
+My name is Elena Wannick, and I lead
+
+9
+00:00:24,138 --> 00:00:25,250
+the shield response team.
+
+10
+00:00:25,658 --> 00:00:27,658
+I'm accompanied by Brian Van Hook, who is
+
+11
+00:00:27,658 --> 00:00:29,388
+a senior specialist essay,
+
+12
+00:00:29,780 --> 00:00:32,098
+and Bashar al-Rawi, who is a software
+
+13
+00:00:32,098 --> 00:00:33,520
+engineer with the company Figma.
+
+14
+00:00:34,959 --> 00:00:37,039
+Over the next hour we're going to take you behind the
+
+15
+00:00:37,039 --> 00:00:39,158
+scenes of AWS's DDoS
+
+16
+00:00:39,158 --> 00:00:40,259
+protection systems
+
+17
+00:00:40,520 --> 00:00:42,840
+and show you how we transform DDoS
+
+18
+00:00:43,829 --> 00:00:45,399
+into actual threat intelligence.
+
+19
+00:00:46,228 --> 00:00:48,279
+This is a 300 level course and so
+
+20
+00:00:48,279 --> 00:00:50,168
+there's an expectation that you have some,
+
+21
+00:00:50,719 --> 00:00:52,840
+uh, high level knowledge on uh
+
+22
+00:00:52,840 --> 00:00:54,959
+how AWS on what AWS
+
+23
+00:00:54,959 --> 00:00:56,990
+services do as we'll be digging
+
+24
+00:00:56,990 --> 00:00:58,899
+deeper into how we integrate
+
+25
+00:00:59,539 --> 00:01:01,618
+DDoS protection into those services.
+
+26
+00:01:04,947 --> 00:01:07,018
+Before we dive in, uh, let me take you
+
+27
+00:01:07,018 --> 00:01:08,358
+through a simple analogy
+
+28
+00:01:08,778 --> 00:01:11,518
+about how AWS approaches threat intelligence.
+
+29
+00:01:12,620 --> 00:01:14,808
+Think of the internet like uh the weather.
+
+30
+00:01:15,388 --> 00:01:16,969
+Most days are predictable and mild,
+
+31
+00:01:17,418 --> 00:01:18,569
+sunny with a chance of rain.
+
+32
+00:01:19,778 --> 00:01:21,870
+And when we encounter rain, simple
+
+33
+00:01:21,870 --> 00:01:23,120
+protection like an umbrella
+
+34
+00:01:23,459 --> 00:01:25,459
+will help us easily handle
+
+35
+00:01:25,459 --> 00:01:27,150
+it. But
+
+36
+00:01:27,959 --> 00:01:29,058
+Uh, Weather
+
+37
+00:01:29,599 --> 00:01:31,638
+has the tendency to evolve from a
+
+38
+00:01:31,638 --> 00:01:33,138
+drizzle to a storm,
+
+39
+00:01:33,469 --> 00:01:34,099
+and
+
+40
+00:01:34,558 --> 00:01:36,638
+just similarly, DDoS can
+
+41
+00:01:36,638 --> 00:01:37,418
+escalate
+
+42
+00:01:37,799 --> 00:01:40,040
+from simple attacks to complex
+
+43
+00:01:40,040 --> 00:01:40,579
+threats.
+
+44
+00:01:42,099 --> 00:01:43,579
+When severe weather approaches,
+
+45
+00:01:43,900 --> 00:01:45,058
+we take shelter,
+
+46
+00:01:45,349 --> 00:01:46,989
+and the same principle can apply.
+
+47
+00:01:48,000 --> 00:01:50,439
+To defending against major cyber threats.
+
+48
+00:01:53,079 --> 00:01:54,838
+Just like meteorologists use
+
+49
+00:01:55,469 --> 00:01:57,980
+sophisticated systems to track hurricanes,
+
+50
+00:01:58,480 --> 00:01:59,859
+we at AWS.
+
+51
+00:02:00,870 --> 00:02:03,120
+Uh Also
+
+52
+00:02:03,120 --> 00:02:05,198
+have evolved our defenses to
+
+53
+00:02:05,198 --> 00:02:07,359
+not only react to DDoS
+
+54
+00:02:07,519 --> 00:02:09,860
+but also adapt to emerging threats.
+
+55
+00:02:12,409 --> 00:02:13,528
+In today's agenda
+
+56
+00:02:13,800 --> 00:02:15,969
+we're going to go through
+
+57
+00:02:15,969 --> 00:02:17,349
+a flywheel approach
+
+58
+00:02:17,719 --> 00:02:19,629
+for protecting DDoS against DDoS.
+
+59
+00:02:19,969 --> 00:02:21,490
+Bashar is going to present
+
+60
+00:02:22,129 --> 00:02:23,879
+his use case on how FGM
+
+61
+00:02:24,439 --> 00:02:26,689
+has used that approach to help benefit
+
+62
+00:02:26,689 --> 00:02:28,469
+them, uh, and then we'll
+
+63
+00:02:29,110 --> 00:02:30,149
+end with some
+
+64
+00:02:30,490 --> 00:02:32,270
+best practices that you can take away
+
+65
+00:02:32,689 --> 00:02:33,990
+to help make your
+
+66
+00:02:34,250 --> 00:02:35,288
+systems more resilient.
+
+67
+00:02:39,520 --> 00:02:40,429
+To kick us off
+
+68
+00:02:41,919 --> 00:02:44,199
+Uh, we're going to dig into how DDoS
+
+69
+00:02:44,199 --> 00:02:44,778
+has
+
+70
+00:02:45,080 --> 00:02:46,179
+developed over the years.
+
+71
+00:02:47,189 --> 00:02:49,429
+DDoS threats can target any
+
+72
+00:02:49,429 --> 00:02:50,969
+type of application on the internet,
+
+73
+00:02:51,389 --> 00:02:53,469
+and broadly speaking, bad
+
+74
+00:02:53,469 --> 00:02:55,710
+actors commonly send commands to
+
+75
+00:02:55,710 --> 00:02:58,008
+botnets to issue large DDoS traffic.
+
+76
+00:02:59,099 --> 00:03:01,429
+For reflection attacks, bad actors scan the
+
+77
+00:03:01,429 --> 00:03:03,879
+internet for open ports like
+
+78
+00:03:04,058 --> 00:03:05,449
+DNS or NTP,
+
+79
+00:03:05,778 --> 00:03:06,588
+and then they
+
+80
+00:03:06,939 --> 00:03:08,960
+use those ports to
+
+81
+00:03:08,979 --> 00:03:10,058
+direct traffic,
+
+82
+00:03:10,899 --> 00:03:13,058
+uh, reflect it off of those ports, and then amplify
+
+83
+00:03:13,058 --> 00:03:14,278
+it either up to
+
+84
+00:03:14,778 --> 00:03:16,819
+100 or 1000 times the
+
+85
+00:03:16,819 --> 00:03:19,258
+original size in order to overwhelm
+
+86
+00:03:19,258 --> 00:03:19,778
+the endpoint.
+
+87
+00:03:21,118 --> 00:03:22,588
+For proxy-driven attacks,
+
+88
+00:03:23,000 --> 00:03:23,860
+threat actors
+
+89
+00:03:24,278 --> 00:03:26,639
+use open or private HTTPP
+
+90
+00:03:26,639 --> 00:03:28,050
+HTTP proxies,
+
+91
+00:03:28,439 --> 00:03:30,969
+and they use these to redirect
+
+92
+00:03:30,969 --> 00:03:31,618
+requests,
+
+93
+00:03:31,919 --> 00:03:34,360
+uh, to disrupt websites' availability.
+
+94
+00:03:35,588 --> 00:03:36,919
+Generally these attacks
+
+95
+00:03:37,520 --> 00:03:39,618
+hit various layers within the OSI model, and
+
+96
+00:03:39,618 --> 00:03:40,699
+they aim to
+
+97
+00:03:40,979 --> 00:03:42,360
+disrupt your
+
+98
+00:03:43,258 --> 00:03:45,618
+availability, overwhelm your
+
+99
+00:03:45,618 --> 00:03:46,699
+network capacity.
+
+100
+00:03:47,479 --> 00:03:49,849
+Uh, overload your connection tracking and,
+
+101
+00:03:49,929 --> 00:03:51,929
+uh, generally overload your
+
+102
+00:03:51,929 --> 00:03:52,449
+application server.
+
+103
+00:03:54,610 --> 00:03:55,139
+Uh
+
+104
+00:03:55,860 --> 00:03:56,919
+I'm gonna talk through
+
+105
+00:03:57,788 --> 00:03:59,868
+how the threats have evolved over the years.
+
+106
+00:04:00,300 --> 00:04:02,949
+So in the early to mid 2000s,
+
+107
+00:04:03,080 --> 00:04:05,099
+we mostly saw reflection and amplification
+
+108
+00:04:05,099 --> 00:04:05,649
+attacks,
+
+109
+00:04:05,939 --> 00:04:07,278
+and at that time we were
+
+110
+00:04:08,139 --> 00:04:10,520
+getting on hosts and editing IP tables
+
+111
+00:04:11,058 --> 00:04:11,719
+and
+
+112
+00:04:11,979 --> 00:04:14,360
+uh doing this per host kind of on the fly
+
+113
+00:04:14,580 --> 00:04:16,699
+to protect services like Cloudfront and Route
+
+114
+00:04:16,699 --> 00:04:17,379
+53.
+
+115
+00:04:18,170 --> 00:04:18,798
+This was
+
+116
+00:04:19,088 --> 00:04:21,170
+complicated and unsophisticated, and so we
+
+117
+00:04:21,170 --> 00:04:23,129
+knew we needed to evolve our approach.
+
+118
+00:04:25,028 --> 00:04:27,108
+Uh, in the 2010s,
+
+119
+00:04:27,588 --> 00:04:30,199
+attacks evolved to leverage botnets,
+
+120
+00:04:30,548 --> 00:04:31,149
+and
+
+121
+00:04:31,428 --> 00:04:33,470
+we responded to this by deploying packet
+
+122
+00:04:33,470 --> 00:04:35,410
+scrubbing hardware across our
+
+123
+00:04:35,928 --> 00:04:37,088
+network edge
+
+124
+00:04:37,470 --> 00:04:39,750
+in order to centralize mitigation
+
+125
+00:04:39,750 --> 00:04:40,790
+in 2012.
+
+126
+00:04:41,149 --> 00:04:43,709
+We then introduced automated mitigations
+
+127
+00:04:43,709 --> 00:04:45,949
+in 2013 in order to kind of help
+
+128
+00:04:45,949 --> 00:04:48,108
+get the humans out of the loop and, and
+
+129
+00:04:48,108 --> 00:04:48,988
+make it more automated.
+
+130
+00:04:50,369 --> 00:04:52,488
+Then in uh WAF and Shield were
+
+131
+00:04:52,488 --> 00:04:54,689
+released a couple of years later in order
+
+132
+00:04:54,689 --> 00:04:57,088
+to provide better customization
+
+133
+00:04:57,088 --> 00:04:58,009
+for mitigations,
+
+134
+00:04:58,608 --> 00:05:00,428
+uh, and then uh in
+
+135
+00:05:00,850 --> 00:05:02,309
+the 2020s,
+
+136
+00:05:02,809 --> 00:05:04,809
+we saw the rise of HTTP
+
+137
+00:05:04,809 --> 00:05:07,338
+driven proxy, uh, floods,
+
+138
+00:05:07,689 --> 00:05:09,928
+and we responded to this by launching
+
+139
+00:05:09,928 --> 00:05:12,170
+the shield application layer auto mitigation
+
+140
+00:05:12,528 --> 00:05:13,579
+in 2021.
+
+141
+00:05:13,928 --> 00:05:14,829
+And then just this year
+
+142
+00:05:15,220 --> 00:05:17,290
+we also released the
+
+143
+00:05:17,290 --> 00:05:19,108
+WAF anti-DDoS rule group,
+
+144
+00:05:19,488 --> 00:05:21,649
+and we'll dig deeper. Brian will dig deeper
+
+145
+00:05:21,649 --> 00:05:22,970
+into that, uh, in a little bit.
+
+146
+00:05:26,088 --> 00:05:28,209
+OK, so, now that we have some background
+
+147
+00:05:28,209 --> 00:05:28,949
+context,
+
+148
+00:05:29,250 --> 00:05:30,149
+uh, around,
+
+149
+00:05:31,009 --> 00:05:32,980
+you know, uh, DDoS over time,
+
+150
+00:05:33,329 --> 00:05:35,569
+let's talk about how AWS thinks about
+
+151
+00:05:35,569 --> 00:05:36,449
+addressing DDoS.
+
+152
+00:05:36,889 --> 00:05:39,048
+So we're gonna go on this journey through this flywheel
+
+153
+00:05:39,048 --> 00:05:41,209
+that we call the 360 degrees of DDoS,
+
+154
+00:05:41,399 --> 00:05:43,629
+uh, and this kind of represents how we think about.
+
+155
+00:05:44,290 --> 00:05:45,949
+Uh, producing threat intelligence
+
+156
+00:05:46,608 --> 00:05:48,838
+to protect ourselves, uh, from DDoS
+
+157
+00:05:48,838 --> 00:05:50,970
+attacks. So we went
+
+158
+00:05:50,970 --> 00:05:52,108
+through kind of a journey of
+
+159
+00:05:52,488 --> 00:05:54,569
+how, uh, threat actors have evolved over
+
+160
+00:05:54,569 --> 00:05:55,889
+time. It starts with a threat actor.
+
+161
+00:05:57,619 --> 00:05:58,528
+Uh, we then
+
+162
+00:05:58,949 --> 00:06:00,488
+dive deeply into
+
+163
+00:06:01,108 --> 00:06:03,189
+the telemetry that we
+
+164
+00:06:03,189 --> 00:06:05,329
+collect across our targeted endpoints.
+
+165
+00:06:06,528 --> 00:06:08,850
+And then we evolve that into, we analyze
+
+166
+00:06:08,850 --> 00:06:11,488
+the signal to evolve that into actionable
+
+167
+00:06:11,488 --> 00:06:12,470
+threat intelligence.
+
+168
+00:06:14,048 --> 00:06:15,028
+From there we show
+
+169
+00:06:15,488 --> 00:06:16,689
+how, uh,
+
+170
+00:06:16,970 --> 00:06:19,329
+we show how AWS threat intelligence
+
+171
+00:06:19,329 --> 00:06:21,528
+is built into AWS
+
+172
+00:06:21,528 --> 00:06:23,350
+services for improved
+
+173
+00:06:23,850 --> 00:06:24,769
+endpoint protection.
+
+174
+00:06:26,879 --> 00:06:29,108
+And then finally we wrap up with uh
+
+175
+00:06:29,399 --> 00:06:30,379
+we wrap up with
+
+176
+00:06:30,670 --> 00:06:32,798
+actual efforts to disrupt and take
+
+177
+00:06:32,798 --> 00:06:35,100
+down threat actors in order to
+
+178
+00:06:35,559 --> 00:06:36,139
+improve
+
+179
+00:06:36,750 --> 00:06:38,920
+resilience from DDoS across the internet.
+
+180
+00:06:39,639 --> 00:06:41,730
+OK. So,
+
+181
+00:06:42,189 --> 00:06:44,230
+let's get into the telemetry piece for
+
+182
+00:06:44,230 --> 00:06:46,309
+what we observe on our targeted endpoints.
+
+183
+00:06:48,819 --> 00:06:51,100
+ALAS's massive network
+
+184
+00:06:51,100 --> 00:06:53,079
+provides a real-time comprehensive view
+
+185
+00:06:53,379 --> 00:06:55,379
+of global internet traffic
+
+186
+00:06:55,379 --> 00:06:57,910
+and, and also not just global but also regional
+
+187
+00:06:57,910 --> 00:06:59,278
+because we're spread across
+
+188
+00:07:00,178 --> 00:07:01,209
+various locations.
+
+189
+00:07:02,199 --> 00:07:04,269
+Just to give you an idea of the scale,
+
+190
+00:07:04,670 --> 00:07:05,379
+on average,
+
+191
+00:07:05,720 --> 00:07:06,939
+we see a peak
+
+192
+00:07:07,278 --> 00:07:08,358
+total rate.
+
+193
+00:07:08,949 --> 00:07:09,569
+Of
+
+194
+00:07:10,069 --> 00:07:12,000
+60 terabits per 2nd,
+
+195
+00:07:12,428 --> 00:07:13,170
+12
+
+196
+00:07:13,488 --> 00:07:15,048
+billion packets per 2nd,
+
+197
+00:07:15,309 --> 00:07:17,350
+and 105 million requests per
+
+198
+00:07:17,350 --> 00:07:19,769
+second, this is the peak rate that we see on average
+
+199
+00:07:19,838 --> 00:07:21,149
+every single day.
+
+200
+00:07:21,509 --> 00:07:23,548
+This is an enormous amount of traffic to have
+
+201
+00:07:23,548 --> 00:07:24,269
+to sift through,
+
+202
+00:07:24,670 --> 00:07:25,209
+which
+
+203
+00:07:25,470 --> 00:07:27,338
+means that, uh,
+
+204
+00:07:27,910 --> 00:07:28,528
+we have a lot
+
+205
+00:07:28,829 --> 00:07:30,369
+to, to have to dig through to
+
+206
+00:07:30,629 --> 00:07:31,910
+get some good information out of it.
+
+207
+00:07:34,298 --> 00:07:36,069
+Meteorologists face a similar problem,
+
+208
+00:07:36,569 --> 00:07:38,449
+ah, when forecasting the weather.
+
+209
+00:07:38,809 --> 00:07:40,850
+If they were just looking at the temperature outside, they
+
+210
+00:07:40,850 --> 00:07:43,250
+wouldn't get a good understanding of what it
+
+211
+00:07:43,250 --> 00:07:44,369
+actually is like out there.
+
+212
+00:07:45,069 --> 00:07:46,579
+And so
+
+213
+00:07:47,000 --> 00:07:47,699
+much like
+
+214
+00:07:48,119 --> 00:07:50,500
+meteorologists set up weather stations to
+
+215
+00:07:50,678 --> 00:07:52,920
+measure things like pressure, humidity,
+
+216
+00:07:53,160 --> 00:07:54,519
+UV index, etc.
+
+217
+00:07:55,358 --> 00:07:56,619
+We need to be able to gather
+
+218
+00:07:57,119 --> 00:07:59,519
+data on more than just IP
+
+219
+00:07:59,519 --> 00:08:03,369
+address. To
+
+220
+00:08:03,369 --> 00:08:03,910
+do that
+
+221
+00:08:04,798 --> 00:08:07,358
+We've strategically integrated detection systems
+
+222
+00:08:07,358 --> 00:08:08,519
+across AWS
+
+223
+00:08:08,798 --> 00:08:11,298
+to capture different aspects of the traffic.
+
+224
+00:08:13,439 --> 00:08:15,559
+When DDoS traffic is destined for an
+
+225
+00:08:15,559 --> 00:08:17,600
+AWS endpoint, it first hits our
+
+226
+00:08:17,600 --> 00:08:19,439
+network layer detection systems,
+
+227
+00:08:19,769 --> 00:08:21,660
+and this system sees
+
+228
+00:08:21,920 --> 00:08:24,178
+kind of what we call top talker traffic, so the,
+
+229
+00:08:24,480 --> 00:08:26,480
+the peak of the peak traffic coming
+
+230
+00:08:26,480 --> 00:08:28,699
+through, and it's more on the
+
+231
+00:08:29,199 --> 00:08:31,459
+bite and packet layer,
+
+232
+00:08:31,639 --> 00:08:33,678
+uh, protoc uh sorry, uh, it's more on
+
+233
+00:08:33,678 --> 00:08:34,710
+the, the bite
+
+234
+00:08:35,239 --> 00:08:35,879
+and.
+
+235
+00:08:36,629 --> 00:08:37,249
+Uh,
+
+236
+00:08:37,508 --> 00:08:39,928
+common vectors that we see in
+
+237
+00:08:40,508 --> 00:08:42,489
+the IP and protocol layers.
+
+238
+00:08:43,710 --> 00:08:44,769
+Our next system
+
+239
+00:08:45,308 --> 00:08:47,369
+is in our edge services like AWS
+
+240
+00:08:47,369 --> 00:08:49,389
+Global Accelerator, Cloudfront,
+
+241
+00:08:49,788 --> 00:08:51,450
+uh, Elastic load balancing,
+
+242
+00:08:51,788 --> 00:08:53,450
+and these systems see
+
+243
+00:08:54,389 --> 00:08:56,058
+information more based off of,
+
+244
+00:08:56,469 --> 00:08:58,590
+you know, top rev requests, TCP
+
+245
+00:08:58,590 --> 00:09:00,330
+connections, and,
+
+246
+00:09:00,808 --> 00:09:01,489
+uh,
+
+247
+00:09:01,989 --> 00:09:03,719
+and ASN, etc.
+
+248
+00:09:05,219 --> 00:09:05,969
+Further in,
+
+249
+00:09:06,298 --> 00:09:08,408
+we also have a detection component in WAAF,
+
+250
+00:09:08,940 --> 00:09:09,899
+and this is,
+
+251
+00:09:10,219 --> 00:09:12,538
+you know, a header order also
+
+252
+00:09:12,538 --> 00:09:13,279
+requests,
+
+253
+00:09:13,580 --> 00:09:15,700
+uh, header combos as well
+
+254
+00:09:15,700 --> 00:09:16,700
+as request combos.
+
+255
+00:09:19,279 --> 00:09:20,658
+And then deeper into our,
+
+256
+00:09:21,158 --> 00:09:23,200
+uh, the kind of the last stop in our detection
+
+257
+00:09:23,200 --> 00:09:25,239
+systems, we also have a fleet of honey pots
+
+258
+00:09:25,399 --> 00:09:27,440
+that detect through direct threat
+
+259
+00:09:27,440 --> 00:09:28,639
+actor interaction.
+
+260
+00:09:28,918 --> 00:09:30,759
+We'll dig into this in just a few minutes.
+
+261
+00:09:32,609 --> 00:09:33,428
+OK, so
+
+262
+00:09:34,320 --> 00:09:36,668
+Across all of these detection systems
+
+263
+00:09:36,668 --> 00:09:40,349
+year to date, we've seen over 700,000
+
+264
+00:09:40,359 --> 00:09:42,259
+network layer detections and over
+
+265
+00:09:42,639 --> 00:09:44,788
+900,000 application layer
+
+266
+00:09:44,788 --> 00:09:46,849
+connection uh detections,
+
+267
+00:09:47,340 --> 00:09:49,340
+and this has kind of helped us funnel down
+
+268
+00:09:49,340 --> 00:09:51,479
+that raw telemetry that we've seen
+
+269
+00:09:51,479 --> 00:09:53,928
+all across our network into
+
+270
+00:09:54,320 --> 00:09:55,178
+kind of more
+
+271
+00:09:55,460 --> 00:09:57,950
+specified information on traffic anomalies.
+
+272
+00:09:58,399 --> 00:10:00,519
+But that being said, this is still a ton
+
+273
+00:10:00,519 --> 00:10:01,558
+to have to sift through.
+
+274
+00:10:02,729 --> 00:10:04,769
+So we need to take it one step further, which is
+
+275
+00:10:04,769 --> 00:10:06,250
+where threat intelligence comes in.
+
+276
+00:10:07,168 --> 00:10:08,869
+And for me this is kind of the fun stuff.
+
+277
+00:10:10,879 --> 00:10:12,779
+So doing that has a few challenges.
+
+278
+00:10:13,729 --> 00:10:15,830
+We collect so much data
+
+279
+00:10:16,210 --> 00:10:18,399
+that our detection systems, uh,
+
+280
+00:10:18,408 --> 00:10:20,849
+we need to be able to form it into some meaningful
+
+281
+00:10:20,849 --> 00:10:22,928
+way to uh
+
+282
+00:10:23,158 --> 00:10:24,869
+to prevent from hindering
+
+283
+00:10:25,168 --> 00:10:26,009
+real users.
+
+284
+00:10:26,879 --> 00:10:29,340
+In DDoS we regularly see threat actors
+
+285
+00:10:29,590 --> 00:10:31,798
+reusing IP addresses when
+
+286
+00:10:31,798 --> 00:10:33,418
+sourcing DDoS traffic.
+
+287
+00:10:33,879 --> 00:10:35,139
+This is likely because
+
+288
+00:10:35,599 --> 00:10:37,840
+spinning up new infrastructure is either
+
+289
+00:10:37,840 --> 00:10:40,058
+costly or time consuming, and so
+
+290
+00:10:40,269 --> 00:10:41,798
+uh it tends to be reused.
+
+291
+00:10:42,950 --> 00:10:45,000
+But unfortunately, it's not just
+
+292
+00:10:45,000 --> 00:10:47,200
+as easy as blocking any IP address
+
+293
+00:10:47,200 --> 00:10:49,200
+that we detect a traffic anomaly on.
+
+294
+00:10:50,639 --> 00:10:52,710
+Often threat actors will
+
+295
+00:10:52,710 --> 00:10:54,788
+use open proxies or
+
+296
+00:10:54,788 --> 00:10:57,250
+they will use compromised home routers
+
+297
+00:10:57,469 --> 00:10:58,849
+in order to
+
+298
+00:10:59,389 --> 00:11:01,389
+send traffic and so if we
+
+299
+00:11:01,389 --> 00:11:03,629
+were to just outright block those IP
+
+300
+00:11:03,629 --> 00:11:05,090
+addresses, we would be,
+
+301
+00:11:05,428 --> 00:11:07,250
+we would be impacting legitimate users.
+
+302
+00:11:09,190 --> 00:11:11,609
+Our second challenge comes in when we
+
+303
+00:11:12,750 --> 00:11:14,178
+Our detection systems are amazing,
+
+304
+00:11:14,479 --> 00:11:16,479
+but this also means that sometimes they
+
+305
+00:11:16,479 --> 00:11:17,139
+capture.
+
+306
+00:11:18,739 --> 00:11:21,259
+Large increases of traffic that are non-malicious,
+
+307
+00:11:21,460 --> 00:11:23,779
+commonly known as flash crowds, and so
+
+308
+00:11:23,779 --> 00:11:25,109
+these aren't actually DDoS.
+
+309
+00:11:26,428 --> 00:11:27,408
+And then last
+
+310
+00:11:28,719 --> 00:11:30,019
+Sometimes compromised
+
+311
+00:11:30,279 --> 00:11:31,879
+hosts will get patched.
+
+312
+00:11:32,729 --> 00:11:33,609
+And become good again.
+
+313
+00:11:36,558 --> 00:11:37,960
+To account for these challenges,
+
+314
+00:11:38,359 --> 00:11:40,239
+we have to get crafty with our traffic attributes.
+
+315
+00:11:41,359 --> 00:11:43,859
+So to create a good list, we run through a cycle
+
+316
+00:11:44,639 --> 00:11:46,619
+to continuously improve our list.
+
+317
+00:11:47,389 --> 00:11:49,070
+When we detect DDoS,
+
+318
+00:11:49,590 --> 00:11:51,908
+we run an analysis to understand how
+
+319
+00:11:51,908 --> 00:11:54,029
+effective our list is capturing the actual
+
+320
+00:11:54,029 --> 00:11:55,070
+DDoS traffic.
+
+321
+00:11:55,428 --> 00:11:57,869
+This analysis evaluates the match rate
+
+322
+00:11:58,029 --> 00:12:00,190
+that the DDoS traffic that our list
+
+323
+00:12:00,190 --> 00:12:02,469
+is having on the actual DDoS
+
+324
+00:12:02,469 --> 00:12:02,989
+traffic.
+
+325
+00:12:04,889 --> 00:12:06,298
+When our match rate is low,
+
+326
+00:12:06,700 --> 00:12:07,259
+we
+
+327
+00:12:07,580 --> 00:12:09,399
+inspect the traffic even further.
+
+328
+00:12:09,719 --> 00:12:11,899
+So what this means is we have to dig
+
+329
+00:12:11,899 --> 00:12:13,979
+into this funnel of traffic attributes
+
+330
+00:12:13,979 --> 00:12:15,418
+in order to better understand
+
+331
+00:12:15,700 --> 00:12:18,099
+how the DDoS herd of traffic is behaving
+
+332
+00:12:18,099 --> 00:12:20,340
+and how that differs from the legitimate traffic.
+
+333
+00:12:22,009 --> 00:12:24,129
+Once we understand that behavior, we tune our
+
+334
+00:12:24,129 --> 00:12:26,538
+algorithm to capture those attributes,
+
+335
+00:12:26,739 --> 00:12:29,090
+and this tuning process helps us better capture
+
+336
+00:12:29,090 --> 00:12:31,168
+the same herd-like behavior, so that way
+
+337
+00:12:31,168 --> 00:12:33,168
+we are able to mitigate
+
+338
+00:12:33,168 --> 00:12:35,320
+that same type of behavior when it repeats
+
+339
+00:12:35,320 --> 00:12:36,009
+in the future.
+
+340
+00:12:38,379 --> 00:12:40,590
+And then all of that leads to
+
+341
+00:12:40,590 --> 00:12:41,308
+successful mitigation.
+
+342
+00:12:43,340 --> 00:12:45,168
+But, as we all know,
+
+343
+00:12:45,788 --> 00:12:47,779
+threats are always evolving,
+
+344
+00:12:48,109 --> 00:12:50,269
+and sometimes DDoS vector, new DDoS
+
+345
+00:12:50,269 --> 00:12:52,849
+vectors crop up and evade our detections.
+
+346
+00:12:54,090 --> 00:12:56,139
+Uh, and when they evade our detections, that means
+
+347
+00:12:56,139 --> 00:12:58,320
+they're not properly getting integrated into
+
+348
+00:12:58,869 --> 00:13:00,320
+our lists.
+
+349
+00:13:00,899 --> 00:13:02,940
+This is where our honey pots come in, known as
+
+350
+00:13:02,940 --> 00:13:05,149
+mad pot. And so,
+
+351
+00:13:05,320 --> 00:13:07,460
+uh, Madpot is a fleet of AWS
+
+352
+00:13:07,460 --> 00:13:09,619
+honey pots, uh, that
+
+353
+00:13:09,808 --> 00:13:11,979
+run across the AWS network and
+
+354
+00:13:11,979 --> 00:13:13,918
+operate on EC2 instances.
+
+355
+00:13:15,349 --> 00:13:17,769
+Madpot pretends to be a vulnerable service
+
+356
+00:13:17,769 --> 00:13:19,869
+in order to get actors to interact with
+
+357
+00:13:19,869 --> 00:13:22,330
+it, and this provides AWS
+
+358
+00:13:22,330 --> 00:13:23,288
+intelligence
+
+359
+00:13:23,629 --> 00:13:24,330
+on
+
+360
+00:13:24,750 --> 00:13:26,808
+what the bad actors are actually trying to accomplish.
+
+361
+00:13:28,450 --> 00:13:30,200
+For botnet-driven DDoS,
+
+362
+00:13:30,519 --> 00:13:31,899
+Madpot captures
+
+363
+00:13:32,519 --> 00:13:33,178
+the
+
+364
+00:13:34,239 --> 00:13:36,710
+exploitation attempts. It then downloads,
+
+365
+00:13:36,908 --> 00:13:39,109
+automatically downloads, detonates,
+
+366
+00:13:39,440 --> 00:13:42,038
+and analyzes the malware
+
+367
+00:13:42,038 --> 00:13:44,158
+to identify key parts of the botnet
+
+368
+00:13:44,158 --> 00:13:44,879
+infrastructure.
+
+369
+00:13:46,629 --> 00:13:48,668
+This also allows Madpot to infiltrate
+
+370
+00:13:48,668 --> 00:13:50,759
+the botnet and see when the
+
+371
+00:13:51,019 --> 00:13:53,250
+command and control server is actually
+
+372
+00:13:53,250 --> 00:13:54,149
+issuing
+
+373
+00:13:54,418 --> 00:13:55,769
+DDoS commands
+
+374
+00:13:56,029 --> 00:13:57,928
+in order to run DDoS attacks.
+
+375
+00:13:58,548 --> 00:13:59,570
+These commands include
+
+376
+00:14:00,019 --> 00:14:02,668
+attack destinations, which gives us a positive
+
+377
+00:14:02,668 --> 00:14:04,570
+DDoS detection signal
+
+378
+00:14:04,989 --> 00:14:07,190
+uh to help us know when DDoS is evading
+
+379
+00:14:07,190 --> 00:14:08,308
+our detection systems.
+
+380
+00:14:09,090 --> 00:14:10,519
+We then run these through
+
+381
+00:14:11,298 --> 00:14:13,899
+our threat cycle in order to incorporate
+
+382
+00:14:13,899 --> 00:14:15,899
+them into our detection systems,
+
+383
+00:14:16,139 --> 00:14:18,340
+and then once they're incorporated into our detection
+
+384
+00:14:18,340 --> 00:14:20,440
+systems, we're then better able to
+
+385
+00:14:20,899 --> 00:14:22,519
+include all of those into
+
+386
+00:14:22,779 --> 00:14:23,340
+our
+
+387
+00:14:23,750 --> 00:14:25,538
+our known offenders lists.
+
+388
+00:14:27,658 --> 00:14:29,729
+OK, So we have two
+
+389
+00:14:30,239 --> 00:14:31,840
+major known offenders lists.
+
+390
+00:14:32,239 --> 00:14:34,408
+Uh, I'm going to start with the application or L7 known
+
+391
+00:14:34,408 --> 00:14:35,200
+offenders list,
+
+392
+00:14:35,658 --> 00:14:38,779
+and this was created in 2022,
+
+393
+00:14:39,139 --> 00:14:41,139
+uh, kind of around the time of this, you
+
+394
+00:14:41,139 --> 00:14:43,779
+know, increase of proxy-driven HTTP
+
+395
+00:14:43,779 --> 00:14:44,320
+flood,
+
+396
+00:14:44,678 --> 00:14:46,658
+uh, and it was really to help combat
+
+397
+00:14:47,099 --> 00:14:48,899
+that rise of of attack pattern.
+
+398
+00:14:50,538 --> 00:14:51,330
+Uh, this
+
+399
+00:14:51,750 --> 00:14:53,889
+is curated on bad actors sending
+
+400
+00:14:53,989 --> 00:14:56,629
+web-based, so HTTP or HTTPS
+
+401
+00:14:56,629 --> 00:14:57,379
+type traffic.
+
+402
+00:14:57,859 --> 00:15:00,009
+Uh, but one thing I want to know is
+
+403
+00:15:00,869 --> 00:15:03,149
+request level traffic does not match
+
+404
+00:15:03,149 --> 00:15:05,229
+one for one for
+
+405
+00:15:05,239 --> 00:15:06,779
+network layer packets.
+
+406
+00:15:07,190 --> 00:15:08,369
+So what that means is
+
+407
+00:15:08,710 --> 00:15:10,899
+that. You can cram
+
+408
+00:15:11,158 --> 00:15:13,389
+many requests into a
+
+409
+00:15:13,389 --> 00:15:15,479
+single network packet, and so often
+
+410
+00:15:15,479 --> 00:15:17,739
+threat actors will exploit this by cramming
+
+411
+00:15:17,739 --> 00:15:19,658
+a ton of application layer
+
+412
+00:15:20,719 --> 00:15:23,038
+requests into a single packet, and
+
+413
+00:15:23,038 --> 00:15:25,019
+so it gets a little bit challenging
+
+414
+00:15:25,279 --> 00:15:27,340
+when looking at the traffic because it doesn't,
+
+415
+00:15:27,678 --> 00:15:30,019
+it doesn't equally match to
+
+416
+00:15:30,479 --> 00:15:32,759
+things that would congest our network capacity.
+
+417
+00:15:33,418 --> 00:15:34,239
+And so
+
+418
+00:15:34,580 --> 00:15:36,719
+we actually have to terminate TLS
+
+419
+00:15:36,719 --> 00:15:38,899
+in order to better understand how many
+
+420
+00:15:38,899 --> 00:15:41,019
+requests are coming into the application.
+
+421
+00:15:42,538 --> 00:15:45,019
+We've seen great benefit using this list to mitigate
+
+422
+00:15:45,019 --> 00:15:47,418
+um uh as a mitigation tool
+
+423
+00:15:47,580 --> 00:15:50,019
+and integrated it early on into Cloudfront
+
+424
+00:15:50,019 --> 00:15:50,668
+and WAF,
+
+425
+00:15:51,379 --> 00:15:53,418
+and some exciting news is just this
+
+426
+00:15:53,418 --> 00:15:53,950
+year,
+
+427
+00:15:54,340 --> 00:15:56,570
+we also integrated it into elastic
+
+428
+00:15:56,570 --> 00:15:58,739
+load balancing or application uh load
+
+429
+00:15:58,739 --> 00:16:01,178
+balancer, so that way it has some extra
+
+430
+00:16:01,178 --> 00:16:02,759
+built-in DDoS resilience.
+
+431
+00:16:06,519 --> 00:16:07,469
+Our second list
+
+432
+00:16:08,168 --> 00:16:10,629
+was developed just this year, and it's the
+
+433
+00:16:11,009 --> 00:16:13,048
+network layer known offenders list, and
+
+434
+00:16:13,048 --> 00:16:15,428
+it focuses on bit and packet heavy
+
+435
+00:16:16,369 --> 00:16:18,590
+attacks, and this was curated
+
+436
+00:16:18,788 --> 00:16:20,840
+using the detection data that we have
+
+437
+00:16:20,840 --> 00:16:21,349
+on our
+
+438
+00:16:21,830 --> 00:16:23,450
+network layer detection systems.
+
+439
+00:16:24,469 --> 00:16:26,629
+To dig into the effectiveness of this list
+
+440
+00:16:26,710 --> 00:16:28,729
+and highlight how it's both helping
+
+441
+00:16:29,029 --> 00:16:31,070
+globally and regionally, I'm gonna go over
+
+442
+00:16:31,070 --> 00:16:32,009
+two case studies.
+
+443
+00:16:34,489 --> 00:16:36,700
+For the first case study, I want to walk through a recent
+
+444
+00:16:36,700 --> 00:16:38,460
+UDP vector that we've seen out in the wild.
+
+445
+00:16:38,899 --> 00:16:40,739
+Uh, the concept is pretty straightforward.
+
+446
+00:16:41,509 --> 00:16:43,019
+It's a UDP flood,
+
+447
+00:16:43,349 --> 00:16:45,389
+but what makes it challenging is that the
+
+448
+00:16:45,389 --> 00:16:47,700
+threat actors send a distributed
+
+449
+00:16:47,700 --> 00:16:48,779
+amount of traffic
+
+450
+00:16:49,109 --> 00:16:51,259
+with both the source ports
+
+451
+00:16:51,259 --> 00:16:53,308
+randomized and the destination
+
+452
+00:16:53,308 --> 00:16:54,408
+ports randomized.
+
+453
+00:16:54,950 --> 00:16:57,029
+So what this means is it's really challenging
+
+454
+00:16:57,029 --> 00:16:59,029
+to be able to pinpoint the traffic
+
+455
+00:16:59,029 --> 00:16:59,879
+to any one
+
+456
+00:17:00,190 --> 00:17:02,190
+of these attributes or any one of these
+
+457
+00:17:02,190 --> 00:17:03,710
+ports because they're all being randomized.
+
+458
+00:17:04,817 --> 00:17:07,239
+Uh, previously or earlier in the year,
+
+459
+00:17:07,659 --> 00:17:10,077
+we weren't actually able to detect these,
+
+460
+00:17:10,409 --> 00:17:11,009
+and
+
+461
+00:17:11,499 --> 00:17:13,597
+we were able to lean on detection
+
+462
+00:17:13,597 --> 00:17:15,817
+systems like Madpot and our other, uh, other
+
+463
+00:17:15,817 --> 00:17:18,218
+telemetry in order to help us
+
+464
+00:17:18,218 --> 00:17:20,759
+understand this traffic profile
+
+465
+00:17:20,979 --> 00:17:21,898
+and with all of that.
+
+466
+00:17:22,549 --> 00:17:24,578
+We were then able to feed it into our
+
+467
+00:17:24,578 --> 00:17:25,809
+detection systems
+
+468
+00:17:26,189 --> 00:17:28,390
+which then had the positive feedback
+
+469
+00:17:28,390 --> 00:17:30,430
+loop of getting integrated into
+
+470
+00:17:30,430 --> 00:17:32,670
+our network layer mitigations,
+
+471
+00:17:33,170 --> 00:17:35,088
+uh sorry, our network layer known offenders,
+
+472
+00:17:35,469 --> 00:17:37,608
+and this list is used
+
+473
+00:17:38,108 --> 00:17:40,209
+today mostly to protect AWS
+
+474
+00:17:40,410 --> 00:17:41,229
+network infrastructure.
+
+475
+00:17:44,989 --> 00:17:47,108
+For the second example, we'll examine a
+
+476
+00:17:47,108 --> 00:17:48,189
+regional case study
+
+477
+00:17:48,779 --> 00:17:50,949
+where DDoS vectors, uh, unlike the past
+
+478
+00:17:50,949 --> 00:17:53,009
+one where it was particularly UDP randomization,
+
+479
+00:17:53,390 --> 00:17:55,189
+the DDoS vectors were a bit more varied.
+
+480
+00:17:55,549 --> 00:17:58,269
+Uh, as I mentioned, this list is broadly,
+
+481
+00:17:58,509 --> 00:17:59,049
+uh,
+
+482
+00:17:59,390 --> 00:18:00,930
+protecting AWS infrastructure.
+
+483
+00:18:01,650 --> 00:18:03,930
+And when analyzing the effectiveness,
+
+484
+00:18:04,108 --> 00:18:06,469
+we discovered something interesting in one
+
+485
+00:18:06,469 --> 00:18:07,449
+particular region.
+
+486
+00:18:07,868 --> 00:18:08,809
+So when
+
+487
+00:18:09,108 --> 00:18:11,309
+uh we investigated, the list
+
+488
+00:18:11,309 --> 00:18:13,078
+was only seeing a small percentage
+
+489
+00:18:13,709 --> 00:18:14,410
+of
+
+490
+00:18:14,910 --> 00:18:16,608
+DDoS in this area.
+
+491
+00:18:17,348 --> 00:18:19,689
+The thing that's strange is we were
+
+492
+00:18:20,068 --> 00:18:22,140
+accurately detecting the floods,
+
+493
+00:18:22,430 --> 00:18:23,338
+but when we,
+
+494
+00:18:23,789 --> 00:18:25,390
+when we checked out the match rate.
+
+495
+00:18:25,920 --> 00:18:28,088
+Of the amount of traffic
+
+496
+00:18:28,088 --> 00:18:30,170
+that our known offenders list was having, it was pretty
+
+497
+00:18:30,170 --> 00:18:32,250
+low relative to other threats we
+
+498
+00:18:32,250 --> 00:18:33,328
+were seeing in other regions.
+
+499
+00:18:35,068 --> 00:18:37,229
+Uh, so, upon a
+
+500
+00:18:37,229 --> 00:18:37,750
+on
+
+501
+00:18:38,269 --> 00:18:39,019
+further investigation
+
+502
+00:18:39,709 --> 00:18:41,828
+we found that the attacking IP addresses were
+
+503
+00:18:41,828 --> 00:18:43,250
+uniquely regional.
+
+504
+00:18:43,549 --> 00:18:46,009
+These threat actors were specifically targeting
+
+505
+00:18:46,229 --> 00:18:47,209
+this area
+
+506
+00:18:47,469 --> 00:18:50,108
+rather than participating on a broader
+
+507
+00:18:50,108 --> 00:18:51,809
+global threat landscape.
+
+508
+00:18:52,309 --> 00:18:54,209
+So to improve our protection coverage,
+
+509
+00:18:54,549 --> 00:18:56,368
+we analyzed the traffic attributes.
+
+510
+00:18:57,019 --> 00:18:58,640
+Refined or inclusion criteria,
+
+511
+00:18:59,180 --> 00:19:01,880
+uh, and this allowed us to better capture
+
+512
+00:19:02,180 --> 00:19:04,709
+that threat actor and those IPs,
+
+513
+00:19:04,979 --> 00:19:06,959
+so when they sent traffic again,
+
+514
+00:19:07,338 --> 00:19:09,420
+we were able to mitigate them with our known offenders
+
+515
+00:19:09,420 --> 00:19:12,199
+list. All
+
+516
+00:19:12,199 --> 00:19:14,559
+right, now I've shown you how AWS
+
+517
+00:19:14,559 --> 00:19:16,650
+curates threat intelligence. I'm gonna hand it
+
+518
+00:19:16,650 --> 00:19:18,848
+over to Brian so he can show you how we've baked
+
+519
+00:19:18,848 --> 00:19:20,170
+it into our services.
+
+520
+00:19:21,910 --> 00:19:30,180
+Thank you. All
+
+521
+00:19:30,180 --> 00:19:31,170
+right, now that you've seen how we
+
+522
+00:19:32,098 --> 00:19:34,130
+curate and invest in all of this great threat
+
+523
+00:19:34,130 --> 00:19:35,088
+intelligence,
+
+524
+00:19:35,489 --> 00:19:37,868
+what should we do with it to protect customers?
+
+525
+00:19:39,380 --> 00:19:41,479
+Well, we integrate that threat intelligence
+
+526
+00:19:41,618 --> 00:19:42,160
+into
+
+527
+00:19:42,660 --> 00:19:45,049
+a number of AWS services
+
+528
+00:19:45,049 --> 00:19:45,618
+and
+
+529
+00:19:46,459 --> 00:19:48,729
+This helps those services provide mitigation
+
+530
+00:19:48,729 --> 00:19:50,348
+capabilities for customers
+
+531
+00:19:50,779 --> 00:19:53,439
+and as you'll see some of these capabilities
+
+532
+00:19:53,439 --> 00:19:55,529
+are built in and always on
+
+533
+00:19:55,529 --> 00:19:57,229
+to protect all customers
+
+534
+00:19:57,729 --> 00:19:59,769
+while other capabilities require
+
+535
+00:19:59,769 --> 00:20:01,769
+you to opt in to certain features based on
+
+536
+00:20:01,769 --> 00:20:03,449
+the type of workload that you have.
+
+537
+00:20:05,189 --> 00:20:07,209
+Now application traffic is
+
+538
+00:20:07,259 --> 00:20:09,209
+often based on HTTP,
+
+539
+00:20:09,828 --> 00:20:12,368
+so common examples there are websites
+
+540
+00:20:12,430 --> 00:20:13,789
+or maybe a rest API.
+
+541
+00:20:14,818 --> 00:20:16,949
+But there are a lot of non-HTTP
+
+542
+00:20:16,949 --> 00:20:18,509
+workloads out there as well.
+
+543
+00:20:18,789 --> 00:20:20,949
+Uh, some examples might be a back-end
+
+544
+00:20:20,949 --> 00:20:22,989
+gaming server that's running a
+
+545
+00:20:22,989 --> 00:20:23,729
+popular
+
+546
+00:20:24,410 --> 00:20:25,890
+massively multiplayer game,
+
+547
+00:20:26,289 --> 00:20:28,459
+or maybe you're operating your own DNS
+
+548
+00:20:28,459 --> 00:20:29,289
+resolvers.
+
+549
+00:20:30,430 --> 00:20:32,368
+So next we're gonna talk about some
+
+550
+00:20:32,789 --> 00:20:34,828
+DDoS resiliency best practices
+
+551
+00:20:34,828 --> 00:20:36,959
+for both of these categories of workloads,
+
+552
+00:20:37,269 --> 00:20:39,390
+and let's start with non-HTTP
+
+553
+00:20:39,390 --> 00:20:40,130
+workloads.
+
+554
+00:20:42,279 --> 00:20:44,739
+So here you see I have a non-HTTP workload
+
+555
+00:20:44,739 --> 00:20:47,489
+running in a couple of private subnets
+
+556
+00:20:47,489 --> 00:20:49,309
+that's done intentionally to
+
+557
+00:20:49,769 --> 00:20:51,848
+reduce and limit exposure to the public
+
+558
+00:20:51,848 --> 00:20:54,049
+internet. And we also
+
+559
+00:20:54,049 --> 00:20:55,670
+recommend using
+
+560
+00:20:56,130 --> 00:20:56,949
+a mechanism
+
+561
+00:20:57,368 --> 00:20:59,469
+that automatically scales your workload
+
+562
+00:20:59,469 --> 00:21:01,608
+to respond to an unexpected
+
+563
+00:21:01,608 --> 00:21:03,608
+flood that wasn't fully mitigated so that
+
+564
+00:21:03,608 --> 00:21:05,828
+you can absorb it and protect your business.
+
+565
+00:21:07,368 --> 00:21:08,910
+It's also very important
+
+566
+00:21:09,170 --> 00:21:11,239
+where possible to use an intelligent load
+
+567
+00:21:11,239 --> 00:21:12,229
+balancing service.
+
+568
+00:21:12,568 --> 00:21:14,469
+Here I'm using network load balancer,
+
+569
+00:21:15,049 --> 00:21:17,170
+and this will evenly distribute incoming
+
+570
+00:21:17,170 --> 00:21:19,209
+traffic across the entire
+
+571
+00:21:19,209 --> 00:21:21,410
+fleet. And you'll see that this is
+
+572
+00:21:21,410 --> 00:21:23,868
+also sitting in private subnets
+
+573
+00:21:23,868 --> 00:21:26,019
+again, very important to limit
+
+574
+00:21:26,019 --> 00:21:27,779
+your exposure to the public internet.
+
+575
+00:21:29,910 --> 00:21:32,309
+Now for this type of workload, we recommend using
+
+576
+00:21:32,309 --> 00:21:34,368
+AWS Global Accelerator.
+
+577
+00:21:35,289 --> 00:21:36,660
+Global Accelerator
+
+578
+00:21:36,959 --> 00:21:39,078
+is a networking service that
+
+579
+00:21:39,078 --> 00:21:40,930
+improves performance and reliability.
+
+580
+00:21:41,650 --> 00:21:43,689
+By routing your traffic over the
+
+581
+00:21:43,689 --> 00:21:46,039
+AWS global network instead of the
+
+582
+00:21:46,039 --> 00:21:48,170
+Internet. So with Global
+
+583
+00:21:48,170 --> 00:21:50,368
+Accelerator you get static IPs
+
+584
+00:21:50,368 --> 00:21:51,358
+that are any cast
+
+585
+00:21:51,719 --> 00:21:53,489
+from the AWS Edge network,
+
+586
+00:21:53,848 --> 00:21:56,000
+which means your client traffic is routed
+
+587
+00:21:56,000 --> 00:21:57,858
+to the closest Edge location
+
+588
+00:21:58,250 --> 00:22:00,650
+and then from there it's routed to your
+
+589
+00:22:00,650 --> 00:22:02,709
+VPC over the AWS global
+
+590
+00:22:02,709 --> 00:22:03,229
+network
+
+591
+00:22:03,848 --> 00:22:05,959
+and what's really great about this is that
+
+592
+00:22:05,959 --> 00:22:08,170
+it works even for VPC
+
+593
+00:22:08,170 --> 00:22:10,170
+resources that are private like our NLB
+
+594
+00:22:10,170 --> 00:22:10,989
+in this case.
+
+595
+00:22:14,789 --> 00:22:17,029
+All right, so at all of these edge locations
+
+596
+00:22:17,029 --> 00:22:18,130
+there are, are
+
+597
+00:22:18,588 --> 00:22:20,670
+many built-in DDoS mitigations,
+
+598
+00:22:20,680 --> 00:22:22,670
+and I'm going to cover a few here.
+
+599
+00:22:23,680 --> 00:22:25,420
+The first is that we rate limit
+
+600
+00:22:26,150 --> 00:22:28,160
+application layer and network layer known
+
+601
+00:22:28,160 --> 00:22:30,338
+offenders, and this is based on the threat
+
+602
+00:22:30,559 --> 00:22:32,858
+intelligence that Elena outlined earlier.
+
+603
+00:22:33,630 --> 00:22:35,608
+We don't outright block this traffic
+
+604
+00:22:36,108 --> 00:22:38,430
+because there are times when these known offender
+
+605
+00:22:38,430 --> 00:22:40,469
+lists can contain legitimate
+
+606
+00:22:40,469 --> 00:22:42,549
+services that customers want to use
+
+607
+00:22:42,549 --> 00:22:44,568
+but that have been abused recently
+
+608
+00:22:44,910 --> 00:22:47,219
+and might end up on this list, so we can't outright
+
+609
+00:22:47,219 --> 00:22:47,969
+block at all.
+
+610
+00:22:49,000 --> 00:22:51,000
+We also block thin floods.
+
+611
+00:22:51,799 --> 00:22:53,880
+So as you probably know, the sin packets the
+
+612
+00:22:53,880 --> 00:22:56,598
+first step in a TCP three-way handshake,
+
+613
+00:22:56,959 --> 00:22:58,789
+and the server responds with a syNAC
+
+614
+00:22:59,279 --> 00:23:01,000
+and then waits for an AC from the client.
+
+615
+00:23:01,828 --> 00:23:02,930
+Well, the sin flood
+
+616
+00:23:03,250 --> 00:23:05,469
+attempts to overwhelm the server by exhausting
+
+617
+00:23:05,469 --> 00:23:07,549
+the sin queue, which is going to deny
+
+618
+00:23:07,549 --> 00:23:08,848
+legitimate connections.
+
+619
+00:23:09,709 --> 00:23:11,868
+So this is mitigated at our edge
+
+620
+00:23:11,868 --> 00:23:14,269
+locations using something called a sin proxy.
+
+621
+00:23:15,239 --> 00:23:17,140
+So instead of storing that sin,
+
+622
+00:23:17,479 --> 00:23:19,578
+we encode the connection information
+
+623
+00:23:19,848 --> 00:23:21,880
+into a sequence number that's sent back to the
+
+624
+00:23:21,880 --> 00:23:24,279
+client. And when legitimate
+
+625
+00:23:24,279 --> 00:23:25,989
+clients respond to that request,
+
+626
+00:23:26,358 --> 00:23:28,578
+we decode the connection information
+
+627
+00:23:29,118 --> 00:23:31,479
+and use that to reconstruct the connection
+
+628
+00:23:31,479 --> 00:23:33,578
+state to complete the three-way handshake.
+
+629
+00:23:35,279 --> 00:23:37,400
+Next up is a what is called
+
+630
+00:23:37,400 --> 00:23:38,640
+a push act flood,
+
+631
+00:23:39,039 --> 00:23:40,838
+so this happens after the
+
+632
+00:23:41,189 --> 00:23:42,858
+three-way handshake is complete.
+
+633
+00:23:43,318 --> 00:23:45,519
+Um, clients can send
+
+634
+00:23:45,519 --> 00:23:47,559
+packets with a push flag set if they
+
+635
+00:23:47,559 --> 00:23:48,858
+want to. That's normal,
+
+636
+00:23:49,640 --> 00:23:51,858
+um, and this acts as a
+
+637
+00:23:52,199 --> 00:23:53,858
+directive for the server
+
+638
+00:23:54,118 --> 00:23:56,098
+to take the data out of that packet
+
+639
+00:23:56,368 --> 00:23:58,390
+and immediately push it up to the
+
+640
+00:23:58,390 --> 00:23:59,858
+application layer without buffering.
+
+641
+00:24:00,900 --> 00:24:02,939
+So a push back flood creates
+
+642
+00:24:02,939 --> 00:24:05,380
+a situation where there's a continuous
+
+643
+00:24:05,380 --> 00:24:06,380
+state of urgency.
+
+644
+00:24:07,029 --> 00:24:09,430
+Uh, and if you look at these packets
+
+645
+00:24:09,430 --> 00:24:11,469
+on a normal basis, they represent a
+
+646
+00:24:11,469 --> 00:24:13,009
+very small percentage
+
+647
+00:24:13,989 --> 00:24:16,140
+typically of total TCP traffic,
+
+648
+00:24:16,509 --> 00:24:18,509
+so we aggressively rate limit these
+
+649
+00:24:18,509 --> 00:24:19,029
+types,
+
+650
+00:24:19,838 --> 00:24:21,049
+uh, this type of traffic,
+
+651
+00:24:21,549 --> 00:24:23,789
+and this helps avoid a state of continuous
+
+652
+00:24:23,789 --> 00:24:24,549
+urgency.
+
+653
+00:24:26,799 --> 00:24:29,318
+The last I'll mention is that we blocked suspicious
+
+654
+00:24:29,318 --> 00:24:30,500
+UDP traffic.
+
+655
+00:24:31,118 --> 00:24:33,660
+This is based on port numbers that are
+
+656
+00:24:33,789 --> 00:24:35,989
+typically only relevant outside of cloud
+
+657
+00:24:35,989 --> 00:24:36,559
+environments.
+
+658
+00:24:38,640 --> 00:24:39,578
+The next piece here
+
+659
+00:24:39,920 --> 00:24:42,578
+is that it's important to protect your global accelerator
+
+660
+00:24:42,759 --> 00:24:45,140
+endpoint with AWS Shield Advance.
+
+661
+00:24:46,108 --> 00:24:48,900
+So with Shield Advance, it will place mitigations
+
+662
+00:24:49,118 --> 00:24:49,818
+using.
+
+663
+00:24:50,640 --> 00:24:52,880
+Thresholds that are twice as sensitive
+
+664
+00:24:52,880 --> 00:24:53,900
+as shield standard,
+
+665
+00:24:54,199 --> 00:24:56,279
+and these mitigations will stay
+
+666
+00:24:56,279 --> 00:24:58,838
+in place based on exponentially increasing
+
+667
+00:24:58,838 --> 00:24:59,779
+TTLs
+
+668
+00:25:00,078 --> 00:25:02,239
+to help mitigate frequently reoccurring
+
+669
+00:25:02,239 --> 00:25:02,828
+attacks.
+
+670
+00:25:03,729 --> 00:25:06,199
+Now also with Shield Advance you gain access to
+
+671
+00:25:06,199 --> 00:25:07,630
+the Shield Response team,
+
+672
+00:25:08,009 --> 00:25:08,890
+and this is a team
+
+673
+00:25:09,209 --> 00:25:11,279
+of DDoS response engineers
+
+674
+00:25:11,279 --> 00:25:12,229
+all around the world
+
+675
+00:25:12,650 --> 00:25:15,088
+that you can engage to get help troubleshooting
+
+676
+00:25:15,088 --> 00:25:17,130
+more complex issues that you
+
+677
+00:25:17,130 --> 00:25:18,509
+haven't been able to mitigate,
+
+678
+00:25:18,769 --> 00:25:20,828
+and they can help you implement
+
+679
+00:25:21,328 --> 00:25:23,588
+sophisticated mitigations in your environment
+
+680
+00:25:24,088 --> 00:25:26,209
+and we are of course fortunate to have Elena
+
+681
+00:25:26,209 --> 00:25:28,299
+managing that team for us at AWS.
+
+682
+00:25:30,759 --> 00:25:33,430
+All right, let's move on to HTTP workloads.
+
+683
+00:25:35,578 --> 00:25:37,670
+So this part looks similar. We have an HTTP
+
+684
+00:25:37,670 --> 00:25:38,368
+workload
+
+685
+00:25:38,670 --> 00:25:40,949
+again running in private subnets to
+
+686
+00:25:40,949 --> 00:25:42,130
+reduce internet exposure,
+
+687
+00:25:42,459 --> 00:25:44,469
+and we're using an auto scaling mechanism
+
+688
+00:25:44,469 --> 00:25:46,729
+to ensure you can scale out if you need to
+
+689
+00:25:47,170 --> 00:25:49,529
+to absorb an unmitigated flood.
+
+690
+00:25:50,500 --> 00:25:51,318
+We're also using
+
+691
+00:25:52,650 --> 00:25:54,719
+An intelligent load balance load
+
+692
+00:25:54,719 --> 00:25:57,098
+balancing service. In this case it's an
+
+693
+00:25:57,098 --> 00:25:59,430
+application load balancer because it's HTTP aware.
+
+694
+00:26:00,640 --> 00:26:02,650
+And this will evenly distribute traffic
+
+695
+00:26:02,650 --> 00:26:03,989
+across your fleet as well.
+
+696
+00:26:04,449 --> 00:26:05,229
+Great idea,
+
+697
+00:26:05,608 --> 00:26:07,949
+and you'll see that this is also in
+
+698
+00:26:08,049 --> 00:26:10,469
+private subnets to reduce internet exposure.
+
+699
+00:26:11,630 --> 00:26:13,709
+You may be wondering how are your clients going to reach
+
+700
+00:26:13,709 --> 00:26:15,779
+this load balancer if it's sitting in
+
+701
+00:26:15,779 --> 00:26:18,150
+a private subnet that's not reachable from the
+
+702
+00:26:18,150 --> 00:26:20,588
+internet. Well,
+
+703
+00:26:20,660 --> 00:26:22,828
+for all HTTP workloads exposed
+
+704
+00:26:22,828 --> 00:26:25,108
+to the internet, we recommend using Amazon
+
+705
+00:26:25,108 --> 00:26:25,858
+Cloudfront,
+
+706
+00:26:26,150 --> 00:26:27,689
+our managed CDN service.
+
+707
+00:26:28,868 --> 00:26:31,358
+A relatively new feature with Cloudfront
+
+708
+00:26:31,358 --> 00:26:33,078
+is called VPC Origins.
+
+709
+00:26:33,939 --> 00:26:35,078
+This lets you define
+
+710
+00:26:35,459 --> 00:26:37,838
+a VPC origin in Cloudfront
+
+711
+00:26:38,019 --> 00:26:40,098
+that references a resource in your
+
+712
+00:26:40,098 --> 00:26:41,739
+VPC that's private.
+
+713
+00:26:42,549 --> 00:26:44,750
+Then you can set up a cloud front distribution
+
+714
+00:26:45,068 --> 00:26:47,189
+using the VPC origin which
+
+715
+00:26:47,189 --> 00:26:49,289
+will route traffic over the Abys global
+
+716
+00:26:49,289 --> 00:26:51,459
+network in a way that doesn't require your
+
+717
+00:26:51,459 --> 00:26:53,650
+origin to be exposed to the public internet
+
+718
+00:26:53,650 --> 00:26:54,348
+at all.
+
+719
+00:26:54,959 --> 00:26:56,969
+So most of you that are using Cloudfront
+
+720
+00:26:57,309 --> 00:26:59,509
+might have origins that are exposed to the
+
+721
+00:26:59,509 --> 00:27:01,410
+internet, and I strongly encourage you
+
+722
+00:27:01,670 --> 00:27:03,509
+to take a look at this feature if you haven't yet.
+
+723
+00:27:06,039 --> 00:27:08,259
+Also at all of our cloud front edge
+
+724
+00:27:08,259 --> 00:27:08,858
+locations
+
+725
+00:27:09,160 --> 00:27:11,469
+we rate limit application layer
+
+726
+00:27:11,469 --> 00:27:13,779
+known offender traffic again this is based on
+
+727
+00:27:13,959 --> 00:27:16,189
+the threat intelligence that Elena outlined
+
+728
+00:27:16,189 --> 00:27:16,699
+earlier.
+
+729
+00:27:18,140 --> 00:27:20,529
+And at these edge locations we block
+
+730
+00:27:20,529 --> 00:27:22,368
+all known network layer threats.
+
+731
+00:27:24,719 --> 00:27:26,939
+Now with Cloudfront, we recommend
+
+732
+00:27:26,939 --> 00:27:29,199
+protecting your distributions with
+
+733
+00:27:29,199 --> 00:27:30,108
+AWS WAF.
+
+734
+00:27:31,328 --> 00:27:34,209
+Now ADBS WAF has been around since 2015
+
+735
+00:27:34,209 --> 00:27:36,410
+and it's evolved to address a wide variety
+
+736
+00:27:36,410 --> 00:27:37,219
+of threats,
+
+737
+00:27:37,828 --> 00:27:39,959
+but there are a few here that are
+
+738
+00:27:39,959 --> 00:27:42,309
+specific and unique to DDoS threats.
+
+739
+00:27:43,160 --> 00:27:45,269
+The first is a new managed rule group
+
+740
+00:27:45,410 --> 00:27:47,608
+this year called the Anti-DoS managed
+
+741
+00:27:47,608 --> 00:27:48,309
+rule Group,
+
+742
+00:27:48,848 --> 00:27:50,949
+and I'm going to dive deeper into this,
+
+743
+00:27:51,000 --> 00:27:51,709
+uh, in a bit.
+
+744
+00:27:53,289 --> 00:27:55,328
+Another one I have listed here is the DDoS
+
+745
+00:27:55,328 --> 00:27:56,289
+IP list,
+
+746
+00:27:56,890 --> 00:27:59,519
+and this is a managed rule with an AWBSWAF
+
+747
+00:27:59,519 --> 00:28:01,949
+that has a list of IPs that's very similar
+
+748
+00:28:01,949 --> 00:28:04,130
+to the application known offenders list
+
+749
+00:28:04,130 --> 00:28:06,539
+that we rate limit at these edge locations.
+
+750
+00:28:06,969 --> 00:28:09,529
+And as you'll see, you can use this rule to tailor
+
+751
+00:28:09,529 --> 00:28:11,529
+your mitigations in AWSSWAF if you
+
+752
+00:28:11,529 --> 00:28:12,229
+need to,
+
+753
+00:28:12,729 --> 00:28:14,009
+and we'll go through that as well.
+
+754
+00:28:16,439 --> 00:28:18,838
+Now before we get into the anti-DDOS
+
+755
+00:28:18,838 --> 00:28:21,019
+rule group, there are a couple
+
+756
+00:28:21,019 --> 00:28:23,118
+of AWS WAF features that
+
+757
+00:28:23,118 --> 00:28:24,299
+we'll review first.
+
+758
+00:28:24,799 --> 00:28:27,098
+The first is WAF rule labels.
+
+759
+00:28:28,390 --> 00:28:30,630
+The second one is the challenge
+
+760
+00:28:30,630 --> 00:28:33,739
+action. So
+
+761
+00:28:33,739 --> 00:28:36,009
+here's a request that might be coming into your
+
+762
+00:28:36,009 --> 00:28:38,779
+application where it has a URI of terraform.
+
+763
+00:28:39,500 --> 00:28:41,709
+And the source of this request is
+
+764
+00:28:41,709 --> 00:28:42,269
+Mars,
+
+765
+00:28:42,549 --> 00:28:44,650
+so we're getting a request from Mars just to keep things
+
+766
+00:28:44,650 --> 00:28:45,789
+a little interesting here.
+
+767
+00:28:46,930 --> 00:28:49,449
+So WAF rules, they typically inspect
+
+768
+00:28:49,449 --> 00:28:51,489
+one element of a request like maybe
+
+769
+00:28:51,489 --> 00:28:53,809
+the URI or query arguments
+
+770
+00:28:53,809 --> 00:28:56,009
+or the body of a request or the source
+
+771
+00:28:56,009 --> 00:28:57,299
+IP source geo
+
+772
+00:28:57,650 --> 00:28:58,789
+things of that nature
+
+773
+00:28:59,368 --> 00:28:59,989
+and often
+
+774
+00:29:00,848 --> 00:29:02,890
+that WAF rule generates a signal that
+
+775
+00:29:02,890 --> 00:29:05,328
+by itself is not enough to decide ultimately
+
+776
+00:29:05,328 --> 00:29:06,868
+what you wanna do with that request.
+
+777
+00:29:07,900 --> 00:29:08,479
+So
+
+778
+00:29:09,098 --> 00:29:11,699
+It would be nice if WAF rules could annotate
+
+779
+00:29:11,699 --> 00:29:13,939
+a request by adding metadata
+
+780
+00:29:14,259 --> 00:29:16,439
+that could then be inspected by other rules
+
+781
+00:29:16,818 --> 00:29:18,979
+to make a final decision on what to do with that
+
+782
+00:29:18,979 --> 00:29:21,180
+request based on a combination of signals,
+
+783
+00:29:21,618 --> 00:29:23,729
+and that is where rule labels come into
+
+784
+00:29:23,729 --> 00:29:26,078
+play. So when this
+
+785
+00:29:26,078 --> 00:29:28,449
+request comes in to your system and it's inspected
+
+786
+00:29:28,449 --> 00:29:29,618
+by AWS WAF.
+
+787
+00:29:30,410 --> 00:29:32,410
+Let's say this rule looks at the URI and
+
+788
+00:29:32,410 --> 00:29:34,150
+says if it's slashed terraform.
+
+789
+00:29:35,000 --> 00:29:37,160
+I'm just gonna count this request. I'm not going to block
+
+790
+00:29:37,160 --> 00:29:38,459
+it or allow it,
+
+791
+00:29:38,799 --> 00:29:40,979
+and when you do that, you can have this rule
+
+792
+00:29:40,979 --> 00:29:42,699
+attach a label to that request.
+
+793
+00:29:43,739 --> 00:29:45,779
+So currently terraforming a planet
+
+794
+00:29:45,779 --> 00:29:47,858
+is kind of expensive, so we're
+
+795
+00:29:47,858 --> 00:29:49,939
+just going to label this with expensive and
+
+796
+00:29:49,939 --> 00:29:51,939
+so now the request
+
+797
+00:29:51,939 --> 00:29:53,959
+inside of Adabis WAF looks like this.
+
+798
+00:29:54,219 --> 00:29:56,469
+It's got one label on it called expensive.
+
+799
+00:29:57,838 --> 00:29:59,890
+The next rule comes into play and it's looking
+
+800
+00:29:59,890 --> 00:30:01,140
+at the source geo,
+
+801
+00:30:01,608 --> 00:30:03,949
+and if that is Mars, that's currently
+
+802
+00:30:04,410 --> 00:30:06,529
+a hazardous location to operate, so
+
+803
+00:30:06,529 --> 00:30:08,910
+we're going to add another label called hazardous.
+
+804
+00:30:09,650 --> 00:30:11,650
+And now the request has two labels
+
+805
+00:30:11,650 --> 00:30:12,199
+on it
+
+806
+00:30:12,539 --> 00:30:13,959
+expensive and hazardous.
+
+807
+00:30:15,338 --> 00:30:17,539
+The third rule now comes into play and
+
+808
+00:30:17,539 --> 00:30:19,618
+you'll see that it's not actually looking at any
+
+809
+00:30:19,618 --> 00:30:21,900
+of the original fields on the HTTP
+
+810
+00:30:21,900 --> 00:30:23,759
+request. It's just looking at labels
+
+811
+00:30:24,140 --> 00:30:26,299
+and it's looking at for both of these labels
+
+812
+00:30:26,299 --> 00:30:28,299
+and if they both are present, it's going to
+
+813
+00:30:28,299 --> 00:30:30,459
+make a decision to block
+
+814
+00:30:30,459 --> 00:30:31,400
+this request
+
+815
+00:30:31,779 --> 00:30:34,118
+because maybe your business isn't quite ready yet
+
+816
+00:30:34,578 --> 00:30:35,719
+to perform
+
+817
+00:30:36,838 --> 00:30:38,858
+a project that's both this expensive and this
+
+818
+00:30:38,858 --> 00:30:39,578
+hazardous.
+
+819
+00:30:43,289 --> 00:30:44,769
+Next up is challenge action.
+
+820
+00:30:45,670 --> 00:30:47,769
+So when your web
+
+821
+00:30:47,769 --> 00:30:49,789
+application receives a flood of
+
+822
+00:30:49,789 --> 00:30:51,828
+traffic, you have to decide what to
+
+823
+00:30:51,828 --> 00:30:52,430
+do with it.
+
+824
+00:30:53,689 --> 00:30:55,588
+Now you could just block all of it,
+
+825
+00:30:56,049 --> 00:30:58,209
+but that is almost certainly going to cause
+
+826
+00:30:58,209 --> 00:31:00,328
+false positives because it's a mix of good
+
+827
+00:31:00,328 --> 00:31:01,588
+and bad traffic.
+
+828
+00:31:02,250 --> 00:31:04,489
+So it would be nice if there was a way for AWS
+
+829
+00:31:04,489 --> 00:31:06,529
+WAF to respond to traffic during
+
+830
+00:31:06,529 --> 00:31:07,309
+a flood
+
+831
+00:31:07,890 --> 00:31:10,269
+that disrupts the malicious traffic
+
+832
+00:31:10,529 --> 00:31:12,529
+but does not impact the experience
+
+833
+00:31:12,529 --> 00:31:13,709
+of a normal user,
+
+834
+00:31:14,410 --> 00:31:16,410
+and that is where the challenge action
+
+835
+00:31:16,410 --> 00:31:17,289
+comes into play.
+
+836
+00:31:19,259 --> 00:31:21,299
+So here we have a client, you
+
+837
+00:31:21,299 --> 00:31:22,479
+don't know if it's good or bad,
+
+838
+00:31:22,900 --> 00:31:24,880
+sending a request to your login page.
+
+839
+00:31:25,529 --> 00:31:27,529
+And the cookie is blank, which just means
+
+840
+00:31:27,529 --> 00:31:29,068
+we haven't seen this client before.
+
+841
+00:31:31,269 --> 00:31:33,489
+So ADFS WAF is going to look at this request
+
+842
+00:31:33,489 --> 00:31:35,279
+and if the URI is log in,
+
+843
+00:31:35,670 --> 00:31:37,719
+we're not gonna allow or block the request,
+
+844
+00:31:37,750 --> 00:31:39,989
+we're gonna respond with a challenge.
+
+845
+00:31:41,598 --> 00:31:43,680
+So what happens here is the WAF
+
+846
+00:31:43,680 --> 00:31:45,848
+returns some HTML content
+
+847
+00:31:45,848 --> 00:31:47,848
+to the client that contains an embedded
+
+848
+00:31:47,848 --> 00:31:50,180
+script. Now
+
+849
+00:31:50,180 --> 00:31:52,160
+the client needs to run this script
+
+850
+00:31:52,779 --> 00:31:54,818
+because what it does is it collects metadata
+
+851
+00:31:54,818 --> 00:31:56,939
+about the client environment and we call this
+
+852
+00:31:56,939 --> 00:31:57,799
+a fingerprint.
+
+853
+00:31:58,969 --> 00:32:00,750
+Now the script introduces
+
+854
+00:32:01,209 --> 00:32:03,430
+a computational cost
+
+855
+00:32:03,430 --> 00:32:05,449
+that's expensive for botnets at
+
+856
+00:32:05,449 --> 00:32:06,769
+scale to operate,
+
+857
+00:32:07,209 --> 00:32:09,250
+but it's not something a normal human would
+
+858
+00:32:09,250 --> 00:32:09,789
+notice.
+
+859
+00:32:10,838 --> 00:32:13,199
+And also in the context of DDoS.
+
+860
+00:32:14,189 --> 00:32:16,229
+Usually what's happening is the client,
+
+861
+00:32:16,390 --> 00:32:18,660
+the driver is just simply trying to overwhelm
+
+862
+00:32:18,660 --> 00:32:20,900
+you with requests and it's not even paying
+
+863
+00:32:20,900 --> 00:32:23,029
+attention to the response at all, let alone
+
+864
+00:32:23,029 --> 00:32:24,328
+take the time to run a script.
+
+865
+00:32:26,219 --> 00:32:27,279
+So this script
+
+866
+00:32:27,939 --> 00:32:30,098
+generates a fingerprint. The fingerprint is
+
+867
+00:32:30,098 --> 00:32:33,259
+sent back to A ofus WA where it's evaluated,
+
+868
+00:32:33,500 --> 00:32:34,680
+and what we're doing here is
+
+869
+00:32:35,059 --> 00:32:37,348
+trying to determine if we think that this is a human
+
+870
+00:32:37,348 --> 00:32:39,578
+or a bot, something that's not a human.
+
+871
+00:32:40,630 --> 00:32:41,729
+If it is a human
+
+872
+00:32:42,739 --> 00:32:44,479
+We generate an encrypted token
+
+873
+00:32:44,739 --> 00:32:46,180
+that's sent back to the client.
+
+874
+00:32:47,098 --> 00:32:49,180
+And then the client stores that token
+
+875
+00:32:49,299 --> 00:32:50,140
+in a cookie,
+
+876
+00:32:50,459 --> 00:32:51,959
+resends the request.
+
+877
+00:32:53,170 --> 00:32:55,630
+Now this rule evaluates the request again,
+
+878
+00:32:56,130 --> 00:32:58,368
+and if it sees that there's a valid waft token
+
+879
+00:32:58,449 --> 00:33:00,489
+in the cookie, it just moves on to the next
+
+880
+00:33:00,489 --> 00:33:03,049
+rule to complete this handshake
+
+881
+00:33:03,049 --> 00:33:07,920
+process. All
+
+882
+00:33:07,920 --> 00:33:09,959
+right, now that we've looked at WAF rule
+
+883
+00:33:09,959 --> 00:33:11,959
+labels and the challenge action, let's get into
+
+884
+00:33:11,959 --> 00:33:14,039
+this anti-DDoS rule group and see how it
+
+885
+00:33:14,039 --> 00:33:14,559
+works.
+
+886
+00:33:17,199 --> 00:33:19,279
+So you're following best practices and you've got
+
+887
+00:33:19,279 --> 00:33:21,519
+a cloud front distribution set up and
+
+888
+00:33:21,519 --> 00:33:23,759
+you're seeing traffic coming from a
+
+889
+00:33:23,759 --> 00:33:25,279
+wide variety of clients.
+
+890
+00:33:26,930 --> 00:33:29,259
+And you've also protected your cloud front distribution
+
+891
+00:33:29,259 --> 00:33:30,229
+with AWS WF
+
+892
+00:33:30,739 --> 00:33:32,818
+and you have implemented this new
+
+893
+00:33:32,818 --> 00:33:34,900
+anti-DDoS managed rule group.
+
+894
+00:33:36,098 --> 00:33:38,269
+So what happens right away is that the WAF
+
+895
+00:33:38,269 --> 00:33:39,328
+starts to learn
+
+896
+00:33:39,630 --> 00:33:41,630
+what normal traffic looks like for
+
+897
+00:33:41,630 --> 00:33:42,719
+your web application.
+
+898
+00:33:43,920 --> 00:33:45,608
+And we call this a baseline.
+
+899
+00:33:46,689 --> 00:33:48,939
+This baseline is established within 15
+
+900
+00:33:48,939 --> 00:33:49,588
+minutes.
+
+901
+00:33:50,009 --> 00:33:51,269
+It's a rolling baseline
+
+902
+00:33:51,608 --> 00:33:53,588
+that's updated every 5 seconds.
+
+903
+00:33:54,430 --> 00:33:56,469
+Now one of the great things about this baseline
+
+904
+00:33:56,709 --> 00:33:57,338
+is that
+
+905
+00:33:57,828 --> 00:34:00,269
+we can detect anomalies in traffic
+
+906
+00:34:00,269 --> 00:34:02,088
+that are unique to your workload.
+
+907
+00:34:03,630 --> 00:34:05,709
+And not all anomalies
+
+908
+00:34:05,709 --> 00:34:07,930
+necessarily though are bad.
+
+909
+00:34:08,269 --> 00:34:10,469
+You might have a flash flood of traffic that's
+
+910
+00:34:10,469 --> 00:34:12,708
+a spike in traffic from legitimate
+
+911
+00:34:12,708 --> 00:34:14,289
+users and you don't want to block that.
+
+912
+00:34:15,228 --> 00:34:17,349
+And you need a way to differentiate the good
+
+913
+00:34:17,349 --> 00:34:18,550
+from a bad spike.
+
+914
+00:34:19,300 --> 00:34:21,389
+And we use the threat intelligence
+
+915
+00:34:21,389 --> 00:34:23,389
+that Elena outlined earlier to help make
+
+916
+00:34:23,389 --> 00:34:24,708
+that differentiation.
+
+917
+00:34:27,039 --> 00:34:29,539
+Now when there's a malicious spike in traffic,
+
+918
+00:34:29,717 --> 00:34:31,418
+we call this a DDoS event,
+
+919
+00:34:32,039 --> 00:34:34,039
+and every request that arrives
+
+920
+00:34:34,039 --> 00:34:36,239
+during a DDoS event is labeled
+
+921
+00:34:36,239 --> 00:34:38,498
+with event detected by these rules,
+
+922
+00:34:39,117 --> 00:34:41,117
+and you'll see how that can come into play later
+
+923
+00:34:41,117 --> 00:34:42,018
+if you want to tailor
+
+924
+00:34:42,947 --> 00:34:43,878
+the behavior here.
+
+925
+00:34:45,159 --> 00:34:47,559
+Now during a DDoS event, not every
+
+926
+00:34:47,559 --> 00:34:49,570
+request that comes in is malicious.
+
+927
+00:34:49,679 --> 00:34:51,840
+There's going to be good traffic in the mix as
+
+928
+00:34:51,840 --> 00:34:53,869
+well. And so what
+
+929
+00:34:53,869 --> 00:34:56,429
+this rule group does is it assigns a suspicion
+
+930
+00:34:56,429 --> 00:34:57,119
+score,
+
+931
+00:34:57,429 --> 00:34:58,070
+and there's
+
+932
+00:34:58,349 --> 00:35:00,610
+3 levels here low, medium, and high,
+
+933
+00:35:00,949 --> 00:35:03,219
+and you can see the corresponding labels that
+
+934
+00:35:03,219 --> 00:35:05,510
+are added to suspicion, uh,
+
+935
+00:35:05,599 --> 00:35:07,789
+to requests based on the level of suspicion that's
+
+936
+00:35:07,789 --> 00:35:09,860
+there. And this is
+
+937
+00:35:09,860 --> 00:35:11,978
+great because if you need to, you can fine
+
+938
+00:35:11,978 --> 00:35:14,059
+tune the sensitivity of this rule group
+
+939
+00:35:14,059 --> 00:35:16,199
+based on these suspicion levels if you need
+
+940
+00:35:16,199 --> 00:35:18,360
+to, so you'll see how that works in a bit.
+
+941
+00:35:21,780 --> 00:35:23,978
+The last piece here is that in this rule
+
+942
+00:35:23,978 --> 00:35:25,119
+group you can define
+
+943
+00:35:25,539 --> 00:35:26,938
+a regular expression
+
+944
+00:35:27,219 --> 00:35:29,469
+that essentially determines which
+
+945
+00:35:29,469 --> 00:35:31,530
+URI's in your
+
+946
+00:35:31,530 --> 00:35:33,369
+application support the challenge action
+
+947
+00:35:33,699 --> 00:35:35,320
+so that helps you narrow down
+
+948
+00:35:35,860 --> 00:35:37,860
+the scope for which these rule
+
+949
+00:35:37,860 --> 00:35:40,099
+groups will respond with a challenge or not.
+
+950
+00:35:43,340 --> 00:35:45,050
+Now for most customers,
+
+951
+00:35:47,039 --> 00:35:49,090
+You really don't need to understand any more than what
+
+952
+00:35:49,090 --> 00:35:50,148
+I've already covered.
+
+953
+00:35:50,530 --> 00:35:52,688
+Uh, this rule group works great for most customers
+
+954
+00:35:52,688 --> 00:35:54,929
+using the defaults, but since this is a 300
+
+955
+00:35:54,929 --> 00:35:57,530
+level talk, we're going to go a little bit deeper.
+
+956
+00:35:59,728 --> 00:36:01,728
+Alright, so what are the rules in this rule group?
+
+957
+00:36:01,809 --> 00:36:02,938
+Well, there's 3 of them.
+
+958
+00:36:03,409 --> 00:36:05,570
+The first one is called Challenge all during
+
+959
+00:36:05,570 --> 00:36:06,128
+event.
+
+960
+00:36:07,159 --> 00:36:09,280
+So this rule will respond
+
+961
+00:36:09,280 --> 00:36:11,679
+to with a challenge for every single
+
+962
+00:36:11,679 --> 00:36:13,878
+request that comes in during a DDoS event
+
+963
+00:36:13,878 --> 00:36:14,898
+that's been detected.
+
+964
+00:36:15,750 --> 00:36:17,820
+And it but it only does this for requests
+
+965
+00:36:17,820 --> 00:36:20,110
+that are challengeable based on that regular expression
+
+966
+00:36:20,110 --> 00:36:21,449
+you've defined earlier
+
+967
+00:36:21,949 --> 00:36:24,030
+so it doesn't look at the suspicion score at
+
+968
+00:36:24,030 --> 00:36:24,610
+all.
+
+969
+00:36:25,188 --> 00:36:26,969
+So you can think of this rule as having
+
+970
+00:36:27,389 --> 00:36:29,090
+the maximum sensitivity
+
+971
+00:36:29,550 --> 00:36:30,849
+because it challenges everything.
+
+972
+00:36:32,429 --> 00:36:35,070
+Now, if you want to tailor the sensitivity
+
+973
+00:36:35,070 --> 00:36:36,188
+of this behavior,
+
+974
+00:36:36,628 --> 00:36:38,530
+you can put this rule in count mode,
+
+975
+00:36:39,070 --> 00:36:41,070
+which brings the next rule into play.
+
+976
+00:36:41,949 --> 00:36:43,550
+And this is called Challenge
+
+977
+00:36:44,079 --> 00:36:45,559
+DDoS requests.
+
+978
+00:36:46,429 --> 00:36:48,789
+So with this rule it's doing something very similar
+
+979
+00:36:48,789 --> 00:36:50,489
+only during a DDoS event
+
+980
+00:36:50,829 --> 00:36:52,949
+it's going to challenge requests, but
+
+981
+00:36:52,949 --> 00:36:54,449
+only if they are
+
+982
+00:36:54,719 --> 00:36:55,648
+suspicious.
+
+983
+00:36:57,110 --> 00:36:59,159
+And by default the sensitivity for this
+
+984
+00:36:59,159 --> 00:37:01,179
+rule is high and this is where
+
+985
+00:37:01,179 --> 00:37:03,378
+you define the sensitivity of that rule
+
+986
+00:37:03,840 --> 00:37:05,619
+and what this really means is that.
+
+987
+00:37:06,340 --> 00:37:08,340
+It's highly sensitive, which means it's
+
+988
+00:37:08,340 --> 00:37:10,579
+going to challenge any request that
+
+989
+00:37:10,579 --> 00:37:11,159
+has
+
+990
+00:37:11,500 --> 00:37:13,139
+some level of suspicion,
+
+991
+00:37:13,739 --> 00:37:15,500
+really any level of suspicion.
+
+992
+00:37:16,590 --> 00:37:17,570
+Now let's say
+
+993
+00:37:17,989 --> 00:37:20,030
+it's being a little too aggressive and you
+
+994
+00:37:20,030 --> 00:37:21,168
+don't want it to challenge
+
+995
+00:37:22,188 --> 00:37:23,949
+requests that have low suspicion,
+
+996
+00:37:24,300 --> 00:37:26,369
+you can set this from high to medium to make it
+
+997
+00:37:26,369 --> 00:37:27,728
+less sensitive,
+
+998
+00:37:28,228 --> 00:37:29,188
+uh, and so on.
+
+999
+00:37:30,918 --> 00:37:33,199
+The third rule is called DDoS requests.
+
+1000
+00:37:34,070 --> 00:37:36,659
+And this will actually block
+
+1001
+00:37:37,059 --> 00:37:39,590
+requests that are suspicious during a DDoS
+
+1002
+00:37:39,590 --> 00:37:41,958
+event and by default the sensitivity
+
+1003
+00:37:41,958 --> 00:37:43,500
+to this rule is low
+
+1004
+00:37:43,840 --> 00:37:45,938
+to avoid false positives, so it's only
+
+1005
+00:37:45,938 --> 00:37:46,820
+going to block
+
+1006
+00:37:47,099 --> 00:37:49,340
+requests that have the highest suspicion level
+
+1007
+00:37:49,639 --> 00:37:50,840
+during a DDoS event.
+
+1008
+00:37:54,929 --> 00:37:57,128
+Alright, so let's talk about how you might wanna
+
+1009
+00:37:57,128 --> 00:37:59,728
+tailor the behavior of AWS WAF
+
+1010
+00:37:59,728 --> 00:38:00,619
+going beyond
+
+1011
+00:38:01,449 --> 00:38:03,590
+the capability you get out of the
+
+1012
+00:38:03,688 --> 00:38:05,570
+anti-DDoS managed rule group.
+
+1013
+00:38:06,949 --> 00:38:09,179
+So here we have edge locations off on the right
+
+1014
+00:38:09,179 --> 00:38:11,679
+and you've got Cloudfront set up with a distribution
+
+1015
+00:38:12,019 --> 00:38:13,510
+that's protected by AWS WAF
+
+1016
+00:38:14,179 --> 00:38:16,378
+and you've already got the anti-DDoS rule group in
+
+1017
+00:38:16,378 --> 00:38:18,599
+play. Let's walk
+
+1018
+00:38:18,599 --> 00:38:20,719
+through 4 different types of traffic
+
+1019
+00:38:20,719 --> 00:38:22,760
+that you might want to consider when tailoring
+
+1020
+00:38:22,760 --> 00:38:23,860
+the behavior here.
+
+1021
+00:38:25,280 --> 00:38:26,329
+The first is that
+
+1022
+00:38:27,139 --> 00:38:29,228
+You might have normal users that are sending
+
+1023
+00:38:29,228 --> 00:38:31,250
+around 50 requests per minute.
+
+1024
+00:38:32,398 --> 00:38:34,438
+And you'll see here that some of these users might
+
+1025
+00:38:34,438 --> 00:38:36,628
+be using an open proxy, which is
+
+1026
+00:38:36,639 --> 00:38:37,719
+perfectly normal.
+
+1027
+00:38:38,159 --> 00:38:40,438
+Unfortunately some of these users
+
+1028
+00:38:40,438 --> 00:38:42,938
+are using an open proxy that's red here
+
+1029
+00:38:43,119 --> 00:38:45,860
+indicating that it has been recently abused
+
+1030
+00:38:46,360 --> 00:38:48,478
+and is actually on our
+
+1031
+00:38:48,478 --> 00:38:49,719
+known offenders list,
+
+1032
+00:38:50,000 --> 00:38:52,159
+so it's a bit of a tricky scenario that we have to deal
+
+1033
+00:38:52,159 --> 00:38:54,550
+with. The
+
+1034
+00:38:54,550 --> 00:38:56,418
+next use case is
+
+1035
+00:38:57,208 --> 00:38:59,398
+a threat actor that's using an IP address
+
+1036
+00:38:59,398 --> 00:39:00,090
+that has bad
+
+1037
+00:39:00,559 --> 00:39:02,750
+DDoS reputation, and they're sending 4
+
+1038
+00:39:02,750 --> 00:39:04,889
+times more traffic than you would expect.
+
+1039
+00:39:06,418 --> 00:39:08,639
+And then here's another user that's sending
+
+1040
+00:39:08,898 --> 00:39:11,188
+20 times more traffic than you would expect
+
+1041
+00:39:11,188 --> 00:39:13,800
+again using an IP that has a bad reputation.
+
+1042
+00:39:14,958 --> 00:39:17,179
+And then our fourth scenario here
+
+1043
+00:39:17,398 --> 00:39:19,639
+is a thread actor that's using an IP address
+
+1044
+00:39:19,639 --> 00:39:21,750
+that doesn't have a bad reputation. It's
+
+1045
+00:39:21,750 --> 00:39:23,438
+actually good as far as we can tell.
+
+1046
+00:39:24,320 --> 00:39:24,949
+And
+
+1047
+00:39:25,320 --> 00:39:27,570
+they're sending over 100 times more traffic
+
+1048
+00:39:27,570 --> 00:39:28,590
+than you would expect.
+
+1049
+00:39:29,969 --> 00:39:32,099
+So what are we going to do with these situations?
+
+1050
+00:39:32,300 --> 00:39:33,878
+Well, on the lower right corner.
+
+1051
+00:39:35,179 --> 00:39:37,340
+Let's say that you implement this DDoS
+
+1052
+00:39:37,340 --> 00:39:39,610
+IP list rule that I mentioned earlier,
+
+1053
+00:39:40,019 --> 00:39:42,760
+so this is a list of IPs
+
+1054
+00:39:43,019 --> 00:39:45,219
+that has our known offenders based on our
+
+1055
+00:39:45,219 --> 00:39:47,300
+threat intelligence, and you could just put this in
+
+1056
+00:39:47,300 --> 00:39:48,159
+block mode,
+
+1057
+00:39:48,739 --> 00:39:50,260
+for example, to start off.
+
+1058
+00:39:51,918 --> 00:39:53,579
+Well, what's going to happen here?
+
+1059
+00:39:54,570 --> 00:39:56,389
+Is that this top threat actor,
+
+1060
+00:39:56,728 --> 00:39:58,728
+well, all their traffic will be allowed
+
+1061
+00:39:58,728 --> 00:40:00,789
+because they're using an IP that doesn't have
+
+1062
+00:40:01,188 --> 00:40:03,250
+a bad reputation, so it won't be
+
+1063
+00:40:03,250 --> 00:40:05,329
+blocked by the DDoS IP list, and
+
+1064
+00:40:05,329 --> 00:40:06,750
+we call this a false negative.
+
+1065
+00:40:07,329 --> 00:40:08,688
+This is not the outcome you want.
+
+1066
+00:40:10,530 --> 00:40:11,539
+The next two
+
+1067
+00:40:11,800 --> 00:40:13,878
+will be blocked because they're using IPs that
+
+1068
+00:40:13,878 --> 00:40:16,079
+are known offenders. That's all good.
+
+1069
+00:40:17,398 --> 00:40:18,168
+But here
+
+1070
+00:40:18,449 --> 00:40:20,610
+we're blocking normal users because they're
+
+1071
+00:40:20,610 --> 00:40:22,610
+using an open proxy that's been abused
+
+1072
+00:40:22,610 --> 00:40:25,228
+recently and we call this a false positive.
+
+1073
+00:40:26,378 --> 00:40:28,530
+And it's also a scenario that
+
+1074
+00:40:29,110 --> 00:40:31,208
+uh this is not the right outcome in this case.
+
+1075
+00:40:32,418 --> 00:40:34,458
+So what can we do to avoid false positives
+
+1076
+00:40:34,458 --> 00:40:35,840
+and false negatives here?
+
+1077
+00:40:37,219 --> 00:40:38,438
+Well, let's back up a little bit.
+
+1078
+00:40:39,559 --> 00:40:40,820
+And try something else.
+
+1079
+00:40:41,849 --> 00:40:42,510
+So here
+
+1080
+00:40:42,849 --> 00:40:45,269
+we still have the anti-DDoS rule group in play,
+
+1081
+00:40:46,128 --> 00:40:48,300
+but. Remember
+
+1082
+00:40:48,300 --> 00:40:50,539
+it is labeling traffic during a DDoS
+
+1083
+00:40:50,539 --> 00:40:52,739
+event with this event detective label, so let's
+
+1084
+00:40:52,739 --> 00:40:54,719
+see if we could take advantage of that
+
+1085
+00:40:55,260 --> 00:40:57,409
+and I'm using numbers here because the ordering is
+
+1086
+00:40:57,409 --> 00:40:59,840
+actually important on what we're walking through next.
+
+1087
+00:41:01,619 --> 00:41:03,898
+So let's put the DDoS IP list back into
+
+1088
+00:41:03,898 --> 00:41:05,938
+play, but instead of putting it in block
+
+1089
+00:41:05,938 --> 00:41:07,840
+mode, we'll just put it in count mode.
+
+1090
+00:41:09,099 --> 00:41:11,148
+And the value here is that it will label
+
+1091
+00:41:11,148 --> 00:41:13,349
+requests during a during a DDoS
+
+1092
+00:41:13,349 --> 00:41:13,989
+event
+
+1093
+00:41:14,389 --> 00:41:16,688
+with the DDoS list label.
+
+1094
+00:41:18,000 --> 00:41:20,079
+And what this means is that it gives you
+
+1095
+00:41:20,079 --> 00:41:22,360
+some metadata to tell if a request is coming
+
+1096
+00:41:22,360 --> 00:41:23,349
+from an IP
+
+1097
+00:41:23,688 --> 00:41:25,378
+that is a known offender.
+
+1098
+00:41:25,878 --> 00:41:27,918
+Now this DDoS list label is not
+
+1099
+00:41:27,918 --> 00:41:30,398
+the actual label for this rule. I've abbreviated
+
+1100
+00:41:30,398 --> 00:41:31,719
+it so it fits on the slide.
+
+1101
+00:41:34,320 --> 00:41:36,909
+So the 3rd rule we're going to add to this web ACL
+
+1102
+00:41:36,909 --> 00:41:38,269
+is a rate-based rule.
+
+1103
+00:41:39,510 --> 00:41:41,668
+So rate-based rules are great.
+
+1104
+00:41:42,820 --> 00:41:45,019
+What they do is they count the number of requests
+
+1105
+00:41:45,019 --> 00:41:45,860
+coming in
+
+1106
+00:41:46,139 --> 00:41:48,260
+by aggregating on some
+
+1107
+00:41:48,260 --> 00:41:49,179
+sort of key.
+
+1108
+00:41:49,918 --> 00:41:52,208
+And the key I'm using here is a source IP
+
+1109
+00:41:52,860 --> 00:41:54,969
+so it's gonna count every request by source
+
+1110
+00:41:54,969 --> 00:41:55,530
+IP.
+
+1111
+00:41:56,269 --> 00:41:58,489
+And it does this counting over a rolling time
+
+1112
+00:41:58,489 --> 00:41:59,050
+window,
+
+1113
+00:41:59,579 --> 00:42:01,570
+and I'm using a one minute window here.
+
+1114
+00:42:02,429 --> 00:42:04,628
+And you set a limit, and the limit I'm using
+
+1115
+00:42:04,628 --> 00:42:05,889
+here is 2000.
+
+1116
+00:42:07,128 --> 00:42:09,159
+So what this rule does is it's going
+
+1117
+00:42:09,159 --> 00:42:10,378
+to block traffic
+
+1118
+00:42:10,878 --> 00:42:13,059
+from any source IP that
+
+1119
+00:42:13,059 --> 00:42:15,159
+has sent more than 2000 requests during the
+
+1120
+00:42:15,159 --> 00:42:16,079
+past 1 minute.
+
+1121
+00:42:17,340 --> 00:42:18,159
+Which is great.
+
+1122
+00:42:18,628 --> 00:42:21,188
+So this is going to handle the, the
+
+1123
+00:42:21,469 --> 00:42:22,668
+top situation here.
+
+1124
+00:42:23,938 --> 00:42:26,139
+Now you might be tempted to just set this
+
+1125
+00:42:26,139 --> 00:42:28,260
+limit of 2000 to something much lower
+
+1126
+00:42:28,260 --> 00:42:29,519
+to address the other
+
+1127
+00:42:29,860 --> 00:42:31,079
+use cases here,
+
+1128
+00:42:31,659 --> 00:42:32,239
+um,
+
+1129
+00:42:32,659 --> 00:42:35,000
+but you want to be careful with that because you might have
+
+1130
+00:42:35,139 --> 00:42:36,829
+normal users, for example,
+
+1131
+00:42:37,099 --> 00:42:39,188
+that are behind a corporate proxy
+
+1132
+00:42:39,539 --> 00:42:41,159
+or a net gateway of some kind
+
+1133
+00:42:41,619 --> 00:42:42,398
+and you have a big
+
+1134
+00:42:43,099 --> 00:42:45,340
+collection of users that essentially
+
+1135
+00:42:45,340 --> 00:42:47,750
+all look like they're coming from the same public IP
+
+1136
+00:42:47,750 --> 00:42:48,269
+address.
+
+1137
+00:42:48,679 --> 00:42:50,688
+And that'll all get aggregated together and it
+
+1138
+00:42:50,688 --> 00:42:51,949
+could easily reach
+
+1139
+00:42:52,389 --> 00:42:54,148
+higher, much higher limits here. So
+
+1140
+00:42:54,449 --> 00:42:55,769
+with rate-based rules,
+
+1141
+00:42:56,610 --> 00:42:58,648
+the rule of thumb here is to err on the
+
+1142
+00:42:58,648 --> 00:43:00,849
+side of using limits that are higher than you might
+
+1143
+00:43:00,849 --> 00:43:03,010
+think to avoid false positives
+
+1144
+00:43:03,010 --> 00:43:05,050
+because they're still very effective at
+
+1145
+00:43:05,050 --> 00:43:06,750
+handling very large floods.
+
+1146
+00:43:09,099 --> 00:43:11,239
+The 4th rule is another rate-based rule.
+
+1147
+00:43:12,599 --> 00:43:15,228
+Here we have the limit much lower. It's down to 500
+
+1148
+00:43:15,228 --> 00:43:15,820
+per minute.
+
+1149
+00:43:17,269 --> 00:43:19,699
+But the scope here says DDoS list,
+
+1150
+00:43:20,059 --> 00:43:22,340
+so what this means is it's only going to count
+
+1151
+00:43:22,340 --> 00:43:24,659
+requests coming from source IPs
+
+1152
+00:43:24,659 --> 00:43:25,938
+that are on that list.
+
+1153
+00:43:26,840 --> 00:43:29,119
+So there's some level of risk here
+
+1154
+00:43:29,119 --> 00:43:31,398
+with that traffic, so it's safer to use a lower
+
+1155
+00:43:31,398 --> 00:43:33,659
+limit should not affect normal users.
+
+1156
+00:43:36,280 --> 00:43:38,599
+The last rule we're going to add is yet
+
+1157
+00:43:38,599 --> 00:43:39,938
+another rate-based rule.
+
+1158
+00:43:41,030 --> 00:43:43,110
+So this one is also counting by source
+
+1159
+00:43:43,110 --> 00:43:43,809
+IP,
+
+1160
+00:43:44,438 --> 00:43:46,510
+but the scope here is using DDoS list
+
+1161
+00:43:46,510 --> 00:43:48,590
+label plus a particular
+
+1162
+00:43:48,590 --> 00:43:49,320
+URI.
+
+1163
+00:43:50,070 --> 00:43:52,309
+So you might pick a URI that is
+
+1164
+00:43:52,309 --> 00:43:54,309
+especially sensitive to DDoS threats
+
+1165
+00:43:54,309 --> 00:43:55,090
+within your application.
+
+1166
+00:43:55,590 --> 00:43:57,628
+So it's only going to count requests for that
+
+1167
+00:43:57,628 --> 00:43:59,659
+URI and only if they're coming from a
+
+1168
+00:43:59,659 --> 00:44:01,250
+source that is suspicious.
+
+1169
+00:44:01,938 --> 00:44:04,159
+So you can use a much lower limit here
+
+1170
+00:44:04,159 --> 00:44:06,219
+and sort of layer these rate-based rules
+
+1171
+00:44:06,219 --> 00:44:06,958
+in a way.
+
+1172
+00:44:08,429 --> 00:44:10,708
+Now just in case normal users
+
+1173
+00:44:10,708 --> 00:44:12,829
+kind of wander into this territory of sending
+
+1174
+00:44:12,829 --> 00:44:15,228
+100 requests per minute for a particular URI,
+
+1175
+00:44:15,269 --> 00:44:17,099
+you don't want to impact those users,
+
+1176
+00:44:17,389 --> 00:44:19,429
+so we're using a challenge action here to
+
+1177
+00:44:19,429 --> 00:44:20,869
+avoid false positives.
+
+1178
+00:44:22,570 --> 00:44:24,590
+Now the anti-DDOS rule group
+
+1179
+00:44:24,590 --> 00:44:26,688
+adds this label of event detected.
+
+1180
+00:44:27,188 --> 00:44:28,648
+You could put that label
+
+1181
+00:44:28,909 --> 00:44:30,989
+in the scope of all these rate-based rules
+
+1182
+00:44:30,989 --> 00:44:33,219
+if you want to further narrow them down
+
+1183
+00:44:33,219 --> 00:44:35,349
+so they only come into play during an actual
+
+1184
+00:44:35,349 --> 00:44:36,269
+DDoS event,
+
+1185
+00:44:36,668 --> 00:44:39,369
+which would further reduce the risk of false positives.
+
+1186
+00:44:41,628 --> 00:44:44,070
+Alright, with that, let's hear from Bashar
+
+1187
+00:44:44,188 --> 00:44:45,418
+on how Figma
+
+1188
+00:44:45,989 --> 00:44:48,090
+has used these capabilities earlier this year
+
+1189
+00:44:48,228 --> 00:44:50,250
+to mitigate real world DDoS threats.
+
+1190
+00:44:56,849 --> 00:44:57,898
+All right, thank you, Brian.
+
+1191
+00:44:58,739 --> 00:45:00,820
+Hi, my name is Bashar, and I'm super excited to be
+
+1192
+00:45:00,820 --> 00:45:02,860
+talking about's journey with DDoS
+
+1193
+00:45:02,860 --> 00:45:04,519
+attacks over the last couple of years.
+
+1194
+00:45:05,269 --> 00:45:06,708
+So what is Figma?
+
+1195
+00:45:07,610 --> 00:45:09,619
+Figma is the platform that designers,
+
+1196
+00:45:10,030 --> 00:45:12,188
+product managers, and software engineers
+
+1197
+00:45:12,188 --> 00:45:14,208
+use to turn their ideas
+
+1198
+00:45:14,429 --> 00:45:15,750
+into shipped products.
+
+1199
+00:45:16,610 --> 00:45:18,849
+We have almost over 13
+
+1200
+00:45:18,849 --> 00:45:21,128
+million users who use Figma products
+
+1201
+00:45:21,128 --> 00:45:21,878
+every month,
+
+1202
+00:45:22,168 --> 00:45:24,320
+and over 95% of the Fortune
+
+1203
+00:45:24,320 --> 00:45:26,728
+500 companies use Figma
+
+1204
+00:45:26,728 --> 00:45:27,708
+products today.
+
+1205
+00:45:28,128 --> 00:45:30,378
+Almost every product that you use
+
+1206
+00:45:30,610 --> 00:45:31,869
+has been designed in
+
+1207
+00:45:32,648 --> 00:45:33,449
+in the browser.
+
+1208
+00:45:35,550 --> 00:45:37,809
+Our customers connect to our
+
+1209
+00:45:37,809 --> 00:45:39,860
+services using their web browser,
+
+1210
+00:45:40,188 --> 00:45:41,699
+mobile or desktop apps,
+
+1211
+00:45:42,148 --> 00:45:44,269
+and we funnel all that traffic
+
+1212
+00:45:44,269 --> 00:45:46,289
+through a cloud front to terminate their SSL
+
+1213
+00:45:46,289 --> 00:45:48,250
+connection closer to their location.
+
+1214
+00:45:48,840 --> 00:45:51,079
+And then we funnel that traffic eventually
+
+1215
+00:45:51,079 --> 00:45:53,639
+into our proxy for logging and observability,
+
+1216
+00:45:53,878 --> 00:45:54,760
+and finally
+
+1217
+00:45:55,039 --> 00:45:57,260
+that traffic hits our back end services
+
+1218
+00:45:57,438 --> 00:45:59,949
+that power figmas user experiences
+
+1219
+00:45:59,949 --> 00:46:02,199
+and collaborative features via either
+
+1220
+00:46:02,199 --> 00:46:03,139
+our real-time
+
+1221
+00:46:03,398 --> 00:46:05,820
+services or our application servers.
+
+1222
+00:46:08,289 --> 00:46:10,340
+Let's take a look at some of the attack patterns that
+
+1223
+00:46:10,340 --> 00:46:12,250
+we've seen over the last 2 years.
+
+1224
+00:46:12,579 --> 00:46:14,958
+This graph shows about a recent
+
+1225
+00:46:15,139 --> 00:46:16,360
+2 month period,
+
+1226
+00:46:16,929 --> 00:46:19,438
+um, and it shows like how many requests
+
+1227
+00:46:20,780 --> 00:46:21,639
+have hit our platform distribution
+
+1228
+00:46:22,019 --> 00:46:22,659
+per minute.
+
+1229
+00:46:23,820 --> 00:46:24,918
+And as you can see,
+
+1230
+00:46:25,929 --> 00:46:28,128
+These attacks happen almost on a
+
+1231
+00:46:28,128 --> 00:46:30,449
+weekly basis and sometimes multiple
+
+1232
+00:46:30,449 --> 00:46:31,458
+times in a day.
+
+1233
+00:46:31,809 --> 00:46:33,849
+They are very brief. They only last a few
+
+1234
+00:46:33,849 --> 00:46:35,849
+minutes, and they are many orders of
+
+1235
+00:46:35,849 --> 00:46:38,168
+magnitude more than our steady
+
+1236
+00:46:38,168 --> 00:46:38,949
+state traffic.
+
+1237
+00:46:39,648 --> 00:46:40,668
+There is no way
+
+1238
+00:46:41,010 --> 00:46:41,639
+we can,
+
+1239
+00:46:41,978 --> 00:46:44,208
+we can handle this much traffic. It's
+
+1240
+00:46:44,208 --> 00:46:46,329
+just like not economically possible to
+
+1241
+00:46:46,329 --> 00:46:48,639
+be provisioned for that much traffic in a steady state,
+
+1242
+00:46:48,969 --> 00:46:51,128
+nor can we scale up quickly
+
+1243
+00:46:51,128 --> 00:46:52,728
+enough to absorb that traffic.
+
+1244
+00:46:53,369 --> 00:46:54,628
+And when these attacks
+
+1245
+00:46:54,889 --> 00:46:55,750
+used to take down,
+
+1246
+00:46:56,519 --> 00:46:58,570
+our customers could not iterate on their
+
+1247
+00:46:58,570 --> 00:47:00,199
+designs, prototypes,
+
+1248
+00:47:00,530 --> 00:47:02,570
+and ideas, and they literally wouldn't be
+
+1249
+00:47:02,570 --> 00:47:03,688
+able to do their job.
+
+1250
+00:47:05,239 --> 00:47:06,659
+So how did we approach this?
+
+1251
+00:47:07,168 --> 00:47:09,750
+So first we try to analyze
+
+1252
+00:47:09,750 --> 00:47:11,769
+these requests to understand
+
+1253
+00:47:11,769 --> 00:47:14,188
+and find any signatures that we can use
+
+1254
+00:47:14,438 --> 00:47:15,469
+in order to
+
+1255
+00:47:15,849 --> 00:47:17,250
+step up our defenses.
+
+1256
+00:47:17,610 --> 00:47:20,148
+So we adopted a defense in depth strategy
+
+1257
+00:47:20,449 --> 00:47:21,889
+by trying to leverage both,
+
+1258
+00:47:22,688 --> 00:47:24,849
+as Brian mentioned, and also
+
+1259
+00:47:24,849 --> 00:47:27,050
+adding some protections in our proxy layer
+
+1260
+00:47:27,050 --> 00:47:29,329
+to protect against these types of attacks.
+
+1261
+00:47:29,809 --> 00:47:30,530
+And finally,
+
+1262
+00:47:30,949 --> 00:47:32,619
+As these attacks have evolved,
+
+1263
+00:47:33,070 --> 00:47:35,099
+we continue to iterate on
+
+1264
+00:47:35,099 --> 00:47:37,289
+our monitoring, observability,
+
+1265
+00:47:37,628 --> 00:47:39,829
+and fine tuning our protections over
+
+1266
+00:47:39,829 --> 00:47:42,659
+time. So
+
+1267
+00:47:42,668 --> 00:47:44,458
+how do we analyze these requests?
+
+1268
+00:47:44,789 --> 00:47:46,789
+So we relied heavily on
+
+1269
+00:47:46,789 --> 00:47:48,869
+WAF logging in order to
+
+1270
+00:47:48,869 --> 00:47:50,250
+try to capture
+
+1271
+00:47:51,398 --> 00:47:53,179
+all the raw requests that come in
+
+1272
+00:47:53,438 --> 00:47:55,728
+and then use the cloud Watch logs insights
+
+1273
+00:47:55,789 --> 00:47:57,228
+to analyze these requests.
+
+1274
+00:47:57,675 --> 00:47:58,724
+to identify
+
+1275
+00:47:58,985 --> 00:48:01,023
+any suspicious patterns such
+
+1276
+00:48:01,023 --> 00:48:01,603
+as
+
+1277
+00:48:02,224 --> 00:48:04,523
+trying to identify the top talker IP
+
+1278
+00:48:04,523 --> 00:48:06,824
+addresses, or any suspicious headers
+
+1279
+00:48:06,824 --> 00:48:09,043
+that might come in that we can use in our
+
+1280
+00:48:09,043 --> 00:48:11,144
+rules for protections to block
+
+1281
+00:48:11,144 --> 00:48:12,503
+these types of attacks.
+
+1282
+00:48:13,239 --> 00:48:15,360
+Um, and so we
+
+1283
+00:48:15,360 --> 00:48:17,438
+added some basic rules and we
+
+1284
+00:48:17,438 --> 00:48:19,478
+also started in count mode because we didn't
+
+1285
+00:48:19,478 --> 00:48:21,820
+want to potentially affect user traffic.
+
+1286
+00:48:22,668 --> 00:48:23,280
+And
+
+1287
+00:48:23,559 --> 00:48:25,829
+we try to target just like the
+
+1288
+00:48:26,639 --> 00:48:29,019
+top toker IP addresses, GA 3s,
+
+1289
+00:48:29,719 --> 00:48:32,219
+and any suspicious headers we've seen such as
+
+1290
+00:48:32,320 --> 00:48:34,579
+unexpected user agents and so on.
+
+1291
+00:48:35,760 --> 00:48:38,159
+And then we also added some rate limiting rules
+
+1292
+00:48:38,159 --> 00:48:39,219
+on top of this
+
+1293
+00:48:39,478 --> 00:48:41,769
+to make sure we have multiple layers of protections.
+
+1294
+00:48:42,119 --> 00:48:44,550
+So we try to target different keys and
+
+1295
+00:48:44,550 --> 00:48:46,800
+time windows and thresholds in order
+
+1296
+00:48:46,800 --> 00:48:49,119
+to provide multiple layers of
+
+1297
+00:48:49,119 --> 00:48:49,639
+protections.
+
+1298
+00:48:50,119 --> 00:48:52,349
+So we try to rate limit the traffic per user
+
+1299
+00:48:52,349 --> 00:48:54,590
+and by targeting the cookie header,
+
+1300
+00:48:54,610 --> 00:48:56,648
+for example, to provide very
+
+1301
+00:48:56,648 --> 00:48:58,329
+specific rate limit rules.
+
+1302
+00:48:59,050 --> 00:49:01,389
+And we also added some endpoint protections
+
+1303
+00:49:01,728 --> 00:49:02,398
+and such
+
+1304
+00:49:02,659 --> 00:49:04,728
+such that some endpoints were more expensive than
+
+1305
+00:49:04,728 --> 00:49:06,820
+others, and so we added some tighter limits there.
+
+1306
+00:49:07,340 --> 00:49:09,489
+And finally we had some catch all rate
+
+1307
+00:49:09,489 --> 00:49:11,489
+limit rules such as limiting the amount
+
+1308
+00:49:11,489 --> 00:49:13,610
+of traffic that we get per IP address.
+
+1309
+00:49:14,050 --> 00:49:16,389
+We had to be very careful with how many
+
+1310
+00:49:16,389 --> 00:49:18,570
+with these thresholds because we didn't
+
+1311
+00:49:18,570 --> 00:49:19,708
+want to block
+
+1312
+00:49:20,329 --> 00:49:22,530
+potentially good traffic coming from corporate
+
+1313
+00:49:22,530 --> 00:49:25,389
+IP addresses, proxies, and
+
+1314
+00:49:25,570 --> 00:49:27,648
+open proxies as Brian mentioned.
+
+1315
+00:49:28,500 --> 00:49:30,918
+And then eventually we ended up adopting
+
+1316
+00:49:31,340 --> 00:49:33,659
+challenges which are really amazing
+
+1317
+00:49:33,659 --> 00:49:36,019
+because they let you provide tighter
+
+1318
+00:49:36,019 --> 00:49:38,059
+limits because even if there were some
+
+1319
+00:49:38,059 --> 00:49:40,250
+false positives, the good traffic is
+
+1320
+00:49:40,250 --> 00:49:42,780
+supposed to go through because it's supposed to be solved
+
+1321
+00:49:42,780 --> 00:49:43,639
+by the browser,
+
+1322
+00:49:43,898 --> 00:49:45,079
+whereas the bad traffic
+
+1323
+00:49:45,458 --> 00:49:46,938
+will be blocked automatically.
+
+1324
+00:49:48,228 --> 00:49:49,829
+Now these were
+
+1325
+00:49:50,289 --> 00:49:52,300
+we added all of these rules and they were amazing,
+
+1326
+00:49:52,469 --> 00:49:54,909
+but we were also worried that some of this traffic
+
+1327
+00:49:54,909 --> 00:49:57,159
+might slip into our back end services
+
+1328
+00:49:57,159 --> 00:49:59,208
+either because our rules were not
+
+1329
+00:49:59,418 --> 00:50:01,510
+attuned perfectly or our
+
+1330
+00:50:01,510 --> 00:50:02,208
+attackers
+
+1331
+00:50:03,070 --> 00:50:05,389
+would evolve their attacks over time.
+
+1332
+00:50:05,869 --> 00:50:07,949
+So what we also tried to do was
+
+1333
+00:50:07,949 --> 00:50:09,769
+to make sure we isolate traffic
+
+1334
+00:50:10,148 --> 00:50:11,909
+in our back end infrastructure.
+
+1335
+00:50:12,188 --> 00:50:14,269
+And what we noticed was a lot of these
+
+1336
+00:50:14,269 --> 00:50:16,869
+attacks came from unauthenticated
+
+1337
+00:50:16,869 --> 00:50:18,168
+requests, for example,
+
+1338
+00:50:18,668 --> 00:50:21,269
+and so we ended up trying to bring up replicas
+
+1339
+00:50:21,269 --> 00:50:23,349
+of some of our backend services
+
+1340
+00:50:23,469 --> 00:50:25,469
+and change our routing such that we would
+
+1341
+00:50:25,469 --> 00:50:27,469
+send unauthenticated requests to like
+
+1342
+00:50:27,469 --> 00:50:29,679
+authenticated application servers
+
+1343
+00:50:29,909 --> 00:50:30,489
+and
+
+1344
+00:50:31,148 --> 00:50:33,429
+authenticated requests to different
+
+1345
+00:50:33,429 --> 00:50:35,949
+application servers that would handle authenticated
+
+1346
+00:50:35,949 --> 00:50:36,590
+traffic
+
+1347
+00:50:36,989 --> 00:50:37,708
+and that way.
+
+1348
+00:50:37,989 --> 00:50:40,309
+If we get a spike, let's say for unauthenticated
+
+1349
+00:50:40,309 --> 00:50:40,898
+traffic,
+
+1350
+00:50:41,228 --> 00:50:42,208
+it may take down
+
+1351
+00:50:43,610 --> 00:50:46,070
+those like those API servers that handle unauthenticated
+
+1352
+00:50:46,070 --> 00:50:48,168
+requests, but the authenticated requests would not
+
+1353
+00:50:48,168 --> 00:50:48,949
+be affected.
+
+1354
+00:50:49,708 --> 00:50:50,668
+And similarly,
+
+1355
+00:50:51,208 --> 00:50:53,010
+we try to move also some of our
+
+1356
+00:50:53,860 --> 00:50:55,550
+application logic
+
+1357
+00:50:56,030 --> 00:50:58,688
+to the front end and to try to actually
+
+1358
+00:50:59,188 --> 00:51:01,409
+serve that traffic by S3, which
+
+1359
+00:51:01,409 --> 00:51:03,628
+is a globally scalable service and such
+
+1360
+00:51:03,628 --> 00:51:05,628
+that this traffic won't actually
+
+1361
+00:51:05,628 --> 00:51:07,688
+eventually take down our back end services.
+
+1362
+00:51:10,219 --> 00:51:12,938
+This was great and everything, but unfortunately
+
+1363
+00:51:12,938 --> 00:51:15,219
+it was just like not super maintainable. Just imagine
+
+1364
+00:51:15,219 --> 00:51:17,418
+every back end service that
+
+1365
+00:51:17,610 --> 00:51:19,739
+you add, then you have to think about, oh, I need to
+
+1366
+00:51:19,739 --> 00:51:21,780
+bring a different replica and I have to
+
+1367
+00:51:21,780 --> 00:51:23,860
+for unauthenticated traffic and change all
+
+1368
+00:51:23,860 --> 00:51:24,889
+of these routing rules.
+
+1369
+00:51:25,219 --> 00:51:27,378
+So what we ended up doing was to try
+
+1370
+00:51:27,378 --> 00:51:29,398
+to centralize all that intelligence
+
+1371
+00:51:29,398 --> 00:51:30,619
+in our proxy layer.
+
+1372
+00:51:31,300 --> 00:51:33,570
+And this is also important because
+
+1373
+00:51:34,228 --> 00:51:36,039
+some of these rate limit rules in WA
+
+1374
+00:51:36,579 --> 00:51:38,628
+don't kick in immediately and take about 30
+
+1375
+00:51:38,628 --> 00:51:40,708
+seconds, and any spike in traffic
+
+1376
+00:51:40,708 --> 00:51:42,409
+during this 32nd period
+
+1377
+00:51:42,668 --> 00:51:44,789
+will actually take down our
+
+1378
+00:51:44,789 --> 00:51:46,860
+back end services if we were not able to
+
+1379
+00:51:46,860 --> 00:51:48,168
+block them immediately.
+
+1380
+00:51:49,219 --> 00:51:51,139
+And so what did we do?
+
+1381
+00:51:51,539 --> 00:51:54,378
+So we built a custom
+
+1382
+00:51:54,579 --> 00:51:55,679
+go filter
+
+1383
+00:51:56,059 --> 00:51:58,519
+and added it to our envoy proxy
+
+1384
+00:51:58,840 --> 00:52:01,500
+that would actually provide fair sharing
+
+1385
+00:52:01,500 --> 00:52:03,139
+between any endpoint,
+
+1386
+00:52:03,500 --> 00:52:04,579
+priority level,
+
+1387
+00:52:04,978 --> 00:52:06,478
+or authentication type
+
+1388
+00:52:06,739 --> 00:52:08,639
+such that there is no,
+
+1389
+00:52:09,458 --> 00:52:11,619
+there is no bucket here that would
+
+1390
+00:52:11,619 --> 00:52:13,860
+take more than its fair
+
+1391
+00:52:13,860 --> 00:52:16,219
+share of capacity as
+
+1392
+00:52:16,219 --> 00:52:18,418
+it would do in steady state traffic.
+
+1393
+00:52:19,539 --> 00:52:21,300
+And we also added
+
+1394
+00:52:22,119 --> 00:52:24,199
+signing to our cookies, and we
+
+1395
+00:52:24,199 --> 00:52:26,199
+would check for signatures here because as I
+
+1396
+00:52:26,199 --> 00:52:28,519
+mentioned, we added rate limit rules
+
+1397
+00:52:28,519 --> 00:52:30,800
+targeting the cookie header, but attackers
+
+1398
+00:52:30,800 --> 00:52:32,918
+can easily just forge these cookies, so
+
+1399
+00:52:32,918 --> 00:52:35,079
+we made sure that we can actually check
+
+1400
+00:52:35,079 --> 00:52:37,148
+for these cookies to make sure they are signed by
+
+1401
+00:52:37,148 --> 00:52:39,659
+FIMA, and we would reject traffic immediately.
+
+1402
+00:52:40,000 --> 00:52:42,079
+And it's amazing to use signatures here because you don't need
+
+1403
+00:52:42,079 --> 00:52:44,079
+to talk to any back end service, so you can do
+
+1404
+00:52:44,079 --> 00:52:45,079
+it extremely cheaply.
+
+1405
+00:52:46,708 --> 00:52:48,719
+Now our attackers have evolved over
+
+1406
+00:52:48,719 --> 00:52:51,039
+time and what we noticed was these
+
+1407
+00:52:51,039 --> 00:52:53,199
+attackers started rotating their IP addresses,
+
+1408
+00:52:53,349 --> 00:52:55,519
+JA 3s, and so on, even
+
+1409
+00:52:55,519 --> 00:52:57,579
+within a single attack and targeting more
+
+1410
+00:52:57,918 --> 00:53:00,199
+critical endpoints. So we had to
+
+1411
+00:53:00,199 --> 00:53:02,239
+continue to automate our analysis and try
+
+1412
+00:53:02,239 --> 00:53:04,320
+to do it in semi-real time, identifying the
+
+1413
+00:53:04,320 --> 00:53:05,219
+top tokers
+
+1414
+00:53:05,478 --> 00:53:07,260
+and then adding them to our blocking rules
+
+1415
+00:53:08,550 --> 00:53:10,659
+and tuning over our rate limit
+
+1416
+00:53:10,659 --> 00:53:11,599
+rules over time.
+
+1417
+00:53:12,159 --> 00:53:13,128
+And finally
+
+1418
+00:53:13,628 --> 00:53:15,168
+we try to
+
+1419
+00:53:15,628 --> 00:53:17,829
+adopt all the amazing threat intelligence
+
+1420
+00:53:17,829 --> 00:53:19,300
+that Elena just talked about.
+
+1421
+00:53:19,699 --> 00:53:21,978
+You know, is just like one customer, but AWS
+
+1422
+00:53:21,978 --> 00:53:24,070
+has millions of customers. They have way more
+
+1423
+00:53:24,070 --> 00:53:26,469
+sophisticated threat intelligence than we can possibly
+
+1424
+00:53:26,469 --> 00:53:28,469
+do. And so we adopted
+
+1425
+00:53:28,469 --> 00:53:30,510
+the anti-Dos rule group that Brian
+
+1426
+00:53:30,510 --> 00:53:32,688
+just talked about and the IP reputation list
+
+1427
+00:53:32,688 --> 00:53:35,019
+to try to identify all these spikes
+
+1428
+00:53:35,019 --> 00:53:36,289
+and the IP
+
+1429
+00:53:36,590 --> 00:53:38,628
+list's reputations automatically
+
+1430
+00:53:38,628 --> 00:53:40,668
+without us trying to actually trying to
+
+1431
+00:53:40,668 --> 00:53:41,688
+do this ourselves.
+
+1432
+00:53:42,239 --> 00:53:42,989
+And so
+
+1433
+00:53:43,489 --> 00:53:45,530
+this has been a really exciting journey over the last
+
+1434
+00:53:45,530 --> 00:53:47,570
+couple of years partnering with AWS. We were
+
+1435
+00:53:47,570 --> 00:53:49,929
+one of the early adopters for the anti-didustrial
+
+1436
+00:53:49,929 --> 00:53:51,349
+group that we just talked about
+
+1437
+00:53:51,688 --> 00:53:54,090
+and integrating the WAF and iOS SDK
+
+1438
+00:53:54,090 --> 00:53:56,329
+rules in order to provide challenge support
+
+1439
+00:53:56,329 --> 00:53:58,599
+seamlessly within our product and finally
+
+1440
+00:53:58,599 --> 00:54:01,530
+providing a lot of product feedback
+
+1441
+00:54:01,530 --> 00:54:03,530
+such as adding configurable time windows for
+
+1442
+00:54:03,530 --> 00:54:05,769
+rate limit-based rules that we needed in order
+
+1443
+00:54:05,769 --> 00:54:06,789
+to have multiple
+
+1444
+00:54:07,409 --> 00:54:08,369
+rules targeting.
+
+1445
+00:54:08,679 --> 00:54:09,648
+Specificities
+
+1446
+00:54:10,219 --> 00:54:12,418
+and finally, let's just take a look at a couple of real world
+
+1447
+00:54:12,418 --> 00:54:13,050
+examples
+
+1448
+00:54:13,469 --> 00:54:15,469
+that just show the magnitude of these
+
+1449
+00:54:15,469 --> 00:54:17,708
+DDoS attacks as well and how our protections
+
+1450
+00:54:17,909 --> 00:54:20,139
+were able to protect us against these attacks.
+
+1451
+00:54:20,309 --> 00:54:22,309
+The first example is just like a very
+
+1452
+00:54:22,309 --> 00:54:24,929
+common example just targeting our main web
+
+1453
+00:54:24,929 --> 00:54:27,349
+application which used to provide both an authenticated
+
+1454
+00:54:27,349 --> 00:54:29,418
+and unauthenticated experience. And as
+
+1455
+00:54:29,418 --> 00:54:30,438
+you can see here,
+
+1456
+00:54:30,949 --> 00:54:33,030
+there were like 10s of millions of requests per
+
+1457
+00:54:33,030 --> 00:54:35,300
+second. And because we had multiple
+
+1458
+00:54:35,679 --> 00:54:38,119
+rules that we're actually working
+
+1459
+00:54:38,119 --> 00:54:40,280
+all together in order to protect
+
+1460
+00:54:40,280 --> 00:54:41,478
+against these attacks,
+
+1461
+00:54:42,199 --> 00:54:44,478
+challenging this number of requests
+
+1462
+00:54:44,478 --> 00:54:45,239
+per minute,
+
+1463
+00:54:45,519 --> 00:54:47,878
+and for the rest of the traffic, as I mentioned, we
+
+1464
+00:54:47,878 --> 00:54:50,099
+try to actually funnel it through S3,
+
+1465
+00:54:51,079 --> 00:54:52,619
+which is like a globally scalable
+
+1466
+00:54:53,208 --> 00:54:53,719
+service.
+
+1467
+00:54:55,360 --> 00:54:57,860
+The final example here is
+
+1468
+00:54:58,840 --> 00:55:00,958
+a more sophisticated attack that targeted one of
+
+1469
+00:55:00,958 --> 00:55:03,179
+our API endpoints, and this
+
+1470
+00:55:03,179 --> 00:55:04,300
+also shows how
+
+1471
+00:55:04,719 --> 00:55:07,199
+this defense in depth strategy works
+
+1472
+00:55:07,199 --> 00:55:08,340
+together in order to protect.
+
+1473
+00:55:09,360 --> 00:55:11,438
+So you can see here in the second
+
+1474
+00:55:11,438 --> 00:55:12,159
+graph,
+
+1475
+00:55:12,599 --> 00:55:15,148
+the 1st 30 seconds, so before
+
+1476
+00:55:15,148 --> 00:55:16,148
+kicked in,
+
+1477
+00:55:16,599 --> 00:55:18,780
+we had our intelligent proxy.
+
+1478
+00:55:19,309 --> 00:55:21,728
+Just react automatically and very quickly
+
+1479
+00:55:21,909 --> 00:55:24,070
+to protect 70,000 requests
+
+1480
+00:55:24,070 --> 00:55:26,269
+per second. If these requests came into our
+
+1481
+00:55:26,269 --> 00:55:26,969
+back ends,
+
+1482
+00:55:27,510 --> 00:55:28,688
+they would actually
+
+1483
+00:55:29,148 --> 00:55:30,168
+cause some downtime.
+
+1484
+00:55:30,708 --> 00:55:33,139
+And for the remaining period when all the
+
+1485
+00:55:33,139 --> 00:55:34,309
+WAF rules kicked in,
+
+1486
+00:55:34,750 --> 00:55:37,070
+we were able to rely on WAF to actually
+
+1487
+00:55:37,070 --> 00:55:39,110
+protect for the
+
+1488
+00:55:39,110 --> 00:55:39,889
+rest of the attack.
+
+1489
+00:55:41,019 --> 00:55:43,050
+And with that, I'll hand it over to Elena
+
+1490
+00:55:43,188 --> 00:55:44,570
+for some final thoughts.
+
+1491
+00:55:47,059 --> 00:55:48,599
+All right, so we're gonna come back
+
+1492
+00:55:49,019 --> 00:55:51,378
+to our threat intelligence cycle,
+
+1493
+00:55:51,659 --> 00:55:53,820
+uh, on our last stop of disrupting and
+
+1494
+00:55:53,820 --> 00:55:55,398
+taking down threat actors.
+
+1495
+00:55:55,688 --> 00:55:58,019
+Uh, I'm gonna do this quick and then Brian's
+
+1496
+00:55:58,019 --> 00:56:00,099
+gonna wrap us up with some best practices,
+
+1497
+00:56:00,579 --> 00:56:02,079
+uh, but I wanted to call out
+
+1498
+00:56:02,340 --> 00:56:04,849
+some of the cool things that AWS
+
+1499
+00:56:04,849 --> 00:56:06,949
+has been a part of over the last year.
+
+1500
+00:56:07,458 --> 00:56:09,579
+We worked with law enforcement in
+
+1501
+00:56:09,579 --> 00:56:10,458
+order to.
+
+1502
+00:56:11,369 --> 00:56:13,510
+I give them information
+
+1503
+00:56:13,510 --> 00:56:15,728
+to help successful takedown of actual
+
+1504
+00:56:15,728 --> 00:56:17,188
+botnet infrastructures
+
+1505
+00:56:17,760 --> 00:56:18,378
+and.
+
+1506
+00:56:19,539 --> 00:56:21,539
+This top one here is one that
+
+1507
+00:56:21,938 --> 00:56:22,610
+I
+
+1508
+00:56:22,878 --> 00:56:25,159
+would want to talk a little bit deeper into
+
+1509
+00:56:25,418 --> 00:56:27,039
+where we were seeing
+
+1510
+00:56:27,378 --> 00:56:29,878
+this wrapper bot issuing DDoS
+
+1511
+00:56:30,418 --> 00:56:31,309
+that was
+
+1512
+00:56:31,579 --> 00:56:32,898
+multi-terabit,
+
+1513
+00:56:33,378 --> 00:56:36,179
+you know, multi-billion
+
+1514
+00:56:36,179 --> 00:56:38,219
+packet per second floods on
+
+1515
+00:56:38,219 --> 00:56:40,409
+a regular basis, not just towards
+
+1516
+00:56:40,409 --> 00:56:42,398
+AWS but broadly
+
+1517
+00:56:42,659 --> 00:56:44,800
+towards various locations on the
+
+1518
+00:56:44,800 --> 00:56:45,619
+Internet, uh,
+
+1519
+00:56:45,898 --> 00:56:46,409
+and.
+
+1520
+00:56:47,128 --> 00:56:47,789
+I,
+
+1521
+00:56:48,208 --> 00:56:50,289
+I think that it, it, I don't know if all of you
+
+1522
+00:56:50,489 --> 00:56:52,648
+are familiar, but AWS has a set of
+
+1523
+00:56:52,648 --> 00:56:53,969
+what we call leadership principles.
+
+1524
+00:56:54,289 --> 00:56:56,349
+Those are kind of like guiding tenants in order
+
+1525
+00:56:56,349 --> 00:56:58,409
+to, uh, help us ensure
+
+1526
+00:56:58,409 --> 00:57:00,829
+that we're producing good things, and some of them are like
+
+1527
+00:57:01,449 --> 00:57:03,809
+customer, uh, customer obsession
+
+1528
+00:57:03,809 --> 00:57:04,688
+or earns trust.
+
+1529
+00:57:05,010 --> 00:57:07,090
+One of my personal favorites is
+
+1530
+00:57:07,090 --> 00:57:09,449
+success and scale bring broad responsibility.
+
+1531
+00:57:09,679 --> 00:57:11,840
+And I really feel like this embodies
+
+1532
+00:57:11,840 --> 00:57:13,300
+this from the perspective of
+
+1533
+00:57:13,739 --> 00:57:16,438
+uh AWS is actively working
+
+1534
+00:57:16,438 --> 00:57:18,898
+to dismantle and take down these threat actors
+
+1535
+00:57:19,079 --> 00:57:21,389
+and trying to leave the Internet a
+
+1536
+00:57:21,760 --> 00:57:23,860
+better place kind of for everybody
+
+1537
+00:57:24,320 --> 00:57:25,570
+uh so I'm gonna do
+
+1538
+00:57:25,840 --> 00:57:27,119
+last handover to Brian
+
+1539
+00:57:27,398 --> 00:57:29,119
+so he can talk about some best practices.
+
+1540
+00:57:37,898 --> 00:57:39,938
+All right, so a quick recap of
+
+1541
+00:57:39,938 --> 00:57:41,269
+some best practices here.
+
+1542
+00:57:42,449 --> 00:57:44,570
+So first is to auto
+
+1543
+00:57:44,570 --> 00:57:45,688
+scale out
+
+1544
+00:57:46,250 --> 00:57:48,409
+so that you can absorb unexpected traffic
+
+1545
+00:57:48,409 --> 00:57:49,309
+spikes.
+
+1546
+00:57:49,728 --> 00:57:51,929
+The next is to make sure you're load balancing across
+
+1547
+00:57:51,929 --> 00:57:53,269
+your entire fleet
+
+1548
+00:57:53,809 --> 00:57:55,309
+and then leverage the built-in
+
+1549
+00:57:56,010 --> 00:57:57,530
+DDOS mitigations
+
+1550
+00:57:57,889 --> 00:58:00,119
+that are available at AWS edge
+
+1551
+00:58:00,119 --> 00:58:00,869
+locations.
+
+1552
+00:58:01,878 --> 00:58:03,800
+And then do everything that you can
+
+1553
+00:58:04,090 --> 00:58:06,050
+to minimize internet exposure.
+
+1554
+00:58:07,780 --> 00:58:09,978
+And then protect your resources with
+
+1555
+00:58:09,978 --> 00:58:12,128
+AWS Shield Advance and use
+
+1556
+00:58:12,128 --> 00:58:14,300
+the new WAF anti-DDOS managed
+
+1557
+00:58:14,300 --> 00:58:14,889
+rule group.
+
+1558
+00:58:17,139 --> 00:58:18,039
+And then if you need
+
+1559
+00:58:18,378 --> 00:58:20,590
+to customize that behavior, use WAF
+
+1560
+00:58:20,590 --> 00:58:21,840
+rate-based rules
+
+1561
+00:58:22,340 --> 00:58:24,860
+and the DDoS IP reputation
+
+1562
+00:58:24,860 --> 00:58:27,530
+list. So
+
+1563
+00:58:28,128 --> 00:58:30,148
+At AWS we operate
+
+1564
+00:58:30,449 --> 00:58:32,449
+the largest public network of
+
+1565
+00:58:32,449 --> 00:58:33,809
+any cloud provider.
+
+1566
+00:58:34,829 --> 00:58:37,260
+And this gives us a unique view
+
+1567
+00:58:37,260 --> 00:58:39,398
+into the DDoS challenges that our
+
+1568
+00:58:39,398 --> 00:58:40,878
+customers face every day.
+
+1569
+00:58:41,909 --> 00:58:44,300
+And we work relentlessly
+
+1570
+00:58:45,458 --> 00:58:47,478
+to improve our threat intelligence so that
+
+1571
+00:58:47,478 --> 00:58:49,760
+we can help mitigate that risk.
+
+1572
+00:58:50,949 --> 00:58:53,809
+Now the result is a level of DDoS resiliency
+
+1573
+00:58:53,809 --> 00:58:56,228
+that's very difficult for most
+
+1574
+00:58:56,228 --> 00:58:57,949
+organizations to achieve on their own.
+
+1575
+00:58:59,099 --> 00:59:01,500
+So if you're headed outside into challenging
+
+1576
+00:59:01,500 --> 00:59:03,769
+weather, Make sure to put
+
+1577
+00:59:04,148 --> 00:59:05,789
+AWS to work for you.
+
+1578
+00:59:06,938 --> 00:59:09,019
+So with that, I wanna thank you for being here and
+
+1579
+00:59:09,019 --> 00:59:10,639
+we hope to work with you in the future.
+
+1580
+00:59:10,898 --> 00:59:11,378
+Thanks.
+

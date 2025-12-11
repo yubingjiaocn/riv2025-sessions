@@ -1,0 +1,5621 @@
+1
+00:00:00,000 --> 00:00:02,454
+- Welcome to ARC312,
+where we're gonna talk
+
+2
+00:00:02,454 --> 00:00:05,240
+about how AWS builds regions
+
+3
+00:00:05,240 --> 00:00:08,820
+and hopefully what that means for you.
+
+4
+00:00:08,820 --> 00:00:09,930
+My name's Don McGarry.
+
+5
+00:00:09,930 --> 00:00:12,285
+I'm a principal engineer in EC2.
+
+6
+00:00:12,285 --> 00:00:14,010
+- And my name is Michelle Thissen.
+
+7
+00:00:14,010 --> 00:00:16,563
+I'm a principal TPM, also with EC2.
+
+8
+00:00:17,670 --> 00:00:19,701
+So before we kick it off,
+let's do a quick overview
+
+9
+00:00:19,701 --> 00:00:22,650
+on what we're actually gonna
+be talking about today.
+
+10
+00:00:22,650 --> 00:00:24,600
+So we'll start with a very quick recap
+
+11
+00:00:24,600 --> 00:00:27,388
+on AWS Global Infrastructure concepts.
+
+12
+00:00:27,388 --> 00:00:29,790
+We'll talk about how
+we build for resiliency
+
+13
+00:00:29,790 --> 00:00:31,680
+and how you can do the same.
+
+14
+00:00:31,680 --> 00:00:33,570
+We'll take you on a journey back in time
+
+15
+00:00:33,570 --> 00:00:36,120
+on how we used to do
+builds and then transition
+
+16
+00:00:36,120 --> 00:00:37,922
+to how we do things today,
+
+17
+00:00:37,922 --> 00:00:41,081
+because things have changed
+a lot in the past decade.
+
+18
+00:00:41,081 --> 00:00:44,580
+We'll then talk about
+availability zones and local zones
+
+19
+00:00:44,580 --> 00:00:49,170
+and then talk in a lot
+more detail on dependencies
+
+20
+00:00:49,170 --> 00:00:53,393
+since those are the primary
+problem when it comes to builds.
+
+21
+00:00:53,393 --> 00:00:55,893
+And then we'll leave you
+with some key takeaways.
+
+22
+00:00:56,782 --> 00:01:01,260
+So first, let's talk about
+our AWS global infrastructure.
+
+23
+00:01:01,260 --> 00:01:05,175
+So this map, you'll see all
+of the AWS regions we have.
+
+24
+00:01:05,175 --> 00:01:06,409
+The ones in green are the ones
+
+25
+00:01:06,409 --> 00:01:08,460
+that have already been launched,
+
+26
+00:01:08,460 --> 00:01:11,190
+and the ones in red are the
+ones we're currently working on.
+
+27
+00:01:11,190 --> 00:01:13,830
+And those include the EU Sovereign Cloud,
+
+28
+00:01:13,830 --> 00:01:16,440
+Chile, and the Kingdom of Saudi Arabia.
+
+29
+00:01:16,440 --> 00:01:21,120
+So overall, right now, we have 38 regions,
+
+30
+00:01:21,120 --> 00:01:23,910
+and we're continuing to
+add to those as we go,
+
+31
+00:01:23,910 --> 00:01:25,890
+including more availability zones
+
+32
+00:01:25,890 --> 00:01:30,030
+and other expansion
+options like local zones.
+
+33
+00:01:30,030 --> 00:01:31,818
+So this is our local zone map.
+
+34
+00:01:31,818 --> 00:01:35,407
+We have 38 metro areas at the moment,
+
+35
+00:01:35,407 --> 00:01:38,370
+and we're expanding heavily
+in that space as well
+
+36
+00:01:38,370 --> 00:01:40,530
+because there's a lot of customer interest
+
+37
+00:01:40,530 --> 00:01:41,973
+in leveraging local zones,
+
+38
+00:01:41,973 --> 00:01:44,910
+but we'll dive more into that later.
+
+39
+00:01:44,910 --> 00:01:46,890
+So next up, let's dive a little bit deeper
+
+40
+00:01:46,890 --> 00:01:49,826
+on how you can think about
+our global infrastructure.
+
+41
+00:01:49,826 --> 00:01:52,239
+- So the highest level of abstraction
+
+42
+00:01:52,239 --> 00:01:56,670
+in AWS's global
+infrastructure is a partition.
+
+43
+00:01:56,670 --> 00:02:00,900
+Most customers don't necessarily
+need to think in terms
+
+44
+00:02:00,900 --> 00:02:04,050
+of partitions because
+most customers are working
+
+45
+00:02:04,050 --> 00:02:06,600
+in what we would call
+the commercial partition.
+
+46
+00:02:06,600 --> 00:02:09,213
+If you look at an ARN, it says arn::aws,
+
+47
+00:02:10,733 --> 00:02:13,260
+that's the partition, so
+the commercial partition
+
+48
+00:02:13,260 --> 00:02:15,120
+is the AWS partition.
+
+49
+00:02:15,120 --> 00:02:17,220
+That's where most customers live.
+
+50
+00:02:17,220 --> 00:02:19,680
+But we've had multiple
+partitions for quite some time.
+
+51
+00:02:19,680 --> 00:02:24,132
+There's the US GovCloud
+partition, which is us-gov.
+
+52
+00:02:24,132 --> 00:02:27,810
+There's the China partition, aws-cn.
+
+53
+00:02:27,810 --> 00:02:29,976
+And the reason we wanted
+to kinda call this out
+
+54
+00:02:29,976 --> 00:02:33,210
+in this talk is the
+upcoming EU Sovereign Cloud
+
+55
+00:02:33,210 --> 00:02:36,210
+is going to launch, and that
+will be its own partition.
+
+56
+00:02:36,210 --> 00:02:39,090
+So, a lot more customers
+will be having to deal
+
+57
+00:02:39,090 --> 00:02:41,790
+with the partition
+abstraction than before.
+
+58
+00:02:41,790 --> 00:02:43,800
+The difference with, you know,
+
+59
+00:02:43,800 --> 00:02:47,825
+between partitions is
+partitions have an instance
+
+60
+00:02:47,825 --> 00:02:50,310
+of our global services in them.
+
+61
+00:02:50,310 --> 00:02:51,960
+So, most notably,
+
+62
+00:02:51,960 --> 00:02:56,343
+IAM and Route 53 are the two
+global services that will,
+
+63
+00:02:57,180 --> 00:02:58,842
+you know, come to mind when you need
+
+64
+00:02:58,842 --> 00:03:01,440
+to work across multiple partitions.
+
+65
+00:03:01,440 --> 00:03:05,668
+And what does that mean
+is an IAM identity,
+
+66
+00:03:05,668 --> 00:03:07,740
+which includes an account number,
+
+67
+00:03:07,740 --> 00:03:09,262
+in the commercial partition,
+
+68
+00:03:09,262 --> 00:03:12,690
+there's no concept of that
+identity in another partition
+
+69
+00:03:12,690 --> 00:03:14,670
+because they're two separate stacks.
+
+70
+00:03:14,670 --> 00:03:17,640
+So, you know, if you need to migrate
+
+71
+00:03:17,640 --> 00:03:21,180
+an application across or
+build it in a new partition,
+
+72
+00:03:21,180 --> 00:03:23,910
+things like IAM principles
+and account numbers
+
+73
+00:03:23,910 --> 00:03:25,110
+will be different because those
+
+74
+00:03:25,110 --> 00:03:27,840
+are two different software stacks.
+
+75
+00:03:27,840 --> 00:03:30,750
+So, you know, outside
+of the global services,
+
+76
+00:03:30,750 --> 00:03:33,128
+partitions are just grouped
+for one or more regions
+
+77
+00:03:33,128 --> 00:03:36,330
+that can be contained within
+one and only one partition.
+
+78
+00:03:36,330 --> 00:03:40,006
+Now we'll dig into a little
+bit more in terms of regions,
+
+79
+00:03:40,006 --> 00:03:42,270
+availability zones, and local zones.
+
+80
+00:03:42,270 --> 00:03:45,720
+So, and our region is
+just a geographic area
+
+81
+00:03:45,720 --> 00:03:47,820
+where we offer our services.
+
+82
+00:03:47,820 --> 00:03:51,780
+Regions are comprised of three
+or more availability zones.
+
+83
+00:03:51,780 --> 00:03:53,915
+And as a customer, you
+can just kinda think
+
+84
+00:03:53,915 --> 00:03:57,150
+of an availability zone as a data center.
+
+85
+00:03:57,150 --> 00:04:01,260
+In reality, there can be tens to even,
+
+86
+00:04:01,260 --> 00:04:03,840
+in some cases, hundreds of data centers
+
+87
+00:04:03,840 --> 00:04:06,672
+that make up an individual
+availability zone.
+
+88
+00:04:06,672 --> 00:04:09,466
+Those data centers
+within availability zone
+
+89
+00:04:09,466 --> 00:04:12,745
+are very close to each other
+from a latency perspective,
+
+90
+00:04:12,745 --> 00:04:16,530
+both from a network path and
+from a shared fate perspective.
+
+91
+00:04:16,530 --> 00:04:20,640
+So each availability
+zone within that zone,
+
+92
+00:04:20,640 --> 00:04:23,160
+you can kinda think of it as sharing fate
+
+93
+00:04:23,160 --> 00:04:25,980
+from an availability perspective.
+
+94
+00:04:25,980 --> 00:04:29,510
+But when we pick where we
+want our availability zones
+
+95
+00:04:29,510 --> 00:04:34,230
+to be in a region, we want
+them to be close enough
+
+96
+00:04:34,230 --> 00:04:37,890
+to each other to maintain
+single-digit millisecond latency
+
+97
+00:04:37,890 --> 00:04:40,050
+between those availability zones,
+
+98
+00:04:40,050 --> 00:04:42,780
+but they're far enough away
+that they won't share fate
+
+99
+00:04:42,780 --> 00:04:46,110
+with each other from things
+like natural disasters,
+
+100
+00:04:46,110 --> 00:04:47,490
+power events.
+
+101
+00:04:47,490 --> 00:04:52,080
+So, our regions are architected
+such that if you spread
+
+102
+00:04:52,080 --> 00:04:55,530
+your workload across
+multiple availability zones,
+
+103
+00:04:55,530 --> 00:04:58,230
+it's unlikely to have shared fate
+
+104
+00:04:58,230 --> 00:05:00,960
+in an outage across
+those availability zones.
+
+105
+00:05:00,960 --> 00:05:03,540
+And we extend that into
+our software stack as well,
+
+106
+00:05:03,540 --> 00:05:05,756
+which we'll talk a little bit more about.
+
+107
+00:05:05,756 --> 00:05:09,240
+We kind of extended the
+idea of an availability zone
+
+108
+00:05:09,240 --> 00:05:11,461
+to this thing called a local zone.
+
+109
+00:05:11,461 --> 00:05:15,342
+And a local zone, you can
+think of it as an extension
+
+110
+00:05:15,342 --> 00:05:17,190
+of an availability zone.
+
+111
+00:05:17,190 --> 00:05:21,990
+So a local zone is parented to
+a single AZ within a region,
+
+112
+00:05:21,990 --> 00:05:25,969
+but that local zone can be,
+from a latency perspective,
+
+113
+00:05:25,969 --> 00:05:27,990
+a pretty far distance away.
+
+114
+00:05:27,990 --> 00:05:31,290
+And that what that does is
+the control plane that will,
+
+115
+00:05:31,290 --> 00:05:34,080
+you know, launch instances
+in that local zone exists
+
+116
+00:05:34,080 --> 00:05:37,080
+in the parent availability
+zone, but the capacity
+
+117
+00:05:37,080 --> 00:05:40,830
+that's running your
+workload is in a metro area
+
+118
+00:05:40,830 --> 00:05:43,581
+closer to your customers or, in some cases
+
+119
+00:05:43,581 --> 00:05:45,811
+for like machine learning, in an area
+
+120
+00:05:45,811 --> 00:05:49,097
+where we're able to
+acquire lots more power
+
+121
+00:05:49,097 --> 00:05:51,450
+to be able to run machine learning,
+
+122
+00:05:51,450 --> 00:05:53,490
+either inference or training workloads.
+
+123
+00:05:53,490 --> 00:05:56,490
+So, we've used the
+availability zone concept
+
+124
+00:05:56,490 --> 00:05:59,730
+to essentially stretch capacity in an AZ
+
+125
+00:05:59,730 --> 00:06:02,880
+to either bring it closer
+to your customer's workloads
+
+126
+00:06:02,880 --> 00:06:04,740
+or to provide additional capacity
+
+127
+00:06:04,740 --> 00:06:06,630
+for things like machine learning.
+
+128
+00:06:06,630 --> 00:06:08,370
+Michelle will dig a little bit more into,
+
+129
+00:06:08,370 --> 00:06:11,280
+like how these concepts
+apply when you're thinking
+
+130
+00:06:11,280 --> 00:06:12,993
+about them in your architecture.
+
+131
+00:06:14,280 --> 00:06:17,790
+- So let's talk a bit about how
+we can build for resiliency.
+
+132
+00:06:17,790 --> 00:06:21,666
+So we've talked about
+regions, availability zones,
+
+133
+00:06:21,666 --> 00:06:25,410
+so let's put this into an example here.
+
+134
+00:06:25,410 --> 00:06:26,850
+So we have a region.
+
+135
+00:06:26,850 --> 00:06:28,710
+We've selected two availability zones,
+
+136
+00:06:28,710 --> 00:06:32,550
+and our VPC spans those
+two availability zones.
+
+137
+00:06:32,550 --> 00:06:35,370
+And what we wanna explain here
+
+138
+00:06:35,370 --> 00:06:37,252
+is that understanding
+the scope of the services
+
+139
+00:06:37,252 --> 00:06:39,450
+that you're using is really important.
+
+140
+00:06:39,450 --> 00:06:42,290
+So in this architecture diagram,
+we have our load balancer
+
+141
+00:06:42,290 --> 00:06:45,690
+and auto scaling group
+and our EC2 instances.
+
+142
+00:06:45,690 --> 00:06:47,880
+But what you'll see is
+that our EC2 instances
+
+143
+00:06:47,880 --> 00:06:49,950
+are in specific availability zones.
+
+144
+00:06:49,950 --> 00:06:52,590
+And that's because when
+you launch an EC2 instance,
+
+145
+00:06:52,590 --> 00:06:53,938
+you specify the AZ.
+
+146
+00:06:53,938 --> 00:06:56,730
+And so this is a zonal service.
+
+147
+00:06:56,730 --> 00:06:59,605
+As opposed to these services such as S3,
+
+148
+00:06:59,605 --> 00:07:01,590
+CloudWatch, DynamoDB,
+
+149
+00:07:01,590 --> 00:07:03,240
+these are regional services.
+
+150
+00:07:03,240 --> 00:07:05,100
+So they exist at the regional level.
+
+151
+00:07:05,100 --> 00:07:06,840
+When you create an S3 bucket
+
+152
+00:07:06,840 --> 00:07:08,850
+and put objects into that bucket,
+
+153
+00:07:08,850 --> 00:07:10,530
+you do it at the region level.
+
+154
+00:07:10,530 --> 00:07:12,273
+You don't specify an AZ.
+
+155
+00:07:13,140 --> 00:07:15,570
+And the reason why
+understanding this is important
+
+156
+00:07:15,570 --> 00:07:16,650
+is because you can plan
+
+157
+00:07:16,650 --> 00:07:19,260
+your operational responses accordingly.
+
+158
+00:07:19,260 --> 00:07:21,810
+You can look at what metrics
+are important to your business
+
+159
+00:07:21,810 --> 00:07:24,300
+and then make business
+decisions based off of that.
+
+160
+00:07:24,300 --> 00:07:27,450
+For example, knowing when to
+scale up your EC2 instances
+
+161
+00:07:27,450 --> 00:07:30,360
+or when you need to fail over in the event
+
+162
+00:07:30,360 --> 00:07:32,163
+of a disaster recovery scenario.
+
+163
+00:07:33,330 --> 00:07:36,570
+For the majority of our
+customers, you know,
+
+164
+00:07:36,570 --> 00:07:39,060
+leveraging multiple availability
+zones within a region
+
+165
+00:07:39,060 --> 00:07:42,360
+is sufficient as Don mentioned.
+
+166
+00:07:42,360 --> 00:07:43,694
+However, there are specific use cases
+
+167
+00:07:43,694 --> 00:07:47,243
+where a multi-region
+strategy might make sense.
+
+168
+00:07:47,243 --> 00:07:49,889
+But that does come with
+some additional complexities
+
+169
+00:07:49,889 --> 00:07:53,280
+managing DNS and costs
+if you're replicating
+
+170
+00:07:53,280 --> 00:07:55,773
+your entire environment
+in a different region.
+
+171
+00:07:56,910 --> 00:07:59,220
+So, hopefully, this is a good introduction
+
+172
+00:07:59,220 --> 00:08:01,950
+into some global infrastructure concepts,
+
+173
+00:08:01,950 --> 00:08:04,680
+kind of framing it with
+resiliency in mind.
+
+174
+00:08:04,680 --> 00:08:08,943
+Let's actually jump into
+how we build new regions.
+
+175
+00:08:09,900 --> 00:08:14,900
+So, region builds have changed
+a ton over the last decade.
+
+176
+00:08:15,600 --> 00:08:16,830
+Even in the last few years,
+
+177
+00:08:16,830 --> 00:08:19,230
+things have changed significantly.
+
+178
+00:08:19,230 --> 00:08:21,870
+However, there are two
+primary work streams
+
+179
+00:08:21,870 --> 00:08:24,210
+that have remained fairly consistent.
+
+180
+00:08:24,210 --> 00:08:26,670
+The first is the physical.
+
+181
+00:08:26,670 --> 00:08:29,940
+So, I know we talk about
+the elusive AWS cloud.
+
+182
+00:08:29,940 --> 00:08:30,773
+At the end of the day,
+
+183
+00:08:30,773 --> 00:08:33,150
+there's still servers in data centers.
+
+184
+00:08:33,150 --> 00:08:36,595
+And so the physical work
+stream consists of everything
+
+185
+00:08:36,595 --> 00:08:39,720
+from picking proposed sites,
+
+186
+00:08:39,720 --> 00:08:41,932
+including looking at expansion options.
+
+187
+00:08:41,932 --> 00:08:43,860
+When we first build a region, you know,
+
+188
+00:08:43,860 --> 00:08:45,330
+we have three availability zones,
+
+189
+00:08:45,330 --> 00:08:47,400
+but in the future, we might want to add
+
+190
+00:08:47,400 --> 00:08:49,023
+additional availability zones.
+
+191
+00:08:50,400 --> 00:08:52,500
+So we have to keep that
+in mind when planning
+
+192
+00:08:52,500 --> 00:08:55,560
+and picking our locations
+because as Don mentioned,
+
+193
+00:08:55,560 --> 00:08:58,350
+we have requirements on how far apart
+
+194
+00:08:58,350 --> 00:08:59,250
+the data centers can be.
+
+195
+00:08:59,250 --> 00:09:02,763
+So, we need to consider all of
+that when picking the sites.
+
+196
+00:09:04,170 --> 00:09:05,160
+Sorry.
+
+197
+00:09:05,160 --> 00:09:08,220
+And then we have to
+construct the data centers,
+
+198
+00:09:08,220 --> 00:09:10,020
+delivering cable, all of the racks,
+
+199
+00:09:10,020 --> 00:09:12,843
+and then connect everything
+to the AWS network.
+
+200
+00:09:14,130 --> 00:09:15,549
+The second work stream is, of course,
+
+201
+00:09:15,549 --> 00:09:17,965
+the software build, and we're
+gonna spend most of our time
+
+202
+00:09:17,965 --> 00:09:20,190
+in this work stream.
+
+203
+00:09:20,190 --> 00:09:22,740
+And this involves
+everything from building out
+
+204
+00:09:22,740 --> 00:09:26,370
+the most foundational
+things such as, you know,
+
+205
+00:09:26,370 --> 00:09:28,740
+making sure that services
+can authenticate,
+
+206
+00:09:28,740 --> 00:09:31,410
+all the way out to building
+all of the AWS services
+
+207
+00:09:31,410 --> 00:09:32,343
+in the new region.
+
+208
+00:09:33,540 --> 00:09:36,180
+So as I mentioned, we've always
+had these two work streams,
+
+209
+00:09:36,180 --> 00:09:39,810
+but the way we go about builds
+has actually changed a lot.
+
+210
+00:09:39,810 --> 00:09:41,788
+So, let's take it back to 2010
+
+211
+00:09:41,788 --> 00:09:45,900
+when we were building the
+first region in South America.
+
+212
+00:09:45,900 --> 00:09:47,883
+- Yeah, so in 2010,
+
+213
+00:09:48,991 --> 00:09:52,830
+AWS launch, announced the
+launch of the Sao Paulo Region.
+
+214
+00:09:52,830 --> 00:09:54,480
+It was our eighth region.
+
+215
+00:09:54,480 --> 00:09:58,530
+We were the first major cloud
+provider to launch a region
+
+216
+00:09:58,530 --> 00:10:00,420
+on the South American continent.
+
+217
+00:10:00,420 --> 00:10:03,519
+And AWS looked a lot different back then.
+
+218
+00:10:03,519 --> 00:10:05,463
+And the way that, you know,
+
+219
+00:10:05,463 --> 00:10:08,793
+you can see from the blog
+post with the old logo.
+
+220
+00:10:09,750 --> 00:10:11,100
+The way that we built regions
+
+221
+00:10:11,100 --> 00:10:12,006
+was pretty different back then,
+
+222
+00:10:12,006 --> 00:10:14,807
+and to talk about how we built Brazil,
+
+223
+00:10:14,807 --> 00:10:17,953
+we'll have to meet you,
+introduce you to John,
+
+224
+00:10:17,953 --> 00:10:20,000
+our fictional character.
+
+225
+00:10:20,000 --> 00:10:23,610
+John, which John was an actual person.
+
+226
+00:10:23,610 --> 00:10:24,543
+That's not John.
+
+227
+00:10:25,860 --> 00:10:27,210
+They don't let us put, you know,
+
+228
+00:10:27,210 --> 00:10:28,510
+real people in the slides.
+
+229
+00:10:29,670 --> 00:10:33,570
+John, his job title was
+region bootstrap ninja.
+
+230
+00:10:33,570 --> 00:10:36,120
+And John would be at
+the office in Seattle,
+
+231
+00:10:36,120 --> 00:10:37,140
+and you know, it'd be like,
+
+232
+00:10:37,140 --> 00:10:40,680
+hey, it's time to go build Sao Paulo.
+
+233
+00:10:40,680 --> 00:10:42,330
+We've built the data centers.
+
+234
+00:10:42,330 --> 00:10:44,100
+The racks arrived.
+
+235
+00:10:44,100 --> 00:10:46,560
+John, here's three jump drives,
+
+236
+00:10:46,560 --> 00:10:48,270
+one for each availability zone.
+
+237
+00:10:48,270 --> 00:10:50,070
+And John would get on a plane,
+
+238
+00:10:50,070 --> 00:10:54,150
+go up to the availability
+zone, kinda walk in there.
+
+239
+00:10:54,150 --> 00:10:55,800
+Whatever server kinda, you know,
+
+240
+00:10:55,800 --> 00:10:58,020
+struck his fancy, he'd
+plug in that jump drive
+
+241
+00:10:58,020 --> 00:11:00,881
+and literally start hand-hacking away,
+
+242
+00:11:00,881 --> 00:11:04,140
+installing all of the bootstrap scripts
+
+243
+00:11:04,140 --> 00:11:05,807
+to be able to launch, at the time,
+
+244
+00:11:05,807 --> 00:11:08,880
+our internal virtualization infrastructure
+
+245
+00:11:08,880 --> 00:11:11,269
+that predated EC2.
+
+246
+00:11:11,269 --> 00:11:13,500
+And this worked good for a while.
+
+247
+00:11:13,500 --> 00:11:16,110
+The problem with this is, you know,
+
+248
+00:11:16,110 --> 00:11:18,150
+over time, John needed to learn
+
+249
+00:11:18,150 --> 00:11:19,320
+a lotta stuff, right?
+
+250
+00:11:19,320 --> 00:11:21,977
+So, you know, it was like
+provisioning network equipment
+
+251
+00:11:21,977 --> 00:11:24,810
+and then, you know, provisioning,
+
+252
+00:11:24,810 --> 00:11:27,540
+you know, our Zen stack
+and then like having to do
+
+253
+00:11:27,540 --> 00:11:30,690
+a whole bunch of like Red
+Hat things and, you know,
+
+254
+00:11:30,690 --> 00:11:33,660
+so John needed to learn
+more and more and more,
+
+255
+00:11:33,660 --> 00:11:37,770
+so it was kinda hard to
+train more Johns over time.
+
+256
+00:11:37,770 --> 00:11:40,590
+The second thing that got
+pretty challenging was,
+
+257
+00:11:40,590 --> 00:11:43,110
+you know, for all of us
+technically inclined here,
+
+258
+00:11:43,110 --> 00:11:46,290
+you know, if I sit down at a
+computer and you ask me to do
+
+259
+00:11:46,290 --> 00:11:49,230
+a step of about 30 or so different things,
+
+260
+00:11:49,230 --> 00:11:52,228
+I'll usually do about
+28 of 'em really good
+
+261
+00:11:52,228 --> 00:11:54,180
+the first time and then, you know,
+
+262
+00:11:54,180 --> 00:11:55,890
+I'll fat-finger one or two things,
+
+263
+00:11:55,890 --> 00:11:57,600
+and then it won't work,
+and I'll have to go back
+
+264
+00:11:57,600 --> 00:11:59,460
+and debug it and then, you know,
+
+265
+00:11:59,460 --> 00:12:01,920
+by this time, I'm on the
+second and the third AZ.
+
+266
+00:12:01,920 --> 00:12:04,470
+I'm getting kinda lazy, so
+I'm making more mistakes.
+
+267
+00:12:04,470 --> 00:12:07,500
+So like, you know,
+sending one person there
+
+268
+00:12:07,500 --> 00:12:10,650
+to do lots of stuff is a
+pretty error-prone process.
+
+269
+00:12:10,650 --> 00:12:13,350
+And flying people around the world
+
+270
+00:12:13,350 --> 00:12:16,170
+that are a limited
+resource isn't a good way
+
+271
+00:12:16,170 --> 00:12:19,230
+to be able to scale to
+multiple region builds at once.
+
+272
+00:12:19,230 --> 00:12:20,820
+So, you know,
+
+273
+00:12:20,820 --> 00:12:23,610
+we managed to build eight
+regions this way, which is,
+
+274
+00:12:23,610 --> 00:12:25,168
+you know, I think pretty good.
+
+275
+00:12:25,168 --> 00:12:27,583
+But there were some other
+changes happening on,
+
+276
+00:12:27,583 --> 00:12:30,030
+you know, kinda behind the scenes that,
+
+277
+00:12:30,030 --> 00:12:32,100
+you know, unfortunately,
+
+278
+00:12:32,100 --> 00:12:37,020
+you know, put John's ninja
+bootstrap role kind of on ice.
+
+279
+00:12:37,020 --> 00:12:38,190
+And the first thing
+
+280
+00:12:38,190 --> 00:12:43,190
+was we've kind of continually
+innovated over time.
+
+281
+00:12:43,230 --> 00:12:46,680
+So I mentioned that
+when AWS first launched,
+
+282
+00:12:46,680 --> 00:12:51,680
+we ran the original
+services like S3 and SQS,
+
+283
+00:12:51,870 --> 00:12:55,710
+and some of those early services
+ran on the infrastructure
+
+284
+00:12:55,710 --> 00:12:57,750
+that this website, amazon.com,
+
+285
+00:12:57,750 --> 00:13:00,570
+you may have heard of it, ran on.
+
+286
+00:13:00,570 --> 00:13:03,967
+And then we launched EC2, and,
+
+287
+00:13:03,967 --> 00:13:05,850
+you know, we thought that was really cool.
+
+288
+00:13:05,850 --> 00:13:07,590
+I think it's the best service.
+
+289
+00:13:07,590 --> 00:13:11,730
+And over time, we started to build
+
+290
+00:13:11,730 --> 00:13:14,943
+all of our AWS services on top of EC2.
+
+291
+00:13:16,260 --> 00:13:20,640
+In fact, today, when you
+launch an instance in EC2,
+
+292
+00:13:20,640 --> 00:13:22,950
+the machine that talks to the server
+
+293
+00:13:22,950 --> 00:13:25,650
+that launches your instance for you,
+
+294
+00:13:25,650 --> 00:13:27,840
+that is actually an EC2 instance.
+
+295
+00:13:27,840 --> 00:13:29,940
+So EC2 runs on top of EC2.
+
+296
+00:13:29,940 --> 00:13:33,210
+So everything runs on EC2
+now, which kinda makes the,
+
+297
+00:13:33,210 --> 00:13:35,040
+you know, John walks into a data center
+
+298
+00:13:35,040 --> 00:13:37,616
+and goes to plug and jump
+drives and run servers.
+
+299
+00:13:37,616 --> 00:13:39,183
+That doesn't really work
+because you need EC2
+
+300
+00:13:39,183 --> 00:13:42,030
+to be able to run EC2 and, you know,
+
+301
+00:13:42,030 --> 00:13:43,290
+your head starts to hurt.
+
+302
+00:13:43,290 --> 00:13:46,530
+The other thing is we came up with things
+
+303
+00:13:46,530 --> 00:13:50,465
+like IAM opt-in regions where
+when we launch a new region,
+
+304
+00:13:50,465 --> 00:13:54,360
+your IAM information for
+your account doesn't exist
+
+305
+00:13:54,360 --> 00:13:56,289
+in that region yet until you as a customer
+
+306
+00:13:56,289 --> 00:14:00,240
+opt into using that region,
+and then your IAM materials
+
+307
+00:14:00,240 --> 00:14:03,450
+will propagate to a regional
+propagator in that region.
+
+308
+00:14:03,450 --> 00:14:06,030
+Again, that made it really,
+really challenging for,
+
+309
+00:14:06,030 --> 00:14:07,740
+you know, oh, I walk into the data center
+
+310
+00:14:07,740 --> 00:14:09,360
+and I start installing stuff 'cause like,
+
+311
+00:14:09,360 --> 00:14:12,060
+we need this regional
+identity stack to exist.
+
+312
+00:14:12,060 --> 00:14:14,659
+So, like, we kept innovating over time.
+
+313
+00:14:14,659 --> 00:14:19,230
+Customers wanted things
+like digital sovereignty
+
+314
+00:14:19,230 --> 00:14:21,270
+and data protection and, you know,
+
+315
+00:14:21,270 --> 00:14:23,724
+more regions to be able
+to run their workload
+
+316
+00:14:23,724 --> 00:14:25,380
+closer to their customers.
+
+317
+00:14:25,380 --> 00:14:29,947
+And so the demand for us to
+grow our global footprint
+
+318
+00:14:29,947 --> 00:14:32,310
+continue to increase over time.
+
+319
+00:14:32,310 --> 00:14:33,540
+And that kinda gets to one
+
+320
+00:14:33,540 --> 00:14:37,200
+of like the fundamental value
+props that we talked about
+
+321
+00:14:37,200 --> 00:14:39,930
+about cloud from the
+first re:Invent actually,
+
+322
+00:14:39,930 --> 00:14:42,330
+is the ability to go
+global in minutes, right?
+
+323
+00:14:42,330 --> 00:14:45,621
+I can be sitting in my
+house in Northern Virginia
+
+324
+00:14:45,621 --> 00:14:48,729
+and launch an instance in Australia
+
+325
+00:14:48,729 --> 00:14:50,820
+just from the management console, right?
+
+326
+00:14:50,820 --> 00:14:53,490
+I don't have to travel there
+and figure out colo space
+
+327
+00:14:53,490 --> 00:14:54,870
+and do all this other stuff.
+
+328
+00:14:54,870 --> 00:14:56,640
+And you know, in order to make good
+
+329
+00:14:56,640 --> 00:14:58,530
+on that value proposition to customers,
+
+330
+00:14:58,530 --> 00:15:00,450
+we needed to expand our global footprint
+
+331
+00:15:00,450 --> 00:15:01,770
+pretty aggressively.
+
+332
+00:15:01,770 --> 00:15:04,920
+So, you know, the global reach
+of what our customers wanted
+
+333
+00:15:04,920 --> 00:15:07,170
+to run on our platform
+really, really pushed us
+
+334
+00:15:07,170 --> 00:15:09,750
+to expand further and further.
+
+335
+00:15:09,750 --> 00:15:13,713
+So with all this, how the heck
+did we build regions today?
+
+336
+00:15:14,790 --> 00:15:17,700
+- Well, it's now 2025.
+
+337
+00:15:17,700 --> 00:15:18,590
+Can't believe I'm saying that.
+
+338
+00:15:18,590 --> 00:15:21,060
+That's wild. And what have we done?
+
+339
+00:15:21,060 --> 00:15:25,830
+Well, we have continued
+to launch more regions
+
+340
+00:15:25,830 --> 00:15:28,110
+and availability zones and local zones.
+
+341
+00:15:28,110 --> 00:15:30,090
+I just included these blog posts
+
+342
+00:15:30,090 --> 00:15:33,240
+from some of the more recent
+regions that we've launched.
+
+343
+00:15:33,240 --> 00:15:34,800
+But this just wouldn't have been possible
+
+344
+00:15:34,800 --> 00:15:36,900
+using the approach that
+we used a while ago.
+
+345
+00:15:36,900 --> 00:15:40,353
+So, let's dive into how
+we build regions today.
+
+346
+00:15:41,520 --> 00:15:43,470
+So, as Don mentioned, you know,
+
+347
+00:15:43,470 --> 00:15:45,390
+it was a very sequential process.
+
+348
+00:15:45,390 --> 00:15:48,144
+We would do the physical
+build and then fly people in
+
+349
+00:15:48,144 --> 00:15:50,340
+and do the software build.
+
+350
+00:15:50,340 --> 00:15:53,970
+And in order to scale, we
+had to parallelize this work.
+
+351
+00:15:53,970 --> 00:15:55,950
+So, how do we do that?
+
+352
+00:15:55,950 --> 00:16:00,388
+Well, we just build AWS on AWS.
+
+353
+00:16:00,388 --> 00:16:03,464
+So we have all of these existing
+regions around the world.
+
+354
+00:16:03,464 --> 00:16:05,964
+So what we do now is we
+use those existing regions
+
+355
+00:16:05,964 --> 00:16:08,280
+to bootstrap the new regions.
+
+356
+00:16:08,280 --> 00:16:09,570
+So instead of waiting around
+
+357
+00:16:09,570 --> 00:16:11,720
+until the physical work
+stream is complete,
+
+358
+00:16:12,680 --> 00:16:15,294
+we get a headstart with a software build.
+
+359
+00:16:15,294 --> 00:16:18,180
+And so we can parallelize the effort.
+
+360
+00:16:18,180 --> 00:16:21,030
+So, we have a build region here.
+
+361
+00:16:21,030 --> 00:16:23,640
+It's still under construction.
+
+362
+00:16:23,640 --> 00:16:27,540
+We're still super early
+on in the planning phase.
+
+363
+00:16:27,540 --> 00:16:29,130
+No racks have landed,
+
+364
+00:16:29,130 --> 00:16:31,170
+but we're gonna get a
+headstart on this region build.
+
+365
+00:16:31,170 --> 00:16:34,890
+So, we're gonna select
+an existing AWS region.
+
+366
+00:16:34,890 --> 00:16:37,920
+We'll refer to this as
+our bootstrap region.
+
+367
+00:16:37,920 --> 00:16:41,550
+Now, we're very careful when
+selecting our bootstrap region
+
+368
+00:16:41,550 --> 00:16:43,230
+because it's, you know,
+
+369
+00:16:43,230 --> 00:16:44,160
+a production region.
+
+370
+00:16:44,160 --> 00:16:45,960
+We have customers running there.
+
+371
+00:16:45,960 --> 00:16:49,609
+So we look into things like
+capacity considerations,
+
+372
+00:16:49,609 --> 00:16:52,347
+the network latency between
+the bootstrap region
+
+373
+00:16:52,347 --> 00:16:54,360
+and the build region, because
+at the end of the day,
+
+374
+00:16:54,360 --> 00:16:56,149
+you know, we need traffic
+to go back and forth,
+
+375
+00:16:56,149 --> 00:16:58,080
+and we don't wanna be traveling
+
+376
+00:16:58,080 --> 00:17:00,780
+all the way around the
+world every single time.
+
+377
+00:17:00,780 --> 00:17:04,099
+And then fiber considerations.
+
+378
+00:17:04,099 --> 00:17:07,170
+And so once we've selected
+this bootstrap region,
+
+379
+00:17:07,170 --> 00:17:10,170
+we go ahead and start that software build.
+
+380
+00:17:10,170 --> 00:17:13,590
+So even super, super, super
+early on in this build,
+
+381
+00:17:13,590 --> 00:17:15,660
+we're designing with resiliency in mind.
+
+382
+00:17:15,660 --> 00:17:18,570
+So our bootstrap VPC
+here is already spanning
+
+383
+00:17:18,570 --> 00:17:20,310
+three availability zones.
+
+384
+00:17:20,310 --> 00:17:23,910
+And everything that we build
+in this bootstrap environment,
+
+385
+00:17:23,910 --> 00:17:26,910
+every service, everything thinks it exists
+
+386
+00:17:26,910 --> 00:17:29,040
+in the new build region.
+
+387
+00:17:29,040 --> 00:17:32,640
+And we connect it up, and eventually,
+
+388
+00:17:32,640 --> 00:17:34,800
+we will, you know, get the racks landed
+
+389
+00:17:34,800 --> 00:17:36,450
+and everything good to go.
+
+390
+00:17:36,450 --> 00:17:37,740
+But let's dive a little bit deeper
+
+391
+00:17:37,740 --> 00:17:40,623
+into what's happening
+in that bootstrap VPC.
+
+392
+00:17:41,460 --> 00:17:44,370
+- Yeah, so we start with a VPC,
+
+393
+00:17:44,370 --> 00:17:47,550
+and we have an account just
+like any other customer.
+
+394
+00:17:47,550 --> 00:17:51,990
+Well, we need to make this VPC
+
+395
+00:17:51,990 --> 00:17:55,020
+look like the region that we're building.
+
+396
+00:17:55,020 --> 00:17:58,500
+So, we need to start
+building some services.
+
+397
+00:17:58,500 --> 00:18:00,385
+Well, that's pretty easy.
+
+398
+00:18:00,385 --> 00:18:01,830
+I can launch an instance,
+
+399
+00:18:01,830 --> 00:18:04,147
+and I can give it to a
+service team and say,
+
+400
+00:18:04,147 --> 00:18:05,910
+"Hey, here you go.
+
+401
+00:18:05,910 --> 00:18:07,500
+It's all good."
+
+402
+00:18:07,500 --> 00:18:08,827
+Well, the service team's gonna go,
+
+403
+00:18:08,827 --> 00:18:10,110
+"Hey, this is great,
+
+404
+00:18:10,110 --> 00:18:12,060
+except I need to get,
+
+405
+00:18:12,060 --> 00:18:14,340
+I need to get my AWS software on there.
+
+406
+00:18:14,340 --> 00:18:15,930
+How am I gonna do that?"
+
+407
+00:18:15,930 --> 00:18:18,270
+Ooh, that's a problem.
+
+408
+00:18:18,270 --> 00:18:19,113
+Well,
+
+409
+00:18:20,460 --> 00:18:25,290
+so, the Amazon deployment system
+can't tell this AWS account
+
+410
+00:18:25,290 --> 00:18:27,990
+from any of the other
+millions of AWS accounts.
+
+411
+00:18:27,990 --> 00:18:31,620
+So we need a way to
+authenticate that host,
+
+412
+00:18:31,620 --> 00:18:34,350
+and then we need a way to
+talk to our deployment system,
+
+413
+00:18:34,350 --> 00:18:35,792
+and then we need a way
+
+414
+00:18:35,792 --> 00:18:39,960
+to make it look like it's the
+build region inside there.
+
+415
+00:18:39,960 --> 00:18:41,550
+Well, but, okay,
+
+416
+00:18:41,550 --> 00:18:43,291
+so we need to install
+some software on that.
+
+417
+00:18:43,291 --> 00:18:45,270
+That's just like an RPM, right?
+
+418
+00:18:45,270 --> 00:18:47,850
+And what's really an RPM repo?
+
+419
+00:18:47,850 --> 00:18:49,640
+It's just a web server.
+
+420
+00:18:49,640 --> 00:18:52,680
+And we're gonna need
+to do some DNS trickery
+
+421
+00:18:52,680 --> 00:18:56,220
+because we're gonna need to
+make DNS inside this environment
+
+422
+00:18:56,220 --> 00:18:59,690
+look like the region or the
+zone that we're building in.
+
+423
+00:18:59,690 --> 00:19:01,643
+But what really is DNS?
+
+424
+00:19:01,643 --> 00:19:05,637
+It's just something that
+answers on UDP 53 based on,
+
+425
+00:19:05,637 --> 00:19:07,868
+you know, something I
+look up in a database.
+
+426
+00:19:07,868 --> 00:19:09,840
+I can surely fake that out.
+
+427
+00:19:09,840 --> 00:19:12,180
+And then most of our host identification,
+
+428
+00:19:12,180 --> 00:19:13,829
+well, that's just a certificate.
+
+429
+00:19:13,829 --> 00:19:16,470
+Well, I can issue certificates.
+
+430
+00:19:16,470 --> 00:19:21,470
+So, what we did in order to
+kinda fake all this stuff
+
+431
+00:19:22,290 --> 00:19:25,650
+until the real services that
+do all these things come up
+
+432
+00:19:25,650 --> 00:19:27,300
+is we launched another instance,
+
+433
+00:19:27,300 --> 00:19:29,400
+and we called it the Franken instance
+
+434
+00:19:29,400 --> 00:19:32,190
+'cause it just kinda pieces
+together all of this stuff
+
+435
+00:19:32,190 --> 00:19:34,650
+that you need to break
+the circular dependencies
+
+436
+00:19:34,650 --> 00:19:37,680
+to get that host to talk
+to the deployment system
+
+437
+00:19:37,680 --> 00:19:39,510
+to be able to get software on it.
+
+438
+00:19:39,510 --> 00:19:43,080
+So we made a Franken
+instance, and it does DNS,
+
+439
+00:19:43,080 --> 00:19:46,110
+and it does PKI, and it
+does a little RPM repo,
+
+440
+00:19:46,110 --> 00:19:49,140
+and that'll turn that generic EC2 instance
+
+441
+00:19:49,140 --> 00:19:51,793
+into an Amazon service team host.
+
+442
+00:19:51,793 --> 00:19:56,430
+And we can do that to build
+the early services like IAM,
+
+443
+00:19:56,430 --> 00:19:57,263
+'cause that's what you need
+
+444
+00:19:57,263 --> 00:19:59,183
+before you need anything else, right?
+
+445
+00:19:59,183 --> 00:20:01,110
+You know, who am I talking to,
+
+446
+00:20:01,110 --> 00:20:02,580
+and how do I authorize them?
+
+447
+00:20:02,580 --> 00:20:03,413
+All right, cool.
+
+448
+00:20:03,413 --> 00:20:04,246
+So we built IAM, right?
+
+449
+00:20:04,246 --> 00:20:05,079
+So this should be easy.
+
+450
+00:20:05,079 --> 00:20:07,080
+Now we just gotta build EC2.
+
+451
+00:20:07,080 --> 00:20:11,640
+So, in order to build EC2, I've got IAM.
+
+452
+00:20:11,640 --> 00:20:12,473
+Great.
+
+453
+00:20:13,470 --> 00:20:15,210
+Well, remember when I mentioned that,
+
+454
+00:20:15,210 --> 00:20:17,760
+like, everything runs on top of EC2?
+
+455
+00:20:17,760 --> 00:20:21,187
+EC2 also uses some other
+AWS services because,
+
+456
+00:20:21,187 --> 00:20:24,060
+you know, we didn't wanna
+be left out of the fun.
+
+457
+00:20:24,060 --> 00:20:28,890
+So we use most notably S3 and DynamoDB.
+
+458
+00:20:28,890 --> 00:20:31,140
+And in a production region,
+
+459
+00:20:31,140 --> 00:20:34,350
+the way that we use S3 and DynamoDB
+
+460
+00:20:34,350 --> 00:20:37,860
+is really strongly kind of
+controlled and monitored
+
+461
+00:20:37,860 --> 00:20:40,410
+such that if those services impair,
+
+462
+00:20:40,410 --> 00:20:42,128
+like we've got a way to either continue
+
+463
+00:20:42,128 --> 00:20:45,215
+portions of our operations
+or we'll degrade
+
+464
+00:20:45,215 --> 00:20:48,060
+relative to those services degrading.
+
+465
+00:20:48,060 --> 00:20:50,790
+But early on in the build,
+
+466
+00:20:50,790 --> 00:20:53,250
+we've got like a chicken
+and the egg problem, right?
+
+467
+00:20:53,250 --> 00:20:56,550
+Because S3 needs EC2 to build,
+
+468
+00:20:56,550 --> 00:20:59,149
+but EC2 needs S3 to build.
+
+469
+00:20:59,149 --> 00:21:00,543
+So we've got a problem.
+
+470
+00:21:01,650 --> 00:21:04,950
+But I'm running into AWS account,
+
+471
+00:21:04,950 --> 00:21:07,053
+and there's S3 and Dynamo in the region.
+
+472
+00:21:08,160 --> 00:21:09,600
+And what's really the difference
+
+473
+00:21:09,600 --> 00:21:12,777
+between S3 and Dynamo
+in the bootstrap region
+
+474
+00:21:12,777 --> 00:21:15,810
+and S3 and Dynamo in the build region?
+
+475
+00:21:15,810 --> 00:21:17,679
+Well, the only difference really
+
+476
+00:21:17,679 --> 00:21:20,430
+is the DNS is different, right?
+
+477
+00:21:20,430 --> 00:21:22,590
+So if I was building US East 2,
+
+478
+00:21:22,590 --> 00:21:26,610
+it would be s3.useast2.amazonaws.com.
+
+479
+00:21:26,610 --> 00:21:29,190
+And if my donor was US East 1,
+
+480
+00:21:29,190 --> 00:21:32,640
+the donor would be s3.useast1.amazonaws.
+
+481
+00:21:32,640 --> 00:21:34,080
+That's just DNS.
+
+482
+00:21:34,080 --> 00:21:36,210
+I can fix that 'cause I
+have the Franken instance.
+
+483
+00:21:36,210 --> 00:21:38,280
+I can just make DNS whatever I want.
+
+484
+00:21:38,280 --> 00:21:40,433
+And then when I auth, I need to auth
+
+485
+00:21:40,433 --> 00:21:42,810
+against that regional opt-in stack,
+
+486
+00:21:42,810 --> 00:21:45,360
+because when you're in
+a regionalized account,
+
+487
+00:21:45,360 --> 00:21:47,700
+you need to talk to the
+regional opt-in stack.
+
+488
+00:21:47,700 --> 00:21:50,711
+Well, so what if I just drew a
+little proxy server in there?
+
+489
+00:21:50,711 --> 00:21:54,120
+That responded on that DNS endpoint,
+
+490
+00:21:54,120 --> 00:21:57,270
+shuffled your auth over to
+the auth that we just built.
+
+491
+00:21:57,270 --> 00:21:59,880
+But then when it actually
+goes to store your data,
+
+492
+00:21:59,880 --> 00:22:01,470
+it just turns around and uses the one
+
+493
+00:22:01,470 --> 00:22:03,000
+in the bootstrap region.
+
+494
+00:22:03,000 --> 00:22:04,050
+That's what we do.
+
+495
+00:22:04,050 --> 00:22:05,970
+We have these little intelligent proxies,
+
+496
+00:22:05,970 --> 00:22:07,824
+which, like a good mullet,
+
+497
+00:22:07,824 --> 00:22:11,520
+is build region in the front,
+bootstrap region in the back.
+
+498
+00:22:11,520 --> 00:22:13,950
+And that's how we break the
+circular dependencies early on
+
+499
+00:22:13,950 --> 00:22:18,480
+in EC2 to be able to allow us to use S3
+
+500
+00:22:18,480 --> 00:22:20,370
+in order to build EC2.
+
+501
+00:22:20,370 --> 00:22:23,640
+And then once we build EC2,
+then S3 and Dynamo can build,
+
+502
+00:22:23,640 --> 00:22:25,830
+and Michelle will talk
+a little bit about that.
+
+503
+00:22:25,830 --> 00:22:26,663
+- Yep.
+
+504
+00:22:26,663 --> 00:22:27,750
+So, at this point, you know,
+
+505
+00:22:27,750 --> 00:22:29,310
+EC2's core dependencies are up,
+
+506
+00:22:29,310 --> 00:22:32,190
+and we can build out
+the EC2 control plane.
+
+507
+00:22:32,190 --> 00:22:34,890
+We also build out some
+core networking services
+
+508
+00:22:34,890 --> 00:22:38,910
+and other services in this
+bootstrap environment.
+
+509
+00:22:38,910 --> 00:22:41,970
+And then, you know, in our build region,
+
+510
+00:22:41,970 --> 00:22:44,220
+we're at the point where
+the racks have been cabled,
+
+511
+00:22:44,220 --> 00:22:46,950
+and we can actually launch EC2 instances
+
+512
+00:22:46,950 --> 00:22:49,740
+into the build region
+using the control plane
+
+513
+00:22:49,740 --> 00:22:52,360
+that exists in the bootstrap VPC.
+
+514
+00:22:52,360 --> 00:22:55,500
+And once we can launch instances, well,
+
+515
+00:22:55,500 --> 00:22:59,100
+that means that other services
+can start their builds.
+
+516
+00:22:59,100 --> 00:23:02,280
+And so the first few services
+that build in the build region
+
+517
+00:23:02,280 --> 00:23:07,280
+are S3 and DynamoDB among
+a few other core services.
+
+518
+00:23:07,650 --> 00:23:10,940
+Once S3 and Dynamo are
+available in the build region,
+
+519
+00:23:10,940 --> 00:23:13,980
+we actually go ahead
+and migrate things over.
+
+520
+00:23:13,980 --> 00:23:17,580
+So we take all of the data
+stored in the bootstrap region,
+
+521
+00:23:17,580 --> 00:23:21,273
+S3 and DynamoDB, and
+we copy that over to S3
+
+522
+00:23:21,273 --> 00:23:24,540
+and DynamoDB in the build region.
+
+523
+00:23:24,540 --> 00:23:27,930
+We also then migrate all of
+the services that were built
+
+524
+00:23:27,930 --> 00:23:31,530
+in the bootstrap VPC
+into the build region.
+
+525
+00:23:31,530 --> 00:23:34,995
+And the way we do this is
+service teams will scale up
+
+526
+00:23:34,995 --> 00:23:36,930
+their instances in the build region
+
+527
+00:23:36,930 --> 00:23:40,380
+and then scale down those
+in the bootstrap VPC.
+
+528
+00:23:40,380 --> 00:23:44,580
+And remember, this is all
+possible because to a service,
+
+529
+00:23:44,580 --> 00:23:47,217
+they are the same region,
+whether it's the VPC environment
+
+530
+00:23:47,217 --> 00:23:50,043
+or the build region environment.
+
+531
+00:23:51,060 --> 00:23:54,270
+And so once the control
+plane is up and running
+
+532
+00:23:54,270 --> 00:23:56,388
+in the build region, we have EC2,
+
+533
+00:23:56,388 --> 00:24:00,720
+S3, DynamoDB, all of the core
+services in the build region.
+
+534
+00:24:00,720 --> 00:24:03,030
+So we have a very stable environment
+
+535
+00:24:03,030 --> 00:24:04,740
+so that a bunch of other services
+
+536
+00:24:04,740 --> 00:24:07,290
+can start their builds as well.
+
+537
+00:24:07,290 --> 00:24:10,170
+Once that's done, we
+go ahead and terminate
+
+538
+00:24:10,170 --> 00:24:14,313
+all of the resources in the
+bootstrap, S3 and DynamoDB.
+
+539
+00:24:15,210 --> 00:24:17,610
+We also shut down and eventually terminate
+
+540
+00:24:17,610 --> 00:24:19,230
+all of the instances that we're running
+
+541
+00:24:19,230 --> 00:24:20,763
+in the bootstrap VPC.
+
+542
+00:24:21,810 --> 00:24:25,707
+We then apply an access
+control list to block traffic
+
+543
+00:24:25,707 --> 00:24:28,290
+from the bootstrap region
+to the build region
+
+544
+00:24:28,290 --> 00:24:29,760
+and vice versa.
+
+545
+00:24:29,760 --> 00:24:32,310
+We then give it some bake
+time just to make sure
+
+546
+00:24:32,310 --> 00:24:35,520
+that nothing is tryna call
+back and forth anymore.
+
+547
+00:24:35,520 --> 00:24:39,450
+If everything looks good,
+we go ahead and disconnect
+
+548
+00:24:39,450 --> 00:24:42,009
+the build region from
+the bootstrap region,
+
+549
+00:24:42,009 --> 00:24:44,940
+and then the build region is on its own.
+
+550
+00:24:44,940 --> 00:24:48,210
+We build out all of the
+services, we run our game days,
+
+551
+00:24:48,210 --> 00:24:49,833
+and then we launch the region.
+
+552
+00:24:51,120 --> 00:24:53,402
+So that is at a very high level
+
+553
+00:24:53,402 --> 00:24:56,363
+how we build a new AWS region.
+
+554
+00:24:56,363 --> 00:24:58,890
+Let's now jump to how we do this
+
+555
+00:24:58,890 --> 00:25:00,933
+for availability zones and local zones.
+
+556
+00:25:02,700 --> 00:25:04,175
+- Yeah, so availability zones,
+
+557
+00:25:04,175 --> 00:25:09,175
+it's a very similar process,
+albeit a lot simpler actually.
+
+558
+00:25:10,590 --> 00:25:12,750
+But what's interesting
+about availability zones
+
+559
+00:25:12,750 --> 00:25:15,649
+is it actually takes us longer
+
+560
+00:25:15,649 --> 00:25:20,040
+to add a new availability
+zone onto an existing region
+
+561
+00:25:20,040 --> 00:25:22,950
+than it does to build a
+new region from scratch.
+
+562
+00:25:22,950 --> 00:25:24,277
+And you're probably like,
+
+563
+00:25:24,277 --> 00:25:25,590
+"Come on, man, why?"
+
+564
+00:25:25,590 --> 00:25:26,490
+- [Michelle] We're working on it, though.
+
+565
+00:25:26,490 --> 00:25:28,200
+- Yeah, we are working
+on making it better,
+
+566
+00:25:28,200 --> 00:25:32,820
+but the reason is our isolation and,
+
+567
+00:25:32,820 --> 00:25:35,730
+you know, our promise
+to customers is that,
+
+568
+00:25:35,730 --> 00:25:38,490
+you know, one region is strongly isolated
+
+569
+00:25:38,490 --> 00:25:39,840
+from another region.
+
+570
+00:25:39,840 --> 00:25:44,130
+So, and when we're running
+in that bootstrap VPC,
+
+571
+00:25:44,130 --> 00:25:45,750
+we don't do anything special.
+
+572
+00:25:45,750 --> 00:25:47,280
+We're just like any other customer.
+
+573
+00:25:47,280 --> 00:25:49,738
+So we're not doing
+anything that will impact
+
+574
+00:25:49,738 --> 00:25:51,570
+the region that we're running in.
+
+575
+00:25:51,570 --> 00:25:54,510
+We really are running
+like a brand new region.
+
+576
+00:25:54,510 --> 00:25:57,130
+So that's pretty isolated
+from everything else
+
+577
+00:25:57,130 --> 00:26:00,813
+in the global AWS infrastructure stack.
+
+578
+00:26:01,858 --> 00:26:04,423
+And there's no customers
+in a build region yet,
+
+579
+00:26:04,423 --> 00:26:06,540
+so we can go really fast.
+
+580
+00:26:06,540 --> 00:26:08,220
+And we do.
+
+581
+00:26:08,220 --> 00:26:09,787
+With an availability zone,
+
+582
+00:26:09,787 --> 00:26:13,560
+you're operating in a live
+region with live customers.
+
+583
+00:26:13,560 --> 00:26:15,570
+So from an availability perspective,
+
+584
+00:26:15,570 --> 00:26:18,210
+there are a whole bunch
+of rules that we follow
+
+585
+00:26:18,210 --> 00:26:21,090
+about deployment safety and not deploying
+
+586
+00:26:21,090 --> 00:26:23,520
+to more than one zone in a region on a day
+
+587
+00:26:23,520 --> 00:26:25,440
+and not deploying to so many zones.
+
+588
+00:26:25,440 --> 00:26:28,541
+And so, like all of those rules apply,
+
+589
+00:26:28,541 --> 00:26:31,980
+and we wanna be really, really cautious
+
+590
+00:26:31,980 --> 00:26:35,310
+that we don't do something
+in a build availability zone
+
+591
+00:26:35,310 --> 00:26:40,310
+that would impact customers
+running in the parent region.
+
+592
+00:26:40,680 --> 00:26:45,570
+So, we are expanding our
+availability zones worldwide
+
+593
+00:26:45,570 --> 00:26:47,970
+and that it's, in some ways, nice
+
+594
+00:26:47,970 --> 00:26:50,760
+because it's a way to
+get additional resiliency
+
+595
+00:26:50,760 --> 00:26:53,550
+and additional capacity available
+to customers without you
+
+596
+00:26:53,550 --> 00:26:56,490
+having to rebuild your
+stack in a new region.
+
+597
+00:26:56,490 --> 00:26:59,350
+So, you know, provide some
+greater flexibility there.
+
+598
+00:26:59,350 --> 00:27:01,710
+And the way that we do
+it is we essentially,
+
+599
+00:27:01,710 --> 00:27:04,396
+instead of having a bootstrap region,
+
+600
+00:27:04,396 --> 00:27:06,450
+we have a bootstrap AZ.
+
+601
+00:27:06,450 --> 00:27:10,290
+And we just create a VPC
+there, and it's a much smaller,
+
+602
+00:27:10,290 --> 00:27:12,030
+you know, that is to scale.
+
+603
+00:27:12,030 --> 00:27:13,647
+It's a much smaller VPC.
+
+604
+00:27:13,647 --> 00:27:17,101
+We only build the zonal
+services that comprise
+
+605
+00:27:17,101 --> 00:27:19,336
+the EC2 control plane in there
+
+606
+00:27:19,336 --> 00:27:22,346
+as well as some of the
+zonal networking services.
+
+607
+00:27:22,346 --> 00:27:26,670
+And then we do some fancy
+under-the-hood network peering
+
+608
+00:27:26,670 --> 00:27:28,980
+to the zone that's being built.
+
+609
+00:27:28,980 --> 00:27:31,860
+And once we can do that, we can provision
+
+610
+00:27:31,860 --> 00:27:33,840
+hardware and launch instances
+
+611
+00:27:33,840 --> 00:27:36,420
+and be able to do that
+same migration process
+
+612
+00:27:36,420 --> 00:27:39,540
+that we do in the region build process.
+
+613
+00:27:39,540 --> 00:27:42,720
+So somewhat similar, slightly different.
+
+614
+00:27:42,720 --> 00:27:45,600
+And you know, the fun fact
+is it actually takes longer,
+
+615
+00:27:45,600 --> 00:27:47,223
+mostly due to deployment safety.
+
+616
+00:27:48,420 --> 00:27:50,880
+- So let's talk a bit
+about local zones next.
+
+617
+00:27:50,880 --> 00:27:54,870
+So local zones exist so customers
+can run their applications
+
+618
+00:27:54,870 --> 00:27:58,560
+on AWS infrastructure
+closer to their end users
+
+619
+00:27:58,560 --> 00:28:01,560
+and to provide additional capacity.
+
+620
+00:28:01,560 --> 00:28:04,380
+So we have a few different
+flavors of local zones.
+
+621
+00:28:04,380 --> 00:28:06,120
+We have our standard local zones,
+
+622
+00:28:06,120 --> 00:28:08,760
+and we have dedicated local zones,
+
+623
+00:28:08,760 --> 00:28:12,854
+which are dedicated to
+a specific customer,
+
+624
+00:28:12,854 --> 00:28:15,595
+which means they might
+come with additional,
+
+625
+00:28:15,595 --> 00:28:17,250
+you know, security services
+
+626
+00:28:17,250 --> 00:28:19,503
+or whatever that customer may require.
+
+627
+00:28:20,520 --> 00:28:25,520
+And similar to an availability
+zone, we have a parent AZ.
+
+628
+00:28:25,620 --> 00:28:29,670
+And the EC2 control plane
+lives in that parent AZ,
+
+629
+00:28:29,670 --> 00:28:33,238
+and then we just extend
+over to the local zone.
+
+630
+00:28:33,238 --> 00:28:35,348
+So the set of services that we build
+
+631
+00:28:35,348 --> 00:28:38,344
+for a local zone is much, much smaller.
+
+632
+00:28:38,344 --> 00:28:41,280
+Most of the complexity
+in a local zone build
+
+633
+00:28:41,280 --> 00:28:43,920
+actually comes from setting
+up the network connectivity
+
+634
+00:28:43,920 --> 00:28:46,801
+between the parent AZ and the local zone.
+
+635
+00:28:46,801 --> 00:28:48,600
+But similar to the AZ, you know,
+
+636
+00:28:48,600 --> 00:28:50,040
+once we have that established,
+
+637
+00:28:50,040 --> 00:28:53,298
+we can provision that capacity,
+
+638
+00:28:53,298 --> 00:28:56,883
+the data plane essentially,
+in the local zone.
+
+639
+00:28:57,870 --> 00:29:02,733
+And one of the huge benefits
+here is that customers
+
+640
+00:29:03,660 --> 00:29:08,130
+can run their workloads in
+different countries, for example.
+
+641
+00:29:08,130 --> 00:29:11,550
+So say you have a parent
+region in country A,
+
+642
+00:29:11,550 --> 00:29:14,310
+but due to data residency requirements,
+
+643
+00:29:14,310 --> 00:29:17,880
+you need to store all of
+your data in country B.
+
+644
+00:29:17,880 --> 00:29:20,148
+Well, using a local zone, you could use
+
+645
+00:29:20,148 --> 00:29:24,450
+some of the local zone
+versions of regional services
+
+646
+00:29:24,450 --> 00:29:27,434
+like S3 Express to ensure
+that all of your data
+
+647
+00:29:27,434 --> 00:29:29,460
+is stored in country B
+
+648
+00:29:29,460 --> 00:29:32,790
+to meet the data residency
+requirements you may have.
+
+649
+00:29:32,790 --> 00:29:36,510
+So it's a really nifty way of, you know,
+
+650
+00:29:36,510 --> 00:29:38,765
+extending AWS infrastructure capabilities
+
+651
+00:29:38,765 --> 00:29:42,993
+to locations beyond where we have regions.
+
+652
+00:29:45,630 --> 00:29:47,430
+Next up, we're going to jump
+
+653
+00:29:47,430 --> 00:29:52,290
+into perhaps the most tricky
+part in all of this building.
+
+654
+00:29:52,290 --> 00:29:55,200
+So, we're gonna talk about dependencies
+
+655
+00:29:55,200 --> 00:29:58,680
+and how we deal with this during builds.
+
+656
+00:29:58,680 --> 00:30:00,992
+So Don touched on this
+a little bit earlier.
+
+657
+00:30:00,992 --> 00:30:02,600
+It's quite tricky because we have a lot
+
+658
+00:30:02,600 --> 00:30:05,310
+of circular dependencies between services,
+
+659
+00:30:05,310 --> 00:30:08,580
+and it continues to become
+more and more complicated
+
+660
+00:30:08,580 --> 00:30:11,700
+as we add more services, more features,
+
+661
+00:30:11,700 --> 00:30:14,292
+and more services wanting
+to leverage the benefits
+
+662
+00:30:14,292 --> 00:30:16,800
+of services that we've
+developed previously.
+
+663
+00:30:16,800 --> 00:30:18,783
+Like think of Lambda, Fargate.
+
+664
+00:30:19,680 --> 00:30:20,520
+If you're a service team,
+
+665
+00:30:20,520 --> 00:30:22,830
+why wouldn't you wanna use those, right?
+
+666
+00:30:22,830 --> 00:30:25,830
+So we've kind of broken it
+up into four main categories.
+
+667
+00:30:25,830 --> 00:30:27,450
+The first is service bring-up.
+
+668
+00:30:27,450 --> 00:30:30,080
+So, this is all about how we bring up
+
+669
+00:30:30,080 --> 00:30:33,270
+all of the AWS services during a build.
+
+670
+00:30:33,270 --> 00:30:34,290
+So we have, you know,
+
+671
+00:30:34,290 --> 00:30:37,050
+hundreds of external AWS services,
+
+672
+00:30:37,050 --> 00:30:40,140
+but probably thousands
+of internal services.
+
+673
+00:30:40,140 --> 00:30:44,485
+So the way we handle
+bringing those up in batches
+
+674
+00:30:44,485 --> 00:30:46,530
+involves quite a bit of complexity,
+
+675
+00:30:46,530 --> 00:30:49,680
+and we'll go through that
+using an example later.
+
+676
+00:30:49,680 --> 00:30:52,110
+Then of dependency management.
+
+677
+00:30:52,110 --> 00:30:54,570
+Dependencies change all the time.
+
+678
+00:30:54,570 --> 00:30:57,475
+It's almost impossible to
+maintain an accurate list
+
+679
+00:30:57,475 --> 00:31:01,590
+of dependencies, especially
+at a granular level.
+
+680
+00:31:01,590 --> 00:31:03,270
+From a program management perspective,
+
+681
+00:31:03,270 --> 00:31:05,550
+when we build a new region
+or availability zone
+
+682
+00:31:05,550 --> 00:31:09,166
+or local zone, we do have a
+high-level dependency graph.
+
+683
+00:31:09,166 --> 00:31:10,709
+This allows us to, you know,
+
+684
+00:31:10,709 --> 00:31:12,668
+plan the schedule and make sure we launch
+
+685
+00:31:12,668 --> 00:31:16,507
+the builds on time, but it's
+much higher level than at,
+
+686
+00:31:16,507 --> 00:31:18,870
+you know, the individual service level
+
+687
+00:31:18,870 --> 00:31:22,498
+because that's just almost
+impossible to maintain.
+
+688
+00:31:22,498 --> 00:31:24,000
+Then we have static stability,
+
+689
+00:31:24,000 --> 00:31:26,490
+so making sure things recover gracefully
+
+690
+00:31:26,490 --> 00:31:28,440
+in the event that something goes wrong.
+
+691
+00:31:28,440 --> 00:31:30,270
+And then continuous testing.
+
+692
+00:31:30,270 --> 00:31:32,982
+So ensuring that all the
+things that we planned for,
+
+693
+00:31:32,982 --> 00:31:36,450
+we actually test and
+make sure that they work.
+
+694
+00:31:36,450 --> 00:31:41,160
+So, to frame dependencies and
+how problematic they can be,
+
+695
+00:31:41,160 --> 00:31:43,320
+we're gonna run you through an example.
+
+696
+00:31:43,320 --> 00:31:47,506
+We'll use EC2's most
+foundational API, run-instances,
+
+697
+00:31:47,506 --> 00:31:49,680
+and talk you through it.
+
+698
+00:31:49,680 --> 00:31:51,870
+- Yeah, so up until this point,
+
+699
+00:31:51,870 --> 00:31:54,330
+everything sounds pretty easy, right?
+
+700
+00:31:54,330 --> 00:31:55,890
+I mean, I think it's easy.
+
+701
+00:31:55,890 --> 00:31:58,710
+So, what does it take to run an instance?
+
+702
+00:31:58,710 --> 00:32:01,560
+This is a really simple
+run instance call, right?
+
+703
+00:32:01,560 --> 00:32:02,713
+Give me an instance from NAT AMI,
+
+704
+00:32:02,713 --> 00:32:06,870
+make it a t3 micro, and
+I'll give it a key pair.
+
+705
+00:32:06,870 --> 00:32:11,280
+What does that look like? Oh, wow.
+
+706
+00:32:11,280 --> 00:32:13,470
+So this is actually a screenshot
+
+707
+00:32:13,470 --> 00:32:17,220
+from our internal API
+orchestration software
+
+708
+00:32:17,220 --> 00:32:18,930
+that we use in EC2.
+
+709
+00:32:18,930 --> 00:32:21,352
+That is what a run
+instance call looks like.
+
+710
+00:32:21,352 --> 00:32:24,750
+Every one of those boxes on that chart,
+
+711
+00:32:24,750 --> 00:32:28,740
+be them purple or yellow,
+are what we call agents.
+
+712
+00:32:28,740 --> 00:32:32,190
+And an agent represents a service team.
+
+713
+00:32:32,190 --> 00:32:35,100
+And a service team in
+AWS is a two-pizza team.
+
+714
+00:32:35,100 --> 00:32:37,711
+So it's roughly eight to 10 engineers.
+
+715
+00:32:37,711 --> 00:32:41,190
+And when you work on a two-pizza team,
+
+716
+00:32:41,190 --> 00:32:43,140
+you are responsible for your service,
+
+717
+00:32:43,140 --> 00:32:46,170
+and you own everything about that service.
+
+718
+00:32:46,170 --> 00:32:50,970
+So in this API orchestration
+framework thingy
+
+719
+00:32:50,970 --> 00:32:53,160
+that we have, if you hover over a box,
+
+720
+00:32:53,160 --> 00:32:56,340
+when you hover over it,
+the green lines highlight
+
+721
+00:32:56,340 --> 00:32:59,580
+what gets called when that
+agent is getting called.
+
+722
+00:32:59,580 --> 00:33:02,460
+So if you'd like stepped
+down the left side
+
+723
+00:33:02,460 --> 00:33:04,873
+at various times, all of
+those little green lines
+
+724
+00:33:04,873 --> 00:33:07,110
+will be pointing at different boxes.
+
+725
+00:33:07,110 --> 00:33:09,990
+So each step in that
+process is what, you know,
+
+726
+00:33:09,990 --> 00:33:12,780
+number of services that get
+called underneath the hood.
+
+727
+00:33:12,780 --> 00:33:16,290
+So you can see from this,
+ooh, this is a problem.
+
+728
+00:33:16,290 --> 00:33:20,973
+So, when we talk about a service,
+
+729
+00:33:21,900 --> 00:33:24,870
+we talk about one of those
+little boxes on the screen,
+
+730
+00:33:24,870 --> 00:33:25,987
+even though most people are like,
+
+731
+00:33:25,987 --> 00:33:27,777
+"Oh, EC2, it's a service."
+
+732
+00:33:28,680 --> 00:33:32,027
+So, when you come into region build and,
+
+733
+00:33:32,027 --> 00:33:34,161
+you know, obviously we
+need to run instances
+
+734
+00:33:34,161 --> 00:33:36,330
+to be able to deliver capacity to people
+
+735
+00:33:36,330 --> 00:33:37,410
+during region build, right?
+
+736
+00:33:37,410 --> 00:33:38,910
+So, like, we gotta build,
+
+737
+00:33:38,910 --> 00:33:40,720
+you know, at a minimum the number of boxes
+
+738
+00:33:40,720 --> 00:33:43,740
+that are on this screen and
+turns out actually a lot more.
+
+739
+00:33:43,740 --> 00:33:45,630
+So, when we talk about like, oh,
+
+740
+00:33:45,630 --> 00:33:48,300
+we need to build EC2,
+we're talking in the order
+
+741
+00:33:48,300 --> 00:33:50,760
+of a couple hundred different services.
+
+742
+00:33:50,760 --> 00:33:53,640
+And those services just like, you know,
+
+743
+00:33:53,640 --> 00:33:55,830
+EC2 depends on S3 and Dynamo,
+
+744
+00:33:55,830 --> 00:33:58,108
+those services depend on each other.
+
+745
+00:33:58,108 --> 00:34:01,170
+So it gets really tricky
+with this dependency thing.
+
+746
+00:34:01,170 --> 00:34:03,443
+And like, the engineer thing you wanna do
+
+747
+00:34:03,443 --> 00:34:06,043
+when you come in is go like, well, wait,
+
+748
+00:34:06,043 --> 00:34:10,079
+there exists a dependency
+graph in which I could order
+
+749
+00:34:10,079 --> 00:34:13,270
+every box on that screen
+in the perfect order
+
+750
+00:34:13,270 --> 00:34:16,590
+to know what order I need
+to build everything in
+
+751
+00:34:16,590 --> 00:34:19,410
+to be able to build EC2.
+
+752
+00:34:19,410 --> 00:34:24,410
+And while that is factually accurate,
+
+753
+00:34:24,600 --> 00:34:28,980
+the reality is that if you
+were able to piece together
+
+754
+00:34:28,980 --> 00:34:30,990
+that dependency graph, one,
+
+755
+00:34:30,990 --> 00:34:33,536
+it would take you a
+while to do it, and two,
+
+756
+00:34:33,536 --> 00:34:36,210
+if I was able to, like, wave my magic wand
+
+757
+00:34:36,210 --> 00:34:38,100
+and have that dependency graph to exist
+
+758
+00:34:38,100 --> 00:34:40,170
+at this very second in time,
+
+759
+00:34:40,170 --> 00:34:41,970
+it would be outta date tomorrow.
+
+760
+00:34:41,970 --> 00:34:43,650
+Because every one of those teams
+
+761
+00:34:43,650 --> 00:34:45,780
+of eight to 10 software engineers,
+
+762
+00:34:45,780 --> 00:34:47,543
+they're writing code every day.
+
+763
+00:34:47,543 --> 00:34:50,400
+And they're changing the behavior
+of this system every day.
+
+764
+00:34:50,400 --> 00:34:52,205
+And actually, the reason why we built
+
+765
+00:34:52,205 --> 00:34:55,140
+this API orchestration framework
+
+766
+00:34:55,140 --> 00:34:58,693
+is we need every box on
+that to be able to change
+
+767
+00:34:58,693 --> 00:35:02,940
+how API calls work in order to
+deliver new features for you
+
+768
+00:35:02,940 --> 00:35:04,752
+and not be dependent on, oh,
+
+769
+00:35:04,752 --> 00:35:08,040
+'cause it used to be, we
+had to talk to every person
+
+770
+00:35:08,040 --> 00:35:09,031
+on that screen to go, oh,
+
+771
+00:35:09,031 --> 00:35:10,800
+we're gonna have to change run instance,
+
+772
+00:35:10,800 --> 00:35:13,283
+like everybody needs to
+get on the same page.
+
+773
+00:35:13,283 --> 00:35:17,160
+So, chasing dependencies
+in a distributed system
+
+774
+00:35:17,160 --> 00:35:19,320
+can be a bit of a fool's errand.
+
+775
+00:35:19,320 --> 00:35:21,180
+So how the heck do we make this thing
+
+776
+00:35:21,180 --> 00:35:22,950
+actually work in a region build?
+
+777
+00:35:22,950 --> 00:35:25,313
+Well, we've got this trick up our sleeve,
+
+778
+00:35:25,313 --> 00:35:29,043
+and the trick is this thing
+called static stability.
+
+779
+00:35:29,970 --> 00:35:31,290
+Static stability.
+
+780
+00:35:31,290 --> 00:35:33,720
+Usually, when we talk
+about static stability,
+
+781
+00:35:33,720 --> 00:35:36,000
+we talk about it in the
+context of, you know,
+
+782
+00:35:36,000 --> 00:35:38,670
+have you tried unplugging it
+and plugging it back in, right?
+
+783
+00:35:38,670 --> 00:35:42,420
+So, you know, we do that
+for entire data centers
+
+784
+00:35:42,420 --> 00:35:45,420
+or availability zones
+if the power goes out
+
+785
+00:35:45,420 --> 00:35:47,850
+and the generators for
+some reason don't come on,
+
+786
+00:35:47,850 --> 00:35:49,800
+which happens from time to time.
+
+787
+00:35:49,800 --> 00:35:52,710
+You know, all of the servers
+in the data center go off.
+
+788
+00:35:52,710 --> 00:35:55,620
+And then usually, the power
+comes back on at some point.
+
+789
+00:35:55,620 --> 00:35:57,690
+And once the power comes back on,
+
+790
+00:35:57,690 --> 00:36:01,260
+all of the servers in the
+data center turn back on.
+
+791
+00:36:01,260 --> 00:36:05,220
+And wouldn't it be nice
+if, when that happened,
+
+792
+00:36:05,220 --> 00:36:08,190
+EC2 just came back to
+life, and it didn't require
+
+793
+00:36:08,190 --> 00:36:10,627
+hundreds of engineers going in and going,
+
+794
+00:36:10,627 --> 00:36:12,230
+"Oh my gosh, I gotta
+get my service working,"
+
+795
+00:36:12,230 --> 00:36:14,430
+and then you have that dependency problem.
+
+796
+00:36:14,430 --> 00:36:16,170
+Well, that's static stability, right?
+
+797
+00:36:16,170 --> 00:36:19,140
+So one, because we run EC2 on EC2,
+
+798
+00:36:19,140 --> 00:36:23,100
+we want the special EC2
+instances that run EC2
+
+799
+00:36:23,100 --> 00:36:26,190
+to be able to come back
+and not lose their state.
+
+800
+00:36:26,190 --> 00:36:28,610
+And secondary to that, we
+want all of the services
+
+801
+00:36:28,610 --> 00:36:30,780
+to come up and just start working
+
+802
+00:36:30,780 --> 00:36:32,730
+without hundreds of engineers
+
+803
+00:36:32,730 --> 00:36:34,980
+having to go in and poke things.
+
+804
+00:36:34,980 --> 00:36:37,345
+Well, in order to make that work,
+
+805
+00:36:37,345 --> 00:36:40,890
+you actually have to build
+your services in a certain way.
+
+806
+00:36:40,890 --> 00:36:45,090
+And the way that we build our
+services is kinda twofold.
+
+807
+00:36:45,090 --> 00:36:49,060
+The first is that I don't
+take a lotta dependencies
+
+808
+00:36:50,130 --> 00:36:52,470
+to get my software from, you know,
+
+809
+00:36:52,470 --> 00:36:54,413
+existing to running.
+
+810
+00:36:54,413 --> 00:36:57,060
+I may not be able to do much, right?
+
+811
+00:36:57,060 --> 00:36:58,740
+Like maybe I need, you know,
+
+812
+00:36:58,740 --> 00:37:02,760
+in order to run a web server,
+I probably can't start
+
+813
+00:37:02,760 --> 00:37:04,607
+if I don't have my SSL certificate, right?
+
+814
+00:37:04,607 --> 00:37:06,810
+'Cause like that's not
+gonna work very well.
+
+815
+00:37:06,810 --> 00:37:08,433
+I kinda need that.
+
+816
+00:37:09,420 --> 00:37:13,230
+But do I really need to talk
+to the monitoring system
+
+817
+00:37:13,230 --> 00:37:16,170
+to be able to admit metrics
+just to get started?
+
+818
+00:37:16,170 --> 00:37:17,130
+No.
+
+819
+00:37:17,130 --> 00:37:20,930
+Do I need to be able to
+actually talk to the database?
+
+820
+00:37:20,930 --> 00:37:24,690
+Do I need to talk to DynamoDB
+to start my service up?
+
+821
+00:37:24,690 --> 00:37:26,370
+Well, not really, right?
+
+822
+00:37:26,370 --> 00:37:28,920
+I can handle API requests.
+
+823
+00:37:28,920 --> 00:37:30,930
+I can't do anything with them.
+
+824
+00:37:30,930 --> 00:37:34,350
+You know, I'll get my
+little web server running,
+
+825
+00:37:34,350 --> 00:37:37,740
+and it'll happily sit there
+and return a 500 error
+
+826
+00:37:37,740 --> 00:37:40,260
+to anything that calls me.
+
+827
+00:37:40,260 --> 00:37:45,180
+But if I can minimize
+the dependency surface
+
+828
+00:37:45,180 --> 00:37:49,920
+that it takes just to get
+my service started and,
+
+829
+00:37:49,920 --> 00:37:52,230
+you know, for those few
+dependencies that I need,
+
+830
+00:37:52,230 --> 00:37:54,420
+like my SSL cert or, you know,
+
+831
+00:37:54,420 --> 00:37:56,210
+my IAM creds to be able to call something,
+
+832
+00:37:56,210 --> 00:37:58,140
+those things are kind of important,
+
+833
+00:37:58,140 --> 00:37:59,775
+and you need those to start up,
+
+834
+00:37:59,775 --> 00:38:02,550
+I'll just sit in an infinite loop
+
+835
+00:38:02,550 --> 00:38:04,350
+and go, can I start?
+
+836
+00:38:04,350 --> 00:38:07,140
+Crash. Can I start?
+
+837
+00:38:07,140 --> 00:38:08,100
+Oh, I can start.
+
+838
+00:38:08,100 --> 00:38:09,660
+I got my IAM creds, my cert,
+
+839
+00:38:09,660 --> 00:38:10,680
+so I'll start.
+
+840
+00:38:10,680 --> 00:38:12,617
+Oh, I can't talk to
+any of my dependencies,
+
+841
+00:38:12,617 --> 00:38:15,260
+so everybody who calls
+me just gets an error,
+
+842
+00:38:15,260 --> 00:38:18,540
+but that's data that I didn't have before.
+
+843
+00:38:18,540 --> 00:38:22,170
+So, static stability starts
+in how we build software
+
+844
+00:38:22,170 --> 00:38:25,290
+in that our services continually
+try to activate themselves
+
+845
+00:38:25,290 --> 00:38:30,290
+no matter what, and they'll
+start with a minimum set of,
+
+846
+00:38:30,330 --> 00:38:34,650
+you know, a minimal dependency
+footprint and then respond,
+
+847
+00:38:34,650 --> 00:38:35,890
+you know, based on, you know,
+
+848
+00:38:35,890 --> 00:38:38,037
+okay, when you make an API call to me,
+
+849
+00:38:38,037 --> 00:38:41,130
+if I can't talk to my dependency,
+I'll return you an error.
+
+850
+00:38:41,130 --> 00:38:43,350
+But when my dependency comes online,
+
+851
+00:38:43,350 --> 00:38:45,210
+the next time you make an API call,
+
+852
+00:38:45,210 --> 00:38:46,260
+up, you get a 200.
+
+853
+00:38:46,260 --> 00:38:47,433
+Great, it works.
+
+854
+00:38:48,330 --> 00:38:52,440
+We can use this in region build
+because while I can't build
+
+855
+00:38:52,440 --> 00:38:56,880
+that perfect dependency map
+of what EC2 looks like today,
+
+856
+00:38:56,880 --> 00:38:58,890
+I can put stuff in buckets, right?
+
+857
+00:38:58,890 --> 00:39:00,774
+I can put stuff in the, you know,
+
+858
+00:39:00,774 --> 00:39:03,780
+foundational database bucket of EC2
+
+859
+00:39:03,780 --> 00:39:08,780
+and the provisioning bucket
+and the fancy API layer bucket.
+
+860
+00:39:08,940 --> 00:39:11,460
+And if I group services into, you know,
+
+861
+00:39:11,460 --> 00:39:14,460
+groups of like 20 or 30 or 50,
+
+862
+00:39:14,460 --> 00:39:17,910
+all I need to do is launch all 50
+
+863
+00:39:17,910 --> 00:39:20,399
+and then kinda let God sort it
+out for a little bit, right?
+
+864
+00:39:20,399 --> 00:39:23,422
+Like let them all sit
+and spin for a little bit
+
+865
+00:39:23,422 --> 00:39:27,450
+and send API traffic through the system.
+
+866
+00:39:27,450 --> 00:39:30,240
+And in a perfect world,
+everything will get to active,
+
+867
+00:39:30,240 --> 00:39:32,910
+all of the dependency things
+will solve each other,
+
+868
+00:39:32,910 --> 00:39:35,354
+and API calls will start to work.
+
+869
+00:39:35,354 --> 00:39:37,749
+In the more realistic scenario where,
+
+870
+00:39:37,749 --> 00:39:40,530
+you know, maybe 75% of everything works,
+
+871
+00:39:40,530 --> 00:39:42,990
+well, at least I got 75% working,
+
+872
+00:39:42,990 --> 00:39:45,960
+and then I can kinda go poke
+along the API call path,
+
+873
+00:39:45,960 --> 00:39:48,090
+fix the one or two things
+that didn't come up,
+
+874
+00:39:48,090 --> 00:39:49,650
+and now everything is working.
+
+875
+00:39:49,650 --> 00:39:53,550
+So we can use this thing
+that we do to recover
+
+876
+00:39:53,550 --> 00:39:58,550
+from major outages and actually
+use it to our advantage
+
+877
+00:39:58,800 --> 00:40:02,400
+to not have to really get into
+granular dependency mapping
+
+878
+00:40:02,400 --> 00:40:05,370
+and project management, and
+instead kinda go with the,
+
+879
+00:40:05,370 --> 00:40:07,475
+like, well, let's just do this in batches
+
+880
+00:40:07,475 --> 00:40:10,233
+and let this thing figure itself out.
+
+881
+00:40:11,400 --> 00:40:14,290
+So kind of moving on from that,
+
+882
+00:40:14,290 --> 00:40:16,110
+we're able to talk about like,
+
+883
+00:40:16,110 --> 00:40:17,640
+all right, that sounds cool.
+
+884
+00:40:17,640 --> 00:40:19,140
+How do we actually, like,
+
+885
+00:40:19,140 --> 00:40:21,870
+make this happen in real life
+and do things like testing
+
+886
+00:40:21,870 --> 00:40:24,450
+to make sure that this
+stuff actually works?
+
+887
+00:40:24,450 --> 00:40:27,480
+- Yeah, so this all sounds
+great in theory, right?
+
+888
+00:40:27,480 --> 00:40:30,067
+And we might plan for
+this, engineer for it,
+
+889
+00:40:30,067 --> 00:40:32,820
+but how do we know it actually works?
+
+890
+00:40:32,820 --> 00:40:34,530
+Well, we run game days.
+
+891
+00:40:34,530 --> 00:40:36,750
+So, regardless of the type of build,
+
+892
+00:40:36,750 --> 00:40:38,610
+regions, AZs, local zones,
+
+893
+00:40:38,610 --> 00:40:42,752
+we have time in the schedule
+dedicated to game day testing.
+
+894
+00:40:42,752 --> 00:40:45,690
+And that time is used
+to actually test things
+
+895
+00:40:45,690 --> 00:40:47,402
+like what would happen if we power down
+
+896
+00:40:47,402 --> 00:40:49,590
+an entire availability zone.
+
+897
+00:40:49,590 --> 00:40:52,020
+And so we'll just pull the plug on the AZ,
+
+898
+00:40:52,020 --> 00:40:53,460
+and we'll see what happens.
+
+899
+00:40:53,460 --> 00:40:55,230
+Do things recover gracefully,
+
+900
+00:40:55,230 --> 00:40:57,494
+or do we have some gaps to close?
+
+901
+00:40:57,494 --> 00:41:00,570
+And these game days have
+proven to be so valuable.
+
+902
+00:41:00,570 --> 00:41:03,180
+We actually built an entire test region
+
+903
+00:41:03,180 --> 00:41:05,250
+to do game day testing.
+
+904
+00:41:05,250 --> 00:41:08,700
+So we did an entire region
+build just for this test region.
+
+905
+00:41:08,700 --> 00:41:10,398
+It has three availability zones,
+
+906
+00:41:10,398 --> 00:41:12,687
+all of the AWS services are there,
+
+907
+00:41:12,687 --> 00:41:16,555
+and we run game days
+there very frequently.
+
+908
+00:41:16,555 --> 00:41:20,610
+And what this allowed us to
+do is move the game days away
+
+909
+00:41:20,610 --> 00:41:23,219
+from just being tied to specific builds
+
+910
+00:41:23,219 --> 00:41:26,430
+because, you know, there are
+only so many builds in a year.
+
+911
+00:41:26,430 --> 00:41:28,140
+So many game days you can do.
+
+912
+00:41:28,140 --> 00:41:30,930
+In this test environment,
+we can run game days
+
+913
+00:41:30,930 --> 00:41:33,510
+whenever we want to
+because those learnings
+
+914
+00:41:33,510 --> 00:41:35,160
+are extremely valuable.
+
+915
+00:41:35,160 --> 00:41:37,650
+What better way to learn
+than when things go
+
+916
+00:41:37,650 --> 00:41:38,943
+disastrously wrong?
+
+917
+00:41:40,290 --> 00:41:42,450
+And sometimes things do go wrong.
+
+918
+00:41:42,450 --> 00:41:44,400
+So whenever there is an incident,
+
+919
+00:41:44,400 --> 00:41:48,180
+whether during a game day
+or in a production region,
+
+920
+00:41:48,180 --> 00:41:50,913
+our first priority is
+always to mitigate impact.
+
+921
+00:41:51,750 --> 00:41:53,820
+However, after we've done that,
+
+922
+00:41:53,820 --> 00:41:56,700
+we wanna make sure that we
+figure out what went wrong.
+
+923
+00:41:56,700 --> 00:41:59,910
+So one of the mechanisms
+we have at Amazon,
+
+924
+00:41:59,910 --> 00:42:02,700
+not just in the build space
+but across the company,
+
+925
+00:42:02,700 --> 00:42:06,258
+is a correction of errors
+mechanism or a COE.
+
+926
+00:42:06,258 --> 00:42:10,650
+So after we've mitigated
+the impact of an event,
+
+927
+00:42:10,650 --> 00:42:12,600
+the service team will actually go in
+
+928
+00:42:12,600 --> 00:42:14,670
+and do a root cause analysis.
+
+929
+00:42:14,670 --> 00:42:16,470
+So they'll author this document.
+
+930
+00:42:16,470 --> 00:42:18,480
+There's a specific format for it.
+
+931
+00:42:18,480 --> 00:42:20,430
+There are tied deadlines around it,
+
+932
+00:42:20,430 --> 00:42:23,927
+and you really dive deep
+into what caused the issue.
+
+933
+00:42:23,927 --> 00:42:26,940
+You assign action items to
+your own engineering team
+
+934
+00:42:26,940 --> 00:42:29,730
+and to other engineering
+teams to close gaps.
+
+935
+00:42:29,730 --> 00:42:31,740
+And the the primary thing here
+
+936
+00:42:31,740 --> 00:42:33,570
+is it's not meant to be punitive.
+
+937
+00:42:33,570 --> 00:42:35,949
+So the root cause of
+an issue can never be,
+
+938
+00:42:35,949 --> 00:42:38,040
+oh, it was operator error.
+
+939
+00:42:38,040 --> 00:42:39,543
+They fat-fingered something.
+
+940
+00:42:40,620 --> 00:42:43,230
+The reason why we don't
+let that be a root cause
+
+941
+00:42:43,230 --> 00:42:45,450
+is because we're not going deep enough.
+
+942
+00:42:45,450 --> 00:42:47,880
+You know, what enabled
+them to be able to do
+
+943
+00:42:47,880 --> 00:42:48,713
+something like that?
+
+944
+00:42:48,713 --> 00:42:51,300
+It can't just be a person's fault.
+
+945
+00:42:51,300 --> 00:42:54,150
+And so the COE process is very effective
+
+946
+00:42:54,150 --> 00:42:56,790
+in getting learnings from
+when things go wrong,
+
+947
+00:42:56,790 --> 00:42:58,080
+but we actually extend that
+
+948
+00:42:58,080 --> 00:43:00,510
+to beyond just that individual team.
+
+949
+00:43:00,510 --> 00:43:03,450
+So at AWS, we have ops meetings.
+
+950
+00:43:03,450 --> 00:43:05,520
+So these are at various levels.
+
+951
+00:43:05,520 --> 00:43:07,590
+We have them at the org level,
+
+952
+00:43:07,590 --> 00:43:10,290
+EC2, and even AWS-wide.
+
+953
+00:43:10,290 --> 00:43:12,930
+And during these ops meetings,
+which are typically led
+
+954
+00:43:12,930 --> 00:43:17,700
+by our principal engineers,
+everyone will review COEs
+
+955
+00:43:17,700 --> 00:43:21,990
+and dashboards, and
+there'll be a discussion on,
+
+956
+00:43:21,990 --> 00:43:24,101
+you know, one or two COEs.
+
+957
+00:43:24,101 --> 00:43:27,210
+And in fact, sometimes
+the principal engineers
+
+958
+00:43:27,210 --> 00:43:29,118
+will assign action items to other teams,
+
+959
+00:43:29,118 --> 00:43:31,809
+because oftentimes when
+there's an operational issue
+
+960
+00:43:31,809 --> 00:43:35,790
+and a team identifies some gaps,
+
+961
+00:43:35,790 --> 00:43:38,227
+it's not just that team that
+could learn from that event.
+
+962
+00:43:38,227 --> 00:43:41,070
+There are learnings that
+could be implemented
+
+963
+00:43:41,070 --> 00:43:42,690
+in other places as well.
+
+964
+00:43:42,690 --> 00:43:45,150
+And the ops meeting is one
+way that we, as a company,
+
+965
+00:43:45,150 --> 00:43:48,060
+really prioritize sharing those learnings.
+
+966
+00:43:48,060 --> 00:43:50,850
+And they happen on a weekly basis.
+
+967
+00:43:50,850 --> 00:43:52,500
+Attendance is required.
+
+968
+00:43:52,500 --> 00:43:54,761
+So, it's a huge part of the culture
+
+969
+00:43:54,761 --> 00:43:59,430
+and a great mechanism to
+ensure that we're improving.
+
+970
+00:43:59,430 --> 00:44:03,360
+And then finally, operational
+readiness reviews or ORRs.
+
+971
+00:44:03,360 --> 00:44:07,020
+So this is a process teams
+go through on a regular basis
+
+972
+00:44:07,020 --> 00:44:11,195
+to ensure that their services
+are operationally healthy.
+
+973
+00:44:11,195 --> 00:44:13,379
+And so this is for existing services,
+
+974
+00:44:13,379 --> 00:44:16,728
+but also if a service team
+is developing a new service
+
+975
+00:44:16,728 --> 00:44:21,649
+or a new feature, they would
+undergo this ORR process,
+
+976
+00:44:21,649 --> 00:44:24,480
+which also incorporates
+some of the learnings from,
+
+977
+00:44:24,480 --> 00:44:25,780
+you know, noteworthy COEs.
+
+978
+00:44:27,720 --> 00:44:30,750
+So these are some of the
+mechanisms that we use
+
+979
+00:44:30,750 --> 00:44:33,630
+across the company to, you know,
+
+980
+00:44:33,630 --> 00:44:36,788
+really drive this culture
+of continuous improvement
+
+981
+00:44:36,788 --> 00:44:39,873
+through those mechanisms and testing.
+
+982
+00:44:41,040 --> 00:44:44,610
+Let's move on to some more key takeaways.
+
+983
+00:44:44,610 --> 00:44:46,110
+Hopefully, you can learn a bit
+
+984
+00:44:46,110 --> 00:44:49,290
+from what we've learned
+over the last few years.
+
+985
+00:44:49,290 --> 00:44:51,240
+- Yeah, so the first is, you know,
+
+986
+00:44:51,240 --> 00:44:54,090
+I kind of, (coughs) excuse me,
+
+987
+00:44:54,090 --> 00:44:57,663
+I got sick before re:Invent, so figures.
+
+988
+00:44:58,560 --> 00:45:01,410
+One is, you know, we kind of alluded to it
+
+989
+00:45:01,410 --> 00:45:05,370
+like throughout the talk,
+but all of our services
+
+990
+00:45:05,370 --> 00:45:07,290
+that we build, you know,
+
+991
+00:45:07,290 --> 00:45:10,380
+are kind of architected from the ground up
+
+992
+00:45:10,380 --> 00:45:12,330
+with how we do resiliency, right?
+
+993
+00:45:12,330 --> 00:45:16,620
+So our services are aware of, you know,
+
+994
+00:45:16,620 --> 00:45:18,270
+hey, I am a zonal service,
+
+995
+00:45:18,270 --> 00:45:19,710
+and I am running in this zone,
+
+996
+00:45:19,710 --> 00:45:22,590
+and here are the other zonal
+services that I talk to.
+
+997
+00:45:22,590 --> 00:45:27,000
+Like that's really baked
+into all of our services,
+
+998
+00:45:27,000 --> 00:45:29,724
+especially our stateful
+services, but even,
+
+999
+00:45:29,724 --> 00:45:33,707
+you know, services that
+handle API call path for EC2,
+
+1000
+00:45:33,707 --> 00:45:35,670
+they are like, you know,
+
+1001
+00:45:35,670 --> 00:45:36,945
+built from the beginning.
+
+1002
+00:45:36,945 --> 00:45:39,870
+You know, those AZs and the bootstrap VPC
+
+1003
+00:45:39,870 --> 00:45:41,760
+are not just there for show.
+
+1004
+00:45:41,760 --> 00:45:46,320
+We need that because our
+software depends on knowing what,
+
+1005
+00:45:46,320 --> 00:45:47,970
+you know, oh, I am a zonal service,
+
+1006
+00:45:47,970 --> 00:45:50,370
+and I am running in this zone, therefore,
+
+1007
+00:45:50,370 --> 00:45:52,440
+like I talk to other stuff in that zone,
+
+1008
+00:45:52,440 --> 00:45:54,690
+and that's handled
+through things like DNS.
+
+1009
+00:45:54,690 --> 00:45:57,851
+So trying to be able to incorporate that
+
+1010
+00:45:57,851 --> 00:46:01,890
+as you build services on our
+infrastructure and decide,
+
+1011
+00:46:01,890 --> 00:46:04,213
+like what failure modes do you want
+
+1012
+00:46:04,213 --> 00:46:06,630
+for what components of your system,
+
+1013
+00:46:06,630 --> 00:46:09,708
+and how do you design your
+foundational infrastructure
+
+1014
+00:46:09,708 --> 00:46:13,243
+in your VPC networking and
+in your DNS infrastructure
+
+1015
+00:46:13,243 --> 00:46:17,646
+around that to really
+have those strong silos
+
+1016
+00:46:17,646 --> 00:46:20,970
+between your components?
+
+1017
+00:46:20,970 --> 00:46:22,873
+Second is, you know,
+
+1018
+00:46:22,873 --> 00:46:27,873
+when to centralize tasks versus
+when to distribute tasks.
+
+1019
+00:46:28,560 --> 00:46:31,470
+And we didn't quite get into this a ton,
+
+1020
+00:46:31,470 --> 00:46:34,290
+but Michelle and I worked
+on the same team in EC2
+
+1021
+00:46:34,290 --> 00:46:35,910
+for a number of years.
+
+1022
+00:46:35,910 --> 00:46:38,430
+And that team was actually dedicated
+
+1023
+00:46:38,430 --> 00:46:42,180
+to doing region build for EC2.
+
+1024
+00:46:42,180 --> 00:46:45,330
+So for those hundreds of teams
+that were on the, you know,
+
+1025
+00:46:45,330 --> 00:46:50,330
+kind of cringe API diagram,
+we actually were a team
+
+1026
+00:46:51,330 --> 00:46:55,260
+that if a service team met our bar
+
+1027
+00:46:55,260 --> 00:46:57,390
+for automating their region build,
+
+1028
+00:46:57,390 --> 00:46:59,640
+we would do their region build for them.
+
+1029
+00:46:59,640 --> 00:47:01,710
+Fun fact, if you're on a service team,
+
+1030
+00:47:01,710 --> 00:47:04,110
+nobody likes doing region
+builds, like everybody.
+
+1031
+00:47:04,110 --> 00:47:05,850
+So, like, everybody was like, "Oh yeah,
+
+1032
+00:47:05,850 --> 00:47:07,260
+you wanna do my region build for me?
+
+1033
+00:47:07,260 --> 00:47:09,750
+Sure, I'll make sure my
+region build is automated
+
+1034
+00:47:09,750 --> 00:47:11,198
+so the central team could do it."
+
+1035
+00:47:11,198 --> 00:47:13,770
+And and that was actually
+like a novel thing
+
+1036
+00:47:13,770 --> 00:47:15,450
+that we discovered over time.
+
+1037
+00:47:15,450 --> 00:47:19,747
+So that program is called
+manage builds inside of EC2.
+
+1038
+00:47:21,137 --> 00:47:24,600
+We also have another program
+called managed fleets.
+
+1039
+00:47:24,600 --> 00:47:27,781
+So each two pizza team, when
+I said they were responsible
+
+1040
+00:47:27,781 --> 00:47:30,330
+for everything, that included,
+
+1041
+00:47:30,330 --> 00:47:32,640
+you know, how many hosts do I have
+
+1042
+00:47:32,640 --> 00:47:34,350
+in every zone, in every region?
+
+1043
+00:47:34,350 --> 00:47:36,756
+And, oh, I have to patch my hosts,
+
+1044
+00:47:36,756 --> 00:47:39,637
+and I have to, like, fix broken hosts
+
+1045
+00:47:39,637 --> 00:47:41,820
+and do all these things with hosts.
+
+1046
+00:47:41,820 --> 00:47:44,654
+And for a service team like EC2
+
+1047
+00:47:44,654 --> 00:47:47,610
+where you're running in every
+region around the world,
+
+1048
+00:47:47,610 --> 00:47:49,740
+and we keep adding more regions,
+
+1049
+00:47:49,740 --> 00:47:51,723
+that actually is a lot of work.
+
+1050
+00:47:52,650 --> 00:47:54,540
+Again, people don't like doing it.
+
+1051
+00:47:54,540 --> 00:47:56,820
+Nobody likes patching their
+infrastructure, right?
+
+1052
+00:47:56,820 --> 00:47:57,960
+Like, let's be honest.
+
+1053
+00:47:57,960 --> 00:48:01,470
+So, we actually started
+to develop centralized,
+
+1054
+00:48:01,470 --> 00:48:06,470
+you know, the problem is every
+team spends an hour a week
+
+1055
+00:48:07,020 --> 00:48:10,080
+on patching their hosts, if
+they're doing a good job.
+
+1056
+00:48:10,080 --> 00:48:11,820
+So when you have thousands of teams,
+
+1057
+00:48:11,820 --> 00:48:13,410
+they're spending thousands of hours
+
+1058
+00:48:13,410 --> 00:48:16,290
+on doing this undifferentiated work.
+
+1059
+00:48:16,290 --> 00:48:18,540
+But no one team is centralized
+
+1060
+00:48:18,540 --> 00:48:20,463
+to actually make that any better.
+
+1061
+00:48:21,450 --> 00:48:25,399
+What happens when you take
+that thousand hours of work
+
+1062
+00:48:25,399 --> 00:48:27,810
+and put it on one central team?
+
+1063
+00:48:27,810 --> 00:48:28,680
+Well, all of a sudden,
+
+1064
+00:48:28,680 --> 00:48:31,680
+they're really incentivized
+to build really cool systems
+
+1065
+00:48:31,680 --> 00:48:35,700
+to make patching hosts
+happen at Amazon scale
+
+1066
+00:48:35,700 --> 00:48:38,880
+really, really fast
+and efficient and safe.
+
+1067
+00:48:38,880 --> 00:48:41,340
+And that's what happened
+in the region build space.
+
+1068
+00:48:41,340 --> 00:48:42,630
+Amazon, generally speaking,
+
+1069
+00:48:42,630 --> 00:48:44,790
+was this like kind of,
+
+1070
+00:48:44,790 --> 00:48:46,560
+I guess you could call it anarchy, right?
+
+1071
+00:48:46,560 --> 00:48:48,180
+Of all these teams just run around
+
+1072
+00:48:48,180 --> 00:48:50,730
+and kind of do whatever
+strikes their fancy.
+
+1073
+00:48:50,730 --> 00:48:52,860
+That's just how we do things.
+
+1074
+00:48:52,860 --> 00:48:56,910
+Over time, we discovered
+that while that provides
+
+1075
+00:48:56,910 --> 00:48:59,572
+a lot of value and you can go really fast,
+
+1076
+00:48:59,572 --> 00:49:03,090
+sometimes centralizing
+things is actually better.
+
+1077
+00:49:03,090 --> 00:49:04,740
+And it's really important, you know,
+
+1078
+00:49:04,740 --> 00:49:06,270
+each business is gonna be different
+
+1079
+00:49:06,270 --> 00:49:08,130
+because it's different how you do things.
+
+1080
+00:49:08,130 --> 00:49:09,750
+But you really should think about, hey,
+
+1081
+00:49:09,750 --> 00:49:11,993
+when is it time to centralize this work
+
+1082
+00:49:11,993 --> 00:49:14,760
+versus when is it time
+to keep it distributed?
+
+1083
+00:49:14,760 --> 00:49:16,740
+Because the flip side of that is,
+
+1084
+00:49:16,740 --> 00:49:18,120
+you know, we struggle as,
+
+1085
+00:49:18,120 --> 00:49:20,220
+you know, a centralized team with,
+
+1086
+00:49:20,220 --> 00:49:24,000
+well, when region builds
+become somebody else's problem,
+
+1087
+00:49:24,000 --> 00:49:27,660
+my incentive to maintain my
+automation is not that great,
+
+1088
+00:49:27,660 --> 00:49:29,224
+and my incentive to, like,
+
+1089
+00:49:29,224 --> 00:49:32,910
+not do screwy things with my
+host is not that great, right?
+
+1090
+00:49:32,910 --> 00:49:34,860
+So there's a natural tension there,
+
+1091
+00:49:34,860 --> 00:49:37,470
+which is why Amazon defaulted to, oh no,
+
+1092
+00:49:37,470 --> 00:49:39,450
+you're a service team, you own everything.
+
+1093
+00:49:39,450 --> 00:49:40,283
+And, oh, by the way,
+
+1094
+00:49:40,283 --> 00:49:41,730
+you're going on call for it.
+
+1095
+00:49:41,730 --> 00:49:44,010
+So if you do something
+silly and you get paged
+
+1096
+00:49:44,010 --> 00:49:46,740
+at two in the morning, you will
+be incentivized to fix that.
+
+1097
+00:49:46,740 --> 00:49:48,270
+So there's a trade off there, and I think,
+
+1098
+00:49:48,270 --> 00:49:50,248
+you know, exploring that
+as part of your business
+
+1099
+00:49:50,248 --> 00:49:52,350
+and as part of your development life cycle
+
+1100
+00:49:52,350 --> 00:49:53,350
+is really important.
+
+1101
+00:49:55,470 --> 00:49:57,840
+Next, do everything in code.
+
+1102
+00:49:57,840 --> 00:50:00,707
+Please, do everything in code.
+
+1103
+00:50:00,707 --> 00:50:03,930
+All of our infrastructure is in code.
+
+1104
+00:50:03,930 --> 00:50:07,665
+You know, obviously, we use
+a lot of CDK internally.
+
+1105
+00:50:07,665 --> 00:50:10,333
+Everything is complicated when
+you run a low-level service
+
+1106
+00:50:10,333 --> 00:50:12,150
+'cause cloud formation runs on us,
+
+1107
+00:50:12,150 --> 00:50:13,350
+so we can't use cloud formation.
+
+1108
+00:50:13,350 --> 00:50:14,940
+So we have an internal infrastructure
+
+1109
+00:50:14,940 --> 00:50:16,590
+as code framework that we use,
+
+1110
+00:50:16,590 --> 00:50:19,860
+but, like, everything is
+in infrastructure as code,
+
+1111
+00:50:19,860 --> 00:50:21,988
+and any type of regionalized config
+
+1112
+00:50:21,988 --> 00:50:23,790
+is actually auto-generated
+
+1113
+00:50:23,790 --> 00:50:25,530
+as part of the build process, right?
+
+1114
+00:50:25,530 --> 00:50:26,790
+And that gets into things
+
+1115
+00:50:26,790 --> 00:50:30,360
+like have predictable DNS
+endpoints for your service,
+
+1116
+00:50:30,360 --> 00:50:32,430
+either at the regional or zonal level,
+
+1117
+00:50:32,430 --> 00:50:34,680
+'cause then you could just
+have a little Ruby script,
+
+1118
+00:50:34,680 --> 00:50:36,721
+that ones that generates those endpoints
+
+1119
+00:50:36,721 --> 00:50:39,390
+for every single region that
+you ever wanna build in,
+
+1120
+00:50:39,390 --> 00:50:41,820
+and then you never need
+to think about it again.
+
+1121
+00:50:41,820 --> 00:50:44,229
+And same goes for configuration
+
+1122
+00:50:44,229 --> 00:50:46,140
+in the software that you run.
+
+1123
+00:50:46,140 --> 00:50:49,980
+Like generate that at build
+time, don't think about it,
+
+1124
+00:50:49,980 --> 00:50:52,920
+have that live in your source control.
+
+1125
+00:50:52,920 --> 00:50:54,210
+We go, you know,
+
+1126
+00:50:54,210 --> 00:50:55,860
+we go a step further, and actually,
+
+1127
+00:50:55,860 --> 00:50:57,538
+this is becoming a little
+bit more interesting
+
+1128
+00:50:57,538 --> 00:51:02,074
+as we're starting to use some
+of the generative AI tools
+
+1129
+00:51:02,074 --> 00:51:07,074
+for coding more, is most stuff in Amazon,
+
+1130
+00:51:07,230 --> 00:51:11,269
+most knowledge is in
+this gigantic wiki site.
+
+1131
+00:51:11,269 --> 00:51:14,341
+And you can write infrastructure as code
+
+1132
+00:51:14,341 --> 00:51:16,920
+to generate wiki pages.
+
+1133
+00:51:16,920 --> 00:51:18,900
+'Cause we actually use wiki pages like,
+
+1134
+00:51:18,900 --> 00:51:21,600
+for our operational
+dashboards for services.
+
+1135
+00:51:21,600 --> 00:51:26,600
+So even our runbooks and
+dashboards for services
+
+1136
+00:51:27,300 --> 00:51:29,850
+are captured in our
+infrastructure as code.
+
+1137
+00:51:29,850 --> 00:51:32,190
+The reason I mentioned
+kinda the gen AI thing
+
+1138
+00:51:32,190 --> 00:51:35,820
+is a lot more teams have been doing it.
+
+1139
+00:51:35,820 --> 00:51:38,580
+You can get it to write
+halfway decent documentation.
+
+1140
+00:51:38,580 --> 00:51:40,580
+I can attest to this.
+
+1141
+00:51:40,580 --> 00:51:43,560
+And it can do things
+like graphs and diagrams
+
+1142
+00:51:43,560 --> 00:51:45,150
+pretty well in markdown.
+
+1143
+00:51:45,150 --> 00:51:48,570
+So more stuff, more
+documentation is actually going
+
+1144
+00:51:48,570 --> 00:51:51,303
+into source control as markdown over time
+
+1145
+00:51:51,303 --> 00:51:54,900
+as some of our projects like
+start to use this stuff more.
+
+1146
+00:51:54,900 --> 00:51:56,340
+So I'd encourage you to, like,
+
+1147
+00:51:56,340 --> 00:51:57,990
+really give that a try because, like,
+
+1148
+00:51:57,990 --> 00:52:00,360
+the more stuff we put in source control,
+
+1149
+00:52:00,360 --> 00:52:01,770
+it's easier to search.
+
+1150
+00:52:01,770 --> 00:52:05,364
+It goes through two PR, like
+it generally has a structure
+
+1151
+00:52:05,364 --> 00:52:07,830
+of, like, if you show me a repo,
+
+1152
+00:52:07,830 --> 00:52:09,720
+I know generally where to find stuff
+
+1153
+00:52:09,720 --> 00:52:12,030
+depending on what programming
+language it's written in.
+
+1154
+00:52:12,030 --> 00:52:15,240
+So, like, really having
+everything in your source control
+
+1155
+00:52:15,240 --> 00:52:17,150
+or repository system versus, like,
+
+1156
+00:52:17,150 --> 00:52:20,340
+some document repository
+that no one really likes
+
+1157
+00:52:20,340 --> 00:52:22,803
+is generally a best practice.
+
+1158
+00:52:23,700 --> 00:52:25,546
+- And we have continuous improvement.
+
+1159
+00:52:25,546 --> 00:52:29,070
+So, we'll use builds as an example.
+
+1160
+00:52:29,070 --> 00:52:30,613
+Builds are, you know,
+
+1161
+00:52:30,613 --> 00:52:33,420
+a very, very long project.
+
+1162
+00:52:33,420 --> 00:52:35,910
+And so there's a tendency to say, "Oh,
+
+1163
+00:52:35,910 --> 00:52:38,029
+you know, we'll talk about lessons learned
+
+1164
+00:52:38,029 --> 00:52:40,890
+and retrospectives once
+the build is done."
+
+1165
+00:52:40,890 --> 00:52:43,080
+The problem is so much time passes,
+
+1166
+00:52:43,080 --> 00:52:45,750
+things have changed, people forget.
+
+1167
+00:52:45,750 --> 00:52:47,490
+So we really encourage, you know,
+
+1168
+00:52:47,490 --> 00:52:50,067
+to continuously look
+at what didn't go well
+
+1169
+00:52:50,067 --> 00:52:52,504
+and iterate quickly.
+
+1170
+00:52:52,504 --> 00:52:55,530
+And the way we've done
+this, as an example,
+
+1171
+00:52:55,530 --> 00:52:58,508
+a few years ago, there
+was this real push at AWS
+
+1172
+00:52:58,508 --> 00:53:01,860
+to have service teams
+automate their builds,
+
+1173
+00:53:01,860 --> 00:53:03,930
+and we'd notice trends.
+
+1174
+00:53:03,930 --> 00:53:06,120
+So for example, we'd see that,
+
+1175
+00:53:06,120 --> 00:53:07,945
+you know, a hundred different teams
+
+1176
+00:53:07,945 --> 00:53:09,757
+were running into the same blocker
+
+1177
+00:53:09,757 --> 00:53:12,090
+when trying to automate their builds.
+
+1178
+00:53:12,090 --> 00:53:14,520
+And so instead of, you know, waiting
+
+1179
+00:53:14,520 --> 00:53:15,821
+and letting every single team
+
+1180
+00:53:15,821 --> 00:53:19,890
+work through that issue
+themselves, we took a step back,
+
+1181
+00:53:19,890 --> 00:53:21,421
+paused and said, "Okay, well,
+
+1182
+00:53:21,421 --> 00:53:22,680
+this doesn't make sense.
+
+1183
+00:53:22,680 --> 00:53:24,000
+Why would we have every single team
+
+1184
+00:53:24,000 --> 00:53:25,980
+work through the same issue?
+
+1185
+00:53:25,980 --> 00:53:27,930
+How about we cut a tracking SIM?
+
+1186
+00:53:27,930 --> 00:53:29,370
+Make sure it's documented.
+
+1187
+00:53:29,370 --> 00:53:33,120
+And we escalate that and
+ensure that the owning team
+
+1188
+00:53:33,120 --> 00:53:35,460
+resolves that centrally, and that way,
+
+1189
+00:53:35,460 --> 00:53:36,540
+you know, the next build,
+
+1190
+00:53:36,540 --> 00:53:40,080
+this isn't an automation
+blocker for those hundred teams,
+
+1191
+00:53:40,080 --> 00:53:41,760
+and those a hundred
+teams don't have to worry
+
+1192
+00:53:41,760 --> 00:53:44,670
+about implementing
+workarounds themselves."
+
+1193
+00:53:44,670 --> 00:53:49,230
+Similarly, we've had sticky
+parts of the build where,
+
+1194
+00:53:49,230 --> 00:53:51,540
+you know, there was a lot of churn,
+
+1195
+00:53:51,540 --> 00:53:55,620
+ownership isn't clear, a lot
+of back and forth on tickets.
+
+1196
+00:53:55,620 --> 00:53:59,280
+And so instead of just
+having that same issue
+
+1197
+00:53:59,280 --> 00:54:01,710
+every single build, because
+it's just a tricky part
+
+1198
+00:54:01,710 --> 00:54:03,755
+of the build, what we've done in the past
+
+1199
+00:54:03,755 --> 00:54:06,630
+is we've actually assigned
+principal engineers
+
+1200
+00:54:06,630 --> 00:54:11,630
+to that ambiguous problem and
+then have them own that space,
+
+1201
+00:54:12,090 --> 00:54:16,230
+find owners and drive
+improvements instead of, you know,
+
+1202
+00:54:16,230 --> 00:54:18,922
+just letting it be an
+issue over and over again.
+
+1203
+00:54:18,922 --> 00:54:20,712
+And you know, taking that approach
+
+1204
+00:54:20,712 --> 00:54:24,339
+of looking at each
+specific phase of the build
+
+1205
+00:54:24,339 --> 00:54:29,339
+and doing a quick
+retrospective, lessons learned,
+
+1206
+00:54:29,790 --> 00:54:32,340
+anything so that you can
+quickly implement some changes
+
+1207
+00:54:32,340 --> 00:54:36,840
+before the next build has
+really helped us improve things
+
+1208
+00:54:36,840 --> 00:54:38,310
+very rapidly.
+
+1209
+00:54:38,310 --> 00:54:40,200
+And the time we see the most improvement
+
+1210
+00:54:40,200 --> 00:54:43,080
+is actually when we have
+several builds back to back
+
+1211
+00:54:43,080 --> 00:54:45,990
+with like a short gap in
+between because we can implement
+
+1212
+00:54:45,990 --> 00:54:48,780
+lessons learned and then hit the next one
+
+1213
+00:54:48,780 --> 00:54:49,800
+without those issues.
+
+1214
+00:54:49,800 --> 00:54:53,643
+And so we slowly make
+progress across each build.
+
+1215
+00:54:55,290 --> 00:54:56,580
+And we've actually, in the past,
+
+1216
+00:54:56,580 --> 00:54:58,313
+staggered builds on purpose
+
+1217
+00:54:58,313 --> 00:55:00,750
+to make sure that we're not just running
+
+1218
+00:55:00,750 --> 00:55:03,300
+into the exact same issue
+in four different builds
+
+1219
+00:55:03,300 --> 00:55:05,520
+at the same time, which is very painful
+
+1220
+00:55:05,520 --> 00:55:07,233
+for everyone involved.
+
+1221
+00:55:08,550 --> 00:55:10,200
+And then finally, culture.
+
+1222
+00:55:10,200 --> 00:55:13,860
+So one thing that's incredibly
+important in general
+
+1223
+00:55:13,860 --> 00:55:16,590
+but specifically in the
+build space is, you know,
+
+1224
+00:55:16,590 --> 00:55:19,080
+we have engineers who are
+actually doing the work.
+
+1225
+00:55:19,080 --> 00:55:21,240
+They are building out their services.
+
+1226
+00:55:21,240 --> 00:55:23,730
+They're building their automation.
+
+1227
+00:55:23,730 --> 00:55:25,410
+And so they need to feel empowered
+
+1228
+00:55:25,410 --> 00:55:27,810
+to vocalize when things
+are just not working.
+
+1229
+00:55:27,810 --> 00:55:30,780
+You know, if they are running
+into those automation blockers
+
+1230
+00:55:30,780 --> 00:55:33,750
+or if they've been going
+back and forth on this issue
+
+1231
+00:55:33,750 --> 00:55:37,170
+over and over again, we wanna
+make sure that those concerns
+
+1232
+00:55:37,170 --> 00:55:39,690
+are heard and escalated to leadership
+
+1233
+00:55:39,690 --> 00:55:42,780
+so we can actually prioritize fixing them.
+
+1234
+00:55:42,780 --> 00:55:44,340
+And so at Amazon,
+
+1235
+00:55:44,340 --> 00:55:47,280
+we have this very healthy
+escalation culture.
+
+1236
+00:55:47,280 --> 00:55:50,025
+So when our engineers or anyone, really,
+
+1237
+00:55:50,025 --> 00:55:54,090
+if they say like, "Hey, this
+is a really big problem,"
+
+1238
+00:55:54,090 --> 00:55:57,210
+we make sure that our
+leadership hears that.
+
+1239
+00:55:57,210 --> 00:55:58,770
+Leadership does need to
+be willing to listen,
+
+1240
+00:55:58,770 --> 00:56:00,723
+and luckily our leadership does.
+
+1241
+00:56:01,715 --> 00:56:03,900
+So we use that escalation culture
+
+1242
+00:56:03,900 --> 00:56:06,660
+to very quickly align on a path forward.
+
+1243
+00:56:06,660 --> 00:56:09,660
+And this is specifically
+important for builds because,
+
+1244
+00:56:09,660 --> 00:56:12,450
+you know, once we make a
+commitment to our customers
+
+1245
+00:56:12,450 --> 00:56:15,690
+to launch a region at a
+specific time of year,
+
+1246
+00:56:15,690 --> 00:56:17,160
+we need to meet that commitment.
+
+1247
+00:56:17,160 --> 00:56:19,890
+And so builds move very, very quickly.
+
+1248
+00:56:19,890 --> 00:56:21,840
+And if there's any friction,
+
+1249
+00:56:21,840 --> 00:56:23,340
+we need to escalate that quickly
+
+1250
+00:56:23,340 --> 00:56:26,670
+and all get on the same
+page so we can move forward.
+
+1251
+00:56:26,670 --> 00:56:29,460
+So culture is extremely
+important in general,
+
+1252
+00:56:29,460 --> 00:56:31,680
+but especially if you have, you know,
+
+1253
+00:56:31,680 --> 00:56:35,853
+very large projects that span
+multiple months or even years.
+
+1254
+00:56:36,705 --> 00:56:38,400
+So these are some of our,
+
+1255
+00:56:38,400 --> 00:56:39,540
+you know, main takeaways.
+
+1256
+00:56:39,540 --> 00:56:43,041
+Hopefully, they've been helpful to you.
+
+1257
+00:56:43,041 --> 00:56:45,909
+If you want to learn
+more, we have two topics
+
+1258
+00:56:45,909 --> 00:56:48,780
+that might be interesting
+if you enjoyed this session.
+
+1259
+00:56:48,780 --> 00:56:52,330
+And then we have some
+builder library resources,
+
+1260
+00:56:52,330 --> 00:56:54,120
+one on static stability,
+
+1261
+00:56:54,120 --> 00:56:56,220
+and then one on building
+resilience services.
+
+1262
+00:56:56,220 --> 00:56:58,533
+So those are the two QR codes.
+
+1263
+00:57:00,300 --> 00:57:02,493
+We thank you so much for your time.
+
+1264
+00:57:02,493 --> 00:57:04,710
+Please, please, please take the survey.
+
+1265
+00:57:04,710 --> 00:57:07,260
+- Yes please.
+- We need that feedback.
+
+1266
+00:57:07,260 --> 00:57:09,780
+And we hope you have a great
+rest of your re:Invent.
+
+1267
+00:57:09,780 --> 00:57:10,830
+Thank you.
+- Thanks.
+

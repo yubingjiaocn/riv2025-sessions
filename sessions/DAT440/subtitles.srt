@@ -1,0 +1,5020 @@
+1
+00:00:04,950 --> 00:00:06,350
+- Good afternoon, everybody.
+
+2
+00:00:08,190 --> 00:00:09,180
+Welcome.
+
+3
+00:00:09,180 --> 00:00:10,740
+This is my first silent session,
+
+4
+00:00:10,740 --> 00:00:13,710
+so if my voice modulation is slightly off,
+
+5
+00:00:13,710 --> 00:00:14,710
+please bear with me.
+
+6
+00:00:15,666 --> 00:00:17,700
+The talk is gonna be strongly consistent,
+
+7
+00:00:17,700 --> 00:00:20,003
+and I'm hoping you guys
+will eventually hear it.
+
+8
+00:00:20,940 --> 00:00:22,140
+So that's good.
+
+9
+00:00:22,140 --> 00:00:24,660
+So my name is Somu Perianayagam.
+
+10
+00:00:24,660 --> 00:00:26,610
+I'm an engineer at AWS.
+
+11
+00:00:26,610 --> 00:00:29,100
+I have Amrith Kumar with me
+who is a senior principal
+
+12
+00:00:29,100 --> 00:00:32,100
+in Amazon by DynamoDB.
+
+13
+00:00:32,100 --> 00:00:33,570
+We both are here to talk to you guys
+
+14
+00:00:33,570 --> 00:00:37,623
+about the two replication modes
+of DynamoDB Global Tables,
+
+15
+00:00:38,550 --> 00:00:40,380
+the guarantees they offer,
+
+16
+00:00:40,380 --> 00:00:43,803
+and what to choose for
+what kind of workload.
+
+17
+00:00:46,110 --> 00:00:49,350
+Customers today are building
+systems that need the data
+
+18
+00:00:49,350 --> 00:00:50,793
+close to their end users,
+
+19
+00:00:52,050 --> 00:00:53,880
+and their end users
+are all over the globe,
+
+20
+00:00:53,880 --> 00:00:56,310
+are multi-regions, and this
+can be for variety of reasons.
+
+21
+00:00:56,310 --> 00:00:58,840
+This can be for reasons for low latency
+
+22
+00:00:59,760 --> 00:01:04,593
+or compliance reasons,
+geo compliance reasons.
+
+23
+00:01:05,580 --> 00:01:08,550
+But a lot of customers
+are building applications
+
+24
+00:01:08,550 --> 00:01:11,370
+and systems where data has to
+be close to their end users.
+
+25
+00:01:11,370 --> 00:01:13,883
+They also want these data
+to be highly available.
+
+26
+00:01:13,883 --> 00:01:15,750
+What do I mean by that?
+
+27
+00:01:15,750 --> 00:01:18,240
+They want the writes
+which happen in any region
+
+28
+00:01:18,240 --> 00:01:21,150
+to be available in other regions as well,
+
+29
+00:01:21,150 --> 00:01:22,653
+simultaneously, right?
+
+30
+00:01:25,929 --> 00:01:27,720
+And they need high business continuity
+
+31
+00:01:27,720 --> 00:01:32,220
+in case of regional service disruptions.
+
+32
+00:01:32,220 --> 00:01:35,237
+If one region goes down,
+they may want to kind of have
+
+33
+00:01:35,237 --> 00:01:39,453
+high business continuity
+for their applications.
+
+34
+00:01:40,470 --> 00:01:42,960
+These requirements are making customers
+
+35
+00:01:42,960 --> 00:01:45,813
+and a lot of applications
+multi-region by default.
+
+36
+00:01:46,800 --> 00:01:49,950
+And this means the database
+also needs to now start
+
+37
+00:01:49,950 --> 00:01:52,591
+growing to be multi-region by default.
+
+38
+00:01:52,591 --> 00:01:55,230
+DynamoDB global tables was created exactly
+
+39
+00:01:55,230 --> 00:01:58,180
+to kind of support this kind
+of multi-region architectures.
+
+40
+00:02:00,210 --> 00:02:03,480
+But multi-region, unlike
+single region is hard.
+
+41
+00:02:03,480 --> 00:02:06,030
+just because regions are very far apart,
+
+42
+00:02:06,030 --> 00:02:09,210
+they're across oceans, the
+latencies are very variable.
+
+43
+00:02:09,210 --> 00:02:11,280
+That means when you write
+a data in another region,
+
+44
+00:02:11,280 --> 00:02:14,010
+it's gonna take some time to
+propagate to a region far away.
+
+45
+00:02:14,010 --> 00:02:17,010
+For example, a ride from Virginia to Tokyo
+
+46
+00:02:17,010 --> 00:02:18,510
+may take a couple of hundred milliseconds,
+
+47
+00:02:18,510 --> 00:02:22,440
+while a ride from Virginia to
+Ohio may take 20 milliseconds.
+
+48
+00:02:22,440 --> 00:02:24,990
+And this is a very different
+latency profile than a write
+
+49
+00:02:24,990 --> 00:02:26,790
+which is replicated within a region.
+
+50
+00:02:28,560 --> 00:02:31,410
+And if your architecture
+now allows multiple writes
+
+51
+00:02:31,410 --> 00:02:33,540
+across multiple different
+copies of this data,
+
+52
+00:02:33,540 --> 00:02:36,450
+then you have to reason about
+how are these writes ordered,
+
+53
+00:02:36,450 --> 00:02:38,050
+how are these writes propagated?
+
+54
+00:02:39,878 --> 00:02:42,180
+What is the order in which the writes
+
+55
+00:02:42,180 --> 00:02:43,830
+will be visible to end customers?
+
+56
+00:02:44,850 --> 00:02:47,370
+These fundamental realities mean
+
+57
+00:02:47,370 --> 00:02:49,740
+that there's no one
+single replication model
+
+58
+00:02:49,740 --> 00:02:52,173
+that would fit every workload.
+
+59
+00:02:53,100 --> 00:02:55,110
+Hence, DynamoDB Global tables offers
+
+60
+00:02:55,110 --> 00:02:57,720
+two different kind of replication models
+
+61
+00:02:57,720 --> 00:02:59,703
+for different workloads.
+
+62
+00:03:02,204 --> 00:03:03,900
+As you build these
+multi-region architectures,
+
+63
+00:03:03,900 --> 00:03:06,630
+you have to kind of have some trade offs,
+
+64
+00:03:06,630 --> 00:03:08,610
+and of the biggest trade offs
+
+65
+00:03:08,610 --> 00:03:11,130
+is do you want your application to be fast
+
+66
+00:03:11,130 --> 00:03:12,660
+and have predictable performance
+
+67
+00:03:12,660 --> 00:03:15,213
+as it would when it
+writes to a single region?
+
+68
+00:03:16,320 --> 00:03:21,320
+Or do you want writes to be
+visible across multiple regions?
+
+69
+00:03:21,579 --> 00:03:23,220
+If a write is done in one region,
+
+70
+00:03:23,220 --> 00:03:25,200
+do you want it to be
+visible in other regions?
+
+71
+00:03:25,200 --> 00:03:28,890
+Because this communication of
+writes going across regions
+
+72
+00:03:28,890 --> 00:03:31,200
+is gonna have a latency penalty,
+
+73
+00:03:31,200 --> 00:03:33,990
+which means that you'll have
+to lose sacrifice of latency
+
+74
+00:03:33,990 --> 00:03:36,543
+or you have to sacrifice consistency.
+
+75
+00:03:37,410 --> 00:03:40,290
+And DynamoDB global tables has two modes.
+
+76
+00:03:40,290 --> 00:03:41,880
+One is the asynchronous replication mode,
+
+77
+00:03:41,880 --> 00:03:45,780
+which helps you have high
+performance, low latency,
+
+78
+00:03:45,780 --> 00:03:46,980
+predictable performance,
+
+79
+00:03:47,910 --> 00:03:49,860
+sort of predict perform workload,
+
+80
+00:03:49,860 --> 00:03:52,950
+while multi-region strong
+consistency global tables,
+
+81
+00:03:52,950 --> 00:03:54,150
+which is a whole mouthful to say,
+
+82
+00:03:54,150 --> 00:03:56,250
+so we're gonna call it MRSC Global Tables,
+
+83
+00:03:57,300 --> 00:04:00,000
+which is suited for
+workloads which requires
+
+84
+00:04:00,000 --> 00:04:02,400
+strong consistency where
+write in any region
+
+85
+00:04:02,400 --> 00:04:04,060
+needs to be visible in other regions,
+
+86
+00:04:04,060 --> 00:04:06,093
+where it's strong if it's read.
+
+87
+00:04:07,830 --> 00:04:10,620
+The other big trade offs around
+
+88
+00:04:10,620 --> 00:04:11,940
+what is the recovery point objective
+
+89
+00:04:11,940 --> 00:04:13,940
+and what is the recovery time objective.
+
+90
+00:04:14,940 --> 00:04:17,310
+The recovery time objective
+is objective where
+
+91
+00:04:17,310 --> 00:04:19,590
+how seamlessly can your
+application failover
+
+92
+00:04:19,590 --> 00:04:21,060
+from one region to another region,
+
+93
+00:04:21,060 --> 00:04:24,300
+or how quickly can your
+application recover from a failure?
+
+94
+00:04:24,300 --> 00:04:25,833
+DynamoDB global tables,
+
+95
+00:04:26,730 --> 00:04:28,230
+from the ground or from first principles,
+
+96
+00:04:28,230 --> 00:04:30,390
+was designed as the
+active-active architecture
+
+97
+00:04:30,390 --> 00:04:31,493
+so that you don't have to worry about this
+
+98
+00:04:31,493 --> 00:04:33,632
+and you can have an
+application architecture
+
+99
+00:04:33,632 --> 00:04:36,423
+which has a recovery
+time objective of zero.
+
+100
+00:04:37,620 --> 00:04:39,721
+The recovery point objective
+is an interesting one.
+
+101
+00:04:39,721 --> 00:04:42,090
+It's the objective that says,
+
+102
+00:04:42,090 --> 00:04:45,520
+how much data can I
+recreate or offer to lose
+
+103
+00:04:46,440 --> 00:04:48,660
+if I have a service disruption
+
+104
+00:04:48,660 --> 00:04:51,570
+or if my service fails in a single region?
+
+105
+00:04:51,570 --> 00:04:53,460
+And this is going to drive how fast
+
+106
+00:04:53,460 --> 00:04:54,870
+you want to replicate writes
+
+107
+00:04:54,870 --> 00:04:57,120
+or how strongly consider your
+writes have to be replicated
+
+108
+00:04:57,120 --> 00:04:58,353
+if you want a low RPO.
+
+109
+00:04:59,203 --> 00:05:00,900
+DynamoDB Global Tables' asynchronous
+
+110
+00:05:00,900 --> 00:05:05,900
+and MRSC Global Tables have
+different RPO characteristics,
+
+111
+00:05:05,910 --> 00:05:08,860
+and your workload's now
+gonna pick and choose
+
+112
+00:05:09,810 --> 00:05:11,280
+which trade-off they want to make.
+
+113
+00:05:11,280 --> 00:05:13,410
+With this, I'm gonna
+hand it over to Amrith
+
+114
+00:05:13,410 --> 00:05:15,930
+to dive deep into the consistency models
+
+115
+00:05:15,930 --> 00:05:18,809
+and asynchronous global table replication.
+
+116
+00:05:18,809 --> 00:05:20,411
+Thanks, Amrith.
+
+117
+00:05:20,411 --> 00:05:21,863
+- Thank you, Somu.
+
+118
+00:05:22,830 --> 00:05:24,900
+So I need a quick show of hands from you
+
+119
+00:05:24,900 --> 00:05:27,180
+if you're able to hear me or not.
+
+120
+00:05:27,180 --> 00:05:28,013
+Okay, thank you.
+
+121
+00:05:30,720 --> 00:05:31,553
+My name is Amrith.
+
+122
+00:05:31,553 --> 00:05:34,260
+I, as Somu said, I work
+on the DynamoDB team.
+
+123
+00:05:34,260 --> 00:05:36,510
+I'm a senior principal engineer.
+
+124
+00:05:36,510 --> 00:05:39,090
+I spend much of my time
+working with customers.
+
+125
+00:05:39,090 --> 00:05:43,980
+And the thing I like the most
+about that part of my job
+
+126
+00:05:43,980 --> 00:05:47,850
+is I get to see what it is
+you're building with DynamoDB.
+
+127
+00:05:47,850 --> 00:05:50,580
+So I wanna talk to you a little bit about
+
+128
+00:05:50,580 --> 00:05:52,020
+eventually consistent global tables,
+
+129
+00:05:52,020 --> 00:05:53,910
+and I'll hand it back to
+Somu who's gonna talk to you
+
+130
+00:05:53,910 --> 00:05:56,913
+about the strongly
+consistent global tables.
+
+131
+00:05:58,500 --> 00:06:01,320
+What we're gonna cover,
+consistency models,
+
+132
+00:06:01,320 --> 00:06:04,227
+use cases for multi-region global tables,
+
+133
+00:06:04,227 --> 00:06:09,227
+and Somu actually, I think,
+is the brave one here.
+
+134
+00:06:09,600 --> 00:06:12,690
+He's gonna show you a live
+demo, so that's gonna be fun.
+
+135
+00:06:12,690 --> 00:06:14,853
+Alright, so let's talk about consistency.
+
+136
+00:06:16,249 --> 00:06:18,300
+See, when you're building
+applications in a database,
+
+137
+00:06:18,300 --> 00:06:21,330
+consistency is about whether your data
+
+138
+00:06:21,330 --> 00:06:24,363
+read in multiple places
+is the same or different.
+
+139
+00:06:25,830 --> 00:06:27,510
+In a single instance database,
+
+140
+00:06:27,510 --> 00:06:29,040
+consistency is relatively easy.
+
+141
+00:06:29,040 --> 00:06:30,759
+You write your data,
+you can read your data,
+
+142
+00:06:30,759 --> 00:06:32,103
+things are good.
+
+143
+00:06:33,330 --> 00:06:36,573
+DynamoDB, on the other hand,
+is a distributed database,
+
+144
+00:06:37,560 --> 00:06:41,160
+and your data is stored
+durably on multiple copies.
+
+145
+00:06:41,160 --> 00:06:44,523
+We'll talk about how many copies
+and how we do it and so on.
+
+146
+00:06:45,360 --> 00:06:48,720
+In order for us to scale,
+it is not possible for us
+
+147
+00:06:48,720 --> 00:06:51,060
+to always give you strong consistency.
+
+148
+00:06:51,060 --> 00:06:53,190
+Applications sometimes
+need strong consistency.
+
+149
+00:06:53,190 --> 00:06:54,630
+What is strong consistency?
+
+150
+00:06:54,630 --> 00:06:56,970
+You write the data, everybody
+should be able to see
+
+151
+00:06:56,970 --> 00:06:58,623
+the same data instantly.
+
+152
+00:06:59,730 --> 00:07:01,680
+Eventual consistency
+is you write the data,
+
+153
+00:07:01,680 --> 00:07:04,113
+everybody will get to
+see that data eventually.
+
+154
+00:07:04,980 --> 00:07:08,730
+In other words, if you do a
+bunch of writes and then stop,
+
+155
+00:07:08,730 --> 00:07:10,890
+all copies of the data
+will converge to one place.
+
+156
+00:07:10,890 --> 00:07:12,960
+That's eventual consistency.
+
+157
+00:07:12,960 --> 00:07:15,210
+If you're not able to
+guarantee strong consistency
+
+158
+00:07:15,210 --> 00:07:18,540
+for everybody, it makes it
+easier to build applications
+
+159
+00:07:18,540 --> 00:07:19,567
+if you're at least able to say,
+
+160
+00:07:19,567 --> 00:07:21,690
+"When I write some data,
+I can read it back."
+
+161
+00:07:21,690 --> 00:07:24,120
+That's read-your-write consistency.
+
+162
+00:07:24,120 --> 00:07:25,980
+And the last one which I wanna point out
+
+163
+00:07:25,980 --> 00:07:27,990
+is something called monotonic reads.
+
+164
+00:07:27,990 --> 00:07:29,400
+With eventual consistency,
+
+165
+00:07:29,400 --> 00:07:32,580
+I said data converges to one place.
+
+166
+00:07:32,580 --> 00:07:36,303
+But suppose you were to do
+multiple writes at T1, 2, 3, 4,
+
+167
+00:07:37,320 --> 00:07:41,823
+monotonic reads basically say
+time will always move forward.
+
+168
+00:07:42,690 --> 00:07:44,220
+There are database architectures
+
+169
+00:07:44,220 --> 00:07:47,580
+where you can read one, three, two, four.
+
+170
+00:07:47,580 --> 00:07:49,080
+We do not give you that.
+
+171
+00:07:49,080 --> 00:07:50,970
+We always give you monotonic reads.
+
+172
+00:07:50,970 --> 00:07:51,803
+Okay.
+
+173
+00:07:52,680 --> 00:07:54,240
+To understand global tables,
+
+174
+00:07:54,240 --> 00:07:56,490
+you need to understand first
+something about DynamoDB.
+
+175
+00:07:56,490 --> 00:07:58,983
+So this is a quick overview of DynamoDB.
+
+176
+00:08:00,000 --> 00:08:03,060
+You the customer over here,
+this is your application.
+
+177
+00:08:03,060 --> 00:08:05,193
+You connect to DynamoDB over a network.
+
+178
+00:08:06,420 --> 00:08:08,880
+Your request goes through a
+whole networking infrastructure,
+
+179
+00:08:08,880 --> 00:08:10,560
+load balancers, and all of that stuff,
+
+180
+00:08:10,560 --> 00:08:13,010
+but eventually makes its
+way to a request router.
+
+181
+00:08:14,160 --> 00:08:17,490
+Your data is stored
+over here on the right,
+
+182
+00:08:17,490 --> 00:08:19,800
+and this is shared infrastructure
+
+183
+00:08:19,800 --> 00:08:22,520
+used by all of our customers.
+
+184
+00:08:22,520 --> 00:08:24,330
+So we have millions of customers,
+
+185
+00:08:24,330 --> 00:08:26,480
+and they all share the
+same infrastructure.
+
+186
+00:08:27,660 --> 00:08:30,570
+When your request makes its
+way to a request router,
+
+187
+00:08:30,570 --> 00:08:33,270
+its job is to figure
+out where your data is.
+
+188
+00:08:33,270 --> 00:08:34,770
+I want to read an item,
+
+189
+00:08:34,770 --> 00:08:37,140
+on which storage node is
+your data actually stored?
+
+190
+00:08:37,140 --> 00:08:38,250
+That's its job.
+
+191
+00:08:38,250 --> 00:08:40,860
+In order to do that, it uses metadata.
+
+192
+00:08:40,860 --> 00:08:43,770
+Now, the most important
+thing for us is to make sure
+
+193
+00:08:43,770 --> 00:08:47,610
+that we only show you the data
+which you are allowed to see.
+
+194
+00:08:47,610 --> 00:08:49,470
+So we have to verify who you are,
+
+195
+00:08:49,470 --> 00:08:51,900
+authenticate you, authorize you.
+
+196
+00:08:51,900 --> 00:08:53,430
+Then we have rate-limiting to make sure
+
+197
+00:08:53,430 --> 00:08:55,380
+that you don't overdrive your database,
+
+198
+00:08:55,380 --> 00:08:58,020
+and then we send it
+over to a storage node.
+
+199
+00:08:58,020 --> 00:09:01,230
+Now, for availability and durability,
+
+200
+00:09:01,230 --> 00:09:02,980
+we store three copies of your data
+
+201
+00:09:04,440 --> 00:09:06,060
+on three storage nodes,
+
+202
+00:09:06,060 --> 00:09:08,013
+in three different availability zones.
+
+203
+00:09:09,540 --> 00:09:11,760
+When you want to do a write,
+
+204
+00:09:11,760 --> 00:09:15,000
+your write always goes
+to a storage node leader.
+
+205
+00:09:15,000 --> 00:09:17,970
+I just depicted leader
+here with the crown.
+
+206
+00:09:17,970 --> 00:09:20,310
+So with that in mind, let's talk about
+
+207
+00:09:20,310 --> 00:09:23,040
+how an eventually consistent read works.
+
+208
+00:09:23,040 --> 00:09:25,953
+You send down a request, it
+comes to a request router.
+
+209
+00:09:27,780 --> 00:09:30,150
+Since it's an eventually consistent read,
+
+210
+00:09:30,150 --> 00:09:31,293
+I can read any copy.
+
+211
+00:09:33,450 --> 00:09:36,810
+That's one of the reasons
+why you have to understand
+
+212
+00:09:36,810 --> 00:09:38,490
+eventual consistency in your application,
+
+213
+00:09:38,490 --> 00:09:42,390
+because when you make a GetItem
+call, you have to realize
+
+214
+00:09:42,390 --> 00:09:46,230
+that you may not be getting the
+most recent version of data.
+
+215
+00:09:46,230 --> 00:09:47,670
+Your application has to understand that.
+
+216
+00:09:47,670 --> 00:09:52,230
+However, if you do want the
+most recent version of the data,
+
+217
+00:09:52,230 --> 00:09:54,090
+you will do a strongly consistent read,
+
+218
+00:09:54,090 --> 00:09:56,160
+which is also something which we support.
+
+219
+00:09:56,160 --> 00:09:59,250
+Then we will send your
+request to the leader.
+
+220
+00:09:59,250 --> 00:10:02,010
+The leader is always part of a write.
+
+221
+00:10:02,010 --> 00:10:05,130
+Therefore, it always has
+your most recent data.
+
+222
+00:10:05,130 --> 00:10:07,130
+Everybody okay with this concept so far?
+
+223
+00:10:08,340 --> 00:10:09,780
+Yes, okay.
+
+224
+00:10:09,780 --> 00:10:13,170
+So when you want to go
+from a single region setup,
+
+225
+00:10:13,170 --> 00:10:15,870
+now this was already
+three availability zones,
+
+226
+00:10:15,870 --> 00:10:17,820
+but if you go from
+three availability zones
+
+227
+00:10:17,820 --> 00:10:20,190
+in one region to multi-region,
+
+228
+00:10:20,190 --> 00:10:22,830
+you have to think about
+a couple more things.
+
+229
+00:10:22,830 --> 00:10:25,593
+First, there's propagation
+delay between regions.
+
+230
+00:10:26,460 --> 00:10:29,190
+Propagation delay between
+AZs is always much shorter
+
+231
+00:10:29,190 --> 00:10:31,170
+than the propagation
+delay between regions.
+
+232
+00:10:31,170 --> 00:10:34,020
+So this is something which
+you have to consider.
+
+233
+00:10:34,020 --> 00:10:35,943
+When you write data to a table,
+
+234
+00:10:36,960 --> 00:10:39,420
+if it's a global table,
+it's our responsibility
+
+235
+00:10:39,420 --> 00:10:41,430
+to get it over to the other region.
+
+236
+00:10:41,430 --> 00:10:44,970
+But in what order are
+your writes sent across?
+
+237
+00:10:44,970 --> 00:10:49,590
+The guarantee we provide is
+that on a per item basis,
+
+238
+00:10:49,590 --> 00:10:52,680
+data will be transferred
+in the write order.
+
+239
+00:10:52,680 --> 00:10:55,560
+In other words, it is monotonic on it's,
+
+240
+00:10:55,560 --> 00:10:57,720
+you're never going to go back in time.
+
+241
+00:10:57,720 --> 00:10:59,520
+It's monotonic on the other direction,
+
+242
+00:10:59,520 --> 00:11:00,920
+on the other region as well.
+
+243
+00:11:02,310 --> 00:11:04,920
+Global tables are also active-active.
+
+244
+00:11:04,920 --> 00:11:08,130
+So your application could
+legitimately be running
+
+245
+00:11:08,130 --> 00:11:09,390
+in multiple regions.
+
+246
+00:11:09,390 --> 00:11:12,750
+We have global tables
+which are in 30 regions.
+
+247
+00:11:12,750 --> 00:11:14,460
+We're responsible for the replication.
+
+248
+00:11:14,460 --> 00:11:16,950
+Your application can be writing anywhere,
+
+249
+00:11:16,950 --> 00:11:20,220
+but if multiple parts, multiple locations
+
+250
+00:11:20,220 --> 00:11:22,143
+were to modify the same item,
+
+251
+00:11:23,130 --> 00:11:26,670
+what is the item finally
+gonna converge to?
+
+252
+00:11:26,670 --> 00:11:29,430
+We use timestamps for conflict resolution,
+
+253
+00:11:29,430 --> 00:11:31,350
+so we'll talk about that as well.
+
+254
+00:11:31,350 --> 00:11:33,720
+And finally, we're gonna
+talk about failure scenarios,
+
+255
+00:11:33,720 --> 00:11:35,130
+various different failure scenarios
+
+256
+00:11:35,130 --> 00:11:36,480
+and how we deal with them.
+
+257
+00:11:36,480 --> 00:11:40,410
+So let's talk about actually the way
+
+258
+00:11:40,410 --> 00:11:42,450
+in which replication works.
+
+259
+00:11:42,450 --> 00:11:46,770
+I have here a picture of a global table.
+
+260
+00:11:46,770 --> 00:11:47,820
+I'm showing two copies.
+
+261
+00:11:47,820 --> 00:11:49,680
+We'll get to multiple copies as well.
+
+262
+00:11:49,680 --> 00:11:52,320
+So in us-east-1, I have a table copy,
+
+263
+00:11:52,320 --> 00:11:53,400
+and in another region,
+
+264
+00:11:53,400 --> 00:11:55,450
+whichever region it is, I have a replica.
+
+265
+00:11:56,880 --> 00:11:59,343
+Whenever you make a change to a table,
+
+266
+00:12:01,656 --> 00:12:05,100
+DynamoDB will first
+perform the write locally.
+
+267
+00:12:05,100 --> 00:12:06,450
+And to perform a write locally,
+
+268
+00:12:06,450 --> 00:12:09,270
+it means it has to be written
+in two availability zones.
+
+269
+00:12:09,270 --> 00:12:13,530
+Once the write is written
+durably in this region,
+
+270
+00:12:13,530 --> 00:12:15,780
+it goes to a replicator,
+
+271
+00:12:15,780 --> 00:12:18,720
+and the replicator job is,
+
+272
+00:12:18,720 --> 00:12:20,580
+replicator is going to read from streams.
+
+273
+00:12:20,580 --> 00:12:22,800
+This is normally the symbol for streams.
+
+274
+00:12:22,800 --> 00:12:24,870
+The replicator job is to read from streams
+
+275
+00:12:24,870 --> 00:12:26,993
+and propagate to the other region, okay?
+
+276
+00:12:28,650 --> 00:12:31,743
+So the sequence is you
+perform a write in region one.
+
+277
+00:12:33,450 --> 00:12:36,000
+Once the write is durably
+written, it goes to streams,
+
+278
+00:12:36,000 --> 00:12:37,470
+the replicator pulls the stream
+
+279
+00:12:37,470 --> 00:12:39,420
+and writes it to the other region.
+
+280
+00:12:39,420 --> 00:12:41,460
+Fairly straightforward, correct?
+
+281
+00:12:41,460 --> 00:12:42,783
+This is two regions.
+
+282
+00:12:43,710 --> 00:12:46,620
+What do you do if you
+have multiple regions?
+
+283
+00:12:46,620 --> 00:12:49,740
+One possible architecture
+is to have one replicator
+
+284
+00:12:49,740 --> 00:12:51,840
+for multiple regions.
+
+285
+00:12:51,840 --> 00:12:52,673
+We don't.
+
+286
+00:12:52,673 --> 00:12:54,693
+We have one replicator per region.
+
+287
+00:12:55,620 --> 00:12:56,940
+And the reason we do that
+
+288
+00:12:56,940 --> 00:12:58,800
+is because we want each path
+
+289
+00:12:58,800 --> 00:13:00,843
+to be its own individual failure domain.
+
+290
+00:13:02,250 --> 00:13:04,800
+Let's assume that us-east-1 has a problem
+
+291
+00:13:04,800 --> 00:13:07,320
+writing to this region, whatever it is,
+
+292
+00:13:07,320 --> 00:13:10,353
+that should not have
+any impact on this path.
+
+293
+00:13:11,700 --> 00:13:14,940
+Therefore, your write
+comes in to us-east-1.
+
+294
+00:13:14,940 --> 00:13:17,370
+where you perform the write,
+it goes through streams.
+
+295
+00:13:17,370 --> 00:13:22,370
+Now you have multiple
+replicators, one per target region
+
+296
+00:13:22,770 --> 00:13:24,870
+performing the replication into the other.
+
+297
+00:13:27,180 --> 00:13:29,460
+The exact same scenario can be played
+
+298
+00:13:29,460 --> 00:13:31,380
+in the opposite direction as well.
+
+299
+00:13:31,380 --> 00:13:34,170
+Us-east-1 becomes whatever
+the remote region is,
+
+300
+00:13:34,170 --> 00:13:36,810
+and it has a replicator in that direction.
+
+301
+00:13:36,810 --> 00:13:39,030
+Replicators are unidirectional.
+
+302
+00:13:39,030 --> 00:13:42,450
+So from us-east-1 to
+destination region replicator,
+
+303
+00:13:42,450 --> 00:13:44,913
+in the opposite direction,
+another replicator.
+
+304
+00:13:46,230 --> 00:13:49,140
+And this is the reason why
+these are eventually consistent.
+
+305
+00:13:49,140 --> 00:13:51,000
+You perform the write here.
+
+306
+00:13:51,000 --> 00:13:53,160
+The write is durably recorded.
+
+307
+00:13:53,160 --> 00:13:55,500
+If you do a strongly
+consistent read in this region,
+
+308
+00:13:55,500 --> 00:13:57,210
+you're gonna see that data.
+
+309
+00:13:57,210 --> 00:13:58,650
+There is a propagation delay
+
+310
+00:13:58,650 --> 00:14:00,180
+before it makes its way over there,
+
+311
+00:14:00,180 --> 00:14:02,640
+but it will eventually get there.
+
+312
+00:14:02,640 --> 00:14:05,850
+That's the eventually consistent
+part of global tables.
+
+313
+00:14:05,850 --> 00:14:08,820
+So let's assume you have a
+table, it has end regions.
+
+314
+00:14:08,820 --> 00:14:12,780
+Like I said, each region to another region
+
+315
+00:14:12,780 --> 00:14:16,140
+is a pairwise replication mechanism.
+
+316
+00:14:16,140 --> 00:14:18,900
+This arrow just shows
+that there's a replicator
+
+317
+00:14:18,900 --> 00:14:21,840
+in one direction or replicator
+in the other direction.
+
+318
+00:14:21,840 --> 00:14:23,790
+So what happens if you
+have various failure?
+
+319
+00:14:23,790 --> 00:14:26,823
+Oh, let's first talk about
+timing diagrams, okay.
+
+320
+00:14:29,670 --> 00:14:31,623
+Time progresses forward.
+
+321
+00:14:34,260 --> 00:14:36,360
+We have four regions here in this picture.
+
+322
+00:14:37,740 --> 00:14:40,083
+I perform a write in region one.
+
+323
+00:14:41,730 --> 00:14:43,830
+That write is durably
+recorded in region one,
+
+324
+00:14:43,830 --> 00:14:46,080
+and it's then replicated to region two.
+
+325
+00:14:46,080 --> 00:14:48,390
+Everybody good with this
+representation so far?
+
+326
+00:14:48,390 --> 00:14:49,233
+Yes, okay.
+
+327
+00:14:51,330 --> 00:14:54,633
+That replication makes its
+way over to region three.
+
+328
+00:14:57,420 --> 00:15:00,270
+That replication makes
+its way over to region two
+
+329
+00:15:00,270 --> 00:15:01,530
+but at different time.
+
+330
+00:15:01,530 --> 00:15:03,930
+Each of these is an
+independent replication stream.
+
+331
+00:15:03,930 --> 00:15:06,000
+Of course there's one more here.
+
+332
+00:15:06,000 --> 00:15:07,320
+The important thing to realize
+
+333
+00:15:07,320 --> 00:15:10,143
+is all these replications
+happen at different times.
+
+334
+00:15:11,670 --> 00:15:13,410
+Okay, they're all independent.
+
+335
+00:15:13,410 --> 00:15:16,140
+Now, let's assume that I do a write.
+
+336
+00:15:16,140 --> 00:15:17,880
+The write is successful.
+
+337
+00:15:17,880 --> 00:15:19,860
+I got a 200 on the write,
+
+338
+00:15:19,860 --> 00:15:21,363
+I perform a consistent read.
+
+339
+00:15:22,530 --> 00:15:25,983
+Whatever I wrote will be
+visible in that consistent read.
+
+340
+00:15:27,870 --> 00:15:30,213
+Okay, what happens here?
+
+341
+00:15:32,370 --> 00:15:37,170
+I did the write, the
+replicator has got the data.
+
+342
+00:15:37,170 --> 00:15:39,300
+The write only happens here.
+
+343
+00:15:39,300 --> 00:15:42,243
+A consistent read here
+will not show you the data.
+
+344
+00:15:43,920 --> 00:15:46,470
+Remember that strongly consistent reads
+
+345
+00:15:46,470 --> 00:15:48,813
+in eventually consistent global tables,
+
+346
+00:15:49,740 --> 00:15:51,990
+strongly consistent reads
+
+347
+00:15:51,990 --> 00:15:55,470
+in eventually consistent
+global tables only reflect
+
+348
+00:15:55,470 --> 00:15:57,793
+those writes which are in that region.
+
+349
+00:15:57,793 --> 00:15:59,850
+A strongly consistent read
+
+350
+00:15:59,850 --> 00:16:02,613
+in this region will reflect this write.
+
+351
+00:16:03,600 --> 00:16:08,520
+A strongly consistent read here
+may not reflect that write.
+
+352
+00:16:08,520 --> 00:16:10,650
+Again, the write was replicated.
+
+353
+00:16:10,650 --> 00:16:11,493
+It will see it.
+
+354
+00:16:12,930 --> 00:16:14,520
+When you're building your application,
+
+355
+00:16:14,520 --> 00:16:17,250
+realize that just because you
+do a strongly consistent read
+
+356
+00:16:17,250 --> 00:16:19,350
+on an eventually consistent global table,
+
+357
+00:16:19,350 --> 00:16:22,350
+it does not guarantee that
+you've got the latest data.
+
+358
+00:16:22,350 --> 00:16:23,183
+Okay?
+
+359
+00:16:25,500 --> 00:16:26,900
+What happens about ordering?
+
+360
+00:16:29,100 --> 00:16:33,330
+I told you that ordering
+is on a per key basis.
+
+361
+00:16:33,330 --> 00:16:36,213
+Let's assume that these
+are two different items.
+
+362
+00:16:37,200 --> 00:16:39,300
+On the first item, the
+initial state is 10,
+
+363
+00:16:39,300 --> 00:16:41,400
+on another item, the initial state is 200.
+
+364
+00:16:43,740 --> 00:16:46,257
+I perform a write, "A equals 11."
+
+365
+00:16:47,160 --> 00:16:48,813
+This item has been modified.
+
+366
+00:16:49,770 --> 00:16:52,530
+At a later time, I write, "B equals 201."
+
+367
+00:16:52,530 --> 00:16:56,163
+So these are two writes
+which occur in this order.
+
+368
+00:16:58,770 --> 00:17:01,233
+This replication comes over here.
+
+369
+00:17:02,280 --> 00:17:04,050
+This replication happens
+
+370
+00:17:04,050 --> 00:17:05,943
+at a completely different time there.
+
+371
+00:17:08,310 --> 00:17:13,310
+On a per item basis, A,
+or another item basis, B,
+
+372
+00:17:13,440 --> 00:17:15,420
+we will guarantee that the replications
+
+373
+00:17:15,420 --> 00:17:16,950
+are going to be in order.
+
+374
+00:17:16,950 --> 00:17:20,430
+But across items, we cannot
+guarantee the same thing.
+
+375
+00:17:20,430 --> 00:17:22,440
+The replication streams are independent.
+
+376
+00:17:22,440 --> 00:17:25,410
+Therefore, this replication happens here,
+
+377
+00:17:25,410 --> 00:17:27,720
+the other replication happens here.
+
+378
+00:17:27,720 --> 00:17:30,843
+Notice, this write
+happens after this write.
+
+379
+00:17:32,970 --> 00:17:37,020
+On a per item basis, we can
+guarantee monotonic reads
+
+380
+00:17:37,020 --> 00:17:40,320
+across items we cannot,
+across keys we cannot.
+
+381
+00:17:40,320 --> 00:17:41,153
+Okay?
+
+382
+00:17:42,210 --> 00:17:45,000
+And the last thing we'll talk
+about is conflict resolution.
+
+383
+00:17:45,000 --> 00:17:46,770
+If you have an active-active system
+
+384
+00:17:46,770 --> 00:17:49,743
+and in multiple regions
+you modify the same item,
+
+385
+00:17:50,850 --> 00:17:52,890
+which one are we going to survive?
+
+386
+00:17:52,890 --> 00:17:54,030
+It's the last write.
+
+387
+00:17:54,030 --> 00:17:58,110
+So all of our regions share atomic locks.
+
+388
+00:17:58,110 --> 00:18:00,720
+We know exactly what time
+you're performing the write.
+
+389
+00:18:00,720 --> 00:18:02,640
+You do it write in two regions.
+
+390
+00:18:02,640 --> 00:18:04,800
+No matter how close you think they are,
+
+391
+00:18:04,800 --> 00:18:07,080
+one is gonna be before the other.
+
+392
+00:18:07,080 --> 00:18:09,480
+The one which is later will always win.
+
+393
+00:18:09,480 --> 00:18:11,670
+So how do we go about doing that?
+
+394
+00:18:11,670 --> 00:18:13,020
+Let's assume that this is an item
+
+395
+00:18:13,020 --> 00:18:15,690
+which we're accepting a write for.
+
+396
+00:18:15,690 --> 00:18:17,760
+I'm going to record, as part of the write,
+
+397
+00:18:17,760 --> 00:18:21,033
+that it came in the IAD
+region at a timestamp of 10.
+
+398
+00:18:23,430 --> 00:18:26,523
+I'm gonna propagate it over,
+along with the timestamp.
+
+399
+00:18:28,170 --> 00:18:32,463
+If there is a write in the
+other region at timestamp 11,
+
+400
+00:18:33,570 --> 00:18:35,340
+this write is gonna be ignored,
+
+401
+00:18:35,340 --> 00:18:37,340
+because this is at an earlier timestamp.
+
+402
+00:18:39,630 --> 00:18:40,770
+Last writer wins.
+
+403
+00:18:40,770 --> 00:18:42,780
+And of course, if there's
+a write at timestamp 11,
+
+404
+00:18:42,780 --> 00:18:44,730
+it'll propagate in the opposite direction.
+
+405
+00:18:44,730 --> 00:18:49,730
+Therefore, both regions will
+converge to timestamp 11, okay?
+
+406
+00:18:50,160 --> 00:18:54,000
+So conflict resolution
+using a timing diagram,
+
+407
+00:18:54,000 --> 00:18:56,790
+at approximately the same time,
+
+408
+00:18:56,790 --> 00:18:58,593
+the write is done in two regions.
+
+409
+00:18:59,460 --> 00:19:01,510
+Both of them are gonna replicate forward.
+
+410
+00:19:02,400 --> 00:19:05,850
+This time here, 20 and 30,
+
+411
+00:19:05,850 --> 00:19:08,340
+indicates the time at
+which the write happened.
+
+412
+00:19:08,340 --> 00:19:11,460
+Since this write says 20,
+
+413
+00:19:11,460 --> 00:19:16,353
+a subsequent write which says
+timestamp 30 will overwrite.
+
+414
+00:19:17,580 --> 00:19:22,580
+Therefore, in region one,
+you do the write at time 20.
+
+415
+00:19:22,620 --> 00:19:25,380
+A subsequent replication
+of the write at 30
+
+416
+00:19:25,380 --> 00:19:26,823
+is going to override it.
+
+417
+00:19:28,080 --> 00:19:30,990
+Similarly, replication into this region
+
+418
+00:19:30,990 --> 00:19:34,020
+where there were no
+writes, R1 happens first,
+
+419
+00:19:34,020 --> 00:19:37,500
+this write comes in first,
+this one comes in second.
+
+420
+00:19:37,500 --> 00:19:38,950
+It is going to converge here.
+
+421
+00:19:40,200 --> 00:19:42,630
+Take a look at what happens here.
+
+422
+00:19:42,630 --> 00:19:44,910
+You performed a write at time 30.
+
+423
+00:19:44,910 --> 00:19:48,000
+The replicator sent down
+something at time 20.
+
+424
+00:19:48,000 --> 00:19:48,833
+We dropped it.
+
+425
+00:19:50,760 --> 00:19:51,720
+Same thing here.
+
+426
+00:19:51,720 --> 00:19:54,573
+The replicator came down
+here with 20, it dropped it.
+
+427
+00:19:55,950 --> 00:20:00,393
+Important consequence of
+this is that in region one,
+
+428
+00:20:01,560 --> 00:20:04,320
+you will see a streams
+notification for this
+
+429
+00:20:04,320 --> 00:20:07,050
+and a streams notification for this,
+
+430
+00:20:07,050 --> 00:20:09,900
+if you're building an application
+using DynamoDB streams.
+
+431
+00:20:11,460 --> 00:20:14,190
+In this region, you will
+see a notification for 20
+
+432
+00:20:14,190 --> 00:20:15,753
+and then a notification for 30.
+
+433
+00:20:17,820 --> 00:20:20,703
+In this region, you will only
+see a notification for 30.
+
+434
+00:20:22,320 --> 00:20:25,170
+In this region, you will see
+only a notification for 30.
+
+435
+00:20:25,170 --> 00:20:27,300
+You will never see this notification.
+
+436
+00:20:27,300 --> 00:20:29,940
+So if you're building
+a streams application,
+
+437
+00:20:29,940 --> 00:20:31,560
+realize the consequence
+
+438
+00:20:31,560 --> 00:20:34,883
+of having eventual consistency
+in your global table, okay?
+
+439
+00:20:36,025 --> 00:20:38,483
+And the last thing we'll
+talk about is failure modes.
+
+440
+00:20:40,320 --> 00:20:42,360
+A three region global table, us-east-1,
+
+441
+00:20:42,360 --> 00:20:44,670
+us-east-2, and us-west-2.
+
+442
+00:20:44,670 --> 00:20:48,033
+For whatever reason, us-east-2 is offline.
+
+443
+00:20:49,560 --> 00:20:51,510
+Nothing happens to the lubrication
+
+444
+00:20:51,510 --> 00:20:53,340
+between us-east-1 and us-west-2.
+
+445
+00:20:53,340 --> 00:20:55,380
+That continues just fine.
+
+446
+00:20:55,380 --> 00:20:56,790
+You can write data here,
+
+447
+00:20:56,790 --> 00:20:59,220
+it just doesn't get propagated over there.
+
+448
+00:20:59,220 --> 00:21:00,540
+You can write data here.
+
+449
+00:21:00,540 --> 00:21:02,160
+It gets over to us-east-1.
+
+450
+00:21:02,160 --> 00:21:04,360
+It doesn't go over to
+us-east-2, that's all.
+
+451
+00:21:05,280 --> 00:21:08,640
+At some point, when
+us-east-2 comes back online,
+
+452
+00:21:08,640 --> 00:21:10,410
+we do the catch up, and the data
+
+453
+00:21:10,410 --> 00:21:12,450
+in all three regions will again converge.
+
+454
+00:21:12,450 --> 00:21:14,310
+Last writer wins.
+
+455
+00:21:14,310 --> 00:21:17,043
+Okay, slightly different scenario.
+
+456
+00:21:18,870 --> 00:21:20,850
+Us-east-2 is perfectly running here.
+
+457
+00:21:20,850 --> 00:21:22,250
+There's a network partition.
+
+458
+00:21:25,470 --> 00:21:28,833
+Any write in us-east-1 will
+make its way over to us-west-2.
+
+459
+00:21:29,880 --> 00:21:33,750
+Any write in us-east-2 can't make it over.
+
+460
+00:21:33,750 --> 00:21:37,263
+So in this condition, all
+three tables are active.
+
+461
+00:21:38,100 --> 00:21:40,590
+This table can serve reads and writes.
+
+462
+00:21:40,590 --> 00:21:43,263
+It is just gonna be serving
+data which is local.
+
+463
+00:21:44,400 --> 00:21:46,500
+When the network links are reestablished,
+
+464
+00:21:46,500 --> 00:21:47,460
+data will come over.
+
+465
+00:21:47,460 --> 00:21:51,633
+Again, we will converge event
+to the last writer wins.
+
+466
+00:21:53,310 --> 00:21:54,600
+And the last one I'll talk about
+
+467
+00:21:54,600 --> 00:21:59,600
+is this particular failure
+mode where one network breaks.
+
+468
+00:22:00,180 --> 00:22:01,830
+I want you to listen
+to this one carefully,
+
+469
+00:22:01,830 --> 00:22:04,140
+because this is something
+where eventually consistent
+
+470
+00:22:04,140 --> 00:22:06,300
+global tables differ
+from strongly consistent
+
+471
+00:22:06,300 --> 00:22:08,200
+global tables when someone gets to it.
+
+472
+00:22:09,180 --> 00:22:12,933
+Any write in us-east-1 will be
+propagated over to us-west-2.
+
+473
+00:22:13,920 --> 00:22:17,790
+Any write in us-east-2 will
+be propagated to us-west-2.
+
+474
+00:22:17,790 --> 00:22:20,643
+Any write in us-west-2
+will be propagated to both.
+
+475
+00:22:22,470 --> 00:22:25,470
+A write in us-east-1
+will not go to us-east-2.
+
+476
+00:22:25,470 --> 00:22:26,673
+We do not relay.
+
+477
+00:22:27,810 --> 00:22:30,450
+A write to east-2 will
+not go to us-east-1.
+
+478
+00:22:30,450 --> 00:22:32,340
+We don't relay the write.
+
+479
+00:22:32,340 --> 00:22:35,280
+Therefore, a write here goes to both.
+
+480
+00:22:35,280 --> 00:22:37,110
+A write here does not
+make its way over there.
+
+481
+00:22:37,110 --> 00:22:39,000
+When the network link is reestablished,
+
+482
+00:22:39,000 --> 00:22:41,250
+that would be reestablished, okay?
+
+483
+00:22:41,250 --> 00:22:42,780
+Keep that in mind because it's different
+
+484
+00:22:42,780 --> 00:22:45,033
+in strongly consistent global tables.
+
+485
+00:22:45,960 --> 00:22:50,960
+So I mentioned streams
+earlier on the timing diagram.
+
+486
+00:22:51,090 --> 00:22:54,120
+Remember that your
+stream will only reflect
+
+487
+00:22:54,120 --> 00:22:56,343
+those writes which actually happen.
+
+488
+00:22:57,480 --> 00:23:01,170
+If you get a replicated
+write which is stale,
+
+489
+00:23:01,170 --> 00:23:04,080
+you will not get a streams notification.
+
+490
+00:23:04,080 --> 00:23:07,470
+You will only get all writes
+which are actually written.
+
+491
+00:23:07,470 --> 00:23:10,020
+So you will get any
+write in the local region
+
+492
+00:23:10,020 --> 00:23:12,383
+and replicated writes
+may not happen, okay.
+
+493
+00:23:14,160 --> 00:23:17,553
+If you were to perform a
+transaction in a region,
+
+494
+00:23:18,960 --> 00:23:22,350
+we guarantee asset
+transactions in the region.
+
+495
+00:23:22,350 --> 00:23:26,160
+Remember that replication
+is on a per item basis.
+
+496
+00:23:26,160 --> 00:23:27,660
+Therefore, it's possible for you
+
+497
+00:23:27,660 --> 00:23:30,420
+to see a torn transaction
+in the remote region.
+
+498
+00:23:30,420 --> 00:23:34,230
+If you're building an applications
+which needs transactions,
+
+499
+00:23:34,230 --> 00:23:36,840
+remember that eventually
+consistent global tables
+
+500
+00:23:36,840 --> 00:23:41,550
+may show you a torn transaction
+in a remote region, okay?
+
+501
+00:23:41,550 --> 00:23:43,440
+With that, I'm gonna hand it back to Somu,
+
+502
+00:23:43,440 --> 00:23:44,550
+and he'll talk to you about
+
+503
+00:23:44,550 --> 00:23:46,710
+strongly consistent global tables.
+
+504
+00:23:46,710 --> 00:23:49,483
+- Thanks, Amrith.
+
+505
+00:23:49,483 --> 00:23:52,890
+Thanks for the deep dive into
+asynchronous global tables
+
+506
+00:23:52,890 --> 00:23:54,990
+and how the application works.
+
+507
+00:23:54,990 --> 00:23:56,880
+Some of the slides were
+eventually consistent,
+
+508
+00:23:56,880 --> 00:23:57,713
+but that's okay.
+
+509
+00:23:59,670 --> 00:24:03,690
+So we build asynchronous global tables,
+
+510
+00:24:03,690 --> 00:24:05,990
+a lot of customers loved
+it for their workload
+
+511
+00:24:07,050 --> 00:24:10,050
+and gained a lot of adoption.
+
+512
+00:24:10,050 --> 00:24:11,640
+But customers still wanted
+
+513
+00:24:11,640 --> 00:24:13,563
+to read their writes from any region.
+
+514
+00:24:14,520 --> 00:24:16,650
+Some applications got
+really smart about this.
+
+515
+00:24:16,650 --> 00:24:18,900
+They said, "Let's take
+asynchronous global tables,
+
+516
+00:24:18,900 --> 00:24:21,690
+let's assign a single region
+as a designated leader
+
+517
+00:24:21,690 --> 00:24:23,843
+and writer and we're gonna read
+and write from that region."
+
+518
+00:24:23,843 --> 00:24:26,190
+This is like pretty
+much like my household.
+
+519
+00:24:26,190 --> 00:24:28,320
+We have my wife as a designated leader.
+
+520
+00:24:28,320 --> 00:24:31,170
+Everything goes through my
+wife in the house, right?
+
+521
+00:24:31,170 --> 00:24:32,003
+It works fine.
+
+522
+00:24:32,850 --> 00:24:34,860
+The latency profile of
+the reads and writes
+
+523
+00:24:34,860 --> 00:24:37,830
+depend on how far the regions are, right?
+
+524
+00:24:37,830 --> 00:24:39,600
+And it's very different from every region.
+
+525
+00:24:39,600 --> 00:24:41,340
+So strongly consistent
+reads will have to go back
+
+526
+00:24:41,340 --> 00:24:43,690
+to the designated region
+and it's (indistinct).
+
+527
+00:24:45,300 --> 00:24:47,340
+But if a wife is not at home,
+
+528
+00:24:47,340 --> 00:24:49,350
+now my kids and I have to
+kind of reconcile the stuff
+
+529
+00:24:49,350 --> 00:24:50,880
+and see who's right.
+
+530
+00:24:50,880 --> 00:24:51,990
+And that becomes a problem,
+
+531
+00:24:51,990 --> 00:24:54,420
+because once a designated
+leader region is not available
+
+532
+00:24:54,420 --> 00:24:56,610
+because of a network
+partition or something else,
+
+533
+00:24:56,610 --> 00:24:59,280
+then we have to figure out
+whether the latest write
+
+534
+00:24:59,280 --> 00:25:01,710
+in that region is available
+to the other regions or not.
+
+535
+00:25:01,710 --> 00:25:03,600
+Other regions have to
+reconcile this stuff,
+
+536
+00:25:03,600 --> 00:25:05,400
+and you'll have to have
+a failover protocol
+
+537
+00:25:05,400 --> 00:25:08,370
+in the application to
+take care of this new,
+
+538
+00:25:08,370 --> 00:25:13,370
+getting a new designated region,
+which will be the leader,
+
+539
+00:25:13,440 --> 00:25:17,163
+writer and reader for all
+the writes, reads and writes.
+
+540
+00:25:18,630 --> 00:25:20,490
+Similarly, some other
+applications said, "You know what?
+
+541
+00:25:20,490 --> 00:25:22,350
+We're gonna get around
+this whole write problem
+
+542
+00:25:22,350 --> 00:25:24,660
+and having higher latencies,
+we're gonna write locally,
+
+543
+00:25:24,660 --> 00:25:26,640
+and then we have to do
+strongly consistent reads
+
+544
+00:25:26,640 --> 00:25:28,860
+because it's a small
+part of our application,
+
+545
+00:25:28,860 --> 00:25:32,040
+we are gonna do a read
+from all the regions
+
+546
+00:25:32,040 --> 00:25:34,617
+and see which region
+has the latest write."
+
+547
+00:25:35,670 --> 00:25:39,330
+This works fine, but again,
+
+548
+00:25:39,330 --> 00:25:42,030
+the strongly consistent
+reads is gonna be very slow,
+
+549
+00:25:42,030 --> 00:25:46,680
+as low as the region which
+is farthest away from you,
+
+550
+00:25:46,680 --> 00:25:49,770
+because you had to read all
+the writes from that region.
+
+551
+00:25:49,770 --> 00:25:51,660
+And if that region is not available,
+
+552
+00:25:51,660 --> 00:25:53,970
+you don't know how to reconcile
+all the reads you have.
+
+553
+00:25:53,970 --> 00:25:55,443
+So this becomes problematic.
+
+554
+00:25:57,300 --> 00:25:59,670
+To take away the differentiated
+heavyweight lifting
+
+555
+00:25:59,670 --> 00:26:02,400
+from customers, we built this feature
+
+556
+00:26:02,400 --> 00:26:03,900
+into DynamoDB global tables.
+
+557
+00:26:03,900 --> 00:26:05,370
+We build multi-region strong consistency
+
+558
+00:26:05,370 --> 00:26:10,370
+DynamoDB global tables, which
+solves region writes problem,
+
+559
+00:26:10,680 --> 00:26:12,120
+makes writes highly available,
+
+560
+00:26:12,120 --> 00:26:14,040
+even in case of region failures,
+
+561
+00:26:14,040 --> 00:26:17,010
+and make strongly consistent
+reads serializable
+
+562
+00:26:17,010 --> 00:26:18,660
+at an item level with all the writes
+
+563
+00:26:18,660 --> 00:26:20,210
+that have happened to the item.
+
+564
+00:26:21,840 --> 00:26:23,580
+So how do my wife and
+I solve this problem?
+
+565
+00:26:23,580 --> 00:26:27,120
+We have a joint calendar, we
+can share that and take notes
+
+566
+00:26:27,120 --> 00:26:29,940
+and we build a basic primitive block
+
+567
+00:26:29,940 --> 00:26:33,100
+journal which spans multiple regions
+
+568
+00:26:34,950 --> 00:26:37,263
+as the replicas of the global table.
+
+569
+00:26:38,760 --> 00:26:41,220
+This journal is append-only log,
+
+570
+00:26:41,220 --> 00:26:45,090
+and the journal would
+successfully append the log
+
+571
+00:26:45,090 --> 00:26:47,357
+It's able to kind of durably
+commit and store the log
+
+572
+00:26:47,357 --> 00:26:48,993
+in two of the three regions.
+
+573
+00:26:50,070 --> 00:26:54,930
+And on top of that, all
+the logs from the journal
+
+574
+00:26:54,930 --> 00:26:56,430
+are delivered to the clients
+
+575
+00:26:56,430 --> 00:26:57,610
+in the order the journal appends them.
+
+576
+00:26:57,610 --> 00:27:00,420
+Since the journal can
+have multiple clients,
+
+577
+00:27:00,420 --> 00:27:02,670
+you have three different
+regions writing to the journal.
+
+578
+00:27:02,670 --> 00:27:05,160
+Then you want the clients
+listening to the journal
+
+579
+00:27:05,160 --> 00:27:07,290
+to receive the logs in the
+order the journal sees it,
+
+580
+00:27:07,290 --> 00:27:09,090
+not in the order the
+clients are appending it.
+
+581
+00:27:09,090 --> 00:27:12,000
+So the journal actually
+provides an interface
+
+582
+00:27:12,000 --> 00:27:15,750
+where all the clients are
+getting logs delivered
+
+583
+00:27:15,750 --> 00:27:18,100
+in the order the journal
+has appended the logs.
+
+584
+00:27:20,670 --> 00:27:25,670
+Now, how does the write
+work in case of multi-region
+
+585
+00:27:26,220 --> 00:27:28,983
+strongly consistent global
+table write request?
+
+586
+00:27:31,380 --> 00:27:32,400
+As soon as the write request comes,
+
+587
+00:27:32,400 --> 00:27:34,410
+it is forwarded to a
+GT replication engine.
+
+588
+00:27:34,410 --> 00:27:36,000
+But this replication engine is different
+
+589
+00:27:36,000 --> 00:27:37,650
+from the asynchronous global tables.
+
+590
+00:27:37,650 --> 00:27:40,710
+This one is inside than DynamoDB
+as opposed to the other one
+
+591
+00:27:40,710 --> 00:27:42,210
+which was waiting for the streams
+
+592
+00:27:42,210 --> 00:27:43,810
+and asynchronous replicating it.
+
+593
+00:27:45,030 --> 00:27:49,830
+This replication engine has
+two key functionalities.
+
+594
+00:27:49,830 --> 00:27:54,030
+One is generating the
+replication log entries for,
+
+595
+00:27:54,030 --> 00:27:55,350
+generating replication log entries
+
+596
+00:27:55,350 --> 00:27:57,660
+and opening it to multi-region journal.
+
+597
+00:27:57,660 --> 00:27:59,580
+And second is to listen to
+the multi-region journal
+
+598
+00:27:59,580 --> 00:28:01,870
+and applying all the
+log entries in the order
+
+599
+00:28:03,210 --> 00:28:04,680
+it's appended on the journal.
+
+600
+00:28:04,680 --> 00:28:06,150
+So the replicated usually reads
+
+601
+00:28:06,150 --> 00:28:07,897
+from the local DynamoDB table, says,
+
+602
+00:28:07,897 --> 00:28:09,240
+"Hey, what is the state of the item
+
+603
+00:28:09,240 --> 00:28:10,590
+you're writing to this item?"
+
+604
+00:28:10,590 --> 00:28:11,940
+Generates a log entry and appends it
+
+605
+00:28:11,940 --> 00:28:14,160
+to the multi-region journal.
+
+606
+00:28:14,160 --> 00:28:16,713
+Once it's successfully
+appended the journal,
+
+607
+00:28:17,760 --> 00:28:18,997
+you get a call back
+from the journal saying,
+
+608
+00:28:18,997 --> 00:28:21,450
+"Hey, I have a new log
+entry for you guys,"
+
+609
+00:28:21,450 --> 00:28:23,220
+and it sends it to all
+the replication engines
+
+610
+00:28:23,220 --> 00:28:24,930
+in all the three regions.
+
+611
+00:28:24,930 --> 00:28:29,550
+And then all the three
+regions apply the log entry,
+
+612
+00:28:29,550 --> 00:28:31,440
+they can apply it anytime
+they want to apply,
+
+613
+00:28:31,440 --> 00:28:33,570
+but the region in which the write happens,
+
+614
+00:28:33,570 --> 00:28:35,220
+the application's done immediately
+
+615
+00:28:35,220 --> 00:28:38,070
+and a success or failure is
+written back to the customer.
+
+616
+00:28:40,560 --> 00:28:44,280
+Now, this is the same request flow diagram
+
+617
+00:28:44,280 --> 00:28:46,740
+but just in a timeline
+to just kind of set pace
+
+618
+00:28:46,740 --> 00:28:48,360
+along with the slides.
+
+619
+00:28:48,360 --> 00:28:50,580
+The write happens, the
+log entries appended,
+
+620
+00:28:50,580 --> 00:28:52,230
+and then you get a call
+back in each of the regions
+
+621
+00:28:52,230 --> 00:28:55,440
+and you can see the
+application of the log entry
+
+622
+00:28:55,440 --> 00:28:57,360
+can happen at various points,
+
+623
+00:28:57,360 --> 00:28:59,940
+various timelines in different regions.
+
+624
+00:28:59,940 --> 00:29:01,920
+But the region in which
+the write originates
+
+625
+00:29:01,920 --> 00:29:04,270
+returns the 200 once it
+applies that log entry.
+
+626
+00:29:06,270 --> 00:29:07,890
+Now, what happens if there
+are concurrent writes
+
+627
+00:29:07,890 --> 00:29:11,160
+to different items from different regions?
+
+628
+00:29:11,160 --> 00:29:14,220
+In this example, we have two regions
+
+629
+00:29:14,220 --> 00:29:16,353
+having two writes to two different items.
+
+630
+00:29:17,190 --> 00:29:20,673
+It might seem that the write A
+arrives at R1 before write B,
+
+631
+00:29:21,630 --> 00:29:25,353
+but since write B is appended
+in the journal before write A,
+
+632
+00:29:26,400 --> 00:29:28,110
+write B is applied by all the regions
+
+633
+00:29:28,110 --> 00:29:29,970
+before write A is applied.
+
+634
+00:29:29,970 --> 00:29:33,273
+So journal allows you to kind
+of serialize these two writes.
+
+635
+00:29:34,950 --> 00:29:37,950
+Journal serializes the writes for you
+
+636
+00:29:37,950 --> 00:29:40,200
+in the order in which
+it appends log entries.
+
+637
+00:29:43,575 --> 00:29:45,300
+Now, how do strongly consistent reads work
+
+638
+00:29:45,300 --> 00:29:49,167
+in case of multi-region strongly
+consistent global tables?
+
+639
+00:29:49,167 --> 00:29:50,820
+The key thing here is to know
+
+640
+00:29:50,820 --> 00:29:52,470
+that when a strongly consistent read
+
+641
+00:29:52,470 --> 00:29:53,640
+arrives in a particular region,
+
+642
+00:29:53,640 --> 00:29:56,638
+that that particular
+region has all the writes.
+
+643
+00:29:56,638 --> 00:30:00,030
+It's not gonna miss any writes
+from any of the regions.
+
+644
+00:30:00,030 --> 00:30:02,430
+And the only way for that read to know
+
+645
+00:30:02,430 --> 00:30:05,520
+that there are no writes
+that's not applied
+
+646
+00:30:05,520 --> 00:30:08,730
+is by ensuring that it has applied
+
+647
+00:30:08,730 --> 00:30:10,130
+everything from the journal.
+
+648
+00:30:12,180 --> 00:30:14,700
+How do we kind of ensure that
+everything from the journal
+
+649
+00:30:14,700 --> 00:30:17,553
+is applied before the read is served?
+
+650
+00:30:18,480 --> 00:30:22,380
+We use a read fence, or
+tracer bullet, or heartbeat,
+
+651
+00:30:22,380 --> 00:30:25,230
+whatever you call, it's another log entry.
+
+652
+00:30:25,230 --> 00:30:28,710
+This log entry is appended
+to the multi-region journal.
+
+653
+00:30:28,710 --> 00:30:32,070
+And then we listen to all the log entries.
+
+654
+00:30:32,070 --> 00:30:34,080
+We try to listen to the heartbeat.
+
+655
+00:30:34,080 --> 00:30:35,850
+But as a part of listening
+to the heartbeat,
+
+656
+00:30:35,850 --> 00:30:37,680
+we'll also listen to all
+the other log entries
+
+657
+00:30:37,680 --> 00:30:40,500
+which we have not applied so far.
+
+658
+00:30:40,500 --> 00:30:42,690
+So we will start applying
+all those log entries
+
+659
+00:30:42,690 --> 00:30:45,960
+which we've not applied so far
+until we reach the heartbeat.
+
+660
+00:30:45,960 --> 00:30:49,440
+And once the heartbeat arrives,
+we can be sure that, one,
+
+661
+00:30:49,440 --> 00:30:50,850
+we've seen all the
+writes in all the regions
+
+662
+00:30:50,850 --> 00:30:52,620
+because the heartbeat is serialized,
+
+663
+00:30:52,620 --> 00:30:54,990
+along with the other writes
+in the journal, right?
+
+664
+00:30:54,990 --> 00:30:57,090
+And you've seen all the
+writes before the heartbeat.
+
+665
+00:30:57,090 --> 00:30:58,560
+So this acts as a read fence,
+
+666
+00:30:58,560 --> 00:31:00,720
+and now we can successfully,
+
+667
+00:31:00,720 --> 00:31:02,280
+you can correctly say that, yes,
+
+668
+00:31:02,280 --> 00:31:04,050
+this strongly consistent
+read is gonna return
+
+669
+00:31:04,050 --> 00:31:05,490
+the latest version of the item,
+
+670
+00:31:05,490 --> 00:31:07,840
+no matter which region
+the item is returned to.
+
+671
+00:31:11,550 --> 00:31:13,650
+Now, the protocol is the same,
+
+672
+00:31:13,650 --> 00:31:16,960
+even if you have a single-region write
+
+673
+00:31:18,030 --> 00:31:19,860
+and you're reading
+strongly from that region,
+
+674
+00:31:19,860 --> 00:31:21,540
+because it ensures correctness
+
+675
+00:31:21,540 --> 00:31:23,610
+and there's no bad behavior.
+
+676
+00:31:23,610 --> 00:31:28,170
+But the thing to keep in mind and remember
+
+677
+00:31:28,170 --> 00:31:31,020
+is that since the heartbeat
+also goes through the journal
+
+678
+00:31:31,890 --> 00:31:35,460
+and appends the journal, you
+pay the penalty of the write.
+
+679
+00:31:35,460 --> 00:31:36,960
+The latency of the
+strongly consistent reads
+
+680
+00:31:36,960 --> 00:31:39,093
+is almost equal to the latency of writes.
+
+681
+00:31:42,660 --> 00:31:44,880
+Now, last year we did,
+
+682
+00:31:44,880 --> 00:31:47,220
+we actually had multi-region
+strongly consistent tables
+
+683
+00:31:47,220 --> 00:31:51,180
+in preview, and at that point in time,
+
+684
+00:31:51,180 --> 00:31:53,550
+it was launched as a three-region replica,
+
+685
+00:31:53,550 --> 00:31:54,960
+global table replica.
+
+686
+00:31:54,960 --> 00:31:57,487
+We got some amazing feedback
+from you guys saying that,
+
+687
+00:31:57,487 --> 00:32:00,450
+"Hey, two regions is more
+than sufficient for us.
+
+688
+00:32:00,450 --> 00:32:01,800
+A third region is not necessary
+
+689
+00:32:01,800 --> 00:32:04,200
+because it will incur operational cost
+
+690
+00:32:04,200 --> 00:32:07,140
+and the cost of having a DynamoDB
+table in a third region."
+
+691
+00:32:07,140 --> 00:32:11,133
+So before we went GA, we
+launched a witness region,
+
+692
+00:32:12,120 --> 00:32:14,490
+and what a witness region allows you,
+
+693
+00:32:14,490 --> 00:32:15,900
+what a witness region allows us to do
+
+694
+00:32:15,900 --> 00:32:17,070
+is that for multi-region journal,
+
+695
+00:32:17,070 --> 00:32:18,180
+we need at least three regions,
+
+696
+00:32:18,180 --> 00:32:21,120
+because the journal has
+to append two regions
+
+697
+00:32:21,120 --> 00:32:23,370
+to successfully kind of say,
+
+698
+00:32:23,370 --> 00:32:25,230
+yes, the log is durably committed.
+
+699
+00:32:25,230 --> 00:32:27,660
+But if there's a region disruption,
+
+700
+00:32:27,660 --> 00:32:28,770
+then you don't have two regions.
+
+701
+00:32:28,770 --> 00:32:31,470
+So we need three regions, at
+least for multi-region journal.
+
+702
+00:32:31,470 --> 00:32:33,750
+So the witness region is just saying that,
+
+703
+00:32:33,750 --> 00:32:35,550
+hey, your multi-region
+journal spans three regions,
+
+704
+00:32:35,550 --> 00:32:36,383
+but you don't have to have
+
+705
+00:32:36,383 --> 00:32:38,070
+a DynamoDB table in the witness region.
+
+706
+00:32:38,070 --> 00:32:40,350
+So you have no resource, no
+cost, no operational cost
+
+707
+00:32:40,350 --> 00:32:42,930
+to kind of maintaining a witness region.
+
+708
+00:32:42,930 --> 00:32:46,380
+So MRSC global tables
+supports two full replicas
+
+709
+00:32:46,380 --> 00:32:47,463
+and a witness region.
+
+710
+00:32:53,580 --> 00:32:55,620
+We did talk about
+asynchronous global tables
+
+711
+00:32:55,620 --> 00:32:59,043
+and how it resolves concurrent writes.
+
+712
+00:33:00,180 --> 00:33:02,100
+And for MRSC global tables,
+
+713
+00:33:02,100 --> 00:33:03,870
+it's very easy on how to
+resolve concurrent writes,
+
+714
+00:33:03,870 --> 00:33:05,580
+because you're writing to the
+multi-region journal, right?
+
+715
+00:33:05,580 --> 00:33:06,810
+So if there are two writes,
+
+716
+00:33:06,810 --> 00:33:08,130
+it's gonna write to the same journal,
+
+717
+00:33:08,130 --> 00:33:09,580
+they're gonna get serialized.
+
+718
+00:33:11,190 --> 00:33:13,200
+But the important point here is,
+
+719
+00:33:13,200 --> 00:33:15,780
+what is that we write to the journal?
+
+720
+00:33:15,780 --> 00:33:17,700
+What is that replication log
+entry we write to the journal
+
+721
+00:33:17,700 --> 00:33:19,170
+and why do we do this?
+
+722
+00:33:19,170 --> 00:33:20,700
+So we write a very important
+
+723
+00:33:20,700 --> 00:33:22,050
+replication log into the journal.
+
+724
+00:33:22,050 --> 00:33:25,680
+The reason for this is that we want it
+
+725
+00:33:25,680 --> 00:33:28,830
+to be applied at most
+once, no matter what,
+
+726
+00:33:28,830 --> 00:33:32,070
+because a GD replicator can
+read the replication log
+
+727
+00:33:32,070 --> 00:33:35,280
+reapply and fail after
+that or crash after that,
+
+728
+00:33:35,280 --> 00:33:39,120
+and then it might restart
+from the previous checkpoint
+
+729
+00:33:39,120 --> 00:33:40,440
+from the journal to start listening
+
+730
+00:33:40,440 --> 00:33:41,610
+and try to reapply the logs.
+
+731
+00:33:41,610 --> 00:33:44,970
+So we make the log entries idempotent.
+
+732
+00:33:44,970 --> 00:33:46,740
+And how do we do that?
+
+733
+00:33:46,740 --> 00:33:48,330
+Like everything Dynamo, Dynamo supports
+
+734
+00:33:48,330 --> 00:33:49,710
+optimistic concurrency control.
+
+735
+00:33:49,710 --> 00:33:52,770
+So we just take any request that comes in,
+
+736
+00:33:52,770 --> 00:33:54,780
+read the current item, and convert it
+
+737
+00:33:54,780 --> 00:33:56,730
+to a conditional write,
+
+738
+00:33:56,730 --> 00:33:58,780
+conditional insert or conditional delete.
+
+739
+00:34:00,330 --> 00:34:02,850
+For example, here I'm
+incrementing the counter
+
+740
+00:34:02,850 --> 00:34:06,330
+of the number of attendees
+for re:Invent 2025, right?
+
+741
+00:34:06,330 --> 00:34:08,640
+When this request comes into a region,
+
+742
+00:34:08,640 --> 00:34:10,890
+it'll read the current state of the item
+
+743
+00:34:10,890 --> 00:34:13,020
+and generate an insert log entry.
+
+744
+00:34:13,020 --> 00:34:15,090
+And this insert log entry is conditioned
+
+745
+00:34:15,090 --> 00:34:18,180
+based on the timestamp which
+we store a system metadata
+
+746
+00:34:18,180 --> 00:34:21,510
+for every global table
+item we have, right?
+
+747
+00:34:21,510 --> 00:34:23,640
+And says, "Okay, fine, update the item
+
+748
+00:34:23,640 --> 00:34:26,163
+to the value seven from six,
+
+749
+00:34:27,540 --> 00:34:29,040
+if the timestamp matches
+
+750
+00:34:29,040 --> 00:34:30,690
+whatever the previous
+timestamp on the item is."
+
+751
+00:34:30,690 --> 00:34:33,390
+And then we also increment the system
+
+752
+00:34:33,390 --> 00:34:34,690
+to show the new timestamp.
+
+753
+00:34:37,620 --> 00:34:38,457
+Now, let's see how this works.
+
+754
+00:34:38,457 --> 00:34:40,500
+Now I have two increment re:Invent calls
+
+755
+00:34:40,500 --> 00:34:42,600
+from two different regions.
+
+756
+00:34:42,600 --> 00:34:44,700
+Both of them are gonna generate
+replication log entries
+
+757
+00:34:44,700 --> 00:34:47,040
+which look almost identical,
+except that one of them
+
+758
+00:34:47,040 --> 00:34:48,600
+may have a different timestamp,
+
+759
+00:34:48,600 --> 00:34:51,810
+new timestamp on the item
+versus other one, right?
+
+760
+00:34:51,810 --> 00:34:54,240
+Now, each of these regions
+are gonna get a call back
+
+761
+00:34:54,240 --> 00:34:57,450
+for each log entries in the order.
+
+762
+00:34:57,450 --> 00:35:01,443
+So region R2's log entry
+will be applied first,
+
+763
+00:35:02,700 --> 00:35:05,670
+and you'll get a success
+back in region R2.
+
+764
+00:35:05,670 --> 00:35:06,503
+It's great.
+
+765
+00:35:06,503 --> 00:35:08,160
+What happens when both the regions
+
+766
+00:35:08,160 --> 00:35:09,460
+read the second log entry?
+
+767
+00:35:10,380 --> 00:35:12,660
+They will not be able to do this insert,
+
+768
+00:35:12,660 --> 00:35:15,450
+again, because this is a
+put item with a condition,
+
+769
+00:35:15,450 --> 00:35:17,430
+and the condition doesn't match anymore.
+
+770
+00:35:17,430 --> 00:35:19,920
+So R2 is gonna say, "I can't apply it.
+
+771
+00:35:19,920 --> 00:35:22,299
+I'm just gonna skip this log entry."
+
+772
+00:35:22,299 --> 00:35:26,077
+R1 will write a failure to
+the application, saying,
+
+773
+00:35:26,077 --> 00:35:28,530
+"Hey, there was a
+replicated write conflict.
+
+774
+00:35:28,530 --> 00:35:32,460
+Please retry this write again."
+
+775
+00:35:32,460 --> 00:35:34,680
+Usually, the SDK is smart
+enough to retry this
+
+776
+00:35:34,680 --> 00:35:35,970
+because it's a retriable exception.
+
+777
+00:35:35,970 --> 00:35:39,543
+So SDK would retry this
+exception for most applications.
+
+778
+00:35:43,650 --> 00:35:45,300
+Multi-region strongly consistent,
+
+779
+00:35:46,410 --> 00:35:48,990
+MRSC global tables and
+failures, like we said,
+
+780
+00:35:48,990 --> 00:35:51,030
+we went through strongly
+consistent reads, how do they work.
+
+781
+00:35:51,030 --> 00:35:53,790
+We've talked about write
+conflicts, how do we handle.
+
+782
+00:35:53,790 --> 00:35:55,380
+The other key thing is like understanding
+
+783
+00:35:55,380 --> 00:35:56,340
+the failure characteristics.
+
+784
+00:35:56,340 --> 00:35:57,990
+What happens in case of failures?
+
+785
+00:35:59,038 --> 00:36:00,388
+How do these tables behave?
+
+786
+00:36:01,440 --> 00:36:03,690
+Since the regional
+latencies are different,
+
+787
+00:36:03,690 --> 00:36:06,840
+if a region is completely isolated,
+
+788
+00:36:06,840 --> 00:36:10,350
+that region is not gonna be
+able to serve first any writes
+
+789
+00:36:10,350 --> 00:36:12,240
+or strongly consistent reads,
+
+790
+00:36:12,240 --> 00:36:14,640
+because it can't write
+to the journal, right?
+
+791
+00:36:14,640 --> 00:36:17,790
+And it can't serve any writes.
+
+792
+00:36:17,790 --> 00:36:21,030
+But interestingly enough,
+before the partition,
+
+793
+00:36:21,030 --> 00:36:23,250
+us-east-1 would've had a very good latency
+
+794
+00:36:23,250 --> 00:36:25,170
+in terms of writes and
+strongly consistent reads,
+
+795
+00:36:25,170 --> 00:36:27,930
+because its closest
+neighbors to us-east-2.
+
+796
+00:36:27,930 --> 00:36:30,510
+So it only needs us-east-2 to acknowledge,
+
+797
+00:36:30,510 --> 00:36:34,830
+us-east-2 itself to
+acknowledge any write quickly.
+
+798
+00:36:34,830 --> 00:36:36,960
+But once us-east-2 is isolated,
+
+799
+00:36:36,960 --> 00:36:39,030
+it has to pair up at the us-west-2
+
+800
+00:36:39,030 --> 00:36:42,120
+for all the journal comments
+and all the journal appends,
+
+801
+00:36:42,120 --> 00:36:44,670
+which means the latency of
+the application would increase
+
+802
+00:36:44,670 --> 00:36:46,920
+if you have one region,
+
+803
+00:36:46,920 --> 00:36:49,563
+if you have your closest
+region completely isolated.
+
+804
+00:36:52,260 --> 00:36:54,540
+Now, if there is a network partition
+
+805
+00:36:54,540 --> 00:36:58,110
+between us-east-1 and us-east-2,
+
+806
+00:36:58,110 --> 00:37:00,750
+this is the most interesting use case.
+
+807
+00:37:00,750 --> 00:37:03,090
+This is the most interesting
+failure scenario.
+
+808
+00:37:03,090 --> 00:37:06,540
+In case of asynchronous global tables,
+
+809
+00:37:06,540 --> 00:37:07,740
+if there is a network partition
+
+810
+00:37:07,740 --> 00:37:10,320
+between us-east-1 and
+us-east-2, the replication stops
+
+811
+00:37:10,320 --> 00:37:12,603
+because it's a point to point replication.
+
+812
+00:37:14,064 --> 00:37:16,320
+But in case of MRSC global tables,
+
+813
+00:37:16,320 --> 00:37:18,870
+it actually works because in steady state,
+
+814
+00:37:18,870 --> 00:37:21,840
+us-east-1 is replicating logs
+to us-east-2 all the time
+
+815
+00:37:21,840 --> 00:37:22,833
+and us-west-2.
+
+816
+00:37:23,910 --> 00:37:25,350
+But if there is a network partition
+
+817
+00:37:25,350 --> 00:37:27,570
+between us-east-1 and us-east-2,
+
+818
+00:37:27,570 --> 00:37:30,600
+those replication logs
+just take a longer route.
+
+819
+00:37:30,600 --> 00:37:33,180
+They just travel through
+us-west-2 to us-east-2.
+
+820
+00:37:33,180 --> 00:37:35,550
+So any replication logs
+even from us-east-2
+
+821
+00:37:35,550 --> 00:37:38,100
+to us-east-1 will travel via us-west-2.
+
+822
+00:37:38,100 --> 00:37:40,680
+So your application latencies will go up
+
+823
+00:37:40,680 --> 00:37:42,690
+because network partition
+and the replication logs
+
+824
+00:37:42,690 --> 00:37:44,670
+will have to take a longer path.
+
+825
+00:37:44,670 --> 00:37:46,890
+But all regions will be available
+
+826
+00:37:46,890 --> 00:37:49,803
+for strongly consistent reads and writes.
+
+827
+00:37:51,930 --> 00:37:54,210
+This is a key difference between
+asynchronous global tables
+
+828
+00:37:54,210 --> 00:37:55,653
+and MRSC global tables.
+
+829
+00:37:59,700 --> 00:38:04,680
+Now, Amrith was talking about
+streams and transactions.
+
+830
+00:38:04,680 --> 00:38:07,050
+All writes to a key are visible
+
+831
+00:38:07,050 --> 00:38:10,080
+in the same order in all
+regions for MRSC global tables.
+
+832
+00:38:10,080 --> 00:38:12,330
+For a given key visible in the same order,
+
+833
+00:38:12,330 --> 00:38:14,610
+that doesn't change with streams.
+
+834
+00:38:14,610 --> 00:38:17,070
+MRSC global tables don't
+support transactions
+
+835
+00:38:17,070 --> 00:38:19,083
+and a time to expire still.
+
+836
+00:38:21,210 --> 00:38:23,460
+So these are two key
+things to keep in mind
+
+837
+00:38:23,460 --> 00:38:25,200
+when you're kind of
+using MRSC global tables
+
+838
+00:38:25,200 --> 00:38:26,643
+for any of your workload.
+
+839
+00:38:30,390 --> 00:38:31,440
+Now, this is just to recap,
+
+840
+00:38:31,440 --> 00:38:33,087
+what are the regional failures
+
+841
+00:38:33,087 --> 00:38:35,220
+and how do these two tables differ?
+
+842
+00:38:35,220 --> 00:38:37,110
+In case of regional failure,
+
+843
+00:38:37,110 --> 00:38:39,120
+again, asynchronous global tables remains,
+
+844
+00:38:39,120 --> 00:38:40,740
+both of them remain very highly available
+
+845
+00:38:40,740 --> 00:38:44,070
+in both of the regions, in
+the remaining healthy regions.
+
+846
+00:38:44,070 --> 00:38:45,540
+In case of a network isolation,
+
+847
+00:38:45,540 --> 00:38:48,180
+again, they remain asynchronous.
+
+848
+00:38:48,180 --> 00:38:50,160
+Global tables is highly
+available in all the regions.
+
+849
+00:38:50,160 --> 00:38:53,340
+Your reads are going to be very eventual,
+
+850
+00:38:53,340 --> 00:38:56,790
+will be stale, but writes
+will be still available.
+
+851
+00:38:56,790 --> 00:38:59,310
+But in case of MRSC global
+tables in the isolated region,
+
+852
+00:38:59,310 --> 00:39:00,540
+regions writes won't be available,
+
+853
+00:39:00,540 --> 00:39:03,000
+but the other regions
+will be highly available.
+
+854
+00:39:03,000 --> 00:39:04,590
+Network partition, like I said,
+
+855
+00:39:04,590 --> 00:39:06,360
+they behave slightly different
+
+856
+00:39:06,360 --> 00:39:08,103
+across both these global tables.
+
+857
+00:39:10,140 --> 00:39:11,610
+Now one of the key things I get asked
+
+858
+00:39:11,610 --> 00:39:12,443
+everywhere I go is like,
+
+859
+00:39:12,443 --> 00:39:14,460
+"Hey, how do you guys gain
+confidence in this protocol?"
+
+860
+00:39:14,460 --> 00:39:16,830
+This is complicated system.
+
+861
+00:39:16,830 --> 00:39:19,350
+All distributed systems are very hard.
+
+862
+00:39:19,350 --> 00:39:21,840
+And in Dynamo, one of the
+things we kind of take
+
+863
+00:39:21,840 --> 00:39:24,030
+very seriously is distributed systems.
+
+864
+00:39:24,030 --> 00:39:26,670
+A human mind can't reason about it.
+
+865
+00:39:26,670 --> 00:39:30,690
+So we use a lot of tools
+to help us kind of reason
+
+866
+00:39:30,690 --> 00:39:33,060
+and check our system in
+variance all the time.
+
+867
+00:39:33,060 --> 00:39:35,070
+So for global tables, we use this new tool
+
+868
+00:39:35,070 --> 00:39:38,160
+called P-model checker, which
+allows you to model the states
+
+869
+00:39:38,160 --> 00:39:41,190
+and transitions of an
+item and the protocol
+
+870
+00:39:41,190 --> 00:39:45,690
+and validate it during runtime,
+during application runtime.
+
+871
+00:39:45,690 --> 00:39:48,840
+Like as the global tables
+protocol is running,
+
+872
+00:39:48,840 --> 00:39:50,430
+we can generate application logs
+
+873
+00:39:50,430 --> 00:39:52,950
+and validate that using P-observe.
+
+874
+00:39:52,950 --> 00:39:57,120
+And since P uses a language
+which is very close to C-sharp,
+
+875
+00:39:57,120 --> 00:40:00,000
+it kind of easy to keep the
+code and the model in sync.
+
+876
+00:40:00,000 --> 00:40:01,740
+So anytime you wanna change the code,
+
+877
+00:40:01,740 --> 00:40:04,020
+the practice is usually
+to change the model first,
+
+878
+00:40:04,020 --> 00:40:05,910
+verify the protocol still works,
+
+879
+00:40:05,910 --> 00:40:08,763
+and then kind of modify the code.
+
+880
+00:40:10,440 --> 00:40:13,170
+A big part, like my
+friends across the stage
+
+881
+00:40:13,170 --> 00:40:15,420
+were talking about was, how
+do you build resiliency?
+
+882
+00:40:15,420 --> 00:40:17,910
+A big part of it is also
+chaos and scale testing.
+
+883
+00:40:17,910 --> 00:40:19,350
+There's a lot of testing which goes
+
+884
+00:40:19,350 --> 00:40:21,090
+into all the failure modes
+
+885
+00:40:21,090 --> 00:40:23,430
+and how global tables
+behave in failure mode.
+
+886
+00:40:23,430 --> 00:40:26,550
+So we do a lot of chaos
+testing and scale testing
+
+887
+00:40:26,550 --> 00:40:28,800
+to ensure the protocols still work
+
+888
+00:40:28,800 --> 00:40:31,473
+and validate in variance of the system.
+
+889
+00:40:33,900 --> 00:40:36,060
+Last but not the least, anti-entropy.
+
+890
+00:40:36,060 --> 00:40:37,830
+For both all global table replicas,
+
+891
+00:40:37,830 --> 00:40:39,810
+we are performing anti-entropy always
+
+892
+00:40:39,810 --> 00:40:41,880
+to ensure there is no divergence
+
+893
+00:40:41,880 --> 00:40:44,460
+and writes usually converge
+
+894
+00:40:44,460 --> 00:40:46,290
+in case of asynchronous
+global tables eventually,
+
+895
+00:40:46,290 --> 00:40:49,830
+and in case of MRSC global
+tables, they are converged.
+
+896
+00:40:49,830 --> 00:40:51,420
+So we keep performing anti-entropy,
+
+897
+00:40:51,420 --> 00:40:53,670
+and this is a property we do
+even for regional DynamoDB,
+
+898
+00:40:53,670 --> 00:40:55,050
+where we have three copies of the data
+
+899
+00:40:55,050 --> 00:40:57,480
+across different availability zones.
+
+900
+00:40:57,480 --> 00:41:00,750
+We have a system which
+continuously performs anti-entropy
+
+901
+00:41:00,750 --> 00:41:02,943
+to verify the replicas have the same data.
+
+902
+00:41:05,670 --> 00:41:09,900
+We also have introduced an experiment
+
+903
+00:41:09,900 --> 00:41:11,940
+in AWS fault injection service,
+
+904
+00:41:11,940 --> 00:41:14,580
+which customers can use
+to kind of test themselves
+
+905
+00:41:14,580 --> 00:41:16,590
+how their applications will behave
+
+906
+00:41:16,590 --> 00:41:18,090
+if there is a failure with global tables.
+
+907
+00:41:18,090 --> 00:41:19,470
+And I think this is very important
+
+908
+00:41:19,470 --> 00:41:21,420
+because we've tested a lot of the stuff,
+
+909
+00:41:21,420 --> 00:41:24,120
+and customers who need to
+kind of test their failover,
+
+910
+00:41:24,990 --> 00:41:27,390
+how their application behaves
+when there's a failure.
+
+911
+00:41:27,390 --> 00:41:31,110
+So we do support post-application
+
+912
+00:41:31,110 --> 00:41:32,820
+for DynamoDB global tables,
+
+913
+00:41:32,820 --> 00:41:34,200
+which would help you test
+
+914
+00:41:34,200 --> 00:41:35,700
+what happens if replication is paused
+
+915
+00:41:35,700 --> 00:41:37,263
+for asynchronous global tables.
+
+916
+00:41:40,012 --> 00:41:42,150
+- A couple of things
+which Somu talked about,
+
+917
+00:41:42,150 --> 00:41:44,610
+first, we currently don't
+support transactions
+
+918
+00:41:44,610 --> 00:41:46,290
+with strongly consistent global tables.
+
+919
+00:41:46,290 --> 00:41:48,000
+We are working on that.
+
+920
+00:41:48,000 --> 00:41:50,640
+If you use TTL, time to live,
+
+921
+00:41:50,640 --> 00:41:52,740
+it is supported with eventually
+consistent global tables.
+
+922
+00:41:52,740 --> 00:41:54,000
+It will also be supported
+
+923
+00:41:54,000 --> 00:41:57,060
+with strongly consistent
+global tables before long.
+
+924
+00:41:57,060 --> 00:41:58,710
+So keep those two things in mind.
+
+925
+00:42:02,460 --> 00:42:03,930
+When you're building your application,
+
+926
+00:42:03,930 --> 00:42:06,510
+one of the choices you're
+gonna have to make is,
+
+927
+00:42:06,510 --> 00:42:08,580
+should you use eventually
+consistent global tables
+
+928
+00:42:08,580 --> 00:42:10,650
+or strongly consistent global tables?
+
+929
+00:42:10,650 --> 00:42:13,163
+These are some of the things
+you have to keep in mind.
+
+930
+00:42:14,220 --> 00:42:16,380
+With asynchronous global tables,
+
+931
+00:42:16,380 --> 00:42:19,800
+there is no write cost across regions.
+
+932
+00:42:19,800 --> 00:42:22,350
+Your writes are always
+in the local region.
+
+933
+00:42:22,350 --> 00:42:25,230
+Your reads are always in
+the local region as well.
+
+934
+00:42:25,230 --> 00:42:27,300
+With strongly consistent global tables,
+
+935
+00:42:27,300 --> 00:42:29,220
+even your strongly consistent reads
+
+936
+00:42:29,220 --> 00:42:31,410
+have to effectively go across regions.
+
+937
+00:42:31,410 --> 00:42:33,420
+That's the heartbeat which
+someone was talking about.
+
+938
+00:42:33,420 --> 00:42:35,460
+So remember that a
+strongly consistent read
+
+939
+00:42:35,460 --> 00:42:37,923
+has a latency of approximately
+the same as write.
+
+940
+00:42:40,170 --> 00:42:44,550
+Availability, both of them are
+going to be highly available,
+
+941
+00:42:44,550 --> 00:42:46,560
+but your data is instantly available
+
+942
+00:42:46,560 --> 00:42:48,420
+in the case of a strongly
+consistent global table.
+
+943
+00:42:48,420 --> 00:42:49,950
+It's eventually consistent in the case
+
+944
+00:42:49,950 --> 00:42:53,220
+of a asynchronous global table.
+
+945
+00:42:53,220 --> 00:42:56,070
+Also, remember the network
+isolation failure modes
+
+946
+00:42:56,070 --> 00:42:57,420
+are a little bit different.
+
+947
+00:42:58,800 --> 00:43:00,930
+This is the one which is most important
+
+948
+00:43:00,930 --> 00:43:04,950
+for your application to deal
+with, and I strongly urge you,
+
+949
+00:43:04,950 --> 00:43:06,510
+when you are building an application
+
+950
+00:43:06,510 --> 00:43:08,450
+with either form of global tables,
+
+951
+00:43:08,450 --> 00:43:10,590
+to use the fault injection mechanism
+
+952
+00:43:10,590 --> 00:43:13,020
+and see how your application deals
+
+953
+00:43:13,020 --> 00:43:15,600
+with the failure of replication.
+
+954
+00:43:15,600 --> 00:43:17,280
+This is not something you should discover
+
+955
+00:43:17,280 --> 00:43:18,660
+in the middle of an event.
+
+956
+00:43:18,660 --> 00:43:20,670
+You should test this on a regular basis.
+
+957
+00:43:20,670 --> 00:43:21,840
+The other thing which you should do
+
+958
+00:43:21,840 --> 00:43:25,230
+if you are building an application
+which is active-active,
+
+959
+00:43:25,230 --> 00:43:27,330
+it's really good that
+you're driving traffic
+
+960
+00:43:27,330 --> 00:43:28,170
+to both the regions.
+
+961
+00:43:28,170 --> 00:43:29,910
+But if you are building an application
+
+962
+00:43:29,910 --> 00:43:31,983
+which is active at a standby region,
+
+963
+00:43:32,820 --> 00:43:35,610
+always please try to drive traffic
+
+964
+00:43:35,610 --> 00:43:37,023
+to the other region as well,
+
+965
+00:43:37,950 --> 00:43:42,060
+10%, 90% or do failovers
+on a regular basis.
+
+966
+00:43:42,060 --> 00:43:46,890
+Do not make those things only
+exercise during a failure.
+
+967
+00:43:46,890 --> 00:43:48,660
+Test continuously.
+
+968
+00:43:48,660 --> 00:43:50,850
+And again, the last one talks
+about the kind of things
+
+969
+00:43:50,850 --> 00:43:51,930
+that you would expect to use
+
+970
+00:43:51,930 --> 00:43:53,853
+these different global tables for.
+
+971
+00:43:55,650 --> 00:43:56,483
+You wanna try again?
+
+972
+00:43:56,483 --> 00:43:57,333
+- Yeah, okay.
+
+973
+00:44:00,900 --> 00:44:03,450
+I think this is fine.
+- All right.
+
+974
+00:44:03,450 --> 00:44:04,350
+- I'm sorry about that.
+
+975
+00:44:04,350 --> 00:44:06,240
+Sorry for the interruption.
+
+976
+00:44:06,240 --> 00:44:07,533
+Hope this time it works.
+
+977
+00:44:09,406 --> 00:44:10,950
+So I've reset the counters.
+
+978
+00:44:10,950 --> 00:44:13,470
+I'm choosing IAD as a region
+where I'm gonna do the writes.
+
+979
+00:44:13,470 --> 00:44:16,170
+I'm gonna increment the counter
+five times there in a loop.
+
+980
+00:44:16,170 --> 00:44:17,460
+While I'm incrementing the counter,
+
+981
+00:44:17,460 --> 00:44:18,750
+I'm gonna do strongly consistent reads
+
+982
+00:44:18,750 --> 00:44:20,220
+from the two other replicas I have,
+
+983
+00:44:20,220 --> 00:44:22,820
+which is one as in us-east-2
+and one is a us-west-2,
+
+984
+00:44:23,700 --> 00:44:25,700
+and see what the experiment provides us.
+
+985
+00:44:27,630 --> 00:44:30,210
+So as you can see, in IAD,
+
+986
+00:44:30,210 --> 00:44:32,520
+the values went from 0, 1, 2, 3, 4, 5,
+
+987
+00:44:32,520 --> 00:44:36,000
+which is local writes, which is fine.
+
+988
+00:44:36,000 --> 00:44:38,640
+And in us-west-2, it's very interesting
+
+989
+00:44:38,640 --> 00:44:41,100
+that when it started reading
+strongly consistent reads
+
+990
+00:44:41,100 --> 00:44:44,280
+for quite some time, we're
+giving the same value
+
+991
+00:44:44,280 --> 00:44:46,230
+as eventually consistent reads.
+
+992
+00:44:46,230 --> 00:44:50,940
+And I ran 10 iterations
+of it and it reads zero
+
+993
+00:44:50,940 --> 00:44:52,260
+and then skips directly to five.
+
+994
+00:44:52,260 --> 00:44:53,093
+It just sees five.
+
+995
+00:44:53,093 --> 00:44:55,050
+So you can see that it's an
+asynchronous replication.
+
+996
+00:44:55,050 --> 00:44:59,310
+The eventual value kind of
+comes over to us-west-2.
+
+997
+00:44:59,310 --> 00:45:02,550
+Likewise, since us-east-2 is nearby,
+
+998
+00:45:02,550 --> 00:45:06,720
+it does see zeros, threes,
+threes, and this one.
+
+999
+00:45:06,720 --> 00:45:09,360
+But one of the key things to
+notice here is the latency.
+
+1000
+00:45:09,360 --> 00:45:10,827
+The latency down at the
+strongly consistent read
+
+1001
+00:45:10,827 --> 00:45:13,590
+and eventually consistent
+reads is very low.
+
+1002
+00:45:13,590 --> 00:45:17,310
+I mean, this is running on
+my laptop but from Vegas.
+
+1003
+00:45:17,310 --> 00:45:19,710
+So it's like about 80
+milliseconds to all the regions.
+
+1004
+00:45:19,710 --> 00:45:22,050
+But both reads are really, really fast
+
+1005
+00:45:22,050 --> 00:45:24,060
+because they're talking
+locally to the region
+
+1006
+00:45:24,060 --> 00:45:25,980
+and they're not talking,
+
+1007
+00:45:25,980 --> 00:45:27,390
+they're not using
+strongly consistent reads
+
+1008
+00:45:27,390 --> 00:45:29,790
+for MRSC global tables.
+
+1009
+00:45:29,790 --> 00:45:31,350
+I'm gonna run the same experiment
+
+1010
+00:45:31,350 --> 00:45:35,283
+with MRSC global tables
+and let's see what we get.
+
+1011
+00:45:36,420 --> 00:45:38,220
+So first, you can see that IAD writes
+
+1012
+00:45:38,220 --> 00:45:40,320
+were almost the same time still.
+
+1013
+00:45:40,320 --> 00:45:42,390
+Writing to one region is fine.
+
+1014
+00:45:42,390 --> 00:45:46,197
+But you can see that
+strongly consistent reads
+
+1015
+00:45:46,197 --> 00:45:49,020
+and eventually consistent
+reads now start seeing
+
+1016
+00:45:49,020 --> 00:45:51,210
+the same values as they kind of
+
+1017
+00:45:51,210 --> 00:45:53,520
+are incremented in IAD, for example.
+
+1018
+00:45:53,520 --> 00:45:56,490
+And also, a key thing to notice
+here is now your latencies
+
+1019
+00:45:56,490 --> 00:45:58,620
+for the strongly consistent
+reads have gone up
+
+1020
+00:45:58,620 --> 00:46:00,810
+from 70 milliseconds to
+about 200 milliseconds
+
+1021
+00:46:00,810 --> 00:46:03,210
+because, like I said,
+strongly consistent reads
+
+1022
+00:46:03,210 --> 00:46:05,580
+for multi-region and
+strongly consistent tables
+
+1023
+00:46:05,580 --> 00:46:07,890
+do write to the journal,
+so that latency does add up
+
+1024
+00:46:07,890 --> 00:46:10,440
+when you're doing strongly
+consistent reads, right?
+
+1025
+00:46:12,240 --> 00:46:14,580
+Likewise, you can see
+that they finally see,
+
+1026
+00:46:14,580 --> 00:46:16,710
+they see most of the values throughout.
+
+1027
+00:46:16,710 --> 00:46:19,431
+In some cases, you can
+see for example here,
+
+1028
+00:46:19,431 --> 00:46:22,080
+the strongly consistent read in us-west-2
+
+1029
+00:46:22,080 --> 00:46:23,400
+does see the value of four,
+
+1030
+00:46:23,400 --> 00:46:25,020
+but the eventually consistent
+value here is three,
+
+1031
+00:46:25,020 --> 00:46:27,900
+because it is reading a
+local copy of the data
+
+1032
+00:46:27,900 --> 00:46:29,700
+which may be stale, but
+strongly considered read
+
+1033
+00:46:29,700 --> 00:46:33,303
+is reading whatever is the
+latest write, which has happened.
+
+1034
+00:46:35,940 --> 00:46:38,010
+The second example I'm gonna show you
+
+1035
+00:46:38,010 --> 00:46:42,420
+is a multi-writer example.
+
+1036
+00:46:42,420 --> 00:46:44,940
+Here is where we are gonna
+increment the counter
+
+1037
+00:46:44,940 --> 00:46:46,830
+across all the regions
+simultaneously, right?
+
+1038
+00:46:46,830 --> 00:46:48,930
+I'm gonna have three different threads
+
+1039
+00:46:48,930 --> 00:46:52,290
+incrementing the counter across
+three different replicas.
+
+1040
+00:46:52,290 --> 00:46:53,940
+So we'll see how this works
+
+1041
+00:46:53,940 --> 00:46:56,013
+with asynchronous global tables first.
+
+1042
+00:46:56,850 --> 00:46:58,950
+Run this experiment and you can see
+
+1043
+00:46:58,950 --> 00:47:03,000
+that they all incremented
+the counter five times,
+
+1044
+00:47:03,000 --> 00:47:05,610
+but they just landed up with
+the same value eventually
+
+1045
+00:47:05,610 --> 00:47:07,410
+because they're not talking to each other,
+
+1046
+00:47:07,410 --> 00:47:08,550
+the writes are not coordinated,
+
+1047
+00:47:08,550 --> 00:47:11,070
+the writes are not
+getting propagated before
+
+1048
+00:47:11,070 --> 00:47:13,110
+the writes happen locally in the region.
+
+1049
+00:47:13,110 --> 00:47:15,990
+So all three replicas land
+up being the same value.
+
+1050
+00:47:15,990 --> 00:47:18,000
+This works for applications
+where you really don't need
+
+1051
+00:47:18,000 --> 00:47:20,100
+the writes propagated across regions.
+
+1052
+00:47:20,100 --> 00:47:23,100
+You can maintain separate
+copies of the values.
+
+1053
+00:47:23,100 --> 00:47:26,340
+So this is, well, and
+you can see the latencies
+
+1054
+00:47:26,340 --> 00:47:27,780
+are also very fast for the writes.
+
+1055
+00:47:27,780 --> 00:47:31,680
+The latencies are almost as
+good as how long it takes
+
+1056
+00:47:31,680 --> 00:47:35,163
+from going from Vegas to
+each of these regions.
+
+1057
+00:47:37,350 --> 00:47:39,120
+We're gonna run the same experiment again
+
+1058
+00:47:39,120 --> 00:47:43,953
+with MRSC tables and see what happens.
+
+1059
+00:47:45,540 --> 00:47:46,920
+Since each of the region is incrementing
+
+1060
+00:47:46,920 --> 00:47:48,000
+the counter five times,
+
+1061
+00:47:48,000 --> 00:47:50,640
+you land up with the
+final value of 14 and 15.
+
+1062
+00:47:50,640 --> 00:47:53,610
+But you can see that
+the values get increment
+
+1063
+00:47:53,610 --> 00:47:55,560
+0, 1, 1, 2, 3, 4.
+
+1064
+00:47:55,560 --> 00:47:58,470
+But there are some writes
+where you can see the value.
+
+1065
+00:47:58,470 --> 00:48:00,360
+The time taken is very high.
+
+1066
+00:48:00,360 --> 00:48:02,460
+For example, in us-west-2,
+the first write,
+
+1067
+00:48:02,460 --> 00:48:04,830
+where its write is five and value is six,
+
+1068
+00:48:04,830 --> 00:48:07,200
+you can see it's taken about
+like half a second to write.
+
+1069
+00:48:07,200 --> 00:48:09,693
+And if I were to go debug this stuff,
+
+1070
+00:48:10,620 --> 00:48:12,300
+in all properties, this is because it got
+
+1071
+00:48:12,300 --> 00:48:13,950
+a replicated write conflict the first time
+
+1072
+00:48:13,950 --> 00:48:15,630
+it tried to increment the counter,
+
+1073
+00:48:15,630 --> 00:48:18,750
+so it had to retry to
+increment the counter again
+
+1074
+00:48:18,750 --> 00:48:19,770
+in the region again.
+
+1075
+00:48:19,770 --> 00:48:21,180
+So the retries do add up,
+
+1076
+00:48:21,180 --> 00:48:23,100
+and you can kind of see
+this latency kind of go up.
+
+1077
+00:48:23,100 --> 00:48:24,870
+But you can see that all three regions
+
+1078
+00:48:24,870 --> 00:48:27,270
+eventually convert to the same value of 15
+
+1079
+00:48:27,270 --> 00:48:29,130
+after incrementing the value five times
+
+1080
+00:48:29,130 --> 00:48:30,280
+in each of the regions.
+
+1081
+00:48:32,460 --> 00:48:34,233
+So that was the part of the demo.
+
+1082
+00:48:36,330 --> 00:48:38,010
+- Do you wanna hit that
+switch for me again?
+
+1083
+00:48:38,010 --> 00:48:38,843
+All right.
+
+1084
+00:48:40,710 --> 00:48:43,380
+So we talked about how you make a choice
+
+1085
+00:48:43,380 --> 00:48:45,540
+between using strongly
+consistent global tables
+
+1086
+00:48:45,540 --> 00:48:47,340
+and asynchronous global tables.
+
+1087
+00:48:47,340 --> 00:48:48,630
+And let me just quickly recap
+
+1088
+00:48:48,630 --> 00:48:50,283
+the things which we talked about.
+
+1089
+00:48:52,110 --> 00:48:55,650
+Customers building applications
+sometimes need the ability
+
+1090
+00:48:55,650 --> 00:48:57,870
+to have data available
+in multiple regions,
+
+1091
+00:48:57,870 --> 00:49:00,570
+distributed applications
+if you want to have
+
+1092
+00:49:00,570 --> 00:49:04,230
+redundancy in the event that
+there's a regional failure.
+
+1093
+00:49:04,230 --> 00:49:09,230
+Some customers are able to
+tolerate a non-zero value of RPO.
+
+1094
+00:49:10,440 --> 00:49:14,910
+They are willing to
+replay that data themself.
+
+1095
+00:49:14,910 --> 00:49:16,920
+Others who are not will probably wanna use
+
+1096
+00:49:16,920 --> 00:49:18,840
+strongly consistent global tables.
+
+1097
+00:49:18,840 --> 00:49:22,230
+There are multiple trade offs
+when you go from one region
+
+1098
+00:49:22,230 --> 00:49:23,640
+to multiple regions,
+
+1099
+00:49:23,640 --> 00:49:26,310
+and when you go from
+multiple regions asynchronous
+
+1100
+00:49:26,310 --> 00:49:28,293
+to multiple regions synchronous.
+
+1101
+00:49:31,080 --> 00:49:33,060
+One of the things which we've realized
+
+1102
+00:49:33,060 --> 00:49:36,420
+is that building applications which scale
+
+1103
+00:49:36,420 --> 00:49:37,950
+is typically much easier
+
+1104
+00:49:37,950 --> 00:49:40,353
+if you're able to embrace
+eventual consistency.
+
+1105
+00:49:41,190 --> 00:49:44,313
+If you require everything
+to be done synchronously,
+
+1106
+00:49:45,150 --> 00:49:49,080
+you are at the mercy of
+having the long network lags.
+
+1107
+00:49:49,080 --> 00:49:51,780
+If you're able to tolerate
+eventual consistency,
+
+1108
+00:49:51,780 --> 00:49:54,930
+you can do everything with the inter-AZ
+
+1109
+00:49:54,930 --> 00:49:56,913
+or intra region costs.
+
+1110
+00:49:57,930 --> 00:49:59,280
+How does dynamo DynamoDB behave
+
+1111
+00:49:59,280 --> 00:50:02,190
+in single region versus multiple regions?
+
+1112
+00:50:02,190 --> 00:50:04,290
+And the most important
+thing is how to choose
+
+1113
+00:50:04,290 --> 00:50:06,900
+the write model for your application.
+
+1114
+00:50:06,900 --> 00:50:08,760
+But no matter which one you choose,
+
+1115
+00:50:08,760 --> 00:50:11,910
+the one thing which I will
+hope you take away is this.
+
+1116
+00:50:11,910 --> 00:50:15,153
+Test your application in all
+the possible failure states.
+
+1117
+00:50:16,170 --> 00:50:17,550
+We do a lot of that.
+
+1118
+00:50:17,550 --> 00:50:18,810
+We use P-model checkers.
+
+1119
+00:50:18,810 --> 00:50:21,120
+For those of you who
+are not familiar with P,
+
+1120
+00:50:21,120 --> 00:50:24,660
+it's a much more recent version
+of what you probably use,
+
+1121
+00:50:24,660 --> 00:50:26,550
+which is TLA plus.
+
+1122
+00:50:26,550 --> 00:50:29,160
+It is extremely useful
+to verify your algorithms
+
+1123
+00:50:29,160 --> 00:50:31,500
+are actually going to work
+the way you expect them to
+
+1124
+00:50:31,500 --> 00:50:32,700
+when there is a failure.
+
+1125
+00:50:33,720 --> 00:50:36,000
+Thank you very much for your time.
+
+1126
+00:50:36,000 --> 00:50:37,740
+We enjoy doing these presentations.
+
+1127
+00:50:37,740 --> 00:50:39,180
+We'd love to get your feedback.
+
+1128
+00:50:39,180 --> 00:50:42,120
+So please let us know what it
+is you wanna hear next time
+
+1129
+00:50:42,120 --> 00:50:43,230
+and we'll try and do that.
+
+1130
+00:50:43,230 --> 00:50:45,450
+Please take the feedback
+on your mobile app.
+
+1131
+00:50:45,450 --> 00:50:46,509
+Thank you.
+
+1132
+00:50:46,509 --> 00:50:48,878
+(audience applauding)
+

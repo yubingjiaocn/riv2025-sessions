@@ -1,0 +1,5478 @@
+1
+00:00:00,060 --> 00:00:03,450
+- Hey, everyone, welcome
+to re:Invent 2025.
+
+2
+00:00:03,450 --> 00:00:04,710
+Thank you for choosing to spend
+
+3
+00:00:04,710 --> 00:00:06,600
+the next one hour or so with us.
+
+4
+00:00:06,600 --> 00:00:08,760
+We're gonna make it worthwhile.
+
+5
+00:00:08,760 --> 00:00:10,080
+In this session, we'll discuss
+
+6
+00:00:10,080 --> 00:00:12,930
+how you can make your
+application data resilient
+
+7
+00:00:12,930 --> 00:00:15,180
+using Clumio, and these applications
+
+8
+00:00:15,180 --> 00:00:17,730
+can be Gen AI or otherwise.
+
+9
+00:00:17,730 --> 00:00:19,560
+We'll go through a host of scenarios
+
+10
+00:00:19,560 --> 00:00:22,320
+ranging all the way from NoSQL databases
+
+11
+00:00:22,320 --> 00:00:25,410
+to Rack data pipelines
+to data lake houses.
+
+12
+00:00:25,410 --> 00:00:26,670
+Quick round of introductions.
+
+13
+00:00:26,670 --> 00:00:27,990
+My name is Akshay Joshi.
+
+14
+00:00:27,990 --> 00:00:29,790
+I'm a senior director
+of product management
+
+15
+00:00:29,790 --> 00:00:32,400
+here at Clumio, and Clumio is now part
+
+16
+00:00:32,400 --> 00:00:36,150
+of the Commvault cloud portfolio,
+and I'm joined by Jeff.
+
+17
+00:00:36,150 --> 00:00:37,410
+- Good morning, everyone.
+
+18
+00:00:37,410 --> 00:00:38,700
+My name is Jeff Cassiana.
+
+19
+00:00:38,700 --> 00:00:41,490
+I am a principal engineer in
+our cloud sales organization
+
+20
+00:00:41,490 --> 00:00:44,670
+focusing on Clumio and AWS.
+
+21
+00:00:44,670 --> 00:00:46,230
+I'm also a former Amazonian.
+
+22
+00:00:46,230 --> 00:00:48,690
+I was a storage specialist
+solutions architect.
+
+23
+00:00:48,690 --> 00:00:51,030
+It's great to be speaking with you today.
+
+24
+00:00:51,030 --> 00:00:52,200
+- Cool.
+
+25
+00:00:52,200 --> 00:00:56,430
+All right, so let's get started.
+
+26
+00:00:56,430 --> 00:00:58,760
+Before we begin, let's take a look at why
+
+27
+00:00:58,760 --> 00:01:01,800
+we need to care about
+resilience right now.
+
+28
+00:01:01,800 --> 00:01:05,670
+AI is everywhere, and
+52% of the data leaders
+
+29
+00:01:05,670 --> 00:01:08,910
+that were surveyed by AWS said
+that their data foundations
+
+30
+00:01:08,910 --> 00:01:11,160
+are not ready for AI implementation,
+
+31
+00:01:11,160 --> 00:01:13,890
+and that's horrible.
+
+32
+00:01:13,890 --> 00:01:16,260
+And that's why we're here
+to talk about resilience
+
+33
+00:01:16,260 --> 00:01:17,460
+at the data layer.
+
+34
+00:01:17,460 --> 00:01:19,413
+It's absolutely foundational.
+
+35
+00:01:21,600 --> 00:01:22,443
+Oh.
+
+36
+00:01:26,040 --> 00:01:28,560
+- We wanna acknowledge something
+right off the bat, though.
+
+37
+00:01:28,560 --> 00:01:31,680
+Resiliency can mean a
+lot of different things,
+
+38
+00:01:31,680 --> 00:01:33,280
+but I think we can all agree
+
+39
+00:01:33,280 --> 00:01:35,943
+it's essential to your
+cloud infrastructure.
+
+40
+00:01:37,020 --> 00:01:39,330
+Akshay and I speak to
+customers all the time.
+
+41
+00:01:39,330 --> 00:01:41,430
+We speak to companies, and
+we get many definitions
+
+42
+00:01:41,430 --> 00:01:44,220
+of what resiliency is,
+but one thing's consistent
+
+43
+00:01:44,220 --> 00:01:46,680
+is that there are common occurrences
+
+44
+00:01:46,680 --> 00:01:49,320
+that affect resiliency in the cloud
+
+45
+00:01:49,320 --> 00:01:51,870
+in a pretty negative way,
+and we've put a few of those
+
+46
+00:01:51,870 --> 00:01:53,880
+as examples on the screen.
+
+47
+00:01:53,880 --> 00:01:55,840
+The first being an accidental deletion.
+
+48
+00:01:55,840 --> 00:01:59,430
+This can be somebody just
+accidentally making a mistake
+
+49
+00:01:59,430 --> 00:02:02,700
+and deleting a directory in
+your cloud infrastructure
+
+50
+00:02:02,700 --> 00:02:04,770
+that has some critical data on it.
+
+51
+00:02:04,770 --> 00:02:06,570
+It could be a cleanup script
+
+52
+00:02:06,570 --> 00:02:09,240
+that perhaps wasn't just fully dialed in.
+
+53
+00:02:09,240 --> 00:02:12,120
+It's basically a mistake,
+and mistakes occur.
+
+54
+00:02:12,120 --> 00:02:14,220
+Humans are mistake-prone.
+
+55
+00:02:14,220 --> 00:02:15,870
+They're not perfect, that can happen.
+
+56
+00:02:15,870 --> 00:02:20,310
+That's definitely one reason
+why resiliency is essential.
+
+57
+00:02:20,310 --> 00:02:22,980
+Another is something that
+we probably have all heard
+
+58
+00:02:22,980 --> 00:02:26,850
+in the news lately where
+code pushes maybe go wrong,
+
+59
+00:02:26,850 --> 00:02:30,450
+and it becomes a front page
+of the internet type event.
+
+60
+00:02:30,450 --> 00:02:32,070
+Software is not perfect.
+
+61
+00:02:32,070 --> 00:02:33,630
+It can create havoc.
+
+62
+00:02:33,630 --> 00:02:37,680
+It can create a scenario
+where resiliency does suffer,
+
+63
+00:02:37,680 --> 00:02:40,560
+and lastly, it's almost
+a hour-by-hour thing.
+
+64
+00:02:40,560 --> 00:02:42,330
+It's definitely a day-by-day thing
+
+65
+00:02:42,330 --> 00:02:46,260
+where bad actors act with negative intent
+
+66
+00:02:46,260 --> 00:02:48,300
+on your cloud infrastructure.
+
+67
+00:02:48,300 --> 00:02:49,710
+Prime example is ransomware,
+
+68
+00:02:49,710 --> 00:02:51,990
+but that's not the only example,
+
+69
+00:02:51,990 --> 00:02:55,290
+so we wanna establish what
+we believe resiliency to be
+
+70
+00:02:55,290 --> 00:02:57,640
+and why it is absolutely essential
+
+71
+00:02:57,640 --> 00:03:00,000
+in your cloud infrastructure.
+
+72
+00:03:00,000 --> 00:03:02,790
+Let's get some participation
+from the audience
+
+73
+00:03:02,790 --> 00:03:04,080
+if you don't mind.
+
+74
+00:03:04,080 --> 00:03:06,780
+We have a couple questions
+that we would like to see
+
+75
+00:03:06,780 --> 00:03:08,853
+you raise your hands in response to.
+
+76
+00:03:09,860 --> 00:03:14,420
+The first is how many of you
+are using the AWS Cloud today
+
+77
+00:03:14,420 --> 00:03:16,320
+to build your applications?
+
+78
+00:03:16,320 --> 00:03:17,250
+I already got one hand.
+
+79
+00:03:17,250 --> 00:03:21,000
+To build your applications
+in a generative AI way
+
+80
+00:03:21,000 --> 00:03:23,910
+with a generative AI or a
+large language model pipeline,
+
+81
+00:03:23,910 --> 00:03:25,560
+I see a bunch of raised hands.
+
+82
+00:03:25,560 --> 00:03:26,393
+That's great.
+
+83
+00:03:27,300 --> 00:03:30,870
+Like I mentioned, Akshay and
+I speak to a lot of companies
+
+84
+00:03:30,870 --> 00:03:33,660
+very frequently, and this is
+extremely common these days
+
+85
+00:03:33,660 --> 00:03:34,830
+in the AWS Cloud.
+
+86
+00:03:34,830 --> 00:03:39,120
+AWS is very effective at
+making that a reality.
+
+87
+00:03:39,120 --> 00:03:40,890
+One second question that I would love
+
+88
+00:03:40,890 --> 00:03:43,350
+to get a raise of hands about as well,
+
+89
+00:03:43,350 --> 00:03:46,050
+similar and related to
+the previous question,
+
+90
+00:03:46,050 --> 00:03:49,220
+how many of you are actually
+protecting the data layer
+
+91
+00:03:49,220 --> 00:03:52,530
+that powers these gen
+AI cloud applications?
+
+92
+00:03:52,530 --> 00:03:55,050
+Is that something you
+take seriously today,
+
+93
+00:03:55,050 --> 00:03:57,153
+or is it an overlooked factor?
+
+94
+00:03:58,530 --> 00:03:59,490
+Less hands.
+
+95
+00:03:59,490 --> 00:04:01,440
+That's actually very common.
+
+96
+00:04:01,440 --> 00:04:05,370
+It's very related to what Akshay
+and I hear from companies.
+
+97
+00:04:05,370 --> 00:04:08,010
+They're really building
+some incredible stuff
+
+98
+00:04:08,010 --> 00:04:12,000
+in the AWS Cloud that
+powers their chat bots,
+
+99
+00:04:12,000 --> 00:04:13,960
+but it's interesting how often
+
+100
+00:04:13,960 --> 00:04:15,993
+data protection is overlooked.
+
+101
+00:04:17,860 --> 00:04:22,020
+We're gonna paint a real-world
+picture for you today.
+
+102
+00:04:22,020 --> 00:04:23,820
+We created a fictitious app.
+
+103
+00:04:23,820 --> 00:04:25,470
+I wanna emphasize this is not real.
+
+104
+00:04:25,470 --> 00:04:28,860
+We didn't get permission to
+use any actual real apps.
+
+105
+00:04:28,860 --> 00:04:30,870
+There's actually a
+little bit of humor here,
+
+106
+00:04:30,870 --> 00:04:32,100
+lightheartedness.
+
+107
+00:04:32,100 --> 00:04:35,190
+It was vibe coded by our
+CTO in about a weekend.
+
+108
+00:04:35,190 --> 00:04:36,030
+It's really kind of cool.
+
+109
+00:04:36,030 --> 00:04:36,990
+I'm very impressed by it.
+
+110
+00:04:36,990 --> 00:04:39,720
+It's called Clumio Final Cut.
+
+111
+00:04:39,720 --> 00:04:42,120
+Think of it as an app, a smartphone app
+
+112
+00:04:42,120 --> 00:04:45,330
+that similar to probably
+what you use today.
+
+113
+00:04:45,330 --> 00:04:48,300
+It's using an openly available data set
+
+114
+00:04:48,300 --> 00:04:51,450
+of thousands of movies,
+actual real movies,
+
+115
+00:04:51,450 --> 00:04:52,770
+that typically is used
+
+116
+00:04:52,770 --> 00:04:55,053
+for machine learning type experimentation.
+
+117
+00:04:56,370 --> 00:04:58,440
+And here's the picture we wanna paint.
+
+118
+00:04:58,440 --> 00:05:01,260
+We'll call this user Sharon here.
+
+119
+00:05:01,260 --> 00:05:02,280
+Let's go ahead and press play.
+
+120
+00:05:02,280 --> 00:05:03,933
+We have a video going here.
+
+121
+00:05:05,310 --> 00:05:06,480
+This is our user Sharon.
+
+122
+00:05:06,480 --> 00:05:08,340
+She's using the Clumio Flick app.
+
+123
+00:05:08,340 --> 00:05:11,670
+She's loving it, but all of
+a sudden, something happens.
+
+124
+00:05:11,670 --> 00:05:13,710
+Resiliency is suffering.
+
+125
+00:05:13,710 --> 00:05:17,560
+She tries to go use the AI
+chatbot as a part of the app
+
+126
+00:05:17,560 --> 00:05:19,860
+to provide her with recommendations
+
+127
+00:05:19,860 --> 00:05:24,720
+of what she wants to watch
+next, and it starts to fail.
+
+128
+00:05:24,720 --> 00:05:28,110
+There's her using the
+movie assistant chatbot
+
+129
+00:05:28,110 --> 00:05:30,003
+as a part of the app that we built.
+
+130
+00:05:31,170 --> 00:05:34,290
+And you can see errors
+are starting to pop up.
+
+131
+00:05:34,290 --> 00:05:35,670
+It failed to load.
+
+132
+00:05:35,670 --> 00:05:37,050
+She has a watch list.
+
+133
+00:05:37,050 --> 00:05:39,090
+It's not finding her entries.
+
+134
+00:05:39,090 --> 00:05:40,380
+She's frustrated.
+
+135
+00:05:40,380 --> 00:05:43,180
+She went from happy to unhappy.
+
+136
+00:05:43,180 --> 00:05:45,390
+Like a typical smartphone user
+
+137
+00:05:45,390 --> 00:05:49,380
+who have come to expect extremely
+good performance from AWS
+
+138
+00:05:49,380 --> 00:05:52,050
+because AWS has set the
+bar very high with that,
+
+139
+00:05:52,050 --> 00:05:54,000
+she goes to her favorite social media app
+
+140
+00:05:54,000 --> 00:05:55,620
+and starts complaining.
+
+141
+00:05:55,620 --> 00:05:57,690
+Perhaps her friends see her complaints,
+
+142
+00:05:57,690 --> 00:06:00,660
+the people she follows, they
+start noticing the failures.
+
+143
+00:06:00,660 --> 00:06:01,830
+This is a bad day.
+
+144
+00:06:01,830 --> 00:06:04,833
+This is a failure of
+the cloud application.
+
+145
+00:06:09,540 --> 00:06:12,480
+Let's dissect what's going on here.
+
+146
+00:06:12,480 --> 00:06:13,410
+And in order to do that,
+
+147
+00:06:13,410 --> 00:06:14,940
+I'm gonna pass it back over to Akshay
+
+148
+00:06:14,940 --> 00:06:17,190
+to explain the first
+part of the cloud app.
+
+149
+00:06:17,190 --> 00:06:18,450
+- Thank you, Jeff.
+
+150
+00:06:18,450 --> 00:06:22,140
+All right, we all saw Sharon
+struggle with the application.
+
+151
+00:06:22,140 --> 00:06:24,490
+Now let's see how we can
+dissect the application
+
+152
+00:06:24,490 --> 00:06:26,823
+and see what's happening under the hood.
+
+153
+00:06:27,870 --> 00:06:30,420
+So let's go feature by feature.
+
+154
+00:06:30,420 --> 00:06:32,520
+The first feature that
+Sharon struggled with
+
+155
+00:06:32,520 --> 00:06:35,670
+was the user profile data
+and the watch list data.
+
+156
+00:06:35,670 --> 00:06:38,750
+And the application uses
+DynamoDB under the hood
+
+157
+00:06:38,750 --> 00:06:42,240
+to store user profile data
+and the watch list data.
+
+158
+00:06:42,240 --> 00:06:44,490
+And DynamoDB is actually a perfect choice
+
+159
+00:06:44,490 --> 00:06:46,260
+to store that kind of data
+
+160
+00:06:46,260 --> 00:06:49,290
+because it's inherently partitioned
+
+161
+00:06:49,290 --> 00:06:51,420
+and it's multi-tenant in nature.
+
+162
+00:06:51,420 --> 00:06:54,480
+And finally, it's also highly scalable.
+
+163
+00:06:54,480 --> 00:06:58,610
+Now, a couple of our customers
+actually use DynamoDB
+
+164
+00:06:58,610 --> 00:07:02,373
+for the very same reasons,
+to store user data.
+
+165
+00:07:04,820 --> 00:07:09,030
+While scalable, it's also
+absolutely vulnerable.
+
+166
+00:07:09,030 --> 00:07:12,090
+So imagine a standard canary deployment
+
+167
+00:07:12,090 --> 00:07:16,530
+where you're updating your
+application in tranches.
+
+168
+00:07:16,530 --> 00:07:19,080
+Users get the updates in tranches.
+
+169
+00:07:19,080 --> 00:07:20,880
+And if a code push goes wrong,
+
+170
+00:07:20,880 --> 00:07:23,250
+this may be due to a bug, for example,
+
+171
+00:07:23,250 --> 00:07:25,740
+the users won't be able
+to access the data at all
+
+172
+00:07:25,740 --> 00:07:28,920
+because those partitions
+would get corrupted.
+
+173
+00:07:28,920 --> 00:07:31,860
+And that's what happened
+to Sharon in our example.
+
+174
+00:07:31,860 --> 00:07:35,850
+She couldn't use her user
+profile or watch list screens
+
+175
+00:07:35,850 --> 00:07:39,363
+because the underlying
+DynamoDB table got impacted.
+
+176
+00:07:40,940 --> 00:07:45,030
+Now, let's visualize
+the problem a bit more.
+
+177
+00:07:45,030 --> 00:07:47,370
+Let's see how the event unfolded.
+
+178
+00:07:47,370 --> 00:07:52,020
+As I mentioned, the canary
+deployment starts at 1 p.m. here
+
+179
+00:07:52,020 --> 00:07:55,980
+and then partitions are
+being updated in tranches.
+
+180
+00:07:55,980 --> 00:07:58,860
+And at 2.30 p.m., somebody reports a bug
+
+181
+00:07:58,860 --> 00:08:03,423
+that your DynamoDB partitions
+have been corrupted.
+
+182
+00:08:04,500 --> 00:08:06,270
+Thankfully though, in this example,
+
+183
+00:08:06,270 --> 00:08:09,150
+only a couple of partitions were impacted
+
+184
+00:08:09,150 --> 00:08:11,120
+but then there could be a scenario
+
+185
+00:08:11,120 --> 00:08:14,730
+where thousands of DynamoDB
+partitions may get impacted
+
+186
+00:08:14,730 --> 00:08:16,140
+because it's highly scalable
+
+187
+00:08:16,140 --> 00:08:20,130
+and consumer apps usually
+have millions of users.
+
+188
+00:08:20,130 --> 00:08:25,130
+So the complication here is
+that every single partition
+
+189
+00:08:25,950 --> 00:08:28,530
+gets impacted at a different timestamp.
+
+190
+00:08:28,530 --> 00:08:32,820
+So the last known good
+copy of a DynamoDB table
+
+191
+00:08:32,820 --> 00:08:35,560
+is actually not a single timestamp.
+
+192
+00:08:35,560 --> 00:08:38,490
+It depends on the
+partition that's impacted.
+
+193
+00:08:38,490 --> 00:08:40,560
+And that's the complication
+that we're gonna explore
+
+194
+00:08:40,560 --> 00:08:43,683
+and learn about how to
+recover from in this session.
+
+195
+00:08:44,980 --> 00:08:47,130
+All right, so in case of such an event,
+
+196
+00:08:47,130 --> 00:08:48,980
+let's wear the hat of an SRE.
+
+197
+00:08:48,980 --> 00:08:51,420
+SRE has four recovery imperatives
+
+198
+00:08:51,420 --> 00:08:53,370
+to deal with at that point.
+
+199
+00:08:53,370 --> 00:08:54,900
+First, they'll have to recover
+
+200
+00:08:54,900 --> 00:08:56,670
+to a known good point in time.
+
+201
+00:08:56,670 --> 00:08:59,040
+And the challenge, as we all know,
+
+202
+00:08:59,040 --> 00:09:00,870
+is that every single partition
+
+203
+00:09:00,870 --> 00:09:05,160
+can have a different last good known copy.
+
+204
+00:09:05,160 --> 00:09:09,000
+And then number two,
+you need to also ensure
+
+205
+00:09:09,000 --> 00:09:11,540
+that the reconfiguration
+at the application level
+
+206
+00:09:11,540 --> 00:09:14,250
+is as little as possible.
+
+207
+00:09:14,250 --> 00:09:15,420
+Because you don't have to deal
+
+208
+00:09:15,420 --> 00:09:17,020
+with reconfiguring the application
+
+209
+00:09:17,020 --> 00:09:19,830
+to talk to a different DynamoDB instance.
+
+210
+00:09:19,830 --> 00:09:22,983
+And that can be a
+time-consuming operation.
+
+211
+00:09:23,910 --> 00:09:26,400
+Number three, of course, TCL.
+
+212
+00:09:26,400 --> 00:09:28,500
+You need to ensure that the resources
+
+213
+00:09:28,500 --> 00:09:32,220
+that you end up spending to
+get the app back up online
+
+214
+00:09:32,220 --> 00:09:34,920
+is as minimal as possible.
+
+215
+00:09:34,920 --> 00:09:38,070
+And finally, you need to ensure
+the best user experience,
+
+216
+00:09:38,070 --> 00:09:40,620
+which means little to no downtime.
+
+217
+00:09:40,620 --> 00:09:43,680
+And we don't want Sharon to get frustrated
+
+218
+00:09:43,680 --> 00:09:45,723
+and go on social media at that point.
+
+219
+00:09:47,550 --> 00:09:49,560
+So let's take a look
+at how you can recover
+
+220
+00:09:49,560 --> 00:09:50,910
+from such an event.
+
+221
+00:09:50,910 --> 00:09:52,620
+I'm gonna talk about two different ways
+
+222
+00:09:52,620 --> 00:09:54,960
+of recovering from any event.
+
+223
+00:09:54,960 --> 00:09:58,350
+One, the hard way, and
+two, the simple way,
+
+224
+00:09:58,350 --> 00:10:00,540
+which is the Clumio way.
+
+225
+00:10:00,540 --> 00:10:03,960
+So in the absence of Clumio,
+it's an arduous process.
+
+226
+00:10:03,960 --> 00:10:07,650
+For each partition's last
+known good point in time,
+
+227
+00:10:07,650 --> 00:10:10,590
+you have to do a full restore.
+
+228
+00:10:10,590 --> 00:10:13,740
+And mind you, this is for
+each and every partition
+
+229
+00:10:13,740 --> 00:10:16,620
+that's impacted, you'll
+have to do a full restore.
+
+230
+00:10:16,620 --> 00:10:19,200
+And then you need to
+cherry-pick the pieces
+
+231
+00:10:19,200 --> 00:10:21,960
+for each partition from the full restores,
+
+232
+00:10:21,960 --> 00:10:23,580
+copy it back to the source table
+
+233
+00:10:23,580 --> 00:10:26,880
+so that you don't have to
+reconfigure the application
+
+234
+00:10:26,880 --> 00:10:29,070
+at a later point in time.
+
+235
+00:10:29,070 --> 00:10:31,860
+And finally, delete all
+the temporary tables
+
+236
+00:10:31,860 --> 00:10:33,480
+that you've created.
+
+237
+00:10:33,480 --> 00:10:37,280
+And finally, I want to mention
+that you have to do this
+
+238
+00:10:37,280 --> 00:10:40,470
+over and over again for
+every single partition
+
+239
+00:10:40,470 --> 00:10:42,240
+that's impacted.
+
+240
+00:10:42,240 --> 00:10:44,130
+If you have 1,000 partitions impacted,
+
+241
+00:10:44,130 --> 00:10:45,840
+you'll have to do this 1,000 times.
+
+242
+00:10:45,840 --> 00:10:47,580
+Now imagine that.
+
+243
+00:10:47,580 --> 00:10:48,963
+That's recovery hell.
+
+244
+00:10:51,450 --> 00:10:54,420
+And now, let's take a
+look at how simple it is
+
+245
+00:10:54,420 --> 00:10:58,140
+to recover using Clumio
+Backtrack for DynamoDB.
+
+246
+00:10:58,140 --> 00:11:00,800
+It's literally a two-step process.
+
+247
+00:11:00,800 --> 00:11:05,130
+Step number one, you pick a point in time,
+
+248
+00:11:05,130 --> 00:11:07,260
+choose a partition that you wanna recover,
+
+249
+00:11:07,260 --> 00:11:09,750
+hit recover, and that's about it.
+
+250
+00:11:09,750 --> 00:11:14,010
+It recovers only what's needed
+for every single partition
+
+251
+00:11:14,010 --> 00:11:16,560
+to the point in time that you've selected
+
+252
+00:11:16,560 --> 00:11:18,180
+and directly to the source table
+
+253
+00:11:18,180 --> 00:11:21,900
+so you don't have to reconfigure
+the application at all.
+
+254
+00:11:21,900 --> 00:11:25,470
+And step number two, there is no step two.
+
+255
+00:11:25,470 --> 00:11:28,320
+Simple as that, all right?
+
+256
+00:11:28,320 --> 00:11:31,840
+So let's learn a bit more
+
+257
+00:11:31,840 --> 00:11:34,170
+about Clumio Backtrack for DynamoDB.
+
+258
+00:11:34,170 --> 00:11:36,330
+We launched Clumio Backtrack for DynamoDB
+
+259
+00:11:36,330 --> 00:11:38,280
+back in June of this year.
+
+260
+00:11:38,280 --> 00:11:40,860
+It's essentially a recovery modality
+
+261
+00:11:40,860 --> 00:11:42,690
+with three distinct features.
+
+262
+00:11:42,690 --> 00:11:46,650
+One, you can recover to any point in time
+
+263
+00:11:46,650 --> 00:11:49,350
+that's available in your backup.
+
+264
+00:11:49,350 --> 00:11:51,510
+Two, it's in-place restore.
+
+265
+00:11:51,510 --> 00:11:54,380
+It means that it goes back
+to the source table directly
+
+266
+00:11:54,380 --> 00:11:57,080
+so that you don't have to
+create temporary tables,
+
+267
+00:11:57,080 --> 00:12:01,380
+repoint the application to
+talk to a different restored
+
+268
+00:12:01,380 --> 00:12:04,710
+DynamoDB table or none of that.
+
+269
+00:12:04,710 --> 00:12:07,560
+And then three, granular recovery.
+
+270
+00:12:07,560 --> 00:12:10,300
+You can perform a recovery
+at any granularity
+
+271
+00:12:10,300 --> 00:12:13,320
+and this can be, in the case of DynamoDB,
+
+272
+00:12:13,320 --> 00:12:15,570
+it can be at the record
+level, partition level,
+
+273
+00:12:15,570 --> 00:12:17,580
+or at the table level itself.
+
+274
+00:12:17,580 --> 00:12:21,570
+Now let's see the feature
+and the event in action.
+
+275
+00:12:21,570 --> 00:12:24,390
+I'm gonna hand it back to Jeff
+
+276
+00:12:24,390 --> 00:12:26,163
+to show you a quick demo on that.
+
+277
+00:12:28,060 --> 00:12:29,133
+- Thank you, Akshay.
+
+278
+00:12:31,200 --> 00:12:34,920
+We prerecorded a demo of our vibecoded app
+
+279
+00:12:34,920 --> 00:12:38,070
+called Clumio Flick and what
+I'm gonna demonstrate today
+
+280
+00:12:38,070 --> 00:12:41,280
+is what Akshay just explained
+about what Clumio Backtrack
+
+281
+00:12:41,280 --> 00:12:43,590
+for DynamoDB is capable of doing.
+
+282
+00:12:43,590 --> 00:12:45,210
+What you see on the screen right here
+
+283
+00:12:45,210 --> 00:12:47,940
+is what we call the movie watch list.
+
+284
+00:12:47,940 --> 00:12:50,760
+But this particular part
+of the app is a watch list
+
+285
+00:12:50,760 --> 00:12:52,260
+that allows you to search
+
+286
+00:12:52,260 --> 00:12:55,200
+for a particular customer's watch list
+
+287
+00:12:55,200 --> 00:12:58,530
+and it is all entirely based on DynamoDB.
+
+288
+00:12:58,530 --> 00:13:00,000
+You can see I've highlighted the section
+
+289
+00:13:00,000 --> 00:13:03,320
+that all of these records are
+coming from DynamoDB items.
+
+290
+00:13:03,320 --> 00:13:06,633
+What I'm gonna do is I'm gonna
+search for Customer ID 3.
+
+291
+00:13:07,720 --> 00:13:11,370
+That takes me to Customer
+ID 3's specific watch page,
+
+292
+00:13:11,370 --> 00:13:13,440
+so very similar to what
+you might experience
+
+293
+00:13:13,440 --> 00:13:15,930
+in your favorite movie smartphone app.
+
+294
+00:13:15,930 --> 00:13:17,730
+In that customer watch list,
+
+295
+00:13:17,730 --> 00:13:19,530
+I have two things that I can do.
+
+296
+00:13:19,530 --> 00:13:23,610
+I can use the AI Movie
+Assistant as a chatbot
+
+297
+00:13:23,610 --> 00:13:27,450
+to interact with our large
+language model pipeline
+
+298
+00:13:27,450 --> 00:13:30,300
+and ask questions using
+natural language prompts.
+
+299
+00:13:30,300 --> 00:13:31,597
+In this case, I'm gonna ask,
+
+300
+00:13:31,597 --> 00:13:34,170
+"Tell me more about the
+movie Clumio to the Moon."
+
+301
+00:13:34,170 --> 00:13:35,660
+I mentioned we're using real movies
+
+302
+00:13:35,660 --> 00:13:37,560
+in this openly available dataset,
+
+303
+00:13:37,560 --> 00:13:40,200
+but we did insert one just
+for a little bit of humor
+
+304
+00:13:40,200 --> 00:13:44,250
+that is related to a fictitious
+movie that Clumio created.
+
+305
+00:13:44,250 --> 00:13:45,210
+And then in the watch list,
+
+306
+00:13:45,210 --> 00:13:46,590
+it's actually mentioned in there.
+
+307
+00:13:46,590 --> 00:13:48,540
+And then I'm gonna show
+you in the AWS console
+
+308
+00:13:48,540 --> 00:13:49,627
+where all of this is coming from.
+
+309
+00:13:49,627 --> 00:13:51,480
+We have a DynamoDB table
+
+310
+00:13:51,480 --> 00:13:53,790
+that has all of the user
+watch lists in there.
+
+311
+00:13:53,790 --> 00:13:57,450
+I'm gonna filter the table by
+just the Customer ID 3 items,
+
+312
+00:13:57,450 --> 00:13:59,580
+and you can see the corresponding items
+
+313
+00:13:59,580 --> 00:14:00,780
+in that DynamoDB table.
+
+314
+00:14:00,780 --> 00:14:04,110
+This is the critical data to
+ensure a good user experience
+
+315
+00:14:04,110 --> 00:14:06,780
+is resilient for Customer ID 3.
+
+316
+00:14:06,780 --> 00:14:09,570
+You can see in the Movie
+AI Assistant chatbot,
+
+317
+00:14:09,570 --> 00:14:12,210
+it has responded with
+some really interesting,
+
+318
+00:14:12,210 --> 00:14:14,190
+rich information about Clumio to the Moon.
+
+319
+00:14:14,190 --> 00:14:15,900
+Things like the plot of the movie,
+
+320
+00:14:15,900 --> 00:14:17,920
+some interesting metadata about revenue,
+
+321
+00:14:17,920 --> 00:14:22,000
+even some catchphrases
+when the movie was created,
+
+322
+00:14:22,000 --> 00:14:24,390
+and the genre as well.
+
+323
+00:14:24,390 --> 00:14:25,410
+This is a happy state.
+
+324
+00:14:25,410 --> 00:14:29,040
+This is Sharon loving the
+app, having a great time,
+
+325
+00:14:29,040 --> 00:14:30,510
+a user that will come back,
+
+326
+00:14:30,510 --> 00:14:32,820
+a user that will be loyal to you.
+
+327
+00:14:32,820 --> 00:14:35,490
+Let's simulate an unhappy situation.
+
+328
+00:14:35,490 --> 00:14:38,370
+Let's simulate a bad day,
+a bad user experience.
+
+329
+00:14:38,370 --> 00:14:40,940
+We're gonna do that with a
+Python script that we created
+
+330
+00:14:40,940 --> 00:14:44,460
+that will purposely,
+let's simulate corruption
+
+331
+00:14:44,460 --> 00:14:48,000
+in Customer ID's DynamoDB items.
+
+332
+00:14:48,000 --> 00:14:49,950
+Essentially, we're removing them,
+
+333
+00:14:49,950 --> 00:14:52,740
+simulating perhaps an
+accidental deletion scenario
+
+334
+00:14:52,740 --> 00:14:54,303
+like I mentioned a second ago.
+
+335
+00:14:57,540 --> 00:15:01,500
+I refreshed the User ID's,
+Customer ID 3's watch list page.
+
+336
+00:15:01,500 --> 00:15:02,910
+Everything's gone.
+
+337
+00:15:02,910 --> 00:15:05,700
+This is absolutely a
+demonstration of what we showed
+
+338
+00:15:05,700 --> 00:15:07,800
+that Sharon experienced a second ago.
+
+339
+00:15:07,800 --> 00:15:09,450
+There's nothing there.
+
+340
+00:15:09,450 --> 00:15:11,460
+Unhappy customer, unhappy user.
+
+341
+00:15:11,460 --> 00:15:13,710
+I'm gonna refresh the DynamoDB table.
+
+342
+00:15:13,710 --> 00:15:15,630
+That simulated corruption
+
+343
+00:15:15,630 --> 00:15:19,140
+has completely removed
+Customer ID's entries
+
+344
+00:15:19,140 --> 00:15:20,670
+and there's no matches found now
+
+345
+00:15:20,670 --> 00:15:23,280
+when I filter for that
+particular customer.
+
+346
+00:15:23,280 --> 00:15:26,360
+The good news is we are
+taking a backup of this table
+
+347
+00:15:26,360 --> 00:15:28,203
+and we have been for some time.
+
+348
+00:15:28,203 --> 00:15:29,460
+What you're seeing on the screen
+
+349
+00:15:29,460 --> 00:15:31,050
+is the Clumio SaaS interface.
+
+350
+00:15:31,050 --> 00:15:33,600
+Our calendar view,
+everywhere you see a dot
+
+351
+00:15:33,600 --> 00:15:35,250
+in that calendar view is a point in time
+
+352
+00:15:35,250 --> 00:15:36,573
+we can recover back to.
+
+353
+00:15:37,620 --> 00:15:39,240
+Usually, like Akshay was mentioning,
+
+354
+00:15:39,240 --> 00:15:41,380
+this is a very difficult
+process to restore.
+
+355
+00:15:41,380 --> 00:15:44,520
+Resiliency and faith in
+your customer with Clumio.
+
+356
+00:15:44,520 --> 00:15:47,130
+All I need to do, and I
+have different options here,
+
+357
+00:15:47,130 --> 00:15:48,990
+is choose a recovery modality.
+
+358
+00:15:48,990 --> 00:15:50,370
+The first one I'm gonna show you
+
+359
+00:15:50,370 --> 00:15:53,520
+is our cyber resilient recovery modality.
+
+360
+00:15:53,520 --> 00:15:55,950
+So unlike the simulation we're creating
+
+361
+00:15:55,950 --> 00:15:58,020
+where there's been accidental deletion,
+
+362
+00:15:58,020 --> 00:16:01,080
+that's ideal for if there is
+a compromise of some kind,
+
+363
+00:16:01,080 --> 00:16:03,270
+a cyber related threat.
+
+364
+00:16:03,270 --> 00:16:05,380
+You're recovering the DynamoDB table
+
+365
+00:16:05,380 --> 00:16:07,640
+or individual Customer ID's item
+
+366
+00:16:07,640 --> 00:16:10,400
+from an air-gapped immutable secure copy
+
+367
+00:16:10,400 --> 00:16:12,720
+that will be unaffected in the event
+
+368
+00:16:12,720 --> 00:16:14,523
+of a cyber related incident.
+
+369
+00:16:15,600 --> 00:16:16,880
+I have multiple different points in time
+
+370
+00:16:16,880 --> 00:16:19,620
+in just that particular
+day in the calendar.
+
+371
+00:16:19,620 --> 00:16:22,200
+So I have a lot of choices here.
+
+372
+00:16:22,200 --> 00:16:23,240
+But what I wanna demonstrate
+
+373
+00:16:23,240 --> 00:16:27,270
+is going back to a point in time in place.
+
+374
+00:16:27,270 --> 00:16:28,530
+Something that we announced,
+
+375
+00:16:28,530 --> 00:16:31,470
+like Akshay mentioned a couple months ago,
+
+376
+00:16:31,470 --> 00:16:33,990
+with Clumio Backtrack for DynamoDB.
+
+377
+00:16:33,990 --> 00:16:36,330
+What you can see on the screen
+is I picked a point in time.
+
+378
+00:16:36,330 --> 00:16:37,680
+I know the text is a little small,
+
+379
+00:16:37,680 --> 00:16:40,680
+but I did pick a point in time
+where I know that there is
+
+380
+00:16:40,680 --> 00:16:43,860
+a good DynamoDB recovery
+point to go back to,
+
+381
+00:16:43,860 --> 00:16:45,567
+and I'm given three options.
+
+382
+00:16:45,567 --> 00:16:48,180
+The one I'm highlighting
+is the in place option.
+
+383
+00:16:48,180 --> 00:16:50,370
+That is the Clumio Backtrack for DynamoDB.
+
+384
+00:16:50,370 --> 00:16:52,860
+That is avoiding all of
+the app reconfiguration
+
+385
+00:16:52,860 --> 00:16:54,720
+that Akshay mentioned just a second ago,
+
+386
+00:16:54,720 --> 00:16:58,920
+and recovering Customer
+ID's specific item entries
+
+387
+00:16:58,920 --> 00:17:01,140
+alone in place.
+
+388
+00:17:01,140 --> 00:17:05,340
+All I need to do is search for
+the Customer ID string three,
+
+389
+00:17:05,340 --> 00:17:07,340
+which I'll do at the bottom here.
+
+390
+00:17:07,340 --> 00:17:11,880
+When I press Preview, it'll
+query that point in time
+
+391
+00:17:11,880 --> 00:17:13,980
+to make sure that what I wanna recover
+
+392
+00:17:13,980 --> 00:17:16,080
+is actually correct in there.
+
+393
+00:17:16,080 --> 00:17:19,830
+I've successfully found
+the recovery items.
+
+394
+00:17:19,830 --> 00:17:23,120
+I'm given a summary of
+what I'm about to do,
+
+395
+00:17:23,120 --> 00:17:25,860
+just to confirm that I'm
+doing the right thing.
+
+396
+00:17:25,860 --> 00:17:27,400
+I'm gonna initiate the restore
+
+397
+00:17:27,400 --> 00:17:30,340
+that has created a
+brand new task in Clumio
+
+398
+00:17:30,340 --> 00:17:33,560
+that I can monitor for completeness.
+
+399
+00:17:33,560 --> 00:17:35,340
+The very beginning of the task,
+
+400
+00:17:35,340 --> 00:17:38,460
+it is queued, and through
+the magic of video editing,
+
+401
+00:17:38,460 --> 00:17:39,780
+we're just going to skip ahead
+
+402
+00:17:39,780 --> 00:17:42,780
+to when the actual task has completed.
+
+403
+00:17:42,780 --> 00:17:45,420
+And in order to prove that
+it has been completed,
+
+404
+00:17:45,420 --> 00:17:47,940
+and this is a very similar
+scenario to what you might do,
+
+405
+00:17:47,940 --> 00:17:50,160
+I'm just gonna refresh the DynamoDB table.
+
+406
+00:17:50,160 --> 00:17:51,750
+All of the entries have recovered,
+
+407
+00:17:51,750 --> 00:17:54,090
+and they're back to where they should be.
+
+408
+00:17:54,090 --> 00:17:56,220
+And just like what a user would experience
+
+409
+00:17:56,220 --> 00:17:59,760
+like our user Sharon, close
+the app in my smartphone,
+
+410
+00:17:59,760 --> 00:18:03,080
+reopen it, it refreshes the
+page, all of my movies are back.
+
+411
+00:18:03,080 --> 00:18:07,020
+We have successfully restored
+resiliency in our application
+
+412
+00:18:07,020 --> 00:18:09,243
+because of a DynamoDB issue.
+
+413
+00:18:11,370 --> 00:18:12,840
+We're gonna give you another scenario.
+
+414
+00:18:12,840 --> 00:18:15,810
+This has to do with S3 specifically.
+
+415
+00:18:15,810 --> 00:18:18,570
+For that, I'll pass it
+back over to Akshay.
+
+416
+00:18:18,570 --> 00:18:19,650
+- All right, thank you, Jeff.
+
+417
+00:18:19,650 --> 00:18:21,360
+That was a great demo.
+
+418
+00:18:21,360 --> 00:18:23,760
+The second feature that
+we're gonna talk about today
+
+419
+00:18:23,760 --> 00:18:25,620
+is the concierge chat bot.
+
+420
+00:18:25,620 --> 00:18:28,110
+You would have seen Sharon
+interacting with the chat bot
+
+421
+00:18:28,110 --> 00:18:31,830
+where she's asking
+recommendations about movies,
+
+422
+00:18:31,830 --> 00:18:35,760
+and then more details about
+the movies that she watched.
+
+423
+00:18:35,760 --> 00:18:38,400
+So that's the chat bot using,
+
+424
+00:18:38,400 --> 00:18:41,340
+I mean, that's built using
+a large language model.
+
+425
+00:18:41,340 --> 00:18:44,100
+And again, this is a typical LLM feature
+
+426
+00:18:44,100 --> 00:18:48,120
+with a rack data pipeline
+that we're all familiar with.
+
+427
+00:18:48,120 --> 00:18:49,710
+It has three components.
+
+428
+00:18:49,710 --> 00:18:53,940
+One is it has a bunch of
+objects with movie details.
+
+429
+00:18:53,940 --> 00:18:57,780
+These could be like text
+files, PDFs, or JSON files,
+
+430
+00:18:57,780 --> 00:19:00,400
+all of that storing
+movie-related information.
+
+431
+00:19:00,400 --> 00:19:02,940
+And it's stored in an S3 bucket.
+
+432
+00:19:02,940 --> 00:19:04,680
+And then there is a vector store
+
+433
+00:19:04,680 --> 00:19:07,590
+where we've computed all
+the vector embeddings
+
+434
+00:19:07,590 --> 00:19:09,720
+from the S3 bucket data,
+
+435
+00:19:09,720 --> 00:19:13,650
+and we've stored it in S3
+vectors for this example.
+
+436
+00:19:13,650 --> 00:19:15,580
+And then finally, the LLM layer
+
+437
+00:19:15,580 --> 00:19:19,080
+connects to the vectorized database.
+
+438
+00:19:19,080 --> 00:19:23,490
+And that is what enables the
+LLM to answer the questions
+
+439
+00:19:23,490 --> 00:19:25,710
+that you ask about any movie
+
+440
+00:19:25,710 --> 00:19:27,580
+that's available on the app.
+
+441
+00:19:27,580 --> 00:19:32,580
+Now, again, if the S3 data itself is lost,
+
+442
+00:19:32,580 --> 00:19:34,983
+then it's gonna be,
+
+443
+00:19:35,820 --> 00:19:38,820
+basically, the vectors
+would be pointing nowhere.
+
+444
+00:19:38,820 --> 00:19:41,760
+So in that case, the Final Cut chat bot
+
+445
+00:19:41,760 --> 00:19:44,620
+won't be able to talk to the vector store
+
+446
+00:19:44,620 --> 00:19:47,640
+because the vectors themselves
+are pointing nowhere.
+
+447
+00:19:47,640 --> 00:19:51,390
+And then finally, Sharon won't
+be able to get the answers
+
+448
+00:19:51,390 --> 00:19:54,990
+that she needs from the
+large language model.
+
+449
+00:19:54,990 --> 00:19:57,690
+So now, let's see how the event unfolded
+
+450
+00:19:57,690 --> 00:20:02,260
+here, you can see that
+as the objects are lost,
+
+451
+00:20:02,260 --> 00:20:05,460
+the LLM starts going rogue.
+
+452
+00:20:05,460 --> 00:20:09,240
+You can see that the LLM is not being,
+
+453
+00:20:09,240 --> 00:20:12,750
+not answering the
+questions satisfactorily.
+
+454
+00:20:12,750 --> 00:20:16,500
+We all know that "Love Actually"
+is not an action movie.
+
+455
+00:20:16,500 --> 00:20:19,560
+So the LLM has basically gone rogue,
+
+456
+00:20:19,560 --> 00:20:22,160
+and the vector store
+is essentially useless
+
+457
+00:20:22,160 --> 00:20:27,160
+if the bucket data that it's
+pointing to is not available.
+
+458
+00:20:28,080 --> 00:20:31,590
+Now, let's take a look at
+the recovery imperatives
+
+459
+00:20:31,590 --> 00:20:32,670
+once again.
+
+460
+00:20:32,670 --> 00:20:34,830
+I mean, coming back to the SRE persona
+
+461
+00:20:34,830 --> 00:20:36,840
+that we keep talking about.
+
+462
+00:20:36,840 --> 00:20:38,940
+So there are a few changes,
+
+463
+00:20:38,940 --> 00:20:40,980
+it's again the four recovery imperatives
+
+464
+00:20:40,980 --> 00:20:43,800
+that the SREs deal with in this scenario,
+
+465
+00:20:43,800 --> 00:20:45,483
+but then there are a few changes.
+
+466
+00:20:46,920 --> 00:20:49,230
+First one is that there should be
+
+467
+00:20:49,230 --> 00:20:51,420
+as little data loss as possible
+
+468
+00:20:51,420 --> 00:20:56,420
+because the vector data is
+pointing to the S3 bucket data,
+
+469
+00:20:56,790 --> 00:20:59,070
+even if there's a small
+amount of data loss
+
+470
+00:20:59,070 --> 00:21:00,780
+at the S3 bucket level,
+
+471
+00:21:00,780 --> 00:21:03,150
+then the vectors would
+essentially be useless.
+
+472
+00:21:03,150 --> 00:21:04,620
+So we don't want that situation.
+
+473
+00:21:04,620 --> 00:21:07,410
+So the first imperative is that
+
+474
+00:21:07,410 --> 00:21:10,800
+the last known good recovery point
+
+475
+00:21:10,800 --> 00:21:14,913
+should have all the data and
+should have zero data loss.
+
+476
+00:21:16,050 --> 00:21:19,200
+Number two, there should be
+as little reconfiguration
+
+477
+00:21:19,200 --> 00:21:22,890
+required at the LLM layer as possible.
+
+478
+00:21:22,890 --> 00:21:26,540
+Again, it's a complex
+process to rewire the LLM
+
+479
+00:21:26,540 --> 00:21:28,500
+to the new vector data store.
+
+480
+00:21:28,500 --> 00:21:32,700
+So that's why you need to
+avoid this as much as possible.
+
+481
+00:21:32,700 --> 00:21:36,180
+And number three, you need
+to keep your costs in check.
+
+482
+00:21:36,180 --> 00:21:38,840
+Recomputing the vectors
+on all of your data
+
+483
+00:21:38,840 --> 00:21:43,840
+is a time compute and
+cost intensive operation.
+
+484
+00:21:44,490 --> 00:21:48,210
+You wouldn't want to
+undertake that kind of effort.
+
+485
+00:21:48,210 --> 00:21:52,530
+And then finally, user
+experience matters once again.
+
+486
+00:21:52,530 --> 00:21:54,160
+There should be little to no downtime
+
+487
+00:21:54,160 --> 00:21:56,550
+for users like Sharon.
+
+488
+00:21:56,550 --> 00:21:59,910
+She shouldn't get frustrated
+asking simple questions as,
+
+489
+00:21:59,910 --> 00:22:04,170
+hey, is "Love Actually" a
+comedy movie or an action movie?
+
+490
+00:22:04,170 --> 00:22:08,520
+So now again, I'm gonna show you
+
+491
+00:22:08,520 --> 00:22:10,830
+what recovery hell looks like.
+
+492
+00:22:10,830 --> 00:22:13,140
+And then we'll talk about Clumio.
+
+493
+00:22:13,140 --> 00:22:15,280
+In the absence of Clumio, again,
+
+494
+00:22:15,280 --> 00:22:18,000
+what you have to do is you
+have to do a full restore
+
+495
+00:22:18,000 --> 00:22:22,140
+of the S3 bucket back to
+a last known good copy.
+
+496
+00:22:22,140 --> 00:22:24,840
+And then you need to recompute the vectors
+
+497
+00:22:24,840 --> 00:22:26,620
+on the restored bucket.
+
+498
+00:22:26,620 --> 00:22:29,430
+And you need to remove
+the old vector store.
+
+499
+00:22:29,430 --> 00:22:32,220
+You need to clean up all of that data.
+
+500
+00:22:32,220 --> 00:22:34,870
+And then you need to clean
+up the old bucket as well.
+
+501
+00:22:36,450 --> 00:22:38,860
+And then finally, you
+need to point your LLM
+
+502
+00:22:38,860 --> 00:22:40,620
+to the new vector store
+
+503
+00:22:40,620 --> 00:22:43,520
+because your vector store
+itself has changed now.
+
+504
+00:22:43,520 --> 00:22:45,870
+Your S3 bucket was restored
+
+505
+00:22:45,870 --> 00:22:48,480
+to a completely different
+bucket than it was.
+
+506
+00:22:48,480 --> 00:22:53,120
+So the vector embeddings had
+to be recomputed at that point.
+
+507
+00:22:53,120 --> 00:22:54,360
+And the S3 vector store
+
+508
+00:22:54,360 --> 00:22:57,360
+would also be a different
+bucket altogether.
+
+509
+00:22:57,360 --> 00:22:59,313
+Now the LLM has to be pointed to that.
+
+510
+00:23:00,360 --> 00:23:03,570
+Now again, let's go back to Clumio
+
+511
+00:23:03,570 --> 00:23:08,250
+and take a look at Clumio's
+two-step recovery process.
+
+512
+00:23:08,250 --> 00:23:11,970
+So this is possible due to
+Clumio backtrack for S3.
+
+513
+00:23:11,970 --> 00:23:14,730
+We'll talk about Clumio
+backtrack for S3 in just a bit.
+
+514
+00:23:14,730 --> 00:23:18,510
+But again, step number one,
+you select a point in time,
+
+515
+00:23:18,510 --> 00:23:20,700
+choose only the impacted objects.
+
+516
+00:23:20,700 --> 00:23:23,520
+Mind you, you don't need to
+restore the entire bucket here.
+
+517
+00:23:23,520 --> 00:23:25,800
+It's not all or nothing with us.
+
+518
+00:23:25,800 --> 00:23:28,230
+You restore only the impacted pieces.
+
+519
+00:23:28,230 --> 00:23:31,413
+You choose the impacted
+objects and then click restore.
+
+520
+00:23:32,400 --> 00:23:35,373
+And step number two, there is no step two.
+
+521
+00:23:36,280 --> 00:23:39,990
+No need to recompute
+the vectors, no cleanup,
+
+522
+00:23:39,990 --> 00:23:43,203
+no changes at the LLM
+layer, simple as that.
+
+523
+00:23:45,300 --> 00:23:47,940
+All right, so we launched Clumio backtrack
+
+524
+00:23:47,940 --> 00:23:51,990
+for Amazon S3 last year
+at re:Invent, in fact.
+
+525
+00:23:51,990 --> 00:23:54,630
+And backtrack for S3 is basically
+
+526
+00:23:54,630 --> 00:23:57,510
+the three same features packaged together.
+
+527
+00:23:57,510 --> 00:24:00,750
+It's in-place recovery
+so that you can recover
+
+528
+00:24:00,750 --> 00:24:02,430
+back to the source bucket itself
+
+529
+00:24:02,430 --> 00:24:05,010
+without having to reconfigure
+the application layer,
+
+530
+00:24:05,010 --> 00:24:08,760
+vector store, or LLM, none of that.
+
+531
+00:24:08,760 --> 00:24:12,080
+And granular recovery,
+again, in case of S3,
+
+532
+00:24:12,080 --> 00:24:14,610
+granularity can mean different things.
+
+533
+00:24:14,610 --> 00:24:17,940
+So in S3, granularity can
+be at the object level,
+
+534
+00:24:17,940 --> 00:24:21,720
+prefix level, or at the
+bucket level itself.
+
+535
+00:24:21,720 --> 00:24:23,640
+And finally, point in time recovery.
+
+536
+00:24:23,640 --> 00:24:25,710
+You can go back to any point in time
+
+537
+00:24:25,710 --> 00:24:30,710
+that's available in our
+backup using Clumio backtrack.
+
+538
+00:24:30,750 --> 00:24:33,720
+And note that Clumio backtrack for S3
+
+539
+00:24:33,720 --> 00:24:35,640
+works with or without SecureVault.
+
+540
+00:24:35,640 --> 00:24:37,830
+SecureVault is our backup offering.
+
+541
+00:24:37,830 --> 00:24:42,210
+Again, you may be using versioning for S3,
+
+542
+00:24:42,210 --> 00:24:44,940
+and that may be your
+idea of data protection,
+
+543
+00:24:44,940 --> 00:24:46,590
+and we don't judge you for that.
+
+544
+00:24:46,590 --> 00:24:47,910
+That's totally fine.
+
+545
+00:24:47,910 --> 00:24:49,560
+You can still roll back your versions
+
+546
+00:24:49,560 --> 00:24:52,180
+to any given point in time using backtrack
+
+547
+00:24:52,180 --> 00:24:54,243
+without the need to back it up with us.
+
+548
+00:24:55,500 --> 00:24:59,490
+And finally, we have
+continuous change tracking
+
+549
+00:24:59,490 --> 00:25:02,730
+for S3 objects, which means
+that every single change
+
+550
+00:25:02,730 --> 00:25:05,370
+that happens at the object
+level or at the version level
+
+551
+00:25:05,370 --> 00:25:09,120
+is continuously tracked,
+and we back it up.
+
+552
+00:25:09,120 --> 00:25:12,540
+So that there is absolutely
+no data loss whatsoever.
+
+553
+00:25:12,540 --> 00:25:14,910
+If you remember, this ties back
+
+554
+00:25:14,910 --> 00:25:16,520
+to the very first recovery imperative
+
+555
+00:25:16,520 --> 00:25:18,843
+that the SREs deal with.
+
+556
+00:25:19,830 --> 00:25:21,780
+All right, so now let's
+see this in action.
+
+557
+00:25:21,780 --> 00:25:24,630
+I'm gonna hand it off to
+Jeff for a quick demo.
+
+558
+00:25:24,630 --> 00:25:25,463
+There you go.
+
+559
+00:25:26,400 --> 00:25:27,800
+- Great stuff, Akshay.
+
+560
+00:25:27,800 --> 00:25:31,950
+So I wanna acknowledge, again,
+resiliency is important,
+
+561
+00:25:31,950 --> 00:25:34,230
+but also what we've experienced
+
+562
+00:25:34,230 --> 00:25:36,260
+and what Akshay just explained is accuracy
+
+563
+00:25:36,260 --> 00:25:39,900
+in your chatbot is also
+extremely important.
+
+564
+00:25:39,900 --> 00:25:42,330
+It's very common and
+actually really, really easy
+
+565
+00:25:42,330 --> 00:25:46,440
+for LLMs to spit out
+gibberish, to hallucinate,
+
+566
+00:25:46,440 --> 00:25:48,810
+to give inaccurate information.
+
+567
+00:25:48,810 --> 00:25:51,990
+That doesn't necessarily,
+that can happen very easily
+
+568
+00:25:51,990 --> 00:25:54,660
+by just having some sort
+of incident or event
+
+569
+00:25:54,660 --> 00:25:57,540
+that has data loss associated with it.
+
+570
+00:25:57,540 --> 00:26:01,890
+So let's go back to our
+ClumioFlix vibe-coded app
+
+571
+00:26:01,890 --> 00:26:03,600
+in the AWS cloud.
+
+572
+00:26:03,600 --> 00:26:05,850
+We're now back at customer ID three,
+
+573
+00:26:05,850 --> 00:26:07,473
+just like we were before.
+
+574
+00:26:08,310 --> 00:26:10,080
+And I'm gonna give it another prompt.
+
+575
+00:26:10,080 --> 00:26:12,510
+I'm gonna ask it to tell me
+more about Clumio to the,
+
+576
+00:26:12,510 --> 00:26:14,670
+I'm sorry, yeah, I'm gonna
+ask it to tell me more
+
+577
+00:26:14,670 --> 00:26:16,880
+about Clumio to the moon,
+just like we did before
+
+578
+00:26:16,880 --> 00:26:18,810
+in the DynamoDB example.
+
+579
+00:26:18,810 --> 00:26:20,700
+While we wait for that
+to think, I'll go ahead
+
+580
+00:26:20,700 --> 00:26:23,580
+and highlight that we have
+an entire part of the app,
+
+581
+00:26:23,580 --> 00:26:25,800
+just like what Sharon was experiencing,
+
+582
+00:26:25,800 --> 00:26:28,620
+that is dedicated to
+just a specific movie.
+
+583
+00:26:28,620 --> 00:26:29,880
+And in this case, we're highlighting
+
+584
+00:26:29,880 --> 00:26:33,240
+our lighthearted Clumio to the moon movie.
+
+585
+00:26:33,240 --> 00:26:34,650
+You can see there's a lot of rich, cool,
+
+586
+00:26:34,650 --> 00:26:36,930
+interesting information
+about that particular movie.
+
+587
+00:26:36,930 --> 00:26:39,450
+I can totally imagine a business
+
+588
+00:26:39,450 --> 00:26:42,120
+wanting to do research
+on a particular movie.
+
+589
+00:26:42,120 --> 00:26:43,860
+This could be really helpful for them.
+
+590
+00:26:43,860 --> 00:26:46,890
+Information like the plot,
+the revenue that it generated,
+
+591
+00:26:46,890 --> 00:26:48,570
+movies that are similar to it.
+
+592
+00:26:48,570 --> 00:26:51,150
+This could be very helpful for researching
+
+593
+00:26:51,150 --> 00:26:53,400
+the next project, for example.
+
+594
+00:26:53,400 --> 00:26:55,410
+You may have noticed
+that in the address bar,
+
+595
+00:26:55,410 --> 00:26:58,500
+and this would be the same
+thing with a smartphone app,
+
+596
+00:26:58,500 --> 00:27:01,050
+that that movie was
+represented by a number.
+
+597
+00:27:01,050 --> 00:27:03,630
+This entire openly
+available movie database
+
+598
+00:27:03,630 --> 00:27:08,190
+is filled with S3 object
+files in JSON format
+
+599
+00:27:08,190 --> 00:27:09,990
+that are represented by a number.
+
+600
+00:27:09,990 --> 00:27:11,220
+You can see that on the screen.
+
+601
+00:27:11,220 --> 00:27:13,320
+I'm highlighting the actual S3 bucket
+
+602
+00:27:13,320 --> 00:27:16,770
+that we're using for this
+app called Clumio Demo Movie.
+
+603
+00:27:16,770 --> 00:27:19,983
+Each one of the objects is
+a number followed by .json.
+
+604
+00:27:20,940 --> 00:27:22,890
+Just to show you this specific object
+
+605
+00:27:22,890 --> 00:27:26,360
+for Clumio to the moon, I'll
+do a search for 7000.json.
+
+606
+00:27:26,360 --> 00:27:28,770
+That's what's connected and associated
+
+607
+00:27:28,770 --> 00:27:30,060
+with Clumio to the moon,
+
+608
+00:27:30,060 --> 00:27:32,640
+and highlight that we do
+have S3 versioning enabled.
+
+609
+00:27:32,640 --> 00:27:35,100
+Like Akshay said, it's a great choice.
+
+610
+00:27:35,100 --> 00:27:38,250
+Doesn't necessarily
+provide 100% resiliency,
+
+611
+00:27:38,250 --> 00:27:41,970
+but it's very fantastic that
+AWS offers something like that.
+
+612
+00:27:41,970 --> 00:27:44,010
+What Clumio has done
+is enhanced the ability
+
+613
+00:27:44,010 --> 00:27:45,873
+to leverage it at scale.
+
+614
+00:27:47,180 --> 00:27:50,580
+I also point out that
+we're also using S3 tables
+
+615
+00:27:50,580 --> 00:27:54,693
+for providing this information,
+and then S3 vectors as well.
+
+616
+00:27:56,400 --> 00:27:59,340
+And again, like the
+DynamoDB, the good news is
+
+617
+00:27:59,340 --> 00:28:01,437
+we're backing this S3 bucket with Clumio,
+
+618
+00:28:01,437 --> 00:28:03,420
+and we have multiple
+different recovery points
+
+619
+00:28:03,420 --> 00:28:06,300
+that we can go back to in the last month.
+
+620
+00:28:06,300 --> 00:28:08,490
+Just like with the DynamoDB recording
+
+621
+00:28:08,490 --> 00:28:09,600
+we showed you a second ago,
+
+622
+00:28:09,600 --> 00:28:11,730
+lots of cool, interesting information
+
+623
+00:28:11,730 --> 00:28:13,860
+in response to the natural language prompt
+
+624
+00:28:13,860 --> 00:28:17,040
+that we put into the chat
+bot about Clumio to the moon.
+
+625
+00:28:17,040 --> 00:28:19,230
+Sharon's happy, it's a good day.
+
+626
+00:28:19,230 --> 00:28:21,120
+Everything's good, no recovery is needed.
+
+627
+00:28:21,120 --> 00:28:22,500
+Let's turn that around.
+
+628
+00:28:22,500 --> 00:28:24,900
+Let's let resilience
+suffer in a simulated way
+
+629
+00:28:24,900 --> 00:28:27,300
+by executing another Python script
+
+630
+00:28:27,300 --> 00:28:30,030
+that will harm that S3 object.
+
+631
+00:28:30,030 --> 00:28:31,680
+It'll essentially remove it.
+
+632
+00:28:31,680 --> 00:28:33,480
+To prove that that actually occurred,
+
+633
+00:28:33,480 --> 00:28:35,790
+and we're now in a bad day scenario,
+
+634
+00:28:35,790 --> 00:28:37,260
+I'll go ahead and submit the exact
+
+635
+00:28:37,260 --> 00:28:39,240
+same prompt I gave before,
+
+636
+00:28:39,240 --> 00:28:41,580
+or I'm asking the chat bot
+to give me more information
+
+637
+00:28:41,580 --> 00:28:43,170
+about Clumio to the moon.
+
+638
+00:28:43,170 --> 00:28:44,850
+While we wait for that to think,
+
+639
+00:28:44,850 --> 00:28:48,440
+I'll refresh the actual page
+which would be representative
+
+640
+00:28:48,440 --> 00:28:51,030
+of where you would go
+in the app to find it.
+
+641
+00:28:51,030 --> 00:28:52,770
+The movie is gone.
+
+642
+00:28:52,770 --> 00:28:55,170
+In that, so now we're creating a scenario
+
+643
+00:28:55,170 --> 00:28:57,810
+like we did in the video with
+Sharon where she's frustrated,
+
+644
+00:28:57,810 --> 00:28:59,880
+she's going to social
+media and complaining.
+
+645
+00:28:59,880 --> 00:29:01,620
+I'll refresh my S3 bucket.
+
+646
+00:29:01,620 --> 00:29:04,080
+The 7000.json file, completely gone.
+
+647
+00:29:04,080 --> 00:29:05,940
+There's no matches found.
+
+648
+00:29:05,940 --> 00:29:09,180
+And that response that I'm now getting
+
+649
+00:29:09,180 --> 00:29:11,250
+from the exact same
+natural language prompt
+
+650
+00:29:11,250 --> 00:29:14,430
+to the AI movie assistant is different.
+
+651
+00:29:14,430 --> 00:29:16,650
+It's inaccurate, it's shorter,
+
+652
+00:29:16,650 --> 00:29:18,960
+it's not as interesting, not as helpful.
+
+653
+00:29:18,960 --> 00:29:20,130
+It even says at the bottom,
+
+654
+00:29:20,130 --> 00:29:22,530
+unfortunately, I don't
+have all the information.
+
+655
+00:29:22,530 --> 00:29:25,290
+Like Akshay said, the pipeline's broken.
+
+656
+00:29:25,290 --> 00:29:27,030
+It's now no longer able to access
+
+657
+00:29:27,030 --> 00:29:28,620
+that rich, interesting information
+
+658
+00:29:28,620 --> 00:29:31,623
+from the .json object in that S3 bucket.
+
+659
+00:29:33,480 --> 00:29:36,090
+Let's do like what we did with DynamoDB.
+
+660
+00:29:36,090 --> 00:29:38,160
+Let's use Clumio Backtrack for S3
+
+661
+00:29:38,160 --> 00:29:40,680
+to bring the resiliency back.
+
+662
+00:29:40,680 --> 00:29:42,600
+But again, just like with DynamoDB,
+
+663
+00:29:42,600 --> 00:29:44,730
+we also have a modality for S3
+
+664
+00:29:44,730 --> 00:29:46,500
+to recover from Secure Vault.
+
+665
+00:29:46,500 --> 00:29:48,960
+Like Akshay mentioned, that's
+our immutable air-gapped copy.
+
+666
+00:29:48,960 --> 00:29:52,260
+So if instead we were simulating
+a cyber-related event,
+
+667
+00:29:52,260 --> 00:29:55,440
+this is what I would recommend
+to my customers and companies
+
+668
+00:29:55,440 --> 00:29:58,230
+is to recover from that
+immutable air-gapped
+
+669
+00:29:58,230 --> 00:30:00,630
+cyber-resilient copy of the object.
+
+670
+00:30:00,630 --> 00:30:02,220
+In order to do that, I just need to search
+
+671
+00:30:02,220 --> 00:30:04,493
+for the 7000.json in my example.
+
+672
+00:30:04,493 --> 00:30:06,780
+I don't have to do
+that, but in my example,
+
+673
+00:30:06,780 --> 00:30:08,370
+I just need that object.
+
+674
+00:30:08,370 --> 00:30:10,680
+It's querying a backup
+from the point in time
+
+675
+00:30:10,680 --> 00:30:11,790
+that I selected.
+
+676
+00:30:11,790 --> 00:30:14,620
+It found the 7000.json object.
+
+677
+00:30:14,620 --> 00:30:17,850
+I now have the option to
+recover just the latest version
+
+678
+00:30:17,850 --> 00:30:18,683
+or all versions.
+
+679
+00:30:18,683 --> 00:30:21,810
+Remember this object in this
+bucket has versioning enabled.
+
+680
+00:30:21,810 --> 00:30:23,880
+There's a lot of benefits
+to being able to do that
+
+681
+00:30:23,880 --> 00:30:25,830
+from a cost and ease point of view.
+
+682
+00:30:25,830 --> 00:30:27,570
+And like the DynamoDB examples,
+
+683
+00:30:27,570 --> 00:30:30,870
+I'm given a lot of really
+advanced selection options
+
+684
+00:30:30,870 --> 00:30:33,720
+because I may wanna
+customize this restoration.
+
+685
+00:30:33,720 --> 00:30:35,430
+I can absolutely see a scenario,
+
+686
+00:30:35,430 --> 00:30:37,120
+especially in a cyber-related event
+
+687
+00:30:37,120 --> 00:30:40,680
+where I don't wanna recover
+to the same AWS account.
+
+688
+00:30:40,680 --> 00:30:43,620
+If the object in that AWS
+account had been compromised,
+
+689
+00:30:43,620 --> 00:30:46,350
+it's very likely that other
+parts of that AWS account
+
+690
+00:30:46,350 --> 00:30:47,940
+are also compromised.
+
+691
+00:30:47,940 --> 00:30:49,260
+We give you the ability to recover
+
+692
+00:30:49,260 --> 00:30:51,360
+to a completely different AWS account,
+
+693
+00:30:51,360 --> 00:30:53,280
+maybe even one that
+you've created brand new
+
+694
+00:30:53,280 --> 00:30:55,113
+and that is completely clean.
+
+695
+00:30:55,950 --> 00:30:56,940
+We also give you other options
+
+696
+00:30:56,940 --> 00:30:58,440
+like recovering to another region.
+
+697
+00:30:58,440 --> 00:31:00,100
+Maybe there's a
+large-scale event occurring
+
+698
+00:31:00,100 --> 00:31:02,190
+and you need to go to a different region.
+
+699
+00:31:02,190 --> 00:31:05,610
+And we even give you the ability
+to add tags to the object
+
+700
+00:31:05,610 --> 00:31:08,850
+or store it in a prefix, an S3 prefix.
+
+701
+00:31:08,850 --> 00:31:10,920
+Very advanced selection options
+
+702
+00:31:10,920 --> 00:31:13,650
+to make sure that your
+particular needs are met
+
+703
+00:31:13,650 --> 00:31:16,240
+for the specific and
+particular recovery scenario
+
+704
+00:31:16,240 --> 00:31:17,523
+that you have.
+
+705
+00:31:18,420 --> 00:31:19,920
+But instead, what I wanna demonstrate
+
+706
+00:31:19,920 --> 00:31:20,910
+is what Akshay mentioned
+
+707
+00:31:20,910 --> 00:31:23,190
+in what we announced at
+AWS re:Invent last year
+
+708
+00:31:23,190 --> 00:31:26,403
+and that's S3 backtrack for S3.
+
+709
+00:31:27,690 --> 00:31:28,950
+I'm given the bucket name.
+
+710
+00:31:28,950 --> 00:31:30,330
+I'm given the point in time.
+
+711
+00:31:30,330 --> 00:31:31,440
+I'm choosing the point in time.
+
+712
+00:31:31,440 --> 00:31:32,910
+I apologize, my mistake.
+
+713
+00:31:32,910 --> 00:31:35,490
+I'm just gonna go ahead
+and choose to pick a hour
+
+714
+00:31:35,490 --> 00:31:37,410
+that's earlier in the same day.
+
+715
+00:31:37,410 --> 00:31:40,900
+I'm gonna filter what I
+see by the 7000.json object
+
+716
+00:31:40,900 --> 00:31:42,320
+when I press Preview.
+
+717
+00:31:42,320 --> 00:31:45,600
+It's going to query the S3 versions
+
+718
+00:31:45,600 --> 00:31:47,430
+at that particular point in time.
+
+719
+00:31:47,430 --> 00:31:51,810
+It found the 7000.json for
+that specific point in time.
+
+720
+00:31:51,810 --> 00:31:53,310
+Just like I showed you before,
+
+721
+00:31:53,310 --> 00:31:55,530
+lots of interesting selectivity options
+
+722
+00:31:55,530 --> 00:32:00,000
+to customize and be very
+specific to your recovery needs.
+
+723
+00:32:00,000 --> 00:32:02,700
+In my example, I'm just
+gonna override the source.
+
+724
+00:32:02,700 --> 00:32:05,190
+I'm gonna override the
+most current object.
+
+725
+00:32:05,190 --> 00:32:08,180
+I've started a new task
+in Clumio to get that done
+
+726
+00:32:08,180 --> 00:32:10,560
+through the magic of video editing.
+
+727
+00:32:10,560 --> 00:32:13,200
+We're gonna fast forward
+to when it's completed.
+
+728
+00:32:13,200 --> 00:32:16,050
+And to prove that it's been
+completed successfully,
+
+729
+00:32:16,050 --> 00:32:18,600
+I'll go back to the AI Movie Assistant,
+
+730
+00:32:18,600 --> 00:32:21,270
+provide the exact same
+natural language prompt
+
+731
+00:32:21,270 --> 00:32:23,343
+to tell me more about Clumio to the Moon.
+
+732
+00:32:24,570 --> 00:32:27,420
+While it's thinking, we'll go ahead
+
+733
+00:32:27,420 --> 00:32:31,170
+and go back to the movie
+page for Clumio to the Moon.
+
+734
+00:32:31,170 --> 00:32:33,780
+Just like I would if I was
+to close and open the app,
+
+735
+00:32:33,780 --> 00:32:35,550
+I'm refreshing it. It's there.
+
+736
+00:32:35,550 --> 00:32:36,960
+The data is there.
+
+737
+00:32:36,960 --> 00:32:38,430
+I'll refresh the S3 bucket.
+
+738
+00:32:38,430 --> 00:32:41,250
+The 7000.json has returned.
+
+739
+00:32:41,250 --> 00:32:43,620
+I'll go back to my AI Movie Assistant,
+
+740
+00:32:43,620 --> 00:32:45,210
+and I'm back to a happy day.
+
+741
+00:32:45,210 --> 00:32:46,043
+Sharon's happy.
+
+742
+00:32:46,043 --> 00:32:48,960
+She's getting the exact
+same consistent response
+
+743
+00:32:48,960 --> 00:32:51,720
+with the rich metadata and
+rich interesting information
+
+744
+00:32:51,720 --> 00:32:53,880
+about Clumio to the Moon movie.
+
+745
+00:32:53,880 --> 00:32:55,760
+We've successfully restored resiliency
+
+746
+00:32:55,760 --> 00:32:59,043
+in our cloud application.
+
+747
+00:33:04,080 --> 00:33:06,510
+We have one more scenario
+to cover with you today.
+
+748
+00:33:06,510 --> 00:33:09,150
+This is specific, and I'm
+actually very, very excited
+
+749
+00:33:09,150 --> 00:33:11,130
+about this one, to Apache Iceberg
+
+750
+00:33:11,130 --> 00:33:12,120
+and our new support for that.
+
+751
+00:33:12,120 --> 00:33:13,980
+For that, I'll turn it
+back over to Akshay.
+
+752
+00:33:13,980 --> 00:33:14,813
+- Thank you, Jeff.
+
+753
+00:33:14,813 --> 00:33:16,380
+Another great demo.
+
+754
+00:33:16,380 --> 00:33:17,790
+The third and the final feature
+
+755
+00:33:17,790 --> 00:33:19,200
+that we're gonna talk about today
+
+756
+00:33:19,200 --> 00:33:21,270
+is the Box Office Analyzer.
+
+757
+00:33:21,270 --> 00:33:23,010
+Again, this is a feature that allows you
+
+758
+00:33:23,010 --> 00:33:26,550
+to compare movie budgets
+and the revenue performance.
+
+759
+00:33:26,550 --> 00:33:28,230
+This can actually be interesting
+
+760
+00:33:28,230 --> 00:33:30,820
+for any Hollywood exec out there.
+
+761
+00:33:30,820 --> 00:33:33,120
+The data layer for this feature
+
+762
+00:33:33,120 --> 00:33:34,770
+is basically a data lake house
+
+763
+00:33:34,770 --> 00:33:37,320
+that's powered by Apache Iceberg.
+
+764
+00:33:37,320 --> 00:33:40,680
+Iceberg has gotten
+really popular over time,
+
+765
+00:33:40,680 --> 00:33:43,140
+and it's the most
+preferred open table format
+
+766
+00:33:43,140 --> 00:33:45,210
+for data lake houses.
+
+767
+00:33:45,210 --> 00:33:47,670
+And for this specific use case,
+
+768
+00:33:47,670 --> 00:33:51,903
+we are using S3 tables to
+store the Apache Iceberg data.
+
+769
+00:33:52,740 --> 00:33:55,950
+And not only is this available
+as an external feature
+
+770
+00:33:55,950 --> 00:33:58,080
+for users like Sharon,
+
+771
+00:33:58,080 --> 00:34:02,280
+but also internal employees of the company
+
+772
+00:34:02,280 --> 00:34:04,830
+can also use the same data set
+
+773
+00:34:04,830 --> 00:34:07,020
+to create dashboards internally
+
+774
+00:34:07,020 --> 00:34:12,020
+to analyze the movie
+financial performance.
+
+775
+00:34:15,640 --> 00:34:19,110
+Iceberg data is actually
+vulnerable to writes.
+
+776
+00:34:19,110 --> 00:34:20,190
+We all know this.
+
+777
+00:34:20,190 --> 00:34:22,100
+Whenever you run an overwrite query
+
+778
+00:34:22,100 --> 00:34:26,190
+that changes the schema or
+drops a column, for example,
+
+779
+00:34:26,190 --> 00:34:29,910
+your visualizations don't
+really match the schema.
+
+780
+00:34:29,910 --> 00:34:32,760
+And that mismatch causes
+all of your visualizations
+
+781
+00:34:32,760 --> 00:34:33,593
+to go empty.
+
+782
+00:34:33,593 --> 00:34:36,420
+And in this case, what has happened
+
+783
+00:34:36,420 --> 00:34:39,240
+is all of the data in the table,
+
+784
+00:34:39,240 --> 00:34:43,710
+all of the genres for the movies
+are overwritten to comedy.
+
+785
+00:34:43,710 --> 00:34:45,910
+And that's what we're
+gonna talk about here.
+
+786
+00:34:46,950 --> 00:34:49,590
+And because of that,
+Final Cut is not able to
+
+787
+00:34:49,590 --> 00:34:51,420
+pull the information satisfactorily
+
+788
+00:34:51,420 --> 00:34:56,420
+and give accurate responses
+on the visualizations.
+
+789
+00:34:56,790 --> 00:34:59,910
+And this would also impact any dashboards
+
+790
+00:34:59,910 --> 00:35:02,460
+that have been created
+internally by the employees
+
+791
+00:35:02,460 --> 00:35:04,440
+outside of the application.
+
+792
+00:35:04,440 --> 00:35:08,673
+So we'll fix both of those
+issues in this scenario.
+
+793
+00:35:10,710 --> 00:35:12,720
+Okay, let's take a look at the event.
+
+794
+00:35:12,720 --> 00:35:16,830
+Let's see what unfolded
+that led to the situation.
+
+795
+00:35:16,830 --> 00:35:18,540
+We are using Athena query here
+
+796
+00:35:18,540 --> 00:35:21,030
+to pull the data from S3 tables.
+
+797
+00:35:21,030 --> 00:35:23,800
+And we are using QuickSight
+as our dashboarding tool
+
+798
+00:35:23,800 --> 00:35:25,590
+for this example.
+
+799
+00:35:25,590 --> 00:35:28,740
+And as you notice here,
+
+800
+00:35:28,740 --> 00:35:32,280
+as the iceberg tables
+are getting impacted,
+
+801
+00:35:32,280 --> 00:35:36,120
+the dashboarding tool is
+malfunctioning as well.
+
+802
+00:35:36,120 --> 00:35:40,200
+So the dashboards are
+showing wrong information,
+
+803
+00:35:40,200 --> 00:35:41,700
+which should not be the case.
+
+804
+00:35:41,700 --> 00:35:44,340
+And let's talk about
+the hard way to recover
+
+805
+00:35:44,340 --> 00:35:46,410
+from such a scenario.
+
+806
+00:35:46,410 --> 00:35:47,880
+But before that, let's take a look
+
+807
+00:35:47,880 --> 00:35:50,820
+at some of the recovery
+imperatives once again.
+
+808
+00:35:50,820 --> 00:35:53,250
+We see a constant theme here
+
+809
+00:35:53,250 --> 00:35:55,980
+with the SREs dealing with
+the same recovery imperatives
+
+810
+00:35:55,980 --> 00:35:57,900
+over and over again.
+
+811
+00:35:57,900 --> 00:35:59,550
+But there are a few things
+
+812
+00:35:59,550 --> 00:36:01,380
+that you need to keep in mind here.
+
+813
+00:36:01,380 --> 00:36:04,107
+With iceberg data, the
+known good recovery points
+
+814
+00:36:04,107 --> 00:36:07,380
+are actually snapshots or point in time.
+
+815
+00:36:07,380 --> 00:36:11,610
+It cannot be a single source of truth.
+
+816
+00:36:11,610 --> 00:36:14,340
+I mean, you can have the data admin
+
+817
+00:36:14,340 --> 00:36:16,440
+who's well-versed with iceberg snapshots,
+
+818
+00:36:16,440 --> 00:36:18,630
+and they may know the snapshot ID.
+
+819
+00:36:18,630 --> 00:36:21,840
+And the S3 admin, for example,
+
+820
+00:36:21,840 --> 00:36:26,190
+may know the point in time
+where the data was clean.
+
+821
+00:36:26,190 --> 00:36:27,870
+So it could be either or.
+
+822
+00:36:27,870 --> 00:36:30,520
+So you need to be mindful
+of both of those situations
+
+823
+00:36:30,520 --> 00:36:32,550
+and deal with that.
+
+824
+00:36:32,550 --> 00:36:35,670
+And number two, there
+should be absolutely no need
+
+825
+00:36:35,670 --> 00:36:37,170
+to recreate dashboards
+
+826
+00:36:37,170 --> 00:36:40,770
+or reconfigure the application whatsoever.
+
+827
+00:36:40,770 --> 00:36:44,730
+So all of the recovery
+should happen in place.
+
+828
+00:36:44,730 --> 00:36:49,620
+And finally, of course,
+we know that PCO and timer
+
+829
+00:36:49,620 --> 00:36:52,500
+absolutely essential to keep in mind.
+
+830
+00:36:52,500 --> 00:36:57,180
+And with that, let's take
+a look at recovery hell.
+
+831
+00:36:57,180 --> 00:36:59,310
+It's a long process.
+
+832
+00:36:59,310 --> 00:37:02,900
+If you're backing up only the S3 data,
+
+833
+00:37:02,900 --> 00:37:06,630
+that's powering the iceberg tables.
+
+834
+00:37:06,630 --> 00:37:10,830
+So in this case, let's
+assume that you're backing up
+
+835
+00:37:10,830 --> 00:37:14,040
+only the general purpose S3
+bucket data under the hood
+
+836
+00:37:14,040 --> 00:37:16,470
+because there is no other iceberg-aware
+
+837
+00:37:16,470 --> 00:37:20,160
+data protection offering out
+there in the market today.
+
+838
+00:37:20,160 --> 00:37:24,510
+So you have to back up only the S3 data
+
+839
+00:37:24,510 --> 00:37:26,880
+that's available to you.
+
+840
+00:37:26,880 --> 00:37:29,400
+And first, you need to do a full restore
+
+841
+00:37:29,400 --> 00:37:31,860
+of every single S3 bucket
+
+842
+00:37:31,860 --> 00:37:33,663
+that's holding the iceberg data.
+
+843
+00:37:35,400 --> 00:37:38,670
+And then you need to restore
+the iceberg table structure
+
+844
+00:37:38,670 --> 00:37:40,770
+once the full restore completes.
+
+845
+00:37:40,770 --> 00:37:44,220
+This would mean you have to
+reconfigure the manifest files,
+
+846
+00:37:44,220 --> 00:37:47,250
+metadata files, and the
+data files to preserve
+
+847
+00:37:47,250 --> 00:37:50,910
+or bring back the iceberg table structure.
+
+848
+00:37:50,910 --> 00:37:53,910
+And you need to point the
+application to the new tables
+
+849
+00:37:53,910 --> 00:37:55,650
+once you've restored it.
+
+850
+00:37:55,650 --> 00:37:58,590
+And then finally,
+reconfigure the application
+
+851
+00:37:58,590 --> 00:38:02,250
+to talk to this new table
+that you've restored.
+
+852
+00:38:02,250 --> 00:38:05,250
+And finally, you need to
+reconfigure the application
+
+853
+00:38:05,250 --> 00:38:09,090
+and recreate all the dashboards
+that you would have created
+
+854
+00:38:09,090 --> 00:38:11,580
+with the previous dataset.
+
+855
+00:38:11,580 --> 00:38:14,460
+And that's what recovery hell looks like.
+
+856
+00:38:14,460 --> 00:38:19,460
+Again, let's take a look at
+the two-step recovery process
+
+857
+00:38:19,500 --> 00:38:20,760
+with Clumio.
+
+858
+00:38:20,760 --> 00:38:24,150
+Again, Clumio is the
+only offering out there
+
+859
+00:38:24,150 --> 00:38:28,023
+that provides iceberg-aware
+data protection.
+
+860
+00:38:29,100 --> 00:38:34,080
+And with that, step number
+one is the backup is absolute.
+
+861
+00:38:34,080 --> 00:38:36,870
+Backup and restores are
+iceberg-aware in nature,
+
+862
+00:38:36,870 --> 00:38:39,940
+which means that you don't
+need to restructure the table
+
+863
+00:38:39,940 --> 00:38:42,270
+once the data has been recovered.
+
+864
+00:38:42,270 --> 00:38:46,260
+So you just pick a snapshot,
+you pick a point in time,
+
+865
+00:38:46,260 --> 00:38:48,480
+and then you click on Recover.
+
+866
+00:38:48,480 --> 00:38:50,520
+And this recovery happens in place,
+
+867
+00:38:50,520 --> 00:38:54,540
+so you don't need to deal with
+any sort of upstream impact.
+
+868
+00:38:54,540 --> 00:38:57,060
+And step number two, there is no step two,
+
+869
+00:38:57,060 --> 00:39:00,030
+as with all of our other
+recovery modalities
+
+870
+00:39:00,030 --> 00:39:01,350
+that we covered.
+
+871
+00:39:01,350 --> 00:39:03,930
+The application doesn't
+need to be reconfigured,
+
+872
+00:39:03,930 --> 00:39:07,260
+the dashboards don't need to be recreated,
+
+873
+00:39:07,260 --> 00:39:08,220
+and none of that.
+
+874
+00:39:08,220 --> 00:39:11,910
+It's simple recovery, just a single step.
+
+875
+00:39:11,910 --> 00:39:14,610
+Now I can say that it's not
+a two-step recovery anymore,
+
+876
+00:39:14,610 --> 00:39:15,960
+it's just one-step recovery.
+
+877
+00:39:15,960 --> 00:39:20,070
+All right, so we launched
+the industry's first
+
+878
+00:39:20,070 --> 00:39:23,490
+iceberg-aware data protection
+offering back in September.
+
+879
+00:39:23,490 --> 00:39:25,770
+Let's learn a bit more about that.
+
+880
+00:39:25,770 --> 00:39:28,290
+The iceberg table structure is preserved
+
+881
+00:39:28,290 --> 00:39:30,990
+both during backup as well as recovery,
+
+882
+00:39:30,990 --> 00:39:33,690
+so that you don't have
+to restructure the table
+
+883
+00:39:33,690 --> 00:39:35,820
+once the table has been recovered.
+
+884
+00:39:35,820 --> 00:39:38,340
+Or you don't have to do
+anything under the hood
+
+885
+00:39:38,340 --> 00:39:43,080
+to preserve the table
+structure, even during backup.
+
+886
+00:39:43,080 --> 00:39:45,780
+And you can back it up and restore it,
+
+887
+00:39:45,780 --> 00:39:49,710
+and recover it without any hassles,
+
+888
+00:39:49,710 --> 00:39:53,130
+and in a very transactionally
+consistent way.
+
+889
+00:39:53,130 --> 00:39:55,380
+And the data itself is stored outside
+
+890
+00:39:55,380 --> 00:39:57,210
+of your enterprise security sphere,
+
+891
+00:39:57,210 --> 00:39:59,640
+as with all of our other
+secure world offerings,
+
+892
+00:39:59,640 --> 00:40:03,240
+which means that your
+data is safe, air-gapped,
+
+893
+00:40:03,240 --> 00:40:06,930
+and immutable, and it can
+actually help you recover
+
+894
+00:40:06,930 --> 00:40:09,480
+from any sort of threat vectors
+
+895
+00:40:09,480 --> 00:40:12,540
+that we talked about
+earlier in the session.
+
+896
+00:40:12,540 --> 00:40:14,100
+And then finally, you can retain
+
+897
+00:40:14,100 --> 00:40:18,210
+as many snapshots as possible
+with Clumio Secure Vault,
+
+898
+00:40:18,210 --> 00:40:22,020
+and this is especially useful
+if you need to be compliant
+
+899
+00:40:22,020 --> 00:40:25,900
+with compliance standards
+like FINRA or HIPAA
+
+900
+00:40:25,900 --> 00:40:30,300
+that require you to store
+every single transaction
+
+901
+00:40:30,300 --> 00:40:32,880
+for about seven to eight years.
+
+902
+00:40:32,880 --> 00:40:35,460
+And finally, another thing that you can do
+
+903
+00:40:35,460 --> 00:40:37,560
+with Clumio Secure
+Vault for Apache Iceberg
+
+904
+00:40:37,560 --> 00:40:41,820
+is that you can modernize
+your iceberg footprint on AWS.
+
+905
+00:40:41,820 --> 00:40:45,510
+You can actively migrate your tables
+
+906
+00:40:45,510 --> 00:40:48,060
+from a general-purpose S3 bucket
+
+907
+00:40:48,060 --> 00:40:51,243
+to the newly-launched
+Amazon S3 Tables feature.
+
+908
+00:40:52,350 --> 00:40:55,140
+All right, so enough about the feature.
+
+909
+00:40:55,140 --> 00:40:56,670
+Now let's see it in action.
+
+910
+00:40:56,670 --> 00:41:00,333
+I'm gonna hand it off to
+Jeff for one last demo.
+
+911
+00:41:01,200 --> 00:41:02,033
+- Thank you, Akshay.
+
+912
+00:41:02,033 --> 00:41:03,960
+Like I mentioned before
+Akshay started speaking,
+
+913
+00:41:03,960 --> 00:41:05,730
+I'm very excited about this.
+
+914
+00:41:05,730 --> 00:41:07,860
+You heard it correctly from Akshay.
+
+915
+00:41:07,860 --> 00:41:11,040
+Clumio is the first
+Iceberg and S3 Tables-aware
+
+916
+00:41:11,040 --> 00:41:13,680
+data protection solution in the AWS cloud.
+
+917
+00:41:13,680 --> 00:41:16,080
+As many of you probably know,
+
+918
+00:41:16,080 --> 00:41:19,200
+Iceberg is extremely popular
+when combined with S3
+
+919
+00:41:19,200 --> 00:41:21,990
+and various different data pipelines.
+
+920
+00:41:21,990 --> 00:41:24,270
+It's so popular AWS themselves came out
+
+921
+00:41:24,270 --> 00:41:25,890
+with a new bucket type, S3 Tables,
+
+922
+00:41:25,890 --> 00:41:29,490
+at this time last year
+at AWS re:Invent 2024.
+
+923
+00:41:29,490 --> 00:41:31,410
+So we're very happy to be helpful
+
+924
+00:41:31,410 --> 00:41:34,170
+in being able to participate
+in increasing the resiliency
+
+925
+00:41:34,170 --> 00:41:35,643
+of those different services.
+
+926
+00:41:36,560 --> 00:41:38,880
+Let me show you another demo.
+
+927
+00:41:38,880 --> 00:41:39,870
+This is our last demo.
+
+928
+00:41:39,870 --> 00:41:41,250
+And what you're seeing on the screen
+
+929
+00:41:41,250 --> 00:41:43,110
+is what we call the movie insights page.
+
+930
+00:41:43,110 --> 00:41:45,750
+So think of this as, you
+know, sharing, using the app
+
+931
+00:41:45,750 --> 00:41:47,220
+and going to a different part of the app,
+
+932
+00:41:47,220 --> 00:41:49,170
+again, to probably do some research.
+
+933
+00:41:49,170 --> 00:41:51,840
+But I can also imagine businesses
+using something like this
+
+934
+00:41:51,840 --> 00:41:55,020
+to do research on maybe what
+movie they wanna make next.
+
+935
+00:41:55,020 --> 00:41:58,110
+They wanna find out that out
+of the several thousand movies
+
+936
+00:41:58,110 --> 00:42:00,780
+that are in our openly available data set,
+
+937
+00:42:00,780 --> 00:42:02,220
+which ones were the most successful?
+
+938
+00:42:02,220 --> 00:42:03,510
+Which ones made the most money?
+
+939
+00:42:03,510 --> 00:42:05,220
+Maybe which ones had the worst returns?
+
+940
+00:42:05,220 --> 00:42:06,360
+And then we can turn on investment.
+
+941
+00:42:06,360 --> 00:42:07,800
+Like Akshay said, in the app,
+
+942
+00:42:07,800 --> 00:42:10,520
+we built this with a pipeline
+that included QuickSight
+
+943
+00:42:10,520 --> 00:42:13,860
+to show this chart
+information in a visual way.
+
+944
+00:42:13,860 --> 00:42:15,900
+I wanna highlight this
+chart at the bottom,
+
+945
+00:42:15,900 --> 00:42:17,010
+revenue by genre.
+
+946
+00:42:17,010 --> 00:42:19,710
+That's what we're gonna
+demonstrate as failing today.
+
+947
+00:42:19,710 --> 00:42:21,720
+And as you can imagine,
+that's some really cool data
+
+948
+00:42:21,720 --> 00:42:24,270
+that you wanna keep
+resilient to keep your users
+
+949
+00:42:24,270 --> 00:42:25,800
+and maybe even the business users
+
+950
+00:42:25,800 --> 00:42:27,693
+of your applications happy.
+
+951
+00:42:28,950 --> 00:42:31,830
+It's broken out by dollar per genre.
+
+952
+00:42:31,830 --> 00:42:33,570
+And you can see that it's very diverse.
+
+953
+00:42:33,570 --> 00:42:35,910
+There's a lot of genres listed there.
+
+954
+00:42:35,910 --> 00:42:36,840
+I'll go ahead and highlight
+
+955
+00:42:36,840 --> 00:42:39,330
+that we do have an S3 table powering this.
+
+956
+00:42:39,330 --> 00:42:42,870
+And that S3 table is in
+the Apache Iceberg format.
+
+957
+00:42:42,870 --> 00:42:45,750
+I have it highlighted
+here in the AWS console.
+
+958
+00:42:45,750 --> 00:42:47,910
+And just like with S3 and DynamoDB,
+
+959
+00:42:47,910 --> 00:42:50,850
+we're also taking
+backups of this S3 table.
+
+960
+00:42:50,850 --> 00:42:52,280
+And we have been for some time now.
+
+961
+00:42:52,280 --> 00:42:55,710
+We have multiple different
+places and points in time
+
+962
+00:42:55,710 --> 00:42:57,840
+to go back to should we need to.
+
+963
+00:42:57,840 --> 00:42:59,850
+It's a good day. It's a good thing.
+
+964
+00:42:59,850 --> 00:43:02,140
+Let's go back to our AI
+Movie Assistant chat bot.
+
+965
+00:43:02,140 --> 00:43:03,780
+But this time I'm gonna give a prompt
+
+966
+00:43:03,780 --> 00:43:06,360
+to have it tell me the specific genre
+
+967
+00:43:06,360 --> 00:43:07,770
+for Clumio to the Rune.
+
+968
+00:43:07,770 --> 00:43:09,900
+I no longer need to know the
+information about the movie.
+
+969
+00:43:09,900 --> 00:43:12,390
+I just wanna know what genre it is.
+
+970
+00:43:12,390 --> 00:43:14,400
+While it's thinking,
+
+971
+00:43:14,400 --> 00:43:16,560
+we'll go ahead and explain
+how this is querying
+
+972
+00:43:16,560 --> 00:43:18,360
+that pipeline that Akshay mentioned
+
+973
+00:43:18,360 --> 00:43:19,860
+and explained a second ago.
+
+974
+00:43:19,860 --> 00:43:23,160
+It has successfully responded
+with the correct genre.
+
+975
+00:43:23,160 --> 00:43:24,140
+It is action and adventure.
+
+976
+00:43:24,140 --> 00:43:26,700
+That is the genre of Clumio to the Moon.
+
+977
+00:43:26,700 --> 00:43:28,680
+Again, another scenario
+where sharing is happy
+
+978
+00:43:28,680 --> 00:43:32,040
+or your business users
+are happy of your app.
+
+979
+00:43:32,040 --> 00:43:34,110
+Let's make it a not so good day.
+
+980
+00:43:34,110 --> 00:43:36,120
+Let's make it a day where
+something bad happens.
+
+981
+00:43:36,120 --> 00:43:37,830
+Resiliency has suffered.
+
+982
+00:43:37,830 --> 00:43:39,450
+We need to go back to these imperatives
+
+983
+00:43:39,450 --> 00:43:40,820
+that Akshay keeps mentioning
+
+984
+00:43:40,820 --> 00:43:43,380
+to ensure that we increase resiliency
+
+985
+00:43:43,380 --> 00:43:45,660
+or return back to a
+resilient point in time
+
+986
+00:43:45,660 --> 00:43:46,833
+for this application.
+
+987
+00:43:47,970 --> 00:43:50,370
+I'm gonna simulate that with
+our Python script again,
+
+988
+00:43:50,370 --> 00:43:53,700
+but this time instead of
+actually destroying data,
+
+989
+00:43:53,700 --> 00:43:55,080
+I'm gonna change the data.
+
+990
+00:43:55,080 --> 00:43:58,680
+I'm gonna change all the
+genres in our S3 table
+
+991
+00:43:58,680 --> 00:44:00,900
+to be comedy.
+
+992
+00:44:00,900 --> 00:44:03,100
+When I go back to the movies insight page
+
+993
+00:44:03,100 --> 00:44:06,270
+and I refresh that, instead
+of the data being gone,
+
+994
+00:44:06,270 --> 00:44:07,560
+the data is incorrect.
+
+995
+00:44:07,560 --> 00:44:10,280
+I'll go back down to that
+chart from QuickSight
+
+996
+00:44:10,280 --> 00:44:12,300
+that showed the revenue by genre.
+
+997
+00:44:12,300 --> 00:44:16,420
+Now all 400 billion plus
+dollars in revenue is comedy
+
+998
+00:44:16,420 --> 00:44:18,810
+and all the top movies of revenue
+
+999
+00:44:18,810 --> 00:44:20,070
+are in the genre of comedy.
+
+1000
+00:44:20,070 --> 00:44:22,170
+This is obviously not correct.
+
+1001
+00:44:22,170 --> 00:44:23,850
+This is bad information.
+
+1002
+00:44:23,850 --> 00:44:26,370
+This is creating a
+negative user experience.
+
+1003
+00:44:26,370 --> 00:44:28,050
+Like let's make it worse.
+
+1004
+00:44:28,050 --> 00:44:30,900
+Let's do a second suffering
+of the application
+
+1005
+00:44:30,900 --> 00:44:33,240
+by going back and doing what
+we did in the previous video
+
+1006
+00:44:33,240 --> 00:44:37,300
+and completely deleting
+the 7000.json object again.
+
+1007
+00:44:37,300 --> 00:44:40,530
+I'll go ahead and simulate
+the negative experience
+
+1008
+00:44:40,530 --> 00:44:42,210
+that your customers or your businesses
+
+1009
+00:44:42,210 --> 00:44:43,140
+might have in this app
+
+1010
+00:44:43,140 --> 00:44:45,600
+by giving the exact same
+natural language prompt
+
+1011
+00:44:45,600 --> 00:44:48,210
+to show me the genre of
+"Clumio to the Moon."
+
+1012
+00:44:48,210 --> 00:44:50,430
+And in this case, after
+it's done thinking,
+
+1013
+00:44:50,430 --> 00:44:52,620
+it'll respond with incorrect information
+
+1014
+00:44:52,620 --> 00:44:55,940
+and now thinks that "Clumio to
+the Moon" is a comedy movie.
+
+1015
+00:44:55,940 --> 00:44:57,870
+We all know that that's not true.
+
+1016
+00:44:57,870 --> 00:44:59,880
+We've looked at the data for that movie
+
+1017
+00:44:59,880 --> 00:45:01,740
+very regularly in these demos.
+
+1018
+00:45:01,740 --> 00:45:03,360
+So recovery needs to be performed.
+
+1019
+00:45:03,360 --> 00:45:05,310
+Resiliency has suffered.
+
+1020
+00:45:05,310 --> 00:45:06,360
+Again, like before,
+
+1021
+00:45:06,360 --> 00:45:09,270
+I have multiple different
+recovery modalities.
+
+1022
+00:45:09,270 --> 00:45:12,390
+The first one I'm gonna show
+you is again that SecureVault,
+
+1023
+00:45:12,390 --> 00:45:16,230
+immutable air-gapped
+cyber-resilient copy of the data.
+
+1024
+00:45:16,230 --> 00:45:18,690
+But in this case, a nice
+little added benefit,
+
+1025
+00:45:18,690 --> 00:45:20,580
+Akshay touched on it a second ago.
+
+1026
+00:45:20,580 --> 00:45:24,390
+Not only can we recover from
+an immutable air-gapped copy,
+
+1027
+00:45:24,390 --> 00:45:28,290
+but we can also convert the catalog type
+
+1028
+00:45:28,290 --> 00:45:33,270
+from AWS Glue catalog type
+to S3 Tables catalog type.
+
+1029
+00:45:33,270 --> 00:45:36,180
+A nice little added, almost
+migration-related benefit
+
+1030
+00:45:36,180 --> 00:45:39,210
+to the functionality that Clumio provides
+
+1031
+00:45:39,210 --> 00:45:41,610
+with the resiliency that
+we're showing you today.
+
+1032
+00:45:41,610 --> 00:45:43,290
+But for my demonstration instead,
+
+1033
+00:45:43,290 --> 00:45:46,620
+I'm gonna go back to a
+very specific point in time
+
+1034
+00:45:46,620 --> 00:45:50,610
+using the built-in native
+Apache Iceberg snapshotting.
+
+1035
+00:45:50,610 --> 00:45:51,960
+I'm gonna go back to October.
+
+1036
+00:45:51,960 --> 00:45:53,550
+I'm gonna pick October 30th,
+
+1037
+00:45:53,550 --> 00:45:55,110
+just 'cause I know
+that's the point in time
+
+1038
+00:45:55,110 --> 00:45:56,190
+I wanna go back to.
+
+1039
+00:45:56,190 --> 00:46:00,420
+It's successfully found a
+snapshot from that point in time.
+
+1040
+00:46:00,420 --> 00:46:03,180
+Again, just like before,
+I can even give the option
+
+1041
+00:46:03,180 --> 00:46:05,420
+to convert from an AWS Glue catalog type
+
+1042
+00:46:05,420 --> 00:46:09,210
+to an S3 Table catalog
+type during this recovery.
+
+1043
+00:46:09,210 --> 00:46:10,710
+I've executed the restore.
+
+1044
+00:46:10,710 --> 00:46:12,630
+A new task has begun.
+
+1045
+00:46:12,630 --> 00:46:14,850
+But remember, I have multiple things
+
+1046
+00:46:14,850 --> 00:46:17,490
+I need to recover from in this example,
+
+1047
+00:46:17,490 --> 00:46:19,620
+not just one like the previous examples.
+
+1048
+00:46:19,620 --> 00:46:22,320
+I need to go back to
+Clumio Backtrack for S3
+
+1049
+00:46:22,320 --> 00:46:24,150
+and do what I did in the previous video
+
+1050
+00:46:24,150 --> 00:46:26,160
+where I recover back to a previous version
+
+1051
+00:46:26,160 --> 00:46:29,610
+of the 7000.json object.
+
+1052
+00:46:29,610 --> 00:46:32,160
+Just like before, I pick a point in time.
+
+1053
+00:46:32,160 --> 00:46:35,490
+I do a filter for the 7000.json object.
+
+1054
+00:46:35,490 --> 00:46:38,340
+It's going to query the
+versions for that bucket.
+
+1055
+00:46:38,340 --> 00:46:39,720
+If there's one that exists,
+
+1056
+00:46:39,720 --> 00:46:41,520
+it'll come back with a result showing
+
+1057
+00:46:41,520 --> 00:46:44,580
+that there is a point in time
+for that particular object
+
+1058
+00:46:44,580 --> 00:46:45,600
+that I can go back to.
+
+1059
+00:46:45,600 --> 00:46:47,700
+It successfully found it.
+
+1060
+00:46:47,700 --> 00:46:49,290
+Again, I have additional options,
+
+1061
+00:46:49,290 --> 00:46:51,240
+but in this case, I'm just gonna override
+
+1062
+00:46:51,240 --> 00:46:52,770
+the existing object.
+
+1063
+00:46:52,770 --> 00:46:55,230
+Execute the restore task.
+
+1064
+00:46:55,230 --> 00:46:58,200
+Now I have two restore tasks
+running simultaneously.
+
+1065
+00:46:58,200 --> 00:46:59,970
+Through the magic of video editing again,
+
+1066
+00:46:59,970 --> 00:47:01,860
+we're gonna fast forward
+to when those tasks
+
+1067
+00:47:01,860 --> 00:47:03,750
+have been completed.
+
+1068
+00:47:03,750 --> 00:47:06,450
+I'll go back to that Movies Insights page,
+
+1069
+00:47:06,450 --> 00:47:09,090
+refresh it, which would
+be just like a user
+
+1070
+00:47:09,090 --> 00:47:11,310
+or a business closing
+the app in my smartphone
+
+1071
+00:47:11,310 --> 00:47:12,960
+and reopening it.
+
+1072
+00:47:12,960 --> 00:47:15,900
+Go back to that same chart
+for revenue by genre.
+
+1073
+00:47:15,900 --> 00:47:17,430
+Everything's back to normal.
+
+1074
+00:47:17,430 --> 00:47:20,580
+I've successfully restored
+the resiliency for my app
+
+1075
+00:47:20,580 --> 00:47:24,510
+from, in this case, a
+multiple failure scenario.
+
+1076
+00:47:24,510 --> 00:47:27,330
+Again, just like before,
+ask the AI Movie Assistant
+
+1077
+00:47:27,330 --> 00:47:28,770
+the same prompt I asked before.
+
+1078
+00:47:28,770 --> 00:47:31,440
+I want it to tell me the genre
+for "Clumio to the Moon."
+
+1079
+00:47:31,440 --> 00:47:33,480
+As long as everything
+was restored correctly
+
+1080
+00:47:33,480 --> 00:47:35,460
+and successfully, it should respond
+
+1081
+00:47:35,460 --> 00:47:37,230
+with the correct and accurate information,
+
+1082
+00:47:37,230 --> 00:47:40,020
+no longer providing a
+negative user experience
+
+1083
+00:47:40,020 --> 00:47:42,360
+for Sharon or for the
+business, and it has.
+
+1084
+00:47:42,360 --> 00:47:44,880
+It's now showing "Clumio to
+the Moon" back to what it was,
+
+1085
+00:47:44,880 --> 00:47:48,030
+which was an action-adventure genre movie.
+
+1086
+00:47:48,030 --> 00:47:49,080
+We're in a happy place.
+
+1087
+00:47:49,080 --> 00:47:50,280
+Sharon's a happy user.
+
+1088
+00:47:50,280 --> 00:47:52,833
+Your businesses, your
+customers are happy users.
+
+1089
+00:47:54,100 --> 00:47:56,373
+We're in a good spot.
+
+1090
+00:47:57,460 --> 00:47:58,980
+Let's look at Sharon again,
+
+1091
+00:47:58,980 --> 00:48:01,620
+our trusty user for our smartphone app.
+
+1092
+00:48:01,620 --> 00:48:04,770
+She's now looking at it again.
+
+1093
+00:48:04,770 --> 00:48:07,620
+After we've done our restorations,
+
+1094
+00:48:07,620 --> 00:48:09,870
+her expectations are high,
+
+1095
+00:48:09,870 --> 00:48:11,620
+which she should have high expectations
+
+1096
+00:48:11,620 --> 00:48:16,200
+because AWS has set the bar so
+high for this type of stuff.
+
+1097
+00:48:16,200 --> 00:48:17,610
+She does the same search.
+
+1098
+00:48:17,610 --> 00:48:19,890
+She found a great movie
+she wants to watch,
+
+1099
+00:48:19,890 --> 00:48:22,560
+and she started watching
+it, eating her popcorn
+
+1100
+00:48:22,560 --> 00:48:24,030
+with a smile on her face.
+
+1101
+00:48:24,030 --> 00:48:28,650
+We're back to a resilient
+state for our smartphone app,
+
+1102
+00:48:28,650 --> 00:48:29,763
+our cloud-based app.
+
+1103
+00:48:31,440 --> 00:48:33,750
+Now that we've gone through
+all of these scenarios
+
+1104
+00:48:33,750 --> 00:48:36,660
+and we've explained to
+you how Clumio can help
+
+1105
+00:48:36,660 --> 00:48:39,810
+increase your resiliency and
+why it's important to do so
+
+1106
+00:48:39,810 --> 00:48:43,080
+in the cloud using these
+Gen AI pipeline-based,
+
+1107
+00:48:43,080 --> 00:48:46,080
+cloud-based apps, we
+wanna leave you with a,
+
+1108
+00:48:46,080 --> 00:48:49,530
+and summarize a few pieces of
+recommendations that we have.
+
+1109
+00:48:49,530 --> 00:48:53,100
+The first is what we
+think are requirements
+
+1110
+00:48:53,100 --> 00:48:56,100
+for when you design your data strategies,
+
+1111
+00:48:56,100 --> 00:48:58,440
+data backup and protection strategies,
+
+1112
+00:48:58,440 --> 00:49:01,440
+and maximize your
+potential for resilience.
+
+1113
+00:49:01,440 --> 00:49:03,990
+Eliminate the risk of
+those three examples I gave
+
+1114
+00:49:03,990 --> 00:49:05,910
+at the beginning of the presentation.
+
+1115
+00:49:05,910 --> 00:49:07,440
+I'll start with the first one.
+
+1116
+00:49:07,440 --> 00:49:09,930
+You need to protect your
+entire data pipeline.
+
+1117
+00:49:09,930 --> 00:49:13,280
+The Clumio Flick app, what
+Sharon was using, was simple.
+
+1118
+00:49:13,280 --> 00:49:16,740
+Like I said, our CTO vibe
+coded it in a weekend.
+
+1119
+00:49:16,740 --> 00:49:19,170
+Most likely you have
+applications running in the cloud
+
+1120
+00:49:19,170 --> 00:49:21,420
+that are more complex,
+that are multifaceted,
+
+1121
+00:49:21,420 --> 00:49:24,240
+that have detailed pipelines that involve
+
+1122
+00:49:24,240 --> 00:49:28,020
+maybe a dozen or a dozen
+more services in AWS.
+
+1123
+00:49:28,020 --> 00:49:31,230
+It's very challenging
+to be able to recover
+
+1124
+00:49:31,230 --> 00:49:33,180
+from something that
+occurs to those services
+
+1125
+00:49:33,180 --> 00:49:35,550
+in that pipeline if you don't have,
+
+1126
+00:49:35,550 --> 00:49:37,680
+don't cover the entire pipeline all
+
+1127
+00:49:37,680 --> 00:49:39,210
+at once like Clumio does.
+
+1128
+00:49:39,210 --> 00:49:41,880
+That's what we recommend
+as the first requirement
+
+1129
+00:49:41,880 --> 00:49:44,430
+for architecting for
+resiliency in the AI world
+
+1130
+00:49:44,430 --> 00:49:46,020
+that we live in today.
+
+1131
+00:49:46,020 --> 00:49:48,210
+The second is speed.
+
+1132
+00:49:48,210 --> 00:49:51,920
+Sharon expects fast responses
+from that smartphone app.
+
+1133
+00:49:51,920 --> 00:49:53,550
+AWS has been around for a long time
+
+1134
+00:49:53,550 --> 00:49:55,860
+and they've done a great
+job at raising that bar
+
+1135
+00:49:55,860 --> 00:49:58,540
+to make sure that customers have speed
+
+1136
+00:49:58,540 --> 00:50:01,500
+in what they're doing in the AWS cloud.
+
+1137
+00:50:01,500 --> 00:50:05,300
+Clumio recognizes that and so
+we have built an architecture
+
+1138
+00:50:05,300 --> 00:50:07,500
+that is built for that,
+
+1139
+00:50:07,500 --> 00:50:10,110
+so that you can have
+a good user experience
+
+1140
+00:50:10,110 --> 00:50:12,540
+as often as you possibly can.
+
+1141
+00:50:12,540 --> 00:50:13,920
+Lastly, scale.
+
+1142
+00:50:13,920 --> 00:50:16,500
+We recognize that our app was very small.
+
+1143
+00:50:16,500 --> 00:50:19,980
+The watch lists were only
+about 20 DynamoDB entries.
+
+1144
+00:50:19,980 --> 00:50:22,950
+We had about 5,000 or so S3 objects.
+
+1145
+00:50:22,950 --> 00:50:24,480
+We only had one S3 table.
+
+1146
+00:50:24,480 --> 00:50:25,950
+We only had one S3 vector.
+
+1147
+00:50:25,950 --> 00:50:30,570
+It's odds are your magnitudes
+order larger than that.
+
+1148
+00:50:30,570 --> 00:50:34,080
+So Clumio has built their
+product and their application
+
+1149
+00:50:34,080 --> 00:50:36,400
+and their solution along with Commvault
+
+1150
+00:50:36,400 --> 00:50:38,180
+to keep pace with that scale.
+
+1151
+00:50:38,180 --> 00:50:41,670
+We know that it's dynamically
+changing every single day.
+
+1152
+00:50:41,670 --> 00:50:44,880
+We know that you're adding and
+subtracting every single day.
+
+1153
+00:50:44,880 --> 00:50:47,580
+You need a solution to
+increase that resiliency
+
+1154
+00:50:47,580 --> 00:50:50,430
+and maintain that
+resiliency that will scale.
+
+1155
+00:50:50,430 --> 00:50:52,440
+Those are our three
+recommendations for architecting,
+
+1156
+00:50:52,440 --> 00:50:54,360
+for best practices for the gen AI world
+
+1157
+00:50:54,360 --> 00:50:55,620
+that we live in today.
+
+1158
+00:50:55,620 --> 00:50:58,080
+But more generally speaking, we also,
+
+1159
+00:50:58,080 --> 00:51:00,030
+Clumio is a eight plus year old company.
+
+1160
+00:51:00,030 --> 00:51:04,050
+We've come to know what best
+practices mean for the cloud.
+
+1161
+00:51:04,050 --> 00:51:05,790
+So we wanna provide you with some guidance
+
+1162
+00:51:05,790 --> 00:51:08,130
+in three different particular areas today
+
+1163
+00:51:08,130 --> 00:51:09,420
+before we leave you.
+
+1164
+00:51:09,420 --> 00:51:12,600
+The first is recovery in place matters.
+
+1165
+00:51:12,600 --> 00:51:14,520
+Not having to go to
+the work and the effort
+
+1166
+00:51:14,520 --> 00:51:19,050
+to reconfigure your app after
+you only recover partially
+
+1167
+00:51:19,050 --> 00:51:22,770
+will slow things down and
+make your resiliency suffer.
+
+1168
+00:51:22,770 --> 00:51:26,080
+We wanna accelerate that
+availability of that data
+
+1169
+00:51:26,080 --> 00:51:28,860
+so that sharing has minimal interruption
+
+1170
+00:51:28,860 --> 00:51:31,650
+or your businesses have
+minimal interruption.
+
+1171
+00:51:31,650 --> 00:51:33,630
+The second is, like I
+mentioned a second ago,
+
+1172
+00:51:33,630 --> 00:51:35,250
+the cloud is dynamic.
+
+1173
+00:51:35,250 --> 00:51:37,230
+I've been working on it
+for about six years now.
+
+1174
+00:51:37,230 --> 00:51:38,130
+I was at AWS.
+
+1175
+00:51:38,130 --> 00:51:39,180
+I observed it firsthand.
+
+1176
+00:51:39,180 --> 00:51:40,950
+It changes every single day.
+
+1177
+00:51:40,950 --> 00:51:42,360
+It shrinks, it grows.
+
+1178
+00:51:42,360 --> 00:51:44,550
+So we wanna be able to
+help you with discovering
+
+1179
+00:51:44,550 --> 00:51:46,740
+what already exists now,
+
+1180
+00:51:46,740 --> 00:51:49,470
+but also what has not been yet created.
+
+1181
+00:51:49,470 --> 00:51:51,420
+We have a part of the
+product called Discover
+
+1182
+00:51:51,420 --> 00:51:54,780
+that will help automate
+that level of protection.
+
+1183
+00:51:54,780 --> 00:51:58,260
+And then lastly, like I keep
+saying, scale is huge in AWS.
+
+1184
+00:51:58,260 --> 00:51:59,670
+I don't see that slowing down.
+
+1185
+00:51:59,670 --> 00:52:03,300
+If anything, that'll accelerate
+in the next 15, 20 years
+
+1186
+00:52:03,300 --> 00:52:05,190
+plus that AWS exists.
+
+1187
+00:52:05,190 --> 00:52:07,080
+So you need a product that will be elastic
+
+1188
+00:52:07,080 --> 00:52:08,280
+and scale with you.
+
+1189
+00:52:08,280 --> 00:52:11,700
+Clumio is a 100% serverless architecture
+
+1190
+00:52:11,700 --> 00:52:13,170
+that is built for scale.
+
+1191
+00:52:13,170 --> 00:52:15,600
+So that is our third best practice
+
+1192
+00:52:15,600 --> 00:52:18,270
+that we wanna provide with you today.
+
+1193
+00:52:18,270 --> 00:52:19,890
+I really enjoyed speaking with all of you
+
+1194
+00:52:19,890 --> 00:52:21,630
+on behalf of Akshay and myself.
+
+1195
+00:52:21,630 --> 00:52:23,460
+We don't want this conversation to end.
+
+1196
+00:52:23,460 --> 00:52:26,880
+We want it to continue, even
+when you walk out those doors.
+
+1197
+00:52:26,880 --> 00:52:28,710
+So we wanna offer a few other things
+
+1198
+00:52:28,710 --> 00:52:31,290
+that we're doing before
+re:Invent ends this week.
+
+1199
+00:52:31,290 --> 00:52:33,600
+The first is an AWS game day
+
+1200
+00:52:33,600 --> 00:52:35,560
+that starts at one o'clock tomorrow.
+
+1201
+00:52:35,560 --> 00:52:37,320
+It's gonna be a little bit of fun.
+
+1202
+00:52:37,320 --> 00:52:39,270
+It's gonna be a little bit of sci-fi.
+
+1203
+00:52:39,270 --> 00:52:40,980
+We're calling it Race to Recover,
+
+1204
+00:52:40,980 --> 00:52:44,300
+but it's based on a zombie
+apocalypse or app-ocalypse
+
+1205
+00:52:44,300 --> 00:52:47,160
+is I guess how we're pronouncing
+it on the screen there.
+
+1206
+00:52:47,160 --> 00:52:48,930
+You can see the QR code.
+
+1207
+00:52:48,930 --> 00:52:52,350
+I'll be there if you wanna
+talk to me more there
+
+1208
+00:52:52,350 --> 00:52:53,970
+or after the session.
+
+1209
+00:52:53,970 --> 00:52:55,170
+I'm available 100%.
+
+1210
+00:52:55,170 --> 00:52:57,600
+I'll be there, like I said,
+at one o'clock tomorrow.
+
+1211
+00:52:57,600 --> 00:52:59,010
+And then right after game day,
+
+1212
+00:52:59,010 --> 00:53:01,290
+we're gonna do a happy
+hour just before replay
+
+1213
+00:53:01,290 --> 00:53:03,660
+just so that you can have some relaxation
+
+1214
+00:53:03,660 --> 00:53:04,780
+and comfort and enjoyment
+
+1215
+00:53:04,780 --> 00:53:07,383
+before going having
+some fun at the concert.
+
+1216
+00:53:09,150 --> 00:53:10,350
+That's all for me today.
+
+1217
+00:53:10,350 --> 00:53:11,760
+I really enjoyed speaking with you.
+
+1218
+00:53:11,760 --> 00:53:12,900
+Like I said, I'm gonna go ahead
+
+1219
+00:53:12,900 --> 00:53:15,810
+and turn it back over
+to Akshay to wrap us up.
+
+1220
+00:53:15,810 --> 00:53:17,460
+- Thank you, Jeff.
+
+1221
+00:53:17,460 --> 00:53:19,590
+Thank you so much for joining us today.
+
+1222
+00:53:19,590 --> 00:53:21,180
+If you wanna learn more about everything
+
+1223
+00:53:21,180 --> 00:53:22,440
+that we talked about,
+
+1224
+00:53:22,440 --> 00:53:24,600
+number one, you can
+sign up for a free trial
+
+1225
+00:53:24,600 --> 00:53:26,160
+on AWS Marketplace.
+
+1226
+00:53:26,160 --> 00:53:27,090
+It's really simple.
+
+1227
+00:53:27,090 --> 00:53:28,890
+It's a 14-day free trial.
+
+1228
+00:53:28,890 --> 00:53:30,390
+And then if you wanna learn more
+
+1229
+00:53:30,390 --> 00:53:32,310
+about Clumio Backtrack for DynamoDB,
+
+1230
+00:53:32,310 --> 00:53:35,730
+you can scan the QR
+code to access the blog.
+
+1231
+00:53:35,730 --> 00:53:36,563
+And then if you wanna learn more
+
+1232
+00:53:36,563 --> 00:53:38,850
+about Clumio for Apache Iceberg,
+
+1233
+00:53:38,850 --> 00:53:40,900
+you can use the third QR code here,
+
+1234
+00:53:40,900 --> 00:53:44,010
+and it's gonna tell you all
+that you need to know about it.
+
+1235
+00:53:44,010 --> 00:53:46,470
+Thank you so much for
+attending our session
+
+1236
+00:53:46,470 --> 00:53:48,120
+and have a wonderful day.
+
+1237
+00:53:48,120 --> 00:53:50,220
+And Jeff and I will be
+here for a few more minutes
+
+1238
+00:53:50,220 --> 00:53:52,140
+to answer any questions that you may have.
+
+1239
+00:53:52,140 --> 00:53:53,354
+Thank you.
+
+1240
+00:53:53,354 --> 00:53:54,884
+(audience applauding)
+

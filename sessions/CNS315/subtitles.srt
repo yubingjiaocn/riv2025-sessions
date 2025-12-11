@@ -1,0 +1,4566 @@
+1
+00:00:03,060 --> 00:00:03,933
+- Hello.
+
+2
+00:00:04,950 --> 00:00:07,440
+I love software deployments.
+
+3
+00:00:07,440 --> 00:00:09,240
+I love software deployments because
+
+4
+00:00:09,240 --> 00:00:12,570
+it's how I deliver value
+to you, my customers,
+
+5
+00:00:12,570 --> 00:00:14,220
+and I see that you're here today.
+
+6
+00:00:14,220 --> 00:00:16,650
+You probably also love deploying software
+
+7
+00:00:16,650 --> 00:00:19,680
+to also bring value to your customers.
+
+8
+00:00:19,680 --> 00:00:20,820
+My name's Kevin Gibbs,
+
+9
+00:00:20,820 --> 00:00:22,590
+and I'm here with my colleague Mike Rizzo,
+
+10
+00:00:22,590 --> 00:00:25,770
+and we're gonna talk
+through ECS deployments,
+
+11
+00:00:25,770 --> 00:00:27,840
+and some of the advanced
+deployment strategies
+
+12
+00:00:27,840 --> 00:00:29,390
+that we've delivered this year.
+
+13
+00:00:30,398 --> 00:00:32,970
+Just a rundown of what we're
+gonna run through today.
+
+14
+00:00:32,970 --> 00:00:34,950
+First we're gonna talk
+through just a primer
+
+15
+00:00:34,950 --> 00:00:38,070
+of ECS services and deployments.
+
+16
+00:00:38,070 --> 00:00:39,630
+Mike is gonna go through a deep dive
+
+17
+00:00:39,630 --> 00:00:42,420
+on advanced deployment
+techniques, configuration,
+
+18
+00:00:42,420 --> 00:00:46,320
+and what exactly we mean when
+we say advanced deployments.
+
+19
+00:00:46,320 --> 00:00:48,480
+Finally, we're gonna go
+through some choosing
+
+20
+00:00:48,480 --> 00:00:51,600
+and migrating between
+different deployment strategies
+
+21
+00:00:51,600 --> 00:00:55,121
+or two advanced deployments from rolling.
+
+22
+00:00:55,121 --> 00:00:57,480
+And we'll also cover some key takeaways,
+
+23
+00:00:57,480 --> 00:00:59,550
+and some other ways that you can finish
+
+24
+00:00:59,550 --> 00:01:01,300
+and continue your learning process.
+
+25
+00:01:02,700 --> 00:01:05,700
+So first off, when we
+talk about ECS services,
+
+26
+00:01:05,700 --> 00:01:06,533
+we're really talking about
+
+27
+00:01:06,533 --> 00:01:08,970
+two different configuration parameters,
+
+28
+00:01:08,970 --> 00:01:10,320
+or sets of parameters.
+
+29
+00:01:10,320 --> 00:01:12,360
+The first one is your task definition.
+
+30
+00:01:12,360 --> 00:01:15,270
+So task definition defines a unit of work,
+
+31
+00:01:15,270 --> 00:01:17,790
+a single task within a service.
+
+32
+00:01:17,790 --> 00:01:19,170
+And then service configuration
+
+33
+00:01:19,170 --> 00:01:20,190
+in those parameters,
+
+34
+00:01:20,190 --> 00:01:22,740
+say how you want to deploy one
+
+35
+00:01:22,740 --> 00:01:25,863
+or more of those tasks
+to perform some function.
+
+36
+00:01:26,789 --> 00:01:29,280
+Those two things together,
+those combination
+
+37
+00:01:29,280 --> 00:01:30,540
+actually come down,
+
+38
+00:01:30,540 --> 00:01:34,080
+and result in a service
+revision is what we call an ACS,
+
+39
+00:01:34,080 --> 00:01:34,950
+so you can actually look at
+
+40
+00:01:34,950 --> 00:01:36,960
+how your service changes over time
+
+41
+00:01:36,960 --> 00:01:39,758
+by looking through your revision history.
+
+42
+00:01:39,758 --> 00:01:42,990
+The process from going from either nothing
+
+43
+00:01:42,990 --> 00:01:44,310
+to your first service revision
+
+44
+00:01:44,310 --> 00:01:46,710
+or from a service revision
+to your next service revision
+
+45
+00:01:46,710 --> 00:01:48,600
+is an ECS deployment.
+
+46
+00:01:48,600 --> 00:01:51,660
+And that process is what
+we're gonna go over today.
+
+47
+00:01:51,660 --> 00:01:53,070
+What it does, how it works,
+
+48
+00:01:53,070 --> 00:01:54,716
+and some of the configuration of it.
+
+49
+00:01:54,716 --> 00:01:58,500
+So to get into a sum of the configuration
+
+50
+00:01:58,500 --> 00:02:00,930
+for your deployments, the
+first thing that we look at
+
+51
+00:02:00,930 --> 00:02:03,150
+is the deployment controller.
+
+52
+00:02:03,150 --> 00:02:04,710
+So today we're gonna be focusing on
+
+53
+00:02:04,710 --> 00:02:06,300
+the ECS deployment controller,
+
+54
+00:02:06,300 --> 00:02:09,870
+our native controller
+that we manage for you.
+
+55
+00:02:09,870 --> 00:02:11,970
+There are two other options that you have.
+
+56
+00:02:11,970 --> 00:02:13,593
+One is you can use Code Deploy,
+
+57
+00:02:14,488 --> 00:02:16,020
+which also supports
+some blue/green, Linear
+
+58
+00:02:16,020 --> 00:02:19,893
+and Canary, as well as external.
+
+59
+00:02:19,893 --> 00:02:21,270
+And what external means
+is really it's up to you.
+
+60
+00:02:21,270 --> 00:02:24,322
+You own the deployments, you
+can do it however you want,
+
+61
+00:02:24,322 --> 00:02:27,360
+but you are taking on that responsibility,
+
+62
+00:02:27,360 --> 00:02:28,440
+so it is another option.
+
+63
+00:02:28,440 --> 00:02:31,353
+Again, we're gonna focus
+on ECS going forward.
+
+64
+00:02:33,000 --> 00:02:35,850
+So the next thing you need
+to decide is what strategy.
+
+65
+00:02:35,850 --> 00:02:38,970
+So now that you have your
+controller decided on ECS,
+
+66
+00:02:38,970 --> 00:02:40,950
+we have four strategies.
+
+67
+00:02:40,950 --> 00:02:43,560
+We have our default
+strategy which is rolling,
+
+68
+00:02:43,560 --> 00:02:45,390
+where you're deploying a new service
+
+69
+00:02:45,390 --> 00:02:48,480
+alongside your old revision,
+
+70
+00:02:48,480 --> 00:02:51,510
+and you're just migrating via the creation
+
+71
+00:02:51,510 --> 00:02:52,833
+and deletion of tasks.
+
+72
+00:02:53,880 --> 00:02:54,780
+In contrast to that,
+
+73
+00:02:54,780 --> 00:02:57,930
+you also have three new
+advanced deployment controls,
+
+74
+00:02:57,930 --> 00:02:59,643
+or deployment strategies, sorry.
+
+75
+00:03:01,080 --> 00:03:02,940
+These are different in sort of
+
+76
+00:03:02,940 --> 00:03:04,800
+how traffic is migrated,
+
+77
+00:03:04,800 --> 00:03:08,130
+but all of them allow you
+to have a new set of tasks,
+
+78
+00:03:08,130 --> 00:03:10,260
+and an old set of tasks sitting together
+
+79
+00:03:10,260 --> 00:03:11,760
+to allow you to roll back,
+
+80
+00:03:11,760 --> 00:03:13,920
+and roll forward much more quickly
+
+81
+00:03:13,920 --> 00:03:15,783
+and seamlessly between versions.
+
+82
+00:03:16,972 --> 00:03:19,590
+Some of the differences that you'll notice
+
+83
+00:03:19,590 --> 00:03:22,320
+between standard rolling
+
+84
+00:03:22,320 --> 00:03:23,400
+and advanced deployments
+
+85
+00:03:23,400 --> 00:03:25,890
+is what your task capacity looks like.
+
+86
+00:03:25,890 --> 00:03:27,960
+So in a standard rolling deployment
+
+87
+00:03:27,960 --> 00:03:30,030
+you're actually gonna create new task,
+
+88
+00:03:30,030 --> 00:03:32,610
+and delete or stop old tasks.
+
+89
+00:03:32,610 --> 00:03:36,480
+And so you kind of have
+more of a constant capacity.
+
+90
+00:03:36,480 --> 00:03:37,770
+Whereas, in advanced deployments,
+
+91
+00:03:37,770 --> 00:03:39,801
+through the lifetime of your deployment
+
+92
+00:03:39,801 --> 00:03:42,300
+you're actually gonna have
+double the number of tasks.
+
+93
+00:03:42,300 --> 00:03:43,890
+You're gonna have your blue task
+
+94
+00:03:43,890 --> 00:03:47,490
+and your green task if you
+wanna use the color analogy.
+
+95
+00:03:47,490 --> 00:03:50,340
+And so you have, again,
+twice for that duration.
+
+96
+00:03:50,340 --> 00:03:51,870
+And then you go back down to normal
+
+97
+00:03:51,870 --> 00:03:54,273
+once the deployment is over.
+
+98
+00:03:56,040 --> 00:03:58,330
+The other aspect, key differences is
+
+99
+00:03:58,330 --> 00:04:02,730
+how traffic is shifted or
+transitions between the two.
+
+100
+00:04:02,730 --> 00:04:05,970
+So in blue/green, you
+have, again, blue task
+
+101
+00:04:05,970 --> 00:04:08,100
+and green tasks running
+right next to each other,
+
+102
+00:04:08,100 --> 00:04:09,300
+old and new.
+
+103
+00:04:09,300 --> 00:04:13,080
+And so the total traffic
+that goes to either one
+
+104
+00:04:13,080 --> 00:04:16,080
+is basically dependent on how
+many tasks are up and healthy.
+
+105
+00:04:17,070 --> 00:04:21,300
+In advanced deployments you
+have additional functionality
+
+106
+00:04:21,300 --> 00:04:22,920
+of how that traffic is shifted,
+
+107
+00:04:22,920 --> 00:04:24,660
+and so in blue/green,
+
+108
+00:04:24,660 --> 00:04:29,660
+really what that's doing is
+taking 100% from blue to green.
+
+109
+00:04:30,090 --> 00:04:33,300
+One step, we just do it once.
+
+110
+00:04:33,300 --> 00:04:35,910
+Canary is kind of a two-step process.
+
+111
+00:04:35,910 --> 00:04:37,975
+So you get to choose
+the initial percentage.
+
+112
+00:04:37,975 --> 00:04:42,030
+So, in this case I'm showing
+10% is the initial transition,
+
+113
+00:04:42,030 --> 00:04:44,012
+and so you transition 10% of your traffic.
+
+114
+00:04:44,012 --> 00:04:45,840
+Then you can check metrics,
+
+115
+00:04:45,840 --> 00:04:47,550
+make sure everything's looking good,
+
+116
+00:04:47,550 --> 00:04:50,183
+and then it'll transition 100%.
+
+117
+00:04:51,060 --> 00:04:53,130
+Linear is an end-stage version,
+
+118
+00:04:53,130 --> 00:04:56,220
+and so in this one you have increments.
+
+119
+00:04:56,220 --> 00:04:58,423
+And so you can start with as small as 3%,
+
+120
+00:04:58,423 --> 00:05:03,000
+which would result in about
+33 stages to your deployment,
+
+121
+00:05:03,000 --> 00:05:04,950
+but it does traffic shifting over time.
+
+122
+00:05:04,950 --> 00:05:07,256
+And so some of the reasons
+you would want to do that
+
+123
+00:05:07,256 --> 00:05:09,900
+is if you're concerned about performance
+
+124
+00:05:09,900 --> 00:05:10,733
+of the new version,
+
+125
+00:05:10,733 --> 00:05:13,740
+and so you wanna actually
+gradually shift traffic,
+
+126
+00:05:13,740 --> 00:05:15,090
+and see how it's performing,
+
+127
+00:05:15,090 --> 00:05:16,240
+or something like that.
+
+128
+00:05:18,240 --> 00:05:20,580
+Some of the common configuration
+
+129
+00:05:20,580 --> 00:05:21,990
+that you have between all
+
+130
+00:05:21,990 --> 00:05:26,220
+of the ECS strategies
+are life cycle hooks.
+
+131
+00:05:26,220 --> 00:05:28,590
+So this was something new
+that we added this year.
+
+132
+00:05:28,590 --> 00:05:31,710
+And this is the ability for you to engage
+
+133
+00:05:31,710 --> 00:05:32,880
+in the deployment process.
+
+134
+00:05:32,880 --> 00:05:34,510
+You can define your lambdas
+
+135
+00:05:35,423 --> 00:05:38,820
+of hey, after you've
+scaled up my new tasks
+
+136
+00:05:38,820 --> 00:05:39,840
+I want to do something.
+
+137
+00:05:39,840 --> 00:05:42,602
+I wanna check something or whatever.
+
+138
+00:05:42,602 --> 00:05:46,950
+You can also implement your
+own traffic shifting paradigm
+
+139
+00:05:46,950 --> 00:05:48,363
+via life cycle.
+
+140
+00:05:49,246 --> 00:05:53,010
+And then also we have
+the idea of a bake time.
+
+141
+00:05:53,010 --> 00:05:55,050
+So if you're using alarm-based rollbacks,
+
+142
+00:05:55,050 --> 00:05:56,678
+which we've had for a little while.
+
+143
+00:05:56,678 --> 00:05:59,520
+If you want to just bake
+it with that new version
+
+144
+00:05:59,520 --> 00:06:02,940
+surfing traffic for an hour a day,
+
+145
+00:06:02,940 --> 00:06:05,553
+you have that option with the bake time.
+
+146
+00:06:07,860 --> 00:06:11,490
+Finally, there's some
+specific configuration
+
+147
+00:06:11,490 --> 00:06:13,263
+for the different strategies.
+
+148
+00:06:14,399 --> 00:06:15,810
+The first one is with rolling is kind of
+
+149
+00:06:15,810 --> 00:06:17,550
+how those increments grow
+
+150
+00:06:17,550 --> 00:06:19,230
+and shift over time of
+
+151
+00:06:19,230 --> 00:06:22,710
+what is your total max
+capacity in rolling,
+
+152
+00:06:22,710 --> 00:06:24,510
+and then also what's a minimum capacity.
+
+153
+00:06:24,510 --> 00:06:27,810
+And so you can actually have
+it scale down some tasks
+
+154
+00:06:27,810 --> 00:06:29,070
+before it starts new tasks,
+
+155
+00:06:29,070 --> 00:06:31,740
+or start new tasks before
+scaling down old tasks,
+
+156
+00:06:31,740 --> 00:06:33,440
+configured using those two things.
+
+157
+00:06:34,350 --> 00:06:36,060
+Blue/green, there's
+really nothing specific.
+
+158
+00:06:36,060 --> 00:06:37,830
+You can set up the life cycle hooks,
+
+159
+00:06:37,830 --> 00:06:39,090
+and you can set up your bake time,
+
+160
+00:06:39,090 --> 00:06:40,920
+but it's pretty much just a single shift,
+
+161
+00:06:40,920 --> 00:06:42,480
+so there's nothing specific.
+
+162
+00:06:42,480 --> 00:06:45,150
+With canary you can
+control that initial shift,
+
+163
+00:06:45,150 --> 00:06:47,383
+and you can go as small as 0.1%,
+
+164
+00:06:47,383 --> 00:06:50,316
+and you can go all the way up to 99.9%
+
+165
+00:06:50,316 --> 00:06:53,160
+to kind of control how much traffic
+
+166
+00:06:53,160 --> 00:06:54,000
+is on your new version
+
+167
+00:06:54,000 --> 00:06:55,800
+before you move everyone over to it.
+
+168
+00:06:56,640 --> 00:06:59,370
+And then Linear, similarly,
+each stage can be
+
+169
+00:06:59,370 --> 00:07:00,600
+as small as 3%,
+
+170
+00:07:00,600 --> 00:07:03,750
+and as much as 99.9%.
+
+171
+00:07:03,750 --> 00:07:05,400
+And, again, with those last two,
+
+172
+00:07:05,400 --> 00:07:07,530
+you kind of have a time wait,
+
+173
+00:07:07,530 --> 00:07:08,910
+kind of like a mini bake time
+
+174
+00:07:08,910 --> 00:07:11,640
+between each of your shifts to control.
+
+175
+00:07:11,640 --> 00:07:12,900
+Now I'm gonna hand it off to Mike,
+
+176
+00:07:12,900 --> 00:07:15,270
+as he's gonna deep dive into the different
+
+177
+00:07:15,270 --> 00:07:17,457
+advanced deployment strategies.
+
+178
+00:07:17,457 --> 00:07:20,457
+(people chattering)
+
+179
+00:07:25,050 --> 00:07:26,700
+- Thanks, Kevin, for that great intro
+
+180
+00:07:26,700 --> 00:07:28,980
+to advanced deployments.
+
+181
+00:07:28,980 --> 00:07:30,390
+My name's Mike,
+
+182
+00:07:30,390 --> 00:07:33,136
+and (indistinct) say
+I'm really excited about
+
+183
+00:07:33,136 --> 00:07:35,130
+working with customers to help them
+
+184
+00:07:35,130 --> 00:07:37,560
+derive real benefits from new features
+
+185
+00:07:37,560 --> 00:07:38,913
+like advanced deployments.
+
+186
+00:07:39,960 --> 00:07:41,370
+Over the next half hour or so,
+
+187
+00:07:41,370 --> 00:07:44,760
+I'm gonna a bit deeper into
+how advanced deployments work.
+
+188
+00:07:44,760 --> 00:07:47,070
+And also look at some specific examples
+
+189
+00:07:47,070 --> 00:07:48,660
+of how you can use them in a variety
+
+190
+00:07:48,660 --> 00:07:50,403
+of different scenarios.
+
+191
+00:07:51,630 --> 00:07:53,553
+But first a little detour.
+
+192
+00:07:54,480 --> 00:07:58,620
+Just like to share another
+passion of mine, unicorns.
+
+193
+00:07:58,620 --> 00:08:00,600
+So at AWS we love unicorns.
+
+194
+00:08:00,600 --> 00:08:02,980
+I'll let you in on a little secret.
+
+195
+00:08:02,980 --> 00:08:03,813
+Some of us venture out at night
+
+196
+00:08:03,813 --> 00:08:05,813
+looking to spot one of
+
+197
+00:08:05,813 --> 00:08:06,646
+these amazing creatures,
+
+198
+00:08:06,646 --> 00:08:10,050
+and here's one that a colleague
+of mine snapped last week.
+
+199
+00:08:10,050 --> 00:08:12,150
+And the reason I'm
+mentioning this is because
+
+200
+00:08:12,150 --> 00:08:14,460
+I'd like to take you through a journey
+
+201
+00:08:14,460 --> 00:08:17,550
+that one of my favorite
+customers recently went through
+
+202
+00:08:17,550 --> 00:08:19,852
+with advanced deployments.
+
+203
+00:08:19,852 --> 00:08:23,580
+Meet Ada, CTO of Unicorn Watch.
+
+204
+00:08:23,580 --> 00:08:27,630
+So Unicorn Watch is the
+world's leading expository
+
+205
+00:08:27,630 --> 00:08:29,820
+of unicorn sightings data,
+
+206
+00:08:29,820 --> 00:08:31,804
+the go-to place for unicorn research.
+
+207
+00:08:31,804 --> 00:08:35,310
+It's also home to the
+world's largest archive
+
+208
+00:08:35,310 --> 00:08:37,863
+of unicorn sighting videos.
+
+209
+00:08:38,820 --> 00:08:43,680
+And when Ada heard about
+
+210
+00:08:43,680 --> 00:08:45,480
+advanced deployments being launched,
+
+211
+00:08:45,480 --> 00:08:47,340
+she came to us and asked
+
+212
+00:08:47,340 --> 00:08:49,770
+whether there was anything
+that they could benefit
+
+213
+00:08:49,770 --> 00:08:51,810
+from using advanced deployments
+
+214
+00:08:51,810 --> 00:08:54,483
+to speed up their delivery velocity.
+
+215
+00:08:57,210 --> 00:08:59,501
+So this is the architecture they had
+
+216
+00:08:59,501 --> 00:09:02,493
+prior to advanced
+deployments coming along.
+
+217
+00:09:03,780 --> 00:09:07,290
+They had a UI fronted with an ALB,
+
+218
+00:09:07,290 --> 00:09:10,500
+and through this UI users were able to
+
+219
+00:09:10,500 --> 00:09:12,780
+access a catalog of videos,
+
+220
+00:09:12,780 --> 00:09:14,460
+to access their accounts,
+
+221
+00:09:14,460 --> 00:09:16,620
+and to make purchases.
+
+222
+00:09:16,620 --> 00:09:19,140
+When making a purchase, that would trigger
+
+223
+00:09:19,140 --> 00:09:21,802
+the creation of an order fulfillment flow,
+
+224
+00:09:21,802 --> 00:09:26,802
+and the flow could be
+monitored through another ALB
+
+225
+00:09:27,137 --> 00:09:31,320
+by pulling an interface
+on orders serviced.
+
+226
+00:09:31,320 --> 00:09:33,510
+All the interaction between the front end,
+
+227
+00:09:33,510 --> 00:09:36,457
+and the back end was
+through Service Connect.
+
+228
+00:09:36,457 --> 00:09:38,730
+And then they also had the bottom,
+
+229
+00:09:38,730 --> 00:09:42,330
+an (indistinct) streaming service
+
+230
+00:09:42,330 --> 00:09:46,380
+that would pick up videos
+from a media asset bucket.
+
+231
+00:09:46,380 --> 00:09:47,427
+And the way this worked as well was
+
+232
+00:09:47,427 --> 00:09:52,427
+the way that orders
+would be creating videos
+
+233
+00:09:53,190 --> 00:09:56,400
+that were water marked
+with a unique identifier
+
+234
+00:09:56,400 --> 00:09:57,873
+for security purposes.
+
+235
+00:09:59,370 --> 00:10:01,507
+So this all worked nicely,
+
+236
+00:10:01,507 --> 00:10:06,507
+and they were using ECS
+rolling deployments throughout
+
+237
+00:10:06,780 --> 00:10:08,300
+with one exception.
+
+238
+00:10:08,300 --> 00:10:11,880
+In the case of the UI they
+wanted to use blue/green
+
+239
+00:10:11,880 --> 00:10:16,402
+so they could manually
+check any new deployments
+
+240
+00:10:16,402 --> 00:10:19,842
+in a safe enviornment
+before flipping it over
+
+241
+00:10:19,842 --> 00:10:23,310
+into the production environment.
+
+242
+00:10:23,310 --> 00:10:25,346
+For that they use Code Deploy.
+
+243
+00:10:25,346 --> 00:10:30,346
+Okay, so, you can imagine
+that a service like this,
+
+244
+00:10:30,960 --> 00:10:33,540
+it's a premium service
+with a high price tag,
+
+245
+00:10:33,540 --> 00:10:35,820
+and also those unicorn photographers
+
+246
+00:10:35,820 --> 00:10:38,580
+wanna get their royalties
+so it's really important
+
+247
+00:10:38,580 --> 00:10:42,510
+that this platform maintains
+a high level of availability
+
+248
+00:10:42,510 --> 00:10:43,599
+and reliability.
+
+249
+00:10:43,599 --> 00:10:45,720
+At the same time,
+
+250
+00:10:45,720 --> 00:10:48,600
+there's growing demand
+for more new features,
+
+251
+00:10:48,600 --> 00:10:53,600
+and also Ada wanted to
+expose the catalog service
+
+252
+00:10:54,013 --> 00:10:55,770
+to third party websites
+
+253
+00:10:55,770 --> 00:11:00,063
+so that they could also resell
+videos from the catalog.
+
+254
+00:11:01,710 --> 00:11:05,490
+So the challenge they faced
+was they wanted to maintain
+
+255
+00:11:05,490 --> 00:11:07,530
+high variability and reliability,
+
+256
+00:11:07,530 --> 00:11:10,380
+but at the same time speed
+up their delivery velocity.
+
+257
+00:11:10,380 --> 00:11:12,540
+So when advanced deployments came along
+
+258
+00:11:12,540 --> 00:11:13,995
+they were really keen to understand
+
+259
+00:11:13,995 --> 00:11:15,903
+what that could do for them.
+
+260
+00:11:17,478 --> 00:11:21,000
+So, I come back to this story in a second,
+
+261
+00:11:21,000 --> 00:11:23,220
+but first I just wanna take you through
+
+262
+00:11:23,220 --> 00:11:25,170
+the life cycle of an advanced deployment
+
+263
+00:11:25,170 --> 00:11:26,283
+in a bit more detail.
+
+264
+00:11:27,720 --> 00:11:30,480
+So, in the initial state,
+
+265
+00:11:30,480 --> 00:11:33,840
+we have a service running in production.
+
+266
+00:11:33,840 --> 00:11:35,403
+Record is the blue environment.
+
+267
+00:11:36,660 --> 00:11:39,090
+All traffic is going there,
+
+268
+00:11:39,090 --> 00:11:44,090
+and when we start a new
+deployment we have new spec
+
+269
+00:11:44,370 --> 00:11:46,950
+for the tasks that need to be run,
+
+270
+00:11:46,950 --> 00:11:49,113
+including a new (indistinct), for example.
+
+271
+00:11:50,490 --> 00:11:53,670
+And we enter the deployment state machine
+
+272
+00:11:53,670 --> 00:11:54,884
+in the first stage,
+
+273
+00:11:54,884 --> 00:11:57,990
+which is noticed pre-scale up.
+
+274
+00:11:57,990 --> 00:12:01,592
+So this is before we scale
+up the green enviornment.
+
+275
+00:12:01,592 --> 00:12:04,440
+Now you see that there's
+a little hook icon
+
+276
+00:12:04,440 --> 00:12:05,970
+on the side there.
+
+277
+00:12:05,970 --> 00:12:08,070
+That notes that this is a hookable stage,
+
+278
+00:12:08,070 --> 00:12:11,640
+which means that you can
+attach a lifecycle hook to it.
+
+279
+00:12:11,640 --> 00:12:14,430
+So with lifecycle hooks you
+can run your own custom logic
+
+280
+00:12:14,430 --> 00:12:16,560
+in a lambda function,
+
+281
+00:12:16,560 --> 00:12:18,600
+and you can use that to perform tests
+
+282
+00:12:18,600 --> 00:12:22,110
+or checks that you could use to determine
+
+283
+00:12:22,110 --> 00:12:24,360
+whether you want that stage to proceed,
+
+284
+00:12:24,360 --> 00:12:26,370
+to succeed and proceed to the next stage,
+
+285
+00:12:26,370 --> 00:12:28,803
+or whether you want to force a roll back.
+
+286
+00:12:29,790 --> 00:12:34,740
+In this example, before you
+scale up the green enviornment,
+
+287
+00:12:34,740 --> 00:12:38,190
+you might, for example,
+want to run some kind of
+
+288
+00:12:38,190 --> 00:12:41,490
+admission control check where
+you might say, for example,
+
+289
+00:12:41,490 --> 00:12:43,290
+is this container image coming from
+
+290
+00:12:43,290 --> 00:12:45,213
+a trusted repo?
+
+291
+00:12:47,550 --> 00:12:50,190
+So if the hook returns successfully,
+
+292
+00:12:50,190 --> 00:12:51,540
+you then proceed to the next stage,
+
+293
+00:12:51,540 --> 00:12:53,820
+and this is where we do the scale up.
+
+294
+00:12:53,820 --> 00:12:56,220
+So, yeah, we scale up
+the green enviornment.
+
+295
+00:12:56,220 --> 00:12:59,399
+You can see there on the far side
+
+296
+00:12:59,399 --> 00:13:02,193
+we have the green enviornment scaling up.
+
+297
+00:13:03,510 --> 00:13:06,521
+And once you achieve the full scale up
+
+298
+00:13:06,521 --> 00:13:10,473
+then we went the post-scale up stage.
+
+299
+00:13:11,370 --> 00:13:14,287
+At this point, all production traffic
+
+300
+00:13:14,287 --> 00:13:16,289
+is still going to the blue environment,
+
+301
+00:13:16,289 --> 00:13:17,933
+there's no traffic going
+to green environment.
+
+302
+00:13:19,020 --> 00:13:21,240
+So once we've got the
+green enviornment in place,
+
+303
+00:13:21,240 --> 00:13:25,260
+the next step is start
+shifting test traffic to it.
+
+304
+00:13:25,260 --> 00:13:28,050
+So we now enter the test
+traffic shift stage,
+
+305
+00:13:28,050 --> 00:13:30,706
+and here we configure routing
+
+306
+00:13:30,706 --> 00:13:33,030
+so that test traffic,
+
+307
+00:13:33,030 --> 00:13:34,740
+which has to be identified in some way,
+
+308
+00:13:34,740 --> 00:13:36,300
+we'll come back to that later,
+
+309
+00:13:36,300 --> 00:13:37,830
+that test traffic can start to flow
+
+310
+00:13:37,830 --> 00:13:39,523
+to the green enviornment.
+
+311
+00:13:40,500 --> 00:13:42,450
+Once that routing is set up,
+
+312
+00:13:42,450 --> 00:13:45,900
+we enter the post test
+traffic shift stage.
+
+313
+00:13:45,900 --> 00:13:48,480
+Now, at this point the green enviornment
+
+314
+00:13:48,480 --> 00:13:51,780
+is able to start to receive test traffic.
+
+315
+00:13:51,780 --> 00:13:54,639
+This is a really convenient
+place to put in some hooks
+
+316
+00:13:54,639 --> 00:13:55,980
+if you want to do
+
+317
+00:13:55,980 --> 00:13:59,520
+some automated testing
+on the green enviornment,
+
+318
+00:13:59,520 --> 00:14:01,500
+or if you want some kind of manual check,
+
+319
+00:14:01,500 --> 00:14:04,080
+some manual approval on something
+
+320
+00:14:04,080 --> 00:14:05,670
+running in the green environment,
+
+321
+00:14:05,670 --> 00:14:07,410
+you can do that through the hook here.
+
+322
+00:14:07,410 --> 00:14:09,120
+And we're gonna see some examples of this
+
+323
+00:14:09,120 --> 00:14:10,110
+with Unicorn Watch,
+
+324
+00:14:10,110 --> 00:14:11,410
+and see how they use this.
+
+325
+00:14:13,800 --> 00:14:15,780
+Okay, so we're now at the position where
+
+326
+00:14:15,780 --> 00:14:17,460
+the blue environment's still
+
+327
+00:14:17,460 --> 00:14:19,290
+receiving all production traffic,
+
+328
+00:14:19,290 --> 00:14:21,005
+all test traffic is going to green.
+
+329
+00:14:21,005 --> 00:14:25,800
+Once we exit the post
+traffic shift successfully,
+
+330
+00:14:25,800 --> 00:14:28,590
+so any life cycle hooks have succeeded,
+
+331
+00:14:28,590 --> 00:14:31,710
+we can start to shift
+the production traffic
+
+332
+00:14:31,710 --> 00:14:34,290
+to the green enviornment.
+
+333
+00:14:34,290 --> 00:14:36,060
+Now, depending on the
+strategy you're using,
+
+334
+00:14:36,060 --> 00:14:38,670
+this can happen in a
+number of different ways.
+
+335
+00:14:38,670 --> 00:14:42,540
+The simplest is with blue/green
+this happens all at once.
+
+336
+00:14:42,540 --> 00:14:45,684
+So we shift all traffic in one step
+
+337
+00:14:45,684 --> 00:14:48,363
+from blue to green.
+
+338
+00:14:49,260 --> 00:14:50,610
+But can also do Canary,
+
+339
+00:14:50,610 --> 00:14:52,140
+where you have it in two stages,
+
+340
+00:14:52,140 --> 00:14:53,010
+or you can do it Linear,
+
+341
+00:14:53,010 --> 00:14:54,720
+which could be multi-step.
+
+342
+00:14:54,720 --> 00:14:56,320
+We'll come back to that shortly.
+
+343
+00:14:57,870 --> 00:15:00,345
+Once you've shifted production traffic,
+
+344
+00:15:00,345 --> 00:15:03,634
+and you've got 100% going to green,
+
+345
+00:15:03,634 --> 00:15:08,634
+we enter the post production
+traffic shift stage.
+
+346
+00:15:08,700 --> 00:15:11,250
+Now at this point there's
+no more production traffic
+
+347
+00:15:11,250 --> 00:15:14,160
+going to blue, it's all going to green,
+
+348
+00:15:14,160 --> 00:15:16,830
+but the blue enviornment is still running.
+
+349
+00:15:16,830 --> 00:15:18,720
+We still have the old
+service revision running
+
+350
+00:15:18,720 --> 00:15:19,920
+in the blue enviornment.
+
+351
+00:15:19,920 --> 00:15:22,560
+And this is useful because
+it means that if something
+
+352
+00:15:22,560 --> 00:15:24,609
+was going wrong in the green enviornment,
+
+353
+00:15:24,609 --> 00:15:27,150
+we can very quickly roll back
+
+354
+00:15:27,150 --> 00:15:28,750
+and switch back to the blue one.
+
+355
+00:15:31,320 --> 00:15:34,410
+And we keep this blue enviornment running
+
+356
+00:15:34,410 --> 00:15:36,180
+for a defined bake time.
+
+357
+00:15:36,180 --> 00:15:39,210
+So as part of your configuration
+
+358
+00:15:39,210 --> 00:15:41,310
+for the blue/green deployment
+
+359
+00:15:41,310 --> 00:15:43,140
+you can specify a bake time.
+
+360
+00:15:43,140 --> 00:15:45,318
+And for the whole
+duration of the bank time
+
+361
+00:15:45,318 --> 00:15:47,913
+your blue enviornment
+will continue to exist.
+
+362
+00:15:49,710 --> 00:15:50,820
+Once the base time is over,
+
+363
+00:15:50,820 --> 00:15:52,170
+the final step is clean up.
+
+364
+00:15:52,170 --> 00:15:55,523
+At this point we scale
+the blue down to zero,
+
+365
+00:15:55,523 --> 00:15:58,830
+and we now have a
+situation where the green
+
+366
+00:15:58,830 --> 00:16:00,300
+is our production enviornment,
+
+367
+00:16:00,300 --> 00:16:03,933
+and becomes the blue enviornment
+for the next deployment.
+
+368
+00:16:05,220 --> 00:16:08,593
+Each of these stages
+can take up to 24 hours,
+
+369
+00:16:08,593 --> 00:16:11,880
+so you can do this over a
+pretty long period of time,
+
+370
+00:16:11,880 --> 00:16:14,373
+if you need to run long
+tests, for example.
+
+371
+00:16:15,750 --> 00:16:18,660
+You'll also notice I was
+careful not to say too much
+
+372
+00:16:18,660 --> 00:16:20,400
+about how the routing,
+
+373
+00:16:20,400 --> 00:16:22,470
+and the traffic shifting
+is actually happening,
+
+374
+00:16:22,470 --> 00:16:26,220
+and that was deliberate
+because it depends on how
+
+375
+00:16:26,220 --> 00:16:28,350
+the service is exposed.
+
+376
+00:16:28,350 --> 00:16:31,226
+So, for example, if the service
+is behind the load balancer,
+
+377
+00:16:31,226 --> 00:16:35,520
+then it's achieved by manipulating
+waits or listener rules.
+
+378
+00:16:35,520 --> 00:16:37,950
+But if the service is
+exposed to Service Connect,
+
+379
+00:16:37,950 --> 00:16:41,190
+then the routing is
+achieved through changing
+
+380
+00:16:41,190 --> 00:16:44,013
+the routing rules in the
+service connect proxy.
+
+381
+00:16:49,200 --> 00:16:52,194
+So in the case of Canary deployment,
+
+382
+00:16:52,194 --> 00:16:53,910
+everything's exactly the same
+
+383
+00:16:53,910 --> 00:16:56,940
+as we saw in the lifecycle up until now.
+
+384
+00:16:56,940 --> 00:17:00,390
+The only difference is
+you get two production
+
+385
+00:17:00,390 --> 00:17:01,740
+traffic shift stages.
+
+386
+00:17:01,740 --> 00:17:03,540
+So essentially any hooks
+
+387
+00:17:03,540 --> 00:17:05,571
+attached to production traffic shift,
+
+388
+00:17:05,571 --> 00:17:09,720
+that hook will be invoked twice.
+
+389
+00:17:09,720 --> 00:17:14,250
+First time will be for
+the initial Canary shift.
+
+390
+00:17:14,250 --> 00:17:17,400
+So in the first step
+you take a percentage,
+
+391
+00:17:17,400 --> 00:17:20,034
+ion this case we've got 10%
+but you can configure that.
+
+392
+00:17:20,034 --> 00:17:23,701
+And we specify a Canary bake time.
+
+393
+00:17:23,701 --> 00:17:26,262
+And for the duration of
+that Canary bake time,
+
+394
+00:17:26,262 --> 00:17:30,150
+we will have that percentage
+of production traffic
+
+395
+00:17:30,150 --> 00:17:32,730
+going to the green enviornment.
+
+396
+00:17:32,730 --> 00:17:34,650
+Once the Canary bake time is over,
+
+397
+00:17:34,650 --> 00:17:37,740
+production, traffic shift is entered again
+
+398
+00:17:37,740 --> 00:17:40,157
+so we invoke the hook
+again if there is one.
+
+399
+00:17:40,157 --> 00:17:42,000
+And then that completes
+
+400
+00:17:42,000 --> 00:17:44,853
+the rest of the traffic
+shift to production.
+
+401
+00:17:47,574 --> 00:17:50,080
+In the case of Linear, it's similar.
+
+402
+00:17:51,392 --> 00:17:54,303
+But we have multiple steps.
+
+403
+00:17:55,920 --> 00:17:57,210
+So you can use Canary
+
+404
+00:17:57,210 --> 00:17:59,640
+and Linear to achieve
+different objectives.
+
+405
+00:17:59,640 --> 00:18:01,170
+In the case of Canary,
+
+406
+00:18:01,170 --> 00:18:04,410
+you would, if had a
+situation where you wanted
+
+407
+00:18:04,410 --> 00:18:09,022
+to do some testing of
+your new service revision
+
+408
+00:18:09,022 --> 00:18:11,550
+with actual production traffic
+
+409
+00:18:11,550 --> 00:18:13,020
+you can do that with Canary,
+
+410
+00:18:13,020 --> 00:18:15,780
+limiting your blast radius
+so that if things went wrong
+
+411
+00:18:15,780 --> 00:18:17,970
+it wouldn't hit you too badly.
+
+412
+00:18:17,970 --> 00:18:19,260
+In the case of Linear,
+
+413
+00:18:19,260 --> 00:18:21,210
+what it allows you to do
+is have a more gradual
+
+414
+00:18:21,210 --> 00:18:25,560
+sort of roll out of the
+new service revision
+
+415
+00:18:25,560 --> 00:18:28,530
+while you're monitoring to make sure
+
+416
+00:18:28,530 --> 00:18:30,000
+that any performance
+
+417
+00:18:30,000 --> 00:18:33,813
+and functionality is maintained correctly.
+
+418
+00:18:36,407 --> 00:18:39,746
+Really important that when
+using advanced deployment
+
+419
+00:18:39,746 --> 00:18:44,370
+you think about what
+would constitute a failure
+
+420
+00:18:44,370 --> 00:18:47,595
+or under performance of the new revision
+
+421
+00:18:47,595 --> 00:18:51,240
+that would require you
+to stop the deployment
+
+422
+00:18:51,240 --> 00:18:52,890
+and roll back.
+
+423
+00:18:52,890 --> 00:18:57,890
+And ECS provides three broad
+mechanisms to support this.
+
+424
+00:18:58,110 --> 00:19:01,200
+First, the simplest is Circuit Breaker.
+
+425
+00:19:01,200 --> 00:19:04,830
+So with Circuit Breaker
+you're simply checking
+
+426
+00:19:04,830 --> 00:19:08,820
+that the new tasks actually
+achieve a healthy, stable state
+
+427
+00:19:08,820 --> 00:19:10,833
+within a specified time period.
+
+428
+00:19:12,810 --> 00:19:14,790
+Next we've got card watch alarms.
+
+429
+00:19:14,790 --> 00:19:16,770
+So here you can choose metrics
+
+430
+00:19:16,770 --> 00:19:18,690
+that are appropriate for your use case,
+
+431
+00:19:18,690 --> 00:19:20,280
+and set alarms on those metrics,
+
+432
+00:19:20,280 --> 00:19:21,840
+and if those alarms are triggered
+
+433
+00:19:21,840 --> 00:19:23,940
+then that can force a failure,
+
+434
+00:19:23,940 --> 00:19:27,210
+and a roll back of the deployment.
+
+435
+00:19:27,210 --> 00:19:28,500
+The metrics you can use here.
+
+436
+00:19:28,500 --> 00:19:33,500
+It depends, for example, if
+you have an ALB fronted service
+
+437
+00:19:34,080 --> 00:19:37,667
+you might be looking at
+metrics for counts of 400
+
+438
+00:19:37,667 --> 00:19:38,823
+or 500 errors.
+
+439
+00:19:40,500 --> 00:19:42,500
+If you had benchmarked the performance
+
+440
+00:19:42,500 --> 00:19:44,130
+or prevision revisions,
+
+441
+00:19:44,130 --> 00:19:46,560
+and you want to ensure
+that the performance
+
+442
+00:19:46,560 --> 00:19:47,670
+of the new revision
+
+443
+00:19:47,670 --> 00:19:49,800
+is consistent with what you had previously
+
+444
+00:19:49,800 --> 00:19:52,530
+you might want to be looking
+at things like CPU utilization
+
+445
+00:19:52,530 --> 00:19:53,913
+or memory utilization.
+
+446
+00:19:54,750 --> 00:19:57,150
+Very important that you factor in,
+
+447
+00:19:57,150 --> 00:20:00,180
+if you're using Canary or Linear in that
+
+448
+00:20:00,180 --> 00:20:01,500
+there's a mixture of the green
+
+449
+00:20:01,500 --> 00:20:02,940
+and blue running together,
+
+450
+00:20:02,940 --> 00:20:05,460
+so that is something you
+need to take account of
+
+451
+00:20:05,460 --> 00:20:08,340
+in your alarm thresholds.
+
+452
+00:20:08,340 --> 00:20:11,940
+You can also think
+about certain situations
+
+453
+00:20:11,940 --> 00:20:16,080
+where you have a task that's
+pulling messages off a cue,
+
+454
+00:20:16,080 --> 00:20:17,580
+so there's no traffic that should be
+
+455
+00:20:17,580 --> 00:20:18,870
+rooted to the task,
+
+456
+00:20:18,870 --> 00:20:21,749
+but instead the task's
+pulling messages off a cue.
+
+457
+00:20:21,749 --> 00:20:24,780
+In that case you might want to
+be monitoring your cue length
+
+458
+00:20:24,780 --> 00:20:26,763
+as a metric for alarming.
+
+459
+00:20:28,170 --> 00:20:30,450
+And then finally we've got custom tasks
+
+460
+00:20:30,450 --> 00:20:31,350
+and traffic monitoring.
+
+461
+00:20:31,350 --> 00:20:32,520
+And this is where
+
+462
+00:20:32,520 --> 00:20:35,250
+life cycle hooks I
+mentioned earlier come in.
+
+463
+00:20:35,250 --> 00:20:39,000
+This is where you can implement
+your own tests in Lambda,
+
+464
+00:20:39,000 --> 00:20:40,920
+and insert them at the right places
+
+465
+00:20:40,920 --> 00:20:43,620
+in the deployment life cycle.
+
+466
+00:20:43,620 --> 00:20:45,840
+And we're gonna see some
+more examples of this
+
+467
+00:20:45,840 --> 00:20:48,375
+with Unicorn Watch.
+
+468
+00:20:48,375 --> 00:20:52,920
+So, let's go back to
+Unicorn Watch architecture.
+
+469
+00:20:52,920 --> 00:20:55,080
+So, just a refresher that this is
+
+470
+00:20:55,080 --> 00:20:59,759
+the architecture they had
+prior to advanced deployments.
+
+471
+00:20:59,759 --> 00:21:02,310
+And what I'm gonna do
+now is just go through
+
+472
+00:21:02,310 --> 00:21:05,340
+some aspects of this architecture in turn,
+
+473
+00:21:05,340 --> 00:21:06,960
+and see what changes they make,
+
+474
+00:21:06,960 --> 00:21:10,530
+and what they were able
+to achieve through that.
+
+475
+00:21:10,530 --> 00:21:13,163
+So first we're gonna talk about the UI
+
+476
+00:21:14,067 --> 00:21:16,020
+and the catalog service.
+
+477
+00:21:16,020 --> 00:21:18,840
+So they wanted to do a
+couple of things here.
+
+478
+00:21:18,840 --> 00:21:22,770
+They wanted to switch to
+using Canary deployments
+
+479
+00:21:22,770 --> 00:21:24,330
+for the catalog so they could
+
+480
+00:21:24,330 --> 00:21:26,490
+try using the new Function F catalog
+
+481
+00:21:26,490 --> 00:21:27,600
+in production enviornment
+
+482
+00:21:27,600 --> 00:21:29,670
+with a limited blast radius.
+
+483
+00:21:29,670 --> 00:21:31,900
+And they also wanted to expose the catalog
+
+484
+00:21:32,850 --> 00:21:36,510
+on a public API so that
+third party websites
+
+485
+00:21:36,510 --> 00:21:37,683
+could also access it.
+
+486
+00:21:38,910 --> 00:21:43,910
+Now, they couldn't do this
+sticking with Code Deploy
+
+487
+00:21:45,000 --> 00:21:49,200
+because first Code Deploy
+doesn't support Service Connect,
+
+488
+00:21:49,200 --> 00:21:52,050
+so they couldn't use it
+with a catalog for Canaries,
+
+489
+00:21:52,050 --> 00:21:55,382
+but also what they wanted
+to do to expose the public,
+
+490
+00:21:55,382 --> 00:21:59,310
+the catalog on a public API
+is they wanted to expose it
+
+491
+00:21:59,310 --> 00:22:01,140
+on the same load balancer,
+
+492
+00:22:01,140 --> 00:22:03,030
+and on the same port.
+
+493
+00:22:03,030 --> 00:22:05,670
+And to do that they would need to use
+
+494
+00:22:05,670 --> 00:22:09,390
+the load balancers advanced
+request routine capabilities
+
+495
+00:22:09,390 --> 00:22:10,863
+to use path-based routing.
+
+496
+00:22:12,450 --> 00:22:15,300
+With Code Deploy you can't
+do path-based routing.
+
+497
+00:22:15,300 --> 00:22:20,220
+So by moving to ECS blue/green,
+
+498
+00:22:20,220 --> 00:22:22,768
+they were able to achieve
+their objective, right?
+
+499
+00:22:22,768 --> 00:22:24,960
+So essentially what you can see here is
+
+500
+00:22:24,960 --> 00:22:28,080
+they were able to use plot-based routing
+
+501
+00:22:28,080 --> 00:22:29,940
+to access two different services
+
+502
+00:22:29,940 --> 00:22:31,443
+through the same port on ALB,
+
+503
+00:22:32,370 --> 00:22:36,873
+and also switch to Canary
+on the catalog service.
+
+504
+00:22:37,710 --> 00:22:39,317
+So let's look into this
+with a bit more detail,
+
+505
+00:22:39,317 --> 00:22:42,489
+starting with the load balancer.
+
+506
+00:22:42,489 --> 00:22:44,700
+What I'm gonna do with this diagram,
+
+507
+00:22:44,700 --> 00:22:46,620
+we'll come back to this diagram
+
+508
+00:22:46,620 --> 00:22:48,701
+as we go through the talk.
+
+509
+00:22:48,701 --> 00:22:51,060
+I'm gonna go through a
+number of different ways
+
+510
+00:22:51,060 --> 00:22:53,040
+of exposing services on ECS,
+
+511
+00:22:53,040 --> 00:22:55,650
+and show you how advanced deployments work
+
+512
+00:22:55,650 --> 00:22:57,150
+with each of them.
+
+513
+00:22:57,150 --> 00:22:59,423
+So we're starting here
+with the load balancer.
+
+514
+00:23:03,450 --> 00:23:05,973
+So when you do advanced
+deployments with ALB,
+
+515
+00:23:07,980 --> 00:23:12,980
+you need to provide as a minium
+a production listener rule.
+
+516
+00:23:13,800 --> 00:23:16,260
+And optionally a test listener rule.
+
+517
+00:23:16,260 --> 00:23:19,710
+And the way it works is
+essentially the waits
+
+518
+00:23:19,710 --> 00:23:21,837
+on those listener rules are manipulated by
+
+519
+00:23:21,837 --> 00:23:24,300
+the ECS deployment controller to achieve
+
+520
+00:23:24,300 --> 00:23:25,710
+the traffic shifting effects
+
+521
+00:23:25,710 --> 00:23:27,483
+that we talked about previously.
+
+522
+00:23:29,040 --> 00:23:32,460
+Because ALB works at
+the listener rule level
+
+523
+00:23:32,460 --> 00:23:34,740
+it is possible to take full advantage
+
+524
+00:23:34,740 --> 00:23:37,170
+of advanced request routing
+
+525
+00:23:37,170 --> 00:23:39,270
+on the application load balancer,
+
+526
+00:23:39,270 --> 00:23:41,514
+which means you can still
+do path-based routing,
+
+527
+00:23:41,514 --> 00:23:43,620
+you can header-based routing,
+(indistinct) base rounding,
+
+528
+00:23:43,620 --> 00:23:46,770
+all these features that
+you've come to expect with ALB
+
+529
+00:23:46,770 --> 00:23:48,453
+can still be supported.
+
+530
+00:23:50,160 --> 00:23:52,770
+You can also make the
+same service available
+
+531
+00:23:52,770 --> 00:23:54,210
+in multiple listeners as well,
+
+532
+00:23:54,210 --> 00:23:56,710
+and that will also work
+with advanced deployments.
+
+533
+00:23:58,770 --> 00:24:03,258
+In order to configure this in
+your service configuration,
+
+534
+00:24:03,258 --> 00:24:05,673
+in the load balancer block,
+
+535
+00:24:06,547 --> 00:24:09,000
+you would add this advanced
+configuration block,
+
+536
+00:24:09,000 --> 00:24:12,690
+and here you specify
+a second target group.
+
+537
+00:24:12,690 --> 00:24:14,370
+So you now need a second target group
+
+538
+00:24:14,370 --> 00:24:17,550
+in order for the advanced
+deployments to work.
+
+539
+00:24:17,550 --> 00:24:21,180
+And then you specify a
+production listener ARN,
+
+540
+00:24:21,180 --> 00:24:23,610
+optionally a test listener rule ARN,
+
+541
+00:24:23,610 --> 00:24:25,830
+and importantly also an IM roll,
+
+542
+00:24:25,830 --> 00:24:30,390
+and the IM roll is needed
+to give ECS permission
+
+543
+00:24:30,390 --> 00:24:33,603
+to manipulate the waits
+on those listener rules.
+
+544
+00:24:38,610 --> 00:24:42,480
+Notes that there's no
+reference to a listener ARN,
+
+545
+00:24:42,480 --> 00:24:44,970
+and that means you are free to choose
+
+546
+00:24:44,970 --> 00:24:46,530
+any listener rules you like,
+
+547
+00:24:46,530 --> 00:24:48,569
+whether they are on the same port or not.
+
+548
+00:24:48,569 --> 00:24:51,750
+From an ECS perspective it
+doesn't make any difference.
+
+549
+00:24:51,750 --> 00:24:55,391
+So ECS is agnostic to which ports
+
+550
+00:24:55,391 --> 00:24:59,793
+those listener rules are
+actually connected to.
+
+551
+00:25:02,730 --> 00:25:04,925
+So let's walk through how this works,
+
+552
+00:25:04,925 --> 00:25:09,030
+taking the example of Unicorn Watchers UI.
+
+553
+00:25:09,030 --> 00:25:11,999
+So they want to do a
+blue/green deployment,
+
+554
+00:25:11,999 --> 00:25:16,999
+and they want to do a manual
+approval on the new version
+
+555
+00:25:17,250 --> 00:25:19,473
+before they allow it
+to go into production.
+
+556
+00:25:21,030 --> 00:25:23,490
+So in the starting state,
+
+557
+00:25:23,490 --> 00:25:25,590
+they have the existing service
+
+558
+00:25:25,590 --> 00:25:27,190
+running in the blue environment,
+
+559
+00:25:28,230 --> 00:25:29,880
+and all traffic is going to that.
+
+560
+00:25:31,924 --> 00:25:34,800
+First step is we do the scale up,
+
+561
+00:25:34,800 --> 00:25:36,810
+so we create the green service revision,
+
+562
+00:25:36,810 --> 00:25:41,130
+we go to the pre-scale up,
+scale up, post scale up stages.
+
+563
+00:25:41,130 --> 00:25:42,690
+We then start to shift (indistinct).
+
+564
+00:25:42,690 --> 00:25:44,640
+So to shift (indistinct) we need to,
+
+565
+00:25:44,640 --> 00:25:47,850
+on the test listener we
+swap the waits around.
+
+566
+00:25:47,850 --> 00:25:49,650
+So we now have 100%
+
+567
+00:25:49,650 --> 00:25:53,160
+of traffic going into
+the green environment.
+
+568
+00:25:53,160 --> 00:25:56,400
+At this point, once the
+traffic shift is completed
+
+569
+00:25:56,400 --> 00:25:58,080
+we're going to post the traffic shift,
+
+570
+00:25:58,080 --> 00:26:02,916
+and in this case Unicorn
+Watch have attached a hook,
+
+571
+00:26:02,916 --> 00:26:05,070
+and what this hook does is
+
+572
+00:26:05,070 --> 00:26:07,986
+it monitors an approval parameter,
+
+573
+00:26:07,986 --> 00:26:09,750
+(audience applauding)
+
+574
+00:26:09,750 --> 00:26:14,700
+until this approval parameter
+is set to accept or decline.
+
+575
+00:26:14,700 --> 00:26:17,910
+So something somewhere
+needs to set that parameter
+
+576
+00:26:17,910 --> 00:26:20,760
+in order to be picked
+up by life cycle hook
+
+577
+00:26:20,760 --> 00:26:24,030
+to determine whether or not
+the deployment should proceed.
+
+578
+00:26:24,030 --> 00:26:27,480
+Know that ECS itself does not provide AUI
+
+579
+00:26:27,480 --> 00:26:29,010
+to do manual approval
+or anything like that.
+
+580
+00:26:29,010 --> 00:26:32,480
+That implementation is
+up to the implementer
+
+581
+00:26:34,647 --> 00:26:36,060
+of the wider operations,
+
+582
+00:26:36,060 --> 00:26:38,310
+and how you orchestrate operations
+
+583
+00:26:38,310 --> 00:26:41,700
+around deployments in your organization.
+
+584
+00:26:41,700 --> 00:26:43,470
+In this example, we've just used
+
+585
+00:26:43,470 --> 00:26:47,160
+an approval parameter
+stored in a parameter store,
+
+586
+00:26:47,160 --> 00:26:49,770
+and then there's a separate
+UI that can be used
+
+587
+00:26:49,770 --> 00:26:51,030
+for an approver to go in,
+
+588
+00:26:51,030 --> 00:26:52,233
+and set that parameter.
+
+589
+00:26:53,400 --> 00:26:54,450
+The way the traffic shift,
+
+590
+00:26:54,450 --> 00:26:56,952
+the post traffic shift hook works here
+
+591
+00:26:56,952 --> 00:27:01,952
+is it checks for the current
+state of approval parameter.
+
+592
+00:27:02,649 --> 00:27:04,818
+If it's still in a pending state,
+
+593
+00:27:04,818 --> 00:27:07,680
+the hook returns with an in-progress
+
+594
+00:27:07,680 --> 00:27:09,030
+status indicator.
+
+595
+00:27:09,030 --> 00:27:13,230
+An ECS will then reinvoke
+the hook multiple times
+
+596
+00:27:13,230 --> 00:27:16,113
+until a success or failure is returned.
+
+597
+00:27:17,940 --> 00:27:21,480
+Okay, assuming then that
+we got the approval,
+
+598
+00:27:21,480 --> 00:27:25,144
+we got a tick in the box so
+the hook is able to succeed,
+
+599
+00:27:25,144 --> 00:27:27,570
+and we're now able to
+progress the deployment
+
+600
+00:27:27,570 --> 00:27:30,420
+beyond the post S traffic shift stage,
+
+601
+00:27:30,420 --> 00:27:33,030
+so now we can move to
+production traffic shifts.
+
+602
+00:27:33,030 --> 00:27:36,772
+Here we swap the weights
+on the production rule,
+
+603
+00:27:36,772 --> 00:27:41,340
+and we start our clock for bake time.
+
+604
+00:27:41,340 --> 00:27:46,007
+So during this time we
+now have traffic flowing
+
+605
+00:27:47,220 --> 00:27:48,300
+to the green environment,
+
+606
+00:27:48,300 --> 00:27:50,340
+but with the blue still waiting
+
+607
+00:27:50,340 --> 00:27:52,860
+just in case we need to roll back.
+
+608
+00:27:52,860 --> 00:27:55,620
+And then, finally, assuming
+we complete bake time
+
+609
+00:27:55,620 --> 00:27:58,950
+without rolling back, the
+last stage is cleanup,
+
+610
+00:27:58,950 --> 00:28:02,640
+so that's where we
+scale down the old blue,
+
+611
+00:28:02,640 --> 00:28:04,473
+and the green becomes the new blue.
+
+612
+00:28:05,850 --> 00:28:09,910
+Okay, so that's how Unicorn Watch used
+
+613
+00:28:13,017 --> 00:28:17,130
+the ALB in front of their UI service,
+
+614
+00:28:17,130 --> 00:28:19,950
+now using ECS blue/green.
+
+615
+00:28:19,950 --> 00:28:22,710
+We haven't talked about
+the actual request route,
+
+616
+00:28:22,710 --> 00:28:25,110
+we're talking about traffic shifting.
+
+617
+00:28:25,110 --> 00:28:27,660
+Now, remember I said
+
+618
+00:28:27,660 --> 00:28:30,891
+that they also wanted
+to expose the catalog
+
+619
+00:28:30,891 --> 00:28:32,070
+on the same ALB port.
+
+620
+00:28:32,070 --> 00:28:33,810
+So how do they want to achieve this?
+
+621
+00:28:33,810 --> 00:28:36,918
+They want to do this
+with path-based routing.
+
+622
+00:28:36,918 --> 00:28:39,810
+So what they set up, as you can see here,
+
+623
+00:28:39,810 --> 00:28:44,520
+is a path-based route
+for catalog/catalog star,
+
+624
+00:28:44,520 --> 00:28:46,230
+routing to the catalog service,
+
+625
+00:28:46,230 --> 00:28:49,099
+another one front-end start to UI service.
+
+626
+00:28:49,099 --> 00:28:53,463
+They also needed a way to
+indicate test traffic, right?
+
+627
+00:28:53,463 --> 00:28:57,450
+If you have test traffic for
+either of those services,
+
+628
+00:28:57,450 --> 00:28:59,580
+how do you indicate that
+this is test traffic?
+
+629
+00:28:59,580 --> 00:29:02,730
+For that they chose to
+use Hoda-based routing.
+
+630
+00:29:02,730 --> 00:29:05,340
+So if there is an XGB test header,
+
+631
+00:29:05,340 --> 00:29:07,803
+that signals that the
+traffic is test traffic.
+
+632
+00:29:11,104 --> 00:29:12,300
+And they can do this because
+
+633
+00:29:12,300 --> 00:29:14,400
+they can use advanced request routing
+
+634
+00:29:14,400 --> 00:29:17,130
+with advanced deployments.
+
+635
+00:29:17,130 --> 00:29:20,364
+So here we have, you can see
+two rules for production,
+
+636
+00:29:20,364 --> 00:29:22,290
+catalog production listener rule,
+
+637
+00:29:22,290 --> 00:29:23,700
+and UI production listener rule.
+
+638
+00:29:23,700 --> 00:29:28,700
+The application load
+balancer with a path pattern
+
+639
+00:29:28,770 --> 00:29:31,200
+matching catalog and front end to route
+
+640
+00:29:31,200 --> 00:29:33,120
+to each of those rules.
+
+641
+00:29:33,120 --> 00:29:35,100
+And then on the far side there you can see
+
+642
+00:29:35,100 --> 00:29:38,490
+the deployment control has
+been configured directly
+
+643
+00:29:38,490 --> 00:29:41,036
+to manipulate those rules.
+
+644
+00:29:41,036 --> 00:29:45,188
+In the case of catalog,
+using Canary deployment,
+
+645
+00:29:45,188 --> 00:29:48,183
+and in the case of UI using blue/green.
+
+646
+00:29:50,010 --> 00:29:53,220
+In order to route the test traffic,
+
+647
+00:29:53,220 --> 00:29:55,800
+we have another two listener rules,
+
+648
+00:29:55,800 --> 00:30:00,730
+and we've added the HTTP header rules
+
+649
+00:30:03,960 --> 00:30:06,273
+matches onto those rules as well.
+
+650
+00:30:08,310 --> 00:30:11,850
+Important to order your
+rules in the right order
+
+651
+00:30:11,850 --> 00:30:14,223
+in order to get the desired effect.
+
+652
+00:30:16,950 --> 00:30:17,783
+Okay.
+
+653
+00:30:18,960 --> 00:30:20,190
+What about Service Connect?
+
+654
+00:30:20,190 --> 00:30:21,960
+So we've looked at the ALB,
+
+655
+00:30:21,960 --> 00:30:25,557
+but catalog is also exposed
+internally via Service Connect.
+
+656
+00:30:25,557 --> 00:30:28,680
+And we want that Canary to
+work with Service Connect?
+
+657
+00:30:28,680 --> 00:30:29,883
+So how does that work?
+
+658
+00:30:34,530 --> 00:30:36,540
+So with Service Connect
+there's no listener rules,
+
+659
+00:30:36,540 --> 00:30:39,240
+and no waits in listener
+rules to manipulate.
+
+660
+00:30:39,240 --> 00:30:43,930
+Instead, we have the Service Connect proxy
+
+661
+00:30:43,930 --> 00:30:46,560
+sitting alongside the
+application container
+
+662
+00:30:46,560 --> 00:30:48,180
+in the applications task,
+
+663
+00:30:48,180 --> 00:30:51,660
+and that leads to route
+traffic to the right place.
+
+664
+00:30:51,660 --> 00:30:56,220
+So the way it works is you've got your,
+
+665
+00:30:56,220 --> 00:30:57,930
+you create your greener vision,
+
+666
+00:30:57,930 --> 00:30:59,860
+and both your blue and greener visions
+
+667
+00:31:00,900 --> 00:31:03,090
+are registered with Cloud Map,
+
+668
+00:31:03,090 --> 00:31:07,623
+with the green one being
+labeled as your test instance.
+
+669
+00:31:09,630 --> 00:31:12,390
+All clients in the main space,
+
+670
+00:31:12,390 --> 00:31:15,780
+in the Service Connect
+name space can see both,
+
+671
+00:31:15,780 --> 00:31:17,973
+the blue and the green revisions.
+
+672
+00:31:19,800 --> 00:31:21,570
+But only requests matching the test routes
+
+673
+00:31:21,570 --> 00:31:23,170
+we routed to the green revision.
+
+674
+00:31:24,270 --> 00:31:26,880
+For those of you may not be
+familiar with Service Connect,
+
+675
+00:31:26,880 --> 00:31:29,160
+in a nutshell, the way it works is
+
+676
+00:31:29,160 --> 00:31:32,250
+you have your proxy
+container running alongside
+
+677
+00:31:32,250 --> 00:31:34,350
+your application container and your task,
+
+678
+00:31:34,350 --> 00:31:37,770
+and that is configured to route,
+
+679
+00:31:37,770 --> 00:31:39,870
+basically all network
+traffic passes through
+
+680
+00:31:39,870 --> 00:31:40,830
+that proxy container,
+
+681
+00:31:40,830 --> 00:31:43,650
+and it can be configured
+through outbound traffic
+
+682
+00:31:43,650 --> 00:31:47,010
+to the version that you require.
+
+683
+00:31:47,010 --> 00:31:51,952
+The way it's setup by default
+is if you set the header
+
+684
+00:31:51,952 --> 00:31:55,770
+(indistinct) ECS blue/green test,
+
+685
+00:31:55,770 --> 00:31:58,440
+then Service Connect
+proxy will automatically
+
+686
+00:31:58,440 --> 00:32:01,173
+route that to the green revision.
+
+687
+00:32:02,430 --> 00:32:05,250
+You can replace that with
+your own header routing rules.
+
+688
+00:32:05,250 --> 00:32:07,110
+You can use any headers you like.
+
+689
+00:32:07,110 --> 00:32:11,400
+You can use header presence,
+header value matching,
+
+690
+00:32:11,400 --> 00:32:13,440
+header pattern matching so you can
+
+691
+00:32:13,440 --> 00:32:15,480
+use things like agent strings
+
+692
+00:32:15,480 --> 00:32:18,780
+or API revision numbers, et. cetera,
+
+693
+00:32:18,780 --> 00:32:20,223
+as needed in your use case.
+
+694
+00:32:23,550 --> 00:32:25,773
+So how did Unicorn use this?
+
+695
+00:32:26,970 --> 00:32:29,640
+So the catalog team wanted,
+
+696
+00:32:29,640 --> 00:32:31,620
+they were very concerned
+about performance,
+
+697
+00:32:31,620 --> 00:32:34,200
+and they wanted to make sure
+they do performance tests
+
+698
+00:32:34,200 --> 00:32:38,370
+on any new revision of the service
+
+699
+00:32:38,370 --> 00:32:40,233
+before putting it into production.
+
+700
+00:32:42,690 --> 00:32:47,690
+So, basically they implemented
+this using two things.
+
+701
+00:32:48,630 --> 00:32:50,640
+They put a traffic generator
+
+702
+00:32:50,640 --> 00:32:52,443
+in the Service Connect main space.
+
+703
+00:32:53,850 --> 00:32:56,555
+And this traffic generator generates load,
+
+704
+00:32:56,555 --> 00:33:00,900
+and all the requests
+are automatically marked
+
+705
+00:33:00,900 --> 00:33:02,523
+with a test header.
+
+706
+00:33:04,110 --> 00:33:06,150
+They then implemented hook
+
+707
+00:33:06,150 --> 00:33:08,133
+in the post S traffic shift stage.
+
+708
+00:33:09,030 --> 00:33:12,150
+And what they do in this
+stage is they trigger
+
+709
+00:33:12,150 --> 00:33:17,150
+the load generator to
+start sending test traffic,
+
+710
+00:33:17,970 --> 00:33:22,970
+they measure the performance
+of the service under load,
+
+711
+00:33:23,850 --> 00:33:25,260
+and then at the end of that test,
+
+712
+00:33:25,260 --> 00:33:27,270
+they determine whether it's passed or not.
+
+713
+00:33:27,270 --> 00:33:30,390
+If it's passed, the hook
+returned successfully,
+
+714
+00:33:30,390 --> 00:33:32,040
+and the deployment continues,
+
+715
+00:33:32,040 --> 00:33:33,190
+otherwise (indistinct).
+
+716
+00:33:34,937 --> 00:33:36,810
+A key thing to note here is that
+
+717
+00:33:36,810 --> 00:33:39,930
+if you are doing testing
+with Service Connect
+
+718
+00:33:39,930 --> 00:33:41,230
+your client has to be
+
+719
+00:33:42,086 --> 00:33:43,230
+part of the Service Connect name space,
+
+720
+00:33:43,230 --> 00:33:44,820
+you can't test from outside.
+
+721
+00:33:44,820 --> 00:33:47,640
+You have do it from
+within Service Connect.
+
+722
+00:33:47,640 --> 00:33:49,860
+In this case they
+achieved that by deploying
+
+723
+00:33:49,860 --> 00:33:52,713
+this traffic generator in the
+Service Connect name space.
+
+724
+00:33:54,780 --> 00:33:58,680
+Okay, so that gave them a performance test
+
+725
+00:33:58,680 --> 00:33:59,820
+in the green enviornment
+
+726
+00:33:59,820 --> 00:34:03,660
+before moving into the
+production traffic shift.
+
+727
+00:34:03,660 --> 00:34:06,630
+But even when going into
+production traffic shift,
+
+728
+00:34:06,630 --> 00:34:11,237
+they wanted to use the Canary
+to do some additional testing
+
+729
+00:34:13,140 --> 00:34:16,590
+before allowing the full shift
+
+730
+00:34:16,590 --> 00:34:20,233
+of production traffic
+into the new enviornment.
+
+731
+00:34:21,954 --> 00:34:23,280
+So here, if you remember
+I mentioned earlier
+
+732
+00:34:23,280 --> 00:34:26,010
+that with Canary the
+production traffic shift hook
+
+733
+00:34:26,010 --> 00:34:28,200
+will get invoked twice.
+
+734
+00:34:28,200 --> 00:34:31,206
+So what I did here was
+on the first invocation
+
+735
+00:34:31,206 --> 00:34:33,753
+they start a test.
+
+736
+00:34:34,980 --> 00:34:38,160
+So at this point a percentage,
+a Canary percentage
+
+737
+00:34:38,160 --> 00:34:41,099
+of production traffic is going
+to the green enviornment,
+
+738
+00:34:41,099 --> 00:34:44,640
+and we start this test to start monitoring
+
+739
+00:34:44,640 --> 00:34:48,393
+the performance of the Canary.
+
+740
+00:34:50,246 --> 00:34:52,650
+That continues for the duration
+
+741
+00:34:52,650 --> 00:34:54,003
+of the Canary bake time.
+
+742
+00:34:54,930 --> 00:34:57,150
+And at the end of the Canary bake time,
+
+743
+00:34:57,150 --> 00:35:02,150
+post production, the
+production traffic shift hook
+
+744
+00:35:02,310 --> 00:35:04,680
+is called for the second time,
+
+745
+00:35:04,680 --> 00:35:08,340
+and at this point the
+results of the monitoring
+
+746
+00:35:08,340 --> 00:35:09,737
+are collected,
+
+747
+00:35:09,737 --> 00:35:13,200
+and analyzed to determine
+whether the Canary
+
+748
+00:35:13,200 --> 00:35:15,060
+has performed successfully or not.
+
+749
+00:35:15,060 --> 00:35:17,880
+And, once again, if the Canary
+has performed successfully
+
+750
+00:35:17,880 --> 00:35:19,590
+we allow (indistinct) success,
+
+751
+00:35:19,590 --> 00:35:21,900
+and allow this production traffic shift
+
+752
+00:35:21,900 --> 00:35:24,404
+to complete to 100%.
+
+753
+00:35:24,404 --> 00:35:27,540
+But if not we can force a roll back
+
+754
+00:35:27,540 --> 00:35:28,540
+by failing the hook.
+
+755
+00:35:29,797 --> 00:35:33,000
+So this shows you that
+you can combine testing
+
+756
+00:35:33,000 --> 00:35:34,776
+of the green environment,
+
+757
+00:35:34,776 --> 00:35:36,749
+as we saw in the previous slide,
+
+758
+00:35:36,749 --> 00:35:41,520
+with also testing with some of the traffic
+
+759
+00:35:41,520 --> 00:35:44,735
+in actual production through the Canary
+
+760
+00:35:44,735 --> 00:35:47,733
+production traffic shift mechanism.
+
+761
+00:35:52,410 --> 00:35:55,890
+Okay, so we looked at the UI,
+
+762
+00:35:55,890 --> 00:35:59,190
+and the Catalog so far.
+
+763
+00:35:59,190 --> 00:36:01,225
+The next thing they looked at
+
+764
+00:36:01,225 --> 00:36:03,050
+was this mechanism here,
+
+765
+00:36:03,050 --> 00:36:05,730
+with a polling (indistinct)
+application advancer
+
+766
+00:36:05,730 --> 00:36:08,763
+for the status of orders
+that are underway.
+
+767
+00:36:10,080 --> 00:36:12,180
+Now this doesn't scale very well, right?
+
+768
+00:36:12,180 --> 00:36:16,110
+Essentially you're having
+to pull for status updates,
+
+769
+00:36:16,110 --> 00:36:18,810
+and obviously the more orders
+you have going through,
+
+770
+00:36:18,810 --> 00:36:21,603
+the less efficient this becomes.
+
+771
+00:36:23,700 --> 00:36:26,790
+But also from a notification
+mechanism perspective,
+
+772
+00:36:26,790 --> 00:36:28,500
+this was quite limiting as well.
+
+773
+00:36:28,500 --> 00:36:30,720
+What I wanted to do was support
+
+774
+00:36:30,720 --> 00:36:32,940
+different notification mechanisms like
+
+775
+00:36:32,940 --> 00:36:34,440
+if people wanted to receive an email
+
+776
+00:36:34,440 --> 00:36:35,910
+or an SMS on their phone,
+
+777
+00:36:35,910 --> 00:36:38,447
+or whatever notification mechanism,
+
+778
+00:36:38,447 --> 00:36:41,970
+they wanted to support a wide range,
+
+779
+00:36:41,970 --> 00:36:44,700
+and they couldn't do it
+with this architecture.
+
+780
+00:36:44,700 --> 00:36:46,860
+What I wanted to do is switch
+
+781
+00:36:46,860 --> 00:36:48,810
+to a more asynchronous approach
+
+782
+00:36:48,810 --> 00:36:51,570
+where orders would post events on a cue,
+
+783
+00:36:51,570 --> 00:36:53,613
+and then that cue would be,
+
+784
+00:36:57,037 --> 00:36:58,380
+essentially would be monitored
+by a notification service
+
+785
+00:36:58,380 --> 00:37:00,130
+that would pull events off the cue,
+
+786
+00:37:01,000 --> 00:37:03,960
+and then serve notifications
+using a variety of mechanisms
+
+787
+00:37:03,960 --> 00:37:05,613
+as configured for each user.
+
+788
+00:37:06,810 --> 00:37:09,300
+And the problem is they
+couldn't do that easily
+
+789
+00:37:09,300 --> 00:37:11,130
+because if they did that
+
+790
+00:37:11,130 --> 00:37:15,352
+they would need a blue/green deployment
+
+791
+00:37:15,352 --> 00:37:19,140
+in order to be able to switch
+from one version to another
+
+792
+00:37:19,140 --> 00:37:20,163
+in one step,
+
+793
+00:37:21,090 --> 00:37:23,490
+and they couldn't do that with Code Deploy
+
+794
+00:37:23,490 --> 00:37:24,810
+because this service wouldn't have
+
+795
+00:37:24,810 --> 00:37:26,530
+a load balancer in front of it
+
+796
+00:37:27,884 --> 00:37:29,250
+if it was pulling messages from a cue.
+
+797
+00:37:29,250 --> 00:37:30,800
+So that's what I want it to do.
+
+798
+00:37:31,740 --> 00:37:33,000
+There's no load balancer in front of
+
+799
+00:37:33,000 --> 00:37:35,013
+the notification service.
+
+800
+00:37:35,013 --> 00:37:37,710
+This is what we call a headless service.
+
+801
+00:37:37,710 --> 00:37:40,170
+There's no request actually being sent
+
+802
+00:37:40,170 --> 00:37:41,937
+to the notification service.
+
+803
+00:37:41,937 --> 00:37:45,183
+(indistinct) service pulling
+messages off the cue.
+
+804
+00:37:46,350 --> 00:37:48,300
+And with ECS blue/green,
+
+805
+00:37:48,300 --> 00:37:51,425
+again, you can support this pattern.
+
+806
+00:37:51,425 --> 00:37:53,880
+So you can support headless services,
+
+807
+00:37:53,880 --> 00:37:55,560
+where there's no Service Connect,
+
+808
+00:37:55,560 --> 00:37:57,270
+there's no load balancer,
+
+809
+00:37:57,270 --> 00:37:59,400
+you just have a task
+
+810
+00:37:59,400 --> 00:38:01,593
+or a service pulling messages off a cue.
+
+811
+00:38:02,721 --> 00:38:04,050
+So this is the next pattern
+
+812
+00:38:04,050 --> 00:38:06,480
+we're gonna look at, headless service.
+
+813
+00:38:06,480 --> 00:38:08,443
+Now, with headless service,
+
+814
+00:38:08,443 --> 00:38:12,360
+because there's no request
+being sent to the service,
+
+815
+00:38:12,360 --> 00:38:14,910
+there's no traffic to shift,
+
+816
+00:38:14,910 --> 00:38:17,280
+so you might ask how does this make sense
+
+817
+00:38:17,280 --> 00:38:20,970
+for advanced deployments if
+there's no traffic to shift.
+
+818
+00:38:20,970 --> 00:38:22,939
+It only makes sense in the sense that
+
+819
+00:38:22,939 --> 00:38:25,782
+you can still, if you still benefit from
+
+820
+00:38:25,782 --> 00:38:27,930
+having a blue and green enviornment
+
+821
+00:38:27,930 --> 00:38:30,510
+running in parallel for a while
+
+822
+00:38:30,510 --> 00:38:32,880
+so that if the green doesn't work well,
+
+823
+00:38:32,880 --> 00:38:34,320
+and you need to roll back quickly,
+
+824
+00:38:34,320 --> 00:38:35,310
+you can still roll back
+
+825
+00:38:35,310 --> 00:38:38,850
+very quickly to the blue enviornment.
+
+826
+00:38:38,850 --> 00:38:41,393
+However, because there
+is no request traffic,
+
+827
+00:38:41,393 --> 00:38:43,740
+you have to think a bit differently
+
+828
+00:38:43,740 --> 00:38:48,740
+about how you manage the
+activation of these services.
+
+829
+00:38:49,470 --> 00:38:51,990
+So essentially you need
+to do a bit of extra work
+
+830
+00:38:51,990 --> 00:38:54,180
+to determine which version of the service
+
+831
+00:38:54,180 --> 00:38:55,980
+is picking messages off the cue.
+
+832
+00:38:55,980 --> 00:38:57,896
+And you need some way of turning off,
+
+833
+00:38:57,896 --> 00:39:01,650
+turning on or off the actual services,
+
+834
+00:39:01,650 --> 00:39:03,453
+pulling off messages off the cue.
+
+835
+00:39:04,860 --> 00:39:07,533
+So let's see how it
+worked for Unicorn Watch.
+
+836
+00:39:08,490 --> 00:39:13,350
+So, in the initial state of
+the existing blue revision,
+
+837
+00:39:13,350 --> 00:39:15,355
+pulling messages off the cue,
+
+838
+00:39:15,355 --> 00:39:16,188
+and processing those messages,
+
+839
+00:39:16,188 --> 00:39:18,570
+they now deploy a new version.
+
+840
+00:39:18,570 --> 00:39:20,040
+When they deployed a new version,
+
+841
+00:39:20,040 --> 00:39:22,323
+they deploy it in a deactivated state.
+
+842
+00:39:23,626 --> 00:39:25,470
+So the tasks are created,
+
+843
+00:39:25,470 --> 00:39:26,970
+but there is some parameter,
+
+844
+00:39:26,970 --> 00:39:28,719
+perhaps in parameter store, for example,
+
+845
+00:39:28,719 --> 00:39:30,900
+which is controlling whether or not
+
+846
+00:39:30,900 --> 00:39:33,360
+this thing should pull
+things off the cue or not.
+
+847
+00:39:33,360 --> 00:39:35,640
+So it starts in a deactivated state saying
+
+848
+00:39:35,640 --> 00:39:37,240
+don't pull messages off the cue.
+
+849
+00:39:38,970 --> 00:39:40,353
+Once this is scaled up,
+
+850
+00:39:42,720 --> 00:39:45,720
+we can skip the usual test traffic shift,
+
+851
+00:39:45,720 --> 00:39:48,406
+you can just go straight through that,
+
+852
+00:39:48,406 --> 00:39:49,316
+go straight to production traffic shift.
+
+853
+00:39:49,316 --> 00:39:50,853
+And at this point,
+
+854
+00:39:52,200 --> 00:39:53,970
+when we enter this stage,
+
+855
+00:39:53,970 --> 00:39:57,246
+we can use a hook to
+disable the blue revision,
+
+856
+00:39:57,246 --> 00:39:59,370
+and enable the green revision.
+
+857
+00:39:59,370 --> 00:40:02,070
+So at this point it's
+now the green revision
+
+858
+00:40:02,070 --> 00:40:03,600
+that's picking up messages from the cue
+
+859
+00:40:03,600 --> 00:40:05,345
+and processing them.
+
+860
+00:40:05,345 --> 00:40:08,427
+And at this point we start
+to monitor the behavior
+
+861
+00:40:08,427 --> 00:40:11,010
+and the performance of the green revision,
+
+862
+00:40:11,010 --> 00:40:14,070
+and make sure that it is
+functioning correctly,
+
+863
+00:40:14,070 --> 00:40:15,903
+and processing messages correctly.
+
+864
+00:40:17,091 --> 00:40:22,091
+So, we monitor this case using Cloud Watch
+
+865
+00:40:22,470 --> 00:40:23,553
+to monitor the cue.
+
+866
+00:40:24,788 --> 00:40:28,320
+If monitoring is successful
+(indistinct) succeeded,
+
+867
+00:40:28,320 --> 00:40:32,740
+and we can get rid of the blue revision
+
+868
+00:40:34,230 --> 00:40:35,253
+after the bake time.
+
+869
+00:40:36,450 --> 00:40:39,000
+Otherwise, if unsuccessful
+we disable green,
+
+870
+00:40:39,000 --> 00:40:40,950
+and restore the blue,
+
+871
+00:40:40,950 --> 00:40:42,720
+reactivate the blue to go back
+
+872
+00:40:42,720 --> 00:40:44,220
+to where they were previously.
+
+873
+00:40:47,880 --> 00:40:52,880
+So that's improved their
+ability to notify customers
+
+874
+00:40:55,440 --> 00:40:57,810
+on status updates for orders.
+
+875
+00:40:57,810 --> 00:41:01,396
+The last bit was the video
+streaming service itself.
+
+876
+00:41:01,396 --> 00:41:03,624
+And here they wanted the ability
+
+877
+00:41:03,624 --> 00:41:08,130
+to deploy new versions
+
+878
+00:41:08,130 --> 00:41:10,140
+of their proprietary streaming protocol
+
+879
+00:41:10,140 --> 00:41:12,300
+with a lot of new security features,
+
+880
+00:41:12,300 --> 00:41:14,160
+and they needed to do it in such a way
+
+881
+00:41:14,160 --> 00:41:18,000
+that they flipped completely
+from one version to another
+
+882
+00:41:18,000 --> 00:41:21,030
+because they couldn't
+guarantee computability
+
+883
+00:41:21,030 --> 00:41:23,643
+between the new version
+and the old version.
+
+884
+00:41:24,630 --> 00:41:28,563
+So they wanted blue/green on
+the video streaming service,
+
+885
+00:41:29,645 --> 00:41:34,320
+and to do this they used
+advanced deployments
+
+886
+00:41:34,320 --> 00:41:35,770
+with a network load balancer.
+
+887
+00:41:36,840 --> 00:41:38,100
+With network load balancer,
+
+888
+00:41:38,100 --> 00:41:39,750
+it's very similar in many ways
+
+889
+00:41:39,750 --> 00:41:42,240
+to what we saw with
+application load balancer,
+
+890
+00:41:42,240 --> 00:41:45,063
+but there are some differences
+you need to be aware of.
+
+891
+00:41:46,260 --> 00:41:48,390
+First, with network load balancer,
+
+892
+00:41:48,390 --> 00:41:49,950
+at the moment you can only do blue/green,
+
+893
+00:41:49,950 --> 00:41:52,803
+you cannot do Canary or Linear.
+
+894
+00:41:53,700 --> 00:41:55,980
+Second, you don't have
+
+895
+00:41:55,980 --> 00:42:00,000
+the benefit of layer
+seven request routing,
+
+896
+00:42:00,000 --> 00:42:01,770
+because you're working at layer four,
+
+897
+00:42:01,770 --> 00:42:04,380
+so you can't do path-based routing.
+
+898
+00:42:04,380 --> 00:42:06,058
+That means you have to use different ports
+
+899
+00:42:06,058 --> 00:42:08,820
+for your production and tests.
+
+900
+00:42:08,820 --> 00:42:10,770
+So you need to have separate ports
+
+901
+00:42:10,770 --> 00:42:12,033
+for production and tests.
+
+902
+00:42:13,200 --> 00:42:15,720
+And also the test listener is not optional
+
+903
+00:42:15,720 --> 00:42:16,890
+in the case of NLB.
+
+904
+00:42:16,890 --> 00:42:18,423
+You must have a test listener.
+
+905
+00:42:19,490 --> 00:42:23,483
+The other thing to be aware
+of is that for some stages
+
+906
+00:42:23,483 --> 00:42:26,220
+there's an extra 10 minute delay added on,
+
+907
+00:42:26,220 --> 00:42:29,073
+and this is to do with some of
+the internal climbing issues
+
+908
+00:42:29,073 --> 00:42:34,073
+within NLB to make sure the
+routing works correctly.
+
+909
+00:42:35,310 --> 00:42:39,003
+But otherwise it's quite similar to ALB.
+
+910
+00:42:40,998 --> 00:42:45,998
+So, just to recap, we saw
+here how Unicorn Watch
+
+911
+00:42:46,200 --> 00:42:49,470
+were able to use advanced deployments
+
+912
+00:42:49,470 --> 00:42:50,910
+in a number of different areas.
+
+913
+00:42:50,910 --> 00:42:53,670
+And what we've done essentially
+is cover four different
+
+914
+00:42:53,670 --> 00:42:55,130
+service exposure methods.
+
+915
+00:42:55,130 --> 00:42:57,180
+We've looked at ALB,
+
+916
+00:42:57,180 --> 00:42:58,680
+we've looked at Service Connect,
+
+917
+00:42:58,680 --> 00:43:00,450
+we looked at headless services,
+
+918
+00:43:00,450 --> 00:43:01,800
+and we looked at NLB.
+
+919
+00:43:01,800 --> 00:43:04,740
+And the beauty of advanced deployments
+
+920
+00:43:04,740 --> 00:43:06,600
+is you can use advanced deployments
+
+921
+00:43:06,600 --> 00:43:09,453
+with all of these service
+exposure patterns.
+
+922
+00:43:10,680 --> 00:43:13,830
+And with that I'll hand back to Kevin,
+
+923
+00:43:13,830 --> 00:43:16,050
+he's gonna take you through
+some of the practicalities
+
+924
+00:43:16,050 --> 00:43:17,310
+around migration,
+
+925
+00:43:17,310 --> 00:43:19,563
+and how you choose your
+deployment strategy.
+
+926
+00:43:22,020 --> 00:43:23,891
+- All right, Mike, thank you.
+
+927
+00:43:23,891 --> 00:43:25,560
+That was pretty exciting right?
+
+928
+00:43:25,560 --> 00:43:28,440
+So I went through a little
+blue/green deployment of my own,
+
+929
+00:43:28,440 --> 00:43:30,833
+and I've got a surprise for you, Mike,
+
+930
+00:43:30,833 --> 00:43:32,970
+worked with Unicorn Watch folks
+
+931
+00:43:32,970 --> 00:43:35,670
+to get a new update on their streaming.
+
+932
+00:43:35,670 --> 00:43:38,010
+Let's go ahead and see how that works.
+
+933
+00:43:38,010 --> 00:43:40,290
+Oh, it worked on my machine,
+
+934
+00:43:40,290 --> 00:43:41,580
+so I'm not sure what's going on here,
+
+935
+00:43:41,580 --> 00:43:43,560
+but luckily we're using
+blue/green deployment
+
+936
+00:43:43,560 --> 00:43:46,108
+so we can quickly roll back, if you will.
+
+937
+00:43:46,108 --> 00:43:48,510
+Hey, that looks better.
+
+938
+00:43:48,510 --> 00:43:52,050
+All right, so let's go through a couple
+
+939
+00:43:52,050 --> 00:43:53,700
+of the things of choosing
+
+940
+00:43:53,700 --> 00:43:56,043
+and also migrating between strategies.
+
+941
+00:43:56,910 --> 00:44:00,090
+So, first, changing them is really easy,
+
+942
+00:44:00,090 --> 00:44:03,630
+you can just change the strategy
+
+943
+00:44:03,630 --> 00:44:04,950
+in the deployment consideration,
+
+944
+00:44:04,950 --> 00:44:06,477
+as Mike talked about.
+
+945
+00:44:06,477 --> 00:44:09,150
+The key is adding that
+advanced configuration,
+
+946
+00:44:09,150 --> 00:44:11,130
+if you're using a load balancer.
+
+947
+00:44:11,130 --> 00:44:13,650
+So once you've added that
+advanced configuration
+
+948
+00:44:13,650 --> 00:44:17,310
+then you can actually go to
+blue/green, back to rolling,
+
+949
+00:44:17,310 --> 00:44:20,927
+to Canary, to Linear, it's very fluid.
+
+950
+00:44:20,927 --> 00:44:24,270
+The key is that once you've
+gone into advanced deployments,
+
+951
+00:44:24,270 --> 00:44:25,500
+we ask that you just leave
+
+952
+00:44:25,500 --> 00:44:28,380
+that advanced configuration there forever,
+
+953
+00:44:28,380 --> 00:44:30,030
+for as long as you're gonna use it,
+
+954
+00:44:30,030 --> 00:44:33,690
+because we could be using
+either one of the target groups.
+
+955
+00:44:33,690 --> 00:44:35,867
+And so if you're doing a
+rolling we need to have both
+
+956
+00:44:35,867 --> 00:44:38,670
+so that we can determine, hey,
+this one's serving traffic,
+
+957
+00:44:38,670 --> 00:44:40,050
+or this one's serving traffic,
+
+958
+00:44:40,050 --> 00:44:41,880
+to do the rolling correctly.
+
+959
+00:44:41,880 --> 00:44:44,160
+So, again, add advanced configuration,
+
+960
+00:44:44,160 --> 00:44:46,951
+and then you're free
+to move back and forth.
+
+961
+00:44:46,951 --> 00:44:51,660
+Also if you're, you have
+kind of two different ways.
+
+962
+00:44:51,660 --> 00:44:55,410
+If you're wanting to migrate
+from Code Deploy to ECS
+
+963
+00:44:55,410 --> 00:44:57,510
+deployment strategies,
+
+964
+00:44:57,510 --> 00:44:59,280
+you can either do just an update service,
+
+965
+00:44:59,280 --> 00:45:00,990
+so update in place,
+
+966
+00:45:00,990 --> 00:45:04,710
+and just move from both
+deployment controller,
+
+967
+00:45:04,710 --> 00:45:06,300
+as well as deployment configuration,
+
+968
+00:45:06,300 --> 00:45:07,600
+to what you want it to be.
+
+969
+00:45:08,580 --> 00:45:11,266
+Again you'll need to add the
+advanced configuration blocks,
+
+970
+00:45:11,266 --> 00:45:13,410
+and the load balancers all together
+
+971
+00:45:13,410 --> 00:45:15,780
+because if you're using Code Deploy
+
+972
+00:45:15,780 --> 00:45:17,280
+the load balancer configuration's
+
+973
+00:45:17,280 --> 00:45:18,753
+actually in Code Deploy land.
+
+974
+00:45:19,860 --> 00:45:23,220
+The other option is basically
+make a replacement service,
+
+975
+00:45:23,220 --> 00:45:26,280
+and do that migration more
+controlled in your way.
+
+976
+00:45:26,280 --> 00:45:28,220
+So if you wanna test out the hook,
+
+977
+00:45:28,220 --> 00:45:30,030
+if you wanna test out
+the process a little bit,
+
+978
+00:45:30,030 --> 00:45:31,950
+you can just create a second service,
+
+979
+00:45:31,950 --> 00:45:33,123
+and then migrate.
+
+980
+00:45:34,455 --> 00:45:38,220
+Some of the considerations,
+
+981
+00:45:38,220 --> 00:45:40,230
+so we talked at the
+beginning about sort of
+
+982
+00:45:40,230 --> 00:45:43,110
+how your tasks are scaling up and down,
+
+983
+00:45:43,110 --> 00:45:45,330
+and then also sort of
+the speed or operation.
+
+984
+00:45:45,330 --> 00:45:48,080
+So your biggest trade off
+from advanced configurations
+
+985
+00:45:48,080 --> 00:45:52,530
+and default rolling is kind
+of that speed of rollback.
+
+986
+00:45:52,530 --> 00:45:55,170
+So you always have that
+blue version fully scaled,
+
+987
+00:45:55,170 --> 00:45:57,870
+ready to go if for whatever reason
+
+988
+00:45:57,870 --> 00:45:59,130
+your service needs to scale up
+
+989
+00:45:59,130 --> 00:46:00,150
+during the middle of deployment,
+
+990
+00:46:00,150 --> 00:46:03,120
+both of them will scale
+up to that capacity,
+
+991
+00:46:03,120 --> 00:46:04,200
+and it's always there.
+
+992
+00:46:04,200 --> 00:46:06,780
+So the speed of rollback is much higher,
+
+993
+00:46:06,780 --> 00:46:08,180
+obviously, in that scenario.
+
+994
+00:46:09,270 --> 00:46:12,330
+And then choosing between
+your advanced deployment types
+
+995
+00:46:12,330 --> 00:46:15,150
+is really just what are
+you trying to achieve?
+
+996
+00:46:15,150 --> 00:46:17,680
+If you want, hey, I only want one service
+
+997
+00:46:19,048 --> 00:46:19,920
+ever serving, or one revision, sorry,
+
+998
+00:46:19,920 --> 00:46:22,530
+ever serving traffic at
+once, blue/green is perfect.
+
+999
+00:46:22,530 --> 00:46:25,583
+It makes sure that all
+is served on the blue
+
+1000
+00:46:25,583 --> 00:46:27,630
+or the green.
+
+1001
+00:46:27,630 --> 00:46:31,920
+So that could be sometimes hey,
+I have a very chatty client,
+
+1002
+00:46:31,920 --> 00:46:33,480
+maybe a web app or something
+
+1003
+00:46:33,480 --> 00:46:35,310
+that's making calls back and forth,
+
+1004
+00:46:35,310 --> 00:46:38,280
+so to make sure they always
+get a consistent experience,
+
+1005
+00:46:38,280 --> 00:46:40,171
+I wanna use blue/green.
+
+1006
+00:46:40,171 --> 00:46:42,660
+Canary, again, we talked
+through that a little bit.
+
+1007
+00:46:42,660 --> 00:46:46,350
+Some of that is if you
+can't test in production,
+
+1008
+00:46:46,350 --> 00:46:48,210
+maybe it's a regulated industry
+
+1009
+00:46:48,210 --> 00:46:50,880
+or some other reason that you
+cannot test in production,
+
+1010
+00:46:50,880 --> 00:46:53,310
+Canary is a great way to introduce it
+
+1011
+00:46:53,310 --> 00:46:55,770
+to a small section of your customer base
+
+1012
+00:46:55,770 --> 00:46:57,520
+before introducing it to everybody.
+
+1013
+00:46:58,770 --> 00:47:00,660
+And then finally Linear is a great option,
+
+1014
+00:47:00,660 --> 00:47:03,420
+again, if you're interested
+in seeing how it scales
+
+1015
+00:47:03,420 --> 00:47:06,150
+under increased load over time,
+
+1016
+00:47:06,150 --> 00:47:08,583
+or other sort of concerns
+along those lines.
+
+1017
+00:47:10,050 --> 00:47:11,460
+Again, one of the amazing things
+
+1018
+00:47:11,460 --> 00:47:14,130
+that you can do with advanced deployments
+
+1019
+00:47:14,130 --> 00:47:16,080
+is this test traffic.
+
+1020
+00:47:16,080 --> 00:47:17,880
+So you have a means,
+
+1021
+00:47:17,880 --> 00:47:20,490
+or you can test actual running code
+
+1022
+00:47:20,490 --> 00:47:22,200
+in your production enviornment
+
+1023
+00:47:22,200 --> 00:47:24,630
+before introducing it to
+any of your customers,
+
+1024
+00:47:24,630 --> 00:47:27,303
+and potentially preventing
+an outage that way.
+
+1025
+00:47:29,790 --> 00:47:33,510
+Again, as we talk about
+you can migrate fluidly
+
+1026
+00:47:33,510 --> 00:47:35,402
+between all of advanced deployments,
+
+1027
+00:47:35,402 --> 00:47:37,953
+or between advanced
+deployments and rolling.
+
+1028
+00:47:39,480 --> 00:47:41,460
+Again, you can migrate Code Deploy
+
+1029
+00:47:41,460 --> 00:47:43,440
+to advanced deployments,
+
+1030
+00:47:43,440 --> 00:47:46,020
+and one of the reasons that
+you might wanna do that
+
+1031
+00:47:46,020 --> 00:47:48,720
+is to take advantage of some
+of those advanced feature set
+
+1032
+00:47:48,720 --> 00:47:52,020
+that you can use with ECS
+that you couldn't before.
+
+1033
+00:47:52,020 --> 00:47:53,730
+Mike talked through a couple of those.
+
+1034
+00:47:53,730 --> 00:47:56,130
+Multi-target groups, sometimes if you have
+
+1035
+00:47:56,130 --> 00:47:58,560
+multiple ALBs you're trying to connect to,
+
+1036
+00:47:58,560 --> 00:48:00,690
+as well as using Service Connect
+
+1037
+00:48:00,690 --> 00:48:02,463
+or some other features like that.
+
+1038
+00:48:04,294 --> 00:48:07,860
+Finally, in order to
+continue your journey,
+
+1039
+00:48:07,860 --> 00:48:09,180
+we have a landing page here
+
+1040
+00:48:09,180 --> 00:48:12,402
+with a bunch of relevant links,
+
+1041
+00:48:12,402 --> 00:48:15,993
+as well as the actual deck
+that we went through today.
+
+1042
+00:48:19,590 --> 00:48:23,010
+Also there is a related
+session this afternoon
+
+1043
+00:48:23,010 --> 00:48:25,110
+at four in the MGM
+
+1044
+00:48:25,110 --> 00:48:28,440
+covering deployment pipelines with ECS.
+
+1045
+00:48:28,440 --> 00:48:31,233
+So if you wanna pop over to
+there that would be great.
+
+1046
+00:48:32,798 --> 00:48:33,631
+At this time I just wanna say
+
+1047
+00:48:33,631 --> 00:48:34,680
+thank you very much for coming,
+
+1048
+00:48:34,680 --> 00:48:39,540
+and I will be around here with Mike
+
+1049
+00:48:39,540 --> 00:48:42,000
+if you have any questions afterwards.
+
+1050
+00:48:42,000 --> 00:48:42,833
+Thank you.
+

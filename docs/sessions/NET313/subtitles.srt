@@ -1,0 +1,3895 @@
+1
+00:00:00,540 --> 00:00:01,860
+- Good afternoon everybody,
+
+2
+00:00:01,860 --> 00:00:04,290
+and welcome to Net 313,
+
+3
+00:00:04,290 --> 00:00:06,620
+where we'll be talking
+about some encryption
+
+4
+00:00:06,620 --> 00:00:08,610
+in transit today.
+
+5
+00:00:08,610 --> 00:00:12,300
+My name's Scott Morrison. I'm
+a Networking SA here at AWS.
+
+6
+00:00:12,300 --> 00:00:15,180
+This will be my, I think, fifth re:Invent
+
+7
+00:00:15,180 --> 00:00:18,243
+that I've presented at,
+and my seventh year at AWS.
+
+8
+00:00:19,740 --> 00:00:23,580
+And I'll say that after
+seven years at AWS,
+
+9
+00:00:23,580 --> 00:00:26,640
+I've gotten to know a lot
+about how our network operates
+
+10
+00:00:26,640 --> 00:00:28,080
+under the hood,
+
+11
+00:00:28,080 --> 00:00:30,150
+where all the packets are
+going through our network,
+
+12
+00:00:30,150 --> 00:00:31,503
+what's happening to them,
+
+13
+00:00:32,820 --> 00:00:35,820
+and it's lost a little bit of
+the mystery after seven years.
+
+14
+00:00:35,820 --> 00:00:36,930
+But then I come to re:Invent,
+
+15
+00:00:36,930 --> 00:00:39,480
+I get to meet with all
+of our great customers
+
+16
+00:00:39,480 --> 00:00:42,150
+and see the mystery that still happens
+
+17
+00:00:42,150 --> 00:00:43,953
+of how the network works at AWS.
+
+18
+00:00:45,090 --> 00:00:47,790
+And so today we're gonna unwrap
+a little bit of that mystery
+
+19
+00:00:47,790 --> 00:00:51,390
+for you, talk about how some
+of that encryption works at AWS
+
+20
+00:00:51,390 --> 00:00:55,230
+on our network and some
+great new features related
+
+21
+00:00:55,230 --> 00:00:57,630
+to VPC encryption controls.
+
+22
+00:00:57,630 --> 00:01:01,050
+So with that, I'm gonna bring on my peer
+
+23
+00:01:01,050 --> 00:01:04,740
+and a product manager
+for VPC, Akshay Choudhry
+
+24
+00:01:04,740 --> 00:01:05,573
+to take it over
+
+25
+00:01:05,573 --> 00:01:07,800
+and talk a little bit about
+VPC encryption controls,
+
+26
+00:01:07,800 --> 00:01:09,330
+and then I'll be back
+with you in a few minutes,
+
+27
+00:01:09,330 --> 00:01:10,680
+talk more about encryption.
+
+28
+00:01:11,670 --> 00:01:12,503
+Akshay.
+
+29
+00:01:18,840 --> 00:01:21,239
+- Good afternoon everyone.
+My name is Akshay Choudhry.
+
+30
+00:01:21,239 --> 00:01:24,813
+I lead the product management
+team here at AWS for VPC.
+
+31
+00:01:25,740 --> 00:01:29,070
+So here I'll first introduce encryption.
+
+32
+00:01:29,070 --> 00:01:32,100
+I'll talk about what is encryption,
+how do you implement it,
+
+33
+00:01:32,100 --> 00:01:34,140
+how it has evolved over the time,
+
+34
+00:01:34,140 --> 00:01:36,810
+and then I'll talk about the challenges
+
+35
+00:01:36,810 --> 00:01:40,020
+in implementing encryption.
+
+36
+00:01:40,020 --> 00:01:43,500
+And with that, I'll talk
+about how AWS is solving many
+
+37
+00:01:43,500 --> 00:01:45,390
+of those challenges
+
+38
+00:01:45,390 --> 00:01:50,340
+by offering native encryption
+across multiple network paths.
+
+39
+00:01:50,340 --> 00:01:52,680
+And after that, I'll
+introduce this new feature
+
+40
+00:01:52,680 --> 00:01:54,870
+of VPC encryption controls.
+
+41
+00:01:54,870 --> 00:01:57,180
+We launched it two weeks back.
+
+42
+00:01:57,180 --> 00:01:59,910
+This feature helps you
+monitor the encryption status
+
+43
+00:01:59,910 --> 00:02:01,200
+of your traffic flows,
+
+44
+00:02:01,200 --> 00:02:03,330
+and it also helps you identify workloads
+
+45
+00:02:03,330 --> 00:02:04,950
+that are not enforcing encryption.
+
+46
+00:02:04,950 --> 00:02:08,310
+And it offers you tools to
+enforce encryption in transit
+
+47
+00:02:08,310 --> 00:02:10,380
+across your environment in a region.
+
+48
+00:02:10,380 --> 00:02:14,100
+A lot has gone into building this feature,
+
+49
+00:02:14,100 --> 00:02:16,860
+and we would love for you folks to go back
+
+50
+00:02:16,860 --> 00:02:19,950
+and try your hand at this
+feature and give us feedback.
+
+51
+00:02:19,950 --> 00:02:24,480
+One thing that is common across
+all the successful features
+
+52
+00:02:24,480 --> 00:02:29,253
+at AWS is that we got a lot of
+feedback from our customers,
+
+53
+00:02:30,870 --> 00:02:32,850
+about what they expect
+from these features.
+
+54
+00:02:32,850 --> 00:02:35,310
+And then we kept working on those feedback
+
+55
+00:02:35,310 --> 00:02:36,750
+and we improved it over time.
+
+56
+00:02:36,750 --> 00:02:38,820
+And we would really
+appreciate your support
+
+57
+00:02:38,820 --> 00:02:41,910
+in doing the same with
+VPC encryption controls.
+
+58
+00:02:41,910 --> 00:02:44,190
+And after I've discussed the details
+
+59
+00:02:44,190 --> 00:02:46,170
+of how to set a VPC encryption controls
+
+60
+00:02:46,170 --> 00:02:47,940
+and what it does,
+
+61
+00:02:47,940 --> 00:02:52,077
+I'll hand over the stage
+to my co-presenter, Scott,
+
+62
+00:02:52,077 --> 00:02:54,600
+who will discuss encryption strategies
+
+63
+00:02:54,600 --> 00:02:56,553
+and the emerging encryption frontiers.
+
+64
+00:02:57,510 --> 00:03:02,510
+So with that, encryption,
+what is encryption?
+
+65
+00:03:04,200 --> 00:03:09,200
+Encryption is the process by
+which you protect your data
+
+66
+00:03:09,360 --> 00:03:13,350
+from getting snooped on or
+from getting compromised
+
+67
+00:03:13,350 --> 00:03:15,840
+by scrambling it using some logic.
+
+68
+00:03:15,840 --> 00:03:18,150
+So in this example,
+suppose the sender wants
+
+69
+00:03:18,150 --> 00:03:20,900
+to send a simple text,
+"Welcome to re:Invent!",
+
+70
+00:03:21,792 --> 00:03:25,140
+so what they would do is
+they would use some logic
+
+71
+00:03:25,140 --> 00:03:27,090
+to scramble it with the expectation
+
+72
+00:03:27,090 --> 00:03:30,540
+that only the intended
+receiver can unscramble it
+
+73
+00:03:30,540 --> 00:03:32,160
+and look at the original message.
+
+74
+00:03:32,160 --> 00:03:34,800
+This way, someone who's not intended
+
+75
+00:03:34,800 --> 00:03:37,773
+to see this message will
+never see the original text.
+
+76
+00:03:38,880 --> 00:03:43,880
+So encryption has been
+known to exist since 100 BC.
+
+77
+00:03:44,370 --> 00:03:48,150
+Back then, it was used
+for secure communications
+
+78
+00:03:48,150 --> 00:03:50,430
+between military factions
+
+79
+00:03:50,430 --> 00:03:53,100
+and it was called Caesar cipher.
+
+80
+00:03:53,100 --> 00:03:54,660
+It used to be pretty simple back then.
+
+81
+00:03:54,660 --> 00:03:58,260
+It used to consist of some
+alphabetic substitutions.
+
+82
+00:03:58,260 --> 00:04:02,010
+With time, the attackers
+got more sophisticated
+
+83
+00:04:02,010 --> 00:04:05,790
+and they knew how to decipher
+the simple encryption.
+
+84
+00:04:05,790 --> 00:04:10,380
+And with that, the encryption also evolved
+
+85
+00:04:10,380 --> 00:04:13,530
+to make it more difficult for
+any attackers to decipher it.
+
+86
+00:04:13,530 --> 00:04:16,800
+So we have evidence that
+around 15th century,
+
+87
+00:04:16,800 --> 00:04:20,850
+the encryption consisted of
+polyalphabetic substitutions.
+
+88
+00:04:20,850 --> 00:04:25,800
+And then in World War II, Germany came out
+
+89
+00:04:25,800 --> 00:04:28,980
+with the Enigma Machine to
+encrypt all their communication.
+
+90
+00:04:28,980 --> 00:04:32,190
+And back then it was
+considered unbreakable
+
+91
+00:04:32,190 --> 00:04:35,880
+until Alan Turing developed
+a machine to decipher those
+
+92
+00:04:35,880 --> 00:04:37,860
+or to break that encryption.
+
+93
+00:04:37,860 --> 00:04:39,870
+And that machine was the first computer,
+
+94
+00:04:39,870 --> 00:04:42,780
+that led to the invention
+of the first computer.
+
+95
+00:04:42,780 --> 00:04:47,780
+But until now, there was no
+one set standard worldwide
+
+96
+00:04:47,940 --> 00:04:49,410
+for encryption.
+
+97
+00:04:49,410 --> 00:04:53,847
+But in 1977, there were worldwide,
+
+98
+00:04:53,847 --> 00:04:56,370
+there were encryption standards
+that were used worldwide
+
+99
+00:04:56,370 --> 00:04:58,230
+and those were DES,
+
+100
+00:04:58,230 --> 00:05:01,260
+which is Digital Encryption
+Standard and RSA.
+
+101
+00:05:01,260 --> 00:05:06,260
+And today, the most prominently
+used encryption standard
+
+102
+00:05:06,690 --> 00:05:08,190
+is Advanced Encryption Standard.
+
+103
+00:05:08,190 --> 00:05:09,930
+You may have heard of AES,
+
+104
+00:05:09,930 --> 00:05:11,490
+that's Advanced Encryption Standard.
+
+105
+00:05:11,490 --> 00:05:14,190
+And it comes with different key lengths
+
+106
+00:05:14,190 --> 00:05:16,650
+and we'll discuss about
+these things later.
+
+107
+00:05:16,650 --> 00:05:21,650
+And today, the Post Quantum
+Cryptography is also picking up.
+
+108
+00:05:22,290 --> 00:05:24,030
+Scott will talk more about it,
+
+109
+00:05:24,030 --> 00:05:27,780
+but Post Quantum Cryptography
+is considered to be safe,
+
+110
+00:05:27,780 --> 00:05:32,223
+even from attackers who use
+quantum computers to break it.
+
+111
+00:05:35,010 --> 00:05:37,953
+With that, let's look
+at how encryption works.
+
+112
+00:05:39,210 --> 00:05:41,340
+We are looking at the old
+example that we looked
+
+113
+00:05:41,340 --> 00:05:43,897
+where the sender wants
+to send this simple text,
+
+114
+00:05:43,897 --> 00:05:45,510
+"Welcome to re:Invent!"
+
+115
+00:05:45,510 --> 00:05:48,570
+What the sender does is before
+sending this message out,
+
+116
+00:05:48,570 --> 00:05:52,230
+the sender will use a
+cryptographic mathematical model
+
+117
+00:05:52,230 --> 00:05:55,080
+to derive a key using which
+they would encrypt this
+
+118
+00:05:55,080 --> 00:05:57,630
+or scramble this text.
+
+119
+00:05:57,630 --> 00:05:58,920
+Once they've scrambled it,
+
+120
+00:05:58,920 --> 00:06:01,290
+they use the same mathematical model
+
+121
+00:06:01,290 --> 00:06:03,180
+to derive another complementary key
+
+122
+00:06:03,180 --> 00:06:06,360
+that can be used to
+unscramble or decrypt it.
+
+123
+00:06:06,360 --> 00:06:09,210
+And once, and let's call
+that the receiver key.
+
+124
+00:06:09,210 --> 00:06:11,280
+Once they have that complementary key,
+
+125
+00:06:11,280 --> 00:06:14,790
+they find a way to
+securely transmit that key
+
+126
+00:06:14,790 --> 00:06:16,200
+to the receiver.
+
+127
+00:06:16,200 --> 00:06:18,210
+When the receiver receives the key,
+
+128
+00:06:18,210 --> 00:06:20,250
+they're able to decrypt the traffic
+
+129
+00:06:20,250 --> 00:06:22,860
+and look at the original message.
+
+130
+00:06:22,860 --> 00:06:25,320
+Now, when the sender key and
+the receiver key are different,
+
+131
+00:06:25,320 --> 00:06:27,450
+it's called asymmetric encryption.
+
+132
+00:06:27,450 --> 00:06:31,110
+And when they're same, it's
+called symmetric encryption.
+
+133
+00:06:31,110 --> 00:06:34,890
+Worldwide, the most common
+encryption standard uses
+
+134
+00:06:34,890 --> 00:06:36,900
+symmetric encryption today.
+
+135
+00:06:36,900 --> 00:06:39,540
+Now, you may have noticed two things here.
+
+136
+00:06:39,540 --> 00:06:43,080
+One is that, it takes
+some computational part,
+
+137
+00:06:43,080 --> 00:06:45,390
+both on the sender side
+and the receiver side
+
+138
+00:06:45,390 --> 00:06:47,640
+to encrypt and decrypt the traffic.
+
+139
+00:06:47,640 --> 00:06:48,723
+Along with that,
+
+140
+00:06:49,740 --> 00:06:53,850
+the security of the key is
+of paramount importance here.
+
+141
+00:06:53,850 --> 00:06:56,340
+Because God forbid, if
+this key gets into the hand
+
+142
+00:06:56,340 --> 00:06:57,450
+of an attacker,
+
+143
+00:06:57,450 --> 00:06:59,760
+they will have visibility
+into the entire communication
+
+144
+00:06:59,760 --> 00:07:02,580
+between the sender and the receiver.
+
+145
+00:07:02,580 --> 00:07:07,050
+That's why companies spend
+large amount of resources
+
+146
+00:07:07,050 --> 00:07:11,400
+to build infrastructure that
+can keep these keys secure
+
+147
+00:07:11,400 --> 00:07:14,130
+and that can rotate these keys regularly
+
+148
+00:07:14,130 --> 00:07:17,073
+so that in case of a compromise,
+
+149
+00:07:17,940 --> 00:07:20,700
+the blast radius is limited.
+
+150
+00:07:20,700 --> 00:07:23,310
+So AWS long back itself,
+
+151
+00:07:23,310 --> 00:07:27,660
+AWS had recognized the challenges
+in implementing encryption
+
+152
+00:07:27,660 --> 00:07:30,690
+and building these secure
+key management systems.
+
+153
+00:07:30,690 --> 00:07:34,620
+And we started offering native encryption
+
+154
+00:07:34,620 --> 00:07:36,570
+across multiple paths.
+
+155
+00:07:36,570 --> 00:07:38,850
+So next we'll discuss
+the native encryption
+
+156
+00:07:38,850 --> 00:07:40,833
+that AWS offers across different paths.
+
+157
+00:07:43,200 --> 00:07:47,550
+So today, all your traffic
+
+158
+00:07:47,550 --> 00:07:51,810
+between any two AWS data
+centers is encrypted
+
+159
+00:07:51,810 --> 00:07:55,830
+using state of the art
+Advanced Encryption Standard
+
+160
+00:07:55,830 --> 00:07:57,813
+with the 256 bit key,
+
+161
+00:08:00,390 --> 00:08:04,440
+whenever this traffic leaves
+AWS secured facilities.
+
+162
+00:08:04,440 --> 00:08:07,800
+And this encryption is implemented
+
+163
+00:08:07,800 --> 00:08:10,710
+between data centers in
+an availability zone,
+
+164
+00:08:10,710 --> 00:08:14,700
+across availability zone,
+and even across regions.
+
+165
+00:08:14,700 --> 00:08:18,570
+And then the traffic is
+transmitted between regions.
+
+166
+00:08:18,570 --> 00:08:20,490
+If you're using transit gateway pairing
+
+167
+00:08:20,490 --> 00:08:22,650
+or if you're using cross region pairing,
+
+168
+00:08:22,650 --> 00:08:24,960
+then all the traffic
+gets an additional layer
+
+169
+00:08:24,960 --> 00:08:29,960
+of bulk encryption on top of
+the native AES 256 encryption.
+
+170
+00:08:33,360 --> 00:08:35,430
+And you may have noticed
+that I've been saying
+
+171
+00:08:35,430 --> 00:08:37,200
+that this traffic is encrypted
+
+172
+00:08:37,200 --> 00:08:40,530
+when it leaves the AWS secured facilities,
+
+173
+00:08:40,530 --> 00:08:42,630
+and these facilities are really secured
+
+174
+00:08:42,630 --> 00:08:45,360
+because there's physical
+security present there,
+
+175
+00:08:45,360 --> 00:08:48,060
+and no unauthorized person can just walk
+
+176
+00:08:48,060 --> 00:08:49,953
+into these buildings.
+
+177
+00:08:51,000 --> 00:08:55,320
+But there's no such
+thing as more security.
+
+178
+00:08:55,320 --> 00:08:59,940
+So back in 2019, we
+launched Nitro encryption
+
+179
+00:08:59,940 --> 00:09:01,977
+or VPC encryption.
+
+180
+00:09:01,977 --> 00:09:06,977
+And what that is that today,
+any two modern EC2 instances,
+
+181
+00:09:07,140 --> 00:09:09,300
+when they're communicating
+with each other,
+
+182
+00:09:09,300 --> 00:09:12,930
+all the traffic between
+these instances are encrypted
+
+183
+00:09:12,930 --> 00:09:16,233
+using state of the art AES 256 encryption.
+
+184
+00:09:17,421 --> 00:09:19,710
+And this encryption holds true even
+
+185
+00:09:19,710 --> 00:09:22,053
+within your data centers,
+
+186
+00:09:23,760 --> 00:09:26,490
+even within AWS secured facilities.
+
+187
+00:09:26,490 --> 00:09:30,420
+So I still remember back in 2019
+
+188
+00:09:30,420 --> 00:09:32,913
+when we launched Nitro encryption,
+
+189
+00:09:33,900 --> 00:09:35,910
+back then there were hoards of customers
+
+190
+00:09:35,910 --> 00:09:38,460
+who upgraded their entire infrastructure
+
+191
+00:09:38,460 --> 00:09:43,290
+so that they can use this
+native Nitro encryption.
+
+192
+00:09:43,290 --> 00:09:45,210
+The good thing about
+this Nitro encryption,
+
+193
+00:09:45,210 --> 00:09:47,940
+it's transparent to the customer.
+
+194
+00:09:47,940 --> 00:09:50,730
+No, you don't have to manage
+the key infrastructure.
+
+195
+00:09:50,730 --> 00:09:53,550
+It does not impact the compute power
+
+196
+00:09:53,550 --> 00:09:56,200
+or the processing power of your compute
+
+197
+00:09:57,360 --> 00:09:59,010
+or your EC2 instances.
+
+198
+00:09:59,010 --> 00:10:01,680
+And it just works there transparently.
+
+199
+00:10:01,680 --> 00:10:05,977
+So even today, a lot of
+customers manage Excel workbooks
+
+200
+00:10:07,890 --> 00:10:11,130
+where they track the
+usage of instance types
+
+201
+00:10:11,130 --> 00:10:13,230
+across their environment.
+
+202
+00:10:13,230 --> 00:10:16,740
+But tracking it manually
+has a couple of challenges.
+
+203
+00:10:16,740 --> 00:10:19,140
+One is, of course, it's a manual effort
+
+204
+00:10:19,140 --> 00:10:23,130
+to track the instance usage
+across your environment.
+
+205
+00:10:23,130 --> 00:10:26,100
+The other thing is this encryption,
+
+206
+00:10:26,100 --> 00:10:30,060
+this native Nitro encryption
+works on modern EC2 instances,
+
+207
+00:10:30,060 --> 00:10:32,580
+but your EC2 instances also communicate
+
+208
+00:10:32,580 --> 00:10:36,240
+with AWS services or external services,
+
+209
+00:10:36,240 --> 00:10:38,223
+not many of which may,
+
+210
+00:10:39,600 --> 00:10:44,250
+not all of which support Nitro encryption.
+
+211
+00:10:44,250 --> 00:10:47,940
+The other problem is that as
+you introduce new workloads,
+
+212
+00:10:47,940 --> 00:10:52,350
+the number of potential network paths
+
+213
+00:10:52,350 --> 00:10:54,240
+increases exponentially.
+
+214
+00:10:54,240 --> 00:10:56,670
+And then tracking and
+monitoring encryption
+
+215
+00:10:56,670 --> 00:10:58,470
+across all these network paths,
+
+216
+00:10:58,470 --> 00:11:01,830
+it can get really difficult real quick.
+
+217
+00:11:01,830 --> 00:11:06,093
+That's why AWS launched
+VPC Encryption Controls,
+
+218
+00:11:07,410 --> 00:11:10,680
+two weeks back to
+address these challenges.
+
+219
+00:11:10,680 --> 00:11:14,760
+So VPC encryption controls allows,
+
+220
+00:11:14,760 --> 00:11:16,170
+it comes in two modes.
+
+221
+00:11:16,170 --> 00:11:19,041
+One is the monitor mode, the
+other is the enforce mode.
+
+222
+00:11:19,041 --> 00:11:24,000
+It allows you to monitor
+the encryption status
+
+223
+00:11:24,000 --> 00:11:25,200
+of your traffic flows.
+
+224
+00:11:25,200 --> 00:11:28,800
+It also allows you to identify resources
+
+225
+00:11:28,800 --> 00:11:31,350
+that are not enforcing
+encryption in transit.
+
+226
+00:11:31,350 --> 00:11:33,840
+And then it gives you the tools
+
+227
+00:11:33,840 --> 00:11:36,720
+to enforce encryption in
+transit within your VPC
+
+228
+00:11:36,720 --> 00:11:38,433
+and even across your VPCs.
+
+229
+00:11:39,330 --> 00:11:40,260
+And once you have done that,
+
+230
+00:11:40,260 --> 00:11:43,710
+you can also create, generate flow logs
+
+231
+00:11:43,710 --> 00:11:44,880
+for auditing purposes.
+
+232
+00:11:44,880 --> 00:11:48,390
+Or you can also look at what
+VPCs are enforcing encryption
+
+233
+00:11:48,390 --> 00:11:50,643
+and what VPCs are not
+enforcing encryption.
+
+234
+00:11:52,290 --> 00:11:54,990
+And this feature is really easy to use.
+
+235
+00:11:54,990 --> 00:11:57,423
+We'll cover it up in
+the subsequent slides.
+
+236
+00:11:58,440 --> 00:12:00,840
+You can literally click a single button
+
+237
+00:12:00,840 --> 00:12:02,640
+and you can turn on encryption controls
+
+238
+00:12:02,640 --> 00:12:06,000
+in your existing VPCs or your new VPCs.
+
+239
+00:12:06,000 --> 00:12:08,463
+You can turn it on during creation itself.
+
+240
+00:12:09,420 --> 00:12:12,720
+And other thing is it
+addresses the other challenge
+
+241
+00:12:12,720 --> 00:12:17,550
+and it offers native Nitro
+encryption beyond EC2 instances
+
+242
+00:12:17,550 --> 00:12:21,153
+to many AWS services like RDS, Redshift,
+
+243
+00:12:22,980 --> 00:12:26,160
+Application Load Balancer,
+Fargate tasks, etc.
+
+244
+00:12:26,160 --> 00:12:29,250
+It also works across your VPCs
+
+245
+00:12:29,250 --> 00:12:30,900
+whenever you're using VPC Peering
+
+246
+00:12:30,900 --> 00:12:33,691
+or whenever you're using Transit Gateway
+
+247
+00:12:33,691 --> 00:12:37,440
+and you can exert all
+these controls centrally,
+
+248
+00:12:37,440 --> 00:12:39,030
+and you can create reports
+
+249
+00:12:39,030 --> 00:12:41,580
+and you can show that you are complying
+
+250
+00:12:41,580 --> 00:12:43,380
+with different encryption standards.
+
+251
+00:12:44,400 --> 00:12:46,650
+So let's talk about the different modes
+
+252
+00:12:46,650 --> 00:12:50,490
+of encryption controls.
+
+253
+00:12:50,490 --> 00:12:52,440
+You may remember that I
+talked about two modes.
+
+254
+00:12:52,440 --> 00:12:54,930
+There's a monitor mode and
+there's an enforce mode.
+
+255
+00:12:54,930 --> 00:12:57,030
+The reason we will discuss monitor mode
+
+256
+00:12:57,030 --> 00:12:58,110
+before enforce mode is
+
+257
+00:12:58,110 --> 00:13:03,110
+because you cannot directly
+move an existing VPC
+
+258
+00:13:03,720 --> 00:13:04,830
+to enforce mode.
+
+259
+00:13:04,830 --> 00:13:05,663
+And the reason is
+
+260
+00:13:05,663 --> 00:13:09,150
+because what enforce mode
+does is enforce mode ensures
+
+261
+00:13:09,150 --> 00:13:13,160
+that all your existing resources
+are enforcing encryption
+
+262
+00:13:13,160 --> 00:13:14,640
+in transit.
+
+263
+00:13:14,640 --> 00:13:17,940
+And it also ensures that
+all your future resources
+
+264
+00:13:17,940 --> 00:13:20,970
+that you will launch,
+ever launch in your VPC,
+
+265
+00:13:20,970 --> 00:13:23,943
+they will also ensure
+encryption in transit.
+
+266
+00:13:24,780 --> 00:13:27,930
+But in order to ensure
+encryption in transit
+
+267
+00:13:27,930 --> 00:13:29,040
+for existing resources,
+
+268
+00:13:29,040 --> 00:13:30,480
+you first need to identify
+
+269
+00:13:30,480 --> 00:13:33,630
+what resources are not
+enforcing encryption today.
+
+270
+00:13:33,630 --> 00:13:37,050
+And for that, you need to
+first turn on monitor mode.
+
+271
+00:13:37,050 --> 00:13:40,530
+So turning on monitor
+mode is as I promised
+
+272
+00:13:40,530 --> 00:13:41,363
+in the previous slide,
+
+273
+00:13:41,363 --> 00:13:43,200
+turning on monitor mode is very easy.
+
+274
+00:13:43,200 --> 00:13:45,210
+You just select your VPC here,
+
+275
+00:13:45,210 --> 00:13:48,960
+and then you just turn on
+encryption controls here.
+
+276
+00:13:48,960 --> 00:13:52,650
+And you'll notice that the
+enforce mode is grayed out.
+
+277
+00:13:52,650 --> 00:13:54,600
+It's grayed out for existing VPCs
+
+278
+00:13:54,600 --> 00:13:56,400
+because you first need to make sure
+
+279
+00:13:56,400 --> 00:13:59,460
+that all your resources
+are encrypting traffic
+
+280
+00:13:59,460 --> 00:14:00,693
+at resource level.
+
+281
+00:14:02,359 --> 00:14:05,910
+And this holds true
+only for existing VPCs.
+
+282
+00:14:05,910 --> 00:14:08,880
+By the way, if you're creating a new VPC,
+
+283
+00:14:08,880 --> 00:14:13,020
+you can always immediately
+turn on encryption enforcement
+
+284
+00:14:13,020 --> 00:14:15,270
+because you don't have
+any resources there.
+
+285
+00:14:15,270 --> 00:14:18,749
+So here, once you turn
+on the monitor mode,
+
+286
+00:14:18,749 --> 00:14:22,590
+we give you a new control
+
+287
+00:14:22,590 --> 00:14:25,170
+using which you can identify the resources
+
+288
+00:14:25,170 --> 00:14:28,140
+that may not be enforcing encryption.
+
+289
+00:14:28,140 --> 00:14:30,240
+So you can go into the console,
+
+290
+00:14:30,240 --> 00:14:31,800
+VPC encryption controls console,
+
+291
+00:14:31,800 --> 00:14:35,400
+and you will see that
+there are, oh, sorry.
+
+292
+00:14:35,400 --> 00:14:38,400
+You'll see that there are these resources
+
+293
+00:14:38,400 --> 00:14:39,870
+which are not encrypting
+
+294
+00:14:39,870 --> 00:14:42,750
+or which are not enforcing
+encryption today.
+
+295
+00:14:42,750 --> 00:14:46,023
+You can also use the CLI to
+identify those resources.
+
+296
+00:14:47,602 --> 00:14:48,690
+When you look into the screen,
+
+297
+00:14:48,690 --> 00:14:51,750
+you'll find out not only the resources
+
+298
+00:14:51,750 --> 00:14:53,820
+that are not enforcing encryption,
+
+299
+00:14:53,820 --> 00:14:55,020
+but you'll also find out
+
+300
+00:14:55,020 --> 00:14:58,410
+whether these resources are
+eligible for exclusion or not.
+
+301
+00:14:58,410 --> 00:15:00,780
+So we'll discuss later in the slides
+
+302
+00:15:00,780 --> 00:15:05,580
+how can you exclude certain resources?
+
+303
+00:15:05,580 --> 00:15:06,720
+But by exclusion,
+
+304
+00:15:06,720 --> 00:15:08,400
+what we mean is that there
+are certain resources.
+
+305
+00:15:08,400 --> 00:15:10,200
+For example, there's internet gateway
+
+306
+00:15:10,200 --> 00:15:11,560
+or virtual private gateway
+
+307
+00:15:12,630 --> 00:15:15,990
+using which your traffic
+transmits outside the boundary
+
+308
+00:15:15,990 --> 00:15:17,340
+of AWS.
+
+309
+00:15:17,340 --> 00:15:19,980
+For such resources, you are responsible
+
+310
+00:15:19,980 --> 00:15:21,483
+to enforce encryption.
+
+311
+00:15:22,320 --> 00:15:25,200
+So either you can remove
+those resources from the VPC
+
+312
+00:15:25,200 --> 00:15:27,720
+or you can continue
+running them as exclusions.
+
+313
+00:15:27,720 --> 00:15:29,610
+And when you continue
+running them as exclusions
+
+314
+00:15:29,610 --> 00:15:32,040
+and you still go into enforce mode,
+
+315
+00:15:32,040 --> 00:15:36,192
+what AWS will ensure is
+that all future resources
+
+316
+00:15:36,192 --> 00:15:38,610
+or all existing resources
+
+317
+00:15:38,610 --> 00:15:41,733
+except these excluded resources
+will enforce encryption.
+
+318
+00:15:43,080 --> 00:15:46,020
+For these resources that are excluded,
+
+319
+00:15:46,020 --> 00:15:48,840
+you are responsible for
+maintaining encryption.
+
+320
+00:15:48,840 --> 00:15:52,560
+So this is what exclusion does.
+
+321
+00:15:52,560 --> 00:15:55,210
+And once you have, once you
+identify these resources,
+
+322
+00:15:55,210 --> 00:15:58,170
+we'll also discuss how to
+migrate each of these resources
+
+323
+00:15:58,170 --> 00:16:02,520
+and how to make sure that
+they're enforcing encryption.
+
+324
+00:16:02,520 --> 00:16:03,963
+But before we go there,
+
+325
+00:16:04,950 --> 00:16:07,930
+the monitor mode also
+gives you the ability
+
+326
+00:16:08,850 --> 00:16:12,870
+to monitor the encryption status
+
+327
+00:16:12,870 --> 00:16:14,700
+of individual traffic flows.
+
+328
+00:16:14,700 --> 00:16:18,120
+And you can do that using
+your familiar VPC flow logs.
+
+329
+00:16:18,120 --> 00:16:20,073
+When you turn on VPC flow logs,
+
+330
+00:16:21,000 --> 00:16:22,980
+we have introduced a new field here
+
+331
+00:16:22,980 --> 00:16:25,021
+and called encryption status.
+
+332
+00:16:25,021 --> 00:16:27,960
+You can just turn on encryption status.
+
+333
+00:16:27,960 --> 00:16:31,890
+And encryption status will
+start emitting numerical values
+
+334
+00:16:31,890 --> 00:16:35,460
+to tell you whether your
+traffic is encrypted or not,
+
+335
+00:16:35,460 --> 00:16:37,650
+or whether it is encrypted
+at the application layer
+
+336
+00:16:37,650 --> 00:16:39,990
+or whether it is encrypted
+at the physical layer
+
+337
+00:16:39,990 --> 00:16:41,313
+using Nitro encryption.
+
+338
+00:16:44,430 --> 00:16:48,123
+So this is how you can
+read the encryption status.
+
+339
+00:16:49,710 --> 00:16:51,870
+When the encryption status is zero,
+
+340
+00:16:51,870 --> 00:16:55,180
+it means that the VPC encryption controls
+
+341
+00:16:56,040 --> 00:17:00,360
+has recognized your traffic
+flow as unencrypted.
+
+342
+00:17:00,360 --> 00:17:01,590
+Now, please note
+
+343
+00:17:01,590 --> 00:17:06,590
+that VPC encryption controls
+recognizes the Nitro encryption
+
+344
+00:17:08,100 --> 00:17:09,570
+at the physical layer
+
+345
+00:17:09,570 --> 00:17:13,440
+as well as the application
+layer encryption only
+
+346
+00:17:13,440 --> 00:17:18,440
+to AWS services via AWS
+PrivateLink interface endpoints
+
+347
+00:17:18,630 --> 00:17:19,803
+and gateway endpoints.
+
+348
+00:17:21,120 --> 00:17:23,970
+Now, when it emits a value of one,
+
+349
+00:17:23,970 --> 00:17:26,310
+it means that your traffic is encrypted
+
+350
+00:17:26,310 --> 00:17:30,420
+at the physical layer using
+the Nitro system hardware.
+
+351
+00:17:30,420 --> 00:17:33,390
+A value of two means it's
+encrypted at application layer.
+
+352
+00:17:33,390 --> 00:17:35,730
+Again, you'll see the value two,
+
+353
+00:17:35,730 --> 00:17:40,080
+when you traffic is going to
+or coming from AWS services,
+
+354
+00:17:40,080 --> 00:17:42,180
+which are accessed via gateway endpoints
+
+355
+00:17:42,180 --> 00:17:45,690
+or interface endpoints.
+
+356
+00:17:45,690 --> 00:17:48,780
+Now, the numerical three tells you
+
+357
+00:17:48,780 --> 00:17:51,900
+that the traffic is encrypted
+both at the physical layer
+
+358
+00:17:51,900 --> 00:17:55,230
+by Nitro and at the application layer.
+
+359
+00:17:55,230 --> 00:17:57,420
+And if you don't get any value,
+
+360
+00:17:57,420 --> 00:17:59,460
+it means that either you haven't turned
+
+361
+00:17:59,460 --> 00:18:01,080
+on VPC encryption controls
+
+362
+00:18:01,080 --> 00:18:04,323
+or flow logs currently does
+not have that value with it.
+
+363
+00:18:07,140 --> 00:18:10,140
+So this is how you monitor
+the encryption status,
+
+364
+00:18:10,140 --> 00:18:12,690
+and this is how you identify resources
+
+365
+00:18:12,690 --> 00:18:14,940
+which are not enforcing encryption.
+
+366
+00:18:14,940 --> 00:18:17,420
+Next, let's see how you can turn on
+
+367
+00:18:17,420 --> 00:18:18,510
+or how you can move
+
+368
+00:18:18,510 --> 00:18:21,690
+to transition your existing
+VPC to enforce mode.
+
+369
+00:18:21,690 --> 00:18:24,990
+Again, just to repeat,
+if you have a new VPC,
+
+370
+00:18:24,990 --> 00:18:28,710
+you can turn on enforce
+mode at creation itself.
+
+371
+00:18:28,710 --> 00:18:31,020
+But for existing VPCs,
+
+372
+00:18:31,020 --> 00:18:33,450
+you first need to turn on monitor mode
+
+373
+00:18:33,450 --> 00:18:36,480
+and you need to identify
+the non-compliant resources.
+
+374
+00:18:36,480 --> 00:18:38,610
+The non-compliant
+resources are the resources
+
+375
+00:18:38,610 --> 00:18:41,673
+that are not enforcing
+encryption in transit themselves.
+
+376
+00:18:42,750 --> 00:18:45,390
+And once you've done that,
+
+377
+00:18:45,390 --> 00:18:48,660
+the next thing is that you
+need to make certain changes
+
+378
+00:18:48,660 --> 00:18:50,580
+to these resources and you need to ensure
+
+379
+00:18:50,580 --> 00:18:53,250
+that all these resources
+are enforcing encryption.
+
+380
+00:18:53,250 --> 00:18:54,600
+And you'll see, and we'll discuss that
+
+381
+00:18:54,600 --> 00:18:55,890
+in the subsequent slide.
+
+382
+00:18:55,890 --> 00:18:57,870
+You'll see that for many of other sources,
+
+383
+00:18:57,870 --> 00:19:01,620
+we will take care of encryption
+ourselves once you turn
+
+384
+00:19:01,620 --> 00:19:04,740
+on the encryption controls
+even in monitor mode.
+
+385
+00:19:04,740 --> 00:19:07,080
+And then once you have made sure
+
+386
+00:19:07,080 --> 00:19:09,720
+that your non all resources,
+
+387
+00:19:09,720 --> 00:19:11,610
+especially the non-excludable ones,
+
+388
+00:19:11,610 --> 00:19:14,130
+are enforcing encryption in transit,
+
+389
+00:19:14,130 --> 00:19:16,283
+that is when you can modify
+your encryption controls
+
+390
+00:19:16,283 --> 00:19:18,060
+to turn on enforce mode,
+
+391
+00:19:18,060 --> 00:19:19,960
+or you can transition to enforce mode.
+
+392
+00:19:21,150 --> 00:19:25,110
+So let's look at how you can ensure
+
+393
+00:19:25,110 --> 00:19:30,060
+that your different VPC resources
+are enforcing encryption.
+
+394
+00:19:30,060 --> 00:19:33,810
+So for many of the resources
+
+395
+00:19:33,810 --> 00:19:36,360
+such as Fargate task,
+Application Load Balancer,
+
+396
+00:19:36,360 --> 00:19:38,310
+Network Load Balancer,
+
+397
+00:19:38,310 --> 00:19:40,830
+the moment you turn on encryption controls
+
+398
+00:19:40,830 --> 00:19:43,320
+in monitor mode itself,
+
+399
+00:19:43,320 --> 00:19:46,920
+behind the scenes, we'll start
+migrating these resources
+
+400
+00:19:46,920 --> 00:19:50,550
+onto new Nitro hardware so
+that they can automatically
+
+401
+00:19:50,550 --> 00:19:52,560
+and natively support
+encryption in transit.
+
+402
+00:19:52,560 --> 00:19:53,940
+So you don't have to do anything.
+
+403
+00:19:53,940 --> 00:19:56,490
+Once you turn it on,
+we'll take care of it.
+
+404
+00:19:56,490 --> 00:19:58,540
+It will take some time but we will do it.
+
+405
+00:20:00,510 --> 00:20:03,780
+For all AWS services except API gateway,
+
+406
+00:20:03,780 --> 00:20:05,040
+for all AWS services
+
+407
+00:20:05,040 --> 00:20:08,490
+that are supported by
+PrivateLink interface endpoint
+
+408
+00:20:08,490 --> 00:20:10,173
+or from gateway endpoint,
+
+409
+00:20:11,370 --> 00:20:16,200
+we'll enforce encryption
+at the application layer.
+
+410
+00:20:16,200 --> 00:20:18,150
+And this, what this means is that
+
+411
+00:20:18,150 --> 00:20:21,120
+if an application tries to
+send unencrypted traffic
+
+412
+00:20:21,120 --> 00:20:24,153
+to such AWS services, we'll just drop it.
+
+413
+00:20:25,200 --> 00:20:28,590
+Then there are a host of other services.
+
+414
+00:20:28,590 --> 00:20:30,930
+These services, which is your EC2
+
+415
+00:20:30,930 --> 00:20:35,930
+or your auto scaling
+groups, or EKS or ECS, etc.,
+
+416
+00:20:37,710 --> 00:20:41,910
+here, typically you select
+the underlying instance type.
+
+417
+00:20:41,910 --> 00:20:45,930
+So you are responsible for
+choosing the modern instances.
+
+418
+00:20:45,930 --> 00:20:48,060
+For many customers that have talked to,
+
+419
+00:20:48,060 --> 00:20:52,410
+they're already using modern
+instances for these resources.
+
+420
+00:20:52,410 --> 00:20:55,200
+And if you're doing that, you are all set.
+
+421
+00:20:55,200 --> 00:20:58,170
+But in case you're using an
+older generation instance,
+
+422
+00:20:58,170 --> 00:21:02,340
+you need to move those
+resources onto new hardware
+
+423
+00:21:02,340 --> 00:21:07,020
+or onto new EC2 instances,
+the modern EC2 instances.
+
+424
+00:21:07,020 --> 00:21:10,050
+Once you do that, they will
+also start encrypting traffic
+
+425
+00:21:10,050 --> 00:21:11,580
+at the physical layer.
+
+426
+00:21:11,580 --> 00:21:14,830
+And all these resources
+lie inside your VPC
+
+427
+00:21:16,677 --> 00:21:20,760
+and they help you enforce
+encryption within the VPC itself.
+
+428
+00:21:20,760 --> 00:21:23,730
+Now let's talk about what you need to do
+
+429
+00:21:23,730 --> 00:21:24,717
+if you have a transit gateway
+
+430
+00:21:24,717 --> 00:21:27,930
+and you also want to encrypt
+your traffic across VPCs.
+
+431
+00:21:27,930 --> 00:21:29,040
+So for transit gateway,
+
+432
+00:21:29,040 --> 00:21:32,100
+we have introduced a new option
+called encryption support.
+
+433
+00:21:32,100 --> 00:21:33,900
+And you can turn it to enable.
+
+434
+00:21:33,900 --> 00:21:35,310
+And once you turn it to enable,
+
+435
+00:21:35,310 --> 00:21:37,260
+even your traffic between your VPCs
+
+436
+00:21:37,260 --> 00:21:38,670
+that have encryption enforced
+
+437
+00:21:38,670 --> 00:21:42,303
+will start getting encrypted
+at the physical layer itself.
+
+438
+00:21:44,460 --> 00:21:48,990
+So now once you've moved all your,
+
+439
+00:21:48,990 --> 00:21:50,948
+once you've moved all these resources
+
+440
+00:21:50,948 --> 00:21:55,948
+to encryption enforcement,
+you can then transition
+
+441
+00:21:57,390 --> 00:21:58,650
+to enforce mode.
+
+442
+00:21:58,650 --> 00:22:01,140
+While you are transitioning
+to enforce mode,
+
+443
+00:22:01,140 --> 00:22:04,683
+the console will give
+you the list of resources
+
+444
+00:22:04,683 --> 00:22:07,500
+that are unencrypted, will
+also give you the resource,
+
+445
+00:22:07,500 --> 00:22:12,273
+the list of resources that
+are eligible for exclusion.
+
+446
+00:22:14,777 --> 00:22:19,777
+You can turn on exclusion
+for those resources
+
+447
+00:22:20,460 --> 00:22:23,130
+and then you can turn on enforce mode.
+
+448
+00:22:23,130 --> 00:22:27,240
+Once you turn on enforce
+mode, the VPC does two things.
+
+449
+00:22:27,240 --> 00:22:28,260
+One, it makes sure
+
+450
+00:22:28,260 --> 00:22:31,500
+that your existing
+resources always communicate
+
+451
+00:22:31,500 --> 00:22:34,290
+in encrypted traffic.
+
+452
+00:22:34,290 --> 00:22:35,940
+And the second thing it
+does is it makes sure
+
+453
+00:22:35,940 --> 00:22:37,440
+that any future resources
+
+454
+00:22:37,440 --> 00:22:40,110
+that you instantiate inside this VPC
+
+455
+00:22:40,110 --> 00:22:42,030
+are always enforcing encryption.
+
+456
+00:22:42,030 --> 00:22:45,210
+It won't allow you to
+launch older generation
+
+457
+00:22:45,210 --> 00:22:48,390
+of EC2 instances, which
+do not support encryption.
+
+458
+00:22:48,390 --> 00:22:51,060
+So that is what enforce mode does.
+
+459
+00:22:51,060 --> 00:22:52,620
+After turning on enforce mode,
+
+460
+00:22:52,620 --> 00:22:57,150
+you basically, this allows
+you to enforce encryption
+
+461
+00:22:57,150 --> 00:22:58,260
+within the VPC.
+
+462
+00:22:58,260 --> 00:23:03,260
+But next we'll discuss how
+can you ensure encryption
+
+463
+00:23:04,290 --> 00:23:09,290
+across VPCs using VPC
+peering and transit gateway.
+
+464
+00:23:10,680 --> 00:23:14,400
+So whenever you're using VPC peering,
+
+465
+00:23:14,400 --> 00:23:16,380
+suppose if you have two VPCs,
+
+466
+00:23:16,380 --> 00:23:20,280
+and both those VPCs have
+encryption controls turned on
+
+467
+00:23:20,280 --> 00:23:24,030
+in enforce mode without any exclusion,
+
+468
+00:23:24,030 --> 00:23:28,470
+you can peer these VPCs
+and all communication
+
+469
+00:23:28,470 --> 00:23:31,923
+between these VPCs will
+always be encrypted.
+
+470
+00:23:33,180 --> 00:23:38,180
+However, even if one of those
+VPCs has any exclusions,
+
+471
+00:23:38,520 --> 00:23:43,520
+or if one of those VPCs has
+encryption controls turned on
+
+472
+00:23:44,580 --> 00:23:47,237
+in monitor mode or is turned off,
+
+473
+00:23:47,237 --> 00:23:51,360
+then in order to turn on peering
+
+474
+00:23:51,360 --> 00:23:52,800
+with an encryption enforced VPC,
+
+475
+00:23:52,800 --> 00:23:55,530
+you need to create an
+exclusion for that peering.
+
+476
+00:23:55,530 --> 00:23:57,810
+And what that means is that this VPC,
+
+477
+00:23:57,810 --> 00:24:00,030
+the VPC on the left hand side,
+
+478
+00:24:00,030 --> 00:24:03,300
+this is going to encrypt all
+traffic except the traffic
+
+479
+00:24:03,300 --> 00:24:06,780
+that's going to the peering connection.
+
+480
+00:24:06,780 --> 00:24:10,200
+The traffic, which is going
+to the peering connection,
+
+481
+00:24:10,200 --> 00:24:12,510
+the encryption status of
+that traffic would depend
+
+482
+00:24:12,510 --> 00:24:15,210
+on the resources that are
+communicating with each other.
+
+483
+00:24:15,210 --> 00:24:19,050
+For example, if you have modern
+EC2 instances on both sides,
+
+484
+00:24:19,050 --> 00:24:20,250
+or you have services that are running
+
+485
+00:24:20,250 --> 00:24:22,110
+on top of modern EC2 instances,
+
+486
+00:24:22,110 --> 00:24:24,210
+then this traffic will be encrypted.
+
+487
+00:24:24,210 --> 00:24:27,390
+But in case if this resource
+tries to communicate
+
+488
+00:24:27,390 --> 00:24:28,350
+with another resource
+
+489
+00:24:28,350 --> 00:24:31,090
+that's running on an older
+generation of EC2 instance
+
+490
+00:24:32,730 --> 00:24:34,530
+then the traffic won't be encrypted.
+
+491
+00:24:35,910 --> 00:24:40,833
+So this is what how you
+can turn on encryption
+
+492
+00:24:42,090 --> 00:24:44,553
+between your encryption enforced VPCs.
+
+493
+00:24:45,390 --> 00:24:49,050
+But if you want more
+flexibility here, for example,
+
+494
+00:24:49,050 --> 00:24:53,120
+if you want this VPC which
+is encryption enforced
+
+495
+00:24:53,120 --> 00:24:55,230
+to be connected to a different VPC
+
+496
+00:24:55,230 --> 00:24:57,180
+which is not encryption enforced,
+
+497
+00:24:57,180 --> 00:24:59,430
+and still make sure that all traffic
+
+498
+00:24:59,430 --> 00:25:03,000
+within this VPC is encrypted,
+
+499
+00:25:03,000 --> 00:25:05,200
+that's when you need
+to use transit gateway.
+
+500
+00:25:06,540 --> 00:25:09,990
+So this is what happens when
+you use transit gateway.
+
+501
+00:25:09,990 --> 00:25:12,750
+You can turn on encryption
+controls on your transit gateway.
+
+502
+00:25:12,750 --> 00:25:17,750
+When you, enable encryption
+controls on your transit gateway
+
+503
+00:25:17,880 --> 00:25:20,938
+and you peer to VPCs, what you
+can do is you can peer a VPC
+
+504
+00:25:20,938 --> 00:25:25,860
+that has encryption
+controls running without,
+
+505
+00:25:25,860 --> 00:25:28,200
+in enforce mode, without any exclusion.
+
+506
+00:25:28,200 --> 00:25:30,029
+And you can peer it with a VPC
+
+507
+00:25:30,029 --> 00:25:35,029
+which is not encryption enforced.
+
+508
+00:25:35,160 --> 00:25:40,160
+And the solid line here
+represents the encrypted traffic
+
+509
+00:25:41,100 --> 00:25:43,920
+and the broken line represents the traffic
+
+510
+00:25:43,920 --> 00:25:45,990
+that may or may not be encrypted.
+
+511
+00:25:45,990 --> 00:25:50,070
+So in this case, what would
+happen is within this VPC,
+
+512
+00:25:50,070 --> 00:25:51,480
+which is encryption enforced,
+
+513
+00:25:51,480 --> 00:25:53,490
+all your traffic will be encrypted,
+
+514
+00:25:53,490 --> 00:25:57,240
+even the traffic that's
+going to the transit gateway.
+
+515
+00:25:57,240 --> 00:26:00,960
+Now, the traffic is encrypted
+
+516
+00:26:00,960 --> 00:26:03,180
+through the transit gateway attachment
+
+517
+00:26:03,180 --> 00:26:07,110
+in your encryption unenforced VPC.
+
+518
+00:26:07,110 --> 00:26:09,000
+And only the last leg of the traffic,
+
+519
+00:26:09,000 --> 00:26:12,030
+which is between the
+transit gateway attachment
+
+520
+00:26:12,030 --> 00:26:13,350
+and your resource
+
+521
+00:26:13,350 --> 00:26:18,350
+in the unenforced,
+encryption unenforced VPC,
+
+522
+00:26:18,540 --> 00:26:20,790
+that will depend on the resource type
+
+523
+00:26:20,790 --> 00:26:23,253
+that the transit gateway
+is communicating with.
+
+524
+00:26:24,090 --> 00:26:25,350
+So this is
+
+525
+00:26:25,350 --> 00:26:28,470
+how you can use this new
+feature VPC encryption controls
+
+526
+00:26:28,470 --> 00:26:33,470
+to enforce encryption within
+your VPCs and across your VPCs.
+
+527
+00:26:34,200 --> 00:26:36,360
+Next I'll hand it over to Scott
+
+528
+00:26:36,360 --> 00:26:38,910
+who will discuss the different
+encryption strategies
+
+529
+00:26:38,910 --> 00:26:42,000
+and he'll talk about the
+emerging encryption frontier.
+
+530
+00:26:42,000 --> 00:26:43,260
+Thank you everyone.
+
+531
+00:26:43,260 --> 00:26:44,700
+- Thanks, Akshay.
+
+532
+00:26:44,700 --> 00:26:48,633
+So let's talk about encryption strategies.
+
+533
+00:26:49,710 --> 00:26:50,543
+We've all seen,
+
+534
+00:26:50,543 --> 00:26:52,020
+or hopefully most of us have seen
+
+535
+00:26:52,020 --> 00:26:54,240
+the famous Werner Vogels shirt that Akshay
+
+536
+00:26:54,240 --> 00:26:56,943
+and I are wrapping today,
+encrypt everything, right?
+
+537
+00:26:58,020 --> 00:27:00,720
+But encrypt everything is a
+goal. It's not a strategy.
+
+538
+00:27:00,720 --> 00:27:03,663
+So how do we actually get to that goal?
+
+539
+00:27:06,660 --> 00:27:09,810
+Encryption layering is the answer to this.
+
+540
+00:27:09,810 --> 00:27:11,220
+And what I've found is
+
+541
+00:27:11,220 --> 00:27:14,340
+that interestingly you can
+match encryption layering
+
+542
+00:27:14,340 --> 00:27:15,420
+to the OSI model.
+
+543
+00:27:15,420 --> 00:27:17,700
+If you're not familiar with OSI model,
+
+544
+00:27:17,700 --> 00:27:19,620
+it gives us seven layers of networking.
+
+545
+00:27:19,620 --> 00:27:22,080
+Some will say eight, I don't know who,
+
+546
+00:27:22,080 --> 00:27:24,570
+anyways, with seven layers of networking
+
+547
+00:27:24,570 --> 00:27:27,210
+from physical all the way to application.
+
+548
+00:27:27,210 --> 00:27:28,290
+And what we find is
+
+549
+00:27:28,290 --> 00:27:31,980
+that these different protocols
+work at different layers.
+
+550
+00:27:31,980 --> 00:27:36,300
+So we have Optical Line
+Encryption or MACsec encryption
+
+551
+00:27:36,300 --> 00:27:38,730
+between our AWS secured facilities
+
+552
+00:27:38,730 --> 00:27:41,190
+like Akshay was talking about earlier.
+
+553
+00:27:41,190 --> 00:27:43,490
+This exists without you
+having to do anything.
+
+554
+00:27:44,370 --> 00:27:46,290
+You can also use MACsec encryption
+
+555
+00:27:46,290 --> 00:27:47,820
+on your direct connect connections
+
+556
+00:27:47,820 --> 00:27:50,250
+if you have a supported connection, right?
+
+557
+00:27:50,250 --> 00:27:53,250
+You can check this in your
+direct connections and enable it.
+
+558
+00:27:54,780 --> 00:27:57,090
+Then we can move up the
+stack into the network layer,
+
+559
+00:27:57,090 --> 00:28:01,140
+that layer three, kind of IP layer, right?
+
+560
+00:28:01,140 --> 00:28:03,570
+And we get into AWS Nitro encryption
+
+561
+00:28:03,570 --> 00:28:05,340
+that Akshay was talking about
+
+562
+00:28:05,340 --> 00:28:08,280
+which we can enforce
+using encryption controls
+
+563
+00:28:08,280 --> 00:28:10,680
+and using modern instances.
+
+564
+00:28:10,680 --> 00:28:14,117
+We also get some tunneling
+technology like IPSec,
+
+565
+00:28:14,117 --> 00:28:17,070
+WireGuard, OpenVPN.
+
+566
+00:28:17,070 --> 00:28:21,600
+You can find IPSec and OpenVPN
+and AWS Site-to-Site VPN
+
+567
+00:28:21,600 --> 00:28:23,910
+and AWS Client VPN.
+
+568
+00:28:23,910 --> 00:28:25,440
+And you can use these to encrypt
+
+569
+00:28:25,440 --> 00:28:30,440
+between on-premise locations,
+various end user locations
+
+570
+00:28:30,660 --> 00:28:32,193
+and your AWS VPC.
+
+571
+00:28:33,480 --> 00:28:35,910
+Then we get TLS. TLS is really great.
+
+572
+00:28:35,910 --> 00:28:37,466
+It's really performant.
+
+573
+00:28:37,466 --> 00:28:42,360
+It encrypts kind of in that
+layer four through six area.
+
+574
+00:28:42,360 --> 00:28:44,070
+Hard to really define
+where and there it is.
+
+575
+00:28:44,070 --> 00:28:45,450
+So I just kinda left it for all of them
+
+576
+00:28:45,450 --> 00:28:47,910
+and we'll leave that
+debate for another day.
+
+577
+00:28:47,910 --> 00:28:51,600
+And this is supported through
+your customer applications,
+
+578
+00:28:51,600 --> 00:28:54,090
+Amazon VPC Lattice, if
+you're not familiar with it,
+
+579
+00:28:54,090 --> 00:28:55,650
+there's some great sessions this week.
+
+580
+00:28:55,650 --> 00:28:56,940
+Go look at them.
+
+581
+00:28:56,940 --> 00:28:59,850
+Elastic Load Balancer, CloudFront
+
+582
+00:28:59,850 --> 00:29:02,915
+and many more services support TLS.
+
+583
+00:29:02,915 --> 00:29:05,010
+And then we get into
+application level encryption.
+
+584
+00:29:05,010 --> 00:29:08,070
+Things like SSH that exist out there,
+
+585
+00:29:08,070 --> 00:29:09,450
+client side encryption.
+
+586
+00:29:09,450 --> 00:29:12,690
+You may use something like our
+key management service, KMS
+
+587
+00:29:12,690 --> 00:29:13,523
+to do that.
+
+588
+00:29:14,700 --> 00:29:16,740
+A lot of different ways to do that,
+
+589
+00:29:16,740 --> 00:29:18,300
+but it really kind of moves up the stack
+
+590
+00:29:18,300 --> 00:29:22,290
+and using multiple layers
+is gonna help you make sure
+
+591
+00:29:22,290 --> 00:29:24,000
+that all of your traffic is encrypted,
+
+592
+00:29:24,000 --> 00:29:26,050
+that you're really encrypting everything.
+
+593
+00:29:27,870 --> 00:29:29,250
+So let's look at the characteristics
+
+594
+00:29:29,250 --> 00:29:32,010
+of these different encryption protocols.
+
+595
+00:29:32,010 --> 00:29:35,160
+So again, we have MACsec
+at the data link layer,
+
+596
+00:29:35,160 --> 00:29:36,510
+performance really high.
+
+597
+00:29:36,510 --> 00:29:38,940
+Typically this is implemented
+in hardware, right?
+
+598
+00:29:38,940 --> 00:29:42,180
+With hardware acceleration, ASICs or FPGAs
+
+599
+00:29:42,180 --> 00:29:45,030
+that are doing the
+encryption at line rate.
+
+600
+00:29:45,030 --> 00:29:46,950
+It's a hop by hop
+encryption though, right?
+
+601
+00:29:46,950 --> 00:29:49,680
+That means that between
+every two layer device
+
+602
+00:29:49,680 --> 00:29:51,810
+or layer two devices,
+
+603
+00:29:51,810 --> 00:29:54,120
+that's where the encryption
+stops, gets decrypted
+
+604
+00:29:54,120 --> 00:29:55,800
+and then re-encrypted, right?
+
+605
+00:29:55,800 --> 00:30:00,800
+So thinking of direct connect
+between your on-premise router
+
+606
+00:30:00,897 --> 00:30:05,327
+and the direct connect switch,
+it's gonna be encrypted,
+
+607
+00:30:05,327 --> 00:30:08,070
+then it's gonna get de-encrypted
+and all that AWS switch.
+
+608
+00:30:08,070 --> 00:30:11,280
+And then when we leave
+an AWS secured facility,
+
+609
+00:30:11,280 --> 00:30:13,310
+we're again going to encrypt
+with optical line encryption
+
+610
+00:30:13,310 --> 00:30:15,390
+or MACsec encryption, right?
+
+611
+00:30:15,390 --> 00:30:17,793
+So it's a hop by hop
+characteristic, right?
+
+612
+00:30:18,930 --> 00:30:20,040
+And we can manage this
+
+613
+00:30:20,040 --> 00:30:22,233
+by the networking team typically, right?
+
+614
+00:30:23,070 --> 00:30:24,263
+Then we get into IPSec.
+
+615
+00:30:25,170 --> 00:30:28,170
+IPSec tends to be a
+little less performant,
+
+616
+00:30:28,170 --> 00:30:31,080
+just dependent on where
+you're terminating it, right?
+
+617
+00:30:31,080 --> 00:30:34,320
+If you have that hardware
+acceleration, it's great.
+
+618
+00:30:34,320 --> 00:30:36,630
+One of the kind of
+downsides to IPSec though is
+
+619
+00:30:36,630 --> 00:30:38,730
+that it's an encapsulation protocol,
+
+620
+00:30:38,730 --> 00:30:39,840
+which means you're cutting off
+
+621
+00:30:39,840 --> 00:30:42,450
+that maximum transmission unit, MTU.
+
+622
+00:30:42,450 --> 00:30:43,800
+So over the internet
+
+623
+00:30:43,800 --> 00:30:47,190
+or even over direct connect,
+AWS Site-to-Site VPN,
+
+624
+00:30:47,190 --> 00:30:49,110
+you're gonna see an MTU
+somewhere in the neighborhood
+
+625
+00:30:49,110 --> 00:30:52,950
+of 1433 bytes, maybe a little
+less, maybe a little more,
+
+626
+00:30:52,950 --> 00:30:55,000
+just depending on what what you're doing.
+
+627
+00:30:56,760 --> 00:30:59,340
+But that's gonna be less, right?
+
+628
+00:30:59,340 --> 00:31:00,600
+Which means when we start getting
+
+629
+00:31:00,600 --> 00:31:03,060
+into higher latency environments,
+
+630
+00:31:03,060 --> 00:31:05,430
+your performance is gonna go down, right?
+
+631
+00:31:05,430 --> 00:31:08,550
+So you gotta really think
+about that usage there.
+
+632
+00:31:08,550 --> 00:31:10,800
+But you can get some very
+performant connections as well.
+
+633
+00:31:10,800 --> 00:31:13,260
+We actually just released
+five gigabit per second,
+
+634
+00:31:13,260 --> 00:31:15,540
+or up to five gigabit per second tunnels
+
+635
+00:31:15,540 --> 00:31:18,420
+on AWS Site-to-Site VPN,
+which is really cool.
+
+636
+00:31:18,420 --> 00:31:19,560
+I've been seeing this team work on this
+
+637
+00:31:19,560 --> 00:31:21,180
+for a number of years.
+
+638
+00:31:21,180 --> 00:31:23,430
+And this is a point to point connection,
+
+639
+00:31:23,430 --> 00:31:25,860
+meaning that where you
+terminate the IPSec tunnel
+
+640
+00:31:25,860 --> 00:31:27,960
+on each side is where it's gonna go.
+
+641
+00:31:27,960 --> 00:31:31,080
+So it's spanning multiple
+hops, but it's not end to end.
+
+642
+00:31:31,080 --> 00:31:33,570
+It's not from server
+to server necessarily.
+
+643
+00:31:33,570 --> 00:31:35,073
+Could be, but not usually.
+
+644
+00:31:36,960 --> 00:31:38,670
+Then we get into network
+encryption, right?
+
+645
+00:31:38,670 --> 00:31:42,480
+Nitro, the security team
+can now control this
+
+646
+00:31:42,480 --> 00:31:44,430
+using VPC encryption controls
+
+647
+00:31:44,430 --> 00:31:47,550
+and setting those VPC
+encryption controls, right?
+
+648
+00:31:47,550 --> 00:31:50,250
+So now we've taken things
+from the networking team
+
+649
+00:31:50,250 --> 00:31:52,500
+and given some capability
+to the security team
+
+650
+00:31:52,500 --> 00:31:53,793
+to enforce encryption.
+
+651
+00:31:55,230 --> 00:31:56,580
+This is again, point to point.
+
+652
+00:31:56,580 --> 00:31:59,760
+It's gonna be from an AWS EC2 instance
+
+653
+00:31:59,760 --> 00:32:02,280
+to an AWS EC2 instance, right?
+
+654
+00:32:02,280 --> 00:32:05,160
+So if there's multiple hops in
+there, like transit gateway,
+
+655
+00:32:05,160 --> 00:32:07,110
+there will be some points
+in there where it decrypts
+
+656
+00:32:07,110 --> 00:32:09,210
+and where it encrypts, so on and so forth.
+
+657
+00:32:10,920 --> 00:32:13,530
+TLS, right? This is
+super performant, right?
+
+658
+00:32:13,530 --> 00:32:15,720
+Because every individual
+session gets encrypted
+
+659
+00:32:15,720 --> 00:32:16,590
+with a different key,
+
+660
+00:32:16,590 --> 00:32:19,950
+gets hashed against
+multiple processing cores,
+
+661
+00:32:19,950 --> 00:32:22,710
+just a absolutely performant protocol.
+
+662
+00:32:22,710 --> 00:32:26,220
+Honestly, most things today
+should be using TLS, right,
+
+663
+00:32:26,220 --> 00:32:27,930
+most of your applications.
+
+664
+00:32:27,930 --> 00:32:30,060
+But it's hard to manage
+and hard to enforce
+
+665
+00:32:30,060 --> 00:32:32,700
+because it's on the
+application owner typically
+
+666
+00:32:32,700 --> 00:32:34,500
+to enforce this, right?
+
+667
+00:32:34,500 --> 00:32:35,580
+So you really gotta think through
+
+668
+00:32:35,580 --> 00:32:37,800
+how you enforce this and how you audit it.
+
+669
+00:32:37,800 --> 00:32:40,560
+And that's where multi-layer encryption
+
+670
+00:32:40,560 --> 00:32:42,030
+comes into play, right?
+
+671
+00:32:42,030 --> 00:32:44,340
+'Cause the networking team
+has an enforcement point,
+
+672
+00:32:44,340 --> 00:32:46,560
+the security team has an enforcement point
+
+673
+00:32:46,560 --> 00:32:49,560
+and the application owner has
+an enforcement point, right?
+
+674
+00:32:49,560 --> 00:32:51,450
+So everybody gets a little
+piece of the pie to make sure
+
+675
+00:32:51,450 --> 00:32:53,673
+that we're getting fully encrypted.
+
+676
+00:32:54,840 --> 00:32:57,180
+And then application layer encryption.
+
+677
+00:32:57,180 --> 00:32:59,490
+This tends to be something like,
+
+678
+00:32:59,490 --> 00:33:03,297
+encrypting individual packets
+with something like KMS.
+
+679
+00:33:03,297 --> 00:33:06,810
+And it's really hard to implement
+this in a performant way.
+
+680
+00:33:06,810 --> 00:33:08,790
+If you wanna be really,
+really super secure
+
+681
+00:33:08,790 --> 00:33:10,980
+and try and do it, you definitely can.
+
+682
+00:33:10,980 --> 00:33:15,600
+But for most things in
+transit, TLS, Nitro,
+
+683
+00:33:15,600 --> 00:33:16,980
+turn type of tunneling protocol,
+
+684
+00:33:16,980 --> 00:33:19,770
+MACsec, Optical Line Encryption,
+
+685
+00:33:19,770 --> 00:33:22,230
+this is where you're gonna get
+the most bang for your buck
+
+686
+00:33:22,230 --> 00:33:25,650
+as compared to, you know, kind
+of client side encryption.
+
+687
+00:33:25,650 --> 00:33:30,420
+KMS is better for more
+encryption at rest, right,
+
+688
+00:33:30,420 --> 00:33:31,770
+than encryption in transit.
+
+689
+00:33:34,740 --> 00:33:38,430
+So let's talk about emerging
+encryption frontiers, right?
+
+690
+00:33:38,430 --> 00:33:40,680
+Akshay brought up earlier
+the history of encryption.
+
+691
+00:33:40,680 --> 00:33:42,213
+And we've come a long way.
+
+692
+00:33:43,530 --> 00:33:46,533
+And so we're now getting into
+post quantum cryptography.
+
+693
+00:33:47,460 --> 00:33:49,080
+And so everyone sees this
+
+694
+00:33:49,080 --> 00:33:50,640
+and they think this magical thing, right?
+
+695
+00:33:50,640 --> 00:33:52,140
+Quantum's all magic, right?
+
+696
+00:33:52,140 --> 00:33:54,030
+No one really knows what it means.
+
+697
+00:33:54,030 --> 00:33:56,400
+But because quantum cryptography
+is all about the fact
+
+698
+00:33:56,400 --> 00:33:59,430
+that in theory there may be some future
+
+699
+00:33:59,430 --> 00:34:03,823
+where a quantum computer
+could potentially break RSA
+
+700
+00:34:05,310 --> 00:34:07,380
+or elliptical curve, right?
+
+701
+00:34:07,380 --> 00:34:08,640
+There's not one that we know of
+
+702
+00:34:08,640 --> 00:34:10,470
+in existence today that's done it.
+
+703
+00:34:10,470 --> 00:34:11,550
+Not powerful enough.
+
+704
+00:34:11,550 --> 00:34:13,380
+They haven't reached enough entanglement
+
+705
+00:34:13,380 --> 00:34:16,110
+to be able to do that,
+enough qubits, right?
+
+706
+00:34:16,110 --> 00:34:16,943
+But we think that maybe
+
+707
+00:34:16,943 --> 00:34:19,530
+there's some future
+where that could exist.
+
+708
+00:34:19,530 --> 00:34:21,510
+And before we get to that future,
+
+709
+00:34:21,510 --> 00:34:23,430
+the industry as a whole has been studying
+
+710
+00:34:23,430 --> 00:34:25,890
+how do we make encryption safe
+
+711
+00:34:25,890 --> 00:34:29,970
+so that if someone's storing those packets
+
+712
+00:34:29,970 --> 00:34:34,260
+that they can't go
+decrypt them later, right?
+
+713
+00:34:34,260 --> 00:34:36,840
+For most people not
+really concerned, right?
+
+714
+00:34:36,840 --> 00:34:38,430
+'Cause your data's
+probably not worth enough
+
+715
+00:34:38,430 --> 00:34:40,410
+to store all that data forever.
+
+716
+00:34:40,410 --> 00:34:42,930
+For some people it's
+very important, right?
+
+717
+00:34:42,930 --> 00:34:44,670
+Governments, financial services,
+
+718
+00:34:44,670 --> 00:34:46,620
+other things like that, right?
+
+719
+00:34:46,620 --> 00:34:47,850
+So it just depends on what you're doing,
+
+720
+00:34:47,850 --> 00:34:49,920
+but it's one of those things
+
+721
+00:34:49,920 --> 00:34:52,560
+that we're starting to think about, right?
+
+722
+00:34:52,560 --> 00:34:55,350
+And AWS has started
+taking it really seriously
+
+723
+00:34:55,350 --> 00:34:58,140
+and we've started releasing
+services that support
+
+724
+00:34:58,140 --> 00:35:03,140
+Module-Lattice-based
+Key-Encapsulation-Mechanism.
+
+725
+00:35:03,270 --> 00:35:04,103
+It's a mouthful.
+
+726
+00:35:04,980 --> 00:35:07,200
+So to explain what that is, right?
+
+727
+00:35:07,200 --> 00:35:09,300
+We do a key exchange
+
+728
+00:35:09,300 --> 00:35:11,460
+and we use asymmetric encryption
+
+729
+00:35:11,460 --> 00:35:16,290
+to do that key exchange
+using RSA or electrical curve
+
+730
+00:35:16,290 --> 00:35:17,670
+and typically use Diffie-Hellman
+
+731
+00:35:17,670 --> 00:35:20,100
+to do the key exchange, right,
+
+732
+00:35:20,100 --> 00:35:24,723
+within that asymmetric path, right?
+
+733
+00:35:25,710 --> 00:35:26,940
+Once we do that key exchange,
+
+734
+00:35:26,940 --> 00:35:30,240
+we then get symmetric keys on both sides
+
+735
+00:35:30,240 --> 00:35:32,640
+and we use those symmetric
+keys as performant way
+
+736
+00:35:32,640 --> 00:35:35,790
+to encrypt the data that's
+actually going across it, right?
+
+737
+00:35:35,790 --> 00:35:39,810
+So we use asymmetric to
+exchange symmetric keys
+
+738
+00:35:39,810 --> 00:35:41,220
+and then symmetric encryption
+
+739
+00:35:41,220 --> 00:35:43,353
+to actually transport data, that's AES.
+
+740
+00:35:44,341 --> 00:35:47,190
+AES, we believe, is
+quantum safe, especially,
+
+741
+00:35:47,190 --> 00:35:49,443
+you know, 256, 128 events.
+
+742
+00:35:50,880 --> 00:35:52,020
+NIST has shown some data
+
+743
+00:35:52,020 --> 00:35:53,883
+that it shows could be quantum safe,
+
+744
+00:35:55,200 --> 00:35:56,670
+but RSA and elliptical curve is
+
+745
+00:35:56,670 --> 00:35:58,770
+where the real concern is, right?
+
+746
+00:35:58,770 --> 00:36:01,110
+And with perfect forwarding secrecy,
+
+747
+00:36:01,110 --> 00:36:05,120
+even more so AES is less a concern, right?
+
+748
+00:36:05,120 --> 00:36:07,740
+So we have different sessions in there.
+
+749
+00:36:07,740 --> 00:36:12,570
+So we focused on ML
+KEM within our services
+
+750
+00:36:12,570 --> 00:36:14,400
+and how we do that key exchange
+
+751
+00:36:14,400 --> 00:36:18,600
+and we support it within
+KMS, secrets manager,
+
+752
+00:36:18,600 --> 00:36:21,690
+certificate manager, CloudFront.
+
+753
+00:36:21,690 --> 00:36:24,390
+We also just released, I
+believe last week support
+
+754
+00:36:24,390 --> 00:36:27,423
+for this in Elastic Load
+Balancer or maybe two weeks ago.
+
+755
+00:36:29,070 --> 00:36:31,710
+But Elastic Load Balancer supports it.
+
+756
+00:36:31,710 --> 00:36:34,830
+So let's take a trip down
+history lane for a second.
+
+757
+00:36:34,830 --> 00:36:38,220
+Think back to like early two thousands.
+
+758
+00:36:38,220 --> 00:36:40,770
+Some of you probably don't
+wanna think about the year 2000,
+
+759
+00:36:40,770 --> 00:36:42,120
+some Y2K stuff there.
+
+760
+00:36:42,120 --> 00:36:44,910
+Some of you maybe have no
+idea what I'm talking about.
+
+761
+00:36:44,910 --> 00:36:46,910
+Don't worry, you can go Google it later.
+
+762
+00:36:48,930 --> 00:36:51,150
+But if you wanted to support
+a new encryption protocol
+
+763
+00:36:51,150 --> 00:36:54,420
+and your application stack
+in the early two thousands,
+
+764
+00:36:54,420 --> 00:36:56,790
+that was a ton of work, right?
+
+765
+00:36:56,790 --> 00:37:00,270
+There's a whole refactor, a
+whole infrastructure upgrade,
+
+766
+00:37:00,270 --> 00:37:03,660
+just massive amount of work. With AWS,
+
+767
+00:37:03,660 --> 00:37:06,840
+if you wanna go support
+post quantum cryptography
+
+768
+00:37:06,840 --> 00:37:09,240
+with these services and the console,
+
+769
+00:37:09,240 --> 00:37:12,270
+it's a checkbox in your cloud formation,
+
+770
+00:37:12,270 --> 00:37:15,720
+Terraform, Pulumi, OpenTofu,
+
+771
+00:37:15,720 --> 00:37:18,360
+whatever else is out there these days.
+
+772
+00:37:18,360 --> 00:37:20,190
+It's a line or two of code, that's it.
+
+773
+00:37:20,190 --> 00:37:21,750
+That's all you gotta do.
+
+774
+00:37:21,750 --> 00:37:25,590
+And then your post
+quantum encrypted, right?
+
+775
+00:37:25,590 --> 00:37:27,180
+As long as your client supports it, right?
+
+776
+00:37:27,180 --> 00:37:30,390
+And you can support the
+multiple encryption protocols,
+
+777
+00:37:30,390 --> 00:37:33,120
+right? So if your client
+doesn't support ML KEM,
+
+778
+00:37:33,120 --> 00:37:37,467
+then they use RSA or
+elliptical curve, right?
+
+779
+00:37:37,467 --> 00:37:39,510
+And if your client supports ML KEM,
+
+780
+00:37:39,510 --> 00:37:42,180
+then they upgrade to ML
+KEM and use that, right?
+
+781
+00:37:42,180 --> 00:37:44,460
+And then as your clients
+become more modern,
+
+782
+00:37:44,460 --> 00:37:46,410
+you can just enforce
+ML KEM on these things
+
+783
+00:37:46,410 --> 00:37:48,093
+with your TLS policies.
+
+784
+00:37:48,990 --> 00:37:51,570
+So it's just really cool
+to think about that of like
+
+785
+00:37:51,570 --> 00:37:56,523
+how hard it was 20 years ago
+and how easy it is today.
+
+786
+00:37:59,430 --> 00:38:00,843
+Quantum key distribution.
+
+787
+00:38:02,100 --> 00:38:04,920
+Quantum key distribution's,
+really, really cool
+
+788
+00:38:04,920 --> 00:38:09,360
+because it's a way to
+prove through physics
+
+789
+00:38:09,360 --> 00:38:13,020
+that when we exchange a key
+over this quantum network
+
+790
+00:38:13,020 --> 00:38:16,350
+and a tangled network that nobody saw
+
+791
+00:38:16,350 --> 00:38:18,480
+that key exchange, right?
+
+792
+00:38:18,480 --> 00:38:21,060
+So we use the Schrodinger principle,
+
+793
+00:38:21,060 --> 00:38:24,210
+which says that when we
+do this key exchange,
+
+794
+00:38:24,210 --> 00:38:25,320
+if there's someone in the middle
+
+795
+00:38:25,320 --> 00:38:28,170
+that state's gonna change,
+it's gonna flatten out.
+
+796
+00:38:28,170 --> 00:38:30,960
+And then on the other side we
+can see that someone observed
+
+797
+00:38:30,960 --> 00:38:33,720
+that key exchange and
+let's just not use that key
+
+798
+00:38:33,720 --> 00:38:35,760
+'cause it's compromised, right?
+
+799
+00:38:35,760 --> 00:38:37,200
+And when you prove it,
+it's a law of physics,
+
+800
+00:38:37,200 --> 00:38:39,540
+you cannot break it.
+
+801
+00:38:39,540 --> 00:38:42,480
+Really cool, really cool
+emerging technology.
+
+802
+00:38:42,480 --> 00:38:45,150
+And AWS has been studying
+quantum key distribution
+
+803
+00:38:45,150 --> 00:38:45,983
+for years.
+
+804
+00:38:45,983 --> 00:38:49,800
+You can see down here a
+link from several years ago
+
+805
+00:38:49,800 --> 00:38:53,550
+where we created a QKD network
+
+806
+00:38:53,550 --> 00:38:57,250
+or a quantum network
+over a couple kilometers
+
+807
+00:38:58,320 --> 00:39:00,000
+and some other research that's going on
+
+808
+00:39:00,000 --> 00:39:00,840
+in that neighborhood.
+
+809
+00:39:00,840 --> 00:39:01,830
+And so we're gonna see this
+
+810
+00:39:01,830 --> 00:39:03,480
+as an emerging technology in AWS.
+
+811
+00:39:05,283 --> 00:39:07,710
+There's a really great session INV 507,
+
+812
+00:39:07,710 --> 00:39:10,590
+which if you get a chance,
+I suggest you go to.
+
+813
+00:39:10,590 --> 00:39:13,623
+Just kind of cool thing to
+nerd out on if you will.
+
+814
+00:39:15,150 --> 00:39:17,670
+But it's a great topic
+to think about, right,
+
+815
+00:39:17,670 --> 00:39:19,350
+of like what's next in that key exchange.
+
+816
+00:39:19,350 --> 00:39:23,373
+How do we make sure that nobody
+can observe that key, right?
+
+817
+00:39:26,580 --> 00:39:28,290
+So what's next? What do you do?
+
+818
+00:39:28,290 --> 00:39:30,723
+How do we get to encrypt everything?
+
+819
+00:39:34,080 --> 00:39:37,350
+Take these steps to get
+to a more secure future.
+
+820
+00:39:37,350 --> 00:39:41,970
+Inventory your environment,
+inventory it through AWS config,
+
+821
+00:39:41,970 --> 00:39:44,790
+through VPC encryption controls, right?
+
+822
+00:39:44,790 --> 00:39:46,890
+Through Security Hub. All
+these tools that are available
+
+823
+00:39:46,890 --> 00:39:49,140
+to you to inventory your environment.
+
+824
+00:39:49,140 --> 00:39:50,670
+Inventory On-Prem environment.
+
+825
+00:39:50,670 --> 00:39:54,120
+Understand what's being
+encrypted and what's not.
+
+826
+00:39:54,120 --> 00:39:57,120
+Where is it being encrypted, right?
+
+827
+00:39:57,120 --> 00:39:58,680
+What's being transmitted?
+
+828
+00:39:58,680 --> 00:40:00,480
+Is it sensitive data
+
+829
+00:40:00,480 --> 00:40:02,910
+or is it something that
+honestly nobody cares
+
+830
+00:40:02,910 --> 00:40:05,070
+if it's in plain text, right?
+
+831
+00:40:05,070 --> 00:40:06,960
+Think about that, inventory it.
+
+832
+00:40:06,960 --> 00:40:08,640
+Audit it, right?
+
+833
+00:40:08,640 --> 00:40:12,000
+Go through that inventory and
+understand what is important,
+
+834
+00:40:12,000 --> 00:40:17,000
+what's meeting your requirements, right?
+
+835
+00:40:17,100 --> 00:40:20,700
+Think through that. Start
+enforcing encryption.
+
+836
+00:40:20,700 --> 00:40:22,620
+How do you enforce it?
+
+837
+00:40:22,620 --> 00:40:25,470
+You gotta start having that
+conversation at the top, right?
+
+838
+00:40:25,470 --> 00:40:29,700
+You gotta start talking to
+your CISOs, to your CIO,
+
+839
+00:40:29,700 --> 00:40:32,400
+to even your CEO and start
+having a conversation
+
+840
+00:40:32,400 --> 00:40:34,920
+about we need to take encryption seriously
+
+841
+00:40:34,920 --> 00:40:36,573
+and we need to enforce it.
+
+842
+00:40:36,573 --> 00:40:39,180
+In AWS, super easy, right?
+
+843
+00:40:39,180 --> 00:40:41,340
+We have all these things
+that are just super easy ways
+
+844
+00:40:41,340 --> 00:40:43,020
+to onboard to encryption.
+
+845
+00:40:43,020 --> 00:40:44,880
+On-prem, maybe not so easy
+
+846
+00:40:44,880 --> 00:40:47,760
+and maybe requires a little
+more investment, right?
+
+847
+00:40:47,760 --> 00:40:50,370
+But start enforcing it.
+
+848
+00:40:50,370 --> 00:40:52,410
+Remediate those things
+
+849
+00:40:52,410 --> 00:40:55,110
+that are missing out in your audit, right?
+
+850
+00:40:55,110 --> 00:40:56,610
+In your inventory and audit.
+
+851
+00:40:56,610 --> 00:40:59,820
+And then repeat because
+things change, right?
+
+852
+00:40:59,820 --> 00:41:04,230
+Developer went and built some
+new cool thing, said, oh yeah,
+
+853
+00:41:04,230 --> 00:41:05,760
+I'm not gonna use encryption
+because that's hard.
+
+854
+00:41:05,760 --> 00:41:07,620
+And it's just a dev environment.
+
+855
+00:41:07,620 --> 00:41:08,790
+And of course what happens
+
+856
+00:41:08,790 --> 00:41:10,890
+to every dev environment
+in the world gets promoted
+
+857
+00:41:10,890 --> 00:41:14,940
+to production and oops, we
+forgot to encrypt it, right?
+
+858
+00:41:14,940 --> 00:41:18,090
+So you gotta continuously
+go through this cycle,
+
+859
+00:41:18,090 --> 00:41:22,173
+continuously inventory, audit,
+enforce remediate, repeat.
+
+860
+00:41:25,170 --> 00:41:27,750
+With that, I'd like to thank
+you for coming to our session.
+
+861
+00:41:27,750 --> 00:41:30,690
+I know that it was during the
+lunch hour and kind of the day
+
+862
+00:41:30,690 --> 00:41:33,720
+before re:Invent starts, so we
+really appreciate your time.
+
+863
+00:41:33,720 --> 00:41:36,390
+If you enjoyed our
+session, go into your app,
+
+864
+00:41:36,390 --> 00:41:38,400
+give us five stars and some feedback.
+
+865
+00:41:38,400 --> 00:41:40,110
+If you didn't enjoy our
+session, go into the app,
+
+866
+00:41:40,110 --> 00:41:41,430
+give us five star, no, I'm just kidding.
+
+867
+00:41:41,430 --> 00:41:43,193
+Give us some honest feedback.
+We love your feedback.
+
+868
+00:41:44,564 --> 00:41:45,420
+And if you have any questions,
+
+869
+00:41:45,420 --> 00:41:48,210
+Akshay and I will be
+right outside those doors
+
+870
+00:41:48,210 --> 00:41:50,370
+across from the content
+hub right after this.
+
+871
+00:41:50,370 --> 00:41:52,320
+We gotta get outta here so
+we clear some space out.
+
+872
+00:41:52,320 --> 00:41:53,730
+But we can meet you over there
+
+873
+00:41:53,730 --> 00:41:54,900
+and answer any questions you have.
+
+874
+00:41:54,900 --> 00:41:55,733
+Thank you.
+

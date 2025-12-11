@@ -1,0 +1,7024 @@
+1
+00:00:04,260 --> 00:00:06,780
+- Good morning, everybody.
+
+2
+00:00:06,780 --> 00:00:08,483
+Firstly, if you haven't
+got your earphones on,
+
+3
+00:00:08,483 --> 00:00:09,720
+it will be a good idea.
+
+4
+00:00:09,720 --> 00:00:10,830
+Then you can hear us properly,
+
+5
+00:00:10,830 --> 00:00:12,900
+and we won't have
+competition from everybody.
+
+6
+00:00:12,900 --> 00:00:15,570
+So just give me a thumbs
+up if you can hear us.
+
+7
+00:00:15,570 --> 00:00:17,520
+Perfect, thank you very much.
+
+8
+00:00:17,520 --> 00:00:21,420
+Welcome to a deep dive session
+onto ECS Manage instances
+
+9
+00:00:21,420 --> 00:00:25,140
+and blue/green deployments for
+ECS for resilient services.
+
+10
+00:00:25,140 --> 00:00:27,270
+My name is Maish Saidel-Keesing.
+
+11
+00:00:27,270 --> 00:00:30,630
+I'm a Developer Advocate with
+the developer relations team.
+
+12
+00:00:30,630 --> 00:00:32,550
+And on stage I have with me.
+
+13
+00:00:32,550 --> 00:00:33,383
+- Hi everyone.
+
+14
+00:00:33,383 --> 00:00:34,260
+My name is Malcolm Featonby.
+
+15
+00:00:34,260 --> 00:00:35,640
+I'm a Senior Principal Engineer
+
+16
+00:00:35,640 --> 00:00:37,650
+with the serverless and containers org.
+
+17
+00:00:37,650 --> 00:00:39,003
+Super excited to be here.
+
+18
+00:00:40,470 --> 00:00:42,690
+- This is a 400 level session,
+
+19
+00:00:42,690 --> 00:00:45,237
+which means we are assuming
+you know what a container is,
+
+20
+00:00:45,237 --> 00:00:46,770
+you know what ECS is,
+
+21
+00:00:46,770 --> 00:00:49,470
+and if not, I'm sorry,
+
+22
+00:00:49,470 --> 00:00:51,720
+this is gonna be very,
+very deep in the weeds,
+
+23
+00:00:51,720 --> 00:00:54,210
+but even though if you haven't
+give a slight interview
+
+24
+00:00:54,210 --> 00:00:56,850
+for slight interlude on what
+we're gonna be doing today
+
+25
+00:00:56,850 --> 00:00:59,700
+on our agenda is we're
+gonna have a short overview
+
+26
+00:00:59,700 --> 00:01:01,950
+of what Amazon ECS is for
+those who are not familiar,
+
+27
+00:01:01,950 --> 00:01:03,475
+but do know what containers are,
+
+28
+00:01:03,475 --> 00:01:06,240
+and have been using other
+container orchestrators.
+
+29
+00:01:06,240 --> 00:01:07,980
+Then I'm gonna hand it over to Malcolm,
+
+30
+00:01:07,980 --> 00:01:12,090
+who will give us a good
+run through the weeds of
+
+31
+00:01:12,090 --> 00:01:13,350
+how we're going to actually,
+
+32
+00:01:13,350 --> 00:01:14,217
+what managed instances is,
+
+33
+00:01:14,217 --> 00:01:18,330
+and what we've built over
+the past period of time.
+
+34
+00:01:18,330 --> 00:01:20,040
+For a long time, we were
+talking about how long ago.
+
+35
+00:01:20,040 --> 00:01:21,180
+This something, which
+has been in the making
+
+36
+00:01:21,180 --> 00:01:22,620
+for a very long time.
+
+37
+00:01:22,620 --> 00:01:23,790
+And afterwards, I'll come back,
+
+38
+00:01:23,790 --> 00:01:26,330
+and we'll dive into how deployments,
+
+39
+00:01:26,330 --> 00:01:27,420
+with software deployments,
+
+40
+00:01:27,420 --> 00:01:28,680
+and how you can use those properly
+
+41
+00:01:28,680 --> 00:01:30,600
+or gain the confidence inside of them
+
+42
+00:01:30,600 --> 00:01:31,890
+that you can use those two,
+
+43
+00:01:31,890 --> 00:01:35,400
+deploy your services in a
+resilient and available way.
+
+44
+00:01:35,400 --> 00:01:37,830
+So ECS is,
+
+45
+00:01:37,830 --> 00:01:40,920
+Amazon ECS is a big service.
+
+46
+00:01:40,920 --> 00:01:43,170
+We are what we call a tier one service,
+
+47
+00:01:43,170 --> 00:01:47,610
+which means we are a
+prerequisite for any new region
+
+48
+00:01:47,610 --> 00:01:50,430
+which is built within
+Amazon or within AWS.
+
+49
+00:01:50,430 --> 00:01:51,720
+And it has to be there
+
+50
+00:01:51,720 --> 00:01:53,760
+because we are a tier one service,
+
+51
+00:01:53,760 --> 00:01:55,800
+which means a lot of the
+services which are built
+
+52
+00:01:55,800 --> 00:01:57,150
+in each of these regions
+
+53
+00:01:57,150 --> 00:01:59,673
+rely on ECS to be there in order to run.
+
+54
+00:02:00,960 --> 00:02:04,950
+We launch more than 3 billion
+tasks every single week
+
+55
+00:02:04,950 --> 00:02:07,350
+across all of our
+regions across the globe.
+
+56
+00:02:07,350 --> 00:02:09,990
+That's a big scale of amount
+of service, of how much traffic
+
+57
+00:02:09,990 --> 00:02:12,814
+and how big the scale,
+the service actually,
+
+58
+00:02:12,814 --> 00:02:14,313
+at which we operate.
+
+59
+00:02:15,270 --> 00:02:17,153
+Customers that are starting with AWS,
+
+60
+00:02:17,153 --> 00:02:19,650
+more than 65% of our customers
+
+61
+00:02:19,650 --> 00:02:21,390
+start actually with using Amazon ECS
+
+62
+00:02:21,390 --> 00:02:26,370
+because if you already know
+how to use Amazon, the APIs,
+
+63
+00:02:26,370 --> 00:02:28,890
+what the concepts are,
+what the constraints are,
+
+64
+00:02:28,890 --> 00:02:30,690
+you probably really know
+how to use ECS as well,
+
+65
+00:02:30,690 --> 00:02:33,300
+because it's just another
+compute option look inside.
+
+66
+00:02:33,300 --> 00:02:35,580
+Similar to EC2, just running containers.
+
+67
+00:02:35,580 --> 00:02:37,740
+You don't have to know
+any specific systems
+
+68
+00:02:37,740 --> 00:02:39,480
+or any kind of architecture,
+
+69
+00:02:39,480 --> 00:02:41,610
+which is different from
+how we build the cloud.
+
+70
+00:02:41,610 --> 00:02:45,900
+And just as an anecdote,
+ECS also helps you buy stuff
+
+71
+00:02:45,900 --> 00:02:47,250
+because in Prime Day as well,
+
+72
+00:02:47,250 --> 00:02:50,230
+we had more than 18.4
+million tasks launched
+
+73
+00:02:51,469 --> 00:02:54,090
+running on AWS Fargate in order to support
+
+74
+00:02:54,090 --> 00:02:55,890
+all the traffic, which ran through
+
+75
+00:02:55,890 --> 00:02:58,200
+on all the different services within,
+
+76
+00:02:58,200 --> 00:02:59,850
+through Amazon Prime Day as well.
+
+77
+00:03:02,430 --> 00:03:04,230
+Customers love it.
+
+78
+00:03:04,230 --> 00:03:05,580
+And these are a couple of customers here,
+
+79
+00:03:05,580 --> 00:03:07,830
+but it goes across the breadth and depth
+
+80
+00:03:07,830 --> 00:03:08,970
+of all the different verticals
+
+81
+00:03:08,970 --> 00:03:10,560
+and different industries today,
+
+82
+00:03:10,560 --> 00:03:12,270
+customers of all sizes.
+
+83
+00:03:12,270 --> 00:03:13,860
+These are just a couple of them on screen,
+
+84
+00:03:13,860 --> 00:03:16,440
+but there's a lot more than
+there is, but they're all,
+
+85
+00:03:16,440 --> 00:03:17,640
+otherwise it would look very, very,
+
+86
+00:03:17,640 --> 00:03:18,750
+very difficult to understand.
+
+87
+00:03:18,750 --> 00:03:20,010
+But still.
+
+88
+00:03:20,010 --> 00:03:22,560
+The reason is because it's a
+very simple container service
+
+89
+00:03:22,560 --> 00:03:23,670
+and allows them to focus on
+
+90
+00:03:23,670 --> 00:03:25,560
+what we call the most valuable thing
+
+91
+00:03:25,560 --> 00:03:27,840
+is providing value for
+their own customers.
+
+92
+00:03:27,840 --> 00:03:29,220
+They don't have to worry
+about the infrastructure
+
+93
+00:03:29,220 --> 00:03:30,810
+in the background.
+
+94
+00:03:30,810 --> 00:03:33,750
+But it's not only customers, as we said.
+
+95
+00:03:33,750 --> 00:03:36,930
+A lot of the services internally
+in Amazon are built on ECS.
+
+96
+00:03:36,930 --> 00:03:38,460
+Here are a couple of examples.
+
+97
+00:03:38,460 --> 00:03:42,093
+We have Amazon SageMaker,
+Amazon Lex, Amazon Polly,
+
+98
+00:03:42,930 --> 00:03:45,000
+AWS Batch, and also the
+Amazon.com recommendation
+
+99
+00:03:45,000 --> 00:03:46,110
+for the store.
+
+100
+00:03:46,110 --> 00:03:48,210
+All of these are built on top of ECS
+
+101
+00:03:48,210 --> 00:03:50,160
+to provide you those services when you,
+
+102
+00:03:51,240 --> 00:03:54,150
+when you consume them, either
+in the Amazon.com store
+
+103
+00:03:54,150 --> 00:03:56,460
+or through the AWS console.
+
+104
+00:03:56,460 --> 00:03:58,200
+And the reason is because it's a very,
+
+105
+00:03:58,200 --> 00:04:01,500
+service which is built for
+security, for reliability,
+
+106
+00:04:01,500 --> 00:04:03,393
+availability, and of course, scale.
+
+107
+00:04:05,160 --> 00:04:08,610
+We released something
+in September, correct?
+
+108
+00:04:08,610 --> 00:04:10,620
+Which was Amazon ECS image instances.
+
+109
+00:04:10,620 --> 00:04:12,630
+I'm gonna hand it over to Malcolm
+
+110
+00:04:12,630 --> 00:04:15,930
+to start diving into a
+little bit of what we did.
+
+111
+00:04:15,930 --> 00:04:17,040
+- Awesome, thank you.
+
+112
+00:04:17,040 --> 00:04:17,880
+Thank you so much, Maish.
+
+113
+00:04:17,880 --> 00:04:19,800
+And thank you all very much
+for taking the time to come
+
+114
+00:04:19,800 --> 00:04:21,960
+and see us, especially,
+you know, given that you
+
+115
+00:04:21,960 --> 00:04:22,920
+chose us over Swami,
+
+116
+00:04:22,920 --> 00:04:23,753
+we think you made a good choice
+
+117
+00:04:23,753 --> 00:04:24,990
+and we really appreciate that.
+
+118
+00:04:24,990 --> 00:04:26,196
+Thank you.
+
+119
+00:04:26,196 --> 00:04:28,380
+So I have the distinct privilege
+
+120
+00:04:28,380 --> 00:04:29,580
+of being an engineer
+
+121
+00:04:29,580 --> 00:04:31,590
+working in the server
+listening container space,
+
+122
+00:04:31,590 --> 00:04:33,660
+and working with the ECS engineering team
+
+123
+00:04:33,660 --> 00:04:34,560
+on an ongoing basis.
+
+124
+00:04:34,560 --> 00:04:36,810
+And one of the things that we spend a lot
+
+125
+00:04:36,810 --> 00:04:40,740
+of time thinking about
+is how we can deliver
+
+126
+00:04:40,740 --> 00:04:42,650
+what we refer to as
+
+127
+00:04:42,650 --> 00:04:45,090
+how we can deliver
+features and capabilities
+
+128
+00:04:45,090 --> 00:04:47,910
+that can remove what we refer
+to as undifferentiated work
+
+129
+00:04:47,910 --> 00:04:49,590
+from your development teams.
+
+130
+00:04:49,590 --> 00:04:51,090
+And really what that means is
+
+131
+00:04:51,090 --> 00:04:52,140
+we wanna be able to make sure
+
+132
+00:04:52,140 --> 00:04:53,340
+that we're delivering capabilities
+
+133
+00:04:53,340 --> 00:04:56,430
+which allow your teams to
+focus as much of your energy
+
+134
+00:04:56,430 --> 00:04:58,620
+as you possibly can on
+delivering the thing
+
+135
+00:04:58,620 --> 00:05:00,630
+that makes your product, your service,
+
+136
+00:05:00,630 --> 00:05:02,640
+your business special for your customers.
+
+137
+00:05:02,640 --> 00:05:04,710
+And we want to take on as much of the,
+
+138
+00:05:04,710 --> 00:05:07,800
+as much of the responsibility
+and burden of that work
+
+139
+00:05:07,800 --> 00:05:10,380
+that is important, but not
+critical to your business.
+
+140
+00:05:10,380 --> 00:05:12,270
+So, you know, things like
+
+141
+00:05:12,270 --> 00:05:13,770
+managing the underlying compute,
+
+142
+00:05:13,770 --> 00:05:16,620
+making sure that your
+EC2 instance is healthy.
+
+143
+00:05:16,620 --> 00:05:18,870
+And you know, the
+infrastructure aspects of that.
+
+144
+00:05:18,870 --> 00:05:21,285
+And then also helping you with things,
+
+145
+00:05:21,285 --> 00:05:24,148
+with the complexities of things
+like deployment software,
+
+146
+00:05:24,148 --> 00:05:25,890
+software development,
+
+147
+00:05:25,890 --> 00:05:27,900
+or software application
+lifecycle management, you know,
+
+148
+00:05:27,900 --> 00:05:29,160
+the deployment of those applications.
+
+149
+00:05:29,160 --> 00:05:32,310
+And so the team spends a lot
+of time thinking about how,
+
+150
+00:05:32,310 --> 00:05:33,840
+what features we can deliver for you
+
+151
+00:05:33,840 --> 00:05:37,740
+in order to deliver that behavior.
+
+152
+00:05:37,740 --> 00:05:40,233
+And this year,
+
+153
+00:05:41,289 --> 00:05:42,420
+we've delivered a number of features,
+
+154
+00:05:42,420 --> 00:05:44,220
+but the two that I'm really excited about,
+
+155
+00:05:44,220 --> 00:05:45,440
+that, you know, we want
+to chat to you about
+
+156
+00:05:45,440 --> 00:05:46,740
+is the one is in the infrastructure,
+
+157
+00:05:46,740 --> 00:05:48,060
+that's managed instances.
+
+158
+00:05:48,060 --> 00:05:50,340
+And then the other is the set of features
+
+159
+00:05:50,340 --> 00:05:51,660
+that we've delivered in
+our deployment space,
+
+160
+00:05:51,660 --> 00:05:54,395
+which Maish is gonna talk to you about.
+
+161
+00:05:54,395 --> 00:05:55,230
+And the reason that Maish,
+
+162
+00:05:55,230 --> 00:05:57,030
+when Maish and I were
+talking about planning,
+
+163
+00:05:57,030 --> 00:05:58,260
+what we were gonna speak to you about,
+
+164
+00:05:58,260 --> 00:06:00,280
+what we thought would be useful is
+
+165
+00:06:01,170 --> 00:06:02,970
+to explore and give you some insight
+
+166
+00:06:02,970 --> 00:06:05,040
+into both how the service works,
+
+167
+00:06:05,040 --> 00:06:08,130
+but also why we designed it the way we do.
+
+168
+00:06:08,130 --> 00:06:10,320
+The intent here really is
+that we want to make sure
+
+169
+00:06:10,320 --> 00:06:14,070
+that we're baking into
+that undifferentiated work,
+
+170
+00:06:14,070 --> 00:06:14,903
+that we're taking on.
+
+171
+00:06:14,903 --> 00:06:16,800
+We wanna bake into that the best practices
+
+172
+00:06:16,800 --> 00:06:19,740
+that we have learned
+over the periods of time.
+
+173
+00:06:19,740 --> 00:06:22,170
+You know, at this point, ECS
+has been around for 11 years,
+
+174
+00:06:22,170 --> 00:06:23,730
+which we're super excited about.
+
+175
+00:06:23,730 --> 00:06:25,140
+But you know, given that,
+
+176
+00:06:25,140 --> 00:06:27,000
+as Maish was pointing out,
+
+177
+00:06:27,000 --> 00:06:29,130
+the number of applications,
+the number of services
+
+178
+00:06:29,130 --> 00:06:32,100
+within Amazon and AWS,
+
+179
+00:06:32,100 --> 00:06:34,350
+and also in terms of the set of customers,
+
+180
+00:06:34,350 --> 00:06:36,210
+we've had an opportunity
+to learn a great deal.
+
+181
+00:06:36,210 --> 00:06:39,570
+And so we try and bake
+a lot of what we see
+
+182
+00:06:39,570 --> 00:06:41,250
+to be best practice into the services,
+
+183
+00:06:41,250 --> 00:06:42,630
+and we wanna deliver that to you in a way
+
+184
+00:06:42,630 --> 00:06:44,180
+that's easy for you to consume.
+
+185
+00:06:45,360 --> 00:06:46,770
+So we're gonna dive into
+some of these things,
+
+186
+00:06:46,770 --> 00:06:48,037
+and we're gonna try,
+
+187
+00:06:48,037 --> 00:06:48,870
+and we're gonna work, you know,
+
+188
+00:06:48,870 --> 00:06:49,890
+work through how this works
+
+189
+00:06:49,890 --> 00:06:52,380
+and then point out to those areas,
+
+190
+00:06:52,380 --> 00:06:54,120
+and we're delivering best practice
+
+191
+00:06:54,120 --> 00:06:55,770
+in these particular feature sets.
+
+192
+00:06:57,870 --> 00:07:01,983
+So ECS, in terms of infrastructure,
+
+193
+00:07:02,850 --> 00:07:05,280
+manages infrastructure,
+using a concept that we call,
+
+194
+00:07:05,280 --> 00:07:07,080
+that we talk about as a compute engine.
+
+195
+00:07:07,080 --> 00:07:11,100
+And when it was first
+launched 11 years ago,
+
+196
+00:07:11,100 --> 00:07:13,230
+ECS delivered the first compute engine,
+
+197
+00:07:13,230 --> 00:07:14,573
+which was ECS and EC2.
+
+198
+00:07:14,573 --> 00:07:17,940
+ECS and EC2 is about bringing
+your own EC2 instance.
+
+199
+00:07:17,940 --> 00:07:20,070
+Effectively, we would
+go about orchestrating
+
+200
+00:07:20,070 --> 00:07:21,510
+the application itself,
+but you would bring
+
+201
+00:07:21,510 --> 00:07:22,343
+your EC2 instance,
+
+202
+00:07:22,343 --> 00:07:23,370
+and you would manage that.
+
+203
+00:07:23,370 --> 00:07:26,080
+In 2017, we delivered
+our serverless offering
+
+204
+00:07:26,970 --> 00:07:28,110
+with ECS Fargate,
+
+205
+00:07:28,110 --> 00:07:30,600
+and that's become very
+popular with our customers.
+
+206
+00:07:30,600 --> 00:07:33,210
+Fargate is sort of on the
+other end of that spectrum,
+
+207
+00:07:33,210 --> 00:07:34,944
+If you imagine that ECS on EC2
+
+208
+00:07:34,944 --> 00:07:37,560
+is about bringing your own capabilities
+
+209
+00:07:37,560 --> 00:07:39,420
+and bringing your own EC2 instance.
+
+210
+00:07:39,420 --> 00:07:41,040
+But then at that, you know,
+
+211
+00:07:41,040 --> 00:07:43,230
+in that respect, you have to think about
+
+212
+00:07:43,230 --> 00:07:45,060
+managing that particular instance.
+
+213
+00:07:45,060 --> 00:07:45,990
+On the other hand of it,
+
+214
+00:07:45,990 --> 00:07:48,240
+on the other side of that continuum,
+
+215
+00:07:48,240 --> 00:07:49,473
+you have ECS on Fargate,
+
+216
+00:07:49,473 --> 00:07:52,380
+where Fargate is taking
+on the responsibility
+
+217
+00:07:52,380 --> 00:07:53,213
+and burden of that,
+
+218
+00:07:53,213 --> 00:07:55,410
+of the underlying compute for you,
+
+219
+00:07:55,410 --> 00:07:56,640
+and delivering it to you entirely
+
+220
+00:07:56,640 --> 00:07:58,170
+in a entirely serverless way,
+
+221
+00:07:58,170 --> 00:08:00,450
+which allows you to then focus exclusively
+
+222
+00:08:00,450 --> 00:08:01,503
+on your application.
+
+223
+00:08:02,670 --> 00:08:03,960
+Now you can think of these things
+
+224
+00:08:03,960 --> 00:08:07,050
+as two sides of a continuum.
+
+225
+00:08:07,050 --> 00:08:10,710
+And on the one side you have
+a high degree of control,
+
+226
+00:08:10,710 --> 00:08:12,570
+a high degree of flexibility.
+
+227
+00:08:12,570 --> 00:08:14,130
+But as a side effect of that,
+
+228
+00:08:14,130 --> 00:08:16,380
+you also have a high degree of burden
+
+229
+00:08:16,380 --> 00:08:17,213
+that you're taking on.
+
+230
+00:08:17,213 --> 00:08:18,870
+You have to think about how to scale,
+
+231
+00:08:18,870 --> 00:08:20,880
+how to manage, how to patch, et cetera.
+
+232
+00:08:20,880 --> 00:08:22,050
+And that's ECS and EC2.
+
+233
+00:08:22,050 --> 00:08:24,270
+On the other side of that spectrum,
+
+234
+00:08:24,270 --> 00:08:26,040
+you have ECS on Fargate,
+
+235
+00:08:26,040 --> 00:08:29,520
+where a lot of that complexity
+is taken away from you.
+
+236
+00:08:29,520 --> 00:08:30,630
+But as this trade off, you know,
+
+237
+00:08:30,630 --> 00:08:33,270
+and this is always true
+with managed services,
+
+238
+00:08:33,270 --> 00:08:35,880
+when you federate a set
+of that responsibility
+
+239
+00:08:35,880 --> 00:08:37,710
+to the managed service,
+you're also giving up
+
+240
+00:08:37,710 --> 00:08:39,480
+a degree of control.
+
+241
+00:08:39,480 --> 00:08:41,130
+You know, in order for us
+to be able to make sure
+
+242
+00:08:41,130 --> 00:08:43,020
+that we're building the
+services so that we can,
+
+243
+00:08:43,020 --> 00:08:47,370
+we can get you an expected outcome
+
+244
+00:08:47,370 --> 00:08:49,470
+based any behaviors that we need
+
+245
+00:08:49,470 --> 00:08:50,670
+to apply to that service.
+
+246
+00:08:50,670 --> 00:08:52,230
+We need to be able to
+make assumptions about
+
+247
+00:08:52,230 --> 00:08:53,370
+how that service works.
+
+248
+00:08:53,370 --> 00:08:56,340
+And so we need to be able
+to constrain at least
+
+249
+00:08:56,340 --> 00:08:58,890
+to some degree, the amount
+of flexibility that you have.
+
+250
+00:08:58,890 --> 00:09:01,560
+And so you can imagine, these
+two things as a continuum.
+
+251
+00:09:01,560 --> 00:09:03,570
+And the way we talk about that
+
+252
+00:09:03,570 --> 00:09:05,310
+in AWS is we talk about it
+
+253
+00:09:05,310 --> 00:09:07,590
+as the shared responsibility model.
+
+254
+00:09:07,590 --> 00:09:09,330
+The shared responsibility model is
+
+255
+00:09:09,330 --> 00:09:13,173
+really the partnership
+between AWS and yourselves.
+
+256
+00:09:14,190 --> 00:09:17,730
+Where we agree which pieces of the stack,
+
+257
+00:09:17,730 --> 00:09:19,050
+going from, you know, the bare metal,
+
+258
+00:09:19,050 --> 00:09:21,480
+all the way up to your
+application you're looking after,
+
+259
+00:09:21,480 --> 00:09:24,000
+and which pieces we're looking after.
+
+260
+00:09:24,000 --> 00:09:26,400
+And so if you look at ECS on EC2,
+
+261
+00:09:26,400 --> 00:09:30,870
+that shared responsibility
+model really is about
+
+262
+00:09:30,870 --> 00:09:33,270
+us looking after the underlying
+infrastructure and compute.
+
+263
+00:09:33,270 --> 00:09:35,220
+We will make sure that
+you have EC2 instances
+
+264
+00:09:35,220 --> 00:09:36,053
+that are healthy.
+
+265
+00:09:36,053 --> 00:09:38,040
+We'll make sure that you
+have those EC2 instances
+
+266
+00:09:38,040 --> 00:09:40,860
+in the availability zones that are needed.
+
+267
+00:09:40,860 --> 00:09:42,780
+We'll provide you storage, networking,
+
+268
+00:09:42,780 --> 00:09:44,130
+monitoring capabilities,
+
+269
+00:09:44,130 --> 00:09:46,410
+and then the ECS control plane
+
+270
+00:09:46,410 --> 00:09:47,490
+where the control plane is,
+
+271
+00:09:47,490 --> 00:09:49,050
+that management layer
+that's actually doing
+
+272
+00:09:49,050 --> 00:09:51,090
+the provisioning of your application.
+
+273
+00:09:51,090 --> 00:09:52,770
+But above that, in terms of making sure
+
+274
+00:09:52,770 --> 00:09:53,670
+that you're order scaled,
+
+275
+00:09:53,670 --> 00:09:55,920
+making sure that your AZ
+distribution, and your spread,
+
+276
+00:09:55,920 --> 00:09:57,990
+your placement is correct,
+
+277
+00:09:57,990 --> 00:09:59,250
+launch templates, instance types,
+
+278
+00:09:59,250 --> 00:10:01,050
+all of that functionality, that behavior,
+
+279
+00:10:01,050 --> 00:10:02,460
+as well as your application
+
+280
+00:10:02,460 --> 00:10:04,473
+all becomes your responsibility.
+
+281
+00:10:05,430 --> 00:10:07,200
+And that can be incredibly powerful
+
+282
+00:10:07,200 --> 00:10:09,330
+because it gives you
+that flexibility, right?
+
+283
+00:10:09,330 --> 00:10:11,040
+But it also means that when we, you know,
+
+284
+00:10:11,040 --> 00:10:12,750
+going back to what we were
+talking about previously,
+
+285
+00:10:12,750 --> 00:10:14,700
+our desire to be able to give you options,
+
+286
+00:10:14,700 --> 00:10:17,460
+to hand off a bunch of
+that undifferentiated work,
+
+287
+00:10:17,460 --> 00:10:18,540
+this is taking on a bunch
+
+288
+00:10:18,540 --> 00:10:20,093
+of that undifferentiated work, right?
+
+289
+00:10:20,093 --> 00:10:23,430
+And so on the other hand, we have Fargate.
+
+290
+00:10:23,430 --> 00:10:26,190
+Now Fargate, on that continuum
+of shared responsibility,
+
+291
+00:10:26,190 --> 00:10:29,790
+actually offloads a lot of
+that functionality to AWS.
+
+292
+00:10:29,790 --> 00:10:32,340
+And that's I think why
+many customers really enjoy
+
+293
+00:10:32,340 --> 00:10:33,510
+the Fargate experience.
+
+294
+00:10:33,510 --> 00:10:35,730
+You can focus exclusively
+on your application.
+
+295
+00:10:35,730 --> 00:10:37,530
+And as you know,
+
+296
+00:10:37,530 --> 00:10:39,660
+we then take on the
+responsibility of making sure
+
+297
+00:10:39,660 --> 00:10:40,493
+that you have the server.
+
+298
+00:10:40,493 --> 00:10:41,946
+In fact, you don't even
+have to worry about the fact
+
+299
+00:10:41,946 --> 00:10:42,779
+that there's a server,
+
+300
+00:10:42,779 --> 00:10:44,730
+because you're really
+just focusing on the app,
+
+301
+00:10:44,730 --> 00:10:46,380
+on the task, on the ECS cluster,
+
+302
+00:10:46,380 --> 00:10:49,053
+ECS service, ECS task.
+
+303
+00:10:51,720 --> 00:10:54,990
+Now what our customers
+tell us, and you know,
+
+304
+00:10:54,990 --> 00:10:56,340
+we get an opportunity to chat you all,
+
+305
+00:10:56,340 --> 00:10:57,270
+we love that.
+
+306
+00:10:57,270 --> 00:11:00,190
+And we get that feedback is they love
+
+307
+00:11:01,409 --> 00:11:05,400
+the degree of flexibility that
+you can get on ECS and EC2,
+
+308
+00:11:05,400 --> 00:11:07,380
+but not super excited about the fact
+
+309
+00:11:07,380 --> 00:11:09,840
+that you've gotta take on this
+additional responsibility.
+
+310
+00:11:09,840 --> 00:11:11,460
+On the other hand, they love the fact
+
+311
+00:11:11,460 --> 00:11:14,190
+that there's the simplicity
+of management in Fargate,
+
+312
+00:11:14,190 --> 00:11:16,140
+but would really like an opportunity
+
+313
+00:11:16,140 --> 00:11:17,580
+to be able to get some of that richness,
+
+314
+00:11:17,580 --> 00:11:21,780
+that experience, the diversity of choice
+
+315
+00:11:21,780 --> 00:11:23,130
+on ECS and EC2.
+
+316
+00:11:23,130 --> 00:11:25,560
+And so in order to respond to that,
+
+317
+00:11:25,560 --> 00:11:27,840
+we've delivered ECS managed instances.
+
+318
+00:11:27,840 --> 00:11:29,730
+We're really excited
+about this as an offering.
+
+319
+00:11:29,730 --> 00:11:31,920
+And we really are, you know,
+
+320
+00:11:31,920 --> 00:11:34,170
+it was delivered in
+September, so it's fairly new.
+
+321
+00:11:34,170 --> 00:11:35,970
+We're very keen to get you get you guys
+
+322
+00:11:35,970 --> 00:11:37,110
+like having a look at it,
+
+323
+00:11:37,110 --> 00:11:39,630
+giving it a go, and then
+giving us that feedback.
+
+324
+00:11:39,630 --> 00:11:42,248
+In terms of shared responsibility model,
+
+325
+00:11:42,248 --> 00:11:45,000
+what ECS managed instances looks to do
+
+326
+00:11:45,000 --> 00:11:49,080
+is deliver the EC2 flexibility
+in terms of choice,
+
+327
+00:11:49,080 --> 00:11:50,670
+but the Fargate experience.
+
+328
+00:11:50,670 --> 00:11:52,620
+And so if you look at what we're doing,
+
+329
+00:11:52,620 --> 00:11:55,380
+we're basically taking on a
+bunch of the responsibility
+
+330
+00:11:55,380 --> 00:11:58,200
+that we would previously
+have offloaded to you
+
+331
+00:11:58,200 --> 00:12:00,720
+in terms of still providing that compute,
+
+332
+00:12:00,720 --> 00:12:02,520
+still providing the availability zone,
+
+333
+00:12:02,520 --> 00:12:04,260
+the network, the storage, et cetera.
+
+334
+00:12:04,260 --> 00:12:05,490
+The ECS control plane
+
+335
+00:12:05,490 --> 00:12:07,740
+that's managing your
+application provisioning.
+
+336
+00:12:07,740 --> 00:12:10,230
+But then on top of that, we're
+also managing things like
+
+337
+00:12:10,230 --> 00:12:11,640
+the compute, auto scaling,
+
+338
+00:12:11,640 --> 00:12:13,080
+the distribution and placement.
+
+339
+00:12:13,080 --> 00:12:15,720
+We create launch templates for you.
+
+340
+00:12:15,720 --> 00:12:16,860
+We're managing the patching
+
+341
+00:12:16,860 --> 00:12:19,380
+of your EC2 instances, et cetera,
+
+342
+00:12:19,380 --> 00:12:20,670
+but we're giving you the flexibility
+
+343
+00:12:20,670 --> 00:12:21,630
+to be able to make choices
+
+344
+00:12:21,630 --> 00:12:23,030
+about what compute you need.
+
+345
+00:12:26,820 --> 00:12:30,827
+So really, the intention
+here is to try and find that,
+
+346
+00:12:30,827 --> 00:12:34,290
+to deliver that sweet spot
+between the ECS and EC2,
+
+347
+00:12:34,290 --> 00:12:35,880
+and the Fargate experience.
+
+348
+00:12:35,880 --> 00:12:37,380
+And we believe that we've got that right.
+
+349
+00:12:37,380 --> 00:12:40,013
+We're waiting for your feedback
+to make sure that we did.
+
+350
+00:12:41,310 --> 00:12:46,310
+The way that ECS manages and vents compute
+
+351
+00:12:46,710 --> 00:12:48,870
+through these compute
+engines into your cluster
+
+352
+00:12:48,870 --> 00:12:50,460
+is through capacity providers.
+
+353
+00:12:50,460 --> 00:12:53,160
+A capacity provider is a configuration
+
+354
+00:12:53,160 --> 00:12:56,640
+that you describe, which
+talks about the kind
+
+355
+00:12:56,640 --> 00:12:58,290
+of underlying compute that you need,
+
+356
+00:12:58,290 --> 00:13:00,390
+and then you associate
+that capacity provider
+
+357
+00:13:00,390 --> 00:13:05,220
+either with your cluster
+or with your ECS service.
+
+358
+00:13:05,220 --> 00:13:07,260
+Or if you're taking
+control of the scheduling
+
+359
+00:13:07,260 --> 00:13:08,250
+and you're using a run task,
+
+360
+00:13:08,250 --> 00:13:09,753
+you can also provide
+
+361
+00:13:09,753 --> 00:13:12,153
+that capacity provider
+through the run task API.
+
+362
+00:13:14,490 --> 00:13:17,760
+Today or previous to the launch
+of ECS managed instances,
+
+363
+00:13:17,760 --> 00:13:19,620
+ECS delivered two capacity providers.
+
+364
+00:13:19,620 --> 00:13:21,150
+There was the ESG,
+
+365
+00:13:21,150 --> 00:13:22,800
+the managed ESG capacity provider,
+
+366
+00:13:22,800 --> 00:13:24,840
+which is effectively managing
+the order scaling group
+
+367
+00:13:24,840 --> 00:13:28,680
+that you bring, and vending and leveraging
+
+368
+00:13:28,680 --> 00:13:31,380
+that auto scaling group
+in order to vent compute
+
+369
+00:13:31,380 --> 00:13:32,884
+into your ECS cluster,
+
+370
+00:13:32,884 --> 00:13:34,773
+in a form of EC2 instances.
+
+371
+00:13:36,030 --> 00:13:37,830
+And then every cluster comes
+
+372
+00:13:37,830 --> 00:13:39,210
+with a default capacity provider,
+
+373
+00:13:39,210 --> 00:13:41,520
+which is the Fargate
+capacity provider, right?
+
+374
+00:13:41,520 --> 00:13:44,820
+Which you can select, that
+is the default experience.
+
+375
+00:13:44,820 --> 00:13:46,740
+And so if you're launching a task
+
+376
+00:13:46,740 --> 00:13:48,180
+into a cluster without
+a capacity provider,
+
+377
+00:13:48,180 --> 00:13:50,530
+typically, you're you're
+gonna land on Fargate.
+
+378
+00:13:52,200 --> 00:13:54,510
+With managed instances,
+we've doubled down on that.
+
+379
+00:13:54,510 --> 00:13:56,487
+So we've introduced a new
+capacity provider called
+
+380
+00:13:56,487 --> 00:13:59,043
+the ECS managed instances
+capacity provider.
+
+381
+00:14:00,270 --> 00:14:04,980
+And again, that sits between
+the ECS managed order scaling
+
+382
+00:14:04,980 --> 00:14:07,740
+and the ECS Fargate capacity provider.
+
+383
+00:14:07,740 --> 00:14:09,900
+It's an additional capacity provider type.
+
+384
+00:14:09,900 --> 00:14:12,120
+These all work together
+if that's your choice.
+
+385
+00:14:12,120 --> 00:14:13,470
+And you know, one of the things
+
+386
+00:14:13,470 --> 00:14:14,940
+that we really wanna make sure
+
+387
+00:14:14,940 --> 00:14:16,740
+that we do well at AWS
+
+388
+00:14:16,740 --> 00:14:18,930
+is we really want to give you choice.
+
+389
+00:14:18,930 --> 00:14:19,950
+We, you know, we acknowledge
+
+390
+00:14:19,950 --> 00:14:21,870
+that there is no one
+size fits all solution.
+
+391
+00:14:21,870 --> 00:14:24,090
+All of you bring value to your customers,
+
+392
+00:14:24,090 --> 00:14:25,110
+and to your business
+
+393
+00:14:25,110 --> 00:14:27,120
+because of the diversity of
+the solution that you have.
+
+394
+00:14:27,120 --> 00:14:29,610
+And so we want to give you the choices
+
+395
+00:14:29,610 --> 00:14:31,020
+that you need in order
+to be able to make sure
+
+396
+00:14:31,020 --> 00:14:32,700
+that we meet you where you are.
+
+397
+00:14:32,700 --> 00:14:36,060
+And so that's really why we
+deliver this set of choices.
+
+398
+00:14:36,060 --> 00:14:38,510
+Now the thing with ECS managed instances
+
+399
+00:14:38,510 --> 00:14:40,920
+is we rarely wanted to optimize
+
+400
+00:14:40,920 --> 00:14:42,450
+for that Fargate experience,
+
+401
+00:14:42,450 --> 00:14:44,550
+but keep in mind that
+there is this continuum,
+
+402
+00:14:44,550 --> 00:14:45,750
+and we're somewhere in the middle, right?
+
+403
+00:14:45,750 --> 00:14:49,080
+So there's always gonna be
+slightly more configuration
+
+404
+00:14:49,080 --> 00:14:50,730
+than the pure Fargate experience
+
+405
+00:14:50,730 --> 00:14:53,133
+where you're just
+configuring your application.
+
+406
+00:14:54,570 --> 00:14:56,010
+So the way that you go about configuring
+
+407
+00:14:56,010 --> 00:14:57,960
+an ECS managed instances capacity provider
+
+408
+00:14:57,960 --> 00:15:01,350
+is you'll provide to us as a minimum,
+
+409
+00:15:01,350 --> 00:15:03,570
+two IM roles.
+
+410
+00:15:03,570 --> 00:15:05,340
+The first role is the instance role.
+
+411
+00:15:05,340 --> 00:15:07,740
+That role is actually used and associated
+
+412
+00:15:07,740 --> 00:15:09,300
+with the EC2 instances that we provision
+
+413
+00:15:09,300 --> 00:15:10,470
+that gives you the permissions,
+
+414
+00:15:10,470 --> 00:15:11,970
+that gives that instance the permissions
+
+415
+00:15:11,970 --> 00:15:13,590
+it needs in order to talk back
+
+416
+00:15:13,590 --> 00:15:14,700
+to the ECS control plane
+
+417
+00:15:14,700 --> 00:15:15,810
+to that management layer,
+
+418
+00:15:15,810 --> 00:15:17,040
+effectively allows the agent
+
+419
+00:15:17,040 --> 00:15:18,480
+that you have the ECS agent
+
+420
+00:15:18,480 --> 00:15:19,830
+that you have running on that box
+
+421
+00:15:19,830 --> 00:15:21,900
+to be able to talk back,
+get the configuration
+
+422
+00:15:21,900 --> 00:15:23,820
+that it needs for your cluster,
+register with that cluster,
+
+423
+00:15:23,820 --> 00:15:25,890
+and then be able to actually
+work with the scheduler,
+
+424
+00:15:25,890 --> 00:15:27,930
+to be able to provision tasks.
+
+425
+00:15:27,930 --> 00:15:29,781
+The other role that you give us is
+
+426
+00:15:29,781 --> 00:15:32,190
+the infrastructure management role.
+
+427
+00:15:32,190 --> 00:15:34,260
+And that's really you giving us permission
+
+428
+00:15:34,260 --> 00:15:38,310
+to take responsibility
+for vending, for managing
+
+429
+00:15:38,310 --> 00:15:40,590
+these EC2 resources in your account.
+
+430
+00:15:40,590 --> 00:15:42,093
+Now the thing with ECS
+managed instances is
+
+431
+00:15:42,093 --> 00:15:45,360
+that it's built on top
+of EC2 managed instances.
+
+432
+00:15:45,360 --> 00:15:49,620
+EC2 managed instances is
+a mechanism, a capability
+
+433
+00:15:49,620 --> 00:15:51,393
+that EC2 delivered last year,
+
+434
+00:15:53,677 --> 00:15:57,480
+which allows a managed service like ECS
+
+435
+00:15:57,480 --> 00:16:00,930
+to be able to manage EC2
+instances in your account.
+
+436
+00:16:00,930 --> 00:16:03,150
+So when ECS managed
+instances is provisioning
+
+437
+00:16:03,150 --> 00:16:03,990
+these EC2 instances,
+
+438
+00:16:03,990 --> 00:16:05,820
+you can see them when you describe them,
+
+439
+00:16:05,820 --> 00:16:07,230
+when you call describe instances,
+
+440
+00:16:07,230 --> 00:16:08,430
+you can see them in your list.
+
+441
+00:16:08,430 --> 00:16:09,690
+When you look at the EC2 console,
+
+442
+00:16:09,690 --> 00:16:11,970
+you'll see the instances there.
+
+443
+00:16:11,970 --> 00:16:13,154
+And you know,
+
+444
+00:16:13,154 --> 00:16:15,060
+we really like that transparency.
+
+445
+00:16:15,060 --> 00:16:16,740
+We like to be able to
+make sure that you're able
+
+446
+00:16:16,740 --> 00:16:18,060
+to see what it is that we're doing.
+
+447
+00:16:18,060 --> 00:16:20,820
+You know, we're not hiding anything here.
+
+448
+00:16:20,820 --> 00:16:22,530
+You will see when you
+look at those instances
+
+449
+00:16:22,530 --> 00:16:23,970
+that they're tagged as managed
+
+450
+00:16:23,970 --> 00:16:25,980
+and they'll be managed by ECS.
+
+451
+00:16:25,980 --> 00:16:27,570
+And you could exclude
+those from, you know,
+
+452
+00:16:27,570 --> 00:16:29,430
+from having to worry about them,
+
+453
+00:16:29,430 --> 00:16:31,050
+because the reality is
+that we are taking care
+
+454
+00:16:31,050 --> 00:16:31,883
+of all of that.
+
+455
+00:16:33,180 --> 00:16:35,700
+When you provision your capacity provider
+
+456
+00:16:35,700 --> 00:16:37,080
+in into your cluster,
+
+457
+00:16:37,080 --> 00:16:38,700
+one of the things that we've indexed on,
+
+458
+00:16:38,700 --> 00:16:39,923
+we do this with Fargate as well,
+
+459
+00:16:39,923 --> 00:16:41,820
+is that your capacity provider is
+
+460
+00:16:41,820 --> 00:16:44,100
+going to be using spread
+placement by default.
+
+461
+00:16:44,100 --> 00:16:46,560
+We believe spread placement
+is the right approach.
+
+462
+00:16:46,560 --> 00:16:47,640
+It allows you to make sure
+
+463
+00:16:47,640 --> 00:16:49,260
+that you're maximizing your availability.
+
+464
+00:16:49,260 --> 00:16:50,700
+And so the way that you do this,
+
+465
+00:16:50,700 --> 00:16:52,920
+in the same way that you
+would with your ECS service
+
+466
+00:16:52,920 --> 00:16:55,020
+when you're provisioning
+your ECS service for Fargate
+
+467
+00:16:55,020 --> 00:16:57,000
+and specifying the subnets that you want,
+
+468
+00:16:57,000 --> 00:16:59,658
+when each subnet specifies the
+underlying availability zone
+
+469
+00:16:59,658 --> 00:17:01,230
+that the task will be launched in.
+
+470
+00:17:01,230 --> 00:17:03,210
+With the ECS managed
+instance capacity provider,
+
+471
+00:17:03,210 --> 00:17:05,220
+you're specifying a set of
+subnets that we are going
+
+472
+00:17:05,220 --> 00:17:07,330
+to use in order to provision EC2 instances
+
+473
+00:17:08,280 --> 00:17:09,960
+into those availability zones.
+
+474
+00:17:09,960 --> 00:17:11,430
+That makes, and then we will use that
+
+475
+00:17:11,430 --> 00:17:12,603
+to do spread placement.
+
+476
+00:17:13,980 --> 00:17:16,020
+Effectively, once you've
+created your capacity provider,
+
+477
+00:17:16,020 --> 00:17:17,040
+given us those two roles
+
+478
+00:17:17,040 --> 00:17:18,900
+and associate it with your
+service or your cluster,
+
+479
+00:17:18,900 --> 00:17:20,520
+at that point you're
+just talking services,
+
+480
+00:17:20,520 --> 00:17:22,080
+and now, it's just like Fargate.
+
+481
+00:17:22,080 --> 00:17:23,490
+You create your ECS service,
+
+482
+00:17:23,490 --> 00:17:25,380
+your task definition, your provision,
+
+483
+00:17:25,380 --> 00:17:26,820
+and off the back of what you need,
+
+484
+00:17:26,820 --> 00:17:29,340
+we will go off and we'll go
+down to EC2 managed fleets.
+
+485
+00:17:29,340 --> 00:17:30,480
+We'll get the capacity you need,
+
+486
+00:17:30,480 --> 00:17:31,650
+we'll provision it into the cluster,
+
+487
+00:17:31,650 --> 00:17:32,483
+and you're good to go.
+
+488
+00:17:32,483 --> 00:17:34,000
+We'll start landing tasks on it.
+
+489
+00:17:35,580 --> 00:17:37,110
+The way that we make decisions about
+
+490
+00:17:37,110 --> 00:17:39,250
+what EC2 instance to use
+
+491
+00:17:41,040 --> 00:17:44,220
+is really what we've done
+is we've had a look at
+
+492
+00:17:44,220 --> 00:17:46,350
+what the vast majority
+of customers end up using
+
+493
+00:17:46,350 --> 00:17:48,090
+when they're using EC2 managed instances,
+
+494
+00:17:48,090 --> 00:17:50,130
+and also with consideration
+as to what it is
+
+495
+00:17:50,130 --> 00:17:52,590
+that we're provisioning
+under the hood for Fargate.
+
+496
+00:17:52,590 --> 00:17:55,650
+And we've come up with a list of defaults.
+
+497
+00:17:55,650 --> 00:17:58,320
+And so unless you actually have a need
+
+498
+00:17:58,320 --> 00:17:59,520
+for specialist compute,
+
+499
+00:17:59,520 --> 00:18:01,020
+unless you actually need to be
+
+500
+00:18:01,020 --> 00:18:03,000
+a little bit more prescriptive.
+
+501
+00:18:03,000 --> 00:18:05,160
+You could just leave us to take care of
+
+502
+00:18:05,160 --> 00:18:07,200
+what instances are available,
+
+503
+00:18:07,200 --> 00:18:08,340
+and we're typically gonna choose
+
+504
+00:18:08,340 --> 00:18:10,200
+from any one of the C, M, or R families,
+
+505
+00:18:10,200 --> 00:18:12,480
+so the general purpose compute families.
+
+506
+00:18:12,480 --> 00:18:13,620
+We're gonna make sure that we're making
+
+507
+00:18:13,620 --> 00:18:15,390
+that choice based on your workload,
+
+508
+00:18:15,390 --> 00:18:17,220
+and we'll get a little
+bit more into exactly
+
+509
+00:18:17,220 --> 00:18:19,500
+how we go about making that choice.
+
+510
+00:18:19,500 --> 00:18:22,800
+However, if you do need more control,
+
+511
+00:18:22,800 --> 00:18:24,957
+and this goes back to
+this idea that, you know,
+
+512
+00:18:24,957 --> 00:18:26,640
+we're sitting on that continuum,
+
+513
+00:18:26,640 --> 00:18:28,020
+we wanna make sure that we're giving you
+
+514
+00:18:28,020 --> 00:18:29,700
+the flexibility that you need.
+
+515
+00:18:29,700 --> 00:18:32,910
+If you need more control, if
+you need to be able to specify
+
+516
+00:18:32,910 --> 00:18:35,640
+that you need a specific
+compute type, well,
+
+517
+00:18:35,640 --> 00:18:39,450
+ECS managed instances allows
+you to capture that as a set,
+
+518
+00:18:39,450 --> 00:18:41,400
+using attribute based selection.
+
+519
+00:18:41,400 --> 00:18:44,550
+If you're familiar with
+EC2's auto scaling groups
+
+520
+00:18:44,550 --> 00:18:46,080
+and fleet configurations, then you'll know
+
+521
+00:18:46,080 --> 00:18:48,240
+that attribute based
+selection is a mechanism
+
+522
+00:18:48,240 --> 00:18:51,600
+that you can use to describe
+the kind of EC2 instance
+
+523
+00:18:51,600 --> 00:18:52,590
+that you might want
+
+524
+00:18:52,590 --> 00:18:54,120
+without actually specifically stating
+
+525
+00:18:54,120 --> 00:18:55,890
+that EC2 instance, right?
+
+526
+00:18:55,890 --> 00:18:56,790
+So you can,
+
+527
+00:18:56,790 --> 00:18:58,080
+as part of attribute based selection,
+
+528
+00:18:58,080 --> 00:19:02,640
+specify that you want
+a specific C648x large
+
+529
+00:19:02,640 --> 00:19:04,530
+if that's what you want,
+
+530
+00:19:04,530 --> 00:19:06,330
+but you can more generally describe
+
+531
+00:19:06,330 --> 00:19:07,800
+the kinds of compute that you want.
+
+532
+00:19:07,800 --> 00:19:09,570
+And the reason that that's really powerful
+
+533
+00:19:09,570 --> 00:19:11,460
+to try and be as general as possible
+
+534
+00:19:11,460 --> 00:19:14,460
+is because it gives us at ECS
+
+535
+00:19:14,460 --> 00:19:15,630
+the opportunity to make sure
+
+536
+00:19:15,630 --> 00:19:17,410
+that we find the capacity you need
+
+537
+00:19:18,330 --> 00:19:21,753
+with a broader, more diverse selection.
+
+538
+00:19:22,800 --> 00:19:25,500
+So the key here is really that
+
+539
+00:19:25,500 --> 00:19:26,673
+you can be as prescriptive as you want
+
+540
+00:19:26,673 --> 00:19:28,320
+with the compute that you want,
+
+541
+00:19:28,320 --> 00:19:29,820
+or you can be as general as you want,
+
+542
+00:19:29,820 --> 00:19:31,413
+or you can just leave it up to us, right?
+
+543
+00:19:31,413 --> 00:19:34,710
+That really goes to that shared
+responsibility continuum.
+
+544
+00:19:34,710 --> 00:19:37,950
+The more prescriptive you
+become, the harder it can be
+
+545
+00:19:37,950 --> 00:19:39,300
+for us to make sure that we're getting you
+
+546
+00:19:39,300 --> 00:19:42,270
+the lowest cost, most available instance.
+
+547
+00:19:42,270 --> 00:19:44,730
+And so in some workloads,
+that's absolutely required.
+
+548
+00:19:44,730 --> 00:19:46,260
+You know, it may be that you need a GPU,
+
+549
+00:19:46,260 --> 00:19:47,093
+and you need that GPU,
+
+550
+00:19:47,093 --> 00:19:48,900
+and so you specifically have to target
+
+551
+00:19:48,900 --> 00:19:50,160
+that particular instance type.
+
+552
+00:19:50,160 --> 00:19:52,410
+You can do that with
+ECS managed instances.
+
+553
+00:19:52,410 --> 00:19:54,600
+At the same time, if you
+really just have a general
+
+554
+00:19:54,600 --> 00:19:56,760
+requirement for something
+that's network optimized,
+
+555
+00:19:56,760 --> 00:19:58,800
+well, you wanna try and
+probably be as broad as possible
+
+556
+00:19:58,800 --> 00:20:00,330
+because the benefit you get is that
+
+557
+00:20:00,330 --> 00:20:03,210
+that offloads the decision making to us.
+
+558
+00:20:03,210 --> 00:20:05,700
+And then what we'll do is
+we can actually go to EC2,
+
+559
+00:20:05,700 --> 00:20:07,740
+and make sure that we're
+getting you that compute.
+
+560
+00:20:07,740 --> 00:20:09,270
+So really the rule of thumb here is
+
+561
+00:20:09,270 --> 00:20:10,470
+as you're using this,
+
+562
+00:20:10,470 --> 00:20:13,500
+try and be as general as you can be,
+
+563
+00:20:13,500 --> 00:20:15,570
+'cause that maximizes
+the availability posture
+
+564
+00:20:15,570 --> 00:20:16,403
+of the service.
+
+565
+00:20:16,403 --> 00:20:18,360
+It gives us a much better chance
+of getting you the compute
+
+566
+00:20:18,360 --> 00:20:20,403
+that's available at any point in time.
+
+567
+00:20:22,440 --> 00:20:24,870
+The way that we go about
+making decisions about how
+
+568
+00:20:24,870 --> 00:20:27,750
+to size the instance that we
+need, how to get that compute
+
+569
+00:20:27,750 --> 00:20:31,290
+for you is we use the task
+definition configuration.
+
+570
+00:20:31,290 --> 00:20:33,220
+So unlike with with ASGs
+
+571
+00:20:35,640 --> 00:20:36,780
+and managed order scaling groups
+
+572
+00:20:36,780 --> 00:20:39,000
+where you're actually
+specifying the EC2 instances,
+
+573
+00:20:39,000 --> 00:20:40,410
+and then we're just placing the tasks.
+
+574
+00:20:40,410 --> 00:20:42,750
+Here, we're actually using
+the task definition to be able
+
+575
+00:20:42,750 --> 00:20:46,063
+to decide what EC2
+instances to get for you.
+
+576
+00:20:46,063 --> 00:20:48,660
+And the way that that works
+is if you think back to
+
+577
+00:20:48,660 --> 00:20:50,493
+how task definitions are configured,
+
+578
+00:20:52,650 --> 00:20:53,910
+perhaps some of you have memorized this
+
+579
+00:20:53,910 --> 00:20:54,840
+quite as detailed as I have.
+
+580
+00:20:54,840 --> 00:20:56,760
+But basically the way this works is that
+
+581
+00:20:56,760 --> 00:20:59,040
+at a container level, keeping in mind
+
+582
+00:20:59,040 --> 00:21:01,380
+that you can have multiple
+containers in your task,
+
+583
+00:21:01,380 --> 00:21:03,360
+you can specify as a minimum
+
+584
+00:21:03,360 --> 00:21:05,580
+the memory reservation for that container.
+
+585
+00:21:05,580 --> 00:21:08,130
+Now, the memory reservation for
+the container is the amount,
+
+586
+00:21:08,130 --> 00:21:09,330
+the minimum amount of memory
+
+587
+00:21:09,330 --> 00:21:10,980
+that is reserved for that container.
+
+588
+00:21:10,980 --> 00:21:12,960
+It doesn't prescribe an upper bound,
+
+589
+00:21:12,960 --> 00:21:14,973
+it's just saying I need at least x.
+
+590
+00:21:16,140 --> 00:21:18,690
+You can then add to that,
+the memory reservation,
+
+591
+00:21:18,690 --> 00:21:20,370
+the the memory that you
+need for the container,
+
+592
+00:21:20,370 --> 00:21:21,390
+which is the upper bound.
+
+593
+00:21:21,390 --> 00:21:23,250
+And now you're saying this container needs
+
+594
+00:21:23,250 --> 00:21:25,590
+to be bounded to this amount of memory.
+
+595
+00:21:25,590 --> 00:21:26,730
+Also at the container level,
+
+596
+00:21:26,730 --> 00:21:28,920
+you can specify the CPU you need.
+
+597
+00:21:28,920 --> 00:21:29,940
+Now the thing with the CPU
+
+598
+00:21:29,940 --> 00:21:32,340
+that you need is it's not a hard cap
+
+599
+00:21:32,340 --> 00:21:33,990
+of this amount of CPU.
+
+600
+00:21:33,990 --> 00:21:35,130
+For the container,
+
+601
+00:21:35,130 --> 00:21:36,570
+the way that this is configured is
+
+602
+00:21:36,570 --> 00:21:39,120
+it becomes a ratio of the CPU available
+
+603
+00:21:39,120 --> 00:21:41,430
+to all of the containers in that task.
+
+604
+00:21:41,430 --> 00:21:44,340
+So it's ratioed across
+all of those containers.
+
+605
+00:21:44,340 --> 00:21:46,440
+And so that's useful
+if you have containers
+
+606
+00:21:46,440 --> 00:21:47,517
+that are kind of bursty,
+
+607
+00:21:47,517 --> 00:21:50,220
+they need to kind of consume,
+you know, more or less.
+
+608
+00:21:50,220 --> 00:21:52,200
+But it also means that
+you can make sure that
+
+609
+00:21:52,200 --> 00:21:54,270
+one of your containers,
+perhaps your primary container
+
+610
+00:21:54,270 --> 00:21:56,370
+is getting 80% of the compute
+
+611
+00:21:56,370 --> 00:21:59,979
+and maybe your log or whatever it is is,
+
+612
+00:21:59,979 --> 00:22:02,133
+is getting less of their compute.
+
+613
+00:22:03,210 --> 00:22:04,500
+At the task level,
+
+614
+00:22:04,500 --> 00:22:06,180
+you can specify memory and CPU,
+
+615
+00:22:06,180 --> 00:22:08,850
+and that actually then,
+this is how Fargate works.
+
+616
+00:22:08,850 --> 00:22:11,190
+That is actually specifying
+exactly how much memory
+
+617
+00:22:11,190 --> 00:22:12,840
+and CPU will be allocated to that task.
+
+618
+00:22:12,840 --> 00:22:14,430
+It's effectively a hard bound.
+
+619
+00:22:14,430 --> 00:22:17,790
+And so the way that we
+go about doing this is
+
+620
+00:22:17,790 --> 00:22:22,020
+when you configure your ECS, your task,
+
+621
+00:22:22,020 --> 00:22:24,420
+for ECS managed instances,
+we walk through the set
+
+622
+00:22:24,420 --> 00:22:25,530
+of configuration that you have
+
+623
+00:22:25,530 --> 00:22:26,910
+and we decide based on that
+
+624
+00:22:26,910 --> 00:22:28,380
+what it is that we can go and get for you.
+
+625
+00:22:28,380 --> 00:22:30,930
+As a minimum, you have to
+specify memory reservation
+
+626
+00:22:30,930 --> 00:22:32,430
+because we will then go
+
+627
+00:22:32,430 --> 00:22:33,540
+and find an EC2 instance
+
+628
+00:22:33,540 --> 00:22:35,403
+that's gonna fit it at least that.
+
+629
+00:22:36,300 --> 00:22:38,100
+But you can specify any
+one of these things,
+
+630
+00:22:38,100 --> 00:22:40,110
+and it's valuable to actually try
+
+631
+00:22:40,110 --> 00:22:41,250
+and move higher up the stack.
+
+632
+00:22:41,250 --> 00:22:43,710
+The less you can be prescriptive
+about what you're getting,
+
+633
+00:22:43,710 --> 00:22:46,110
+the more elastic you end up getting,
+
+634
+00:22:46,110 --> 00:22:48,000
+in terms in terms of
+the underlying compute.
+
+635
+00:22:48,000 --> 00:22:49,620
+The difference between Fargate,
+
+636
+00:22:49,620 --> 00:22:51,090
+where you're getting that compute
+
+637
+00:22:51,090 --> 00:22:54,450
+and managed instances is
+that with managed instances,
+
+638
+00:22:54,450 --> 00:22:55,830
+these workloads are multi-tenant.
+
+639
+00:22:55,830 --> 00:22:57,060
+They're gonna rely,
+
+640
+00:22:57,060 --> 00:22:58,650
+there'll be multiple of these,
+
+641
+00:22:58,650 --> 00:23:01,080
+of your tasks running on
+the same EC2 instance.
+
+642
+00:23:01,080 --> 00:23:03,060
+And that's valuable,
+because it allows you,
+
+643
+00:23:03,060 --> 00:23:05,370
+depending on how you specify
+this, to allow those workloads
+
+644
+00:23:05,370 --> 00:23:06,870
+to burst from one to the other.
+
+645
+00:23:06,870 --> 00:23:08,670
+I was chatting to a gentleman earlier.
+
+646
+00:23:08,670 --> 00:23:10,260
+He was telling me about Java workloads
+
+647
+00:23:10,260 --> 00:23:12,180
+and the fact that they run a lot of Java.
+
+648
+00:23:12,180 --> 00:23:13,320
+A lot of Java,
+
+649
+00:23:13,320 --> 00:23:16,200
+especially when it's doing
+just in time compilation
+
+650
+00:23:16,200 --> 00:23:19,830
+can burst CPU quite high
+when it first starts out.
+
+651
+00:23:19,830 --> 00:23:22,260
+And what we found, customers
+have told us with Fargate,
+
+652
+00:23:22,260 --> 00:23:23,430
+the end result is you actually have
+
+653
+00:23:23,430 --> 00:23:24,740
+to specify the CPU need at P100,
+
+654
+00:23:24,740 --> 00:23:27,840
+effectively the maximum CPU you need.
+
+655
+00:23:27,840 --> 00:23:30,210
+Using ECS managed
+instances, you can allow,
+
+656
+00:23:30,210 --> 00:23:31,280
+we can leverage the elasticity
+
+657
+00:23:31,280 --> 00:23:32,520
+of the underlying compute
+
+658
+00:23:32,520 --> 00:23:34,440
+so that you can actually
+specify less memory,
+
+659
+00:23:34,440 --> 00:23:36,360
+you can specify your aggregate
+memory that you need,
+
+660
+00:23:36,360 --> 00:23:37,950
+and it'll allow you to burst,
+
+661
+00:23:37,950 --> 00:23:40,050
+to be able to handle that jet compilation.
+
+662
+00:23:41,430 --> 00:23:43,780
+Let's talk a little bit
+about how we go about
+
+663
+00:23:44,820 --> 00:23:47,370
+making the decisions as to
+what instance to launch.
+
+664
+00:23:47,370 --> 00:23:49,290
+Now one of the things that we really,
+
+665
+00:23:49,290 --> 00:23:52,170
+really index heavily on
+is in order to make sure
+
+666
+00:23:52,170 --> 00:23:54,510
+that we're delivering you
+the most resilient service,
+
+667
+00:23:54,510 --> 00:23:56,640
+we want to make sure that we
+can provision your workloads
+
+668
+00:23:56,640 --> 00:23:58,290
+as fast as we possibly can.
+
+669
+00:23:58,290 --> 00:23:59,310
+That's our goal.
+
+670
+00:23:59,310 --> 00:24:00,360
+And effectively,
+
+671
+00:24:00,360 --> 00:24:02,100
+as you scale up, as
+your service scales up,
+
+672
+00:24:02,100 --> 00:24:03,750
+we wanna be able to make sure
+that we're launching those
+
+673
+00:24:03,750 --> 00:24:06,540
+tasks quickly because we
+wanna get the workloads there
+
+674
+00:24:06,540 --> 00:24:09,660
+to make sure that they're
+meeting your customer demand.
+
+675
+00:24:09,660 --> 00:24:12,360
+So the way we go about doing this is
+
+676
+00:24:12,360 --> 00:24:13,710
+at a point in time,
+
+677
+00:24:13,710 --> 00:24:15,840
+now keep in mind that a big cluster,
+
+678
+00:24:15,840 --> 00:24:17,160
+depending on the size of your clusters,
+
+679
+00:24:17,160 --> 00:24:18,660
+large clusters are very active.
+
+680
+00:24:18,660 --> 00:24:20,280
+There's workload going on all the time.
+
+681
+00:24:20,280 --> 00:24:21,270
+There's multiple services,
+
+682
+00:24:21,270 --> 00:24:22,410
+there's scaling up and scaling down.
+
+683
+00:24:22,410 --> 00:24:24,090
+So at any point in time,
+
+684
+00:24:24,090 --> 00:24:26,580
+the ECS scheduler will be having a look
+
+685
+00:24:26,580 --> 00:24:28,560
+to see what work needs to be done.
+
+686
+00:24:28,560 --> 00:24:30,720
+It takes a snapshot of all of the tasks
+
+687
+00:24:30,720 --> 00:24:33,000
+that are currently in a
+pending state, basically tasks
+
+688
+00:24:33,000 --> 00:24:35,430
+that need to be
+provisioned onto workloads.
+
+689
+00:24:35,430 --> 00:24:37,800
+And it's gonna index on making sure
+
+690
+00:24:37,800 --> 00:24:40,710
+that we first use the
+compute that's already there.
+
+691
+00:24:40,710 --> 00:24:42,690
+And the reason for that, again,
+goes to we wanna make sure
+
+692
+00:24:42,690 --> 00:24:44,010
+that we're launching your instance,
+
+693
+00:24:44,010 --> 00:24:45,420
+your tasks as quickly as we can.
+
+694
+00:24:45,420 --> 00:24:48,750
+So if we can fit the tasks
+that you have on the instances
+
+695
+00:24:48,750 --> 00:24:51,240
+that you have while meeting
+your placement constraints.
+
+696
+00:24:51,240 --> 00:24:53,010
+So making sure that we're spread AZ,
+
+697
+00:24:53,010 --> 00:24:54,660
+making sure that we're, if, you know,
+
+698
+00:24:54,660 --> 00:24:56,130
+whatever placement
+constraints you've applied,
+
+699
+00:24:56,130 --> 00:24:57,780
+distinct instance, et cetera,
+
+700
+00:24:57,780 --> 00:24:59,640
+we'll make sure that we are first
+
+701
+00:24:59,640 --> 00:25:01,590
+landing on the compute that's there.
+
+702
+00:25:01,590 --> 00:25:04,410
+What we do next is we then
+look at all of those tasks
+
+703
+00:25:04,410 --> 00:25:06,000
+that we were unable to place.
+
+704
+00:25:06,000 --> 00:25:08,940
+We look at the placement
+constraints that have been applied
+
+705
+00:25:08,940 --> 00:25:10,590
+to those tasks, including their need
+
+706
+00:25:10,590 --> 00:25:12,093
+for availability zone spread.
+
+707
+00:25:14,670 --> 00:25:19,670
+And we will then go to EC2,
+
+708
+00:25:19,830 --> 00:25:21,780
+and based on your capacity,
+
+709
+00:25:21,780 --> 00:25:25,530
+your managed instances capacity
+provider specifications,
+
+710
+00:25:25,530 --> 00:25:27,450
+we will get all of the EC2 instances
+
+711
+00:25:27,450 --> 00:25:29,190
+that meet that requirement.
+
+712
+00:25:29,190 --> 00:25:34,190
+We then do what we call
+first fit descending,
+
+713
+00:25:34,260 --> 00:25:36,060
+first fit decreasing rather,
+
+714
+00:25:36,060 --> 00:25:37,920
+where what we'll do is walk through
+
+715
+00:25:37,920 --> 00:25:41,130
+the set of the set of tasks
+that need to be placed,
+
+716
+00:25:41,130 --> 00:25:43,200
+and we'll look for the
+largest EC2 instance
+
+717
+00:25:43,200 --> 00:25:45,420
+that meets those requirements
+in order to place it.
+
+718
+00:25:45,420 --> 00:25:47,910
+So our goal is spread placement first.
+
+719
+00:25:47,910 --> 00:25:50,400
+In fact, first phase is
+place on what we have.
+
+720
+00:25:50,400 --> 00:25:52,020
+Second phase is spread placement,
+
+721
+00:25:52,020 --> 00:25:54,360
+and then third phase is gonna be bin pack.
+
+722
+00:25:54,360 --> 00:25:56,070
+And the reason for that is
+because we wanna make sure
+
+723
+00:25:56,070 --> 00:25:57,800
+that we're optimizing cost for you.
+
+724
+00:25:57,800 --> 00:26:00,210
+We wanna make sure that we're
+finding the largest instance
+
+725
+00:26:00,210 --> 00:26:01,380
+at the best possible price,
+
+726
+00:26:01,380 --> 00:26:03,280
+and putting as much onto it as we can.
+
+727
+00:26:06,090 --> 00:26:08,640
+Let's move on a little bit,
+talk a little bit about how
+
+728
+00:26:08,640 --> 00:26:09,870
+that can be optimized.
+
+729
+00:26:09,870 --> 00:26:13,440
+So the benefit that we get
+
+730
+00:26:13,440 --> 00:26:15,453
+in using these larger instances is,
+
+731
+00:26:16,350 --> 00:26:18,900
+and in using ECS manage
+instances is you're actually
+
+732
+00:26:18,900 --> 00:26:20,340
+reusing that underlying compute.
+
+733
+00:26:20,340 --> 00:26:21,930
+And that's incredibly valuable,
+
+734
+00:26:21,930 --> 00:26:23,460
+because it goes to what
+we were saying earlier
+
+735
+00:26:23,460 --> 00:26:24,930
+about the fact that we
+wanna launch quickly,
+
+736
+00:26:24,930 --> 00:26:27,120
+we wanna get you running quickly.
+
+737
+00:26:27,120 --> 00:26:28,590
+There's two upsides there.
+
+738
+00:26:28,590 --> 00:26:31,260
+The one is you've got this
+elasticity that we talked about
+
+739
+00:26:31,260 --> 00:26:32,520
+because you've got the larger instance,
+
+740
+00:26:32,520 --> 00:26:34,773
+so you can burst into it if you need.
+
+741
+00:26:36,240 --> 00:26:38,190
+Because you're landing
+all of your workloads
+
+742
+00:26:38,190 --> 00:26:39,060
+on this instance,
+
+743
+00:26:39,060 --> 00:26:40,800
+the first workload will pull the image,
+
+744
+00:26:40,800 --> 00:26:42,900
+and the subsequent workloads
+are gonna use that image cache.
+
+745
+00:26:42,900 --> 00:26:44,670
+And in fact, if you had multiple
+
+746
+00:26:44,670 --> 00:26:48,270
+of the same task landing
+on the same EC2 instance,
+
+747
+00:26:48,270 --> 00:26:49,830
+those subsequent tasks are actually
+
+748
+00:26:49,830 --> 00:26:51,360
+reusing the image that's already there.
+
+749
+00:26:51,360 --> 00:26:53,040
+It saves you a bunch of time.
+
+750
+00:26:53,040 --> 00:26:55,390
+You're not putting that
+image cache every time.
+
+751
+00:26:58,800 --> 00:27:00,990
+This significantly improves throughput.
+
+752
+00:27:00,990 --> 00:27:02,730
+And that's really why we
+index hard on the, you know,
+
+753
+00:27:02,730 --> 00:27:03,750
+it's a combination of cost
+
+754
+00:27:03,750 --> 00:27:05,430
+and throughput that really leads us
+
+755
+00:27:05,430 --> 00:27:07,470
+to index quite heavily on making sure
+
+756
+00:27:07,470 --> 00:27:09,620
+that we're choosing a
+larger instance type.
+
+757
+00:27:14,610 --> 00:27:16,380
+One of the things that we will be doing
+
+758
+00:27:16,380 --> 00:27:19,440
+in your cluster on sort
+of an ongoing basis
+
+759
+00:27:19,440 --> 00:27:22,470
+is we're gonna be doing host replacement.
+
+760
+00:27:22,470 --> 00:27:24,120
+Remember, we talked about the fact that
+
+761
+00:27:24,120 --> 00:27:26,430
+there's this continuum, this
+shared responsibility model,
+
+762
+00:27:26,430 --> 00:27:28,290
+and you know, part of this offering is
+
+763
+00:27:28,290 --> 00:27:31,110
+that you've offloaded
+to us the responsibility
+
+764
+00:27:31,110 --> 00:27:33,120
+of making sure that your host is patched
+
+765
+00:27:33,120 --> 00:27:35,250
+and that your host is, is compliant.
+
+766
+00:27:35,250 --> 00:27:39,480
+And so we're gonna be
+looking at opportunities
+
+767
+00:27:39,480 --> 00:27:40,440
+to be able to make sure
+
+768
+00:27:40,440 --> 00:27:42,510
+that we're meeting that
+compliance requirement.
+
+769
+00:27:42,510 --> 00:27:44,400
+At the same time, there
+are a bunch of other things
+
+770
+00:27:44,400 --> 00:27:47,550
+that could be going on that
+actually drive the need
+
+771
+00:27:47,550 --> 00:27:48,660
+for replacing the host.
+
+772
+00:27:48,660 --> 00:27:51,960
+The first is that as an
+operator, you may decide
+
+773
+00:27:51,960 --> 00:27:53,820
+that you don't particularly
+want this particular host.
+
+774
+00:27:53,820 --> 00:27:54,870
+For some reason you decide
+
+775
+00:27:54,870 --> 00:27:55,710
+that you wanna get rid of that one,
+
+776
+00:27:55,710 --> 00:27:57,300
+and so you can actually drain the host,
+
+777
+00:27:57,300 --> 00:27:58,950
+can select it, deregister,
+or force deregister,
+
+778
+00:27:58,950 --> 00:28:02,340
+and then we would run it through
+what we call a drain cycle
+
+779
+00:28:02,340 --> 00:28:04,350
+or a host replacement cycle.
+
+780
+00:28:04,350 --> 00:28:05,670
+Another is maintenance events.
+
+781
+00:28:05,670 --> 00:28:07,950
+And so ECS is continually monitoring
+
+782
+00:28:07,950 --> 00:28:10,140
+to see if there are EC2 maintenance events
+
+783
+00:28:10,140 --> 00:28:12,120
+applied to that particular EC2 instance,
+
+784
+00:28:12,120 --> 00:28:13,800
+so that we need to replace it.
+
+785
+00:28:13,800 --> 00:28:15,460
+Or maintenance is a result
+of patching, you know,
+
+786
+00:28:15,460 --> 00:28:17,790
+where the operating system
+needs to be patched.
+
+787
+00:28:17,790 --> 00:28:19,650
+And so we'll be applying those.
+
+788
+00:28:19,650 --> 00:28:20,550
+There's auto scaling,
+
+789
+00:28:20,550 --> 00:28:23,520
+so your service is continually
+scaling up and scaling down.
+
+790
+00:28:23,520 --> 00:28:25,383
+And as you scale up and scale down,
+
+791
+00:28:26,280 --> 00:28:28,560
+we need to make sure that
+we're taking corrective action.
+
+792
+00:28:28,560 --> 00:28:29,970
+And then there's cost optimization.
+
+793
+00:28:29,970 --> 00:28:32,100
+We're continually looking for
+opportunities to make sure
+
+794
+00:28:32,100 --> 00:28:33,870
+that we're giving you
+the best possible value.
+
+795
+00:28:33,870 --> 00:28:36,210
+We don't want idle
+instances sitting around.
+
+796
+00:28:36,210 --> 00:28:38,850
+So the way that this
+works is that effectively,
+
+797
+00:28:38,850 --> 00:28:42,390
+at the point that we get a notification
+
+798
+00:28:42,390 --> 00:28:46,050
+that an an instance needs to be replaced
+
+799
+00:28:46,050 --> 00:28:47,400
+for whatever reason,
+
+800
+00:28:47,400 --> 00:28:48,870
+we enter the draining life cycle.
+
+801
+00:28:48,870 --> 00:28:50,970
+And the first two of the
+scheduler is gonna do
+
+802
+00:28:50,970 --> 00:28:52,710
+is it's going to try and replace,
+
+803
+00:28:52,710 --> 00:28:55,020
+it's going to replace all of the tasks
+
+804
+00:28:55,020 --> 00:28:56,320
+that are managed,
+
+805
+00:28:56,320 --> 00:28:59,013
+running on that on that instance.
+
+806
+00:29:00,300 --> 00:29:02,370
+We always make sure,
+again, going to resilience,
+
+807
+00:29:02,370 --> 00:29:05,460
+we always start a task
+before we stop a task.
+
+808
+00:29:05,460 --> 00:29:07,140
+It's sort of a golden rule that we have.
+
+809
+00:29:07,140 --> 00:29:07,973
+We have this conversation
+
+810
+00:29:07,973 --> 00:29:08,806
+with the schedule team all the time.
+
+811
+00:29:08,806 --> 00:29:09,639
+It is the golden rule.
+
+812
+00:29:09,639 --> 00:29:11,880
+We start things before we
+stop things to make sure
+
+813
+00:29:11,880 --> 00:29:14,310
+that we're always meeting your minimum
+
+814
+00:29:14,310 --> 00:29:15,570
+healthy requirement for your service.
+
+815
+00:29:15,570 --> 00:29:17,880
+That we're always meeting
+your resiliency goals.
+
+816
+00:29:17,880 --> 00:29:19,470
+So the way that this will
+work is the scheduler
+
+817
+00:29:19,470 --> 00:29:21,930
+is gonna first launch a bunch of tasks.
+
+818
+00:29:21,930 --> 00:29:23,820
+Now let's assume in this
+particular case there isn't
+
+819
+00:29:23,820 --> 00:29:25,560
+enough compute in your cluster.
+
+820
+00:29:25,560 --> 00:29:27,210
+Those tasks are gonna go into pending,
+
+821
+00:29:27,210 --> 00:29:28,710
+and we're gonna go back
+through that workflow
+
+822
+00:29:28,710 --> 00:29:29,760
+that we were talking about earlier
+
+823
+00:29:29,760 --> 00:29:30,990
+where we're going to have,
+
+824
+00:29:30,990 --> 00:29:32,430
+we're gonna look for the capacity,
+
+825
+00:29:32,430 --> 00:29:33,810
+the compute that we need,
+
+826
+00:29:33,810 --> 00:29:34,800
+find the compute
+
+827
+00:29:34,800 --> 00:29:36,270
+that meets the placement requirements
+
+828
+00:29:36,270 --> 00:29:37,590
+for these particular tasks,
+
+829
+00:29:37,590 --> 00:29:40,833
+and provision that into the cluster.
+
+830
+00:29:41,700 --> 00:29:44,850
+We are then going to
+provision those tasks onto
+
+831
+00:29:44,850 --> 00:29:46,440
+this EC2 instance.
+
+832
+00:29:46,440 --> 00:29:48,690
+Now you'll notice here
+that we've provisioned
+
+833
+00:29:50,604 --> 00:29:52,800
+the orange and the green
+tasks, the service tasks,
+
+834
+00:29:52,800 --> 00:29:54,000
+the managed tasks.
+
+835
+00:29:54,000 --> 00:29:57,300
+What we have not done is
+provisioned the unmanaged task.
+
+836
+00:29:57,300 --> 00:30:01,140
+So if you launch a task
+onto ECS using a run task
+
+837
+00:30:01,140 --> 00:30:04,655
+or start task, then the
+way that we think about
+
+838
+00:30:04,655 --> 00:30:07,620
+that is effectively, that's
+a mechanism to tell us
+
+839
+00:30:07,620 --> 00:30:10,980
+that your service is taking
+responsibility for scheduling.
+
+840
+00:30:10,980 --> 00:30:12,540
+So rather than using our scheduler,
+
+841
+00:30:12,540 --> 00:30:14,460
+you want to own the scheduling through
+
+842
+00:30:14,460 --> 00:30:17,340
+some some external, external process.
+
+843
+00:30:17,340 --> 00:30:19,113
+And so we don't take,
+
+844
+00:30:20,553 --> 00:30:22,170
+we don't manage those tasks.
+
+845
+00:30:22,170 --> 00:30:24,720
+What we will do is we will make sure
+
+846
+00:30:24,720 --> 00:30:27,900
+that those tasks are the
+last to be deprovisioned,
+
+847
+00:30:27,900 --> 00:30:31,860
+and we will always honor the
+task shut down grace period.
+
+848
+00:30:31,860 --> 00:30:35,460
+And any of the mu text functionality.
+
+849
+00:30:35,460 --> 00:30:38,194
+So the task scale-in protection,
+
+850
+00:30:38,194 --> 00:30:40,350
+the task that you've got enabled.
+
+851
+00:30:40,350 --> 00:30:42,360
+So if a task, if a run,
+
+852
+00:30:42,360 --> 00:30:44,220
+if a unmanaged task is currently
+
+853
+00:30:44,220 --> 00:30:46,350
+in its shutdown grace period,
+
+854
+00:30:46,350 --> 00:30:51,090
+or it's currently in a
+scale-in protection phase,
+
+855
+00:30:51,090 --> 00:30:52,380
+we won't take corrective action
+
+856
+00:30:52,380 --> 00:30:54,213
+until it's exited that phase.
+
+857
+00:30:55,200 --> 00:30:57,060
+Unmanaged tasks are also the last things
+
+858
+00:30:57,060 --> 00:30:59,220
+to be deprovisioned off the instance.
+
+859
+00:30:59,220 --> 00:31:00,870
+So the first thing we'll be doing is
+
+860
+00:31:00,870 --> 00:31:02,370
+we go and find new tasks for you.
+
+861
+00:31:02,370 --> 00:31:04,350
+The schedule will
+replace the managed tasks
+
+862
+00:31:04,350 --> 00:31:05,610
+on the new capacity,
+
+863
+00:31:05,610 --> 00:31:08,070
+then it'll tear down the managed tasks.
+
+864
+00:31:08,070 --> 00:31:10,343
+And then the very last thing,
+honoring these constraints.
+
+865
+00:31:10,343 --> 00:31:12,164
+What'll do is it'll then tear down
+
+866
+00:31:12,164 --> 00:31:14,643
+the actual unmanaged tasks.
+
+867
+00:31:15,690 --> 00:31:17,430
+Once we've done that,
+we're then gonna actually
+
+868
+00:31:17,430 --> 00:31:18,600
+tear down the EC2 instance.
+
+869
+00:31:18,600 --> 00:31:21,720
+And that gets us back to a point where
+
+870
+00:31:21,720 --> 00:31:24,200
+you know, your processes, your services
+
+871
+00:31:24,200 --> 00:31:25,410
+is up and running,
+
+872
+00:31:25,410 --> 00:31:27,690
+and we've removed any of that.
+
+873
+00:31:27,690 --> 00:31:29,823
+The idle compute that you no longer need.
+
+874
+00:31:32,260 --> 00:31:33,840
+Now one of the things
+that you might notice
+
+875
+00:31:33,840 --> 00:31:36,570
+in your services, remember
+we talked a little bit about
+
+876
+00:31:36,570 --> 00:31:38,010
+the fact that we're
+optimizing for throughput.
+
+877
+00:31:38,010 --> 00:31:39,420
+And so we're, so, you know,
+
+878
+00:31:39,420 --> 00:31:42,120
+we really wanna make sure
+that we're launching quickly,
+
+879
+00:31:42,120 --> 00:31:43,500
+but as a side effect of that,
+
+880
+00:31:43,500 --> 00:31:44,880
+when we launch, it may be
+
+881
+00:31:44,880 --> 00:31:47,010
+that in fact that the
+distribution of compute
+
+882
+00:31:47,010 --> 00:31:48,720
+that you have in your
+cluster doesn't align
+
+883
+00:31:48,720 --> 00:31:51,120
+with the distribution of pure balance
+
+884
+00:31:51,120 --> 00:31:52,680
+that you'd need for your ECS service.
+
+885
+00:31:52,680 --> 00:31:55,650
+And so your service can end,
+for a short period of time,
+
+886
+00:31:55,650 --> 00:31:57,750
+in an unbalanced state.
+
+887
+00:31:57,750 --> 00:32:00,750
+ECS is continually looking for
+opportunities to rebalance.
+
+888
+00:32:00,750 --> 00:32:04,500
+And so just before re:Invent last year,
+
+889
+00:32:04,500 --> 00:32:05,370
+we launched a feature
+
+890
+00:32:05,370 --> 00:32:07,680
+for ECS services called
+continual rebalance,
+
+891
+00:32:07,680 --> 00:32:10,770
+where where you can actually
+select for that service
+
+892
+00:32:10,770 --> 00:32:12,240
+that you want to be rebalanced.
+
+893
+00:32:12,240 --> 00:32:14,010
+This is now a default behavior.
+
+894
+00:32:14,010 --> 00:32:16,020
+And again, it goes to what
+we were saying earlier.
+
+895
+00:32:16,020 --> 00:32:17,580
+We try very hard to bake in,
+
+896
+00:32:17,580 --> 00:32:19,740
+we work to bake in default best practice
+
+897
+00:32:19,740 --> 00:32:20,850
+as default into the service.
+
+898
+00:32:20,850 --> 00:32:22,590
+And so this is a best practice,
+
+899
+00:32:22,590 --> 00:32:23,700
+and for any new service
+
+900
+00:32:23,700 --> 00:32:26,010
+that you create, it will
+automatically rebalance.
+
+901
+00:32:26,010 --> 00:32:27,570
+And so what's gonna happen there is that
+
+902
+00:32:27,570 --> 00:32:29,640
+the schedule is looking
+for these opportunities.
+
+903
+00:32:29,640 --> 00:32:30,930
+It's going to identify the fact
+
+904
+00:32:30,930 --> 00:32:32,670
+that this particular
+service is unbalanced,
+
+905
+00:32:32,670 --> 00:32:34,590
+and then it will take corrective action
+
+906
+00:32:34,590 --> 00:32:36,360
+to make sure that it replaces,
+
+907
+00:32:36,360 --> 00:32:37,590
+it rebalances that service
+
+908
+00:32:37,590 --> 00:32:39,570
+by launching a new task first
+
+909
+00:32:39,570 --> 00:32:41,340
+into the appropriate availability zone
+
+910
+00:32:41,340 --> 00:32:42,900
+and tearing down the the previous task.
+
+911
+00:32:42,900 --> 00:32:44,250
+And again, that'll kick off
+
+912
+00:32:44,250 --> 00:32:46,530
+that workflow if you need new compute.
+
+913
+00:32:46,530 --> 00:32:48,060
+Well, in that particular
+case, we're gonna go off
+
+914
+00:32:48,060 --> 00:32:49,860
+and get an EC2 instance and
+we're gonna make sure we put it
+
+915
+00:32:49,860 --> 00:32:52,410
+right where it needs to be
+in that availability zone,
+
+916
+00:32:52,410 --> 00:32:56,167
+so we can provision onto that instance
+
+917
+00:32:56,167 --> 00:32:59,220
+for you, and make sure that
+you're continually balanced.
+
+918
+00:32:59,220 --> 00:33:00,960
+And as a result you will
+end up in a world where,
+
+919
+00:33:00,960 --> 00:33:03,600
+you know, you're continually
+
+920
+00:33:03,600 --> 00:33:05,250
+meeting that availability requirement.
+
+921
+00:33:05,250 --> 00:33:06,960
+Your tasks are always appropriately spread
+
+922
+00:33:06,960 --> 00:33:09,533
+across the availability
+zones that you've configured.
+
+923
+00:33:15,330 --> 00:33:17,550
+One of the things that we watch for
+
+924
+00:33:17,550 --> 00:33:19,920
+on an ongoing basis is a notion
+
+925
+00:33:19,920 --> 00:33:21,900
+that we call idle hosts.
+
+926
+00:33:21,900 --> 00:33:24,270
+And idle hosts, really,
+is just to make sure
+
+927
+00:33:24,270 --> 00:33:25,560
+that we don't end up in a position
+
+928
+00:33:25,560 --> 00:33:27,060
+where we've deprovisioned
+a bunch of tasks,
+
+929
+00:33:27,060 --> 00:33:29,460
+and we've got a bunch of
+EC2 capacity sitting around.
+
+930
+00:33:29,460 --> 00:33:30,420
+'Cause that's just wasting,
+
+931
+00:33:30,420 --> 00:33:32,705
+it's wasteful, it's wasting your money.
+
+932
+00:33:32,705 --> 00:33:35,580
+And so the way we do
+that the ECS scheduler
+
+933
+00:33:35,580 --> 00:33:37,920
+is continually monitoring for stop events.
+
+934
+00:33:37,920 --> 00:33:40,560
+Effectively, anytime a task is terminated,
+
+935
+00:33:40,560 --> 00:33:42,870
+we know that there's an
+opportunity potentially
+
+936
+00:33:42,870 --> 00:33:45,450
+for us to go and do some optimization,
+
+937
+00:33:45,450 --> 00:33:46,803
+to apply some optimization.
+
+938
+00:33:48,390 --> 00:33:50,010
+And so as soon as we see that event,
+
+939
+00:33:50,010 --> 00:33:53,310
+we'll go and do a sweep
+of the entire cluster.
+
+940
+00:33:53,310 --> 00:33:55,050
+We'll identify opportunities
+
+941
+00:33:55,050 --> 00:33:57,540
+where we think we can
+actually do a better job,
+
+942
+00:33:57,540 --> 00:33:59,340
+and we will move tasks to make sure
+
+943
+00:33:59,340 --> 00:34:01,440
+that we're packed appropriately.
+
+944
+00:34:01,440 --> 00:34:05,550
+Again, honoring spread
+and placement constraints.
+
+945
+00:34:05,550 --> 00:34:07,800
+And then deprovision those tasks.
+
+946
+00:34:07,800 --> 00:34:10,050
+We will deprovision those instances.
+
+947
+00:34:10,050 --> 00:34:11,670
+Again, honoring stop before stop.
+
+948
+00:34:11,670 --> 00:34:14,190
+The other thing that we will be doing is
+
+949
+00:34:14,190 --> 00:34:15,960
+we look for opportunities to downscale.
+
+950
+00:34:15,960 --> 00:34:19,634
+So if you're running on a
+larger instance, say, you know,
+
+951
+00:34:19,634 --> 00:34:21,990
+many workloads may be diurnal,
+
+952
+00:34:21,990 --> 00:34:23,190
+so you scale up during the day,
+
+953
+00:34:23,190 --> 00:34:24,270
+you need larger instances,
+
+954
+00:34:24,270 --> 00:34:25,770
+you need more capacity.
+
+955
+00:34:25,770 --> 00:34:28,800
+But as you get to the end of the day,
+
+956
+00:34:28,800 --> 00:34:30,690
+your service scales in, your
+customers are, you know,
+
+957
+00:34:30,690 --> 00:34:31,980
+customer demand has dropped.
+
+958
+00:34:31,980 --> 00:34:36,420
+And so during that case,
+
+959
+00:34:36,420 --> 00:34:38,040
+we're gonna end up in a position where
+
+960
+00:34:38,040 --> 00:34:40,620
+those EC2 instances are no longer needed.
+
+961
+00:34:40,620 --> 00:34:42,360
+It may be, you know,
+there's two ways to do that.
+
+962
+00:34:42,360 --> 00:34:43,320
+We may be deprovisioning.
+
+963
+00:34:43,320 --> 00:34:45,060
+The other is that we may
+actually just scale down.
+
+964
+00:34:45,060 --> 00:34:47,460
+And so we would choose a
+new instance type for you,
+
+965
+00:34:47,460 --> 00:34:49,530
+and actually move you onto
+that new instance type,
+
+966
+00:34:49,530 --> 00:34:52,073
+that smaller instance type
+in order to save you money.
+
+967
+00:34:55,770 --> 00:34:58,740
+So let's talk a little bit about
+
+968
+00:34:58,740 --> 00:35:00,060
+how we do patching.
+
+969
+00:35:00,060 --> 00:35:02,520
+One of the things that, you know,
+
+970
+00:35:02,520 --> 00:35:04,170
+we talked about is we wanna take on
+
+971
+00:35:04,170 --> 00:35:05,370
+that responsibility for patching.
+
+972
+00:35:05,370 --> 00:35:07,020
+Our customers have told us,
+you know, I wanna make sure
+
+973
+00:35:07,020 --> 00:35:08,610
+that I'm compliant, but actually,
+
+974
+00:35:08,610 --> 00:35:10,110
+keeping your EC2 instance patched,
+
+975
+00:35:10,110 --> 00:35:13,470
+your Amazon machine image
+patched is hard work,
+
+976
+00:35:13,470 --> 00:35:14,850
+and there's a lot that goes into that,
+
+977
+00:35:14,850 --> 00:35:16,770
+and it generally doesn't tend
+
+978
+00:35:16,770 --> 00:35:19,440
+to be differentiated
+work for many businesses.
+
+979
+00:35:19,440 --> 00:35:21,330
+You know, it's not the
+thing that's gonna really,
+
+980
+00:35:21,330 --> 00:35:23,370
+really make you shine,
+it's just busy work.
+
+981
+00:35:23,370 --> 00:35:25,020
+It's incredibly important work.
+
+982
+00:35:25,020 --> 00:35:26,700
+And so we wanna take
+on that responsibility.
+
+983
+00:35:26,700 --> 00:35:28,110
+And so one of the key features
+
+984
+00:35:28,110 --> 00:35:30,030
+that ECS managed instances delivers
+
+985
+00:35:30,030 --> 00:35:31,833
+is this patching workflow.
+
+986
+00:35:32,760 --> 00:35:34,270
+Now the way that this works is
+
+987
+00:35:35,220 --> 00:35:37,380
+we wanna make sure that
+within a 30 day period,
+
+988
+00:35:37,380 --> 00:35:40,380
+we have patched all of your capacity.
+
+989
+00:35:40,380 --> 00:35:43,080
+On day zero, at the point
+that you provision your task,
+
+990
+00:35:43,080 --> 00:35:45,393
+we're gonna give you a
+brand new EC2 instance.
+
+991
+00:35:46,740 --> 00:35:49,430
+We always favor provisioning
+new instances over.
+
+992
+00:35:49,430 --> 00:35:51,030
+We never patch in place.
+
+993
+00:35:51,030 --> 00:35:52,017
+We always provision a new instance.
+
+994
+00:35:52,017 --> 00:35:54,750
+And the reason for that
+is because under the hood,
+
+995
+00:35:54,750 --> 00:35:58,140
+EC2 has its fleet of available capacity
+
+996
+00:35:58,140 --> 00:36:00,540
+against which it is continually
+running health checks.
+
+997
+00:36:00,540 --> 00:36:02,910
+And so getting a new
+EC2 instance means that
+
+998
+00:36:02,910 --> 00:36:05,250
+that health checks have
+recently been applied to that.
+
+999
+00:36:05,250 --> 00:36:07,980
+And so it's going to be
+a good, healthy instance.
+
+1000
+00:36:07,980 --> 00:36:10,140
+We're not gonna vent
+one that is unhealthy.
+
+1001
+00:36:10,140 --> 00:36:11,010
+So we're gonna give you,
+
+1002
+00:36:11,010 --> 00:36:12,330
+we're gonna give you a healthy instance,
+
+1003
+00:36:12,330 --> 00:36:13,800
+and then we're gonna give you the latest
+
+1004
+00:36:13,800 --> 00:36:16,320
+Amazon machine image that we are using.
+
+1005
+00:36:16,320 --> 00:36:19,650
+ECS managed instances is
+built on Bottlerocket.
+
+1006
+00:36:19,650 --> 00:36:21,780
+Again, going to that shared
+responsibility model,
+
+1007
+00:36:21,780 --> 00:36:25,440
+the thing with ECS managed instances is
+
+1008
+00:36:25,440 --> 00:36:28,215
+you don't get to bring your own army.
+
+1009
+00:36:28,215 --> 00:36:30,630
+We deliver the army because again,
+
+1010
+00:36:30,630 --> 00:36:32,430
+we need to make sure
+that we understand how
+
+1011
+00:36:32,430 --> 00:36:34,830
+that army works because we
+need to be able to patch it
+
+1012
+00:36:34,830 --> 00:36:36,900
+and deploy it and run your workloads on it
+
+1013
+00:36:36,900 --> 00:36:38,970
+in a way that ensures
+that you're gonna get
+
+1014
+00:36:38,970 --> 00:36:40,500
+the outcome that you need.
+
+1015
+00:36:40,500 --> 00:36:42,840
+And so if you do need to
+
+1016
+00:36:42,840 --> 00:36:44,400
+manage your own Amazon machine image,
+
+1017
+00:36:44,400 --> 00:36:47,490
+well, ECS and EC2 is
+probably a good fit for you.
+
+1018
+00:36:47,490 --> 00:36:51,960
+But in many cases, customers
+don't need that responsibility.
+
+1019
+00:36:51,960 --> 00:36:52,860
+The Amazon machine image,
+
+1020
+00:36:52,860 --> 00:36:54,946
+the army that we're using is Bottlerocket.
+
+1021
+00:36:54,946 --> 00:36:58,477
+Bottlerocket is AWS's
+
+1022
+00:36:58,477 --> 00:37:02,155
+container optimized operating system.
+
+1023
+00:37:02,155 --> 00:37:05,250
+We delivered, in fact, that
+team works very closely
+
+1024
+00:37:05,250 --> 00:37:06,713
+with with our ECS container
+
+1025
+00:37:06,713 --> 00:37:08,910
+and our EKS teams to make sure
+
+1026
+00:37:08,910 --> 00:37:11,220
+that we're continually
+delivering the most optimal
+
+1027
+00:37:11,220 --> 00:37:12,840
+configuration that we can.
+
+1028
+00:37:12,840 --> 00:37:15,120
+So under the hood, we're gonna
+be giving you the latest,
+
+1029
+00:37:15,120 --> 00:37:19,080
+the latest up to date Bottlerocket image.
+
+1030
+00:37:19,080 --> 00:37:21,000
+We're gonna deliver that on day zero.
+
+1031
+00:37:21,000 --> 00:37:24,990
+And then 14 days after that,
+
+1032
+00:37:24,990 --> 00:37:27,270
+we're going to start to
+look for opportunities
+
+1033
+00:37:27,270 --> 00:37:28,770
+to be able to patch that.
+
+1034
+00:37:28,770 --> 00:37:30,600
+And really, that's because
+we wanna fit into this
+
+1035
+00:37:30,600 --> 00:37:31,650
+30 day patch cycle.
+
+1036
+00:37:31,650 --> 00:37:33,450
+We wanna make sure that
+we've always replaced
+
+1037
+00:37:33,450 --> 00:37:35,550
+all of your armies within
+a period of 30 days,
+
+1038
+00:37:35,550 --> 00:37:37,110
+because that rarely helps with meeting,
+
+1039
+00:37:37,110 --> 00:37:39,270
+making sure that we're meeting
+your compliance requirements
+
+1040
+00:37:39,270 --> 00:37:40,890
+for those of you in regulated industries
+
+1041
+00:37:40,890 --> 00:37:43,623
+that have that pressing requirement.
+
+1042
+00:37:44,820 --> 00:37:47,370
+At day 14, we start looking
+for these opportunities
+
+1043
+00:37:47,370 --> 00:37:48,543
+to be able to optimize,
+
+1044
+00:37:50,079 --> 00:37:52,980
+to be able to replace these instances.
+
+1045
+00:37:52,980 --> 00:37:54,880
+Now one of the things that we do is
+
+1046
+00:37:55,950 --> 00:37:59,550
+ECS on managed instances honors
+the EC2 maintenance window.
+
+1047
+00:37:59,550 --> 00:38:02,370
+So for those of you that
+have used EC2 extensively,
+
+1048
+00:38:02,370 --> 00:38:04,770
+you've probably encountered
+EC2 maintenance windows.
+
+1049
+00:38:04,770 --> 00:38:07,020
+It's a mechanism that you can
+use to be able to configure
+
+1050
+00:38:07,020 --> 00:38:09,480
+and tell us when is a good
+time for us to be able
+
+1051
+00:38:09,480 --> 00:38:12,240
+to take corrective action
+for your underlying compute.
+
+1052
+00:38:12,240 --> 00:38:14,730
+And so as a minimum, you
+need to give us two windows
+
+1053
+00:38:14,730 --> 00:38:16,590
+within a one week period
+
+1054
+00:38:16,590 --> 00:38:18,600
+where we can go and take
+that corrective action.
+
+1055
+00:38:18,600 --> 00:38:21,420
+ECS managed instances is
+leveraging that configuration
+
+1056
+00:38:21,420 --> 00:38:22,980
+so you can configure through
+
+1057
+00:38:22,980 --> 00:38:25,080
+EC2 managed instances when you want us
+
+1058
+00:38:25,080 --> 00:38:26,100
+to take this corrective action,
+
+1059
+00:38:26,100 --> 00:38:27,780
+and we're only going to
+take the corrective action
+
+1060
+00:38:27,780 --> 00:38:28,680
+during that period.
+
+1061
+00:38:28,680 --> 00:38:30,720
+So obviously you can optimize
+for weekends or downtimes
+
+1062
+00:38:30,720 --> 00:38:32,670
+or whatever it is that works best for you.
+
+1063
+00:38:32,670 --> 00:38:35,733
+Sort of your low traffic points in a day.
+
+1064
+00:38:39,150 --> 00:38:40,230
+At that 14 day period,
+
+1065
+00:38:40,230 --> 00:38:41,310
+we're gonna give you, like I said,
+
+1066
+00:38:41,310 --> 00:38:42,600
+brand new instance,
+
+1067
+00:38:42,600 --> 00:38:45,210
+and we're gonna give you a brand new army.
+
+1068
+00:38:45,210 --> 00:38:47,310
+It is possible that over that period,
+
+1069
+00:38:47,310 --> 00:38:49,650
+that we haven't got to everything,
+
+1070
+00:38:49,650 --> 00:38:52,290
+although under most circumstances,
+
+1071
+00:38:52,290 --> 00:38:54,290
+we will have completed that patch cycle.
+
+1072
+00:38:55,170 --> 00:38:56,430
+It's also important to keep in mind
+
+1073
+00:38:56,430 --> 00:38:58,830
+that this patch cycle isn't
+everything in your cluster
+
+1074
+00:38:58,830 --> 00:39:00,600
+on launch day zero,
+
+1075
+00:39:00,600 --> 00:39:02,220
+day 14, everything in your cluster, right?
+
+1076
+00:39:02,220 --> 00:39:03,780
+It's an ongoing process.
+
+1077
+00:39:03,780 --> 00:39:05,670
+So we're continually evolving,
+
+1078
+00:39:05,670 --> 00:39:07,650
+we're continually making sure
+that your cluster is okay.
+
+1079
+00:39:07,650 --> 00:39:09,510
+So you'll see, you'll see a fair degree
+
+1080
+00:39:09,510 --> 00:39:10,980
+of mutation in your cluster
+
+1081
+00:39:10,980 --> 00:39:12,780
+as we taking this corrective action.
+
+1082
+00:39:12,780 --> 00:39:13,680
+It's not high mutation,
+
+1083
+00:39:13,680 --> 00:39:15,420
+but there's an ongoing background mutation
+
+1084
+00:39:15,420 --> 00:39:16,890
+as we manage that entropy for you,
+
+1085
+00:39:16,890 --> 00:39:19,140
+as we take on the
+responsibility of making sure
+
+1086
+00:39:19,140 --> 00:39:21,210
+that we are keeping you compliant.
+
+1087
+00:39:21,210 --> 00:39:23,040
+At day 21, we start
+
+1088
+00:39:23,040 --> 00:39:24,120
+to get a little bit more aggressive,
+
+1089
+00:39:24,120 --> 00:39:25,680
+'cause we've made a commitment to you
+
+1090
+00:39:25,680 --> 00:39:29,070
+that we will make sure
+that we keep you compliant
+
+1091
+00:39:29,070 --> 00:39:30,090
+within this 30 day window.
+
+1092
+00:39:30,090 --> 00:39:31,920
+So at day 21, we're actually gonna start
+
+1093
+00:39:31,920 --> 00:39:32,910
+taking corrective action
+
+1094
+00:39:32,910 --> 00:39:35,880
+where we're going to start
+doing effectively eviction,
+
+1095
+00:39:35,880 --> 00:39:37,680
+where we'll find the instance that needs
+
+1096
+00:39:37,680 --> 00:39:39,720
+to be patched and then
+we'll move workloads off it
+
+1097
+00:39:39,720 --> 00:39:41,337
+and patch it.
+
+1098
+00:39:41,337 --> 00:39:42,750
+And at that point,
+
+1099
+00:39:42,750 --> 00:39:44,940
+so typically we're gonna be
+honoring maintenance windows
+
+1100
+00:39:44,940 --> 00:39:46,320
+between day 14 and day 21.
+
+1101
+00:39:46,320 --> 00:39:48,420
+So it's very unlikely
+that that we wouldn't.
+
+1102
+00:39:48,420 --> 00:39:50,010
+But at day 21, we need to start
+
+1103
+00:39:50,010 --> 00:39:51,210
+being a little bit more aggressive,
+
+1104
+00:39:51,210 --> 00:39:53,373
+because we have to replace that army.
+
+1105
+00:39:56,280 --> 00:39:58,530
+And then, you know, having
+completed that cycle,
+
+1106
+00:39:58,530 --> 00:39:59,930
+we then get to a point where
+
+1107
+00:40:01,110 --> 00:40:04,290
+you now have a clean, healthy cluster.
+
+1108
+00:40:04,290 --> 00:40:06,300
+All of your instances are
+replaced, they're all replaced
+
+1109
+00:40:06,300 --> 00:40:08,850
+with brand new instances,
+and you're currently running
+
+1110
+00:40:08,850 --> 00:40:11,553
+the latest and greatest
+of the Bottlerocket army.
+
+1111
+00:40:14,520 --> 00:40:16,470
+So one of the things that you
+might be asking yourself is,
+
+1112
+00:40:16,470 --> 00:40:17,303
+well, that's great.
+
+1113
+00:40:17,303 --> 00:40:18,136
+There's like this continuum,
+
+1114
+00:40:18,136 --> 00:40:19,650
+and I've got all these decisions point,
+
+1115
+00:40:19,650 --> 00:40:20,483
+like, you know,
+
+1116
+00:40:20,483 --> 00:40:21,540
+now I've got a bunch of things to decide
+
+1117
+00:40:21,540 --> 00:40:24,120
+when would I use one versus the other.
+
+1118
+00:40:24,120 --> 00:40:26,430
+Our recommendation is
+that more often than not,
+
+1119
+00:40:26,430 --> 00:40:29,430
+most customers are best served by Fargate.
+
+1120
+00:40:29,430 --> 00:40:31,110
+Typically customers, you know,
+
+1121
+00:40:31,110 --> 00:40:32,340
+'cause typically your workload,
+
+1122
+00:40:32,340 --> 00:40:33,870
+especially if it's a stateless workload,
+
+1123
+00:40:33,870 --> 00:40:37,560
+especially if it's CPU and memory bound,
+
+1124
+00:40:37,560 --> 00:40:39,930
+you can get everything
+that you need from Fargate.
+
+1125
+00:40:39,930 --> 00:40:42,120
+And so that's where we would
+recommend that you start.
+
+1126
+00:40:42,120 --> 00:40:43,560
+It's simple.
+
+1127
+00:40:43,560 --> 00:40:44,670
+It works.
+
+1128
+00:40:44,670 --> 00:40:45,663
+Customers love it.
+
+1129
+00:40:46,620 --> 00:40:48,720
+If you find that you have a need
+
+1130
+00:40:48,720 --> 00:40:51,030
+either to have a larger instance,
+
+1131
+00:40:51,030 --> 00:40:52,260
+a larger task size,
+
+1132
+00:40:52,260 --> 00:40:55,110
+so Fargate has upper bounds
+
+1133
+00:40:55,110 --> 00:40:56,820
+in terms of the amount of VCPU and memory
+
+1134
+00:40:56,820 --> 00:40:58,380
+that it will configure,
+
+1135
+00:40:58,380 --> 00:41:00,450
+and you need something bigger.
+
+1136
+00:41:00,450 --> 00:41:03,150
+ECS managed instances is for you.
+
+1137
+00:41:03,150 --> 00:41:06,120
+Equally if you need control
+over the underlying compute,
+
+1138
+00:41:06,120 --> 00:41:08,910
+if you really wanna make
+sure that you are choosing
+
+1139
+00:41:08,910 --> 00:41:10,380
+that particular instance type,
+
+1140
+00:41:10,380 --> 00:41:12,030
+or that family of instance types.
+
+1141
+00:41:12,030 --> 00:41:13,410
+Or you know, for example if you need
+
+1142
+00:41:13,410 --> 00:41:16,050
+accelerated instance types,
+you need GPUs, et cetera.
+
+1143
+00:41:16,050 --> 00:41:18,990
+ECS managed instances
+is a really good fit.
+
+1144
+00:41:18,990 --> 00:41:22,320
+It's the sweet spot between
+that Fargate experience
+
+1145
+00:41:22,320 --> 00:41:25,187
+and the ability to be able to own
+
+1146
+00:41:25,187 --> 00:41:26,970
+and manage the configuration that you need
+
+1147
+00:41:26,970 --> 00:41:29,280
+in order to get that
+compute that you need.
+
+1148
+00:41:29,280 --> 00:41:30,900
+For those customers that need
+
+1149
+00:41:30,900 --> 00:41:33,450
+to manage the actual operating system.
+
+1150
+00:41:33,450 --> 00:41:35,850
+Effectively, you wanna be
+able to bring your own army.
+
+1151
+00:41:35,850 --> 00:41:37,680
+You wanna be able to tune the kernel
+
+1152
+00:41:37,680 --> 00:41:38,790
+or whatever it is.
+
+1153
+00:41:38,790 --> 00:41:40,830
+ECS on managed instances is for you.
+
+1154
+00:41:40,830 --> 00:41:43,500
+That is probably the small minority.
+
+1155
+00:41:43,500 --> 00:41:46,380
+There are very few cases
+where that is needed,
+
+1156
+00:41:46,380 --> 00:41:48,840
+but if it is needed, you have that option.
+
+1157
+00:41:48,840 --> 00:41:51,330
+So the way we're thinking about this is
+
+1158
+00:41:51,330 --> 00:41:53,083
+we think a lot of customers today
+
+1159
+00:41:53,083 --> 00:41:55,757
+that needed that additional functionality
+
+1160
+00:41:55,757 --> 00:41:58,770
+that Fargate wasn't quite
+able to deliver in terms
+
+1161
+00:41:58,770 --> 00:42:00,420
+of the instance type selection,
+
+1162
+00:42:00,420 --> 00:42:04,050
+and are currently running on ECS on EC2.
+
+1163
+00:42:04,050 --> 00:42:06,240
+Managed instances is probably a great fit,
+
+1164
+00:42:06,240 --> 00:42:08,010
+and that migration is fairly seamless.
+
+1165
+00:42:08,010 --> 00:42:11,130
+So, you know, we'd encourage
+you to have a look at that.
+
+1166
+00:42:11,130 --> 00:42:13,485
+At the same time, those customers that are
+
+1167
+00:42:13,485 --> 00:42:15,810
+running on Fargate and get to a point
+
+1168
+00:42:15,810 --> 00:42:17,277
+where you feel like you need more compute
+
+1169
+00:42:17,277 --> 00:42:19,980
+than Fargate is able to deliver,
+
+1170
+00:42:19,980 --> 00:42:22,460
+or you need something
+that's optimized for network
+
+1171
+00:42:22,460 --> 00:42:24,810
+or optimized for storage throughput,
+
+1172
+00:42:24,810 --> 00:42:26,010
+ECS managed instances
+
+1173
+00:42:26,010 --> 00:42:27,390
+is a great fit for you as well.
+
+1174
+00:42:27,390 --> 00:42:29,840
+So it's sort of the sweet
+spot between those two.
+
+1175
+00:42:32,070 --> 00:42:33,390
+With that, I'm gonna hand over
+
+1176
+00:42:33,390 --> 00:42:35,940
+to my friend and colleague Maish.
+
+1177
+00:42:35,940 --> 00:42:36,773
+Thank you all.
+
+1178
+00:42:38,520 --> 00:42:40,770
+- Thank you very much, Malcolm.
+
+1179
+00:42:40,770 --> 00:42:41,940
+Everybody hear me okay?
+
+1180
+00:42:41,940 --> 00:42:43,380
+Perfect, okay.
+
+1181
+00:42:43,380 --> 00:42:46,470
+So we've been talking about
+infrastructure up until now,
+
+1182
+00:42:46,470 --> 00:42:49,740
+and I want to move over
+to the software part,
+
+1183
+00:42:49,740 --> 00:42:51,570
+which essentially is
+again, on that continuum
+
+1184
+00:42:51,570 --> 00:42:53,340
+of the shared responsibility.
+
+1185
+00:42:53,340 --> 00:42:55,410
+This actually is your responsibility.
+
+1186
+00:42:55,410 --> 00:42:57,840
+We still, as part of the
+shared responsibility model,
+
+1187
+00:42:57,840 --> 00:43:00,900
+still provide you with the
+infrastructure underneath
+
+1188
+00:43:00,900 --> 00:43:03,690
+that allows you to continue
+to provision your software
+
+1189
+00:43:03,690 --> 00:43:06,750
+as part of your application,
+which you're providing.
+
+1190
+00:43:06,750 --> 00:43:09,480
+And in November, we
+kind of revamped the way
+
+1191
+00:43:09,480 --> 00:43:12,780
+we do in Amazon ECS deployments.
+
+1192
+00:43:12,780 --> 00:43:13,613
+The reason that, of course
+
+1193
+00:43:13,613 --> 00:43:15,930
+is because, of course,
+feedback from our customers.
+
+1194
+00:43:15,930 --> 00:43:17,910
+They had some challenges
+
+1195
+00:43:17,910 --> 00:43:18,890
+with the way we were doing it.
+
+1196
+00:43:18,890 --> 00:43:21,240
+It was dependent on an external service
+
+1197
+00:43:21,240 --> 00:43:22,650
+called CodeDeploy.
+
+1198
+00:43:22,650 --> 00:43:26,100
+And we wanted to give you a
+more streamlined experience.
+
+1199
+00:43:26,100 --> 00:43:28,530
+And just in the beginning of last month,
+
+1200
+00:43:28,530 --> 00:43:30,300
+we provided that experience,
+
+1201
+00:43:30,300 --> 00:43:31,860
+which is called ECS deployments
+
+1202
+00:43:31,860 --> 00:43:33,660
+with three different options for you
+
+1203
+00:43:33,660 --> 00:43:35,310
+to deploy your services
+
+1204
+00:43:35,310 --> 00:43:37,560
+and upgrade your
+applications running on ECS.
+
+1205
+00:43:39,030 --> 00:43:40,110
+Blue/green deployments,
+
+1206
+00:43:40,110 --> 00:43:41,940
+linear deployments,
+and canary deployments.
+
+1207
+00:43:41,940 --> 00:43:44,430
+So we're gonna go through each
+one of these in some detail
+
+1208
+00:43:44,430 --> 00:43:45,420
+to explain exactly what it is,
+
+1209
+00:43:45,420 --> 00:43:46,253
+but first, of course,
+
+1210
+00:43:46,253 --> 00:43:48,750
+an overview for those who are not
+
+1211
+00:43:48,750 --> 00:43:51,333
+people who usually do this
+for the day to day life.
+
+1212
+00:43:52,170 --> 00:43:53,003
+A blue/green deployment is
+
+1213
+00:43:53,003 --> 00:43:54,600
+you have a blue service running
+
+1214
+00:43:54,600 --> 00:43:57,210
+in production across
+multiple availability zones.
+
+1215
+00:43:57,210 --> 00:43:59,160
+You would like to upgrade the service.
+
+1216
+00:43:59,160 --> 00:43:59,993
+In that case,
+
+1217
+00:43:59,993 --> 00:44:01,910
+you provision a new
+version of that service
+
+1218
+00:44:03,000 --> 00:44:05,184
+across the availability zones,
+
+1219
+00:44:05,184 --> 00:44:06,750
+meeting your requirements,
+
+1220
+00:44:06,750 --> 00:44:08,880
+and when you're ready,
+you take that service
+
+1221
+00:44:08,880 --> 00:44:11,130
+and flip it between a load
+balancer to the new one,
+
+1222
+00:44:11,130 --> 00:44:14,340
+and direct all your traffic
+to the new green service.
+
+1223
+00:44:14,340 --> 00:44:17,700
+And when you're ready, remove
+the previous one in blue.
+
+1224
+00:44:17,700 --> 00:44:18,840
+Simple process.
+
+1225
+00:44:18,840 --> 00:44:21,150
+But let's go and fall into
+a little bit more detail
+
+1226
+00:44:21,150 --> 00:44:23,280
+into how this actually works.
+
+1227
+00:44:23,280 --> 00:44:26,280
+There are six different stages
+
+1228
+00:44:26,280 --> 00:44:28,680
+of a deployment in Amazon ECS.
+
+1229
+00:44:28,680 --> 00:44:30,030
+The preparations phase.
+
+1230
+00:44:30,030 --> 00:44:31,920
+Sorry, preparation stage,
+
+1231
+00:44:31,920 --> 00:44:34,380
+deployment, testing, traffic shift,
+
+1232
+00:44:34,380 --> 00:44:36,003
+and monitoring and completion.
+
+1233
+00:44:37,470 --> 00:44:39,020
+In the preparation stage, we go back
+
+1234
+00:44:39,020 --> 00:44:41,250
+to the fact you have one
+version, which is blue,
+
+1235
+00:44:41,250 --> 00:44:43,110
+running a hundred percent of your traffic,
+
+1236
+00:44:43,110 --> 00:44:44,880
+and at a hundred percent capacity
+
+1237
+00:44:44,880 --> 00:44:47,793
+in your ECS cluster.
+
+1238
+00:44:49,830 --> 00:44:52,800
+When you start a deployment,
+we will start to pre-scale up.
+
+1239
+00:44:52,800 --> 00:44:54,120
+The pre-scale up in this case
+
+1240
+00:44:54,120 --> 00:44:55,740
+will not provision any resources.
+
+1241
+00:44:55,740 --> 00:44:58,470
+And again, these are very distinct phases
+
+1242
+00:44:58,470 --> 00:45:00,780
+within the deployment process as part,
+
+1243
+00:45:00,780 --> 00:45:02,670
+and you can get status on each
+
+1244
+00:45:02,670 --> 00:45:05,580
+and every single one of
+these different phases.
+
+1245
+00:45:05,580 --> 00:45:07,500
+We will provision the
+infrastructure underneath,
+
+1246
+00:45:07,500 --> 00:45:10,650
+where in this case, is
+preparing the routing rules
+
+1247
+00:45:10,650 --> 00:45:13,170
+in the load balancer
+and the target groups,
+
+1248
+00:45:13,170 --> 00:45:15,780
+but we will not yet start
+to provision resources.
+
+1249
+00:45:15,780 --> 00:45:17,280
+This is the preparation phase.
+
+1250
+00:45:18,540 --> 00:45:21,210
+Deployment phase has two different things.
+
+1251
+00:45:21,210 --> 00:45:23,130
+In this case, when we
+start the deployment phase,
+
+1252
+00:45:23,130 --> 00:45:25,893
+we will start the scale
+up of the green version,
+
+1253
+00:45:26,850 --> 00:45:28,980
+where we will provision a
+hundred percent of the capacity.
+
+1254
+00:45:28,980 --> 00:45:30,420
+And again, it's always
+the a hundred percent
+
+1255
+00:45:30,420 --> 00:45:32,580
+of capacity which we are
+provisioning in the background
+
+1256
+00:45:32,580 --> 00:45:34,650
+for the very simple reason, of course,
+
+1257
+00:45:34,650 --> 00:45:36,450
+we want to provide you the capability
+
+1258
+00:45:36,450 --> 00:45:38,490
+of always having enough capacity
+
+1259
+00:45:38,490 --> 00:45:41,580
+to move over when you're
+moving to a new version.
+
+1260
+00:45:41,580 --> 00:45:43,951
+In this case, of course,
+the post scale up,
+
+1261
+00:45:43,951 --> 00:45:47,640
+we will verify that the green
+service has been started,
+
+1262
+00:45:47,640 --> 00:45:50,070
+and that the a hundred
+percent of the traffic
+
+1263
+00:45:50,070 --> 00:45:51,960
+is still being routed to the blue version,
+
+1264
+00:45:51,960 --> 00:45:54,160
+and no traffic is being
+moved over to green.
+
+1265
+00:45:55,560 --> 00:45:57,993
+During a testing phase, we'll validate
+
+1266
+00:45:57,993 --> 00:45:59,880
+that the green environment is able
+
+1267
+00:45:59,880 --> 00:46:03,810
+to actually accept traffic
+by injecting some test
+
+1268
+00:46:03,810 --> 00:46:06,750
+traffic into the load balancer,
+
+1269
+00:46:06,750 --> 00:46:08,550
+which will start verifying
+
+1270
+00:46:08,550 --> 00:46:11,160
+that actually it is working,
+and able to respond.
+
+1271
+00:46:11,160 --> 00:46:12,930
+All the health checks are passing,
+
+1272
+00:46:12,930 --> 00:46:15,180
+and your application is behaving
+
+1273
+00:46:15,180 --> 00:46:18,360
+and performing the way
+you expect it to do that.
+
+1274
+00:46:18,360 --> 00:46:21,240
+You'll see at the bottom
+there is a smaller lambda icon
+
+1275
+00:46:21,240 --> 00:46:24,810
+because at what we have
+tried to provide for you
+
+1276
+00:46:24,810 --> 00:46:27,330
+is the ability at every single stage
+
+1277
+00:46:27,330 --> 00:46:29,680
+of the deployment or a
+phase of the deployment,
+
+1278
+00:46:30,630 --> 00:46:32,910
+the possibility to run your own tests.
+
+1279
+00:46:32,910 --> 00:46:34,200
+And these are done
+
+1280
+00:46:34,200 --> 00:46:36,360
+in what we call deployment
+lifecycle hooks.
+
+1281
+00:46:36,360 --> 00:46:38,400
+And the deployment lifecycle
+hooks is essentially
+
+1282
+00:46:38,400 --> 00:46:39,233
+a lambda function,
+
+1283
+00:46:39,233 --> 00:46:40,590
+which you can configure
+
+1284
+00:46:40,590 --> 00:46:44,130
+or define as part of the
+deployment of what you want
+
+1285
+00:46:44,130 --> 00:46:46,560
+that lambda facts
+function to actually test
+
+1286
+00:46:46,560 --> 00:46:48,240
+or verify is working.
+
+1287
+00:46:48,240 --> 00:46:50,190
+So for example, essentially it is
+
+1288
+00:46:50,190 --> 00:46:51,570
+actually just code.
+
+1289
+00:46:51,570 --> 00:46:54,870
+For like any other lambda
+code where you will provide
+
+1290
+00:46:54,870 --> 00:46:56,700
+the criteria for what, is it passed,
+
+1291
+00:46:56,700 --> 00:46:58,219
+if it's currently in progress,
+
+1292
+00:46:58,219 --> 00:47:00,150
+if it failed, and what to do.
+
+1293
+00:47:00,150 --> 00:47:03,180
+And once it either passes
+that phase or fails,
+
+1294
+00:47:03,180 --> 00:47:04,230
+it'll automatically roll back
+
+1295
+00:47:04,230 --> 00:47:05,850
+or continue to the next phase.
+
+1296
+00:47:05,850 --> 00:47:08,250
+This can be, for example,
+to verify that the SHA
+
+1297
+00:47:08,250 --> 00:47:10,380
+that you are looking for
+on your container image
+
+1298
+00:47:10,380 --> 00:47:12,540
+matches the one that you're actually
+
+1299
+00:47:12,540 --> 00:47:13,410
+supposed to be deploying,
+
+1300
+00:47:13,410 --> 00:47:14,760
+and there's no in discrepancy,
+
+1301
+00:47:14,760 --> 00:47:17,730
+or that the target
+groups have already been
+
+1302
+00:47:17,730 --> 00:47:21,090
+validated and actually
+exist on the load balancer
+
+1303
+00:47:21,090 --> 00:47:23,190
+so that I know that everything is working.
+
+1304
+00:47:23,190 --> 00:47:24,960
+These are the tests that
+you can define exactly
+
+1305
+00:47:24,960 --> 00:47:26,510
+what you would like them to be.
+
+1306
+00:47:29,490 --> 00:47:30,480
+Traffic shift.
+
+1307
+00:47:30,480 --> 00:47:32,250
+So we verified that everything is working
+
+1308
+00:47:32,250 --> 00:47:33,660
+and now we start to move the traffic.
+
+1309
+00:47:33,660 --> 00:47:34,890
+In a blue/green, of course,
+
+1310
+00:47:34,890 --> 00:47:36,300
+we said was a hundred percent capacity
+
+1311
+00:47:36,300 --> 00:47:38,010
+was running to blue,
+
+1312
+00:47:38,010 --> 00:47:40,920
+and we flip it at one time in one shot
+
+1313
+00:47:40,920 --> 00:47:43,500
+for moving all the capacity over to green.
+
+1314
+00:47:43,500 --> 00:47:46,920
+So in this case, now zero is
+running to the blue version,
+
+1315
+00:47:46,920 --> 00:47:48,900
+and all the a hundred percent
+traffic is now running
+
+1316
+00:47:48,900 --> 00:47:50,730
+again, to the green version.
+
+1317
+00:47:50,730 --> 00:47:52,830
+And again, we have these
+deployment lifecycle hooks
+
+1318
+00:47:52,830 --> 00:47:55,923
+where we can validate that
+everything is actually working.
+
+1319
+00:47:57,630 --> 00:47:59,880
+We then go into a bake
+time or a monitoring phase.
+
+1320
+00:47:59,880 --> 00:48:01,380
+In other words, we want to see actually
+
+1321
+00:48:01,380 --> 00:48:03,840
+that everything has,
+performing the way it was.
+
+1322
+00:48:03,840 --> 00:48:06,600
+This can be of course some
+kind of a performance,
+
+1323
+00:48:06,600 --> 00:48:07,860
+maybe a degradation test.
+
+1324
+00:48:07,860 --> 00:48:09,960
+Is my application
+performing exactly the way
+
+1325
+00:48:09,960 --> 00:48:11,460
+it should be like it was before?
+
+1326
+00:48:11,460 --> 00:48:13,380
+If there's any degradation in performance,
+
+1327
+00:48:13,380 --> 00:48:15,570
+I want to automatically
+re-roll back directly
+
+1328
+00:48:15,570 --> 00:48:17,580
+to my previous version because
+it's still sitting there,
+
+1329
+00:48:17,580 --> 00:48:18,770
+but there's no traffic running to it.
+
+1330
+00:48:18,770 --> 00:48:22,200
+So the switch backward and
+forward is almost instantaneous,
+
+1331
+00:48:22,200 --> 00:48:24,510
+and allows you to gain the confidence
+
+1332
+00:48:24,510 --> 00:48:25,590
+and be very, very confident
+
+1333
+00:48:25,590 --> 00:48:27,780
+that you can actually
+not have any problems.
+
+1334
+00:48:27,780 --> 00:48:28,710
+And if they are,
+
+1335
+00:48:28,710 --> 00:48:30,660
+roll back directly very quickly without
+
+1336
+00:48:31,590 --> 00:48:34,950
+hurting or hitting any of
+your of your customers,
+
+1337
+00:48:34,950 --> 00:48:36,350
+hitting a performance issue.
+
+1338
+00:48:37,830 --> 00:48:39,360
+The last one of course
+is the cleanup phase.
+
+1339
+00:48:39,360 --> 00:48:41,670
+The cleanup phase is after we
+verify that everything is done
+
+1340
+00:48:41,670 --> 00:48:43,140
+and over here specifically a cleanup,
+
+1341
+00:48:43,140 --> 00:48:45,330
+there is no deployment lifecycle hook,
+
+1342
+00:48:45,330 --> 00:48:48,030
+because this is the last
+stage of the deployment.
+
+1343
+00:48:48,030 --> 00:48:50,130
+Once we're ready, we know
+that everything is working.
+
+1344
+00:48:50,130 --> 00:48:52,980
+We can finally deprovision
+all the resources
+
+1345
+00:48:52,980 --> 00:48:54,360
+which we had on our previous version,
+
+1346
+00:48:54,360 --> 00:48:56,640
+and then green becomes blue,
+
+1347
+00:48:56,640 --> 00:48:58,680
+and we continue the
+process to the next one,
+
+1348
+00:48:58,680 --> 00:49:00,380
+to the next version going forward.
+
+1349
+00:49:03,030 --> 00:49:04,410
+Linear deployments.
+
+1350
+00:49:04,410 --> 00:49:05,520
+Similar.
+
+1351
+00:49:05,520 --> 00:49:06,810
+Blue version, which you wanna start
+
+1352
+00:49:06,810 --> 00:49:08,580
+running a hundred percent of my traffic.
+
+1353
+00:49:08,580 --> 00:49:11,970
+I would like to start
+slowly gradually moving
+
+1354
+00:49:11,970 --> 00:49:13,080
+traffic to my new version.
+
+1355
+00:49:13,080 --> 00:49:14,640
+I provision a new version,
+
+1356
+00:49:14,640 --> 00:49:16,650
+and slowly move my traffic.
+
+1357
+00:49:16,650 --> 00:49:18,240
+25% of the time you can do
+
+1358
+00:49:18,240 --> 00:49:20,040
+the definition of however much of traffic
+
+1359
+00:49:20,040 --> 00:49:21,420
+you would like to do.
+
+1360
+00:49:21,420 --> 00:49:22,890
+Over time moving more and more
+
+1361
+00:49:22,890 --> 00:49:24,990
+and more traffic over to my new version
+
+1362
+00:49:24,990 --> 00:49:26,850
+until I get to the fact
+that everything is moved,
+
+1363
+00:49:26,850 --> 00:49:29,910
+and then I can de deprovision
+my previous version
+
+1364
+00:49:29,910 --> 00:49:33,480
+and work with this kind of
+process on a regular basis.
+
+1365
+00:49:33,480 --> 00:49:35,520
+So let's dive in again.
+
+1366
+00:49:35,520 --> 00:49:37,770
+The first part is exactly
+the same as we saw before.
+
+1367
+00:49:37,770 --> 00:49:40,500
+The preparation, deployment,
+and testing phase,
+
+1368
+00:49:40,500 --> 00:49:42,690
+but it is slightly different
+on the traffic shift.
+
+1369
+00:49:42,690 --> 00:49:44,910
+So let's zoom in over there for a second,
+
+1370
+00:49:44,910 --> 00:49:46,493
+and have a look what it looks like.
+
+1371
+00:49:47,910 --> 00:49:48,780
+In the traffic shift,
+
+1372
+00:49:48,780 --> 00:49:51,780
+we start in the beginning with
+a hundred percent capacity
+
+1373
+00:49:51,780 --> 00:49:54,720
+running to blue, zero percent per traffic
+
+1374
+00:49:54,720 --> 00:49:55,683
+running to green.
+
+1375
+00:49:56,880 --> 00:49:58,680
+We start moving our traffic.
+
+1376
+00:49:58,680 --> 00:49:59,910
+As part of the deployment,
+
+1377
+00:49:59,910 --> 00:50:01,800
+we have a definition of a bake time.
+
+1378
+00:50:01,800 --> 00:50:03,210
+Again, this is an amount of time
+
+1379
+00:50:03,210 --> 00:50:05,230
+where you want the application to sit
+
+1380
+00:50:06,570 --> 00:50:07,560
+on both versions
+
+1381
+00:50:07,560 --> 00:50:09,240
+to see that actually
+everything is working.
+
+1382
+00:50:09,240 --> 00:50:10,920
+And again, with the
+deployment lifecycle hooks,
+
+1383
+00:50:10,920 --> 00:50:13,680
+you can validate after every
+single one of these steps
+
+1384
+00:50:13,680 --> 00:50:15,210
+of the traffic shift,
+
+1385
+00:50:15,210 --> 00:50:16,740
+you can validate that
+everything is working.
+
+1386
+00:50:16,740 --> 00:50:19,740
+Again, if anything fails,
+we'll fail back all together
+
+1387
+00:50:19,740 --> 00:50:20,720
+back to the regional version,
+
+1388
+00:50:20,720 --> 00:50:23,850
+so you would not have any
+degradation of service.
+
+1389
+00:50:23,850 --> 00:50:27,480
+And it continues per
+each amount of traffic
+
+1390
+00:50:27,480 --> 00:50:30,660
+or the weighting of the load balancer
+
+1391
+00:50:30,660 --> 00:50:33,690
+moving more and more and more
+traffic to the new version,
+
+1392
+00:50:33,690 --> 00:50:36,150
+until we finally complete
+
+1393
+00:50:36,150 --> 00:50:38,460
+and get to moving all of our traffic over
+
+1394
+00:50:38,460 --> 00:50:40,800
+to our new version that we've run.
+
+1395
+00:50:40,800 --> 00:50:41,633
+This is the linear.
+
+1396
+00:50:41,633 --> 00:50:44,040
+So we go step by step by step by step
+
+1397
+00:50:44,040 --> 00:50:45,390
+in order for us to do this.
+
+1398
+00:50:48,210 --> 00:50:49,680
+The last one I wanna look is canary.
+
+1399
+00:50:49,680 --> 00:50:52,580
+It's similar, it's a kind of
+a mixture of both of the two.
+
+1400
+00:50:53,790 --> 00:50:57,000
+Where we have a hundred percent
+running on our blue version,
+
+1401
+00:50:57,000 --> 00:50:59,580
+we want to deploy a new
+service, we deploy a new one,
+
+1402
+00:50:59,580 --> 00:51:01,350
+but we only move a bit of the traffic,
+
+1403
+00:51:01,350 --> 00:51:03,660
+in this case, 10% for example.
+
+1404
+00:51:03,660 --> 00:51:06,510
+And we let that sit to verify
+that everything is okay,
+
+1405
+00:51:06,510 --> 00:51:08,610
+and once we are confident enough,
+
+1406
+00:51:08,610 --> 00:51:10,140
+we're are gonna flip everything at once,
+
+1407
+00:51:10,140 --> 00:51:12,510
+the rest of the remainder of the traffic.
+
+1408
+00:51:12,510 --> 00:51:15,480
+So it's pretty much just
+a two or three step,
+
+1409
+00:51:15,480 --> 00:51:16,530
+depends on how you look at it.
+
+1410
+00:51:16,530 --> 00:51:20,370
+Two or three step motion where you only
+
+1411
+00:51:20,370 --> 00:51:22,680
+do one migration of traffic or part of it.
+
+1412
+00:51:22,680 --> 00:51:25,110
+And once you're confident enough
+that everything is working,
+
+1413
+00:51:25,110 --> 00:51:27,660
+then you'll flip all the other traffic.
+
+1414
+00:51:27,660 --> 00:51:30,540
+And again, too, and afterwards
+
+1415
+00:51:30,540 --> 00:51:32,190
+remove the the blue service.
+
+1416
+00:51:32,190 --> 00:51:34,260
+Again, zooming in on
+the actual traffic shift
+
+1417
+00:51:34,260 --> 00:51:35,820
+because this is the only different change
+
+1418
+00:51:35,820 --> 00:51:36,663
+that we have.
+
+1419
+00:51:38,520 --> 00:51:39,353
+In the beginning,
+
+1420
+00:51:39,353 --> 00:51:42,390
+we have a hundred percent
+running to our blue version,
+
+1421
+00:51:42,390 --> 00:51:43,710
+no traffic going to green.
+
+1422
+00:51:43,710 --> 00:51:45,510
+We move some of the traffic,
+
+1423
+00:51:45,510 --> 00:51:46,530
+in this case 10%,
+
+1424
+00:51:46,530 --> 00:51:47,490
+over to the one version.
+
+1425
+00:51:47,490 --> 00:51:48,630
+And again, we have the bake time.
+
+1426
+00:51:48,630 --> 00:51:51,270
+This is what we are
+there to run your tests,
+
+1427
+00:51:51,270 --> 00:51:53,490
+run your validations to see
+that everything is working
+
+1428
+00:51:53,490 --> 00:51:55,800
+correctly the way you expect it is.
+
+1429
+00:51:55,800 --> 00:51:59,040
+Let it sit, validate the
+performance is working
+
+1430
+00:51:59,040 --> 00:51:59,873
+as it should be.
+
+1431
+00:51:59,873 --> 00:52:01,110
+And once you are confident enough
+
+1432
+00:52:01,110 --> 00:52:03,150
+and have got the correct metrics
+
+1433
+00:52:03,150 --> 00:52:04,380
+and everything that you need,
+
+1434
+00:52:04,380 --> 00:52:07,110
+then you can flip everything
+over to the new version.
+
+1435
+00:52:07,110 --> 00:52:10,923
+And allow you to migrate your
+service to a new version.
+
+1436
+00:52:15,630 --> 00:52:18,990
+We like to provide,
+
+1437
+00:52:18,990 --> 00:52:21,663
+ECS is what we call
+best practice by design.
+
+1438
+00:52:24,090 --> 00:52:25,920
+Everything Malcolm has been talking about
+
+1439
+00:52:25,920 --> 00:52:27,870
+the fact of start before stop,
+
+1440
+00:52:27,870 --> 00:52:29,370
+placement mechanisms,
+
+1441
+00:52:29,370 --> 00:52:31,962
+how we actually do the
+updates of software,
+
+1442
+00:52:31,962 --> 00:52:33,213
+of the instances, everything,
+
+1443
+00:52:33,213 --> 00:52:36,540
+that best practices
+which we internally use
+
+1444
+00:52:36,540 --> 00:52:38,820
+for our own fleets and our own services.
+
+1445
+00:52:38,820 --> 00:52:40,980
+We want to provide that
+option for you as a customer
+
+1446
+00:52:40,980 --> 00:52:42,830
+to use those same primitives as well.
+
+1447
+00:52:44,130 --> 00:52:47,160
+And by the provisioning of
+resources in each version,
+
+1448
+00:52:47,160 --> 00:52:49,590
+for example, best practices by design,
+
+1449
+00:52:49,590 --> 00:52:51,840
+the lifecycle hooks allow
+you to gain that confidence.
+
+1450
+00:52:51,840 --> 00:52:52,830
+We give you that opportunity.
+
+1451
+00:52:52,830 --> 00:52:56,340
+Again, I try to refer back to that
+
+1452
+00:52:56,340 --> 00:52:59,250
+shared responsibility model
+of we're taking on toil
+
+1453
+00:52:59,250 --> 00:53:00,083
+and giving you some of it,
+
+1454
+00:53:00,083 --> 00:53:01,350
+but we are giving you the options.
+
+1455
+00:53:01,350 --> 00:53:02,790
+So for example, you have to validate
+
+1456
+00:53:02,790 --> 00:53:04,860
+that everything is working correctly,
+
+1457
+00:53:04,860 --> 00:53:06,540
+and you have to provide that code.
+
+1458
+00:53:06,540 --> 00:53:08,100
+It's that shared responsibility model,
+
+1459
+00:53:08,100 --> 00:53:09,420
+but we are giving you the options
+
+1460
+00:53:09,420 --> 00:53:12,960
+and the mechanisms in order for
+you to allow you to do that.
+
+1461
+00:53:12,960 --> 00:53:13,793
+The bake time as well
+
+1462
+00:53:13,793 --> 00:53:15,210
+is also best practice internally.
+
+1463
+00:53:15,210 --> 00:53:17,130
+We do that for every single
+one of our deployments.
+
+1464
+00:53:17,130 --> 00:53:20,130
+We are also giving you that opportunity
+
+1465
+00:53:20,130 --> 00:53:20,963
+and that primitive
+
+1466
+00:53:20,963 --> 00:53:23,760
+to allow you to also make
+use of that mechanism
+
+1467
+00:53:23,760 --> 00:53:26,760
+as well to validate your
+applications are working correctly.
+
+1468
+00:53:28,290 --> 00:53:29,910
+So as Malcolm asks,
+
+1469
+00:53:29,910 --> 00:53:33,120
+we have different spectrums
+of what you can use.
+
+1470
+00:53:33,120 --> 00:53:35,700
+So a question that a lot
+of customers come to us,
+
+1471
+00:53:35,700 --> 00:53:36,780
+when do I do blue/green,
+
+1472
+00:53:36,780 --> 00:53:39,300
+when do I do linear, when do I do canary?
+
+1473
+00:53:39,300 --> 00:53:44,300
+And as any good IT person
+will say, it depends.
+
+1474
+00:53:44,310 --> 00:53:45,143
+Obviously.
+
+1475
+00:53:45,143 --> 00:53:48,900
+There are benefits
+
+1476
+00:53:48,900 --> 00:53:50,393
+of one version over the other,
+
+1477
+00:53:50,393 --> 00:53:52,643
+and it will depend on
+your kind of application.
+
+1478
+00:53:54,060 --> 00:53:56,100
+We look at blue/green
+mainly optimized for speed.
+
+1479
+00:53:56,100 --> 00:53:58,110
+If I want to actually
+move over to a new version
+
+1480
+00:53:58,110 --> 00:54:00,840
+very, very quickly, this will
+be the fastest way to do it.
+
+1481
+00:54:00,840 --> 00:54:03,300
+It will of course require you
+
+1482
+00:54:03,300 --> 00:54:05,010
+to have a robust deployment mechanism
+
+1483
+00:54:05,010 --> 00:54:06,360
+and validate that everything is working
+
+1484
+00:54:06,360 --> 00:54:07,950
+because once you switch,
+
+1485
+00:54:07,950 --> 00:54:08,967
+you're switching all of the traffic,
+
+1486
+00:54:08,967 --> 00:54:11,280
+and that could cause a
+problem if there is some kind
+
+1487
+00:54:11,280 --> 00:54:13,863
+of degradation or bug inside your system.
+
+1488
+00:54:14,970 --> 00:54:18,410
+When we look at linear, this is kind of,
+
+1489
+00:54:18,410 --> 00:54:20,670
+we have to be, I want to
+be a bit more conservative.
+
+1490
+00:54:20,670 --> 00:54:23,130
+I want to do it slowly
+and move my customers
+
+1491
+00:54:23,130 --> 00:54:25,170
+or my traffic over to actually gain.
+
+1492
+00:54:25,170 --> 00:54:26,760
+I'm not a hundred percent
+sure how this works.
+
+1493
+00:54:26,760 --> 00:54:28,950
+It'll take me more time to validate
+
+1494
+00:54:28,950 --> 00:54:30,060
+that the traffic is working,
+
+1495
+00:54:30,060 --> 00:54:32,220
+there's no degradation of performance.
+
+1496
+00:54:32,220 --> 00:54:33,053
+Those kind of things,
+
+1497
+00:54:33,053 --> 00:54:34,200
+I wanna be a little bit more conservative.
+
+1498
+00:54:34,200 --> 00:54:36,660
+But on the other hand,
+this will take more time.
+
+1499
+00:54:36,660 --> 00:54:38,760
+Your deployment time will be longer,
+
+1500
+00:54:38,760 --> 00:54:40,110
+and the rollover to a new version
+
+1501
+00:54:40,110 --> 00:54:41,160
+of a service will be longer.
+
+1502
+00:54:41,160 --> 00:54:42,480
+And as a result, of course,
+
+1503
+00:54:42,480 --> 00:54:45,360
+because we are provisioning
+as we said, a hundred percent
+
+1504
+00:54:45,360 --> 00:54:47,310
+of capacity on both versions,
+
+1505
+00:54:47,310 --> 00:54:50,100
+you'll be paying a
+slightly bit longer amount,
+
+1506
+00:54:50,100 --> 00:54:51,297
+slightly bit more for that amount,
+
+1507
+00:54:51,297 --> 00:54:54,090
+and that both resources are
+sitting up in the air waiting
+
+1508
+00:54:54,090 --> 00:54:55,950
+for the actual migration
+
+1509
+00:54:55,950 --> 00:54:58,150
+of your service from
+one version to another.
+
+1510
+00:55:00,030 --> 00:55:02,160
+Canary is a kind of a mix of the two.
+
+1511
+00:55:02,160 --> 00:55:04,290
+In other words, I wanted do quickly,
+
+1512
+00:55:04,290 --> 00:55:05,790
+but I don't wanna wait so long
+
+1513
+00:55:05,790 --> 00:55:07,830
+so I'll do a bit of my traffic.
+
+1514
+00:55:07,830 --> 00:55:10,260
+I will validate that I know
+exactly I'm confident enough
+
+1515
+00:55:10,260 --> 00:55:11,790
+that if I do a bit of it and it moves
+
+1516
+00:55:11,790 --> 00:55:14,400
+and everything is working fine,
+then I'll move everything.
+
+1517
+00:55:14,400 --> 00:55:16,950
+That's what our customers
+kind of look for.
+
+1518
+00:55:16,950 --> 00:55:18,600
+But it's not only on your own confidence
+
+1519
+00:55:18,600 --> 00:55:21,450
+and your own operational practices,
+
+1520
+00:55:21,450 --> 00:55:23,790
+it also kind of depends on
+the application as well.
+
+1521
+00:55:23,790 --> 00:55:25,950
+Because if I give you, for example,
+
+1522
+00:55:25,950 --> 00:55:28,233
+your application has some kind of,
+
+1523
+00:55:30,090 --> 00:55:31,170
+everybody talks about AI,
+
+1524
+00:55:31,170 --> 00:55:33,030
+so let's talk about AI.
+
+1525
+00:55:33,030 --> 00:55:34,530
+Some kind of LLM application.
+
+1526
+00:55:34,530 --> 00:55:37,320
+In other words where you
+are updating a version
+
+1527
+00:55:37,320 --> 00:55:39,510
+of an LLM inside your application.
+
+1528
+00:55:39,510 --> 00:55:44,370
+So if you do a migration
+from one version of service
+
+1529
+00:55:44,370 --> 00:55:47,460
+to the other and start
+on linear for example,
+
+1530
+00:55:47,460 --> 00:55:51,510
+there could be a chance
+that the customer experience
+
+1531
+00:55:51,510 --> 00:55:55,380
+coming to to these different services,
+
+1532
+00:55:55,380 --> 00:55:56,213
+well, might be different
+
+1533
+00:55:56,213 --> 00:55:59,490
+because the one LLM version
+behaves slightly different
+
+1534
+00:55:59,490 --> 00:56:01,140
+than the previous one.
+
+1535
+00:56:01,140 --> 00:56:03,240
+So that might be a reason that
+you, for example, would like
+
+1536
+00:56:03,240 --> 00:56:04,650
+to do something which is more blue/green.
+
+1537
+00:56:04,650 --> 00:56:07,890
+I want the the customer experience to be
+
+1538
+00:56:07,890 --> 00:56:11,010
+as standard as possible
+and not have any deviations
+
+1539
+00:56:11,010 --> 00:56:12,690
+where customers could
+get different answers.
+
+1540
+00:56:12,690 --> 00:56:13,948
+For example, from an LLM,
+
+1541
+00:56:13,948 --> 00:56:16,110
+then I would do a blue/green
+to move as fast as possible
+
+1542
+00:56:16,110 --> 00:56:17,760
+from one version to the other.
+
+1543
+00:56:17,760 --> 00:56:20,460
+If it is an application, which
+is a simple web application,
+
+1544
+00:56:20,460 --> 00:56:23,370
+maybe upgrading one version
+to another, then maybe
+
+1545
+00:56:23,370 --> 00:56:24,570
+that will make much of a difference.
+
+1546
+00:56:24,570 --> 00:56:26,130
+It would depend on the kind of software
+
+1547
+00:56:26,130 --> 00:56:27,480
+that you're actually using.
+
+1548
+00:56:30,060 --> 00:56:32,940
+Before we leave, we
+would like to leave you
+
+1549
+00:56:32,940 --> 00:56:34,710
+with a couple of QR codes and resources,
+
+1550
+00:56:34,710 --> 00:56:36,670
+which we can actually dive deeper into
+
+1551
+00:56:38,314 --> 00:56:40,560
+a lot of the topics which
+we talked about today.
+
+1552
+00:56:40,560 --> 00:56:43,230
+The first one is actually
+the documentation,
+
+1553
+00:56:43,230 --> 00:56:44,550
+which is very, very robust,
+
+1554
+00:56:44,550 --> 00:56:48,120
+and gives a bit more
+than I did actually today
+
+1555
+00:56:48,120 --> 00:56:49,950
+with how exactly each of the stages are,
+
+1556
+00:56:49,950 --> 00:56:51,810
+each of the phases are
+exactly what you can do
+
+1557
+00:56:51,810 --> 00:56:53,610
+and how you implement that.
+
+1558
+00:56:53,610 --> 00:56:56,320
+On the right hand side,
+on your right hand side is
+
+1559
+00:56:57,699 --> 00:56:59,696
+blog posts, which we published about
+
+1560
+00:56:59,696 --> 00:57:02,160
+a deep dive into ECS managed instances
+
+1561
+00:57:02,160 --> 00:57:03,060
+with a lot of the information
+
+1562
+00:57:03,060 --> 00:57:04,470
+that Malcolm provided today as well,
+
+1563
+00:57:04,470 --> 00:57:05,370
+but not all of it.
+
+1564
+00:57:06,300 --> 00:57:10,260
+And the last two are two
+builder library articles.
+
+1565
+00:57:10,260 --> 00:57:15,240
+A builder library is a website
+where we have white papers
+
+1566
+00:57:15,240 --> 00:57:17,530
+of how we build things in Amazon
+
+1567
+00:57:18,540 --> 00:57:20,010
+on a regular basis.
+
+1568
+00:57:20,010 --> 00:57:21,300
+Of course, without all the details,
+
+1569
+00:57:21,300 --> 00:57:23,594
+but from the concept perspective,
+
+1570
+00:57:23,594 --> 00:57:26,880
+if these are white
+papers, which are written
+
+1571
+00:57:26,880 --> 00:57:29,760
+by our principal engineers,
+senior principal engineers,
+
+1572
+00:57:29,760 --> 00:57:32,160
+distinguished, the top people in Amazon
+
+1573
+00:57:32,160 --> 00:57:36,510
+who build systems which scale
+to things like as we say,
+
+1574
+00:57:36,510 --> 00:57:40,170
+3 billion tasks a week on a regular basis.
+
+1575
+00:57:40,170 --> 00:57:41,340
+And the first one is about,
+
+1576
+00:57:41,340 --> 00:57:44,700
+both are written about how we do
+
+1577
+00:57:44,700 --> 00:57:46,440
+deployments internally in Amazon.
+
+1578
+00:57:46,440 --> 00:57:48,240
+How you can ensure, for example,
+
+1579
+00:57:48,240 --> 00:57:49,890
+rollback safety with deployments.
+
+1580
+00:57:49,890 --> 00:57:51,750
+These are the kind of things
+which we do on a regular basis
+
+1581
+00:57:51,750 --> 00:57:53,610
+at huge scale in Amazon,
+
+1582
+00:57:53,610 --> 00:57:55,860
+and we would like to provide
+that information to you as well
+
+1583
+00:57:55,860 --> 00:57:56,970
+so you can start reading about
+
+1584
+00:57:56,970 --> 00:57:59,820
+and implement that as well
+inside your own organizations.
+
+1585
+00:58:01,438 --> 00:58:03,630
+We'd like to thank you very,
+very much for your time.
+
+1586
+00:58:03,630 --> 00:58:05,220
+Our emails are here up on the screen.
+
+1587
+00:58:05,220 --> 00:58:06,450
+If you would like to take a picture,
+
+1588
+00:58:06,450 --> 00:58:07,860
+send us an email.
+
+1589
+00:58:07,860 --> 00:58:09,090
+If you have any questions.
+
+1590
+00:58:09,090 --> 00:58:11,250
+We'd be more than happy to answer them.
+
+1591
+00:58:11,250 --> 00:58:14,460
+And of course, before you leave,
+
+1592
+00:58:14,460 --> 00:58:16,553
+and preferably before you leave,
+
+1593
+00:58:16,553 --> 00:58:17,670
+or you can also do it on the way,
+
+1594
+00:58:17,670 --> 00:58:19,260
+please don't forget to
+give us the feedback
+
+1595
+00:58:19,260 --> 00:58:21,180
+from the session itself
+in the application,
+
+1596
+00:58:21,180 --> 00:58:22,560
+the AWS events application.
+
+1597
+00:58:22,560 --> 00:58:24,658
+We would really, really appreciate it
+
+1598
+00:58:24,658 --> 00:58:27,690
+to hear back from you how the session was,
+
+1599
+00:58:27,690 --> 00:58:29,100
+was it useful?
+
+1600
+00:58:29,100 --> 00:58:31,020
+Is there any feedback you
+would like to give us directly
+
+1601
+00:58:31,020 --> 00:58:32,490
+about the actual session itself?
+
+1602
+00:58:32,490 --> 00:58:33,810
+We'd be more than happy to hear from you.
+
+1603
+00:58:33,810 --> 00:58:35,760
+And if there are any questions,
+
+1604
+00:58:35,760 --> 00:58:38,109
+we will be somewhere over
+there towards the entrance
+
+1605
+00:58:38,109 --> 00:58:40,650
+of the hall,
+
+1606
+00:58:40,650 --> 00:58:42,300
+so that we don't stop
+the next session coming,
+
+1607
+00:58:42,300 --> 00:58:43,740
+which is already lining up.
+
+1608
+00:58:43,740 --> 00:58:44,940
+Thank you very much for your time
+
+1609
+00:58:44,940 --> 00:58:47,250
+and enjoy the rest of
+your day and your event.
+
+1610
+00:58:47,250 --> 00:58:48,083
+- [Malcolm] Thank you.
+
+1611
+00:58:48,083 --> 00:58:50,884
+(audience clapping)
+

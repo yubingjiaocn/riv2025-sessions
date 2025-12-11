@@ -1,0 +1,3877 @@
+1
+00:00:01,050 --> 00:00:02,370
+- All right, folks.
+
+2
+00:00:02,370 --> 00:00:03,960
+Thanks for coming out.
+
+3
+00:00:03,960 --> 00:00:06,900
+This presentation is
+Streaming Without Limits,
+
+4
+00:00:06,900 --> 00:00:09,360
+How Sky scale's bookmarking
+and powers the future
+
+5
+00:00:09,360 --> 00:00:11,430
+of streaming with Redis Cloud.
+
+6
+00:00:11,430 --> 00:00:12,570
+I'm here with Lena Youssef,
+
+7
+00:00:12,570 --> 00:00:14,790
+the Engineering Manager
+in Global Streaming
+
+8
+00:00:14,790 --> 00:00:16,590
+at NBCUniversal Sky.
+
+9
+00:00:16,590 --> 00:00:19,920
+I'm Jon Fritz, I'm the Chief
+Product Officer of Redis.
+
+10
+00:00:19,920 --> 00:00:20,753
+So thanks for coming out.
+
+11
+00:00:20,753 --> 00:00:22,350
+Hopefully your re:Invent
+is off to a great start.
+
+12
+00:00:22,350 --> 00:00:24,540
+It's gonna be an exciting week.
+
+13
+00:00:24,540 --> 00:00:25,710
+Real quick, an agenda.
+
+14
+00:00:25,710 --> 00:00:27,660
+I'm gonna take about 10 or 15 minutes,
+
+15
+00:00:27,660 --> 00:00:28,960
+give a quick little introduction,
+
+16
+00:00:28,960 --> 00:00:32,070
+and talk a little bit about
+some of the new innovations
+
+17
+00:00:32,070 --> 00:00:35,880
+in the Redis world around
+Redis Cloud and Redis for AI.
+
+18
+00:00:35,880 --> 00:00:36,930
+Then I'm gonna hand it over to Lena.
+
+19
+00:00:36,930 --> 00:00:38,910
+She's gonna talk all about how Sky
+
+20
+00:00:38,910 --> 00:00:43,800
+has reinvented their streaming
+platform using Redis Cloud,
+
+21
+00:00:43,800 --> 00:00:45,240
+some of the execution and outcomes,
+
+22
+00:00:45,240 --> 00:00:47,310
+and some of the next
+steps in thinking forward
+
+23
+00:00:47,310 --> 00:00:49,743
+about their thoughts for generative AI.
+
+24
+00:00:51,060 --> 00:00:52,260
+But I'll kinda get started.
+
+25
+00:00:52,260 --> 00:00:55,340
+So how many folks here
+are familiar with Redis?
+
+26
+00:00:55,340 --> 00:00:57,300
+All right, not surprised that pretty much
+
+27
+00:00:57,300 --> 00:00:59,190
+everyone raised their hand.
+
+28
+00:00:59,190 --> 00:01:00,880
+It's the most popular database,
+
+29
+00:01:00,880 --> 00:01:03,420
+in-memory caching database in the world.
+
+30
+00:01:03,420 --> 00:01:05,130
+And a few stats I'd love to share.
+
+31
+00:01:05,130 --> 00:01:07,500
+We've recently passed
+10 billion Docker pulls,
+
+32
+00:01:07,500 --> 00:01:10,530
+and I think we're the second
+Datastore database project
+
+33
+00:01:10,530 --> 00:01:14,460
+to ever pass that amount
+of Docker activity.
+
+34
+00:01:14,460 --> 00:01:15,600
+And it's growing, right?
+
+35
+00:01:15,600 --> 00:01:17,790
+It's not slowing down.
+
+36
+00:01:17,790 --> 00:01:22,290
+We also have a couple of
+other facts I'd like to share.
+
+37
+00:01:22,290 --> 00:01:24,120
+In the Stack Overflow survey,
+
+38
+00:01:24,120 --> 00:01:26,430
+the most loved non-relational database,
+
+39
+00:01:26,430 --> 00:01:27,540
+I think we're just behind sort of
+
+40
+00:01:27,540 --> 00:01:29,480
+out of the whole database
+ranking Postgres,
+
+41
+00:01:29,480 --> 00:01:33,080
+and recently voted the most
+used data management tool
+
+42
+00:01:33,080 --> 00:01:36,510
+for agents in generative AI as well,
+
+43
+00:01:36,510 --> 00:01:39,180
+sort of speaking to the ubiquitous nature
+
+44
+00:01:39,180 --> 00:01:41,403
+of Redis as an AI building block.
+
+45
+00:01:42,540 --> 00:01:44,430
+And with that, I wanted to also share
+
+46
+00:01:44,430 --> 00:01:47,190
+that Redis 8.4 recently
+just released in open source
+
+47
+00:01:47,190 --> 00:01:49,140
+and will be available in our cloud product
+
+48
+00:01:49,140 --> 00:01:54,030
+and enterprise software soon,
+is the fastest Redis ever.
+
+49
+00:01:54,030 --> 00:01:55,640
+It's really breaking the limits on speed,
+
+50
+00:01:55,640 --> 00:01:57,690
+scalability, and performance.
+
+51
+00:01:57,690 --> 00:02:00,930
+With up to a 90% latency improvement,
+
+52
+00:02:00,930 --> 00:02:03,600
+scales much faster, you can
+get much higher throughput
+
+53
+00:02:03,600 --> 00:02:06,960
+in a variety of the Redis
+multimodal situations,
+
+54
+00:02:06,960 --> 00:02:09,870
+and also better memory
+compression as well,
+
+55
+00:02:09,870 --> 00:02:13,260
+so you can save costs on
+your in-memory database
+
+56
+00:02:13,260 --> 00:02:14,520
+and caching workloads.
+
+57
+00:02:14,520 --> 00:02:16,170
+So 8.4 just came out.
+
+58
+00:02:16,170 --> 00:02:18,210
+I encourage you to check it out.
+
+59
+00:02:18,210 --> 00:02:19,950
+But all you are familiar with Redis,
+
+60
+00:02:19,950 --> 00:02:21,660
+how many folks are
+familiar with Redis Cloud
+
+61
+00:02:21,660 --> 00:02:24,300
+by a show of hands or
+use Redis Cloud today?
+
+62
+00:02:24,300 --> 00:02:26,550
+So not nearly as many.
+
+63
+00:02:26,550 --> 00:02:28,200
+So I wanna share just a
+couple of things about it
+
+64
+00:02:28,200 --> 00:02:29,970
+before handing it over to Lina
+
+65
+00:02:29,970 --> 00:02:32,370
+to talk about the use case at Sky.
+
+66
+00:02:32,370 --> 00:02:35,400
+So Redis Cloud, it's the
+most reliable and available,
+
+67
+00:02:35,400 --> 00:02:39,720
+secure, cost-effective, and
+integrated way to scale Redis
+
+68
+00:02:39,720 --> 00:02:42,540
+to power applications and AI agents
+
+69
+00:02:42,540 --> 00:02:44,640
+in any cloud environment.
+
+70
+00:02:44,640 --> 00:02:48,390
+So any cloud environment,
+but we're here at re:Invent,
+
+71
+00:02:48,390 --> 00:02:50,550
+so we should be talking about AWS,
+
+72
+00:02:50,550 --> 00:02:53,190
+and wanted to share
+quickly the two flavors
+
+73
+00:02:53,190 --> 00:02:54,720
+of Redis Cloud because they're useful
+
+74
+00:02:54,720 --> 00:02:57,860
+for different use cases and worth sharing.
+
+75
+00:02:57,860 --> 00:03:00,120
+So the first is Redis Cloud Essentials.
+
+76
+00:03:00,120 --> 00:03:02,520
+This is a fully serverless platform
+
+77
+00:03:02,520 --> 00:03:04,640
+and the lowest cost actually per gigabyte
+
+78
+00:03:04,640 --> 00:03:07,410
+Redis or Redis API compatible
+platform out there.
+
+79
+00:03:07,410 --> 00:03:11,490
+So super easy to get started,
+super cost-effective,
+
+80
+00:03:11,490 --> 00:03:14,370
+built for slightly medium,
+smaller scale applications,
+
+81
+00:03:14,370 --> 00:03:15,600
+and there's actually a free tier.
+
+82
+00:03:15,600 --> 00:03:18,660
+So we've got thousands
+and thousands of customers
+
+83
+00:03:18,660 --> 00:03:21,210
+building on this platform, trying it out,
+
+84
+00:03:21,210 --> 00:03:23,790
+experimenting, and then scaling up.
+
+85
+00:03:23,790 --> 00:03:25,320
+We also have Redis Cloud Pro.
+
+86
+00:03:25,320 --> 00:03:27,930
+That's sort of the more high-scale,
+
+87
+00:03:27,930 --> 00:03:29,160
+the highest availability,
+
+88
+00:03:29,160 --> 00:03:32,160
+highest performance
+edition of Redis Cloud.
+
+89
+00:03:32,160 --> 00:03:35,550
+You have things around
+sort of dedicated clusters
+
+90
+00:03:35,550 --> 00:03:37,440
+with multi-tenancies so
+you can choose really
+
+91
+00:03:37,440 --> 00:03:40,740
+how to build your own private
+serverless environment.
+
+92
+00:03:40,740 --> 00:03:44,460
+Active Active with up to
+five nines of availability.
+
+93
+00:03:44,460 --> 00:03:46,470
+That's the highest you can get.
+
+94
+00:03:46,470 --> 00:03:49,380
+Smooth and fast scaling, really
+great enterprise support,
+
+95
+00:03:49,380 --> 00:03:51,570
+and you can get started with a free trial.
+
+96
+00:03:51,570 --> 00:03:53,070
+Variety of different flavors depending on
+
+97
+00:03:53,070 --> 00:03:54,510
+if you wanna get started quick,
+
+98
+00:03:54,510 --> 00:03:56,340
+scale in a serverless environment,
+
+99
+00:03:56,340 --> 00:03:59,220
+or run these globally highly
+available applications
+
+100
+00:03:59,220 --> 00:04:00,723
+in a unique way.
+
+101
+00:04:01,920 --> 00:04:03,960
+One other thing I wanted
+to note is we actually have
+
+102
+00:04:03,960 --> 00:04:07,980
+two deployment models in AWS
+as well for Redis Cloud Pro.
+
+103
+00:04:07,980 --> 00:04:09,510
+We have our hosted compute model,
+
+104
+00:04:09,510 --> 00:04:10,740
+which is sort of the similar
+
+105
+00:04:10,740 --> 00:04:13,530
+SaaS cloud database type approach.
+
+106
+00:04:13,530 --> 00:04:15,780
+You launch a database, all of the compute
+
+107
+00:04:15,780 --> 00:04:19,110
+is hosted in Redis Cloud,
+very easy to get started,
+
+108
+00:04:19,110 --> 00:04:21,540
+minimal networking configuration,
+
+109
+00:04:21,540 --> 00:04:23,850
+and you're sort of off to the races.
+
+110
+00:04:23,850 --> 00:04:26,400
+However, we also have a
+bring your own cloud model,
+
+111
+00:04:26,400 --> 00:04:28,980
+which we find customers who
+have very, very specific
+
+112
+00:04:28,980 --> 00:04:31,650
+security requirements, or
+customers that might have
+
+113
+00:04:31,650 --> 00:04:34,770
+sort of a high or pretty
+good EC2 direct discount
+
+114
+00:04:34,770 --> 00:04:36,930
+through a deal with
+AWS, and looking around,
+
+115
+00:04:36,930 --> 00:04:38,880
+I know some of you in here do.
+
+116
+00:04:38,880 --> 00:04:41,490
+To be able to use the EC2 directly,
+
+117
+00:04:41,490 --> 00:04:44,300
+launching the Redis
+cluster in the VPC you own
+
+118
+00:04:44,300 --> 00:04:46,230
+on EC2 instance that you own,
+
+119
+00:04:46,230 --> 00:04:48,570
+meaning that no data leaves your VPC,
+
+120
+00:04:48,570 --> 00:04:50,490
+and so for some customers,
+that's very important
+
+121
+00:04:50,490 --> 00:04:52,500
+from a data residency perspective.
+
+122
+00:04:52,500 --> 00:04:55,710
+And also, you can utilize
+up your EC2 RI spend,
+
+123
+00:04:55,710 --> 00:04:57,900
+leverage those discounts, and oftentimes,
+
+124
+00:04:57,900 --> 00:05:02,900
+get the lowest cost Redis footprint
+
+125
+00:05:03,270 --> 00:05:04,920
+in your environment that you can.
+
+126
+00:05:06,180 --> 00:05:07,710
+So that's a little bit of background about
+
+127
+00:05:07,710 --> 00:05:10,320
+sort of the flavors of Redis Cloud on AWS.
+
+128
+00:05:10,320 --> 00:05:12,030
+I wanted to talk about a
+few things we just shipped
+
+129
+00:05:12,030 --> 00:05:14,730
+in the last few weeks that really help
+
+130
+00:05:14,730 --> 00:05:16,680
+deliver on that mission
+of what I was saying,
+
+131
+00:05:16,680 --> 00:05:18,510
+sort of our goal with Redis Cloud is.
+
+132
+00:05:18,510 --> 00:05:20,850
+The first is, Redis Flex is now launched
+
+133
+00:05:20,850 --> 00:05:22,200
+on Redis Cloud Pro.
+
+134
+00:05:22,200 --> 00:05:23,550
+So if you're wondering what Redis Flex is,
+
+135
+00:05:23,550 --> 00:05:27,360
+it's the ability to use both RAM and SSD
+
+136
+00:05:27,360 --> 00:05:29,280
+for your database,
+allowing you to basically
+
+137
+00:05:29,280 --> 00:05:33,000
+scale much larger, and at a lower cost.
+
+138
+00:05:33,000 --> 00:05:34,980
+What's interesting here, a couple points.
+
+139
+00:05:34,980 --> 00:05:37,320
+The first is that you
+actually get to choose
+
+140
+00:05:37,320 --> 00:05:40,980
+the ratio of RAM to SSD, depending on
+
+141
+00:05:40,980 --> 00:05:43,440
+the price performance you
+want for your workload.
+
+142
+00:05:43,440 --> 00:05:45,600
+And you can actually scale up to 10% RAM
+
+143
+00:05:45,600 --> 00:05:47,583
+and 90% SSD.
+
+144
+00:05:48,720 --> 00:05:50,880
+And you can scale these databases huge,
+
+145
+00:05:50,880 --> 00:05:52,980
+up to 50 terabytes, right?
+
+146
+00:05:52,980 --> 00:05:55,200
+And, also interestingly enough,
+
+147
+00:05:55,200 --> 00:05:59,070
+is you can get up to a
+75% discount per gigabyte
+
+148
+00:05:59,070 --> 00:06:00,270
+using Flex.
+
+149
+00:06:00,270 --> 00:06:02,280
+So taking a step back,
+what does that give you?
+
+150
+00:06:02,280 --> 00:06:06,120
+Well, it sort of gives a
+different price performance dial
+
+151
+00:06:06,120 --> 00:06:09,000
+on your Redis databases,
+unlocking a lot of workloads
+
+152
+00:06:09,000 --> 00:06:11,280
+that might have just not
+been the right fit for Redis,
+
+153
+00:06:11,280 --> 00:06:15,210
+either from a TCO perspective
+or a scale perspective.
+
+154
+00:06:15,210 --> 00:06:18,180
+Now you can run those on
+Redis in a cost-effective way,
+
+155
+00:06:18,180 --> 00:06:19,560
+in an easy way to scale.
+
+156
+00:06:19,560 --> 00:06:21,570
+And for many workloads,
+the performance impact
+
+157
+00:06:21,570 --> 00:06:23,040
+is actually not that much, right?
+
+158
+00:06:23,040 --> 00:06:25,140
+If you think about it,
+if most of your reads
+
+159
+00:06:25,140 --> 00:06:26,940
+are from a smaller set of data,
+
+160
+00:06:26,940 --> 00:06:29,310
+but you want your long tail,
+this is actually very common,
+
+161
+00:06:29,310 --> 00:06:30,960
+so like a feature store use case.
+
+162
+00:06:32,250 --> 00:06:33,870
+There's some other use cases as well.
+
+163
+00:06:33,870 --> 00:06:35,970
+The performance hit is
+actually not a whole lot,
+
+164
+00:06:35,970 --> 00:06:39,210
+but you get these massive cost savings.
+
+165
+00:06:39,210 --> 00:06:44,210
+And so Flex on Cloud Pro, check
+it out, it's available now.
+
+166
+00:06:45,240 --> 00:06:47,540
+We've also built a couple of features
+
+167
+00:06:47,540 --> 00:06:49,950
+to really improve the
+resilience and scalability
+
+168
+00:06:49,950 --> 00:06:51,243
+of Redis Cloud as well.
+
+169
+00:06:52,230 --> 00:06:53,340
+There's much faster scaling.
+
+170
+00:06:53,340 --> 00:06:55,860
+We've made some huge
+improvements in our cloud fabric
+
+171
+00:06:55,860 --> 00:06:59,550
+to scale up and down 40% faster.
+
+172
+00:06:59,550 --> 00:07:00,870
+Also, there's actually more coming, right?
+
+173
+00:07:00,870 --> 00:07:02,670
+I mentioned Redis 8.4.
+
+174
+00:07:02,670 --> 00:07:04,200
+We put a new feature in open source
+
+175
+00:07:04,200 --> 00:07:05,910
+called Atomic Slot Migration,
+
+176
+00:07:05,910 --> 00:07:08,320
+and that's gonna be
+leveraged once Redis 8.4
+
+177
+00:07:08,320 --> 00:07:11,130
+is in Redis Cloud to drive even better
+
+178
+00:07:11,130 --> 00:07:14,400
+and faster scalability as
+well, and that's coming soon.
+
+179
+00:07:14,400 --> 00:07:18,390
+We also shipped a feature
+called Smart Client Handoffs.
+
+180
+00:07:18,390 --> 00:07:20,550
+The goal of that is to really eliminate
+
+181
+00:07:20,550 --> 00:07:22,620
+any disruption you might
+have in your application
+
+182
+00:07:22,620 --> 00:07:24,000
+during planned events.
+
+183
+00:07:24,000 --> 00:07:25,740
+This is like scale up or scale down
+
+184
+00:07:25,740 --> 00:07:27,990
+when you add or remove
+nodes from your cluster,
+
+185
+00:07:27,990 --> 00:07:29,940
+or upgrading a cluster, right?
+
+186
+00:07:29,940 --> 00:07:31,920
+Times when nodes are changing.
+
+187
+00:07:31,920 --> 00:07:35,040
+We've built basically a
+way for the Redis client
+
+188
+00:07:35,040 --> 00:07:36,840
+to communicate with Redis Cloud,
+
+189
+00:07:36,840 --> 00:07:39,480
+to work in unison to basically update
+
+190
+00:07:39,480 --> 00:07:41,790
+where all the nodes
+are before they change,
+
+191
+00:07:41,790 --> 00:07:44,910
+and so the client can sort
+of proactively fail over
+
+192
+00:07:44,910 --> 00:07:46,650
+between one node or the other,
+
+193
+00:07:46,650 --> 00:07:48,300
+reducing disruption greatly.
+
+194
+00:07:48,300 --> 00:07:50,580
+So once again, it's sort of
+an interesting innovation.
+
+195
+00:07:50,580 --> 00:07:53,040
+That's sort of what I'm
+showing on the slide.
+
+196
+00:07:53,040 --> 00:07:54,780
+Utilizing both the client
+and server together
+
+197
+00:07:54,780 --> 00:07:57,660
+in a unique way, and
+there's more ideas we have
+
+198
+00:07:57,660 --> 00:07:59,040
+on leveraging those two components
+
+199
+00:07:59,040 --> 00:08:01,590
+in a way to make a much better experience
+
+200
+00:08:01,590 --> 00:08:03,570
+when running your
+applications on Redis Cloud.
+
+201
+00:08:03,570 --> 00:08:05,790
+Finally, just better
+performance across the board.
+
+202
+00:08:05,790 --> 00:08:07,520
+We recently upgraded Redis Cloud
+
+203
+00:08:07,520 --> 00:08:10,320
+to use the AWS Graviton-based instances.
+
+204
+00:08:10,320 --> 00:08:12,150
+That gives you lower
+latency, better performance.
+
+205
+00:08:12,150 --> 00:08:14,853
+We're big fans of the
+Graviton instance class.
+
+206
+00:08:15,960 --> 00:08:17,820
+Okay, so we talked about Flex.
+
+207
+00:08:17,820 --> 00:08:18,653
+That's new.
+
+208
+00:08:18,653 --> 00:08:21,900
+We talked about smart client
+handoffs and faster scaling.
+
+209
+00:08:21,900 --> 00:08:23,940
+I also wanted to share that we have now
+
+210
+00:08:23,940 --> 00:08:25,830
+Redis Data Integration, RDI,
+
+211
+00:08:25,830 --> 00:08:28,980
+available in public preview
+in Redis Cloud as well.
+
+212
+00:08:28,980 --> 00:08:30,450
+For those of you who aren't
+as familiar with RDI,
+
+213
+00:08:30,450 --> 00:08:32,550
+it was in our software product before.
+
+214
+00:08:32,550 --> 00:08:34,590
+RDI is a way to basically sync data
+
+215
+00:08:34,590 --> 00:08:37,320
+out of source databases in real time,
+
+216
+00:08:37,320 --> 00:08:39,300
+sort of in a CDC-like way,
+
+217
+00:08:39,300 --> 00:08:42,360
+transform from the data
+model that's coming in
+
+218
+00:08:42,360 --> 00:08:43,800
+into Redis data structures,
+
+219
+00:08:43,800 --> 00:08:46,320
+and then sort of update
+them real time in Redis.
+
+220
+00:08:46,320 --> 00:08:48,750
+So that gives you, it
+makes it easy to unlock
+
+221
+00:08:48,750 --> 00:08:51,390
+and accelerate data assets
+across your enterprise
+
+222
+00:08:51,390 --> 00:08:53,643
+in a variety of different database systems
+
+223
+00:08:53,643 --> 00:08:56,310
+into Redis and give
+sort of the scalability
+
+224
+00:08:56,310 --> 00:08:57,450
+for that data set,
+
+225
+00:08:57,450 --> 00:08:59,700
+but also the developer experience, right?
+
+226
+00:08:59,700 --> 00:09:01,760
+Developers love building
+with Redis data structures,
+
+227
+00:09:01,760 --> 00:09:04,920
+and you can expose data from
+a variety of source systems
+
+228
+00:09:04,920 --> 00:09:06,920
+as these Redis data structures.
+
+229
+00:09:06,920 --> 00:09:09,510
+You can stream from things
+like Postgres, Oracle,
+
+230
+00:09:09,510 --> 00:09:12,870
+MongoDB, data warehouses like Snowflake,
+
+231
+00:09:12,870 --> 00:09:15,150
+which is a common thing
+for taking out information
+
+232
+00:09:15,150 --> 00:09:17,130
+and creating feature stores out of it.
+
+233
+00:09:17,130 --> 00:09:19,380
+RDI has a variety of transforms.
+
+234
+00:09:19,380 --> 00:09:21,600
+We recently acquired a company, Decodable,
+
+235
+00:09:21,600 --> 00:09:24,690
+to accelerate sort of
+our real-time streaming
+
+236
+00:09:24,690 --> 00:09:26,890
+transformations that you can do
+
+237
+00:09:26,890 --> 00:09:28,830
+and sort of more complex things you can do
+
+238
+00:09:28,830 --> 00:09:30,930
+when transforming it into
+Redis data structures.
+
+239
+00:09:30,930 --> 00:09:33,390
+And then finally, a way to easily update
+
+240
+00:09:33,390 --> 00:09:35,160
+your Redis database,
+and we've seen sort of
+
+241
+00:09:35,160 --> 00:09:38,070
+a variety of interesting things
+around data modernization,
+
+242
+00:09:38,070 --> 00:09:39,560
+taking data out of older systems
+
+243
+00:09:39,560 --> 00:09:42,210
+and then sort of accelerating
+it to build applications
+
+244
+00:09:42,210 --> 00:09:43,960
+and get value from it.
+
+245
+00:09:43,960 --> 00:09:46,230
+But besides overall data modernization,
+
+246
+00:09:46,230 --> 00:09:49,590
+you can also use RDI to
+just modernize your cache,
+
+247
+00:09:49,590 --> 00:09:51,090
+that the cache-aside architecture
+
+248
+00:09:51,090 --> 00:09:52,470
+can be a little bit brittle.
+
+249
+00:09:52,470 --> 00:09:54,780
+Dealing with cache and
+validation can be annoying.
+
+250
+00:09:54,780 --> 00:09:58,020
+And with RDI, you can
+basically sync updates
+
+251
+00:09:58,020 --> 00:10:00,700
+into a source database
+directly into your cache
+
+252
+00:10:00,700 --> 00:10:04,620
+to serve fast reads without dealing
+
+253
+00:10:04,620 --> 00:10:06,270
+with sort of the cache-aside architecture.
+
+254
+00:10:06,270 --> 00:10:08,310
+So it's a way to very much simplify,
+
+255
+00:10:08,310 --> 00:10:12,360
+for many use cases, your
+caching architecture using RDI.
+
+256
+00:10:12,360 --> 00:10:13,680
+And a great example is this.
+
+257
+00:10:13,680 --> 00:10:14,850
+So we worked with Access Bank.
+
+258
+00:10:14,850 --> 00:10:16,470
+This is sort of top of mind for me today,
+
+259
+00:10:16,470 --> 00:10:18,480
+talking with some customers.
+
+260
+00:10:18,480 --> 00:10:21,930
+Access Bank, they're building
+a mobile banking application,
+
+261
+00:10:21,930 --> 00:10:24,870
+and their core banking
+system store data in Oracle.
+
+262
+00:10:24,870 --> 00:10:29,460
+Oracle has higher latency
+during peak times.
+
+263
+00:10:29,460 --> 00:10:31,800
+You couldn't really sort
+of max out the throughput.
+
+264
+00:10:31,800 --> 00:10:33,540
+You couldn't really scale it very well.
+
+265
+00:10:33,540 --> 00:10:36,780
+And using RDI, Access was able
+to pull data out of Oracle
+
+266
+00:10:36,780 --> 00:10:39,870
+in real time, transform
+it, put it into Redis,
+
+267
+00:10:39,870 --> 00:10:41,880
+and build their entire
+mobile banking application
+
+268
+00:10:41,880 --> 00:10:45,540
+on top of that Redis database
+and keep it up to date.
+
+269
+00:10:45,540 --> 00:10:48,720
+That resulted in a much,
+much lower latency,
+
+270
+00:10:48,720 --> 00:10:52,180
+thousands, huge scalability increase,
+
+271
+00:10:52,180 --> 00:10:54,780
+and sort of a modern way
+to build an application
+
+272
+00:10:54,780 --> 00:10:56,790
+without needing to sunset Oracle, right?
+
+273
+00:10:56,790 --> 00:10:58,980
+It's a way to get more value out of data
+
+274
+00:10:58,980 --> 00:11:00,783
+that's locked in other data systems.
+
+275
+00:11:01,830 --> 00:11:04,860
+Okay, so moving from RDI,
+wanted to have a quick note
+
+276
+00:11:04,860 --> 00:11:07,200
+on what Redis is doing in
+the generative AI space.
+
+277
+00:11:07,200 --> 00:11:09,080
+Obviously, that is what
+everyone is talking about
+
+278
+00:11:09,080 --> 00:11:11,640
+for the last couple
+years and current, right?
+
+279
+00:11:11,640 --> 00:11:14,550
+This conference is no exception.
+
+280
+00:11:14,550 --> 00:11:18,810
+And people build with Redis,
+Gen AI apps on Redis daily.
+
+281
+00:11:18,810 --> 00:11:19,643
+And it makes sense, right?
+
+282
+00:11:19,643 --> 00:11:22,290
+In the same way that
+Redis is sort of the thing
+
+283
+00:11:22,290 --> 00:11:25,080
+that you use when you scale
+out your mobile application,
+
+284
+00:11:25,080 --> 00:11:27,280
+your web application, Gen AI applications
+
+285
+00:11:27,280 --> 00:11:30,390
+have a lot of the same needs,
+and it's sort of logical
+
+286
+00:11:30,390 --> 00:11:32,400
+that you'd use Redis for a
+lot of those same things.
+
+287
+00:11:32,400 --> 00:11:33,720
+Redis is fast.
+
+288
+00:11:33,720 --> 00:11:36,270
+For Redis' semantic
+search-like applications,
+
+289
+00:11:36,270 --> 00:11:37,710
+it has high accuracy.
+
+290
+00:11:37,710 --> 00:11:38,820
+And Redis is integrated, right?
+
+291
+00:11:38,820 --> 00:11:42,750
+We've got over 30 plus of the
+top AI building frameworks
+
+292
+00:11:42,750 --> 00:11:44,490
+plus a variety of other tools that you use
+
+293
+00:11:44,490 --> 00:11:46,050
+when building apps as well,
+
+294
+00:11:46,050 --> 00:11:48,090
+and Redis is integrated
+with all of those things.
+
+295
+00:11:48,090 --> 00:11:50,791
+And customers ranging from OpenAI,
+
+296
+00:11:50,791 --> 00:11:53,610
+RelevanceAI, Superlinked, Raymond James,
+
+297
+00:11:53,610 --> 00:11:56,250
+they're all using these Redis technology
+
+298
+00:11:56,250 --> 00:11:58,560
+to make their generative AI apps fast
+
+299
+00:11:58,560 --> 00:12:00,123
+and performance and low-cost.
+
+300
+00:12:01,640 --> 00:12:03,660
+And this slide sort of shows, really,
+
+301
+00:12:03,660 --> 00:12:05,820
+the versatility of Redis
+in the Gen AI stack.
+
+302
+00:12:05,820 --> 00:12:07,350
+There's a ton of icons here,
+
+303
+00:12:07,350 --> 00:12:09,150
+but I will call out a few things.
+
+304
+00:12:09,150 --> 00:12:11,220
+And actually, you can use
+Redis for all of these layers,
+
+305
+00:12:11,220 --> 00:12:13,860
+things like Redis Flex
+for long-term storage,
+
+306
+00:12:13,860 --> 00:12:15,420
+RDI as the data pipeline,
+
+307
+00:12:15,420 --> 00:12:17,610
+or a variety of other
+things that Redis integrates
+
+308
+00:12:17,610 --> 00:12:19,575
+ranging from Snowflake or Databricks,
+
+309
+00:12:19,575 --> 00:12:22,710
+a variety of database services
+in all the hyperscalers,
+
+310
+00:12:22,710 --> 00:12:25,680
+using a variety of data
+pipeline tools to get data in.
+
+311
+00:12:25,680 --> 00:12:27,510
+But the key is the working memory layer,
+
+312
+00:12:27,510 --> 00:12:29,673
+that fast data layer for agents,
+
+313
+00:12:31,350 --> 00:12:32,667
+that's Redis, right?
+
+314
+00:12:32,667 --> 00:12:34,050
+And Redis Vector Search,
+
+315
+00:12:34,050 --> 00:12:37,200
+which is a way to obviously
+use semantic search at scale
+
+316
+00:12:37,200 --> 00:12:38,790
+with very high performance,
+
+317
+00:12:38,790 --> 00:12:40,080
+and the Redis Engine in general
+
+318
+00:12:40,080 --> 00:12:42,280
+can back a variety of
+these different Gen AI
+
+319
+00:12:43,200 --> 00:12:44,310
+apps you might build.
+
+320
+00:12:44,310 --> 00:12:47,040
+And then there's
+integrations with Tools LLMs.
+
+321
+00:12:47,040 --> 00:12:48,900
+Redis VL is very, very popular,
+
+322
+00:12:48,900 --> 00:12:51,000
+semantic caching with lane cache,
+
+323
+00:12:51,000 --> 00:12:53,730
+a variety of other Redis tools
+to really integrate Redis
+
+324
+00:12:53,730 --> 00:12:55,800
+with the way you build for Gen AI,
+
+325
+00:12:55,800 --> 00:12:58,050
+alongside integrations with
+a variety of other tools
+
+326
+00:12:58,050 --> 00:12:58,883
+as well, right?
+
+327
+00:12:58,883 --> 00:13:01,350
+And this is all sort of
+there and rapidly developed
+
+328
+00:13:01,350 --> 00:13:02,840
+and hugely important for our team
+
+329
+00:13:02,840 --> 00:13:05,160
+to serve the Gen AI world in the same way
+
+330
+00:13:05,160 --> 00:13:09,280
+that we're serving the
+web app, mobile app world.
+
+331
+00:13:09,280 --> 00:13:12,780
+I wanna call out one specific
+thing we're working on,
+
+332
+00:13:12,780 --> 00:13:15,660
+Redis Lane Cache, which is
+our semantic caching product,
+
+333
+00:13:15,660 --> 00:13:17,160
+uses Redis under the hood,
+
+334
+00:13:17,160 --> 00:13:20,370
+but has a variety of services
+that make it very, very easy
+
+335
+00:13:20,370 --> 00:13:21,533
+to sort of build semantic caching.
+
+336
+00:13:21,533 --> 00:13:24,060
+There's a bunch of things
+besides the actual cache
+
+337
+00:13:24,060 --> 00:13:27,000
+and Vector Search to really build
+
+338
+00:13:27,000 --> 00:13:28,890
+a great semantic caching solution.
+
+339
+00:13:28,890 --> 00:13:30,390
+If you're not familiar
+with semantic caching,
+
+340
+00:13:30,390 --> 00:13:31,860
+it's basically some of the similar idea
+
+341
+00:13:31,860 --> 00:13:34,110
+of what caching is with a database.
+
+342
+00:13:34,110 --> 00:13:35,850
+Instead of hitting an LLM for everything,
+
+343
+00:13:35,850 --> 00:13:37,110
+let's say you have a chat bot
+
+344
+00:13:37,110 --> 00:13:39,960
+and you're hitting the LLM
+for all of the responses,
+
+345
+00:13:39,960 --> 00:13:41,910
+oftentimes you're gonna
+have many customers
+
+346
+00:13:41,910 --> 00:13:42,930
+asking the same thing,
+
+347
+00:13:42,930 --> 00:13:44,280
+and if you could cache that response
+
+348
+00:13:44,280 --> 00:13:47,100
+back from an LLM, it would be cheaper,
+
+349
+00:13:47,100 --> 00:13:49,410
+you wouldn't have to go hit
+the LLM again, and faster.
+
+350
+00:13:49,410 --> 00:13:51,240
+For anyone who's built with LLMs,
+
+351
+00:13:51,240 --> 00:13:53,340
+they know that the latency is not as fast
+
+352
+00:13:53,340 --> 00:13:55,443
+as a lot of other data or AI products.
+
+353
+00:13:56,340 --> 00:13:58,350
+And so with Lane Cache,
+we've seen customers
+
+354
+00:13:58,350 --> 00:14:02,577
+get up to 15 times faster
+performance in calling an LLM,
+
+355
+00:14:02,577 --> 00:14:04,440
+and up to 90% lower cost,
+
+356
+00:14:04,440 --> 00:14:06,490
+depending on how you structure the cache,
+
+357
+00:14:07,530 --> 00:14:09,120
+because you're not
+hitting the LLM as often.
+
+358
+00:14:09,120 --> 00:14:11,010
+So once again, this is
+something that you think about
+
+359
+00:14:11,010 --> 00:14:13,290
+when productionizing your Gen AI systems
+
+360
+00:14:13,290 --> 00:14:14,910
+is at some point, you're
+gonna need to think
+
+361
+00:14:14,910 --> 00:14:17,220
+about performance and lower cost.
+
+362
+00:14:17,220 --> 00:14:18,570
+And here's an example, right?
+
+363
+00:14:18,570 --> 00:14:21,000
+It's not just sort of an abstract idea.
+
+364
+00:14:21,000 --> 00:14:21,990
+Performance does matter.
+
+365
+00:14:21,990 --> 00:14:23,480
+We worked with Asurion,
+
+366
+00:14:23,480 --> 00:14:26,760
+who has a customer service application.
+
+367
+00:14:26,760 --> 00:14:28,740
+They built their Symantec
+Cache and optimized it
+
+368
+00:14:28,740 --> 00:14:30,600
+so that a high percentage of asks
+
+369
+00:14:30,600 --> 00:14:32,490
+were served out of the cache.
+
+370
+00:14:32,490 --> 00:14:35,610
+This improved their
+response times by over 50%,
+
+371
+00:14:35,610 --> 00:14:37,590
+resulting in a four
+times higher engagement
+
+372
+00:14:37,590 --> 00:14:38,850
+on their websites, right?
+
+373
+00:14:38,850 --> 00:14:40,680
+Performance, when
+thinking about this stuff,
+
+374
+00:14:40,680 --> 00:14:41,760
+makes a huge difference,
+
+375
+00:14:41,760 --> 00:14:43,620
+and we're seeing Symantec Caching,
+
+376
+00:14:43,620 --> 00:14:45,240
+now that a lot of these generative AI apps
+
+377
+00:14:45,240 --> 00:14:46,680
+are moving towards production,
+
+378
+00:14:46,680 --> 00:14:49,413
+becoming just a critical
+part of the Gen AI stack.
+
+379
+00:14:50,280 --> 00:14:51,540
+So before I hand it over to Lina,
+
+380
+00:14:51,540 --> 00:14:53,490
+one more point I wanted to make,
+
+381
+00:14:53,490 --> 00:14:56,400
+which was, we're at an AWS conference.
+
+382
+00:14:56,400 --> 00:14:58,650
+We all love the cloud, we all love AWS,
+
+383
+00:14:58,650 --> 00:15:00,750
+but many of you, I'm sure,
+
+384
+00:15:00,750 --> 00:15:03,780
+have either your team or
+teams in your organization
+
+385
+00:15:03,780 --> 00:15:06,990
+running deployments in a
+variety of areas, right?
+
+386
+00:15:06,990 --> 00:15:09,660
+In other hyperscaler clouds,
+
+387
+00:15:09,660 --> 00:15:12,270
+maybe on Kubernetes in
+the cloud or on-prem,
+
+388
+00:15:12,270 --> 00:15:13,890
+or software and VMs,
+
+389
+00:15:13,890 --> 00:15:15,960
+either in the cloud or on-premises, right?
+
+390
+00:15:15,960 --> 00:15:19,110
+Enterprises today usually
+don't just run in one place,
+
+391
+00:15:19,110 --> 00:15:22,140
+and with Redis, you can really run Redis
+
+392
+00:15:22,140 --> 00:15:24,990
+and enterprise-grade
+supported Redis anywhere.
+
+393
+00:15:24,990 --> 00:15:27,510
+In any major cloud, we support,
+
+394
+00:15:27,510 --> 00:15:29,820
+Kubernetes for a variety
+of major cloud service,
+
+395
+00:15:29,820 --> 00:15:32,580
+Kubernetes providers, or
+Kubernetes in general,
+
+396
+00:15:32,580 --> 00:15:34,950
+wherever, OpenShift, we support it,
+
+397
+00:15:34,950 --> 00:15:36,267
+and software as well, we support.
+
+398
+00:15:36,267 --> 00:15:39,060
+And one thing that I found
+when talking to customers,
+
+399
+00:15:39,060 --> 00:15:40,340
+especially enterprise customers,
+
+400
+00:15:40,340 --> 00:15:42,900
+is they care about
+consolidating their engines,
+
+401
+00:15:42,900 --> 00:15:45,540
+so there's sort of one
+standard way to deploy,
+
+402
+00:15:45,540 --> 00:15:47,010
+and they appreciate the fact
+
+403
+00:15:47,010 --> 00:15:48,090
+that they can sort of deploy
+
+404
+00:15:48,090 --> 00:15:49,890
+the best-in-class, fastest engine
+
+405
+00:15:49,890 --> 00:15:51,330
+with all these different capabilities
+
+406
+00:15:51,330 --> 00:15:53,580
+across Gen-AI, caching, NoSQL,
+
+407
+00:15:53,580 --> 00:15:56,760
+wherever they want with the same group,
+
+408
+00:15:56,760 --> 00:15:58,010
+and so we can offer that.
+
+409
+00:15:58,980 --> 00:16:01,080
+But with that, I'll hand it over to Lina,
+
+410
+00:16:01,080 --> 00:16:03,450
+who will get more into
+how all this technology
+
+411
+00:16:03,450 --> 00:16:05,250
+is used at Sky to reinvent
+
+412
+00:16:05,250 --> 00:16:07,110
+their streaming platform
+
+413
+00:16:07,110 --> 00:16:08,910
+and their future with generative AI.
+
+414
+00:16:14,918 --> 00:16:17,840
+♪ Yeah, I wanna go with you ♪
+
+415
+00:16:17,840 --> 00:16:20,373
+- [Narrator] The NBA is
+streaming on Peacock.
+
+416
+00:16:21,320 --> 00:16:24,680
+140 games, Peacock NBA Monday,
+
+417
+00:16:24,680 --> 00:16:26,000
+Coast to Coast Tuesday,
+
+418
+00:16:26,000 --> 00:16:28,223
+and one epic 2026.
+
+419
+00:16:28,223 --> 00:16:30,570
+♪ I'mma elevate the next
+time they see this ♪
+
+420
+00:16:30,570 --> 00:16:34,053
+- [Narrator] Plus all new ways
+to see more than the score.
+
+421
+00:16:35,280 --> 00:16:37,880
+From the court, to the culture,
+
+422
+00:16:37,880 --> 00:16:39,955
+the NBA is on Peacock.
+
+423
+00:16:39,955 --> 00:16:41,705
+♪ Go baby ♪
+
+424
+00:16:41,705 --> 00:16:45,260
+♪ Yeah I wanna go baby ♪
+
+425
+00:16:45,260 --> 00:16:46,093
+- Thank you, Jon.
+
+426
+00:16:46,093 --> 00:16:48,480
+I hope you enjoyed that short video
+
+427
+00:16:48,480 --> 00:16:51,990
+showcasing our partnership
+with NBA on Peacock.
+
+428
+00:16:51,990 --> 00:16:53,720
+So let me give you a bit of an overview
+
+429
+00:16:53,720 --> 00:16:56,640
+about global streaming and who we are.
+
+430
+00:16:56,640 --> 00:16:59,820
+So we have over 41 million customers
+
+431
+00:16:59,820 --> 00:17:01,700
+here in the US alone for Peacock,
+
+432
+00:17:01,700 --> 00:17:05,280
+and we consider ourselves as leaders
+
+433
+00:17:05,280 --> 00:17:06,783
+in the live sports streaming.
+
+434
+00:17:08,010 --> 00:17:09,930
+To give you a bit of a scale,
+
+435
+00:17:09,930 --> 00:17:14,070
+in 2024, we had a streaming record
+
+436
+00:17:14,070 --> 00:17:16,440
+with the NFL wild card game,
+
+437
+00:17:16,440 --> 00:17:21,180
+and we encountered over 30%
+of the internet of the US,
+
+438
+00:17:21,180 --> 00:17:23,670
+which was, at the time, a record.
+
+439
+00:17:23,670 --> 00:17:26,250
+So global streaming technology
+
+440
+00:17:26,250 --> 00:17:28,350
+is truly a global department.
+
+441
+00:17:28,350 --> 00:17:31,080
+We have engineers here in the US,
+
+442
+00:17:31,080 --> 00:17:35,103
+in London, Czech Republic,
+Portugal, and India.
+
+443
+00:17:37,890 --> 00:17:41,250
+So let me give you an
+overview about bookmarking,
+
+444
+00:17:41,250 --> 00:17:44,097
+which is one of the use
+case we used Redis Cloud,
+
+445
+00:17:44,097 --> 00:17:46,350
+and it was our first application
+
+446
+00:17:46,350 --> 00:17:51,060
+to integrate Redis Enterprise.
+
+447
+00:17:51,060 --> 00:17:53,040
+So what's bookmarking?
+
+448
+00:17:53,040 --> 00:17:56,650
+I guess all of you here have been using it
+
+449
+00:17:56,650 --> 00:18:01,560
+on a day-to-day during
+your streaming experience.
+
+450
+00:18:01,560 --> 00:18:03,340
+So basically, you'll be watching
+
+451
+00:18:04,740 --> 00:18:07,590
+such an episode on Love
+Island, for example,
+
+452
+00:18:07,590 --> 00:18:10,950
+and you will want to pause
+to grab a cup of coffee
+
+453
+00:18:10,950 --> 00:18:14,570
+or, let's say, go back to work.
+
+454
+00:18:14,570 --> 00:18:18,090
+So that's basically bookmarking.
+
+455
+00:18:18,090 --> 00:18:20,340
+So that's available, as you know,
+
+456
+00:18:20,340 --> 00:18:24,910
+on all platforms such as Peacock, Netflix,
+
+457
+00:18:24,910 --> 00:18:27,603
+or, God forbid, Amazon Prime.
+
+458
+00:18:28,530 --> 00:18:31,080
+So as you can imagine,
+
+459
+00:18:31,080 --> 00:18:33,750
+we get millions of people
+watching every day,
+
+460
+00:18:33,750 --> 00:18:37,470
+and in the number of
+bookmarking we're saving,
+
+461
+00:18:37,470 --> 00:18:38,310
+it's also a million,
+
+462
+00:18:38,310 --> 00:18:42,453
+and that's the scale we
+are handling every day.
+
+463
+00:18:43,410 --> 00:18:46,680
+So bookmarking is feeding, as well,
+
+464
+00:18:46,680 --> 00:18:48,240
+on another important feature,
+
+465
+00:18:48,240 --> 00:18:50,390
+which is continue watching.
+
+466
+00:18:50,390 --> 00:18:53,280
+It's also continue watching the rail
+
+467
+00:18:53,280 --> 00:18:55,680
+that you can see on the right.
+
+468
+00:18:55,680 --> 00:18:57,510
+It shows you all the
+content you've started
+
+469
+00:18:57,510 --> 00:18:59,520
+but haven't completed it.
+
+470
+00:18:59,520 --> 00:19:02,283
+So it appears in multiple contexts.
+
+471
+00:19:03,510 --> 00:19:08,460
+So on the left, you will see
+the Yellowstone series page
+
+472
+00:19:08,460 --> 00:19:10,590
+where you would have
+saved all your bookmarks,
+
+473
+00:19:10,590 --> 00:19:14,310
+and you would continue
+watching where you left it off.
+
+474
+00:19:14,310 --> 00:19:15,330
+But on the right, you will see
+
+475
+00:19:15,330 --> 00:19:17,790
+that the continue
+watching section homepage
+
+476
+00:19:17,790 --> 00:19:19,500
+will have all your series,
+
+477
+00:19:19,500 --> 00:19:22,080
+such as Yellowstone, Love Island,
+
+478
+00:19:22,080 --> 00:19:23,940
+and How to Train Your Dragon,
+
+479
+00:19:23,940 --> 00:19:27,270
+which you didn't continue or finish.
+
+480
+00:19:27,270 --> 00:19:30,873
+And it will also show you any
+returning series or episodes.
+
+481
+00:19:32,070 --> 00:19:35,400
+Now that sounds like
+quite a simple feature,
+
+482
+00:19:35,400 --> 00:19:39,690
+but actually, the complexity
+lies into the scale.
+
+483
+00:19:39,690 --> 00:19:41,010
+So the technical challenge here
+
+484
+00:19:41,010 --> 00:19:44,970
+is to maintain the state,
+
+485
+00:19:44,970 --> 00:19:47,370
+in the consistent state
+of saving the bookmarks,
+
+486
+00:19:47,370 --> 00:19:51,900
+the low latency, and the
+cadence of saving a bookmark.
+
+487
+00:19:51,900 --> 00:19:55,020
+So every minute, you
+have millions of writes,
+
+488
+00:19:55,020 --> 00:19:57,270
+and every page load, you will have
+
+489
+00:19:57,270 --> 00:19:59,973
+potentially millions of
+reads for the bookmarks.
+
+490
+00:20:01,430 --> 00:20:04,870
+So what can you do when
+your largest database
+
+491
+00:20:04,870 --> 00:20:07,803
+is too costly to run and manage?
+
+492
+00:20:11,580 --> 00:20:14,940
+So we were using Cassandra
+to store our bookmarks,
+
+493
+00:20:14,940 --> 00:20:17,010
+but we hit several limitations,
+
+494
+00:20:17,010 --> 00:20:21,210
+due to the data size, loads,
+the volume of bookmarks.
+
+495
+00:20:21,210 --> 00:20:23,820
+Our infrastructure was under strain,
+
+496
+00:20:23,820 --> 00:20:26,943
+and it was becoming very cost-intensive.
+
+497
+00:20:27,960 --> 00:20:29,370
+So we were unable to meet
+
+498
+00:20:29,370 --> 00:20:31,830
+one of the most important
+product requirements,
+
+499
+00:20:31,830 --> 00:20:35,760
+such as expanding the
+retention of our bookmarks,
+
+500
+00:20:35,760 --> 00:20:38,340
+and that was a problem
+due to the Cassandra
+
+501
+00:20:38,340 --> 00:20:40,590
+not able to support it.
+
+502
+00:20:40,590 --> 00:20:41,940
+Outside of this project,
+
+503
+00:20:41,940 --> 00:20:44,100
+we've been working on a broader migration
+
+504
+00:20:44,100 --> 00:20:49,100
+from the self-managed Cassandra
+to a managed AWS Keyspaces,
+
+505
+00:20:49,980 --> 00:20:52,560
+and all of these
+limitations were the same,
+
+506
+00:20:52,560 --> 00:20:55,470
+not being able, for this reason,
+
+507
+00:20:55,470 --> 00:20:57,693
+to migrate to AWS Keyspaces.
+
+508
+00:21:00,260 --> 00:21:04,560
+So this is our previous
+bookmarking service architecture.
+
+509
+00:21:04,560 --> 00:21:06,300
+As you can see, in the middle,
+
+510
+00:21:06,300 --> 00:21:08,340
+we were heavily dependent on the database,
+
+511
+00:21:08,340 --> 00:21:11,280
+so every reads and writes operation
+
+512
+00:21:11,280 --> 00:21:13,650
+went directly to Cassandra,
+
+513
+00:21:13,650 --> 00:21:15,780
+with no caching layer,
+
+514
+00:21:15,780 --> 00:21:18,990
+so there was no place to absorb traffic
+
+515
+00:21:18,990 --> 00:21:21,450
+or buffer for writes.
+
+516
+00:21:21,450 --> 00:21:25,410
+So the system used a single
+uniform persistent layer
+
+517
+00:21:25,410 --> 00:21:26,970
+for all the data.
+
+518
+00:21:26,970 --> 00:21:30,210
+There was no distinction
+between the short-term
+
+519
+00:21:30,210 --> 00:21:33,000
+and the long-term data.
+
+520
+00:21:33,000 --> 00:21:34,890
+So everything lived in the same place,
+
+521
+00:21:34,890 --> 00:21:36,040
+and as you can imagine,
+
+522
+00:21:36,040 --> 00:21:39,160
+it was creating a constant
+high cadence and pressure
+
+523
+00:21:39,160 --> 00:21:41,250
+on the database.
+
+524
+00:21:41,250 --> 00:21:44,490
+So every bookmark update executed at full,
+
+525
+00:21:44,490 --> 00:21:46,560
+rate-generated sustained load,
+
+526
+00:21:46,560 --> 00:21:50,883
+and no natural relief
+point on this architecture.
+
+527
+00:21:51,840 --> 00:21:55,770
+So as you can see, Cassandra
+struggled to scale,
+
+528
+00:21:55,770 --> 00:21:59,733
+especially when we had
+big events, effectively.
+
+529
+00:22:00,630 --> 00:22:03,420
+So the challenge was not
+simply to add capacity,
+
+530
+00:22:03,420 --> 00:22:05,220
+even if we scaled horizontally,
+
+531
+00:22:05,220 --> 00:22:07,890
+this was not solving the problem.
+
+532
+00:22:07,890 --> 00:22:10,740
+Compounding this issue with, as I said,
+
+533
+00:22:10,740 --> 00:22:13,800
+the product requirements,
+we were not able to meet,
+
+534
+00:22:13,800 --> 00:22:18,450
+so it was clear to us that
+this architecture we had
+
+535
+00:22:18,450 --> 00:22:21,810
+was clearly, could not evolve
+
+536
+00:22:21,810 --> 00:22:23,850
+with any of these product requirements,
+
+537
+00:22:23,850 --> 00:22:25,623
+or could not sustain.
+
+538
+00:22:28,520 --> 00:22:30,090
+So here comes Redis.
+
+539
+00:22:30,090 --> 00:22:31,673
+We reached out to Redis,
+
+540
+00:22:32,610 --> 00:22:36,060
+so that we look at potential options
+
+541
+00:22:36,060 --> 00:22:37,710
+to solve those problems together.
+
+542
+00:22:41,580 --> 00:22:44,280
+So initially, we looked
+at Redis Open Source.
+
+543
+00:22:44,280 --> 00:22:46,950
+It seems like everyone
+knows Redis Open Source.
+
+544
+00:22:46,950 --> 00:22:49,860
+It offers a lot of core capabilities,
+
+545
+00:22:49,860 --> 00:22:53,760
+however, with Open Source,
+everything is self-managed.
+
+546
+00:22:53,760 --> 00:22:56,820
+So that would have been difficult,
+especially at our scale,
+
+547
+00:22:56,820 --> 00:23:01,440
+for maintaining, scaling,
+and all this operation,
+
+548
+00:23:01,440 --> 00:23:04,830
+and it will have created a
+lot of operational overhead
+
+549
+00:23:04,830 --> 00:23:09,830
+for us, and required a dedicated expertise
+
+550
+00:23:09,900 --> 00:23:11,163
+to manage effectively.
+
+551
+00:23:13,380 --> 00:23:15,360
+So we then evaluated Redis Cloud,
+
+552
+00:23:15,360 --> 00:23:17,940
+that Jon mentioned previously.
+
+553
+00:23:17,940 --> 00:23:22,830
+So it's a managed service
+that offers all of those,
+
+554
+00:23:22,830 --> 00:23:27,120
+and eliminates our
+operational buffer and burden.
+
+555
+00:23:27,120 --> 00:23:32,010
+So the team identified that
+this area of Redis Cloud
+
+556
+00:23:32,010 --> 00:23:34,800
+provides the most value for us.
+
+557
+00:23:34,800 --> 00:23:39,800
+So auto-scaling is, for us,
+the biggest differentiator.
+
+558
+00:23:39,960 --> 00:23:43,320
+So Redis Cloud will handle
+scaling effectively,
+
+559
+00:23:43,320 --> 00:23:47,340
+and it will allow us to
+focus on the development,
+
+560
+00:23:47,340 --> 00:23:48,900
+rather than the infrastructure.
+
+561
+00:23:48,900 --> 00:23:52,890
+And that was the biggest
+game-changer for us.
+
+562
+00:23:52,890 --> 00:23:54,930
+In addition to that, they support
+
+563
+00:23:54,930 --> 00:23:58,410
+the cross-region replication,
+with a very low latency.
+
+564
+00:23:58,410 --> 00:24:01,620
+So for us, as we said, we are global,
+
+565
+00:24:01,620 --> 00:24:04,320
+and that will obviously work for us,
+
+566
+00:24:04,320 --> 00:24:05,553
+for global deployments.
+
+567
+00:24:06,840 --> 00:24:11,840
+And we also have, as a feature
+provided by Redis Cloud,
+
+568
+00:24:13,530 --> 00:24:15,930
+a two-second flash to this capability,
+
+569
+00:24:15,930 --> 00:24:18,060
+that ensure data durability.
+
+570
+00:24:18,060 --> 00:24:21,510
+And obviously, if we had
+to use self-managed Redis,
+
+571
+00:24:21,510 --> 00:24:24,753
+it would have been very
+difficult to maintain.
+
+572
+00:24:25,860 --> 00:24:28,560
+Another aspect of the Redis Cloud
+
+573
+00:24:28,560 --> 00:24:32,430
+is the number of modern data
+structures they support.
+
+574
+00:24:32,430 --> 00:24:36,660
+So we explored hash,
+JSON, string, sorted set.
+
+575
+00:24:36,660 --> 00:24:38,520
+We end up choosing a
+string and sorted set,
+
+576
+00:24:38,520 --> 00:24:41,070
+but all of those models they offer
+
+577
+00:24:41,070 --> 00:24:43,260
+worked very well for our business,
+
+578
+00:24:43,260 --> 00:24:47,163
+and allow us to save massive costs.
+
+579
+00:24:48,390 --> 00:24:50,640
+In addition to those ones,
+
+580
+00:24:50,640 --> 00:24:53,820
+we also have a TTL-based eviction policy,
+
+581
+00:24:53,820 --> 00:24:56,760
+which is time-to-leave
+based eviction policy,
+
+582
+00:24:56,760 --> 00:24:59,760
+which will clean up your clusters,
+
+583
+00:24:59,760 --> 00:25:04,053
+and effectively manage,
+simplify, manage your cache.
+
+584
+00:25:05,310 --> 00:25:07,250
+So in the end, as you can see,
+
+585
+00:25:07,250 --> 00:25:09,030
+we have the hybrid search,
+
+586
+00:25:09,030 --> 00:25:12,300
+which is used for vector search.
+
+587
+00:25:12,300 --> 00:25:14,220
+We do not need this for bookmarking,
+
+588
+00:25:14,220 --> 00:25:18,670
+but it was also, while we
+were exploring Redis Cloud,
+
+589
+00:25:18,670 --> 00:25:21,090
+we were thinking that
+it could be a use case,
+
+590
+00:25:21,090 --> 00:25:23,340
+a very good one for Genepi,
+
+591
+00:25:23,340 --> 00:25:24,990
+which we will be talking about.
+
+592
+00:25:24,990 --> 00:25:27,513
+She's our Gen AI platform.
+
+593
+00:25:31,020 --> 00:25:34,050
+So we've built a new
+architecture using Redis
+
+594
+00:25:34,050 --> 00:25:36,720
+to make bookmarks faster
+and more reliable.
+
+595
+00:25:36,720 --> 00:25:40,770
+So as you can see, when you
+create or update a bookmark,
+
+596
+00:25:40,770 --> 00:25:45,480
+so our system are writing
+to two Redis Cloud clusters.
+
+597
+00:25:45,480 --> 00:25:46,980
+The first one is a string,
+
+598
+00:25:46,980 --> 00:25:49,590
+and the second one is a sorted set,
+
+599
+00:25:49,590 --> 00:25:52,880
+which I will be explaining
+further in the next slides.
+
+600
+00:25:52,880 --> 00:25:56,880
+So that separates service,
+as you can see below,
+
+601
+00:25:56,880 --> 00:25:58,350
+which we call BMS,
+
+602
+00:25:58,350 --> 00:26:00,900
+the bookmarking service
+cache right behind,
+
+603
+00:26:00,900 --> 00:26:05,900
+will save the bookmarks
+to long-term data storage,
+
+604
+00:26:06,900 --> 00:26:11,900
+which will be AWS Keyspaces
+we are currently migrating,
+
+605
+00:26:13,560 --> 00:26:15,063
+once they are enough mature.
+
+606
+00:26:17,100 --> 00:26:19,770
+And also, when you need a bookmark,
+
+607
+00:26:19,770 --> 00:26:21,900
+in terms of bookmarking reading,
+
+608
+00:26:21,900 --> 00:26:24,150
+our system will check both Redis
+
+609
+00:26:24,150 --> 00:26:29,150
+and our long storage in parallel,
+
+610
+00:26:29,310 --> 00:26:32,943
+and will fetch the most recent bookmark.
+
+611
+00:26:34,860 --> 00:26:38,360
+So bookmarks now stay in
+Redis for at least 10 minutes
+
+612
+00:26:38,360 --> 00:26:41,160
+before they go to the long-term storage,
+
+613
+00:26:41,160 --> 00:26:44,160
+and instead of writing
+to Cassandra constantly,
+
+614
+00:26:44,160 --> 00:26:45,900
+the separation of hot data,
+
+615
+00:26:45,900 --> 00:26:47,760
+so basically what you need the most,
+
+616
+00:26:47,760 --> 00:26:50,820
+and the cold data, which
+is the historic bookmarks,
+
+617
+00:26:50,820 --> 00:26:54,483
+improves the performance and
+reduce massively the cost.
+
+618
+00:26:57,390 --> 00:27:00,330
+So Redis acts as a cache in
+
+619
+00:27:00,330 --> 00:27:02,913
+the middle of our infrastructure,
+
+620
+00:27:03,760 --> 00:27:07,890
+as a design to cache data
+for the bookmarking reader,
+
+621
+00:27:07,890 --> 00:27:11,610
+while also finding a way to persist data
+
+622
+00:27:11,610 --> 00:27:13,770
+for long-term storage.
+
+623
+00:27:13,770 --> 00:27:18,753
+So we architected Redis with
+two different data structure.
+
+624
+00:27:19,590 --> 00:27:21,810
+The first one is a string cluster,
+
+625
+00:27:21,810 --> 00:27:23,943
+and the sorted set data structure.
+
+626
+00:27:24,900 --> 00:27:29,880
+So the string data structure
+supports heavy writes,
+
+627
+00:27:29,880 --> 00:27:31,890
+so the writes happening
+at the same cadence
+
+628
+00:27:31,890 --> 00:27:35,850
+of the current, as soon as
+we receive the bookmark.
+
+629
+00:27:35,850 --> 00:27:39,570
+For every single bookmarks
+we have in Kafka,
+
+630
+00:27:39,570 --> 00:27:42,213
+it will end up in our string cluster.
+
+631
+00:27:43,200 --> 00:27:45,510
+So the aim of the string cluster
+
+632
+00:27:45,510 --> 00:27:48,660
+is to deduplicate the data,
+
+633
+00:27:48,660 --> 00:27:52,240
+if we have a new bookmark
+for the same user,
+
+634
+00:27:52,240 --> 00:27:55,020
+for the same content, we simply update
+
+635
+00:27:55,020 --> 00:27:57,753
+the string position of that bookmark.
+
+636
+00:27:58,830 --> 00:28:02,673
+So this is essentially a cache
+accumulating all the data.
+
+637
+00:28:04,080 --> 00:28:07,290
+So the string operation
+are very, very fast,
+
+638
+00:28:07,290 --> 00:28:11,013
+and quite performant, they
+have a time complexity of O1,
+
+639
+00:28:12,240 --> 00:28:15,760
+and obviously this was
+where we had a lot of data.
+
+640
+00:28:15,760 --> 00:28:19,860
+We needed something else
+to process the data,
+
+641
+00:28:19,860 --> 00:28:21,720
+and that's why we took a second cluster,
+
+642
+00:28:21,720 --> 00:28:23,370
+which is a sorted set.
+
+643
+00:28:23,370 --> 00:28:26,940
+So the sorted set has, as the name said,
+
+644
+00:28:26,940 --> 00:28:29,490
+it's basically ordering the bookmarks,
+
+645
+00:28:29,490 --> 00:28:32,880
+and it's like a
+leaderboard, which will keep
+
+646
+00:28:32,880 --> 00:28:35,880
+the key of the bookmark, and a score
+
+647
+00:28:35,880 --> 00:28:40,380
+that will keep moving and compare
+
+648
+00:28:40,380 --> 00:28:41,973
+the previous entries we had.
+
+649
+00:28:43,080 --> 00:28:44,880
+With a sorted set, you get a view
+
+650
+00:28:44,880 --> 00:28:47,553
+of the string cluster in an ordered way.
+
+651
+00:28:48,780 --> 00:28:52,680
+So this gives us a nice
+way to process the data
+
+652
+00:28:52,680 --> 00:28:54,450
+separately from the string cluster,
+
+653
+00:28:54,450 --> 00:28:57,600
+which is used to fetch the bookmarks,
+
+654
+00:28:57,600 --> 00:29:00,273
+and without impacting the customer.
+
+655
+00:29:04,740 --> 00:29:06,720
+So we started our journey with Redis
+
+656
+00:29:06,720 --> 00:29:09,630
+by proof of concept last year,
+
+657
+00:29:09,630 --> 00:29:13,110
+where we conducted
+functional testing, NFT,
+
+658
+00:29:13,110 --> 00:29:15,790
+scale on the load and latency.
+
+659
+00:29:15,790 --> 00:29:19,830
+They really helped us to
+explore with the architects
+
+660
+00:29:19,830 --> 00:29:24,660
+both different data model
+and what could work for us.
+
+661
+00:29:24,660 --> 00:29:27,810
+We then did an accumulation rate test
+
+662
+00:29:27,810 --> 00:29:30,900
+to see how much we will
+be saving of writes
+
+663
+00:29:30,900 --> 00:29:33,210
+in the long persistent database,
+
+664
+00:29:33,210 --> 00:29:35,190
+which was at that time Cassandra,
+
+665
+00:29:35,190 --> 00:29:38,490
+and it happened that we
+were saving 20 to 40 times.
+
+666
+00:29:38,490 --> 00:29:41,730
+So that was massive, and
+it was very clear to us
+
+667
+00:29:41,730 --> 00:29:44,403
+that Redis Cloud will be a good choice.
+
+668
+00:29:45,540 --> 00:29:50,070
+We then did a latency benchmarking test
+
+669
+00:29:50,070 --> 00:29:52,080
+through one of their
+library they provided,
+
+670
+00:29:52,080 --> 00:29:53,670
+which is Memtier.
+
+671
+00:29:53,670 --> 00:29:55,503
+We observed some latency there.
+
+672
+00:29:56,460 --> 00:30:01,460
+Redis helped us to find that
+it was mainly on our stack,
+
+673
+00:30:02,220 --> 00:30:06,010
+but also, they also tried to provide
+
+674
+00:30:06,010 --> 00:30:11,010
+even better performance
+that came out in Redis 8.2,
+
+675
+00:30:11,430 --> 00:30:13,650
+especially on how they recharged
+
+676
+00:30:13,650 --> 00:30:15,543
+when we are scaling on the load.
+
+677
+00:30:16,710 --> 00:30:19,110
+We then started our development
+
+678
+00:30:19,110 --> 00:30:22,140
+by integrating Redis
+open source initially,
+
+679
+00:30:22,140 --> 00:30:25,080
+and the reason why was that we needed,
+
+680
+00:30:25,080 --> 00:30:29,460
+as NBCU, Sky, AWS private link
+
+681
+00:30:29,460 --> 00:30:33,900
+to not be exposed over the
+public internet, to avoid that,
+
+682
+00:30:33,900 --> 00:30:36,180
+and Redis really stood out.
+
+683
+00:30:36,180 --> 00:30:38,940
+They road mapped it, they worked with AWS,
+
+684
+00:30:38,940 --> 00:30:41,220
+and it was available last summer,
+
+685
+00:30:41,220 --> 00:30:43,443
+just a summer, a few months ago.
+
+686
+00:30:44,610 --> 00:30:48,300
+So that allowed us to start
+our production readiness.
+
+687
+00:30:48,300 --> 00:30:50,670
+We did some chaos testing, scaling,
+
+688
+00:30:50,670 --> 00:30:53,460
+and we launched a few weeks ago,
+
+689
+00:30:53,460 --> 00:30:55,380
+hand-in-hand with Redis,
+
+690
+00:30:55,380 --> 00:30:58,830
+and we have had zero incidents so far.
+
+691
+00:30:58,830 --> 00:31:03,830
+So that unlocked for us the
+migration to AWS Keyspaces
+
+692
+00:31:04,150 --> 00:31:07,500
+with the cost reduction
+and the number of writes
+
+693
+00:31:07,500 --> 00:31:10,953
+that have reduced by at least 20 times.
+
+694
+00:31:13,850 --> 00:31:17,130
+So as I said, the result of
+this Redis cloud implementation
+
+695
+00:31:17,130 --> 00:31:20,640
+has been transformational for us.
+
+696
+00:31:20,640 --> 00:31:24,603
+We have a 20 times reduction
+in the write pressure.
+
+697
+00:31:25,440 --> 00:31:30,150
+This means our database can
+focus on complex queries
+
+698
+00:31:30,150 --> 00:31:32,670
+and long-term storage rather than handling
+
+699
+00:31:32,670 --> 00:31:36,470
+millions of millions of bookmarks updates.
+
+700
+00:31:36,470 --> 00:31:40,860
+And with this performance
+bottleneck removed now,
+
+701
+00:31:40,860 --> 00:31:44,280
+our product teams can
+now build more feature
+
+702
+00:31:44,280 --> 00:31:45,630
+they've been waiting for.
+
+703
+00:31:45,630 --> 00:31:50,280
+So we are seeing some really
+faster feature development
+
+704
+00:31:50,280 --> 00:31:55,090
+in our side, and more
+ambitious road map items
+
+705
+00:31:55,090 --> 00:31:56,973
+that are becoming feasible.
+
+706
+00:31:58,920 --> 00:32:02,310
+Also, the Redis performance
+gives us ability
+
+707
+00:32:02,310 --> 00:32:05,880
+to handle traffic spikes
+without degradation.
+
+708
+00:32:05,880 --> 00:32:09,300
+We are preparing the NFL,
+big NFL exclusive event
+
+709
+00:32:09,300 --> 00:32:12,810
+for end of December, and
+we are quite confident now
+
+710
+00:32:12,810 --> 00:32:16,023
+that we have Redis in place
+that we will be able to scale.
+
+711
+00:32:17,130 --> 00:32:21,720
+And also by keeping, obviously this,
+
+712
+00:32:21,720 --> 00:32:24,300
+only the frequently accessed bookmarks
+
+713
+00:32:24,300 --> 00:32:25,890
+into the long-term database,
+
+714
+00:32:25,890 --> 00:32:28,893
+it's obviously a massive
+cost reduction for us.
+
+715
+00:32:32,690 --> 00:32:35,430
+So we are migrating our Cassandra database
+
+716
+00:32:35,430 --> 00:32:38,160
+to AWS Keyspaces, and I want to highlight
+
+717
+00:32:38,160 --> 00:32:42,660
+the key benefits that made
+this the right choice for us.
+
+718
+00:32:42,660 --> 00:32:45,840
+So by combining better Redis caching,
+
+719
+00:32:45,840 --> 00:32:50,760
+and we were able to reduce the writes
+
+720
+00:32:50,760 --> 00:32:54,180
+and basically unlock this migration
+
+721
+00:32:54,180 --> 00:32:56,523
+that was awaited for so long.
+
+722
+00:32:57,540 --> 00:33:02,540
+So AWS Keyspaces are managed as a service,
+
+723
+00:33:02,670 --> 00:33:04,680
+they handle for us the infrastructure,
+
+724
+00:33:04,680 --> 00:33:06,660
+the backups, and the maintenance,
+
+725
+00:33:06,660 --> 00:33:09,993
+so we don't have to worry
+about operational overhead.
+
+726
+00:33:10,920 --> 00:33:13,650
+The service scales to handle millions
+
+727
+00:33:13,650 --> 00:33:16,770
+of operations per second
+without any downtime.
+
+728
+00:33:16,770 --> 00:33:21,510
+It has, like Redis, five
+nines of high availability,
+
+729
+00:33:21,510 --> 00:33:25,430
+with data replicated across
+multiple availability zones.
+
+730
+00:33:25,430 --> 00:33:28,920
+So one of the key reasons
+we chose Keyspaces,
+
+731
+00:33:28,920 --> 00:33:32,910
+it was compatible with
+our Apache Cassandra,
+
+732
+00:33:32,910 --> 00:33:35,520
+and we can use our existing APIs,
+
+733
+00:33:35,520 --> 00:33:38,433
+tools without any code
+changes, to migrate.
+
+734
+00:33:39,330 --> 00:33:42,900
+And also AWS partnership
+has really facilitated
+
+735
+00:33:42,900 --> 00:33:45,840
+for big database,
+especially our bookmarking,
+
+736
+00:33:45,840 --> 00:33:49,170
+which is in terabytes, to migrate,
+
+737
+00:33:49,170 --> 00:33:50,650
+and they've increased the throughput
+
+738
+00:33:50,650 --> 00:33:52,473
+on the gouge on their side.
+
+739
+00:33:56,040 --> 00:33:59,910
+So beyond our existing bookmarking,
+
+740
+00:33:59,910 --> 00:34:02,280
+we are actively exploring and working
+
+741
+00:34:02,280 --> 00:34:06,513
+on several additional Redis
+use cases across NBCU Sky.
+
+742
+00:34:07,710 --> 00:34:12,710
+So the first two, concurrency
+management and GNAP,
+
+743
+00:34:13,020 --> 00:34:16,170
+are the areas I will
+be talking you through.
+
+744
+00:34:16,170 --> 00:34:19,230
+And then you have continue
+watching and personalization,
+
+745
+00:34:19,230 --> 00:34:21,930
+which we are exploring.
+
+746
+00:34:21,930 --> 00:34:23,580
+Continue watching will be pretty much
+
+747
+00:34:23,580 --> 00:34:26,490
+the same solution we have
+been using for bookmarking.
+
+748
+00:34:26,490 --> 00:34:30,600
+And we are also exploring
+and evaluating feature form,
+
+749
+00:34:30,600 --> 00:34:32,580
+which will be replacing our feature store
+
+750
+00:34:32,580 --> 00:34:35,400
+for personalization features,
+
+751
+00:34:35,400 --> 00:34:40,400
+for personalization features
+and for that service.
+
+752
+00:34:44,280 --> 00:34:47,460
+So concurrency manager,
+or what we call ConMan,
+
+753
+00:34:47,460 --> 00:34:50,880
+is a service that manage concurrent access
+
+754
+00:34:50,880 --> 00:34:54,030
+to content across our platform.
+
+755
+00:34:54,030 --> 00:34:57,780
+It basically controls how
+many simultaneous streams
+
+756
+00:34:57,780 --> 00:35:00,450
+a user can have, active at the same time.
+
+757
+00:35:00,450 --> 00:35:05,430
+So for example, you are watching
+NFL or NBA in one device,
+
+758
+00:35:05,430 --> 00:35:09,320
+and ConMan tracks this
+stream and enforce you
+
+759
+00:35:09,320 --> 00:35:13,620
+to not have multiple
+streams on other devices.
+
+760
+00:35:13,620 --> 00:35:16,860
+And that depends, obviously,
+of your subscription.
+
+761
+00:35:16,860 --> 00:35:18,210
+So in the current architecture,
+
+762
+00:35:18,210 --> 00:35:21,570
+ConMan is deployed across multiple region.
+
+763
+00:35:21,570 --> 00:35:24,180
+So here you can see
+region one and region two.
+
+764
+00:35:24,180 --> 00:35:29,180
+And each of them are
+connected to a separate DB.
+
+765
+00:35:31,320 --> 00:35:35,430
+So the change we are gonna do very soon
+
+766
+00:35:35,430 --> 00:35:39,240
+is to integrate Redis
+Cloud with PrivateLink,
+
+767
+00:35:39,240 --> 00:35:42,030
+similarly to what we did with bookmarking.
+
+768
+00:35:42,030 --> 00:35:45,360
+And this will obviously make
+it definitely more secure,
+
+769
+00:35:45,360 --> 00:35:50,360
+but also, Redis Cloud provides
+cross-region replication,
+
+770
+00:35:50,880 --> 00:35:54,220
+so it would work for us perfectly.
+
+771
+00:35:54,220 --> 00:35:57,090
+We are also evaluating Redis Flex,
+
+772
+00:35:57,090 --> 00:36:00,780
+which obviously is an
+optimized storage tier,
+
+773
+00:36:00,780 --> 00:36:05,220
+since ConMan has a very small
+time to live, retention,
+
+774
+00:36:05,220 --> 00:36:09,183
+so that would work probably
+better in terms of cost.
+
+775
+00:36:12,430 --> 00:36:16,530
+So I will talk about the Genepi,
+
+776
+00:36:16,530 --> 00:36:20,790
+which is our multipurpose GenAI platform
+
+777
+00:36:20,790 --> 00:36:25,200
+that supports development
+and production workloads.
+
+778
+00:36:25,200 --> 00:36:29,250
+So it's an in-house solution
+
+779
+00:36:29,250 --> 00:36:33,840
+that is vendor agnostic and
+cloud provider agnostic.
+
+780
+00:36:33,840 --> 00:36:35,130
+That means that we are not tied up
+
+781
+00:36:35,130 --> 00:36:38,390
+to any AI vendor or cloud provider.
+
+782
+00:36:38,390 --> 00:36:43,390
+And it seeks to eventually
+facilitate to our team,
+
+783
+00:36:45,690 --> 00:36:48,510
+to all our team, to create
+their own AI solution
+
+784
+00:36:48,510 --> 00:36:49,860
+and development.
+
+785
+00:36:49,860 --> 00:36:54,860
+It provides guardrails and
+governance, as well as security.
+
+786
+00:36:55,200 --> 00:36:57,390
+So as you can see on the left side,
+
+787
+00:36:57,390 --> 00:37:00,210
+you have our tenants, which are basically
+
+788
+00:37:00,210 --> 00:37:03,933
+our team's application that use Genepi,
+
+789
+00:37:03,933 --> 00:37:08,550
+that go through Genepi
+before accessing AI models.
+
+790
+00:37:08,550 --> 00:37:12,000
+And that obviously provides
+for us standardization,
+
+791
+00:37:12,000 --> 00:37:14,103
+security, but also cost tracking.
+
+792
+00:37:16,230 --> 00:37:20,940
+So let me take you through
+Genepi and how it works
+
+793
+00:37:20,940 --> 00:37:23,883
+and how Redis and AWS come
+into the architecture.
+
+794
+00:37:24,900 --> 00:37:26,850
+So on the left, you have all our tenants,
+
+795
+00:37:26,850 --> 00:37:28,260
+which are three types.
+
+796
+00:37:28,260 --> 00:37:32,470
+The workflows, which are consecutive AI
+
+797
+00:37:34,230 --> 00:37:37,290
+requests, and you have the chains,
+
+798
+00:37:37,290 --> 00:37:39,420
+which are connected sequence of AI,
+
+799
+00:37:39,420 --> 00:37:43,800
+where the output of one will
+feed the input of the other.
+
+800
+00:37:43,800 --> 00:37:45,810
+And you have the agents.
+
+801
+00:37:45,810 --> 00:37:49,320
+So they go all through
+Genepi, which is, as I said,
+
+802
+00:37:49,320 --> 00:37:52,770
+the in-house product that we have done.
+
+803
+00:37:52,770 --> 00:37:57,030
+It has an AI gateway that
+facilitate the authorization
+
+804
+00:37:57,030 --> 00:37:58,710
+and the authentication.
+
+805
+00:37:58,710 --> 00:38:01,250
+And then the orchestrator,
+which is basically the brain
+
+806
+00:38:01,250 --> 00:38:03,630
+that connect to all the other
+
+807
+00:38:03,630 --> 00:38:06,870
+component and the LLM adapter.
+
+808
+00:38:06,870 --> 00:38:10,230
+So above Genepi, you can
+see we have semantic cache
+
+809
+00:38:10,230 --> 00:38:15,120
+and we have chosen to
+take Redis line cache,
+
+810
+00:38:15,120 --> 00:38:18,033
+which is basically a
+semantic cache as a service.
+
+811
+00:38:19,590 --> 00:38:22,170
+And it's quite performance
+
+812
+00:38:22,170 --> 00:38:24,753
+and one of the fastest, to be honest.
+
+813
+00:38:25,620 --> 00:38:30,150
+Then once, if basically
+the tenants send a request,
+
+814
+00:38:30,150 --> 00:38:32,040
+Genepi will go to the line cache.
+
+815
+00:38:32,040 --> 00:38:36,270
+If there is a miss within that line cache,
+
+816
+00:38:36,270 --> 00:38:38,250
+we are going to the RAG.
+
+817
+00:38:38,250 --> 00:38:42,030
+We are currently using
+AWS Kendra for the search
+
+818
+00:38:42,030 --> 00:38:46,380
+and the AWS Knowledge Base,
+which is a RAG as a service.
+
+819
+00:38:46,380 --> 00:38:50,760
+And those will go to the vector database.
+
+820
+00:38:50,760 --> 00:38:54,333
+We are also using AWS
+OpenSearch and Redis.
+
+821
+00:38:55,590 --> 00:38:58,750
+If you ask me why we are
+basically using both and not one,
+
+822
+00:38:58,750 --> 00:39:01,770
+it all depends of our
+tenant and what they need.
+
+823
+00:39:01,770 --> 00:39:03,510
+So the tenant control the RAG.
+
+824
+00:39:03,510 --> 00:39:06,120
+They also feed it with their request,
+
+825
+00:39:06,120 --> 00:39:09,030
+the embedding models, their documents.
+
+826
+00:39:09,030 --> 00:39:10,830
+So depending on what they want,
+
+827
+00:39:10,830 --> 00:39:13,500
+we will choose either OpenSearch or Redis.
+
+828
+00:39:13,500 --> 00:39:16,380
+So Redis is very fast
+compared to OpenSearch.
+
+829
+00:39:16,380 --> 00:39:18,870
+We're speaking about milliseconds.
+
+830
+00:39:18,870 --> 00:39:21,480
+OpenSearch is 10 to 100 millisecond.
+
+831
+00:39:21,480 --> 00:39:24,240
+Redis is between three to 10.
+
+832
+00:39:24,240 --> 00:39:27,543
+So you can imagine that
+it simplify for you a lot.
+
+833
+00:39:29,040 --> 00:39:32,160
+It's also depending of the tenant,
+
+834
+00:39:32,160 --> 00:39:35,613
+so we will be either
+taking one or the other.
+
+835
+00:39:36,930 --> 00:39:40,290
+And for the MCP, so to
+connect to other tools
+
+836
+00:39:40,290 --> 00:39:42,630
+such as Jira, Confluence, et cetera,
+
+837
+00:39:42,630 --> 00:39:46,443
+we are currently evaluating
+AWS Asian Core Gateway.
+
+838
+00:39:47,700 --> 00:39:51,850
+So all of these requests go there before
+
+839
+00:39:51,850 --> 00:39:53,760
+to reach the LLM provider.
+
+840
+00:39:53,760 --> 00:39:57,450
+And if they are not found, we
+go through the AWS guardrail
+
+841
+00:39:57,450 --> 00:40:01,260
+that basically make sure
+that we are compliant
+
+842
+00:40:01,260 --> 00:40:03,063
+in the output and the inputs.
+
+843
+00:40:06,820 --> 00:40:09,543
+So we have been building better together.
+
+844
+00:40:11,240 --> 00:40:13,110
+I've started with the Redis community
+
+845
+00:40:13,110 --> 00:40:15,240
+because this is where we started as a POC
+
+846
+00:40:15,240 --> 00:40:17,970
+and maybe many of you know it.
+
+847
+00:40:17,970 --> 00:40:21,000
+So this is especially
+for Redis open source
+
+848
+00:40:21,000 --> 00:40:22,710
+where you can find information.
+
+849
+00:40:22,710 --> 00:40:24,540
+We use the Memtier, as I said,
+
+850
+00:40:24,540 --> 00:40:27,240
+for the latency benchmarking.
+
+851
+00:40:27,240 --> 00:40:29,430
+And then once we reach out to Redis,
+
+852
+00:40:29,430 --> 00:40:33,510
+we had their great support
+in terms of architects
+
+853
+00:40:33,510 --> 00:40:37,600
+and all the guidance from them
+
+854
+00:40:37,600 --> 00:40:40,380
+to choose which data model we wanted.
+
+855
+00:40:40,380 --> 00:40:45,380
+But also, when we had found
+that we needed private link,
+
+856
+00:40:45,930 --> 00:40:48,060
+they were hand-in-hand with us.
+
+857
+00:40:48,060 --> 00:40:51,090
+When we saw that there
+was some latency happening
+
+858
+00:40:51,090 --> 00:40:55,660
+when scaling on the load,
+they were working with us
+
+859
+00:40:55,660 --> 00:40:57,800
+depending of the framework we were using
+
+860
+00:40:57,800 --> 00:40:59,913
+and advising us what to do.
+
+861
+00:41:00,750 --> 00:41:05,750
+And especially when we
+had a date to release,
+
+862
+00:41:06,360 --> 00:41:08,070
+they were sitting next to us in the office
+
+863
+00:41:08,070 --> 00:41:10,323
+making sure that everything went well.
+
+864
+00:41:11,220 --> 00:41:16,220
+And I also have AWS support,
+which linked basically
+
+865
+00:41:16,350 --> 00:41:19,980
+to the Redis-AWS private
+link that happened there.
+
+866
+00:41:19,980 --> 00:41:23,520
+So Redis really worked with
+AWS to provide this for us
+
+867
+00:41:23,520 --> 00:41:25,480
+as soon as possible.
+
+868
+00:41:25,480 --> 00:41:28,630
+And finally, the AWS marketplace
+
+869
+00:41:29,520 --> 00:41:31,980
+that we have been able to access
+
+870
+00:41:31,980 --> 00:41:33,873
+and procure Redis Cloud through them.
+
+871
+00:41:34,890 --> 00:41:38,280
+And it simplified us, obviously
+the billing, et cetera,
+
+872
+00:41:38,280 --> 00:41:41,013
+and made that purchase very fast.
+
+873
+00:41:42,630 --> 00:41:45,180
+- Okay, well hey, thanks all for coming.
+
+874
+00:41:45,180 --> 00:41:46,680
+Have a great rest of the conference
+
+875
+00:41:46,680 --> 00:41:48,060
+and I appreciate you taking the time
+
+876
+00:41:48,060 --> 00:41:50,010
+to come and come to our session.
+
+877
+00:41:50,010 --> 00:41:50,880
+Thank you.
+
+878
+00:41:50,880 --> 00:41:54,363
+- Thank you for having me.
+(audience applauds)
+

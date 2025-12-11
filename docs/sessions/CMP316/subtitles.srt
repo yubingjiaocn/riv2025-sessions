@@ -1,0 +1,4284 @@
+1
+00:00:02,730 --> 00:00:06,150
+- Hello and welcome to a deep
+dive into the Nitro System.
+
+2
+00:00:06,150 --> 00:00:07,410
+My name's Ali Saidi,
+
+3
+00:00:07,410 --> 00:00:09,750
+I'm a Distinguished Engineer at AWS,
+
+4
+00:00:09,750 --> 00:00:12,060
+and with me today is Filippo Sironi.
+
+5
+00:00:12,060 --> 00:00:13,863
+who's a Senior Principal Engineer.
+
+6
+00:00:14,760 --> 00:00:16,680
+Today, we're going to talk
+about the Nitro System
+
+7
+00:00:16,680 --> 00:00:19,230
+and why we've done things in a certain way
+
+8
+00:00:19,230 --> 00:00:20,980
+and what benefit you get from that.
+
+9
+00:00:22,830 --> 00:00:24,150
+So far, in AWS,
+
+10
+00:00:24,150 --> 00:00:26,430
+we built chips spanning multiple areas
+
+11
+00:00:26,430 --> 00:00:29,550
+including data center I/O, core compute,
+
+12
+00:00:29,550 --> 00:00:31,920
+and machine learning infrastructure.
+
+13
+00:00:31,920 --> 00:00:32,910
+With the Nitro System,
+
+14
+00:00:32,910 --> 00:00:35,700
+we moved functionality away
+from a traditional hypervisor
+
+15
+00:00:35,700 --> 00:00:38,160
+to our purpose built Nitro Chips.
+
+16
+00:00:38,160 --> 00:00:40,410
+This started back in 2013
+
+17
+00:00:40,410 --> 00:00:42,690
+and we were working with a
+startup called Annapurna Labs,
+
+18
+00:00:42,690 --> 00:00:45,810
+which we would later
+require a few years later.
+
+19
+00:00:45,810 --> 00:00:48,810
+And this talk's going to talk
+mostly about the Nitro System,
+
+20
+00:00:49,740 --> 00:00:51,780
+but I want to talk about
+the couple other areas
+
+21
+00:00:51,780 --> 00:00:54,003
+where we're investing in custom silicon.
+
+22
+00:00:54,960 --> 00:00:57,390
+The second one is with Graviton,
+
+23
+00:00:57,390 --> 00:00:59,100
+where we build host CPUs
+
+24
+00:00:59,100 --> 00:01:01,140
+that deliver the best price performance
+
+25
+00:01:01,140 --> 00:01:03,750
+for a wide range of cloud workloads.
+
+26
+00:01:03,750 --> 00:01:06,450
+We have a range of customers
+running on Graviton,
+
+27
+00:01:06,450 --> 00:01:09,450
+people like Epic Games, who
+are the makers of Fortnite,
+
+28
+00:01:09,450 --> 00:01:12,090
+Stripe, the payment processing company,
+
+29
+00:01:12,090 --> 00:01:15,483
+Datadog, and even SAP
+running commercial databases.
+
+30
+00:01:16,320 --> 00:01:17,153
+Some of these customers
+
+31
+00:01:17,153 --> 00:01:18,840
+are running the majority of their compute
+
+32
+00:01:18,840 --> 00:01:19,833
+on Graviton today.
+
+33
+00:01:21,150 --> 00:01:24,390
+And the third place where we've
+invested in custom silicon
+
+34
+00:01:24,390 --> 00:01:26,430
+is our machine learning accelerators.
+
+35
+00:01:26,430 --> 00:01:27,263
+With Trainium,
+
+36
+00:01:27,263 --> 00:01:31,827
+and we announced Trainium3
+instance availability yesterday,
+
+37
+00:01:32,790 --> 00:01:35,280
+we built purpose-built
+deep learning accelerators
+
+38
+00:01:35,280 --> 00:01:36,113
+from the ground up
+
+39
+00:01:36,113 --> 00:01:38,520
+to deliver the best price performance
+
+40
+00:01:38,520 --> 00:01:41,493
+for machine learning
+inference and for training.
+
+41
+00:01:43,770 --> 00:01:46,080
+So, why do we build our own hardware?
+
+42
+00:01:46,080 --> 00:01:48,930
+It's not necessarily
+easy to build hardware,
+
+43
+00:01:48,930 --> 00:01:50,010
+but the answer's kind of simple.
+
+44
+00:01:50,010 --> 00:01:52,560
+We're building our silicon
+
+45
+00:01:52,560 --> 00:01:56,010
+where we can provide
+improved price performance
+
+46
+00:01:56,010 --> 00:01:57,033
+for our customers.
+
+47
+00:02:00,930 --> 00:02:02,220
+And there's a couple ways we do this.
+
+48
+00:02:02,220 --> 00:02:04,560
+One is through specialization.
+
+49
+00:02:04,560 --> 00:02:05,670
+By building our own chips
+
+50
+00:02:05,670 --> 00:02:09,090
+we get to specialize the
+hardware for AWS use cases
+
+51
+00:02:09,090 --> 00:02:10,560
+that lets us tailor our designs
+
+52
+00:02:10,560 --> 00:02:15,060
+to the AWS operating environment
+
+53
+00:02:15,060 --> 00:02:19,920
+and we can tailor the performance
+and the design of them
+
+54
+00:02:19,920 --> 00:02:21,120
+to our specific needs
+
+55
+00:02:21,120 --> 00:02:24,480
+and not burden them with many features.
+
+56
+00:02:24,480 --> 00:02:25,313
+You might ask,
+
+57
+00:02:25,313 --> 00:02:28,080
+"Why are people burdening
+chip ever with any features?"
+
+58
+00:02:28,080 --> 00:02:30,420
+And the reason is it's
+expensive to build silicon.
+
+59
+00:02:30,420 --> 00:02:31,770
+And so, when companies build it,
+
+60
+00:02:31,770 --> 00:02:36,480
+they want it to apply to a
+bunch of different markets.
+
+61
+00:02:36,480 --> 00:02:40,560
+And by focusing just on our
+use cases, we get to optimize.
+
+62
+00:02:40,560 --> 00:02:41,393
+So, I'll show you today
+
+63
+00:02:41,393 --> 00:02:44,520
+how we tailored the Nitro
+System to AWS's infrastructure
+
+64
+00:02:44,520 --> 00:02:45,840
+to improve both the security
+
+65
+00:02:45,840 --> 00:02:47,590
+and the performance of our servers.
+
+66
+00:02:49,320 --> 00:02:50,700
+The second is speed.
+
+67
+00:02:50,700 --> 00:02:52,140
+We get better speed of execution
+
+68
+00:02:52,140 --> 00:02:54,630
+when we own the end-to-end
+development process
+
+69
+00:02:54,630 --> 00:02:56,520
+from defining the product
+
+70
+00:02:56,520 --> 00:02:58,590
+all the way through deploying
+in our data centers.
+
+71
+00:02:58,590 --> 00:03:00,960
+We get to bring technology
+to customers faster
+
+72
+00:03:00,960 --> 00:03:03,420
+and shrink the time
+
+73
+00:03:03,420 --> 00:03:06,360
+between concept and delivery
+
+74
+00:03:06,360 --> 00:03:08,133
+by hardware and software co-design.
+
+75
+00:03:11,250 --> 00:03:12,510
+The third is innovation.
+
+76
+00:03:12,510 --> 00:03:15,030
+When we're building our our chips,
+
+77
+00:03:15,030 --> 00:03:16,650
+we're building our servers,
+
+78
+00:03:16,650 --> 00:03:19,350
+we're putting them in our data centers,
+
+79
+00:03:19,350 --> 00:03:21,790
+we get to innovate
+across traditional silos
+
+80
+00:03:23,580 --> 00:03:25,410
+and that can be really powerful
+
+81
+00:03:25,410 --> 00:03:26,790
+and let us optimize
+
+82
+00:03:26,790 --> 00:03:29,943
+in a way that you can't with those silos.
+
+83
+00:03:33,540 --> 00:03:34,950
+And lastly is security.
+
+84
+00:03:34,950 --> 00:03:36,390
+Nitro provides us a mechanism
+
+85
+00:03:36,390 --> 00:03:38,310
+to enhance the security of our servers
+
+86
+00:03:38,310 --> 00:03:39,810
+through a hardware root of trust,
+
+87
+00:03:39,810 --> 00:03:41,730
+verification of firmware on the server,
+
+88
+00:03:41,730 --> 00:03:43,950
+and limiting interactions
+with each of our servers
+
+89
+00:03:43,950 --> 00:03:47,763
+through our narrow set of
+authenticated and auditable APIs.
+
+90
+00:03:50,460 --> 00:03:52,320
+So, Nitro is really a fundamental rethink
+
+91
+00:03:52,320 --> 00:03:55,173
+about how virtualization in
+the cloud should be done.
+
+92
+00:03:58,350 --> 00:03:59,183
+At its lowest level,
+
+93
+00:03:59,183 --> 00:04:01,140
+the Nitro System has our Nitro Cards.
+
+94
+00:04:01,140 --> 00:04:04,860
+These offer networking, storage,
+and security functionality.
+
+95
+00:04:04,860 --> 00:04:07,740
+In the host processor, you
+run our Nitro Hypervisor.
+
+96
+00:04:07,740 --> 00:04:09,180
+And on top of that,
+
+97
+00:04:09,180 --> 00:04:12,510
+your virtual machines
+and your applications,
+
+98
+00:04:12,510 --> 00:04:13,343
+and I'll talk to you today
+
+99
+00:04:13,343 --> 00:04:16,180
+about how this separation
+has provided better security
+
+100
+00:04:18,300 --> 00:04:20,730
+and also let us bring
+features to you rapidly.
+
+101
+00:04:20,730 --> 00:04:22,590
+But first, let me rewind a little bit
+
+102
+00:04:22,590 --> 00:04:24,140
+and talk about how we got here.
+
+103
+00:04:26,550 --> 00:04:27,930
+It all started with a simple question.
+
+104
+00:04:27,930 --> 00:04:30,180
+After building EC2 for almost a decade,
+
+105
+00:04:30,180 --> 00:04:32,160
+if we applied our learnings,
+
+106
+00:04:32,160 --> 00:04:33,777
+how do we change our server platforms?
+
+107
+00:04:33,777 --> 00:04:36,180
+And we got lots of suggestions.
+
+108
+00:04:36,180 --> 00:04:38,340
+There were performance features
+like improving throughput,
+
+109
+00:04:38,340 --> 00:04:41,370
+simplifying the hypervisor,
+reducing latency and jitter,
+
+110
+00:04:41,370 --> 00:04:43,410
+and being able to have
+bare metal instances
+
+111
+00:04:43,410 --> 00:04:46,470
+that looked and felt like
+our virtual machines.
+
+112
+00:04:46,470 --> 00:04:48,690
+And then, there were a
+number of security features
+
+113
+00:04:48,690 --> 00:04:50,550
+like having transparent encryption,
+
+114
+00:04:50,550 --> 00:04:52,050
+building a hardware root of trust,
+
+115
+00:04:52,050 --> 00:04:54,720
+removing operator access from our systems,
+
+116
+00:04:54,720 --> 00:04:58,413
+and having a narrow set of
+auditable and authenticated APIs.
+
+117
+00:05:01,200 --> 00:05:03,960
+Nitro's a combination of
+hardware and software.
+
+118
+00:05:03,960 --> 00:05:05,910
+The chips, we're building in AWS
+
+119
+00:05:05,910 --> 00:05:09,150
+and we've built six
+generations of these chips now.
+
+120
+00:05:09,150 --> 00:05:14,150
+We introduced Nitro back
+in 2017 with a C5 instance,
+
+121
+00:05:14,280 --> 00:05:15,873
+but we really started back in 2013
+
+122
+00:05:15,873 --> 00:05:19,620
+when we started with enhanced networking,
+
+123
+00:05:19,620 --> 00:05:23,010
+moving functionality
+away from the hypervisor
+
+124
+00:05:23,010 --> 00:05:25,560
+onto special-purpose cards.
+
+125
+00:05:25,560 --> 00:05:28,050
+Over time, we expanded
+the I/O that we offer
+
+126
+00:05:28,050 --> 00:05:32,820
+through our Nitro Cards to
+add EBS and our local storage,
+
+127
+00:05:32,820 --> 00:05:33,730
+and then we built a hypervisor
+
+128
+00:05:33,730 --> 00:05:36,570
+where we got to remove a
+bunch of functionality.
+
+129
+00:05:36,570 --> 00:05:40,200
+Since 2017, all the EC2
+instances that we've launched
+
+130
+00:05:40,200 --> 00:05:42,000
+have been based on the Nitro System.
+
+131
+00:05:43,320 --> 00:05:45,810
+So, what is it tangibly?
+
+132
+00:05:45,810 --> 00:05:48,510
+On the left here, I've
+got one of our Nitro Chips
+
+133
+00:05:48,510 --> 00:05:51,600
+and that's integrated into
+one of our Nitro Cards
+
+134
+00:05:51,600 --> 00:05:53,373
+that you see on the right.
+
+135
+00:05:55,770 --> 00:05:57,870
+And this is what one
+of servers looked like
+
+136
+00:05:57,870 --> 00:05:59,490
+before the Nitro System.
+
+137
+00:05:59,490 --> 00:06:01,230
+We had customer instances
+
+138
+00:06:01,230 --> 00:06:03,720
+and they were running on
+top of the hypervisor Xen.
+
+139
+00:06:03,720 --> 00:06:05,850
+Now, Xen's great but it did a lot.
+
+140
+00:06:05,850 --> 00:06:08,550
+It did CPU scheduling, device simulation,
+
+141
+00:06:08,550 --> 00:06:10,860
+network limiters, security
+group enforcement,
+
+142
+00:06:10,860 --> 00:06:13,650
+packet encapsulation,
+and quite a bit more.
+
+143
+00:06:13,650 --> 00:06:15,360
+It even has a full-blown Linux user space
+
+144
+00:06:15,360 --> 00:06:18,273
+in this privileged Dom0.
+
+145
+00:06:19,650 --> 00:06:23,820
+And all that functionality
+used resources on the host CPU.
+
+146
+00:06:23,820 --> 00:06:26,070
+So, we started offloading
+those capabilities
+
+147
+00:06:26,070 --> 00:06:28,053
+onto our Nitro Cards.
+
+148
+00:06:33,210 --> 00:06:36,600
+And the first place we
+did that is networking.
+
+149
+00:06:36,600 --> 00:06:38,763
+So, let's dive into networking.
+
+150
+00:06:41,220 --> 00:06:43,320
+We have a family of Nitro Cards
+
+151
+00:06:43,320 --> 00:06:46,020
+across now six generations of chips.
+
+152
+00:06:46,020 --> 00:06:47,670
+But from the networking point of view,
+
+153
+00:06:47,670 --> 00:06:49,320
+they all do a very similar thing.
+
+154
+00:06:50,910 --> 00:06:55,910
+They provide the VPC data plane
+offload for our instances.
+
+155
+00:06:55,920 --> 00:06:57,750
+This is things like ENI attachments,
+
+156
+00:06:57,750 --> 00:07:00,720
+enforcing security groups,
+creating flow logs,
+
+157
+00:07:00,720 --> 00:07:03,000
+routing, encapsulating packets,
+
+158
+00:07:03,000 --> 00:07:05,820
+providing you with DHCP and DNS.
+
+159
+00:07:05,820 --> 00:07:07,860
+All this used to run in our hypervisor
+
+160
+00:07:07,860 --> 00:07:09,720
+and is now offloaded
+
+161
+00:07:09,720 --> 00:07:12,123
+into dedicated hardware
+on our Nitro Cards.
+
+162
+00:07:13,650 --> 00:07:15,540
+Most of our Nitro Cards (clears throat)
+
+163
+00:07:15,540 --> 00:07:17,070
+since the third generation
+
+164
+00:07:17,070 --> 00:07:20,010
+also enable transparent
+256-bit AES encryption
+
+165
+00:07:20,010 --> 00:07:23,160
+of networking packets in
+transit to other instances
+
+166
+00:07:23,160 --> 00:07:24,810
+without any performance overhead.
+
+167
+00:07:26,038 --> 00:07:27,810
+(Ali coughing)
+
+168
+00:07:27,810 --> 00:07:31,770
+And the VPC card presents the ENA device
+
+169
+00:07:31,770 --> 00:07:34,650
+that you see in your instances today.
+
+170
+00:07:34,650 --> 00:07:36,010
+The Elastic Network Adapter
+
+171
+00:07:37,500 --> 00:07:40,410
+is really cool in that
+it's been very extensible.
+
+172
+00:07:40,410 --> 00:07:42,330
+When we first launched ENA,
+
+173
+00:07:42,330 --> 00:07:44,970
+we had 10 gigabits of networking.
+
+174
+00:07:44,970 --> 00:07:49,970
+Since then, we went from
+25 to 100 to 200 to 300,
+
+175
+00:07:50,127 --> 00:07:51,360
+and today we have instances
+
+176
+00:07:51,360 --> 00:07:55,203
+with over 600 gigabits
+of networking bandwidth.
+
+177
+00:07:56,490 --> 00:07:57,323
+And it's kind of really powerful
+
+178
+00:07:57,323 --> 00:08:00,240
+that with that same ENA device model,
+
+179
+00:08:00,240 --> 00:08:01,950
+you can have that range of performance.
+
+180
+00:08:01,950 --> 00:08:05,430
+You can stop an instance on one
+machine, move it to another,
+
+181
+00:08:05,430 --> 00:08:08,520
+and have an order of magnitude
+more networking bandwidth
+
+182
+00:08:08,520 --> 00:08:10,420
+if that's what your application needs.
+
+183
+00:08:14,610 --> 00:08:18,483
+This card also provides
+our Elastic Fabric Adapter.
+
+184
+00:08:19,410 --> 00:08:22,920
+EFA is a network with
+features geared to HPC
+
+185
+00:08:22,920 --> 00:08:24,810
+and machine learning workloads.
+
+186
+00:08:24,810 --> 00:08:26,490
+These workloads are special.
+
+187
+00:08:26,490 --> 00:08:28,740
+Most workloads either need low latency
+
+188
+00:08:28,740 --> 00:08:30,630
+or they need high bandwidth,
+
+189
+00:08:30,630 --> 00:08:33,000
+but ML workloads and HPC workloads
+
+190
+00:08:33,000 --> 00:08:34,500
+tend to need both at the same time.
+
+191
+00:08:34,500 --> 00:08:36,603
+They want high bandwidth and low latency.
+
+192
+00:08:37,890 --> 00:08:41,490
+And to build our Elastic Fabric Adapter,
+
+193
+00:08:41,490 --> 00:08:43,890
+we had to build our own protocol
+
+194
+00:08:43,890 --> 00:08:46,050
+to transport data across our network.
+
+195
+00:08:46,050 --> 00:08:49,767
+We call this a scalable
+reliable datagram, or SRD.
+
+196
+00:08:49,767 --> 00:08:51,270
+SRD lets us use multiple paths
+
+197
+00:08:51,270 --> 00:08:53,070
+through our network simultaneously
+
+198
+00:08:53,070 --> 00:08:56,370
+to find you low latency
+and high bandwidth paths.
+
+199
+00:08:56,370 --> 00:08:58,370
+Let's talk a little bit more about that.
+
+200
+00:08:59,280 --> 00:09:00,510
+Traditional network protocols
+
+201
+00:09:00,510 --> 00:09:03,180
+take a single path through our network
+
+202
+00:09:03,180 --> 00:09:04,530
+and if there's congestion,
+
+203
+00:09:04,530 --> 00:09:08,400
+they're relatively slow
+to react to failures.
+
+204
+00:09:08,400 --> 00:09:10,290
+Our networks kinda look
+like this. (clears throat)
+
+205
+00:09:10,290 --> 00:09:11,610
+They are cross-network
+
+206
+00:09:11,610 --> 00:09:13,200
+and between any two servers,
+
+207
+00:09:13,200 --> 00:09:14,910
+you can see there's many different paths
+
+208
+00:09:14,910 --> 00:09:16,260
+that your packets can take.
+
+209
+00:09:17,280 --> 00:09:18,990
+And with the knowledge of our networks,
+
+210
+00:09:18,990 --> 00:09:20,700
+we can detect congestion
+
+211
+00:09:20,700 --> 00:09:22,000
+and we can route around it
+
+212
+00:09:23,100 --> 00:09:24,390
+at data center scale times,
+
+213
+00:09:24,390 --> 00:09:26,103
+not at internet scale times.
+
+214
+00:09:27,360 --> 00:09:28,710
+And this is exactly what we do
+
+215
+00:09:28,710 --> 00:09:31,443
+with our SRD and our Nitro Cards.
+
+216
+00:09:32,490 --> 00:09:33,720
+SRD provides a foundation
+
+217
+00:09:33,720 --> 00:09:37,260
+for using many paths through
+our network simultaneously,
+
+218
+00:09:37,260 --> 00:09:39,960
+allowing us to distribute
+bandwidth across those paths
+
+219
+00:09:41,070 --> 00:09:44,820
+and react quickly to any
+congestion, any link issues,
+
+220
+00:09:44,820 --> 00:09:46,820
+and significantly reduce tail latencies.
+
+221
+00:09:47,790 --> 00:09:48,623
+These tail latencies
+
+222
+00:09:48,623 --> 00:09:50,190
+are particularly important
+in distributed applications
+
+223
+00:09:50,190 --> 00:09:53,040
+where the P50 is not
+what you're looking for,
+
+224
+00:09:53,040 --> 00:09:56,673
+but you're looking for
+five nine tail latencies.
+
+225
+00:09:58,680 --> 00:10:03,390
+And let's look at how kind of SRD is used.
+
+226
+00:10:03,390 --> 00:10:04,590
+So, the first way we used SRD
+
+227
+00:10:04,590 --> 00:10:07,380
+was with the Elastic Fabric Adapter.
+
+228
+00:10:07,380 --> 00:10:11,460
+Here, I'm showing scaling
+of an HPC workload
+
+229
+00:10:11,460 --> 00:10:13,620
+where you have, as you increase cores,
+
+230
+00:10:13,620 --> 00:10:16,440
+you'd expect to also scale linear yearly.
+
+231
+00:10:16,440 --> 00:10:18,840
+You'd like to be on the red line.
+
+232
+00:10:18,840 --> 00:10:21,870
+Before EFA, we were on that purple line.
+
+233
+00:10:21,870 --> 00:10:23,940
+We scaled pretty well to about 400 cores
+
+234
+00:10:23,940 --> 00:10:25,590
+and then everything tailed off
+
+235
+00:10:25,590 --> 00:10:27,790
+and actually, we started
+scaling negatively.
+
+236
+00:10:28,710 --> 00:10:30,600
+When we added EFA,
+
+237
+00:10:30,600 --> 00:10:33,153
+you can see that scaling trend continues.
+
+238
+00:10:34,050 --> 00:10:36,010
+We've now had four generations of EFA
+
+239
+00:10:37,920 --> 00:10:40,140
+and we launched the most recent one
+
+240
+00:10:40,140 --> 00:10:44,523
+with our P6-B200 and GB200 instances.
+
+241
+00:10:48,720 --> 00:10:51,810
+Now, another place that
+expects in-order packets
+
+242
+00:10:51,810 --> 00:10:54,780
+are TCP flows.
+
+243
+00:10:54,780 --> 00:10:59,780
+TCP uses packet ordering
+to detect congestion.
+
+244
+00:10:59,820 --> 00:11:01,530
+And so, through our network,
+
+245
+00:11:01,530 --> 00:11:03,813
+flows get hashed to a single path.
+
+246
+00:11:04,980 --> 00:11:08,250
+And that single connection, all
+the packets flow through it.
+
+247
+00:11:08,250 --> 00:11:09,690
+Now, sometimes large flows,
+
+248
+00:11:09,690 --> 00:11:11,730
+even in an over-provisioned network
+
+249
+00:11:11,730 --> 00:11:14,250
+can end up hashing to the same path,
+
+250
+00:11:14,250 --> 00:11:18,213
+and there, they can result
+in network congestion.
+
+251
+00:11:19,200 --> 00:11:22,170
+So, what I'm showing
+here in the yellow line.
+
+252
+00:11:22,170 --> 00:11:24,750
+This can result in packet
+delays and packet drops,
+
+253
+00:11:24,750 --> 00:11:27,000
+which causes TCP to back off
+
+254
+00:11:27,000 --> 00:11:30,360
+and result in some re-transmits,
+reducing total throughput,
+
+255
+00:11:30,360 --> 00:11:33,120
+and everything continues happily.
+
+256
+00:11:33,120 --> 00:11:35,160
+TCP congestion is generally good,
+
+257
+00:11:35,160 --> 00:11:39,513
+but it was built for internet scale times.
+
+258
+00:11:41,130 --> 00:11:41,963
+Other than congestion,
+
+259
+00:11:41,963 --> 00:11:44,310
+occasionally you can have
+a failure in the network,
+
+260
+00:11:44,310 --> 00:11:45,870
+like a link failure,
+
+261
+00:11:45,870 --> 00:11:48,000
+and this is what you
+see with this red circle
+
+262
+00:11:48,000 --> 00:11:50,820
+and with this X here.
+
+263
+00:11:50,820 --> 00:11:53,400
+In this case, TCP doesn't
+respond well at all.
+
+264
+00:11:53,400 --> 00:11:54,600
+You have to wait for a timeout,
+
+265
+00:11:54,600 --> 00:11:56,523
+reestablish connection, and try again.
+
+266
+00:11:57,450 --> 00:12:00,750
+So, why not just send this
+across multiple paths?
+
+267
+00:12:00,750 --> 00:12:03,963
+Well, because TCP has that
+expectation of in-order delivery,
+
+268
+00:12:06,270 --> 00:12:07,680
+so with out Nitro Cards,
+
+269
+00:12:07,680 --> 00:12:10,500
+we also built something
+we call ENA Express.
+
+270
+00:12:10,500 --> 00:12:13,020
+While TCP doesn't handle
+out of order segments,
+
+271
+00:12:13,020 --> 00:12:17,730
+we've offloaded a functionality
+of this to our Nitro Cards.
+
+272
+00:12:17,730 --> 00:12:22,590
+It allows you to send traffic
+across multiple paths at once,
+
+273
+00:12:22,590 --> 00:12:26,790
+either TCP or UDP traffic
+over the SRD protocol,
+
+274
+00:12:26,790 --> 00:12:29,700
+and the Nitro Card takes care
+of assembling the packets
+
+275
+00:12:29,700 --> 00:12:30,900
+into the right order
+
+276
+00:12:30,900 --> 00:12:32,950
+before delivering it to your application.
+
+277
+00:12:35,040 --> 00:12:37,620
+And the benefits can be pretty amazing.
+
+278
+00:12:37,620 --> 00:12:39,120
+The single-flow bandwidth
+
+279
+00:12:39,120 --> 00:12:42,900
+goes from 5 gigabits up to 25 gigabits,
+
+280
+00:12:42,900 --> 00:12:46,650
+and we've seen tail
+latencies reduced by 85%.
+
+281
+00:12:46,650 --> 00:12:49,170
+It's really easy to enable ENA Express.
+
+282
+00:12:49,170 --> 00:12:51,300
+It's a simple configuration.
+
+283
+00:12:51,300 --> 00:12:54,570
+It's available in the same AZ. (coughs)
+
+284
+00:12:54,570 --> 00:12:58,593
+Excuse me, and it's
+transparent to TCP and UDP.
+
+285
+00:13:02,040 --> 00:13:03,300
+So, when EC2 started,
+
+286
+00:13:03,300 --> 00:13:07,950
+we had one gigabit
+networks were pretty common
+
+287
+00:13:07,950 --> 00:13:10,470
+and it was this way for almost a decade.
+
+288
+00:13:10,470 --> 00:13:13,200
+Today, we've seen a shift to 25 gigabit
+
+289
+00:13:13,200 --> 00:13:17,073
+to 100 gigabit to 200 gigabit networks.
+
+290
+00:13:18,660 --> 00:13:22,470
+The increasing base of
+bandwidth has been incredible
+
+291
+00:13:22,470 --> 00:13:24,030
+and if you look at our instances,
+
+292
+00:13:24,030 --> 00:13:27,180
+this year, we announced CMR AI instances
+
+293
+00:13:27,180 --> 00:13:29,640
+that have up to 100 gigabits of bandwidth
+
+294
+00:13:29,640 --> 00:13:31,560
+in our core sets of platforms.
+
+295
+00:13:31,560 --> 00:13:34,200
+And in our network-optimized
+sets of platforms,
+
+296
+00:13:34,200 --> 00:13:38,310
+we have the C and R8gn instances
+
+297
+00:13:38,310 --> 00:13:41,370
+that have two 300 gigabit
+network interfaces
+
+298
+00:13:41,370 --> 00:13:42,330
+in a single instance.
+
+299
+00:13:42,330 --> 00:13:44,800
+So, 600 gigabits of network bandwidth
+
+300
+00:13:45,660 --> 00:13:47,860
+are available to an
+instance if you need it.
+
+301
+00:13:49,860 --> 00:13:52,710
+Obviously, I was talking
+about core instances there.
+
+302
+00:13:52,710 --> 00:13:55,500
+If you look at our machine
+learning instances,
+
+303
+00:13:55,500 --> 00:14:00,500
+we've gone from 400 gigabits
+with a P5 instance back in 2020
+
+304
+00:14:00,540 --> 00:14:04,470
+up to 6.4 terabits in
+a single instance today
+
+305
+00:14:04,470 --> 00:14:05,853
+with our P6 instances.
+
+306
+00:14:10,013 --> 00:14:12,596
+(Ali coughing)
+
+307
+00:14:13,470 --> 00:14:15,480
+Okay, so we talked about networking.
+
+308
+00:14:15,480 --> 00:14:18,063
+Let's take a minute
+and talk about storage.
+
+309
+00:14:21,270 --> 00:14:23,370
+NVMe is a great standard protocol
+
+310
+00:14:23,370 --> 00:14:24,780
+with lots of standardized drivers
+
+311
+00:14:24,780 --> 00:14:28,243
+across different operating
+systems, (coughs)
+
+312
+00:14:29,160 --> 00:14:32,220
+and our Nitro Card exposes
+an NVMe interface on one side
+
+313
+00:14:32,220 --> 00:14:33,750
+and translates those commands
+
+314
+00:14:33,750 --> 00:14:36,633
+to the EBS data plane on the other side.
+
+315
+00:14:39,240 --> 00:14:40,950
+This lets us use those Nitro Cards
+
+316
+00:14:40,950 --> 00:14:43,290
+to encrypt your data in transit
+
+317
+00:14:43,290 --> 00:14:45,840
+with a hardware engine on the Nitro Cards.
+
+318
+00:14:45,840 --> 00:14:47,610
+And it means you don't
+need to make a trade-off
+
+319
+00:14:47,610 --> 00:14:51,210
+between performance or encryption.
+
+320
+00:14:51,210 --> 00:14:53,610
+You get encryption just transparently
+
+321
+00:14:53,610 --> 00:14:55,533
+if you enable encrypted volumes.
+
+322
+00:14:56,610 --> 00:14:58,590
+And you might imagine here too,
+
+323
+00:14:58,590 --> 00:15:01,980
+EBS uses the SRD, that
+protocol I just talked about,
+
+324
+00:15:01,980 --> 00:15:04,560
+to send packets through multiple paths
+
+325
+00:15:04,560 --> 00:15:06,960
+to where your EBS volumes are located
+
+326
+00:15:06,960 --> 00:15:08,343
+to reduce tail latencies.
+
+327
+00:15:10,710 --> 00:15:14,280
+And just like with networking
+at the EC2 instance level,
+
+328
+00:15:14,280 --> 00:15:17,460
+you can see the amazing
+increase in performance
+
+329
+00:15:17,460 --> 00:15:19,770
+that we've offered over the years.
+
+330
+00:15:19,770 --> 00:15:21,540
+If you go back a decade,
+
+331
+00:15:21,540 --> 00:15:25,290
+we had two gigabits of EBS bandwidth.
+
+332
+00:15:25,290 --> 00:15:29,160
+Today, we offer up to 150
+gigabits of EBS bandwidth
+
+333
+00:15:29,160 --> 00:15:34,140
+and up to 720,000 IOPS
+in a single instance.
+
+334
+00:15:34,140 --> 00:15:36,730
+This lets you run things
+like demanding databases
+
+335
+00:15:38,040 --> 00:15:40,050
+while also having the durability
+
+336
+00:15:40,050 --> 00:15:42,123
+and enterprise features of EBS.
+
+337
+00:15:43,500 --> 00:15:44,940
+Now, EBS is great.
+
+338
+00:15:44,940 --> 00:15:47,250
+It's the answer for
+most customers, I think.
+
+339
+00:15:47,250 --> 00:15:50,400
+You get durability, you get snapshots,
+
+340
+00:15:50,400 --> 00:15:53,250
+but there are some customers
+who also want local storage.
+
+341
+00:15:54,330 --> 00:15:56,780
+So, let's talk a little
+bit about our Nitro SSDs.
+
+342
+00:15:57,660 --> 00:15:58,493
+And to do that,
+
+343
+00:15:58,493 --> 00:16:01,503
+I need to tell you a little
+bit about how an SSD works.
+
+344
+00:16:02,580 --> 00:16:04,500
+There's a couple of components in an SSD.
+
+345
+00:16:04,500 --> 00:16:06,060
+The first is the NAND.
+
+346
+00:16:06,060 --> 00:16:07,680
+This is where the bits are stored,
+
+347
+00:16:07,680 --> 00:16:10,140
+but NAND has a lot of peculiarities.
+
+348
+00:16:10,140 --> 00:16:12,540
+You can only write it after you erase it
+
+349
+00:16:12,540 --> 00:16:16,080
+and the chunks that you tend
+to erase are about a megabyte.
+
+350
+00:16:16,080 --> 00:16:18,270
+So, even if you want to
+update just a single byte,
+
+351
+00:16:18,270 --> 00:16:20,310
+you actually need to copy
+the data to a new location
+
+352
+00:16:20,310 --> 00:16:21,143
+with an update.
+
+353
+00:16:22,230 --> 00:16:26,663
+And so, this ends up,
+
+354
+00:16:26,663 --> 00:16:27,870
+(Ali coughing)
+
+355
+00:16:27,870 --> 00:16:29,160
+excuse me, needing something
+
+356
+00:16:29,160 --> 00:16:31,510
+that looks a lot like a
+write-locking database.
+
+357
+00:16:34,170 --> 00:16:35,580
+NAND also has a lifetime.
+
+358
+00:16:35,580 --> 00:16:36,630
+If you write it a bunch,
+
+359
+00:16:36,630 --> 00:16:38,910
+write one block a bunch,
+you'll wear it out.
+
+360
+00:16:38,910 --> 00:16:42,483
+So, you need to spread the
+writes around all that flash.
+
+361
+00:16:43,500 --> 00:16:44,730
+And to manage this complexity,
+
+362
+00:16:44,730 --> 00:16:46,710
+there's something called
+a Flash Translation Layer.
+
+363
+00:16:46,710 --> 00:16:50,460
+It's usually a chip on an SSD.
+
+364
+00:16:50,460 --> 00:16:51,690
+It maps the logical addresses
+
+365
+00:16:51,690 --> 00:16:53,280
+that an operating system knows about
+
+366
+00:16:53,280 --> 00:16:56,670
+to the physical blocks where the NAND is.
+
+367
+00:16:56,670 --> 00:16:59,850
+It performs garbage collection,
+it performs wear leveling,
+
+368
+00:16:59,850 --> 00:17:02,460
+and ultimately, you end up doing something
+
+369
+00:17:02,460 --> 00:17:05,033
+like these databases, like
+a write-locking database.
+
+370
+00:17:07,380 --> 00:17:09,300
+Now, there's lots of flash manufacturers
+
+371
+00:17:09,300 --> 00:17:12,570
+that produce their own
+SSDs with their own FTLs.
+
+372
+00:17:12,570 --> 00:17:14,310
+Just like with databases, actually,
+
+373
+00:17:14,310 --> 00:17:17,160
+each of those FTL implementations
+behaves a bit differently
+
+374
+00:17:17,160 --> 00:17:20,130
+even though they all offer
+the same external API.
+
+375
+00:17:20,130 --> 00:17:22,140
+They all do a good job
+in the average case,
+
+376
+00:17:22,140 --> 00:17:23,940
+but our experience over many years
+
+377
+00:17:23,940 --> 00:17:26,100
+is they have some unpredictable behaviors.
+
+378
+00:17:26,100 --> 00:17:28,860
+Garbage collection decides to kick in
+
+379
+00:17:28,860 --> 00:17:30,903
+just at the worst possible time.
+
+380
+00:17:31,770 --> 00:17:34,860
+And these unexpected
+behaviors make it hard for us
+
+381
+00:17:34,860 --> 00:17:37,530
+to engineer a consistent performance.
+
+382
+00:17:37,530 --> 00:17:40,770
+So, how can we get the
+performance we need?
+
+383
+00:17:40,770 --> 00:17:43,320
+Well, you could probably
+guess by this point,
+
+384
+00:17:43,320 --> 00:17:46,290
+we integrated the FTL
+into our Nitro Cards.
+
+385
+00:17:46,290 --> 00:17:50,220
+And so, with this, we have
+up to 60% lower latencies,
+
+386
+00:17:50,220 --> 00:17:52,080
+improved reliability,
+
+387
+00:17:52,080 --> 00:17:54,750
+and through our Nitro Cards,
+we can encrypt all your data
+
+388
+00:17:54,750 --> 00:17:57,400
+within an ephemeral key that
+never leaves the server.
+
+389
+00:17:59,910 --> 00:18:02,130
+So, this is what the server now looks like
+
+390
+00:18:02,130 --> 00:18:03,780
+after we moved a bunch of functionality
+
+391
+00:18:03,780 --> 00:18:06,720
+away from the host CPU
+onto our Nitro Cards.
+
+392
+00:18:06,720 --> 00:18:10,430
+You can see that Dom0, that
+privileged domain, and Xen
+
+393
+00:18:10,430 --> 00:18:12,270
+is significantly offloaded
+
+394
+00:18:12,270 --> 00:18:13,110
+and most of the functions
+
+395
+00:18:13,110 --> 00:18:15,033
+are now handled by the Nitro System.
+
+396
+00:18:16,320 --> 00:18:18,330
+Now, I'm going to turn it over to Filippo.
+
+397
+00:18:18,330 --> 00:18:20,100
+He's going to talk to you
+about the Nitro Hypervisor
+
+398
+00:18:20,100 --> 00:18:22,943
+and some of the other features
+we offer in the Nitro System.
+
+399
+00:18:24,690 --> 00:18:25,540
+- Thank you, Ali.
+
+400
+00:18:28,080 --> 00:18:31,083
+So, let's now look at
+the Nitro Hypervisor.
+
+401
+00:18:33,210 --> 00:18:37,080
+After having offloaded
+I/O to dedicated hardware
+
+402
+00:18:37,080 --> 00:18:39,270
+and purpose-built hardware,
+
+403
+00:18:39,270 --> 00:18:40,620
+what we're left with
+
+404
+00:18:40,620 --> 00:18:44,970
+is the bare minimum that
+a hypervisor needs to do.
+
+405
+00:18:44,970 --> 00:18:49,970
+This means focusing on CPU,
+memory, and device assignment.
+
+406
+00:18:50,040 --> 00:18:50,940
+With device assignment,
+
+407
+00:18:50,940 --> 00:18:53,190
+I mean providing a path
+
+408
+00:18:53,190 --> 00:18:56,400
+for the virtual CPUs to have direct access
+
+409
+00:18:56,400 --> 00:19:00,150
+to the dedicated hardware that
+we just added to our systems.
+
+410
+00:19:00,150 --> 00:19:01,140
+On top of that,
+
+411
+00:19:01,140 --> 00:19:04,200
+we want to make sure that we
+strip down the hypervisor,
+
+412
+00:19:04,200 --> 00:19:07,200
+removing every other feature
+that's not necessary.
+
+413
+00:19:07,200 --> 00:19:08,220
+For example,
+
+414
+00:19:08,220 --> 00:19:12,030
+when hypervisor isn't involved
+with networking or storage,
+
+415
+00:19:12,030 --> 00:19:13,650
+we can get rid of the network stack,
+
+416
+00:19:13,650 --> 00:19:15,630
+we can get rid of the storage stack,
+
+417
+00:19:15,630 --> 00:19:18,600
+so no more file system support.
+
+418
+00:19:18,600 --> 00:19:20,850
+We can also get rid of additional services
+
+419
+00:19:20,850 --> 00:19:22,560
+like the SSH server
+
+420
+00:19:22,560 --> 00:19:25,140
+to make sure that access
+to the hypervisor,
+
+421
+00:19:25,140 --> 00:19:28,530
+which is the closest
+component to customer data,
+
+422
+00:19:28,530 --> 00:19:29,943
+is completely restricted.
+
+423
+00:19:32,310 --> 00:19:35,490
+This results in a very small, lightweight,
+
+424
+00:19:35,490 --> 00:19:37,050
+and secure hypervisor,
+
+425
+00:19:37,050 --> 00:19:39,390
+a hypervisor that's quiescent
+
+426
+00:19:39,390 --> 00:19:43,590
+and it's only going to execute code
+
+427
+00:19:43,590 --> 00:19:48,420
+whenever the customer instance
+asks for hypervisor services.
+
+428
+00:19:48,420 --> 00:19:51,600
+Think about instruction
+emulation, for example.
+
+429
+00:19:51,600 --> 00:19:53,850
+And when you put this all together,
+
+430
+00:19:53,850 --> 00:19:54,960
+you have a hypervisor
+
+431
+00:19:54,960 --> 00:19:59,220
+that provides very minimal
+performance overhead
+
+432
+00:19:59,220 --> 00:20:01,260
+such that our virtual machines
+
+433
+00:20:01,260 --> 00:20:04,770
+can have close to bare metal performance.
+
+434
+00:20:04,770 --> 00:20:06,930
+If you take a look at
+our most recent series
+
+435
+00:20:06,930 --> 00:20:10,080
+of virtual machines and
+bare metal machines,
+
+436
+00:20:10,080 --> 00:20:13,320
+it's very difficult to find differences
+
+437
+00:20:13,320 --> 00:20:15,870
+in terms of performance between our metal
+
+438
+00:20:15,870 --> 00:20:18,453
+and our virtualized instances.
+
+439
+00:20:24,180 --> 00:20:26,880
+Beyond stripping down the
+hypervisor to the bare minimum,
+
+440
+00:20:26,880 --> 00:20:30,573
+we also wanted to go one step further.
+
+441
+00:20:31,860 --> 00:20:35,400
+The hypervisor runs at a layer of the CPU
+
+442
+00:20:35,400 --> 00:20:39,840
+where it normally has
+access to everything.
+
+443
+00:20:39,840 --> 00:20:40,713
+It's the most,
+
+444
+00:20:41,640 --> 00:20:45,270
+is the highest priority component
+
+445
+00:20:45,270 --> 00:20:47,370
+that normally has access to all the CPU
+
+446
+00:20:47,370 --> 00:20:49,170
+and all the memory in our system.
+
+447
+00:20:49,170 --> 00:20:53,580
+However, this violates one of
+the main security principles,
+
+448
+00:20:53,580 --> 00:20:58,440
+which is the principle of least access.
+
+449
+00:20:58,440 --> 00:21:00,180
+So we want to make sure,
+
+450
+00:21:00,180 --> 00:21:01,200
+with the Nitro Hypervisor,
+
+451
+00:21:01,200 --> 00:21:03,660
+we wanted to make sure that the hypervisor
+
+452
+00:21:03,660 --> 00:21:08,660
+was not going to have
+access to any customer data
+
+453
+00:21:08,730 --> 00:21:10,143
+unless it really needed to.
+
+454
+00:21:11,550 --> 00:21:14,340
+When you look at the commodity hypervisor,
+
+455
+00:21:14,340 --> 00:21:16,690
+it owns the entire address
+space of the server.
+
+456
+00:21:18,210 --> 00:21:19,650
+When you start a virtual machine,
+
+457
+00:21:19,650 --> 00:21:21,360
+both the CPU context,
+
+458
+00:21:21,360 --> 00:21:24,720
+which means all the CPU
+registers as well as the memory
+
+459
+00:21:24,720 --> 00:21:26,760
+is part of the hypervisor address space,
+
+460
+00:21:26,760 --> 00:21:29,880
+which means that the
+hypervisor has full access.
+
+461
+00:21:29,880 --> 00:21:32,423
+This holds for all the virtual
+machines that we start.
+
+462
+00:21:33,840 --> 00:21:36,060
+When we look at the Nitro Hypervisor,
+
+463
+00:21:36,060 --> 00:21:38,640
+the address space of the
+Nitro Hypervisor is minimal.
+
+464
+00:21:38,640 --> 00:21:40,980
+We are talking about
+hundreds of megabytes,
+
+465
+00:21:40,980 --> 00:21:43,830
+the bare minimum to run our systems.
+
+466
+00:21:43,830 --> 00:21:46,920
+Whenever we start a virtual machine,
+
+467
+00:21:46,920 --> 00:21:50,820
+both the CPU context and the
+memory for that virtual machine
+
+468
+00:21:50,820 --> 00:21:53,403
+are outside of the address
+space of the hypervisor.
+
+469
+00:21:54,480 --> 00:21:57,360
+This gives us great properties
+
+470
+00:21:57,360 --> 00:22:02,040
+because whenever there is
+a bug in the hypervisor
+
+471
+00:22:02,040 --> 00:22:06,240
+or for example a CPU security problem,
+
+472
+00:22:06,240 --> 00:22:10,290
+we have better properties
+that allow us to reason about
+
+473
+00:22:10,290 --> 00:22:13,863
+whether customer data
+would be in reach or not.
+
+474
+00:22:14,850 --> 00:22:16,900
+This is true for all the virtual machines
+
+475
+00:22:17,758 --> 00:22:19,230
+that we start on our server.
+
+476
+00:22:19,230 --> 00:22:21,220
+Each one gets its own address space
+
+477
+00:22:22,560 --> 00:22:26,130
+and whenever the hypervisor
+needs to perform services
+
+478
+00:22:26,130 --> 00:22:27,840
+on behalf of a virtual machine,
+
+479
+00:22:27,840 --> 00:22:30,150
+for example instruction emulation,
+
+480
+00:22:30,150 --> 00:22:32,100
+what happens is the hypervisor
+
+481
+00:22:32,100 --> 00:22:35,100
+maps the bare minimum amount of memory
+
+482
+00:22:35,100 --> 00:22:37,620
+that's necessary to perform its operation.
+
+483
+00:22:37,620 --> 00:22:39,930
+And as soon as that's done,
+
+484
+00:22:39,930 --> 00:22:41,670
+the hypervisor goes back
+
+485
+00:22:41,670 --> 00:22:43,740
+to having its previous address space
+
+486
+00:22:43,740 --> 00:22:45,993
+that does not map any
+of the customer data.
+
+487
+00:22:47,550 --> 00:22:50,740
+We call this type of memory management
+
+488
+00:22:51,810 --> 00:22:52,833
+secret hiding.
+
+489
+00:22:53,790 --> 00:22:55,560
+Since then,
+
+490
+00:22:55,560 --> 00:22:56,820
+since we started our journey,
+
+491
+00:22:56,820 --> 00:23:00,630
+implemented secret hiding by
+removing memory and CPU context
+
+492
+00:23:00,630 --> 00:23:02,190
+from the hypervisor address space,
+
+493
+00:23:02,190 --> 00:23:06,780
+this has also been called design
+of a secret-free hypervisor
+
+494
+00:23:06,780 --> 00:23:08,550
+or in some cases,
+
+495
+00:23:08,550 --> 00:23:10,770
+people are referring to
+inability of hypervisor
+
+496
+00:23:10,770 --> 00:23:14,133
+to access customer data
+as confidential computing.
+
+497
+00:23:19,050 --> 00:23:20,160
+A few months ago,
+
+498
+00:23:20,160 --> 00:23:24,330
+a research group from
+a university in Europe
+
+499
+00:23:24,330 --> 00:23:27,300
+published a very interesting
+piece of research
+
+500
+00:23:27,300 --> 00:23:29,430
+talking about a new security vulnerability
+
+501
+00:23:29,430 --> 00:23:32,190
+called L1TF Reloaded.
+
+502
+00:23:32,190 --> 00:23:33,390
+L1TF Reloaded
+
+503
+00:23:33,390 --> 00:23:37,110
+is a transit execution attack
+
+504
+00:23:37,110 --> 00:23:39,630
+that relies on L1TF
+
+505
+00:23:39,630 --> 00:23:43,740
+and what researchers
+call half-Spectre gadget.
+
+506
+00:23:43,740 --> 00:23:45,220
+So, it's one attack
+
+507
+00:23:46,200 --> 00:23:48,750
+that derives from Spectre Meltdown
+
+508
+00:23:48,750 --> 00:23:50,433
+that came in 2018.
+
+509
+00:23:51,330 --> 00:23:53,940
+Through the clever combination of L1TF
+
+510
+00:23:53,940 --> 00:23:56,190
+and half-Spectre gadgets,
+
+511
+00:23:56,190 --> 00:23:57,960
+the research team was able to show
+
+512
+00:23:57,960 --> 00:24:01,163
+that when running on a commodity Linux KVM
+
+513
+00:24:01,163 --> 00:24:04,830
+and KVM hypervisor as well
+as other cloud providers,
+
+514
+00:24:04,830 --> 00:24:08,430
+it was possible to
+exfiltrate the private keys
+
+515
+00:24:08,430 --> 00:24:11,970
+of a web server from
+one instance to another.
+
+516
+00:24:11,970 --> 00:24:14,190
+On the other end, when the
+same attack was mounted
+
+517
+00:24:14,190 --> 00:24:17,040
+against the two instances
+running on the Nitro Hypervisor,
+
+518
+00:24:17,040 --> 00:24:18,150
+the researchers were not able
+
+519
+00:24:18,150 --> 00:24:20,490
+to extract any of the private keys
+
+520
+00:24:20,490 --> 00:24:23,610
+and this is thanks to the design
+
+521
+00:24:23,610 --> 00:24:27,003
+of a secret-free hypervisor.
+
+522
+00:24:28,440 --> 00:24:30,870
+We recently published a blog post
+
+523
+00:24:30,870 --> 00:24:33,180
+with a deep dive into memory management
+
+524
+00:24:33,180 --> 00:24:34,740
+of the Nitro Hypervisor.
+
+525
+00:24:34,740 --> 00:24:37,140
+I invited you to scan
+the QR code on the screen
+
+526
+00:24:37,140 --> 00:24:39,963
+and take another look at the blog post.
+
+527
+00:24:43,740 --> 00:24:46,620
+Now, let's continue our
+journey on the security aspect
+
+528
+00:24:46,620 --> 00:24:48,243
+of the Nitro System.
+
+529
+00:24:49,680 --> 00:24:52,260
+The next component in the Nitro System
+
+530
+00:24:52,260 --> 00:24:53,310
+that has to do with security
+
+531
+00:24:53,310 --> 00:24:54,807
+is the Nitro Security Chip.
+
+532
+00:24:54,807 --> 00:24:57,780
+The Nitro Security Chip
+is a piece of silicon
+
+533
+00:24:57,780 --> 00:24:59,340
+that's baked on our motherboard
+
+534
+00:24:59,340 --> 00:25:04,200
+and helps the primary Nitro
+Card or the Nitro Controller
+
+535
+00:25:04,200 --> 00:25:06,123
+establishing a hardware root of trust.
+
+536
+00:25:07,320 --> 00:25:08,760
+If you look at motherboards,
+
+537
+00:25:08,760 --> 00:25:13,200
+they have a series of
+non-volatile assets, flashes.
+
+538
+00:25:13,200 --> 00:25:17,070
+These flashes contain BIOS, UEFI images,
+
+539
+00:25:17,070 --> 00:25:20,490
+or the binary image of the BMC,
+
+540
+00:25:20,490 --> 00:25:21,780
+the BMC being the component
+
+541
+00:25:21,780 --> 00:25:24,630
+that manages the fan speed
+
+542
+00:25:24,630 --> 00:25:29,100
+and collects several information
+
+543
+00:25:29,100 --> 00:25:31,950
+about the system like the
+temperature, voltages, and so on
+
+544
+00:25:31,950 --> 00:25:34,550
+to guarantee that the system
+is operating correctly.
+
+545
+00:25:36,960 --> 00:25:38,490
+Through the Nitro Security Chip,
+
+546
+00:25:38,490 --> 00:25:40,410
+we are able to consistently
+
+547
+00:25:40,410 --> 00:25:42,930
+and continuously monitor the content
+
+548
+00:25:42,930 --> 00:25:44,860
+of the flashes on our systems
+
+549
+00:25:46,200 --> 00:25:48,330
+and we do this for two purposes.
+
+550
+00:25:48,330 --> 00:25:51,480
+First, we want to be able
+to update them out of band
+
+551
+00:25:51,480 --> 00:25:54,090
+to make sure that we always
+have the latest software running
+
+552
+00:25:54,090 --> 00:25:55,950
+in our fleet.
+
+553
+00:25:55,950 --> 00:25:59,430
+And on top of that, we
+are able to validate
+
+554
+00:25:59,430 --> 00:26:00,270
+that the software
+
+555
+00:26:00,270 --> 00:26:02,130
+and the firmware that we
+are running on our systems
+
+556
+00:26:02,130 --> 00:26:03,903
+is exactly what we intend to run.
+
+557
+00:26:05,550 --> 00:26:06,960
+Beyond that, the Nitro Security Chip
+
+558
+00:26:06,960 --> 00:26:11,490
+keeps monitoring the auxiliary
+buses on our systems.
+
+559
+00:26:11,490 --> 00:26:13,260
+Think like the I2C bus
+
+560
+00:26:13,260 --> 00:26:15,153
+or the SPI bus to access flashes.
+
+561
+00:26:18,270 --> 00:26:21,540
+Okay, we have removed I/O,
+
+562
+00:26:21,540 --> 00:26:25,050
+we have moved the management of security.
+
+563
+00:26:25,050 --> 00:26:28,470
+We basically stripped down
+Dom0 to the bare minimum,
+
+564
+00:26:28,470 --> 00:26:29,670
+potentially removing it,
+
+565
+00:26:30,660 --> 00:26:32,370
+and we designed a new hypervisor,
+
+566
+00:26:32,370 --> 00:26:34,750
+a hypervisor that's
+quiescent and lightweight
+
+567
+00:26:35,730 --> 00:26:38,640
+and that gives more
+resources to customers,
+
+568
+00:26:38,640 --> 00:26:40,390
+translates into higher performance.
+
+569
+00:26:45,600 --> 00:26:46,920
+On top of that,
+
+570
+00:26:46,920 --> 00:26:49,740
+we have a very flexible
+system in the Nitro System.
+
+571
+00:26:49,740 --> 00:26:52,770
+Because the Nitro System
+is extremely composable,
+
+572
+00:26:52,770 --> 00:26:55,860
+we can increase the number
+of Nitro Cards in our servers
+
+573
+00:26:55,860 --> 00:27:00,060
+to provide more local storage
+to provide higher performance
+
+574
+00:27:00,060 --> 00:27:02,673
+for remote storage or
+higher network performance.
+
+575
+00:27:03,780 --> 00:27:06,750
+If you look at our pace of launches
+
+576
+00:27:06,750 --> 00:27:11,190
+in terms of instance types
+between 2006 and 2017,
+
+577
+00:27:11,190 --> 00:27:13,710
+we launched 17 instance types.
+
+578
+00:27:13,710 --> 00:27:16,920
+However, after the full Nitro
+System has been developed
+
+579
+00:27:16,920 --> 00:27:19,470
+and put in production in 2017,
+
+580
+00:27:19,470 --> 00:27:24,470
+we have since launched more
+than 800 instance types,
+
+581
+00:27:24,510 --> 00:27:25,710
+to the point where we are
+
+582
+00:27:25,710 --> 00:27:27,567
+at 1,000 plus instance types today,
+
+583
+00:27:27,567 --> 00:27:29,133
+and we did stop counting.
+
+584
+00:27:33,720 --> 00:27:38,340
+Okay, let's continue our
+journey into the Nitro System
+
+585
+00:27:38,340 --> 00:27:41,043
+and keep focusing on the security aspects.
+
+586
+00:27:41,970 --> 00:27:46,237
+So, security is the number
+one priority for AWS,
+
+587
+00:27:47,430 --> 00:27:50,973
+but security is also a
+shared responsibility.
+
+588
+00:27:52,170 --> 00:27:56,040
+There is security of the cloud
+and security in the cloud
+
+589
+00:27:56,040 --> 00:27:58,157
+that we need to take care of.
+
+590
+00:27:58,157 --> 00:28:01,230
+AWS is responsible for
+security of the cloud
+
+591
+00:28:01,230 --> 00:28:04,410
+and this starts from
+securing our facilities
+
+592
+00:28:04,410 --> 00:28:08,610
+and making sure that our
+hardware is in top shape.
+
+593
+00:28:08,610 --> 00:28:11,100
+The firmware and the software
+that runs on our hardware
+
+594
+00:28:11,100 --> 00:28:12,813
+is exactly what we intend to run.
+
+595
+00:28:14,520 --> 00:28:15,480
+On the other end, the customer
+
+596
+00:28:15,480 --> 00:28:18,480
+is responsible for the
+security in the cloud.
+
+597
+00:28:18,480 --> 00:28:19,800
+This means that the customer
+
+598
+00:28:19,800 --> 00:28:21,990
+is responsible for updating
+the operating system
+
+599
+00:28:21,990 --> 00:28:24,720
+that runs in their instances,
+
+600
+00:28:24,720 --> 00:28:27,270
+making sure that their application
+
+601
+00:28:27,270 --> 00:28:29,070
+are using all the very latest libraries,
+
+602
+00:28:29,070 --> 00:28:31,620
+for example, cryptographic libraries
+
+603
+00:28:31,620 --> 00:28:33,813
+that are not subject to timing attacks.
+
+604
+00:28:36,000 --> 00:28:36,833
+And on top of that,
+
+605
+00:28:36,833 --> 00:28:37,920
+customers are responsible
+
+606
+00:28:37,920 --> 00:28:40,650
+for using all the security
+features that we make available
+
+607
+00:28:40,650 --> 00:28:43,290
+like VPC, security groups,
+
+608
+00:28:43,290 --> 00:28:45,060
+and configuring them correctly
+
+609
+00:28:45,060 --> 00:28:47,100
+to prevent instances
+
+610
+00:28:47,100 --> 00:28:49,710
+that are not supposed
+to talk with one another
+
+611
+00:28:49,710 --> 00:28:50,763
+from communicating.
+
+612
+00:28:57,240 --> 00:29:02,220
+Okay, let's continue our
+journey on the security front
+
+613
+00:29:02,220 --> 00:29:04,050
+and let's talk about
+confidential computing.
+
+614
+00:29:04,050 --> 00:29:05,320
+Confidential computing
+
+615
+00:29:06,330 --> 00:29:09,660
+is something that popped
+up a couple of years ago
+
+616
+00:29:09,660 --> 00:29:13,510
+and it tries to specify
+
+617
+00:29:15,960 --> 00:29:20,340
+how to protect customer
+code and customer data.
+
+618
+00:29:20,340 --> 00:29:22,110
+There's been a bit of confusion
+
+619
+00:29:22,110 --> 00:29:25,923
+and I want to address a few
+topics on on this front.
+
+620
+00:29:27,854 --> 00:29:31,140
+At AWS, we really believe
+that confidential computing
+
+621
+00:29:31,140 --> 00:29:32,670
+is all about making sure
+
+622
+00:29:32,670 --> 00:29:35,490
+that customer data and code is protected,
+
+623
+00:29:35,490 --> 00:29:36,720
+but we need to understand
+
+624
+00:29:36,720 --> 00:29:39,453
+from whom this needs to be protected.
+
+625
+00:29:40,680 --> 00:29:43,500
+We have two dimensions here
+that we need to consider.
+
+626
+00:29:43,500 --> 00:29:47,520
+The first dimension is
+protecting customer code and data
+
+627
+00:29:47,520 --> 00:29:49,920
+from the cloud provider itself
+
+628
+00:29:49,920 --> 00:29:52,923
+and from one customer to the next.
+
+629
+00:29:54,270 --> 00:29:56,160
+When it comes to the cloud provider,
+
+630
+00:29:56,160 --> 00:29:57,220
+the Nitro System
+
+631
+00:29:58,290 --> 00:30:01,343
+provides several improvements
+
+632
+00:30:01,343 --> 00:30:05,940
+because we removed operator
+access to the Nitro System
+
+633
+00:30:05,940 --> 00:30:07,770
+and to the Nitro Hypervisor.
+
+634
+00:30:07,770 --> 00:30:11,310
+So, we make sure that
+customer data is safe
+
+635
+00:30:11,310 --> 00:30:12,610
+and customer code as well.
+
+636
+00:30:14,070 --> 00:30:17,823
+Now, let's recap how the
+Nitro System achieves that.
+
+637
+00:30:19,170 --> 00:30:23,020
+We have encryption for all
+the communication channels
+
+638
+00:30:24,000 --> 00:30:26,313
+where customer data may be in transit.
+
+639
+00:30:27,180 --> 00:30:30,240
+We use Secure Boot and
+Measured Boot extensively
+
+640
+00:30:30,240 --> 00:30:32,820
+to ensure that our hardware
+
+641
+00:30:32,820 --> 00:30:35,580
+is running the latest
+firmware and software
+
+642
+00:30:35,580 --> 00:30:36,570
+and most importantly,
+
+643
+00:30:36,570 --> 00:30:38,850
+the firmware and software
+that we intend to run,
+
+644
+00:30:38,850 --> 00:30:41,640
+and we perform cryptographic validation
+
+645
+00:30:41,640 --> 00:30:42,930
+that this is the case
+
+646
+00:30:42,930 --> 00:30:45,280
+from the very early stages
+of the boot process.
+
+647
+00:30:46,200 --> 00:30:50,130
+On top of that, we have
+periodic deployments
+
+648
+00:30:50,130 --> 00:30:52,870
+of newer version of firmware and software
+
+649
+00:30:53,760 --> 00:30:55,020
+to patch our systems,
+
+650
+00:30:55,020 --> 00:30:58,890
+to have the latest security fixes,
+
+651
+00:30:58,890 --> 00:31:00,720
+the latest bug fixes.
+
+652
+00:31:00,720 --> 00:31:04,230
+This includes all the firmware
+and software that we run,
+
+653
+00:31:04,230 --> 00:31:05,550
+including the Nitro Hypervisor,
+
+654
+00:31:05,550 --> 00:31:07,860
+which we can live update
+
+655
+00:31:07,860 --> 00:31:10,413
+with no interruption
+of customer workloads.
+
+656
+00:31:13,080 --> 00:31:15,120
+Lastly, as I mentioned before,
+
+657
+00:31:15,120 --> 00:31:19,560
+we got rid of access to our servers.
+
+658
+00:31:19,560 --> 00:31:20,940
+There is no shell,
+
+659
+00:31:20,940 --> 00:31:25,323
+no SSH to the Nitro System
+and to the Nitro Hypervisor.
+
+660
+00:31:27,480 --> 00:31:28,410
+Beyond that,
+
+661
+00:31:28,410 --> 00:31:31,230
+every piece of software
+and firmware that we build,
+
+662
+00:31:31,230 --> 00:31:34,560
+it's built by multiple teams
+
+663
+00:31:34,560 --> 00:31:38,400
+that are globally distributed
+across all the continents
+
+664
+00:31:38,400 --> 00:31:41,223
+and it is code reviewed
+by multiple people,
+
+665
+00:31:42,090 --> 00:31:43,890
+extensively tested,
+
+666
+00:31:43,890 --> 00:31:46,650
+and only when all our testing is passing,
+
+667
+00:31:46,650 --> 00:31:48,540
+this code is production signed
+
+668
+00:31:48,540 --> 00:31:51,780
+to make sure that the
+EC2 deployments service
+
+669
+00:31:51,780 --> 00:31:54,660
+can deploy it following our policy
+
+670
+00:31:54,660 --> 00:31:58,683
+across all the AZs and
+regions that AWS provides.
+
+671
+00:32:02,070 --> 00:32:02,903
+Now, let's take a look
+
+672
+00:32:02,903 --> 00:32:05,553
+at the second dimension
+of confidential computing.
+
+673
+00:32:06,600 --> 00:32:09,300
+We want to provide options to customers
+
+674
+00:32:09,300 --> 00:32:12,810
+to make sure that the
+customer code and data
+
+675
+00:32:12,810 --> 00:32:16,230
+is also protected within
+the customer organization.
+
+676
+00:32:16,230 --> 00:32:20,550
+There are several levels
+
+677
+00:32:20,550 --> 00:32:22,260
+of trustworthiness of software
+
+678
+00:32:22,260 --> 00:32:23,880
+that we usually deploy,
+
+679
+00:32:23,880 --> 00:32:26,020
+that anybody deploys in systems.
+
+680
+00:32:26,020 --> 00:32:29,850
+There are highly trusted pieces
+of code that, for example,
+
+681
+00:32:29,850 --> 00:32:33,180
+operate on signing keys
+
+682
+00:32:33,180 --> 00:32:35,340
+and there are less trusted piece of code
+
+683
+00:32:35,340 --> 00:32:38,010
+that provide public endpoints.
+
+684
+00:32:38,010 --> 00:32:40,650
+We want to make sure
+that these are decoupled
+
+685
+00:32:40,650 --> 00:32:44,460
+so that a bug in a piece of code
+
+686
+00:32:44,460 --> 00:32:46,110
+that deals with a public endpoint
+
+687
+00:32:46,110 --> 00:32:49,833
+does not result in leaking
+a signing key, for example.
+
+688
+00:32:51,390 --> 00:32:54,420
+One of the solutions that
+we offer on this front
+
+689
+00:32:54,420 --> 00:32:55,443
+is Nitro Enclaves.
+
+690
+00:32:56,700 --> 00:32:59,190
+With Nitro Enclaves,
+
+691
+00:32:59,190 --> 00:33:02,520
+the parent instance is
+able to donate resources
+
+692
+00:33:02,520 --> 00:33:04,950
+in terms of CPU and memory
+
+693
+00:33:04,950 --> 00:33:07,110
+and these resources are
+used by the hypervisor
+
+694
+00:33:07,110 --> 00:33:10,590
+to start a sidecar instance.
+
+695
+00:33:10,590 --> 00:33:13,210
+These sidecar instance or enclaves
+
+696
+00:33:14,970 --> 00:33:18,540
+has all the security
+properties of an EC2 instance.
+
+697
+00:33:18,540 --> 00:33:21,850
+It benefits for all the
+secret hiding that I mentioned
+
+698
+00:33:22,920 --> 00:33:25,920
+that Nitro Hypervisor
+implements, for example.
+
+699
+00:33:25,920 --> 00:33:29,610
+However, it's also a much
+more enclosed environment
+
+700
+00:33:29,610 --> 00:33:33,750
+because a Nitro Enclave does
+not have persistent storage,
+
+701
+00:33:33,750 --> 00:33:36,330
+does not have a network
+interface, for example.
+
+702
+00:33:36,330 --> 00:33:38,850
+It only has a thin pipe
+
+703
+00:33:38,850 --> 00:33:41,370
+between itself and the parent instance,
+
+704
+00:33:41,370 --> 00:33:44,490
+so that the parent instance
+can provide commands
+
+705
+00:33:44,490 --> 00:33:46,533
+for perform our PC calls, for example.
+
+706
+00:33:48,810 --> 00:33:53,760
+Nitro Enclaves are integrated with AWS KMS
+
+707
+00:33:53,760 --> 00:33:56,200
+and when all the software
+in the Nitro Enclaves
+
+708
+00:33:57,780 --> 00:33:59,190
+is attested,
+
+709
+00:33:59,190 --> 00:34:02,340
+an attestation document can
+be used together with KMS
+
+710
+00:34:02,340 --> 00:34:07,340
+to unlock content that only
+the enclave needs to access.
+
+711
+00:34:07,380 --> 00:34:10,860
+And one of the most common
+use case for Nitro Enclaves
+
+712
+00:34:10,860 --> 00:34:14,433
+is to store signing keys, for example.
+
+713
+00:34:17,430 --> 00:34:19,470
+Beyond Nitro Enclaves,
+
+714
+00:34:19,470 --> 00:34:23,010
+we are also providing
+features like Secure Boot.
+
+715
+00:34:23,010 --> 00:34:24,300
+Now,
+
+716
+00:34:24,300 --> 00:34:28,500
+A-M-Is or AMIs provide an immutable way
+
+717
+00:34:28,500 --> 00:34:31,770
+to boot software on an EC2 instance.
+
+718
+00:34:31,770 --> 00:34:33,480
+However, there is a lot of use
+
+719
+00:34:33,480 --> 00:34:37,290
+of UEFI Secure Boot on-premise
+
+720
+00:34:37,290 --> 00:34:38,850
+and customers have been asking us
+
+721
+00:34:38,850 --> 00:34:43,203
+to provide the very same
+features for EC2 instances.
+
+722
+00:34:45,338 --> 00:34:47,130
+Through UEFI Secure Boot,
+
+723
+00:34:47,130 --> 00:34:52,130
+it is possible for the
+guest firmware, UEFI,
+
+724
+00:34:52,470 --> 00:34:54,450
+to cryptographically validate
+
+725
+00:34:54,450 --> 00:34:57,210
+that the boot loader and the kernel
+
+726
+00:34:57,210 --> 00:34:59,610
+and the rest of the operating system
+
+727
+00:34:59,610 --> 00:35:00,960
+that's going to be loaded,
+
+728
+00:35:00,960 --> 00:35:04,143
+it is signed with a key
+that the customer trusts.
+
+729
+00:35:05,460 --> 00:35:08,220
+This allows the customer
+
+730
+00:35:08,220 --> 00:35:12,450
+to protect against a type of malware
+
+731
+00:35:12,450 --> 00:35:14,520
+that may persist across reboots
+
+732
+00:35:14,520 --> 00:35:17,160
+and ensures that an EC2 instance
+
+733
+00:35:17,160 --> 00:35:21,063
+will only run the software that
+the customer intends to run.
+
+734
+00:35:24,030 --> 00:35:27,213
+NitroTPM is the next step on this journey.
+
+735
+00:35:28,950 --> 00:35:32,970
+NitroTPM is a TPM 2.0 implementation
+
+736
+00:35:32,970 --> 00:35:34,420
+that conforms to the standard
+
+737
+00:35:35,370 --> 00:35:37,240
+and it allows
+
+738
+00:35:38,340 --> 00:35:40,920
+measurement of software,
+
+739
+00:35:40,920 --> 00:35:43,260
+cryptographic measurement of software,
+
+740
+00:35:43,260 --> 00:35:46,360
+and extending this
+measurement into the TPM
+
+741
+00:35:47,250 --> 00:35:50,190
+so that this measurement can be used to,
+
+742
+00:35:50,190 --> 00:35:53,670
+for example, unlock the local
+storage on an EC2 instance
+
+743
+00:35:53,670 --> 00:35:58,410
+using solutions like LUKS or BitLocker.
+
+744
+00:35:58,410 --> 00:36:03,030
+Now, UEFI Secure Boot and Nitro and TPMs
+
+745
+00:36:03,030 --> 00:36:05,160
+are available since a long while.
+
+746
+00:36:05,160 --> 00:36:08,190
+However, the software
+stack to make use of them
+
+747
+00:36:08,190 --> 00:36:10,500
+has historically been complicated.
+
+748
+00:36:10,500 --> 00:36:14,310
+Having end-to-end
+attestation of a workload
+
+749
+00:36:14,310 --> 00:36:16,200
+is not a simple step,
+
+750
+00:36:16,200 --> 00:36:18,840
+and that is why customers
+love Nitro Enclaves.
+
+751
+00:36:18,840 --> 00:36:22,920
+Nitro Enclaves provide an easy solution
+
+752
+00:36:22,920 --> 00:36:25,320
+to validate that the entire software
+
+753
+00:36:25,320 --> 00:36:27,600
+that's being running the workload
+
+754
+00:36:27,600 --> 00:36:30,120
+is exactly what it's supposed to be.
+
+755
+00:36:30,120 --> 00:36:31,070
+So, customer ask us
+
+756
+00:36:33,000 --> 00:36:37,170
+to port this ease-of-use
+to EC2 instances as well
+
+757
+00:36:37,170 --> 00:36:41,553
+for use cases where Nitro
+Enclaves are not enough.
+
+758
+00:36:42,810 --> 00:36:45,060
+That's why we released the
+EC2 instance attestation.
+
+759
+00:36:45,060 --> 00:36:47,110
+Now, EC2 instance attestation
+
+760
+00:36:47,970 --> 00:36:52,360
+builds on top of UEFI Secure
+Boot and the Nitro TPM
+
+761
+00:36:53,520 --> 00:36:57,570
+and makes use of what we
+are calling Attestable AMIs.
+
+762
+00:36:57,570 --> 00:37:01,830
+Attestable AMIs are AMIs that
+can be built over and over
+
+763
+00:37:01,830 --> 00:37:04,590
+and rebuilding those
+AMIs following a recipe
+
+764
+00:37:04,590 --> 00:37:09,570
+will always result in the
+same bits that we can measure.
+
+765
+00:37:09,570 --> 00:37:12,180
+And again, we can use those measurement
+
+766
+00:37:12,180 --> 00:37:14,910
+to provide an attestation document,
+
+767
+00:37:14,910 --> 00:37:17,940
+an attestation document that
+like with Nitro Enclaves
+
+768
+00:37:17,940 --> 00:37:22,623
+can be used to work with
+AWS KMS to unlock secrets.
+
+769
+00:37:25,650 --> 00:37:30,570
+What can EC2 instance attestation
+
+770
+00:37:30,570 --> 00:37:31,740
+be used for?
+
+771
+00:37:31,740 --> 00:37:33,810
+One of the use cases that we have in mind
+
+772
+00:37:33,810 --> 00:37:36,120
+is confidential inferencing.
+
+773
+00:37:36,120 --> 00:37:39,630
+Think about the case of a cloud provider
+
+774
+00:37:39,630 --> 00:37:44,630
+wanting to make a closed-source
+machine learning model,
+
+775
+00:37:44,640 --> 00:37:49,080
+AI/ML model available to customers.
+
+776
+00:37:49,080 --> 00:37:51,300
+Now, the model provider
+
+777
+00:37:51,300 --> 00:37:53,880
+may not want to disclose the model weights
+
+778
+00:37:53,880 --> 00:37:58,110
+because those are the IP of
+of the model provider, right?
+
+779
+00:37:58,110 --> 00:37:59,670
+And the cloud provider wants to make sure
+
+780
+00:37:59,670 --> 00:38:02,010
+that the customer data,
+
+781
+00:38:02,010 --> 00:38:06,000
+meaning the prompts and
+the inferred content,
+
+782
+00:38:06,000 --> 00:38:08,280
+will not be available
+to the model provider.
+
+783
+00:38:08,280 --> 00:38:12,810
+Now, EC2 instance attestation
+allows us to build systems
+
+784
+00:38:12,810 --> 00:38:14,433
+that achieve these guarantees.
+
+785
+00:38:17,340 --> 00:38:18,300
+EC2 instance attestation
+
+786
+00:38:18,300 --> 00:38:20,910
+is available on a large
+range of Nitro instances
+
+787
+00:38:20,910 --> 00:38:23,250
+including AI/ML instances
+
+788
+00:38:23,250 --> 00:38:27,747
+with premium Inferentia
+accelerators as well as Nvidia GPUs.
+
+789
+00:38:27,747 --> 00:38:30,029
+And you can start building UEFI
+
+790
+00:38:30,029 --> 00:38:31,440
+and Nitro TPM-enabled Attestable AMIs
+
+791
+00:38:33,000 --> 00:38:36,720
+using Amazon Linux 2023 or NixOS,
+
+792
+00:38:36,720 --> 00:38:39,393
+and this is working for both Graviton,
+
+793
+00:38:39,393 --> 00:38:40,923
+AMD, and Intel instances.
+
+794
+00:38:46,482 --> 00:38:47,610
+A few years back,
+
+795
+00:38:47,610 --> 00:38:50,880
+we published a white paper
+
+796
+00:38:50,880 --> 00:38:55,290
+discussing the security
+design of the AWS Nitro System
+
+797
+00:38:55,290 --> 00:38:58,050
+and where we go in more depth
+
+798
+00:38:58,050 --> 00:39:00,930
+into security aspects of the design
+
+799
+00:39:00,930 --> 00:39:05,010
+of the Nitro Cards and
+the Nitro Hypervisor
+
+800
+00:39:05,010 --> 00:39:06,840
+and the Nitro Security Chip.
+
+801
+00:39:06,840 --> 00:39:11,490
+In addition, the NCC group,
+which is an independent company,
+
+802
+00:39:11,490 --> 00:39:15,000
+perform a review of the Nitro System
+
+803
+00:39:15,000 --> 00:39:18,840
+including all the APIs
+that EC2 Control Plane
+
+804
+00:39:18,840 --> 00:39:20,670
+or any operator can use
+
+805
+00:39:20,670 --> 00:39:22,770
+to work with the Nitro System,
+
+806
+00:39:22,770 --> 00:39:25,620
+and thus concluded that
+there is no mechanism
+
+807
+00:39:25,620 --> 00:39:27,900
+for a cloud operator
+
+808
+00:39:27,900 --> 00:39:31,560
+to gain access to the underlying host
+
+809
+00:39:31,560 --> 00:39:33,630
+or to the customer data
+
+810
+00:39:33,630 --> 00:39:36,420
+that's stored in the instance
+memory, instance storage,
+
+811
+00:39:36,420 --> 00:39:37,743
+or EBS volumes.
+
+812
+00:39:39,630 --> 00:39:41,167
+I invite you to scan the QR code
+
+813
+00:39:41,167 --> 00:39:43,953
+and have a look at the
+white paper in depth.
+
+814
+00:39:45,960 --> 00:39:50,960
+Now, let's continue our
+journey into the Nitro System
+
+815
+00:39:51,030 --> 00:39:53,973
+and let's look at a Graviton4 server.
+
+816
+00:39:55,650 --> 00:39:58,710
+This is a server that can
+run many virtual machines
+
+817
+00:39:58,710 --> 00:40:02,400
+or one or two bare metal instances.
+
+818
+00:40:02,400 --> 00:40:04,290
+When we run two bare metal instances,
+
+819
+00:40:04,290 --> 00:40:07,470
+the lifecycle of the two CPUs is decoupled
+
+820
+00:40:07,470 --> 00:40:10,113
+even though they share
+a single Nitro System.
+
+821
+00:40:13,320 --> 00:40:14,720
+When looking at this server,
+
+822
+00:40:16,830 --> 00:40:20,793
+all the high-speed connections, the DRAM,
+
+823
+00:40:21,780 --> 00:40:23,670
+everything is encrypted.
+
+824
+00:40:23,670 --> 00:40:26,790
+DRAM encryption is something
+that we started doing
+
+825
+00:40:26,790 --> 00:40:30,180
+with our sixth generation
+of instance families,
+
+826
+00:40:30,180 --> 00:40:31,710
+leading with Graviton2.
+
+827
+00:40:31,710 --> 00:40:33,060
+And since then,
+
+828
+00:40:33,060 --> 00:40:36,360
+all EC2 instance platforms
+
+829
+00:40:36,360 --> 00:40:38,910
+have used DRAM encryption.
+
+830
+00:40:38,910 --> 00:40:42,180
+With our eighth generation
+of Nitro instances,
+
+831
+00:40:42,180 --> 00:40:44,670
+again leading with Graviton4 this time,
+
+832
+00:40:44,670 --> 00:40:46,650
+we also started encrypting the links
+
+833
+00:40:46,650 --> 00:40:51,243
+that connect the CPU to the
+Nitro Cards using PCIe IDE,
+
+834
+00:40:53,130 --> 00:40:55,740
+but with Graviton4 we
+went one step further.
+
+835
+00:40:55,740 --> 00:40:58,590
+Graviton4 is the first Graviton solution
+
+836
+00:40:58,590 --> 00:41:00,930
+where we are supporting multiple sockets,
+
+837
+00:41:00,930 --> 00:41:03,240
+so up to two CPUs in a server
+
+838
+00:41:03,240 --> 00:41:06,030
+communicating with one another,
+
+839
+00:41:06,030 --> 00:41:09,150
+and the coherency link
+between the two CPUs
+
+840
+00:41:09,150 --> 00:41:10,473
+are also encrypted.
+
+841
+00:41:16,230 --> 00:41:20,073
+Now, for the cloud to be secure,
+
+842
+00:41:21,510 --> 00:41:26,070
+we have to have certainty
+of everything that's running
+
+843
+00:41:26,070 --> 00:41:29,640
+and we have to make sure
+
+844
+00:41:29,640 --> 00:41:31,170
+that at any time,
+
+845
+00:41:31,170 --> 00:41:35,280
+we have a cryptographic certainty
+
+846
+00:41:35,280 --> 00:41:37,320
+of all the software and firmware
+
+847
+00:41:37,320 --> 00:41:40,020
+that we're running on our servers.
+
+848
+00:41:40,020 --> 00:41:42,330
+That's what we call attestation.
+
+849
+00:41:42,330 --> 00:41:45,840
+However, doing these at the scale of AWS,
+
+850
+00:41:45,840 --> 00:41:47,253
+it's a challenging problem.
+
+851
+00:41:50,130 --> 00:41:54,450
+Let's take a look at
+how an EC2 server boots
+
+852
+00:41:54,450 --> 00:41:56,493
+or any server boot for what matters.
+
+853
+00:41:57,540 --> 00:41:59,520
+When the silicon is light up,
+
+854
+00:41:59,520 --> 00:42:03,745
+it loads code from the code from the ROM,
+
+855
+00:42:03,745 --> 00:42:08,745
+the ROM will instruct the
+CPU on how to load firmware
+
+856
+00:42:08,940 --> 00:42:11,400
+and then the firmware
+will hand over control
+
+857
+00:42:11,400 --> 00:42:12,630
+to the boot loader,
+
+858
+00:42:12,630 --> 00:42:14,850
+which usually resides on the boot volume.
+
+859
+00:42:14,850 --> 00:42:16,440
+And the boot loader
+
+860
+00:42:16,440 --> 00:42:19,380
+is further concerned with
+loading the operating system
+
+861
+00:42:19,380 --> 00:42:21,830
+and from there, loading
+the customer application.
+
+862
+00:42:23,520 --> 00:42:27,060
+Now, at every time when
+we hand over control
+
+863
+00:42:27,060 --> 00:42:29,703
+from one piece of firmware
+or software to the next,
+
+864
+00:42:30,540 --> 00:42:33,540
+there is a chance that
+something may go wrong.
+
+865
+00:42:33,540 --> 00:42:36,000
+So, we have to make sure
+that every single step
+
+866
+00:42:36,000 --> 00:42:37,890
+of the boot process is validated.
+
+867
+00:42:37,890 --> 00:42:39,123
+But where do we start?
+
+868
+00:42:41,040 --> 00:42:43,170
+We need to start from the very beginning,
+
+869
+00:42:43,170 --> 00:42:44,943
+from the manufacturing plans,
+
+870
+00:42:46,050 --> 00:42:50,070
+and we have to follow
+
+871
+00:42:50,070 --> 00:42:51,840
+our hardware
+
+872
+00:42:51,840 --> 00:42:54,723
+from manufacturing through
+the assembly lines,
+
+873
+00:42:55,800 --> 00:42:59,340
+transits from the assembly
+lines to our data centers,
+
+874
+00:42:59,340 --> 00:43:01,200
+installation in our data centers
+
+875
+00:43:01,200 --> 00:43:02,913
+and power on in our data centers.
+
+876
+00:43:04,710 --> 00:43:06,000
+This is about creating
+
+877
+00:43:06,000 --> 00:43:10,440
+an unbroken chain of custody
+
+878
+00:43:10,440 --> 00:43:14,340
+and verification of
+every piece of hardware,
+
+879
+00:43:14,340 --> 00:43:17,490
+firmware, and software
+that runs on our servers.
+
+880
+00:43:17,490 --> 00:43:20,160
+Now, let's dive specifically
+into how this works
+
+881
+00:43:20,160 --> 00:43:23,643
+for our most recent Graviton4 servers,
+
+882
+00:43:25,950 --> 00:43:29,490
+and it all starts with a Nitro Chip.
+
+883
+00:43:29,490 --> 00:43:30,610
+Every Nitro Chip
+
+884
+00:43:34,317 --> 00:43:36,543
+comes with a private and a public key,
+
+885
+00:43:40,380 --> 00:43:43,450
+and this couple of private and public keys
+
+886
+00:43:44,610 --> 00:43:48,210
+allow us to establish a chain of trust.
+
+887
+00:43:48,210 --> 00:43:50,580
+At every step of the boot process,
+
+888
+00:43:50,580 --> 00:43:55,320
+we use this to create a new
+pair of private and public key,
+
+889
+00:43:55,320 --> 00:43:56,770
+destroying the previous pair,
+
+890
+00:43:58,080 --> 00:44:01,120
+and making sure that the next
+piece of software that we load
+
+891
+00:44:01,980 --> 00:44:04,563
+is exactly what we intend it to be.
+
+892
+00:44:08,370 --> 00:44:11,760
+With Graviton, though, we
+push this one step further.
+
+893
+00:44:11,760 --> 00:44:15,003
+We do not just look at
+the Nitro System itself.
+
+894
+00:44:16,800 --> 00:44:20,070
+What happens is that the same idea
+
+895
+00:44:20,070 --> 00:44:22,320
+of having a private and a public key
+
+896
+00:44:22,320 --> 00:44:25,620
+extends to the CPUs in our systems.
+
+897
+00:44:25,620 --> 00:44:29,010
+And this allows us to make sure
+
+898
+00:44:29,010 --> 00:44:30,630
+that only two CPUs
+
+899
+00:44:30,630 --> 00:44:33,810
+that are two Graviton4 CPUs
+can talk with one another
+
+900
+00:44:33,810 --> 00:44:35,380
+and we can establish
+
+901
+00:44:37,140 --> 00:44:40,590
+a cryptographic channel
+between the two of them
+
+902
+00:44:40,590 --> 00:44:43,893
+whenever we are running
+coherency between the two CPUs.
+
+903
+00:44:44,820 --> 00:44:48,420
+Also, we can establish a secure link
+
+904
+00:44:48,420 --> 00:44:50,310
+between the Nitro System,
+
+905
+00:44:50,310 --> 00:44:52,920
+meaning all the Nitro Cards
+that we have in our systems
+
+906
+00:44:52,920 --> 00:44:56,703
+and the CPUs, again relying on PCIe IDE.
+
+907
+00:45:02,730 --> 00:45:04,647
+Now, let's put everything together
+
+908
+00:45:04,647 --> 00:45:07,923
+and let's look at the life
+cycle of an EC2 instance.
+
+909
+00:45:09,240 --> 00:45:12,663
+Whenever a customer calls run instance,
+
+910
+00:45:13,800 --> 00:45:15,120
+the run instance call
+
+911
+00:45:15,120 --> 00:45:17,670
+will go through the EC2 Control Plane.
+
+912
+00:45:17,670 --> 00:45:19,323
+All the necessary resources
+
+913
+00:45:19,323 --> 00:45:22,020
+will be made available
+by the control plane,
+
+914
+00:45:22,020 --> 00:45:24,060
+but the last mile of the control plane
+
+915
+00:45:24,060 --> 00:45:26,430
+will use the Nitro API,
+
+916
+00:45:26,430 --> 00:45:30,120
+which is an authenticated,
+authorized, encrypted,
+
+917
+00:45:30,120 --> 00:45:34,440
+and most importantly, logged API
+
+918
+00:45:34,440 --> 00:45:37,920
+that's going to instruct the
+Nitro System on what to do.
+
+919
+00:45:37,920 --> 00:45:40,830
+The first step is for the control plane
+
+920
+00:45:40,830 --> 00:45:45,240
+to tell the Nitro Controller
+to allocate an empty shell,
+
+921
+00:45:45,240 --> 00:45:49,350
+which only contains CPU and memory.
+
+922
+00:45:49,350 --> 00:45:50,730
+The Nitro Controller will do so
+
+923
+00:45:50,730 --> 00:45:53,670
+by making an RPC to the Nitro Hypervisor
+
+924
+00:45:53,670 --> 00:45:56,470
+so that the Nitro Hypervisor
+can perform the allocation.
+
+925
+00:45:57,360 --> 00:45:59,780
+The next step is for
+these two control plane
+
+926
+00:45:59,780 --> 00:46:02,813
+to instruct the Nitro Controller
+to set up the Nitro Cards
+
+927
+00:46:02,813 --> 00:46:06,930
+so that we can expose
+ENI through ENA devices
+
+928
+00:46:06,930 --> 00:46:09,003
+and EBS volumes through NVMe.
+
+929
+00:46:09,900 --> 00:46:14,160
+The Nitro Controller will later
+on instruct the hypervisor
+
+930
+00:46:14,160 --> 00:46:18,120
+to create a channel
+between the virtual CPUs
+
+931
+00:46:18,120 --> 00:46:20,010
+and the dedicated hardware
+
+932
+00:46:20,010 --> 00:46:24,330
+to make sure that the hypervisor
+will not be in the picture
+
+933
+00:46:24,330 --> 00:46:26,733
+whenever there is an I/O happening.
+
+934
+00:46:27,960 --> 00:46:31,170
+The last step is for the EC2 Control Plane
+
+935
+00:46:31,170 --> 00:46:35,310
+to tell the Nitro Controller
+to start the virtual machine.
+
+936
+00:46:35,310 --> 00:46:36,570
+At this point,
+
+937
+00:46:36,570 --> 00:46:39,150
+the Nitro Controller will
+instruct the hypervisor,
+
+938
+00:46:39,150 --> 00:46:42,210
+the hypervisor will start
+executing the guest firmware,
+
+939
+00:46:42,210 --> 00:46:44,010
+and from the guest firmware,
+
+940
+00:46:44,010 --> 00:46:47,460
+the boot loader and guest kernel
+and guest operating system
+
+941
+00:46:47,460 --> 00:46:48,810
+will be loaded.
+
+942
+00:46:48,810 --> 00:46:51,630
+And again, potentially
+using a UEFI Secure Boot
+
+943
+00:46:51,630 --> 00:46:53,613
+and Nitro TPM and so on.
+
+944
+00:46:59,790 --> 00:47:01,350
+On a Graviton4 server,
+
+945
+00:47:01,350 --> 00:47:04,803
+whenever we are running
+in non-coherent mode,
+
+946
+00:47:06,990 --> 00:47:10,230
+this could happen at any
+time on any of the two hosts.
+
+947
+00:47:10,230 --> 00:47:11,880
+And most critically,
+
+948
+00:47:11,880 --> 00:47:14,340
+this also works whenever the hypervisor
+
+949
+00:47:14,340 --> 00:47:15,900
+is not in the picture.
+
+950
+00:47:15,900 --> 00:47:18,810
+And this relies on the Nitro Controller
+
+951
+00:47:18,810 --> 00:47:23,280
+and the Nitro Security Chip
+holding the CPU in a reset state
+
+952
+00:47:23,280 --> 00:47:24,713
+so that the EC2 Control Plane
+
+953
+00:47:24,713 --> 00:47:26,940
+and the Nitro Controller
+and the Nitro Cards
+
+954
+00:47:26,940 --> 00:47:30,780
+can set up the system
+so that the ENA devices
+
+955
+00:47:30,780 --> 00:47:34,740
+and NVMe devices exposing
+the EBS root volume
+
+956
+00:47:34,740 --> 00:47:36,630
+become available to the CPU,
+
+957
+00:47:36,630 --> 00:47:41,160
+so that the CPU can start
+booting the metal instance
+
+958
+00:47:41,160 --> 00:47:43,010
+as soon as it is released from reset.
+
+959
+00:47:45,559 --> 00:47:49,050
+And the very same solution
+is what enabled AWS
+
+960
+00:47:49,050 --> 00:47:51,723
+to also bring Mac into the cloud.
+
+961
+00:47:53,280 --> 00:47:54,570
+If you're familiar with our offering,
+
+962
+00:47:54,570 --> 00:47:58,290
+we have multiple
+iteration of Mac instances
+
+963
+00:47:58,290 --> 00:48:01,350
+and in this case, we
+connect the Nitro System
+
+964
+00:48:01,350 --> 00:48:03,600
+to Apple Mac Minis
+
+965
+00:48:03,600 --> 00:48:08,490
+using a PCIe to Thunderbolt connector.
+
+966
+00:48:08,490 --> 00:48:11,733
+And this allows us to
+provide the elasticity,
+
+967
+00:48:12,600 --> 00:48:17,100
+reliability, and security
+of EC2 to Mac users,
+
+968
+00:48:17,100 --> 00:48:18,663
+including EBS volumes, VPC,
+
+969
+00:48:19,860 --> 00:48:22,083
+and every other feature that AWS provides.
+
+970
+00:48:23,340 --> 00:48:24,840
+This is a great option
+
+971
+00:48:24,840 --> 00:48:26,610
+for customers that are
+building applications
+
+972
+00:48:26,610 --> 00:48:30,450
+for macOS, iOS, tvOS, watchOS,
+
+973
+00:48:30,450 --> 00:48:33,570
+and they need to perform
+continuous builds,
+
+974
+00:48:33,570 --> 00:48:36,063
+testing, and signing
+of their applications.
+
+975
+00:48:38,038 --> 00:48:40,803
+And with this, we are concluding our talk.
+
+976
+00:48:41,640 --> 00:48:44,580
+We are happy to take
+question outside of the room.
+
+977
+00:48:44,580 --> 00:48:46,586
+Thank you for your attendance.
+
+978
+00:48:46,586 --> 00:48:48,878
+(audience clapping)
+

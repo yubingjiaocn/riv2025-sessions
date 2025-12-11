@@ -1,0 +1,4377 @@
+1
+00:00:00,300 --> 00:00:01,950
+- [Eitav] Hello everybody.
+
+2
+00:00:01,950 --> 00:00:04,410
+So glad to see you today.
+
+3
+00:00:04,410 --> 00:00:06,918
+Who is having a good time so far?
+
+4
+00:00:06,918 --> 00:00:07,751
+- Woo.
+- Yeah.
+
+5
+00:00:07,751 --> 00:00:09,120
+- Woo!
+- Exactly.
+
+6
+00:00:09,120 --> 00:00:10,070
+This is the spirit.
+
+7
+00:00:11,340 --> 00:00:13,170
+So today we're going to talk about
+
+8
+00:00:13,170 --> 00:00:15,840
+how to manage bots versus humans
+
+9
+00:00:15,840 --> 00:00:19,113
+using Amazon CloudFront and AWS WAF.
+
+10
+00:00:20,160 --> 00:00:22,050
+My name is Eitav Arditti.
+
+11
+00:00:22,050 --> 00:00:25,050
+I am an Edge specialist at AWS,
+
+12
+00:00:25,050 --> 00:00:27,180
+meaning I work on a daily basis
+
+13
+00:00:27,180 --> 00:00:28,830
+with different Edge customers
+
+14
+00:00:28,830 --> 00:00:31,410
+and seeing the different
+patterns out there.
+
+15
+00:00:31,410 --> 00:00:35,430
+And lucky enough, I was Edge
+customer for the last 10 years.
+
+16
+00:00:35,430 --> 00:00:39,240
+So I am very happy to share
+my experience today with you
+
+17
+00:00:39,240 --> 00:00:42,930
+and later on to discuss
+your own challenges.
+
+18
+00:00:42,930 --> 00:00:45,690
+Together with me on the stage is Nick.
+
+19
+00:00:45,690 --> 00:00:46,523
+- [Nick] Hi everybody.
+
+20
+00:00:46,523 --> 00:00:49,560
+Nick McCord, Startup Solutions Architect.
+
+21
+00:00:49,560 --> 00:00:51,360
+So my day job is working with startups
+
+22
+00:00:51,360 --> 00:00:55,650
+and what I chose to do was
+working with services that are
+
+23
+00:00:55,650 --> 00:00:57,090
+around going global in minutes.
+
+24
+00:00:57,090 --> 00:00:59,040
+I just thought the concept
+of that was interesting.
+
+25
+00:00:59,040 --> 00:01:02,100
+So I've helped dozens of
+customers of all sizes
+
+26
+00:01:02,100 --> 00:01:04,320
+with their CDN, WAF, and DDoS problems,
+
+27
+00:01:04,320 --> 00:01:08,250
+as well as published a few
+blogs and AWS solutions.
+
+28
+00:01:08,250 --> 00:01:09,600
+- [Eitav] Cool.
+
+29
+00:01:09,600 --> 00:01:12,363
+So a bit of the operations here,
+
+30
+00:01:12,363 --> 00:01:16,200
+this is considered as
+a Code Talk, level 300.
+
+31
+00:01:16,200 --> 00:01:18,420
+So what does it mean?
+
+32
+00:01:18,420 --> 00:01:20,190
+We're going to deep dive.
+
+33
+00:01:20,190 --> 00:01:23,850
+So yes, we're going to
+have a quick short ramp up,
+
+34
+00:01:23,850 --> 00:01:26,310
+but during the entire
+session this is going
+
+35
+00:01:26,310 --> 00:01:29,187
+to be quite a complex concept
+
+36
+00:01:29,187 --> 00:01:34,032
+so we'll try to face
+it during the session.
+
+37
+00:01:34,032 --> 00:01:36,667
+But if you have any questions during it,
+
+38
+00:01:36,667 --> 00:01:40,347
+we'll have some time after this session.
+
+39
+00:01:40,347 --> 00:01:43,230
+We're going to present a lot of code
+
+40
+00:01:43,230 --> 00:01:45,630
+and architecture diagrams.
+
+41
+00:01:45,630 --> 00:01:47,220
+During the entire session,
+
+42
+00:01:47,220 --> 00:01:50,258
+both Nick and myself will
+have a live demo running
+
+43
+00:01:50,258 --> 00:01:54,240
+to showcase how the different
+changes within CloudFront
+
+44
+00:01:54,240 --> 00:01:56,250
+and WAF actually implemented
+
+45
+00:01:56,250 --> 00:02:00,273
+and actually impacted our
+platform that we built for you.
+
+46
+00:02:01,350 --> 00:02:04,140
+And last Q and A, so
+this session is recorded
+
+47
+00:02:04,140 --> 00:02:06,907
+so we're not going to do a
+Q and A during the session,
+
+48
+00:02:06,907 --> 00:02:09,330
+but both Nick and myself will be here
+
+49
+00:02:09,330 --> 00:02:11,820
+for the next 15 minutes after the session.
+
+50
+00:02:11,820 --> 00:02:14,853
+So please reach out later on
+and we'll be happy to discuss.
+
+51
+00:02:16,440 --> 00:02:18,540
+So after the operation,
+
+52
+00:02:18,540 --> 00:02:22,770
+we can start discuss
+about our topic for today.
+
+53
+00:02:22,770 --> 00:02:27,770
+So humans, who of those
+know humans? (laughs)
+
+54
+00:02:28,140 --> 00:02:32,070
+I surely hope that's all
+of us here are humans,
+
+55
+00:02:32,070 --> 00:02:35,850
+but nowadays it's quite
+challenging to understand.
+
+56
+00:02:35,850 --> 00:02:38,580
+So when all of us trying
+to build the products,
+
+57
+00:02:38,580 --> 00:02:42,783
+we aim to build it for humans
+to the actual legitimate users
+
+58
+00:02:42,783 --> 00:02:44,947
+that will use our product.
+
+59
+00:02:44,947 --> 00:02:47,550
+But since the internet began,
+
+60
+00:02:47,550 --> 00:02:52,187
+we also saw a tremendous
+trend of using of good bots.
+
+61
+00:02:52,187 --> 00:02:55,967
+Good bots are usually being
+used to operate the internet,
+
+62
+00:02:55,967 --> 00:02:59,520
+to crawl the index, to
+populate our websites,
+
+63
+00:02:59,520 --> 00:03:03,330
+and eventually are good for our business.
+
+64
+00:03:03,330 --> 00:03:06,810
+But wherever there is
+good there is always bad.
+
+65
+00:03:06,810 --> 00:03:09,000
+And this time we have bad bots.
+
+66
+00:03:09,000 --> 00:03:12,492
+So bad bots can also try to
+harm your infrastructure.
+
+67
+00:03:12,492 --> 00:03:16,968
+DDoS is the most common
+attack that we see out there,
+
+68
+00:03:16,968 --> 00:03:21,510
+but bad bots can also
+try to replicate your IP,
+
+69
+00:03:21,510 --> 00:03:22,920
+try to steal your content
+
+70
+00:03:22,920 --> 00:03:25,080
+and maybe publish it somewhere else.
+
+71
+00:03:25,080 --> 00:03:27,960
+So we'll discuss about
+those two in the session.
+
+72
+00:03:27,960 --> 00:03:32,550
+And last, we must say AI in
+every single session, right?
+
+73
+00:03:32,550 --> 00:03:34,200
+So AI bots
+
+74
+00:03:34,200 --> 00:03:35,670
+and we see an increased trend
+
+75
+00:03:35,670 --> 00:03:37,800
+in the last two years of AI bots.
+
+76
+00:03:37,800 --> 00:03:38,970
+And this is like tweaking,
+
+77
+00:03:38,970 --> 00:03:43,500
+because this is combining all
+the human, bad and good bots.
+
+78
+00:03:43,500 --> 00:03:44,880
+Some of those AI bots,
+
+79
+00:03:44,880 --> 00:03:49,847
+those agents are working for humans,
+
+80
+00:03:49,847 --> 00:03:52,140
+but some of them are just trying
+
+81
+00:03:52,140 --> 00:03:55,080
+to showcase they are humans.
+
+82
+00:03:55,080 --> 00:03:56,520
+So in today's session we're going
+
+83
+00:03:56,520 --> 00:03:59,050
+to discuss about all those four topics
+
+84
+00:04:00,090 --> 00:04:03,420
+and as promised a quick Edge ramp up.
+
+85
+00:04:03,420 --> 00:04:05,340
+So Amazon CloudFront footprint
+
+86
+00:04:05,340 --> 00:04:09,690
+is the Amazon CDN service
+
+87
+00:04:09,690 --> 00:04:11,130
+that's mostly is being discussed
+
+88
+00:04:11,130 --> 00:04:13,080
+when you're talking about Edge.
+
+89
+00:04:13,080 --> 00:04:14,730
+So Amazon CloudFront is built
+
+90
+00:04:14,730 --> 00:04:18,000
+from more than 700 point of presence
+
+91
+00:04:18,000 --> 00:04:20,850
+that we like to call
+POPs around the globe.
+
+92
+00:04:20,850 --> 00:04:24,090
+So no matter if you want
+to serve a cache content,
+
+93
+00:04:24,090 --> 00:04:27,043
+which is usually being used with CDN,
+
+94
+00:04:27,043 --> 00:04:30,210
+but also if you want to serve your APIs
+
+95
+00:04:30,210 --> 00:04:32,456
+closer to the actual customers,
+
+96
+00:04:32,456 --> 00:04:35,760
+we see a lot of customers
+using Amazon CloudFront.
+
+97
+00:04:35,760 --> 00:04:37,500
+And in this specific session
+
+98
+00:04:37,500 --> 00:04:40,079
+we're going to talk
+about Amazon CloudFront,
+
+99
+00:04:40,079 --> 00:04:42,240
+Amazon CloudFront Functions,
+
+100
+00:04:42,240 --> 00:04:43,740
+and AWS Lambda@Edge,
+
+101
+00:04:43,740 --> 00:04:48,677
+which is our compute Edge offering at AWS.
+
+102
+00:04:48,677 --> 00:04:51,355
+We're going to discuss about AWS WAF
+
+103
+00:04:51,355 --> 00:04:54,789
+as the protection layer
+on top of CloudFront
+
+104
+00:04:54,789 --> 00:04:58,230
+and last we're going to
+talk about Amazon CloudWatch
+
+105
+00:04:58,230 --> 00:05:01,680
+as a unified observability
+service to showcase
+
+106
+00:05:01,680 --> 00:05:05,643
+the entire changes during this session.
+
+107
+00:05:08,130 --> 00:05:09,130
+- [Nick] Thank you.
+
+108
+00:05:09,130 --> 00:05:11,730
+Shall we make all of these
+services work together?
+
+109
+00:05:11,730 --> 00:05:13,560
+Well, I think a good place to start
+
+110
+00:05:13,560 --> 00:05:16,830
+is going to be breaking down
+the journey of the request,
+
+111
+00:05:16,830 --> 00:05:19,297
+which falls into four different stages.
+
+112
+00:05:19,297 --> 00:05:22,170
+The first is going to
+be the viewer request,
+
+113
+00:05:22,170 --> 00:05:26,010
+which before the request even
+hits the CloudFront cache
+
+114
+00:05:26,010 --> 00:05:30,000
+is going to be evaluated
+against your AWS WAF rules,
+
+115
+00:05:30,000 --> 00:05:32,814
+which is the protection
+logic you have in place
+
+116
+00:05:32,814 --> 00:05:34,740
+broadly across your site,
+
+117
+00:05:34,740 --> 00:05:39,060
+but more specifically for your Edge cache.
+
+118
+00:05:39,060 --> 00:05:40,740
+Next we have our origin request.
+
+119
+00:05:40,740 --> 00:05:44,520
+This is often commonly
+referred to as a cache miss
+
+120
+00:05:44,520 --> 00:05:46,890
+and this will happen if the content
+
+121
+00:05:46,890 --> 00:05:48,120
+that the user has requested
+
+122
+00:05:48,120 --> 00:05:49,350
+is not in the cache
+
+123
+00:05:49,350 --> 00:05:52,560
+or if the TTL and time to live has expired
+
+124
+00:05:52,560 --> 00:05:53,910
+and needs to be refreshed.
+
+125
+00:05:53,910 --> 00:05:57,150
+So CloudFront makes the
+request on your behalf
+
+126
+00:05:57,150 --> 00:05:59,130
+to your designated origin,
+
+127
+00:05:59,130 --> 00:06:01,770
+which then responds
+with an origin response.
+
+128
+00:06:01,770 --> 00:06:03,502
+This populates the CloudFront cache,
+
+129
+00:06:03,502 --> 00:06:06,420
+which can then be used
+for the viewer request
+
+130
+00:06:06,420 --> 00:06:10,110
+and for subsequent requests
+from viewers that come in.
+
+131
+00:06:10,110 --> 00:06:11,490
+This has the advantages
+
+132
+00:06:11,490 --> 00:06:15,612
+of being more latency advantages
+
+133
+00:06:15,612 --> 00:06:19,442
+as well as a better cost profile.
+
+134
+00:06:19,442 --> 00:06:22,020
+In addition to this, we have access logs.
+
+135
+00:06:22,020 --> 00:06:26,790
+This is using CloudWatch,
+Kinesis, Firehose and S3.
+
+136
+00:06:26,790 --> 00:06:28,800
+This is going to be
+capturing different aspects
+
+137
+00:06:28,800 --> 00:06:32,796
+about the request once it's
+been sent back to the user.
+
+138
+00:06:32,796 --> 00:06:35,052
+This can include the total processing time
+
+139
+00:06:35,052 --> 00:06:36,960
+of this entire flow.
+
+140
+00:06:36,960 --> 00:06:39,452
+It could be different
+headers, query strings,
+
+141
+00:06:39,452 --> 00:06:42,090
+the various fields and aspects
+that are being captured
+
+142
+00:06:42,090 --> 00:06:43,830
+by CloudFront for each of them,
+
+143
+00:06:43,830 --> 00:06:45,450
+as well as real time logs,
+
+144
+00:06:45,450 --> 00:06:47,576
+which is gonna be making
+use of a Kinesis data stream
+
+145
+00:06:47,576 --> 00:06:49,982
+and is actually going
+to give you those logs
+
+146
+00:06:49,982 --> 00:06:52,117
+in seconds as opposed to the minutes
+
+147
+00:06:52,117 --> 00:06:54,810
+that you would see with standard logs.
+
+148
+00:06:54,810 --> 00:06:56,580
+This can be further filtered down
+
+149
+00:06:56,580 --> 00:06:58,110
+so that you're using sampling
+
+150
+00:06:58,110 --> 00:07:01,842
+or doing it on specific
+behaviors or caching policies
+
+151
+00:07:01,842 --> 00:07:04,540
+so that you don't have the additional cost
+
+152
+00:07:04,540 --> 00:07:07,350
+of all of your logs
+being ready immediately
+
+153
+00:07:07,350 --> 00:07:08,400
+if you don't need it.
+
+154
+00:07:09,522 --> 00:07:12,359
+Moving more deeply into WAF,
+
+155
+00:07:12,359 --> 00:07:17,130
+here we have a protection pack,
+formerly known as Web ACL.
+
+156
+00:07:17,130 --> 00:07:19,857
+If any of you have updated
+to look at the new UI,
+
+157
+00:07:19,857 --> 00:07:23,580
+and this is going to be the
+scaffolding for our rules,
+
+158
+00:07:23,580 --> 00:07:25,440
+our rule groups, everything
+that we want to do
+
+159
+00:07:25,440 --> 00:07:28,817
+with layer seven protection using WAF.
+
+160
+00:07:28,817 --> 00:07:31,110
+We have various protected resources.
+
+161
+00:07:31,110 --> 00:07:33,300
+All of these are accessible through HTTP.
+
+162
+00:07:33,300 --> 00:07:35,782
+This could be your API endpoints,
+
+163
+00:07:35,782 --> 00:07:38,697
+could be your Kognito user groups,
+
+164
+00:07:38,697 --> 00:07:41,382
+but compatible with various services.
+
+165
+00:07:41,382 --> 00:07:45,060
+And then the smallest unit within AWS WAF
+
+166
+00:07:45,060 --> 00:07:46,440
+is going to be a rule.
+
+167
+00:07:46,440 --> 00:07:49,792
+And so this is going to house
+business logic and an action.
+
+168
+00:07:49,792 --> 00:07:53,896
+The business logic could
+be geo-based IP rules.
+
+169
+00:07:53,896 --> 00:07:56,061
+You could be looking at query strings.
+
+170
+00:07:56,061 --> 00:07:58,215
+It's really gonna be
+dependent on your workload,
+
+171
+00:07:58,215 --> 00:07:59,970
+what you want to evaluate,
+
+172
+00:07:59,970 --> 00:08:03,990
+and what you want to
+protect about your workload.
+
+173
+00:08:03,990 --> 00:08:07,590
+These rules can then be
+bundled up into a rule group
+
+174
+00:08:07,590 --> 00:08:10,020
+and what this does is allows you
+
+175
+00:08:10,020 --> 00:08:12,813
+to have portability
+across different web ACLs
+
+176
+00:08:12,813 --> 00:08:14,182
+or protection packs
+
+177
+00:08:14,182 --> 00:08:16,800
+in order to make it a little bit easier
+
+178
+00:08:16,800 --> 00:08:19,230
+in terms of managing the overhead of rules
+
+179
+00:08:19,230 --> 00:08:22,563
+across multiple different
+WAF protected resources.
+
+180
+00:08:23,730 --> 00:08:26,880
+It's important to note
+that these are in priority.
+
+181
+00:08:26,880 --> 00:08:31,134
+So if you hit a terminating
+rule on your rule one
+
+182
+00:08:31,134 --> 00:08:33,682
+and you either block
+or allow that request,
+
+183
+00:08:33,682 --> 00:08:36,270
+then rule two and the rule group here
+
+184
+00:08:36,270 --> 00:08:37,680
+is not going to be evaluated.
+
+185
+00:08:37,680 --> 00:08:39,630
+So it's important to think about
+
+186
+00:08:39,630 --> 00:08:41,158
+what you want that flow to be.
+
+187
+00:08:41,158 --> 00:08:44,310
+What are the, let's say IPs,
+
+188
+00:08:44,310 --> 00:08:46,530
+or the the regions that
+you wanna block outright
+
+189
+00:08:46,530 --> 00:08:50,160
+and you don't wanna have any
+more advanced evaluation of?
+
+190
+00:08:50,160 --> 00:08:52,294
+Versus the ones that need to go through
+
+191
+00:08:52,294 --> 00:08:54,300
+that entire workflow.
+
+192
+00:08:54,300 --> 00:08:58,170
+So how this ends up
+looking is for your user,
+
+193
+00:08:58,170 --> 00:09:00,360
+they should be passing seamlessly through,
+
+194
+00:09:00,360 --> 00:09:01,470
+it works every time.
+
+195
+00:09:01,470 --> 00:09:02,370
+They're never going to have
+
+196
+00:09:02,370 --> 00:09:05,153
+an interruption in production impact.
+
+197
+00:09:05,153 --> 00:09:07,080
+Threat actors are going to be constantly
+
+198
+00:09:07,080 --> 00:09:08,430
+trying to navigate around this,
+
+199
+00:09:08,430 --> 00:09:11,160
+which is why WAF is considered something
+
+200
+00:09:11,160 --> 00:09:12,780
+that's not set and forget.
+
+201
+00:09:12,780 --> 00:09:14,520
+You have to continually evaluate the rules
+
+202
+00:09:14,520 --> 00:09:16,530
+that you're adding to your WAF.
+
+203
+00:09:16,530 --> 00:09:19,710
+You have to look at the
+behaviors that are coming in
+
+204
+00:09:19,710 --> 00:09:21,780
+and then make updates to these.
+
+205
+00:09:21,780 --> 00:09:22,950
+Amazon does help with that.
+
+206
+00:09:22,950 --> 00:09:25,350
+We have our manageable
+groups for common use cases
+
+207
+00:09:25,350 --> 00:09:27,600
+such as IP reputation lists
+
+208
+00:09:27,600 --> 00:09:30,620
+or the OS top 10, which
+is in our core rule set.
+
+209
+00:09:30,620 --> 00:09:32,730
+But this is a constant journey
+
+210
+00:09:32,730 --> 00:09:33,832
+where you're going to be evaluating
+
+211
+00:09:33,832 --> 00:09:37,383
+and understanding what is
+actually hitting your workload.
+
+212
+00:09:39,000 --> 00:09:40,230
+So a bit of background.
+
+213
+00:09:40,230 --> 00:09:43,143
+How many animal people do
+we have in the audience?
+
+214
+00:09:44,790 --> 00:09:46,140
+A few. Okay, okay.
+
+215
+00:09:46,140 --> 00:09:47,670
+Fellow animal lovers.
+
+216
+00:09:47,670 --> 00:09:49,770
+This will play I promise.
+
+217
+00:09:49,770 --> 00:09:53,010
+So we built a platform out for animals
+
+218
+00:09:53,010 --> 00:09:57,693
+and this is largely driven
+by the 2024 ASPCA report
+
+219
+00:09:57,693 --> 00:10:01,753
+where 5.8 million dogs and cats in rescues
+
+220
+00:10:01,753 --> 00:10:04,830
+and shelters for the year.
+
+221
+00:10:04,830 --> 00:10:06,690
+I know we say a lot of
+big numbers at re:Invent,
+
+222
+00:10:06,690 --> 00:10:08,970
+so I'll put that in a
+little bit of context.
+
+223
+00:10:08,970 --> 00:10:13,223
+If you were to adopt a dog
+every hour for 662 years,
+
+224
+00:10:13,223 --> 00:10:15,330
+then you'd get to that number
+
+225
+00:10:15,330 --> 00:10:17,970
+or fill about a hundred NFL stadiums.
+
+226
+00:10:17,970 --> 00:10:19,860
+So quite a few.
+
+227
+00:10:19,860 --> 00:10:22,236
+Additionally, the data
+shows the length of time
+
+228
+00:10:22,236 --> 00:10:24,540
+in shelters and rescues is increasing.
+
+229
+00:10:24,540 --> 00:10:28,860
+And last year alone they
+euthanized over 600,000 animals.
+
+230
+00:10:28,860 --> 00:10:31,290
+Now why are we qualified to do this?
+
+231
+00:10:31,290 --> 00:10:34,389
+I've been an extensive
+participant in fostering.
+
+232
+00:10:34,389 --> 00:10:36,540
+We both are rescue dads
+
+233
+00:10:36,540 --> 00:10:38,286
+and as Eitav mentioned,
+
+234
+00:10:38,286 --> 00:10:41,550
+it would not be re:Invent
+without a little bit of AI.
+
+235
+00:10:41,550 --> 00:10:43,500
+So the dogs are much closer.
+
+236
+00:10:43,500 --> 00:10:46,810
+It probably could have
+done a better job on us.
+
+237
+00:10:46,810 --> 00:10:49,800
+So what we ended up doing
+is building out a platform
+
+238
+00:10:49,800 --> 00:10:54,600
+for aggregating this data
+from the rescues and shelters.
+
+239
+00:10:54,600 --> 00:10:56,670
+Our platform is far better
+
+240
+00:10:56,670 --> 00:10:58,560
+because we have these relationships.
+
+241
+00:10:58,560 --> 00:10:59,490
+It's more up to date.
+
+242
+00:10:59,490 --> 00:11:02,335
+We have a larger pool of
+animals than you can find
+
+243
+00:11:02,335 --> 00:11:04,890
+directly with the shelters and rescues.
+
+244
+00:11:04,890 --> 00:11:07,353
+Just to switch over to the UI.
+
+245
+00:11:09,380 --> 00:11:12,420
+Here, we have basic search functionality.
+
+246
+00:11:12,420 --> 00:11:15,330
+So you can look for a particular pet type,
+
+247
+00:11:15,330 --> 00:11:16,834
+you have maintenance level.
+
+248
+00:11:16,834 --> 00:11:18,810
+For some reason I continually find
+
+249
+00:11:18,810 --> 00:11:20,067
+the high maintenance ones.
+
+250
+00:11:20,067 --> 00:11:21,060
+(Eitav chuckles)
+
+251
+00:11:21,060 --> 00:11:22,500
+You have the max age.
+
+252
+00:11:22,500 --> 00:11:23,926
+And then for demonstration purposes
+
+253
+00:11:23,926 --> 00:11:26,160
+we have added a bot toggle.
+
+254
+00:11:26,160 --> 00:11:29,687
+So this is basically to
+differentiate between the experience
+
+255
+00:11:29,687 --> 00:11:31,800
+a bot is going to have on our website
+
+256
+00:11:31,800 --> 00:11:33,225
+versus a legitimate human,
+
+257
+00:11:33,225 --> 00:11:35,040
+as well as an admin panel
+
+258
+00:11:35,040 --> 00:11:37,800
+where we can see logs
+on the adoption requests
+
+259
+00:11:37,800 --> 00:11:39,270
+that are being submitted
+
+260
+00:11:39,270 --> 00:11:42,890
+and logs that are coming
+in from CloudFront.
+
+261
+00:11:43,957 --> 00:11:45,813
+Swap back over here.
+
+262
+00:11:47,670 --> 00:11:50,070
+So we got a whole bunch
+of adoption requests.
+
+263
+00:11:50,070 --> 00:11:51,420
+Our platform's a huge success.
+
+264
+00:11:51,420 --> 00:11:54,078
+Awesome, well, wait a second.
+
+265
+00:11:54,078 --> 00:11:57,300
+We have adopters being
+numerically incremented
+
+266
+00:11:57,300 --> 00:11:59,280
+and it appears that there's
+someone that's trying
+
+267
+00:11:59,280 --> 00:12:01,709
+to take advantage of the data that we have
+
+268
+00:12:01,709 --> 00:12:04,953
+and they are saturating
+our adoption pipeline
+
+269
+00:12:04,953 --> 00:12:07,964
+with these fake adoption requests.
+
+270
+00:12:07,964 --> 00:12:12,339
+So as much as we might think
+this is the outcome of that,
+
+271
+00:12:12,339 --> 00:12:15,697
+more than likely there is
+another competitor in the market
+
+272
+00:12:15,697 --> 00:12:18,310
+that is going to be taking this data
+
+273
+00:12:18,310 --> 00:12:22,200
+and doing it for profit as
+opposed to the non-profit
+
+274
+00:12:22,200 --> 00:12:24,450
+that we are operating as.
+
+275
+00:12:24,450 --> 00:12:27,194
+So to summarize, we've got
+our pet adoption platform,
+
+276
+00:12:27,194 --> 00:12:30,510
+tons of traffic, but only
+certain pets are being adopted.
+
+277
+00:12:30,510 --> 00:12:33,360
+And we operate off three main KPIs,
+
+278
+00:12:33,360 --> 00:12:34,980
+which we'll continue to come back to.
+
+279
+00:12:34,980 --> 00:12:36,959
+The first is going to be website traffic.
+
+280
+00:12:36,959 --> 00:12:39,570
+The second is the application review time.
+
+281
+00:12:39,570 --> 00:12:43,030
+We have a healthy bench
+of adoption reviewers
+
+282
+00:12:43,030 --> 00:12:46,874
+and then finally is going
+to be the time to adopt.
+
+283
+00:12:46,874 --> 00:12:48,943
+Well, now what do we do?
+
+284
+00:12:48,943 --> 00:12:50,643
+AWS Edge to the rescue.
+
+285
+00:12:51,600 --> 00:12:55,062
+So QR code, you're welcome
+to play along with us.
+
+286
+00:12:55,062 --> 00:12:57,600
+You all mostly look human,
+
+287
+00:12:57,600 --> 00:12:59,760
+but for demonstration purposes
+
+288
+00:12:59,760 --> 00:13:01,170
+we are going to assume you're bots.
+
+289
+00:13:01,170 --> 00:13:04,120
+So as we're going through
+the different phases,
+
+290
+00:13:04,120 --> 00:13:07,710
+you're going to see the
+experience that is reflective
+
+291
+00:13:07,710 --> 00:13:09,480
+of a bot that is going
+to be hitting our site.
+
+292
+00:13:09,480 --> 00:13:12,990
+So you'll see how that plays out.
+
+293
+00:13:12,990 --> 00:13:14,100
+On the backend,
+
+294
+00:13:14,100 --> 00:13:15,720
+Eitav and I are going to
+be helping each other out
+
+295
+00:13:15,720 --> 00:13:17,100
+with AWS CDK.
+
+296
+00:13:17,100 --> 00:13:19,890
+So we'll be doing
+deployments to automate this,
+
+297
+00:13:19,890 --> 00:13:21,613
+but I'll be walking through the console,
+
+298
+00:13:21,613 --> 00:13:23,250
+show you just how easy it is
+
+299
+00:13:23,250 --> 00:13:25,063
+to do some of these very simple steps
+
+300
+00:13:25,063 --> 00:13:29,643
+and into some of the code
+that applies to the functions.
+
+301
+00:13:31,100 --> 00:13:32,820
+We did use a little help.
+
+302
+00:13:32,820 --> 00:13:36,450
+We've set up a pretty
+sophisticated bot using Tor Cannon
+
+303
+00:13:36,450 --> 00:13:37,380
+and that is going to be
+
+304
+00:13:37,380 --> 00:13:40,481
+both manufacturing traffic to our website,
+
+305
+00:13:40,481 --> 00:13:42,793
+makes the graphs a little bit prettier,
+
+306
+00:13:42,793 --> 00:13:44,490
+but it'll also demonstrate
+
+307
+00:13:44,490 --> 00:13:46,290
+some of the complex nature of bots
+
+308
+00:13:46,290 --> 00:13:49,140
+that you'll end up potentially
+seeing with your business.
+
+309
+00:13:50,730 --> 00:13:53,580
+So what's our baseline architecture?
+
+310
+00:13:53,580 --> 00:13:54,810
+Very straightforward.
+
+311
+00:13:54,810 --> 00:13:57,090
+S3 object for storing the animal images.
+
+312
+00:13:57,090 --> 00:13:58,620
+This is going to go to our cache.
+
+313
+00:13:58,620 --> 00:14:02,760
+If it's a new pull, then we
+need to repopulate the cache.
+
+314
+00:14:02,760 --> 00:14:04,110
+For the adoption requests,
+
+315
+00:14:04,110 --> 00:14:06,030
+this is going to go to our load balancer
+
+316
+00:14:06,030 --> 00:14:08,550
+backed by serverless AWS Lambda.
+
+317
+00:14:08,550 --> 00:14:09,810
+And then we have a Dynamo DB
+
+318
+00:14:09,810 --> 00:14:12,433
+for storing those adoption requests.
+
+319
+00:14:12,433 --> 00:14:16,590
+So if we look where it
+stands right now, no WAF.
+
+320
+00:14:16,590 --> 00:14:19,050
+If you take away one
+thing, it's adopt a dog.
+
+321
+00:14:19,050 --> 00:14:21,270
+I'm just kidding. Turn WAF on.
+
+322
+00:14:21,270 --> 00:14:23,634
+So we go over here
+
+323
+00:14:23,634 --> 00:14:26,970
+and we look at where our phase starts.
+
+324
+00:14:26,970 --> 00:14:31,020
+We have a good bit of
+traffic that is coming in
+
+325
+00:14:31,020 --> 00:14:32,250
+and there you'll notice
+
+326
+00:14:32,250 --> 00:14:34,170
+that the number of CloudFront requests
+
+327
+00:14:34,170 --> 00:14:36,930
+and the amount of adoption
+requests is all very linear.
+
+328
+00:14:36,930 --> 00:14:39,540
+So these are unable to be distinguished
+
+329
+00:14:39,540 --> 00:14:40,890
+between humans and bots at the moment
+
+330
+00:14:40,890 --> 00:14:42,960
+and we aren't doing
+anything to protect it.
+
+331
+00:14:42,960 --> 00:14:46,027
+So phase one, let's turn on WAF.
+
+332
+00:14:47,380 --> 00:14:49,284
+What does that look like though?
+
+333
+00:14:49,284 --> 00:14:53,010
+As we are going to add rate limiting,
+
+334
+00:14:53,010 --> 00:14:56,684
+which is based on a
+timeframe that you specify,
+
+335
+00:14:56,684 --> 00:15:00,930
+can be down to as low
+as I believe, a minute,
+
+336
+00:15:00,930 --> 00:15:03,446
+and then up to several.
+
+337
+00:15:03,446 --> 00:15:06,270
+This can be based on URI, IP headers.
+
+338
+00:15:06,270 --> 00:15:08,880
+There's a bunch of different
+aspects within the request
+
+339
+00:15:08,880 --> 00:15:10,680
+that you can use to actually,
+
+340
+00:15:10,680 --> 00:15:12,594
+as the counter for the rate limiting.
+
+341
+00:15:12,594 --> 00:15:17,151
+In addition, we're using
+JA3/JA4 fingerprinting.
+
+342
+00:15:17,151 --> 00:15:20,874
+This is around SSL, TSL, TLS connections.
+
+343
+00:15:20,874 --> 00:15:22,950
+It's a hash created by a combination
+
+344
+00:15:22,950 --> 00:15:24,308
+of the request characteristics
+
+345
+00:15:24,308 --> 00:15:27,210
+and it's very helpful for
+catching subtle tricks
+
+346
+00:15:27,210 --> 00:15:28,740
+of a request manipulation
+
+347
+00:15:28,740 --> 00:15:31,800
+as opposed to looking just at
+the geo where it's coming from
+
+348
+00:15:31,800 --> 00:15:34,920
+just at the IP or the user agent.
+
+349
+00:15:34,920 --> 00:15:36,810
+And then finally, bot control.
+
+350
+00:15:36,810 --> 00:15:39,510
+Amazon does have a managed
+rule group for this.
+
+351
+00:15:39,510 --> 00:15:41,716
+It comes in two flavors
+of common and targeted.
+
+352
+00:15:41,716 --> 00:15:44,400
+This is functions by monitoring,
+
+353
+00:15:44,400 --> 00:15:45,960
+blocking and rate limiting,
+
+354
+00:15:45,960 --> 00:15:49,331
+scrapers, scanners, crawlers, SEO.
+
+355
+00:15:49,331 --> 00:15:52,065
+How it does this is as the
+requests are going through
+
+356
+00:15:52,065 --> 00:15:55,770
+that WAF pipeline of rules
+that we talked about,
+
+357
+00:15:55,770 --> 00:15:56,910
+it adds labels to it.
+
+358
+00:15:56,910 --> 00:15:58,644
+So it's you can label the good bots,
+
+359
+00:15:58,644 --> 00:16:00,513
+the SEO that you want to crawl
+
+360
+00:16:00,513 --> 00:16:03,363
+versus the ones that it deems to be bad.
+
+361
+00:16:04,649 --> 00:16:08,193
+So what does this look like
+in our new architecture?
+
+362
+00:16:09,030 --> 00:16:10,480
+We now have WAF coming in
+
+363
+00:16:10,480 --> 00:16:13,500
+and to walk you through
+kind of the pseudo logic
+
+364
+00:16:13,500 --> 00:16:15,360
+that exists before we
+get into the console,
+
+365
+00:16:15,360 --> 00:16:17,715
+we have request comes in,
+
+366
+00:16:17,715 --> 00:16:18,967
+WAF is checking,
+
+367
+00:16:18,967 --> 00:16:21,774
+"Hey, are you a bot? No."
+
+368
+00:16:21,774 --> 00:16:24,753
+Otherwise humans can progress on through.
+
+369
+00:16:28,410 --> 00:16:29,970
+So we swap over
+
+370
+00:16:29,970 --> 00:16:34,093
+to what this looks like in the UI.
+
+371
+00:16:36,480 --> 00:16:39,002
+Here we have our CloudFront distribution,
+
+372
+00:16:39,002 --> 00:16:41,013
+oh, the burden of being tall.
+
+373
+00:16:42,059 --> 00:16:45,810
+And you can see when it comes up
+
+374
+00:16:45,810 --> 00:16:47,670
+that we have a WAF attached,
+
+375
+00:16:47,670 --> 00:16:50,040
+but right now it's not blocking anything.
+
+376
+00:16:50,040 --> 00:16:52,110
+So we're going to do a very simple change
+
+377
+00:16:52,110 --> 00:16:54,922
+of going over to our managed rules.
+
+378
+00:16:54,922 --> 00:16:58,230
+We have the IP reputation list,
+we have rate limiting here,
+
+379
+00:16:58,230 --> 00:17:00,552
+bot control, add bot label.
+
+380
+00:17:00,552 --> 00:17:02,535
+We have made it easy for ourselves
+
+381
+00:17:02,535 --> 00:17:04,440
+and consolidate all of these
+
+382
+00:17:04,440 --> 00:17:06,810
+to basically add a label to the request,
+
+383
+00:17:06,810 --> 00:17:08,730
+which we then act on at the end.
+
+384
+00:17:08,730 --> 00:17:11,466
+So that's the take action here
+and we're going to go over
+
+385
+00:17:11,466 --> 00:17:16,082
+and change it from count to block.
+
+386
+00:17:16,082 --> 00:17:17,490
+Save rule.
+
+387
+00:17:17,490 --> 00:17:21,213
+And so now if we go over to our UI,
+
+388
+00:17:23,857 --> 00:17:25,800
+I'm a normal human,
+
+389
+00:17:25,800 --> 00:17:28,710
+I can keep searching for all
+of the pets that I would like,
+
+390
+00:17:28,710 --> 00:17:30,623
+and then a bot.
+
+391
+00:17:30,623 --> 00:17:33,660
+Oh no. (laughs)
+
+392
+00:17:33,660 --> 00:17:38,660
+Now any thoughts on how this
+might reflect in our logs?
+
+393
+00:17:39,420 --> 00:17:40,560
+Well, if it's a simple bot,
+
+394
+00:17:40,560 --> 00:17:42,660
+they'll just give up
+and find a new target.
+
+395
+00:17:42,660 --> 00:17:44,860
+However, ours are a bit craftier.
+
+396
+00:17:44,860 --> 00:17:49,860
+So if we go into what this
+has done for WAF blocking,
+
+397
+00:17:50,205 --> 00:17:54,068
+we've actually seen an increase
+in the amount of requests.
+
+398
+00:17:54,068 --> 00:17:57,504
+So what we've said is that for the people
+
+399
+00:17:57,504 --> 00:17:59,306
+that are using bots on our website,
+
+400
+00:17:59,306 --> 00:18:02,730
+they have detected that
+they are being blocked
+
+401
+00:18:02,730 --> 00:18:04,110
+getting the four hundreds
+
+402
+00:18:04,110 --> 00:18:06,765
+and they're trying alternative methods.
+
+403
+00:18:06,765 --> 00:18:11,610
+Trying alternative methods
+and what that means is
+
+404
+00:18:11,610 --> 00:18:14,671
+they're using different request types,
+
+405
+00:18:14,671 --> 00:18:16,590
+they are using different paths,
+
+406
+00:18:16,590 --> 00:18:19,773
+they're saturating across
+a different number of IPs,
+
+407
+00:18:20,730 --> 00:18:25,200
+and bot blocking.
+
+408
+00:18:25,200 --> 00:18:26,752
+Is it blocking?
+
+409
+00:18:26,752 --> 00:18:27,585
+- [Eitav] It should be.
+
+410
+00:18:27,585 --> 00:18:30,843
+- [Nick] Hmm, may take a moment.
+
+411
+00:18:32,040 --> 00:18:33,843
+We do have a prep though over here.
+
+412
+00:18:36,000 --> 00:18:38,010
+So we see the CloudFront requests go up
+
+413
+00:18:38,010 --> 00:18:41,400
+so it sees it's blocked
+and they're trying harder.
+
+414
+00:18:41,400 --> 00:18:42,660
+They're not gonna give up easily.
+
+415
+00:18:42,660 --> 00:18:45,210
+What this is actually doing is
+we have more traffic flowing,
+
+416
+00:18:45,210 --> 00:18:46,585
+which is a greater cost to us.
+
+417
+00:18:46,585 --> 00:18:48,780
+We have more requests
+that are being submitted
+
+418
+00:18:48,780 --> 00:18:50,070
+and it's harder for us to track.
+
+419
+00:18:50,070 --> 00:18:52,470
+So we've actually made it a
+little bit more expensive for us
+
+420
+00:18:52,470 --> 00:18:54,000
+to be able to do this.
+
+421
+00:18:54,000 --> 00:18:56,169
+And then how does this impact our KPIs?
+
+422
+00:18:56,169 --> 00:18:59,141
+So we have an increase in website traffic
+
+423
+00:18:59,141 --> 00:19:01,170
+but not in a good way.
+
+424
+00:19:01,170 --> 00:19:05,430
+We have application review
+time which has been increased
+
+425
+00:19:05,430 --> 00:19:07,170
+because they're still trying to do it
+
+426
+00:19:07,170 --> 00:19:10,401
+and then the time to adoption
+hasn't really changed.
+
+427
+00:19:10,401 --> 00:19:13,110
+So how can we be smarter
+
+428
+00:19:13,110 --> 00:19:16,412
+as the implementers of the WAF logic?
+
+429
+00:19:16,412 --> 00:19:19,410
+Well, instead of giving them the,
+
+430
+00:19:19,410 --> 00:19:21,382
+hey, you're not allowed
+here, very clear stop sign,
+
+431
+00:19:21,382 --> 00:19:24,291
+we can change from using
+terminating actions of block
+
+432
+00:19:24,291 --> 00:19:26,040
+to non-terminating.
+
+433
+00:19:26,040 --> 00:19:27,570
+There are CAPTCHAs and challenge,
+
+434
+00:19:27,570 --> 00:19:29,490
+which some of you may be familiar with.
+
+435
+00:19:29,490 --> 00:19:31,211
+We are specifically gonna be using count
+
+436
+00:19:31,211 --> 00:19:33,540
+and then we're going to enhance that
+
+437
+00:19:33,540 --> 00:19:36,810
+by adding a custom request
+header to those requests
+
+438
+00:19:36,810 --> 00:19:38,831
+that are coming in and deemed to be bots.
+
+439
+00:19:38,831 --> 00:19:41,528
+So a bot's going to come in,
+we'll add a header to it,
+
+440
+00:19:41,528 --> 00:19:43,143
+and then make use of a caching policy
+
+441
+00:19:43,143 --> 00:19:46,989
+so that if that request
+is deemed to be a bot,
+
+442
+00:19:46,989 --> 00:19:51,270
+we are only gonna show it
+a segment of our platform.
+
+443
+00:19:51,270 --> 00:19:52,651
+This way we can narrow down
+
+444
+00:19:52,651 --> 00:19:55,649
+the amount of animals
+that are being scraped
+
+445
+00:19:55,649 --> 00:20:00,516
+and we have control over what
+is being pulled from our site.
+
+446
+00:20:00,516 --> 00:20:03,843
+This makes it less
+valuable data to the bot.
+
+447
+00:20:04,921 --> 00:20:08,298
+What does this look like
+in the architecture?
+
+448
+00:20:08,298 --> 00:20:10,804
+We now have two different paths.
+
+449
+00:20:10,804 --> 00:20:13,005
+The request comes in
+
+450
+00:20:13,005 --> 00:20:16,164
+and instead of outright blocking it,
+
+451
+00:20:16,164 --> 00:20:21,164
+we are going to add the X
+is bot true else do nothing.
+
+452
+00:20:21,540 --> 00:20:22,830
+And then as it goes through
+
+453
+00:20:22,830 --> 00:20:24,420
+and hits our caching policy,
+
+454
+00:20:24,420 --> 00:20:27,320
+the bot is going to be redirected
+to our CloudFront cache.
+
+455
+00:20:30,537 --> 00:20:33,573
+So swapping over here.
+
+456
+00:20:34,920 --> 00:20:38,220
+Off that, we are going to
+look at our distribution.
+
+457
+00:20:38,220 --> 00:20:41,318
+Right now we have the
+different caching behaviors.
+
+458
+00:20:41,318 --> 00:20:44,589
+We are going to our search
+path pattern and edit.
+
+459
+00:20:44,589 --> 00:20:49,589
+We've pre-configured the bot policy here.
+
+460
+00:20:49,650 --> 00:20:51,210
+So if we take a look at that policy,
+
+461
+00:20:51,210 --> 00:20:54,360
+we can see the different
+aspects of the query strings.
+
+462
+00:20:54,360 --> 00:20:55,500
+That's a part of it.
+
+463
+00:20:55,500 --> 00:20:57,450
+I get to copy this.
+
+464
+00:20:57,450 --> 00:21:00,300
+Amazon WAF is going to preface the headers
+
+465
+00:21:00,300 --> 00:21:02,250
+that are added as part of these WAF rules
+
+466
+00:21:02,250 --> 00:21:04,113
+with the X Amazon WAF.
+
+467
+00:21:05,158 --> 00:21:07,800
+And we go back over here,
+
+468
+00:21:07,800 --> 00:21:10,867
+this is going to be saved
+to our distribution.
+
+469
+00:21:10,867 --> 00:21:14,970
+And then in the WAF rule for our action,
+
+470
+00:21:14,970 --> 00:21:17,310
+instead of blocking here,
+
+471
+00:21:17,310 --> 00:21:21,663
+we'll move over to count
+and do a custom request.
+
+472
+00:21:33,810 --> 00:21:35,820
+So now if we go back
+to what the experience
+
+473
+00:21:35,820 --> 00:21:39,543
+for a bot looks like,
+humans still have access.
+
+474
+00:21:40,890 --> 00:21:44,640
+Swap over to a bot, they have access,
+
+475
+00:21:44,640 --> 00:21:49,640
+but the same access, I can
+keep searching, keep searching,
+
+476
+00:21:50,340 --> 00:21:52,830
+and it's gonna be the same
+content that the bot is getting.
+
+477
+00:21:52,830 --> 00:21:55,500
+Whereas if I'm a human,
+I can see hamsters,
+
+478
+00:21:55,500 --> 00:21:56,760
+I can see bunnies,
+
+479
+00:21:56,760 --> 00:21:59,780
+I can see all of the available
+animals on our platform.
+
+480
+00:21:59,780 --> 00:22:01,200
+So now we've restricted the bot,
+
+481
+00:22:01,200 --> 00:22:03,330
+what the bot is able to see
+
+482
+00:22:03,330 --> 00:22:05,944
+only to a much smaller portion.
+
+483
+00:22:05,944 --> 00:22:08,491
+What does this mean for our KPIs?
+
+484
+00:22:08,491 --> 00:22:12,462
+Well, overall the deploy changes go down.
+
+485
+00:22:12,462 --> 00:22:16,328
+The cloud run requests go down.
+
+486
+00:22:16,328 --> 00:22:18,120
+The WAF blocked traffic,
+
+487
+00:22:18,120 --> 00:22:19,770
+there is none anymore that's blocked.
+
+488
+00:22:19,770 --> 00:22:22,410
+And our Lambda invocations have decreased.
+
+489
+00:22:22,410 --> 00:22:24,004
+Website traffic is now at an acceptable
+
+490
+00:22:24,004 --> 00:22:25,200
+and appropriate level
+
+491
+00:22:25,200 --> 00:22:28,107
+for what we would expect for our platform.
+
+492
+00:22:28,107 --> 00:22:29,970
+Our application review time,
+
+493
+00:22:29,970 --> 00:22:31,830
+we can work with the
+volunteers to say, hey,
+
+494
+00:22:31,830 --> 00:22:34,860
+this segment of animals is
+the ones that are in the cache
+
+495
+00:22:34,860 --> 00:22:38,190
+and are going to have
+known bad adoption forms.
+
+496
+00:22:38,190 --> 00:22:39,450
+And then the time to adoption
+
+497
+00:22:39,450 --> 00:22:42,303
+for a vast majority of
+our animals has decreased.
+
+498
+00:22:47,250 --> 00:22:50,850
+- [Eitav] So while those are great metrics
+
+499
+00:22:50,850 --> 00:22:53,371
+and improvement in our application,
+
+500
+00:22:53,371 --> 00:22:56,850
+does it actually impact
+what we try to solve?
+
+501
+00:22:56,850 --> 00:22:59,400
+So if I go back to our platform
+
+502
+00:22:59,400 --> 00:23:01,680
+and repeating what Nick just mentioned,
+
+503
+00:23:01,680 --> 00:23:06,120
+where humans get new pets every time,
+
+504
+00:23:06,120 --> 00:23:07,833
+but bots get the same pet,
+
+505
+00:23:08,790 --> 00:23:11,776
+this is going to put us
+in a different challenge
+
+506
+00:23:11,776 --> 00:23:16,094
+because now bots getting
+the same cache response
+
+507
+00:23:16,094 --> 00:23:19,260
+and they'll probably try to adopt
+
+508
+00:23:19,260 --> 00:23:22,140
+the same pet over and over again.
+
+509
+00:23:22,140 --> 00:23:24,090
+So we just moved the problem
+
+510
+00:23:24,090 --> 00:23:26,430
+from hitting all the different pets
+
+511
+00:23:26,430 --> 00:23:29,100
+to hit on a specific pet.
+
+512
+00:23:29,100 --> 00:23:31,710
+And both Nick and myself
+love all the pets.
+
+513
+00:23:31,710 --> 00:23:34,022
+So we need to find a way and solution
+
+514
+00:23:34,022 --> 00:23:39,022
+to somehow don't impact any of
+the pets during our research.
+
+515
+00:23:40,860 --> 00:23:44,853
+So we are going to present
+couple of more approaches,
+
+516
+00:23:46,740 --> 00:23:47,910
+couple of more approaches
+
+517
+00:23:47,910 --> 00:23:51,720
+on how you can customize
+even further the traffic,
+
+518
+00:23:51,720 --> 00:23:54,180
+the bot traffic.
+
+519
+00:23:54,180 --> 00:23:56,220
+So we believe that different traffic
+
+520
+00:23:56,220 --> 00:23:58,170
+deserves different response
+
+521
+00:23:58,170 --> 00:24:01,620
+and we're going to use
+a couple of concepts
+
+522
+00:24:01,620 --> 00:24:02,970
+within CloudFront and WAF
+
+523
+00:24:02,970 --> 00:24:07,475
+that will help us provide
+different response to bots
+
+524
+00:24:07,475 --> 00:24:09,867
+but still doesn't signal back to the bots
+
+525
+00:24:09,867 --> 00:24:12,330
+that they're being blocked.
+
+526
+00:24:12,330 --> 00:24:15,420
+So first we're going to
+use origin modification.
+
+527
+00:24:15,420 --> 00:24:18,150
+Origin modification is quite a new feature
+
+528
+00:24:18,150 --> 00:24:21,541
+within CloudFront Functions
+that allows you to override
+
+529
+00:24:21,541 --> 00:24:26,541
+the traffic from one origin
+to a different origin.
+
+530
+00:24:26,760 --> 00:24:29,507
+This is usually being used for AB testing
+
+531
+00:24:29,507 --> 00:24:31,410
+where you want to split the traffic
+
+532
+00:24:31,410 --> 00:24:33,270
+between different regions.
+
+533
+00:24:33,270 --> 00:24:35,543
+But this can all also be used
+
+534
+00:24:35,543 --> 00:24:40,217
+if you got a signal from
+upstream like the WAF upstream
+
+535
+00:24:40,217 --> 00:24:44,160
+and route the traffic to
+the different regions.
+
+536
+00:24:44,160 --> 00:24:46,422
+Moreover, we're not just going to reroute
+
+537
+00:24:46,422 --> 00:24:49,350
+the bot traffic to a new region,
+
+538
+00:24:49,350 --> 00:24:51,570
+we're going to traffic to a new region
+
+539
+00:24:51,570 --> 00:24:54,270
+that we used an honeypot on it.
+
+540
+00:24:54,270 --> 00:24:59,270
+So instead of just responding
+with a different pet,
+
+541
+00:25:00,298 --> 00:25:04,123
+we want to respond with
+an intelligent response
+
+542
+00:25:04,123 --> 00:25:09,123
+that will allow us to get more
+insights about the attackers
+
+543
+00:25:09,180 --> 00:25:12,570
+and maybe understand why
+it tried to attack us,
+
+544
+00:25:12,570 --> 00:25:15,453
+and last, we are going to use
+a cache busting mechanism.
+
+545
+00:25:16,380 --> 00:25:19,410
+So Nick implemented a caching for bots,
+
+546
+00:25:19,410 --> 00:25:23,193
+meaning bots going to get the
+same over and over response.
+
+547
+00:25:23,193 --> 00:25:25,800
+But these have some caveats
+
+548
+00:25:25,800 --> 00:25:27,318
+because if you're going to response
+
+549
+00:25:27,318 --> 00:25:29,578
+for bots from caching only,
+
+550
+00:25:29,578 --> 00:25:33,120
+you are going to lose the
+insights about the bots.
+
+551
+00:25:33,120 --> 00:25:34,890
+So using CloudFront Functions,
+
+552
+00:25:34,890 --> 00:25:36,209
+we're going to implement
+
+553
+00:25:36,209 --> 00:25:40,490
+a way to override some
+of the caching policies
+
+554
+00:25:40,490 --> 00:25:44,190
+and control it according
+to your business logic.
+
+555
+00:25:44,190 --> 00:25:45,450
+So in our example,
+
+556
+00:25:45,450 --> 00:25:48,720
+we're going to cache busting
+for only 1% of the traffic,
+
+557
+00:25:48,720 --> 00:25:52,650
+but you can do it for as
+much percentage you need.
+
+558
+00:25:52,650 --> 00:25:54,120
+So many of those features
+
+559
+00:25:54,120 --> 00:25:56,207
+are related to CloudFront Function.
+
+560
+00:25:56,207 --> 00:25:57,480
+So we're going to do
+
+561
+00:25:57,480 --> 00:26:02,040
+a couple minutes 101 on
+CloudFront Functions.
+
+562
+00:26:02,040 --> 00:26:05,280
+So CloudFront Functions
+are a lightweight compute
+
+563
+00:26:05,280 --> 00:26:06,600
+running on the Edge
+
+564
+00:26:06,600 --> 00:26:09,750
+and this is basically a
+simple JavaScript file
+
+565
+00:26:09,750 --> 00:26:11,070
+that you can write
+
+566
+00:26:11,070 --> 00:26:15,780
+and it will run between
+the WAF and to your region,
+
+567
+00:26:15,780 --> 00:26:17,970
+meaning at first the WAF happens
+
+568
+00:26:17,970 --> 00:26:20,010
+and only then the CloudFront Functions.
+
+569
+00:26:20,010 --> 00:26:23,343
+This is allow us to read the
+headers that WAF is adding.
+
+570
+00:26:24,436 --> 00:26:27,670
+So the CloudFront Functions
+are based with, as I mentioned,
+
+571
+00:26:27,670 --> 00:26:29,250
+a simple JavaScript.
+
+572
+00:26:29,250 --> 00:26:33,470
+So you can use variables
+like stream and numbers.
+
+573
+00:26:33,470 --> 00:26:36,250
+You can define your own functions.
+
+574
+00:26:36,250 --> 00:26:40,730
+You can create, you can use
+JavaScript native methods
+
+575
+00:26:40,730 --> 00:26:44,340
+such as split, length, lowercase,
+
+576
+00:26:44,340 --> 00:26:47,246
+and other many JavaScript native methods.
+
+577
+00:26:47,246 --> 00:26:51,300
+You can use more advanced methods
+
+578
+00:26:51,300 --> 00:26:54,000
+like buffers and crypto if you want
+
+579
+00:26:54,000 --> 00:26:57,030
+to create your own
+authentication within the Edge.
+
+580
+00:26:57,030 --> 00:27:01,565
+And you can also do as in
+corporation using Promise
+
+581
+00:27:01,565 --> 00:27:04,800
+and asking to wait.
+
+582
+00:27:04,800 --> 00:27:06,781
+And of course every JavaScript program
+
+583
+00:27:06,781 --> 00:27:08,520
+should support console log.
+
+584
+00:27:08,520 --> 00:27:11,880
+So every time that you
+are doing console log
+
+585
+00:27:11,880 --> 00:27:13,380
+within CloudFront Functions,
+
+586
+00:27:13,380 --> 00:27:18,360
+it will auto ship to
+CloudWatch logs in USC one.
+
+587
+00:27:18,360 --> 00:27:22,163
+So you can later on check those logs
+
+588
+00:27:22,163 --> 00:27:24,668
+and you control the return.
+
+589
+00:27:24,668 --> 00:27:28,086
+So the control of the
+return is quite important.
+
+590
+00:27:28,086 --> 00:27:31,365
+So if you return and request object,
+
+591
+00:27:31,365 --> 00:27:33,742
+this tells CloudFront
+
+592
+00:27:33,742 --> 00:27:38,310
+to just proxy the request
+later on to the origin.
+
+593
+00:27:38,310 --> 00:27:41,610
+But if you return the event dot response
+
+594
+00:27:41,610 --> 00:27:43,102
+that we'll see in a second,
+
+595
+00:27:43,102 --> 00:27:46,967
+this will tell CloudFront
+Functions to terminate the request
+
+596
+00:27:46,967 --> 00:27:49,170
+and skip the origin altogether.
+
+597
+00:27:49,170 --> 00:27:52,307
+So if you want to do a very quick blocking
+
+598
+00:27:52,307 --> 00:27:54,270
+on the Edge after the WAF,
+
+599
+00:27:54,270 --> 00:27:56,320
+you can do it using CloudFront Functions.
+
+600
+00:27:57,690 --> 00:28:01,950
+So the event structure, we
+discussed a bit about the event.
+
+601
+00:28:01,950 --> 00:28:03,480
+So we have the context
+
+602
+00:28:03,480 --> 00:28:07,010
+and this is like a general
+metadata of the distribution.
+
+603
+00:28:07,010 --> 00:28:10,740
+So we have a request ID,
+this is CloudFront request ID
+
+604
+00:28:10,740 --> 00:28:13,320
+and this is unique per request.
+
+605
+00:28:13,320 --> 00:28:15,743
+We have the distribution
+ID and the event type.
+
+606
+00:28:15,743 --> 00:28:17,705
+So CloudFront Functions can be hooked
+
+607
+00:28:17,705 --> 00:28:21,510
+to the viewer request
+and the viewer response.
+
+608
+00:28:21,510 --> 00:28:23,942
+So you can write your own code
+
+609
+00:28:23,942 --> 00:28:27,130
+according to the different viewing type.
+
+610
+00:28:27,130 --> 00:28:29,910
+We have the viewer within the event
+
+611
+00:28:29,910 --> 00:28:32,049
+and this is basically the device
+
+612
+00:28:32,049 --> 00:28:34,550
+that's got connected to CloudFront.
+
+613
+00:28:34,550 --> 00:28:36,900
+In the vast majority of the cases,
+
+614
+00:28:36,900 --> 00:28:39,180
+it will be our mobile devices,
+
+615
+00:28:39,180 --> 00:28:41,310
+our laptops or the server to server.
+
+616
+00:28:41,310 --> 00:28:44,914
+And this will represent the
+actual IPs of those devices.
+
+617
+00:28:44,914 --> 00:28:49,696
+We have the request and the
+request is also modifiable,
+
+618
+00:28:49,696 --> 00:28:53,850
+meaning you can also
+read the query string,
+
+619
+00:28:53,850 --> 00:28:55,380
+the headers and the cookies,
+
+620
+00:28:55,380 --> 00:28:58,874
+but you can manipulate those
+using CloudFront Functions.
+
+621
+00:28:58,874 --> 00:29:00,248
+And as same as the request,
+
+622
+00:29:00,248 --> 00:29:03,988
+we'll also have the response
+when we can manipulate
+
+623
+00:29:03,988 --> 00:29:07,890
+the status code, status
+description, headers, cookies,
+
+624
+00:29:07,890 --> 00:29:10,533
+and override the body altogether.
+
+625
+00:29:10,533 --> 00:29:12,875
+And as I mentioned before,
+this is quite important
+
+626
+00:29:12,875 --> 00:29:15,840
+to understand if you want
+to terminate the request
+
+627
+00:29:15,840 --> 00:29:18,723
+or just proxy to the origin.
+
+628
+00:29:20,342 --> 00:29:23,488
+In order to use origin modification,
+
+629
+00:29:23,488 --> 00:29:25,860
+we are going to use a new helper
+
+630
+00:29:25,860 --> 00:29:29,250
+that you should use the import CF
+
+631
+00:29:29,250 --> 00:29:31,650
+from CloudFront in your own code.
+
+632
+00:29:31,650 --> 00:29:33,111
+This helper allows us
+
+633
+00:29:33,111 --> 00:29:36,360
+and exposes three different method to us.
+
+634
+00:29:36,360 --> 00:29:39,186
+The first one is update origin,
+
+635
+00:29:39,186 --> 00:29:41,339
+sorry, update request origin.
+
+636
+00:29:41,339 --> 00:29:43,479
+And this allows you to override
+
+637
+00:29:43,479 --> 00:29:48,479
+any kind of origin
+parameters like the host,
+
+638
+00:29:48,511 --> 00:29:52,995
+the entire URL, the editor,
+the TLS configuration.
+
+639
+00:29:52,995 --> 00:29:56,100
+You can simply override whatever you need.
+
+640
+00:29:56,100 --> 00:29:58,761
+So this will allow us later to route
+
+641
+00:29:58,761 --> 00:30:01,843
+between bots and human origin.
+
+642
+00:30:01,843 --> 00:30:05,508
+You can also use the select
+request origin by ID.
+
+643
+00:30:05,508 --> 00:30:10,003
+So you can deploy pre-made
+entire origin configuration.
+
+644
+00:30:10,003 --> 00:30:14,921
+So you're just stating the
+ID that you want to use
+
+645
+00:30:14,921 --> 00:30:17,867
+and it will auto import the
+configuration from there.
+
+646
+00:30:17,867 --> 00:30:21,477
+And you can also use our
+request origin groups,
+
+647
+00:30:21,477 --> 00:30:25,463
+which gives you a native
+failover mechanism.
+
+648
+00:30:25,463 --> 00:30:27,180
+Within the region groups,
+
+649
+00:30:27,180 --> 00:30:28,860
+you can define two different origins
+
+650
+00:30:28,860 --> 00:30:31,935
+and CloudFront will try to fetch the data
+
+651
+00:30:31,935 --> 00:30:34,087
+from the first origin.
+
+652
+00:30:34,087 --> 00:30:37,321
+If the origin will fail to respond,
+
+653
+00:30:37,321 --> 00:30:41,978
+for example, giving HTTP 500 or 400,
+
+654
+00:30:41,978 --> 00:30:45,487
+CloudFront will auto
+retry to the second region
+
+655
+00:30:45,487 --> 00:30:48,420
+and this is without your
+clients to be aware of it.
+
+656
+00:30:48,420 --> 00:30:51,060
+So this is like a native
+failover mechanism
+
+657
+00:30:51,060 --> 00:30:53,277
+over at CloudFront.
+
+658
+00:30:53,277 --> 00:30:57,410
+So how it is all going
+to be connected together
+
+659
+00:30:57,410 --> 00:31:00,967
+and how the architecture
+is going to be changed?
+
+660
+00:31:00,967 --> 00:31:04,050
+So we are going to introduce a new router,
+
+661
+00:31:04,050 --> 00:31:06,270
+we called it a traffic router.
+
+662
+00:31:06,270 --> 00:31:07,920
+So as I mentioned this is happens
+
+663
+00:31:07,920 --> 00:31:11,220
+after the WAF but before our origins.
+
+664
+00:31:11,220 --> 00:31:12,390
+And this will allow us
+
+665
+00:31:12,390 --> 00:31:16,293
+to create this custom mechanism
+that our business needs.
+
+666
+00:31:18,404 --> 00:31:22,559
+So when a request will hit the CloudFront,
+
+667
+00:31:22,559 --> 00:31:25,123
+we'll get first to WAF.
+
+668
+00:31:25,123 --> 00:31:27,930
+Now if WAF detects a bot,
+
+669
+00:31:27,930 --> 00:31:32,190
+it will add the same header
+that sneak added before,
+
+670
+00:31:32,190 --> 00:31:35,310
+but instead of just going to the cache,
+
+671
+00:31:35,310 --> 00:31:37,302
+now this this new header
+
+672
+00:31:37,302 --> 00:31:41,585
+is exposable within CloudFront Functions
+
+673
+00:31:41,585 --> 00:31:43,496
+and we're going to implement
+
+674
+00:31:43,496 --> 00:31:46,065
+change the origin to all the bots
+
+675
+00:31:46,065 --> 00:31:50,460
+and for 1% of the bots we're
+going to eliminate the caching.
+
+676
+00:31:50,460 --> 00:31:53,360
+So as I mentioned before, you
+can do 1% or more than that.
+
+677
+00:31:56,550 --> 00:31:58,650
+And of course after it
+
+678
+00:31:58,650 --> 00:32:01,353
+we'll redirect the traffic to the cache.
+
+679
+00:32:03,000 --> 00:32:04,653
+Let's see it in action.
+
+680
+00:32:06,300 --> 00:32:08,583
+So in order to associate,
+
+681
+00:32:10,499 --> 00:32:11,523
+oh, one second.
+
+682
+00:32:12,810 --> 00:32:16,860
+In order to associate a
+function for CloudFront,
+
+683
+00:32:16,860 --> 00:32:18,963
+you will need to choose your behavior.
+
+684
+00:32:20,490 --> 00:32:22,722
+If you scroll down in the behaviors,
+
+685
+00:32:22,722 --> 00:32:25,560
+you will have four different hooks
+
+686
+00:32:25,560 --> 00:32:29,100
+where you can associate
+a functional lambda edge.
+
+687
+00:32:29,100 --> 00:32:32,110
+I'm going to associate it
+for the viewer request.
+
+688
+00:32:32,110 --> 00:32:34,440
+I'm going to choose a custom function
+
+689
+00:32:34,440 --> 00:32:37,501
+and I'm going to choose a
+function that's a pre-made.
+
+690
+00:32:37,501 --> 00:32:39,510
+We'll see the code in a second.
+
+691
+00:32:39,510 --> 00:32:41,680
+I just deployed very quickly
+
+692
+00:32:44,010 --> 00:32:45,990
+and this is all you need to do in order
+
+693
+00:32:45,990 --> 00:32:48,630
+to have compute turning on the Edge.
+
+694
+00:32:48,630 --> 00:32:50,580
+So let's check the actual code
+
+695
+00:32:50,580 --> 00:32:54,552
+and how we implemented
+the different aspect
+
+696
+00:32:54,552 --> 00:32:56,943
+that we see for CloudFront Function.
+
+697
+00:32:59,790 --> 00:33:02,490
+Okay, so this is basically the end there,
+
+698
+00:33:02,490 --> 00:33:04,611
+those 20 lines.
+
+699
+00:33:04,611 --> 00:33:08,609
+So first I extracted the
+request from the event.
+
+700
+00:33:08,609 --> 00:33:11,171
+This is the request and
+this is the headers.
+
+701
+00:33:11,171 --> 00:33:14,940
+I have created my own
+is bot detected function
+
+702
+00:33:14,940 --> 00:33:16,410
+that's checking on the headers.
+
+703
+00:33:16,410 --> 00:33:20,760
+Let's see, this function
+is just right here
+
+704
+00:33:20,760 --> 00:33:22,080
+and this is a simple function.
+
+705
+00:33:22,080 --> 00:33:24,990
+It's simply to check if the WAF header
+
+706
+00:33:24,990 --> 00:33:27,963
+that we've added before
+that is equal for true.
+
+707
+00:33:28,925 --> 00:33:33,420
+Meaning this scope of code
+will only run for bots.
+
+708
+00:33:33,420 --> 00:33:36,976
+So for our users that are human users,
+
+709
+00:33:36,976 --> 00:33:39,716
+this altogether will be skipped.
+
+710
+00:33:39,716 --> 00:33:42,870
+For bots we are going
+to randomize a number
+
+711
+00:33:42,870 --> 00:33:44,470
+between zero and 100
+
+712
+00:33:44,470 --> 00:33:47,655
+and only for 1% of the traffic,
+
+713
+00:33:47,655 --> 00:33:50,700
+we're going to implement a cache busting.
+
+714
+00:33:50,700 --> 00:33:52,530
+But again we can do it 50%
+
+715
+00:33:52,530 --> 00:33:55,056
+and do some kind of maybe test for it.
+
+716
+00:33:55,056 --> 00:33:58,745
+The way that I have
+implemented the cache busting
+
+717
+00:33:58,745 --> 00:34:03,270
+is randomize a new value
+and override the header
+
+718
+00:34:03,270 --> 00:34:06,390
+that's according to it the
+cache policy is working.
+
+719
+00:34:06,390 --> 00:34:07,860
+So from caching perspective,
+
+720
+00:34:07,860 --> 00:34:10,110
+each time that we're
+randomizing the number,
+
+721
+00:34:10,110 --> 00:34:12,051
+it's seeing that this is all new request
+
+722
+00:34:12,051 --> 00:34:14,470
+and it's keeping the caching.
+
+723
+00:34:17,370 --> 00:34:19,278
+And last on row 24,
+
+724
+00:34:19,278 --> 00:34:22,947
+I've used the method of
+select request origin by ID
+
+725
+00:34:22,947 --> 00:34:26,970
+and I've used an ID of my origin
+
+726
+00:34:26,970 --> 00:34:30,300
+that I pre-created for the bot.
+
+727
+00:34:30,300 --> 00:34:32,370
+I'm going to copy paste the ID here
+
+728
+00:34:32,370 --> 00:34:34,653
+and let's see where it's being configured.
+
+729
+00:34:35,670 --> 00:34:38,283
+So I'm going back to the
+CloudFront distribution.
+
+730
+00:34:47,483 --> 00:34:50,710
+So I can see in the origin tabs
+
+731
+00:34:51,725 --> 00:34:55,710
+I now have the ID that I've used before
+
+732
+00:34:55,710 --> 00:34:57,960
+and this is a lambda function URL.
+
+733
+00:34:57,960 --> 00:35:00,648
+So you can create your own origin pre-made
+
+734
+00:35:00,648 --> 00:35:03,959
+having them deployed and simply map them
+
+735
+00:35:03,959 --> 00:35:07,053
+in CloudFront Functions using the ID.
+
+736
+00:35:07,980 --> 00:35:10,091
+So let's see together
+
+737
+00:35:10,091 --> 00:35:14,433
+how it impacted our platform.
+
+738
+00:35:15,690 --> 00:35:20,283
+So I am currently a
+regular human, I hope so,
+
+739
+00:35:21,360 --> 00:35:23,400
+and I'm searching for pets
+
+740
+00:35:23,400 --> 00:35:25,710
+and everything is working as expected.
+
+741
+00:35:25,710 --> 00:35:28,173
+And the moment that I'm
+switching to be a bot,
+
+742
+00:35:29,610 --> 00:35:32,531
+I started to get a bot pets
+
+743
+00:35:32,531 --> 00:35:35,099
+and for sure those bot pets
+
+744
+00:35:35,099 --> 00:35:37,394
+are not going to be impacted
+
+745
+00:35:37,394 --> 00:35:41,245
+if any kind of bot will
+try to adopt them, right?
+
+746
+00:35:41,245 --> 00:35:45,120
+You can also check it out
+with using your mobile phone.
+
+747
+00:35:45,120 --> 00:35:46,530
+This is the URL from before
+
+748
+00:35:46,530 --> 00:35:48,150
+and hopefully you will see
+
+749
+00:35:48,150 --> 00:35:51,033
+the same different bots that I see.
+
+750
+00:35:52,020 --> 00:35:56,444
+So checking out the network here
+
+751
+00:35:56,444 --> 00:36:01,444
+you will see that the response
+are hits from CloudFront,
+
+752
+00:36:02,340 --> 00:36:04,470
+this means it's being cached
+
+753
+00:36:04,470 --> 00:36:07,290
+but only 1% of this
+traffic is being cached.
+
+754
+00:36:07,290 --> 00:36:10,410
+So if I'm going to check the admin panel,
+
+755
+00:36:10,410 --> 00:36:13,883
+I have a couple of logs already here
+
+756
+00:36:13,883 --> 00:36:17,092
+and as I mentioned, we are
+not just going to respond
+
+757
+00:36:17,092 --> 00:36:19,530
+a different response to the bot.
+
+758
+00:36:19,530 --> 00:36:22,740
+We want to fetch some
+information about those bots.
+
+759
+00:36:22,740 --> 00:36:25,540
+So we created a simple login UI
+
+760
+00:36:26,659 --> 00:36:29,325
+and as you can see we
+have now the information
+
+761
+00:36:29,325 --> 00:36:32,277
+on the route the bot tried to hit,
+
+762
+00:36:32,277 --> 00:36:35,520
+the bot IP, the different user agents.
+
+763
+00:36:35,520 --> 00:36:39,900
+So we see some of those are
+using in this example PhantomJS,
+
+764
+00:36:39,900 --> 00:36:43,072
+but some of those are using
+an actual user agents.
+
+765
+00:36:43,072 --> 00:36:45,623
+We have the JA fingerprint and so,
+
+766
+00:36:45,623 --> 00:36:49,683
+and this is all the metadata
+that I wanted to implement.
+
+767
+00:36:50,580 --> 00:36:54,570
+Let's see how it impacts our CloudWatch.
+
+768
+00:36:54,570 --> 00:36:59,297
+So I'm going to the honeypot routing,
+
+769
+00:36:59,297 --> 00:37:01,623
+let's refresh it.
+
+770
+00:37:02,940 --> 00:37:06,210
+I'm going to do the last 50 minutes.
+
+771
+00:37:06,210 --> 00:37:07,043
+Okay.
+
+772
+00:37:08,659 --> 00:37:13,659
+So we can see here that our
+cache hit rate decreased a bit
+
+773
+00:37:16,569 --> 00:37:21,128
+and this has happened because
+now 1% of the bot traffic
+
+774
+00:37:21,128 --> 00:37:25,392
+are having cache miss.
+
+775
+00:37:25,392 --> 00:37:28,773
+But we introduced a new function,
+
+776
+00:37:29,730 --> 00:37:31,650
+it might be a bit too small
+
+777
+00:37:31,650 --> 00:37:32,753
+but on the third row you have,
+
+778
+00:37:32,753 --> 00:37:35,790
+we have the honeypot Lambda invocation
+
+779
+00:37:35,790 --> 00:37:39,000
+and you can see it being
+hit like, four times.
+
+780
+00:37:39,000 --> 00:37:41,700
+So for all the traffic that
+we are sending for the bots,
+
+781
+00:37:41,700 --> 00:37:45,603
+only four bots, we actually
+got hit by the whole region.
+
+782
+00:37:49,170 --> 00:37:50,673
+- I'll switch.
+- Thank you.
+
+783
+00:37:55,042 --> 00:37:58,650
+And here we have a more
+simplified way to look at it.
+
+784
+00:37:58,650 --> 00:38:01,777
+So the vast majority of our
+metrics remain the same.
+
+785
+00:38:01,777 --> 00:38:05,610
+We have the same amount of
+requests coming to the system.
+
+786
+00:38:05,610 --> 00:38:07,950
+We have almost the same caching hit rate
+
+787
+00:38:07,950 --> 00:38:12,030
+because only 1% of the
+traffic is being cache missed.
+
+788
+00:38:12,030 --> 00:38:16,182
+And this is by purpose thanks
+to our CloudFront Functions
+
+789
+00:38:16,182 --> 00:38:20,243
+and we introduced only a very
+small amount of new lambda
+
+790
+00:38:20,243 --> 00:38:25,043
+that's being served new
+content to the bots.
+
+791
+00:38:25,043 --> 00:38:29,010
+So the cost impact for it is
+going to be very, very minimal.
+
+792
+00:38:29,010 --> 00:38:30,600
+And this is also can be adjusted.
+
+793
+00:38:30,600 --> 00:38:32,880
+So if you want a less percent than one,
+
+794
+00:38:32,880 --> 00:38:34,380
+you can also do half percent
+
+795
+00:38:34,380 --> 00:38:36,210
+of the traffic is being cache busting.
+
+796
+00:38:36,210 --> 00:38:39,550
+So this is highly customized
+for your own business needs
+
+797
+00:38:40,683 --> 00:38:43,950
+and as always, this is not enough.
+
+798
+00:38:43,950 --> 00:38:45,182
+We wanted more,
+
+799
+00:38:45,182 --> 00:38:50,182
+so we thought how we can get
+any new insight for our bots?
+
+800
+00:38:51,716 --> 00:38:56,716
+So instead of just to respond a new JSON,
+
+801
+00:38:57,330 --> 00:38:58,966
+a new patch to our bots,
+
+802
+00:38:58,966 --> 00:39:03,208
+we want to respond and
+images to the bots, right?
+
+803
+00:39:03,208 --> 00:39:07,233
+And as we saw in the
+platform the images, sorry.
+
+804
+00:39:10,318 --> 00:39:14,235
+The images are being
+rendered with the browser.
+
+805
+00:39:15,303 --> 00:39:19,362
+So we thought how cool
+it can be if the browser
+
+806
+00:39:19,362 --> 00:39:22,549
+that's rendering the images
+will send us new metrics
+
+807
+00:39:22,549 --> 00:39:25,498
+and then we can correlate between the bots
+
+808
+00:39:25,498 --> 00:39:29,176
+that's making the fetch
+request of the APIs
+
+809
+00:39:29,176 --> 00:39:32,823
+and the bot that's actually
+are being rendering our images.
+
+810
+00:39:34,080 --> 00:39:37,350
+So even here in our static routes,
+
+811
+00:39:37,350 --> 00:39:39,330
+which usually is just being used
+
+812
+00:39:39,330 --> 00:39:42,090
+for caching and proxy to S3,
+
+813
+00:39:42,090 --> 00:39:44,490
+we introduce a new CloudFront function.
+
+814
+00:39:44,490 --> 00:39:47,773
+And this CloudFront
+function is quite simple.
+
+815
+00:39:47,773 --> 00:39:49,770
+All it's going to do
+
+816
+00:39:49,770 --> 00:39:53,261
+is when bot is going to render an image,
+
+817
+00:39:53,261 --> 00:39:55,290
+the CloudFront Functions are going
+
+818
+00:39:55,290 --> 00:39:57,660
+to do an ASN console log
+
+819
+00:39:57,660 --> 00:40:01,380
+and ship the metadata to CloudWatch logs
+
+820
+00:40:01,380 --> 00:40:04,260
+and then respond the same image
+
+821
+00:40:04,260 --> 00:40:06,013
+so the bots doesn't even know
+
+822
+00:40:06,013 --> 00:40:08,563
+that something happened
+behind the scenes for them.
+
+823
+00:40:12,701 --> 00:40:15,213
+Yeah, let's see it in the demo.
+
+824
+00:40:18,360 --> 00:40:21,661
+So as before,
+
+825
+00:40:21,661 --> 00:40:24,993
+if I want to associate a new function,
+
+826
+00:40:25,950 --> 00:40:29,310
+I'm going back to my distribution
+
+827
+00:40:29,310 --> 00:40:31,290
+then to my behaviors.
+
+828
+00:40:31,290 --> 00:40:34,890
+Now I am going to check
+a different behavior,
+
+829
+00:40:34,890 --> 00:40:38,373
+which is the static PNG's path.
+
+830
+00:40:39,578 --> 00:40:44,578
+I'm going to add this
+new function and save it.
+
+831
+00:40:45,916 --> 00:40:50,916
+Let's see the function code itself,
+
+832
+00:40:51,741 --> 00:40:55,353
+it's going to be either
+simplified than the previous one.
+
+833
+00:40:59,436 --> 00:41:00,336
+So let's see here.
+
+834
+00:41:01,410 --> 00:41:04,710
+So this is my header on
+the first three lines,
+
+835
+00:41:04,710 --> 00:41:07,663
+I'm extracting the request metadata
+
+836
+00:41:07,663 --> 00:41:11,013
+and then it simply comes log of JSON
+
+837
+00:41:11,013 --> 00:41:13,653
+with all the information from the request.
+
+838
+00:41:13,653 --> 00:41:17,370
+That is important for me as a
+business to better understand
+
+839
+00:41:17,370 --> 00:41:19,770
+and better analyze the
+traffic that is coming.
+
+840
+00:41:19,770 --> 00:41:22,530
+So in this case we want
+to make a correlation
+
+841
+00:41:22,530 --> 00:41:26,160
+between the search request
+and the image request.
+
+842
+00:41:26,160 --> 00:41:28,533
+So I log the same metadata
+
+843
+00:41:28,533 --> 00:41:32,220
+such as the user agent and the client IP,
+
+844
+00:41:32,220 --> 00:41:34,268
+but also JA fingerprint
+
+845
+00:41:34,268 --> 00:41:39,268
+that is being pre-calculated
+by CloudFront.
+
+846
+00:41:39,540 --> 00:41:41,858
+So they're getting it
+out of free of charge
+
+847
+00:41:41,858 --> 00:41:44,050
+within all the requests.
+
+848
+00:41:44,050 --> 00:41:47,787
+I also console log the device type.
+
+849
+00:41:47,787 --> 00:41:50,972
+So again I can know if
+it's a desktop, mobile,
+
+850
+00:41:50,972 --> 00:41:53,828
+iOS, Android, et cetera.
+
+851
+00:41:53,828 --> 00:41:56,955
+And I also have the get location.
+
+852
+00:41:56,955 --> 00:41:59,316
+And again this can be highly customized
+
+853
+00:41:59,316 --> 00:42:00,963
+by our own business needs.
+
+854
+00:42:02,284 --> 00:42:05,223
+So I'm getting back to the platform.
+
+855
+00:42:06,600 --> 00:42:09,330
+I'm doing requests as a normal human,
+
+856
+00:42:09,330 --> 00:42:13,420
+everything is working fine
+and then I'm switching to bots
+
+857
+00:42:14,430 --> 00:42:15,960
+and still those bots
+
+858
+00:42:15,960 --> 00:42:19,687
+are being responsed by their own images.
+
+859
+00:42:19,687 --> 00:42:22,230
+But each time that this image
+
+860
+00:42:22,230 --> 00:42:23,847
+is being rendered in the console,
+
+861
+00:42:23,847 --> 00:42:26,253
+now we should have a log for it.
+
+862
+00:42:27,104 --> 00:42:32,104
+Let's see if it's already
+fetched some logs, yeah.
+
+863
+00:42:32,190 --> 00:42:33,963
+So I will zoom in a bit.
+
+864
+00:42:35,293 --> 00:42:39,658
+So you can see that instead
+of just having my API log,
+
+865
+00:42:39,658 --> 00:42:44,321
+now I have the log for the bots images.
+
+866
+00:42:44,321 --> 00:42:47,908
+So I can see that it's
+a different client IPs
+
+867
+00:42:47,908 --> 00:42:51,293
+that are actually rendering the data
+
+868
+00:42:51,293 --> 00:42:56,293
+versus the kind of IPs
+that are fetching our APIs.
+
+869
+00:42:57,909 --> 00:43:02,306
+Same goes to the user
+agents, same goes to the ASN,
+
+870
+00:43:02,306 --> 00:43:05,723
+sorry, and the JA fingerprints.
+
+871
+00:43:05,723 --> 00:43:09,810
+So this makes us understand
+that there is a machine probably
+
+872
+00:43:09,810 --> 00:43:13,680
+that's making the request
+and fetching the API for us.
+
+873
+00:43:13,680 --> 00:43:15,150
+But this machine is trying
+
+874
+00:43:15,150 --> 00:43:17,097
+to publish our content across the globe
+
+875
+00:43:17,097 --> 00:43:21,568
+and there is actual browsers out there
+
+876
+00:43:21,568 --> 00:43:24,660
+that are rendering the image.
+
+877
+00:43:24,660 --> 00:43:26,489
+So we can do,
+
+878
+00:43:26,489 --> 00:43:29,220
+now we can even do our rough rules
+
+879
+00:43:29,220 --> 00:43:30,960
+even more complex than that
+
+880
+00:43:30,960 --> 00:43:33,090
+because if we see a JA fingerprint
+
+881
+00:43:33,090 --> 00:43:35,682
+that is repeated as a rendered image
+
+882
+00:43:35,682 --> 00:43:39,540
+or maybe as a API search,
+
+883
+00:43:39,540 --> 00:43:42,312
+we can now block this
+specific JA fingerprint
+
+884
+00:43:42,312 --> 00:43:44,910
+or maybe create a new rate limit.
+
+885
+00:43:44,910 --> 00:43:49,383
+So basically we just expose
+many more metrics out there,
+
+886
+00:43:51,174 --> 00:43:52,740
+thank you.
+
+887
+00:43:52,740 --> 00:43:53,880
+Many more metrics
+
+888
+00:43:53,880 --> 00:43:56,040
+and give your business the ability
+
+889
+00:43:56,040 --> 00:43:57,993
+to control the traffic accordingly.
+
+890
+00:43:59,760 --> 00:44:01,020
+We thought it will be best
+
+891
+00:44:01,020 --> 00:44:03,810
+to simplify a bit the architecture.
+
+892
+00:44:03,810 --> 00:44:07,830
+I saw many of you taking
+pictures of the architecture
+
+893
+00:44:07,830 --> 00:44:10,207
+that we just showcased and this is great,
+
+894
+00:44:10,207 --> 00:44:13,232
+but we want to talk about
+the high level concept
+
+895
+00:44:13,232 --> 00:44:16,320
+because every different product
+
+896
+00:44:16,320 --> 00:44:18,557
+is built a bit differently.
+
+897
+00:44:18,557 --> 00:44:21,946
+So we want to to discuss
+how you can implement it
+
+898
+00:44:21,946 --> 00:44:24,074
+with your own business.
+
+899
+00:44:24,074 --> 00:44:29,074
+So we used WAF in our case in
+order to label the traffic,
+
+900
+00:44:29,372 --> 00:44:33,030
+unlike the vast majority
+of the usage of WAF,
+
+901
+00:44:33,030 --> 00:44:34,470
+which is blocking.
+
+902
+00:44:34,470 --> 00:44:36,586
+And if you use WAF for labeling,
+
+903
+00:44:36,586 --> 00:44:40,170
+now you have the upstream
+that can react to it.
+
+904
+00:44:40,170 --> 00:44:43,470
+So we use CloudFront
+Functions to react to it.
+
+905
+00:44:43,470 --> 00:44:46,320
+But if you have your honor
+regions behind the scenes,
+
+906
+00:44:46,320 --> 00:44:49,507
+your origin can be exposed
+to those labels as well.
+
+907
+00:44:49,507 --> 00:44:52,585
+Within the CloudFront
+Functions we use modified.
+
+908
+00:44:52,585 --> 00:44:54,690
+So now the CloudFront Functions knew
+
+909
+00:44:54,690 --> 00:44:56,384
+if it's a bot or not a bot
+
+910
+00:44:56,384 --> 00:45:00,152
+and could react differently to those.
+
+911
+00:45:00,152 --> 00:45:02,880
+After the modification,
+some of the traffic,
+
+912
+00:45:02,880 --> 00:45:05,752
+99% of the traffic still
+got served by the cache
+
+913
+00:45:05,752 --> 00:45:08,491
+because this is what we
+wanted as a business.
+
+914
+00:45:08,491 --> 00:45:13,491
+But the rest of the 1% got
+split into two different regions
+
+915
+00:45:13,660 --> 00:45:16,453
+and this is like more trivial architecture
+
+916
+00:45:16,453 --> 00:45:21,046
+that you mostly see in
+the different patterns.
+
+917
+00:45:21,046 --> 00:45:26,046
+But again, you don't need to
+replicate it step by step,
+
+918
+00:45:26,213 --> 00:45:28,413
+just taking different concepts.
+
+919
+00:45:29,770 --> 00:45:34,320
+So the takeaways that I
+want you to take back home
+
+920
+00:45:34,320 --> 00:45:37,503
+and thinking about your
+architecture is split it into three.
+
+921
+00:45:38,700 --> 00:45:39,870
+First,
+
+922
+00:45:39,870 --> 00:45:43,434
+and for most you need to be traffic aware.
+
+923
+00:45:43,434 --> 00:45:46,359
+You should ask yourself do you really know
+
+924
+00:45:46,359 --> 00:45:49,980
+what goes on within your system?
+
+925
+00:45:49,980 --> 00:45:54,570
+So in our case we just used
+label for bot versus humans,
+
+926
+00:45:54,570 --> 00:45:58,440
+but this can be for any
+business related topic.
+
+927
+00:45:58,440 --> 00:46:00,030
+So it can be different tenants,
+
+928
+00:46:00,030 --> 00:46:03,420
+different tenant tiers
+like premium or freemium.
+
+929
+00:46:03,420 --> 00:46:05,229
+This can be even sales,
+
+930
+00:46:05,229 --> 00:46:07,260
+like if you want to route traffic
+
+931
+00:46:07,260 --> 00:46:09,382
+from the EU to a EU region,
+
+932
+00:46:09,382 --> 00:46:12,480
+you can do it using CloudFront.
+
+933
+00:46:12,480 --> 00:46:16,050
+So rethink within your engineering team
+
+934
+00:46:16,050 --> 00:46:17,220
+and your product team,
+
+935
+00:46:17,220 --> 00:46:21,000
+what kind of different metadata
+is related to your business.
+
+936
+00:46:21,000 --> 00:46:23,310
+So we showcased this about bots
+
+937
+00:46:23,310 --> 00:46:25,833
+but this literally can be anything else.
+
+938
+00:46:27,330 --> 00:46:30,060
+Second, simplify.
+
+939
+00:46:30,060 --> 00:46:30,893
+All the changes
+
+940
+00:46:30,893 --> 00:46:34,050
+that Nick and myself done
+during this live demo
+
+941
+00:46:34,050 --> 00:46:38,490
+was done only using
+CloudFront and AWS WAF.
+
+942
+00:46:38,490 --> 00:46:41,649
+We haven't introduced any
+change to our application.
+
+943
+00:46:41,649 --> 00:46:45,480
+So you can think how
+much of your complexity
+
+944
+00:46:45,480 --> 00:46:47,010
+you can move to the Edge
+
+945
+00:46:47,010 --> 00:46:50,247
+without actually impacting
+your engineering efforts.
+
+946
+00:46:50,247 --> 00:46:53,529
+So rethink, if there is maybe workload
+
+947
+00:46:53,529 --> 00:46:56,490
+that's you're currently
+doing in your own regions
+
+948
+00:46:56,490 --> 00:47:00,150
+that's you can simplify and
+decouple it to run on the Edge.
+
+949
+00:47:00,150 --> 00:47:02,129
+And last, create a synergy.
+
+950
+00:47:02,129 --> 00:47:06,720
+Using AWS Services is not
+just selecting one component
+
+951
+00:47:06,720 --> 00:47:08,850
+and use just it.
+
+952
+00:47:08,850 --> 00:47:10,620
+In our use cases we used WAF,
+
+953
+00:47:10,620 --> 00:47:13,410
+CloudFront Functions and CloudFront Cache.
+
+954
+00:47:13,410 --> 00:47:16,500
+So rethink about to each
+one of those components
+
+955
+00:47:16,500 --> 00:47:18,660
+what value it brings to you.
+
+956
+00:47:18,660 --> 00:47:20,460
+And now you can multiply this value
+
+957
+00:47:20,460 --> 00:47:24,153
+by connecting all those
+components together.
+
+958
+00:47:27,052 --> 00:47:30,390
+This re:Invent session is,
+
+959
+00:47:30,390 --> 00:47:34,300
+re:Invent week is full of
+content delivery sessions.
+
+960
+00:47:34,300 --> 00:47:36,406
+We have packed all of them for you
+
+961
+00:47:36,406 --> 00:47:39,090
+so you can take a screenshot of it.
+
+962
+00:47:39,090 --> 00:47:41,341
+I know that some of those already passed
+
+963
+00:47:41,341 --> 00:47:43,742
+but most of them are being recorded
+
+964
+00:47:43,742 --> 00:47:45,682
+so this can be used later on
+
+965
+00:47:45,682 --> 00:47:49,996
+when you want to pick
+some of those content.
+
+966
+00:47:49,996 --> 00:47:52,593
+I will keep it here for a second.
+
+967
+00:47:53,700 --> 00:47:56,970
+Yeah, everyone stopped taking picture.
+
+968
+00:47:56,970 --> 00:48:01,859
+Moreover, we curated those
+three articles for you.
+
+969
+00:48:01,859 --> 00:48:04,941
+The first two is different articles
+
+970
+00:48:04,941 --> 00:48:08,621
+that will deep dive into the
+concept that we discussed today
+
+971
+00:48:08,621 --> 00:48:12,019
+about how the flow request is happening
+
+972
+00:48:12,019 --> 00:48:13,581
+within CloudFront and WAF
+
+973
+00:48:13,581 --> 00:48:17,221
+and the different approaches
+of using origin routing.
+
+974
+00:48:17,221 --> 00:48:21,296
+And the last QR is actually
+about a pricing change
+
+975
+00:48:21,296 --> 00:48:24,541
+that we released two weeks ago.
+
+976
+00:48:24,541 --> 00:48:27,780
+This is called the
+flat-rate pricing plans.
+
+977
+00:48:27,780 --> 00:48:32,640
+And it goes between $0 a
+month up to $1000 a month
+
+978
+00:48:32,640 --> 00:48:34,470
+and this is a fixed price.
+
+979
+00:48:34,470 --> 00:48:36,090
+So currently there is,
+
+980
+00:48:36,090 --> 00:48:38,550
+and you get CloudFront
+and WAF out of the box.
+
+981
+00:48:38,550 --> 00:48:41,328
+So this is give you like a very quick way
+
+982
+00:48:41,328 --> 00:48:45,032
+to start using those different components
+
+983
+00:48:45,032 --> 00:48:48,660
+that we just discussed with
+a very little price for it
+
+984
+00:48:48,660 --> 00:48:50,433
+and goes from there.
+
+985
+00:48:52,582 --> 00:48:57,582
+And my ask for you before
+you leave this room
+
+986
+00:48:57,993 --> 00:49:02,190
+is to do something good
+for the pets out there.
+
+987
+00:49:02,190 --> 00:49:03,940
+So if you'll open the AWS Events up
+
+988
+00:49:05,370 --> 00:49:07,110
+and feedback this session.
+
+989
+00:49:07,110 --> 00:49:09,290
+For every feedback we are going to donate
+
+990
+00:49:09,290 --> 00:49:12,768
+for a pet organization, nonprofit,
+
+991
+00:49:12,768 --> 00:49:14,970
+nonprofit pet organization.
+
+992
+00:49:14,970 --> 00:49:16,740
+So we really appreciate
+
+993
+00:49:16,740 --> 00:49:18,450
+your honest feedback for this session.
+
+994
+00:49:18,450 --> 00:49:23,020
+This will highly help us later
+on to shape this session,
+
+995
+00:49:23,020 --> 00:49:27,600
+but it will also allow us to
+help other pets out there.
+
+996
+00:49:27,600 --> 00:49:30,663
+So please use our AWS Events
+to feedback this session.
+
+997
+00:49:31,710 --> 00:49:34,031
+And thank you, folks.
+
+998
+00:49:34,031 --> 00:49:36,417
+How was it all? Nick?
+
+999
+00:49:36,417 --> 00:49:38,888
+Have a happy re:Invent week.
+
+1000
+00:49:38,888 --> 00:49:40,538
+(audience applauding)
+Thank you.
+

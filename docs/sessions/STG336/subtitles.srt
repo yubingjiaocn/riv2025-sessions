@@ -1,0 +1,4078 @@
+1
+00:00:01,080 --> 00:00:03,810
+- Hello, everyone. My name is Aditi.
+
+2
+00:00:03,810 --> 00:00:06,690
+I'm a Senior Product
+Manager for Amazon FSx.
+
+3
+00:00:06,690 --> 00:00:08,790
+I'm joined by Manish Talreja,
+
+4
+00:00:08,790 --> 00:00:12,090
+who's the Principal Product
+Manager for Amazon S3
+
+5
+00:00:12,090 --> 00:00:16,800
+and Mark Roper, who's the
+Principal Engineer for Amazon FSx.
+
+6
+00:00:16,800 --> 00:00:19,713
+Mark will join Manish and
+I for Q&A after the talk.
+
+7
+00:00:21,150 --> 00:00:24,970
+All right, so all three
+of us have spent years
+
+8
+00:00:26,441 --> 00:00:28,050
+working directly with customers,
+
+9
+00:00:28,050 --> 00:00:30,570
+running high-performance workloads,
+
+10
+00:00:30,570 --> 00:00:33,663
+and pushing the boundaries of
+what's possible with storage.
+
+11
+00:00:35,880 --> 00:00:38,250
+We are going to share a little
+bit about what we've learned
+
+12
+00:00:38,250 --> 00:00:39,840
+about high-performance storage
+
+13
+00:00:39,840 --> 00:00:43,830
+for AI/ML analytics and HPC workloads.
+
+14
+00:00:43,830 --> 00:00:46,833
+We are going to walk through
+some real customer use cases,
+
+15
+00:00:49,500 --> 00:00:50,610
+real-world examples,
+
+16
+00:00:50,610 --> 00:00:52,290
+dive into technical capabilities
+
+17
+00:00:52,290 --> 00:00:54,393
+that enable performance at scale,
+
+18
+00:00:55,590 --> 00:00:58,530
+and introduce exciting new
+features along the way.
+
+19
+00:00:58,530 --> 00:01:00,530
+Let's start with a fundamental question.
+
+20
+00:01:01,740 --> 00:01:03,810
+Who needs high-performance storage?
+
+21
+00:01:03,810 --> 00:01:06,780
+And the answer is a lot
+of different workloads
+
+22
+00:01:06,780 --> 00:01:09,180
+across a wide range of industries.
+
+23
+00:01:09,180 --> 00:01:11,700
+So, think about machine learning teams
+
+24
+00:01:11,700 --> 00:01:16,140
+running large language training
+models on massive datasets,
+
+25
+00:01:16,140 --> 00:01:20,490
+data analysts querying
+petabytes of data interactively,
+
+26
+00:01:20,490 --> 00:01:24,203
+or think about researchers
+running weather simulations
+
+27
+00:01:24,203 --> 00:01:28,110
+or drug discovery with tens
+and thousands of cores.
+
+28
+00:01:28,110 --> 00:01:30,120
+And the list goes on.
+
+29
+00:01:30,120 --> 00:01:33,900
+But what ties all of these
+together are two things.
+
+30
+00:01:33,900 --> 00:01:37,260
+First, that these are
+compute-intensive workloads.
+
+31
+00:01:37,260 --> 00:01:38,940
+So they require hundreds
+
+32
+00:01:38,940 --> 00:01:43,800
+and thousands of cores
+CPU or GPU resources.
+
+33
+00:01:43,800 --> 00:01:46,530
+And second, they're all data-intensive.
+
+34
+00:01:46,530 --> 00:01:48,030
+They depend on fast,
+
+35
+00:01:48,030 --> 00:01:53,030
+reliable access to massive scale of data.
+
+36
+00:01:53,640 --> 00:01:55,110
+And that second part,
+
+37
+00:01:55,110 --> 00:01:57,393
+that's where things
+really get interesting.
+
+38
+00:01:59,610 --> 00:02:00,443
+Let me show you how.
+
+39
+00:02:00,443 --> 00:02:03,030
+So we frequently hear from our customers
+
+40
+00:02:03,030 --> 00:02:06,060
+that they love that with AWS,
+
+41
+00:02:06,060 --> 00:02:08,670
+they can spin up compute clusters,
+
+42
+00:02:08,670 --> 00:02:11,280
+run their workload
+faster than ever before,
+
+43
+00:02:11,280 --> 00:02:14,400
+and then spin them down
+once their workload's done
+
+44
+00:02:14,400 --> 00:02:16,860
+and stop paying for those resources.
+
+45
+00:02:16,860 --> 00:02:18,753
+This is the magic of the cloud.
+
+46
+00:02:19,980 --> 00:02:23,010
+So ideally, you want this, you want...
+
+47
+00:02:23,010 --> 00:02:27,510
+As you add more compute,
+more CPU, more GPU resources,
+
+48
+00:02:27,510 --> 00:02:30,000
+you get proportionally more work done.
+
+49
+00:02:30,000 --> 00:02:33,540
+Ideal linear scaling, beautiful.
+
+50
+00:02:33,540 --> 00:02:35,100
+Here's the problem, though.
+
+51
+00:02:35,100 --> 00:02:37,290
+What if you have a storage solution
+
+52
+00:02:37,290 --> 00:02:38,790
+that cannot keep up
+
+53
+00:02:38,790 --> 00:02:42,030
+with the performance
+requirements of your workload,
+
+54
+00:02:42,030 --> 00:02:46,980
+and in that case, the work done
+or your throughput plateaus.
+
+55
+00:02:46,980 --> 00:02:50,250
+And you can keep throwing
+CPU/GPU resources,
+
+56
+00:02:50,250 --> 00:02:54,060
+but the performance will
+not scale linearly with it.
+
+57
+00:02:54,060 --> 00:02:57,450
+And the reason being that
+all those compute instances
+
+58
+00:02:57,450 --> 00:03:00,780
+are now competing for access
+to the same data store,
+
+59
+00:03:00,780 --> 00:03:03,990
+and that data storage has
+now become the bottleneck.
+
+60
+00:03:03,990 --> 00:03:05,610
+This is specifically painful
+
+61
+00:03:05,610 --> 00:03:10,260
+because we see that 90 to 95%
+of spend on these workloads
+
+62
+00:03:10,260 --> 00:03:11,580
+is compute.
+
+63
+00:03:11,580 --> 00:03:14,070
+So when your compute is
+sitting underutilized
+
+64
+00:03:14,070 --> 00:03:15,630
+waiting for data,
+
+65
+00:03:15,630 --> 00:03:20,310
+your time to run gets shorter
+and your cost goes up.
+
+66
+00:03:20,310 --> 00:03:22,320
+So, in an ideal world,
+
+67
+00:03:22,320 --> 00:03:24,750
+when you're architecting your solution,
+
+68
+00:03:24,750 --> 00:03:26,160
+you would want your storage
+
+69
+00:03:26,160 --> 00:03:28,410
+to scale linearly with your compute
+
+70
+00:03:28,410 --> 00:03:30,903
+so that it never ends up
+becoming a bottleneck.
+
+71
+00:03:34,447 --> 00:03:36,440
+And before diving right into solutions
+
+72
+00:03:36,440 --> 00:03:40,410
+of what we've built at AWS to
+address that very bottleneck,
+
+73
+00:03:40,410 --> 00:03:43,680
+I want to acknowledge
+that customers come to AWS
+
+74
+00:03:43,680 --> 00:03:45,540
+from two different parts.
+
+75
+00:03:45,540 --> 00:03:46,740
+On the one hand,
+
+76
+00:03:46,740 --> 00:03:51,210
+we have the customers that are
+running HPC ML/AI workloads
+
+77
+00:03:51,210 --> 00:03:53,250
+on-premises for years.
+
+78
+00:03:53,250 --> 00:03:57,270
+Their workloads are based
+on file-based access,
+
+79
+00:03:57,270 --> 00:04:01,320
+and they want to maintain that paradigm
+
+80
+00:04:01,320 --> 00:04:02,917
+and move to the cloud,
+
+81
+00:04:02,917 --> 00:04:05,430
+gaining the benefits of the cloud.
+
+82
+00:04:05,430 --> 00:04:07,320
+And on the second hand,
+
+83
+00:04:07,320 --> 00:04:11,460
+we have the customers who started
+in the cloud from day one.
+
+84
+00:04:11,460 --> 00:04:15,120
+So that means that they have
+their data stored in Amazon S3,
+
+85
+00:04:15,120 --> 00:04:18,393
+and their applications
+are built around S3 APIs.
+
+86
+00:04:19,380 --> 00:04:21,210
+So, just for the show of hands,
+
+87
+00:04:21,210 --> 00:04:24,273
+who here is using file-based
+applications today?
+
+88
+00:04:27,270 --> 00:04:28,410
+Oh, awesome.
+
+89
+00:04:28,410 --> 00:04:31,953
+And who here is using Amazon
+S3 as their data lake?
+
+90
+00:04:33,240 --> 00:04:36,390
+That's pretty good, that's
+a great mix of customers.
+
+91
+00:04:36,390 --> 00:04:40,770
+And this is also very, very
+accurate representation
+
+92
+00:04:40,770 --> 00:04:45,540
+of what we see with our
+customers in production today.
+
+93
+00:04:45,540 --> 00:04:47,850
+So, we are going to
+cover each one of these,
+
+94
+00:04:47,850 --> 00:04:51,663
+but let me start with lift and
+shift file system customers.
+
+95
+00:04:52,710 --> 00:04:54,180
+So the question remains,
+
+96
+00:04:54,180 --> 00:04:57,360
+why do file system remains
+the preferred choice
+
+97
+00:04:57,360 --> 00:05:00,630
+for so many of these
+high-performance workloads?
+
+98
+00:05:00,630 --> 00:05:02,010
+Couple reasons,
+
+99
+00:05:02,010 --> 00:05:05,040
+but the primary one
+being familiar interface.
+
+100
+00:05:05,040 --> 00:05:07,710
+So, researchers, data scientists,
+
+101
+00:05:07,710 --> 00:05:12,210
+and developers know how to work
+with files and directories.
+
+102
+00:05:12,210 --> 00:05:13,743
+It's just more intuitive.
+
+103
+00:05:14,670 --> 00:05:17,280
+The second is POSIX permissions.
+
+104
+00:05:17,280 --> 00:05:20,283
+So when I say POSIX permissions,
+
+105
+00:05:20,283 --> 00:05:22,710
+file systems give you granular access.
+
+106
+00:05:22,710 --> 00:05:26,610
+When you have multiple users
+accessing the same data,
+
+107
+00:05:26,610 --> 00:05:28,260
+you want to give control,
+
+108
+00:05:28,260 --> 00:05:29,220
+you want to make sure
+
+109
+00:05:29,220 --> 00:05:33,450
+that you are controlling who
+gets access to those files,
+
+110
+00:05:33,450 --> 00:05:35,913
+who can write and execute those files.
+
+111
+00:05:36,780 --> 00:05:39,360
+And the third is consistent data access.
+
+112
+00:05:39,360 --> 00:05:40,860
+Again, if all of your users
+
+113
+00:05:40,860 --> 00:05:43,140
+are accessing the same file system,
+
+114
+00:05:43,140 --> 00:05:45,450
+you want to make sure that
+the data that they're reading
+
+115
+00:05:45,450 --> 00:05:46,890
+is consistent.
+
+116
+00:05:46,890 --> 00:05:48,390
+Consistency is guaranteed.
+
+117
+00:05:48,390 --> 00:05:50,070
+There are no stale reads,
+
+118
+00:05:50,070 --> 00:05:53,103
+and that is where file system is used.
+
+119
+00:05:54,030 --> 00:05:55,830
+Back in 2018,
+
+120
+00:05:55,830 --> 00:05:58,140
+we found that many customers
+
+121
+00:05:58,140 --> 00:06:01,380
+wanted all of these
+benefits of file system,
+
+122
+00:06:01,380 --> 00:06:05,580
+along with the ease of use
+and scalability of the cloud.
+
+123
+00:06:05,580 --> 00:06:09,390
+And that is when we
+launched FSx for Lustre.
+
+124
+00:06:09,390 --> 00:06:11,760
+FSx for Lustre is built
+
+125
+00:06:11,760 --> 00:06:14,220
+on the open-source Lustre file system.
+
+126
+00:06:14,220 --> 00:06:17,043
+So any of you who've heard Lustre before?
+
+127
+00:06:19,350 --> 00:06:20,790
+Okay, that's pretty good.
+
+128
+00:06:20,790 --> 00:06:24,900
+So Lustre is the open-source
+high-performance file system.
+
+129
+00:06:24,900 --> 00:06:27,960
+It is one of the most popular
+high-performance file systems.
+
+130
+00:06:27,960 --> 00:06:30,750
+It is used by National
+Labs across the world.
+
+131
+00:06:30,750 --> 00:06:34,710
+It is used by ML/AI and HPC applications
+
+132
+00:06:34,710 --> 00:06:36,090
+on-premises as well.
+
+133
+00:06:36,090 --> 00:06:39,030
+So, it goes from applications range
+
+134
+00:06:39,030 --> 00:06:40,920
+from training and inference,
+
+135
+00:06:40,920 --> 00:06:45,813
+all the way to weather
+modeling and genomic analysis.
+
+136
+00:06:46,650 --> 00:06:50,130
+And so what we've done is...
+
+137
+00:06:50,130 --> 00:06:51,840
+Lustre's really powerful,
+
+138
+00:06:51,840 --> 00:06:54,840
+but it's also notoriously
+complex to manage.
+
+139
+00:06:54,840 --> 00:06:58,290
+What we have done is basically
+taken all the benefits
+
+140
+00:06:58,290 --> 00:07:01,230
+of the fast and scalable
+Lustre file system
+
+141
+00:07:01,230 --> 00:07:06,180
+and combined it with the
+management and ease of use
+
+142
+00:07:06,180 --> 00:07:08,490
+of a cloud solution.
+
+143
+00:07:08,490 --> 00:07:12,090
+So, we've offered a
+fully-managed, fully-elastic,
+
+144
+00:07:12,090 --> 00:07:15,033
+and fast FSx for Lustre file system.
+
+145
+00:07:15,900 --> 00:07:18,900
+Let me walk you through
+all of these one by one,
+
+146
+00:07:18,900 --> 00:07:20,850
+starting with fully managed.
+
+147
+00:07:20,850 --> 00:07:22,803
+So, what does fully managed means?
+
+148
+00:07:23,730 --> 00:07:26,220
+Fully managed means that this file system
+
+149
+00:07:26,220 --> 00:07:30,063
+is tested and operated at
+an unprecedented scale.
+
+150
+00:07:30,930 --> 00:07:33,180
+We are also consistently monitoring
+
+151
+00:07:33,180 --> 00:07:34,650
+all the hardware resources
+
+152
+00:07:34,650 --> 00:07:36,810
+that are underpinning the file system.
+
+153
+00:07:36,810 --> 00:07:39,930
+So, assume that one of your server
+
+154
+00:07:39,930 --> 00:07:41,970
+runs into a hardware failure,
+
+155
+00:07:41,970 --> 00:07:44,850
+and in that case, we
+automatically monitor it,
+
+156
+00:07:44,850 --> 00:07:46,620
+automatically detect it,
+
+157
+00:07:46,620 --> 00:07:49,050
+and replace the server
+with a healthy server
+
+158
+00:07:49,050 --> 00:07:52,110
+to keep your file system
+healthy at all times.
+
+159
+00:07:52,110 --> 00:07:54,180
+We've also done the heavy lifting
+
+160
+00:07:54,180 --> 00:07:57,360
+of ensuring that your file system
+
+161
+00:07:57,360 --> 00:08:01,290
+is built on the latest and
+greatest technologies at AWS
+
+162
+00:08:01,290 --> 00:08:03,390
+and the latest and greatest
+technologies offered
+
+163
+00:08:03,390 --> 00:08:05,403
+by the open-source Lustre community,
+
+164
+00:08:07,680 --> 00:08:10,773
+and make those available to
+you with full API support.
+
+165
+00:08:12,270 --> 00:08:13,103
+All right.
+
+166
+00:08:14,220 --> 00:08:17,010
+Now I want to talk about elasticity.
+
+167
+00:08:17,010 --> 00:08:19,410
+We've made Lustre fully elastic
+
+168
+00:08:19,410 --> 00:08:21,010
+for the first time in the cloud.
+
+169
+00:08:21,870 --> 00:08:24,360
+We were hearing growing
+pains from the customers
+
+170
+00:08:24,360 --> 00:08:27,270
+as they were scaling their
+workloads in the cloud.
+
+171
+00:08:27,270 --> 00:08:30,750
+Growing pains, such as data
+does not grow linearly.
+
+172
+00:08:30,750 --> 00:08:34,470
+So for instance, if you
+have ML training runs,
+
+173
+00:08:34,470 --> 00:08:37,020
+you generate terabytes of checkpoints,
+
+174
+00:08:37,020 --> 00:08:38,370
+and then you clean them up.
+
+175
+00:08:38,370 --> 00:08:41,850
+Your simulation spikes and
+then you wrap those projects.
+
+176
+00:08:41,850 --> 00:08:45,300
+So your data requirements
+are always going up and down,
+
+177
+00:08:45,300 --> 00:08:47,670
+and there's this constant battle
+
+178
+00:08:47,670 --> 00:08:49,890
+that you never want to run out of storage,
+
+179
+00:08:49,890 --> 00:08:51,390
+but at the same time,
+
+180
+00:08:51,390 --> 00:08:54,513
+you don't want to pay for
+unused capacity, right?
+
+181
+00:08:56,010 --> 00:08:57,000
+That's one thing.
+
+182
+00:08:57,000 --> 00:08:58,290
+And the second thing
+
+183
+00:08:58,290 --> 00:09:01,230
+is that not all your data is active data.
+
+184
+00:09:01,230 --> 00:09:03,300
+You're not actively using all of that data
+
+185
+00:09:03,300 --> 00:09:05,670
+to be stored on the SSD file system.
+
+186
+00:09:05,670 --> 00:09:08,550
+So, you need it for your hot data,
+
+187
+00:09:08,550 --> 00:09:11,790
+but you still need your
+terabyte, your checkpoints,
+
+188
+00:09:11,790 --> 00:09:15,930
+and our results stored,
+but not on the fast SSD.
+
+189
+00:09:15,930 --> 00:09:18,630
+Because if it is stored
+on your faster SSD tier,
+
+190
+00:09:18,630 --> 00:09:21,600
+it gets real expensive real fast.
+
+191
+00:09:21,600 --> 00:09:25,710
+So, think as you're scaling
+your dataset to petabyte scale.
+
+192
+00:09:25,710 --> 00:09:27,303
+As you go to petabyte scale,
+
+193
+00:09:28,579 --> 00:09:31,200
+it gets really hard to
+just operationally manage
+
+194
+00:09:31,200 --> 00:09:34,050
+and the economies don't scale either.
+
+195
+00:09:34,050 --> 00:09:36,600
+That is why we launched
+FSx Intelligent-Tiering
+
+196
+00:09:36,600 --> 00:09:37,653
+earlier this year.
+
+197
+00:09:38,910 --> 00:09:41,220
+So with FSx Intelligent-Tiering,
+
+198
+00:09:41,220 --> 00:09:44,490
+we offer virtually
+unlimited storage capacity,
+
+199
+00:09:44,490 --> 00:09:46,650
+which means that the data grow...
+
+200
+00:09:46,650 --> 00:09:50,250
+that the storage capacity
+grows and shrinks automatically
+
+201
+00:09:50,250 --> 00:09:51,663
+based on your usage.
+
+202
+00:09:52,740 --> 00:09:54,300
+You don't have to worry about it,
+
+203
+00:09:54,300 --> 00:09:56,070
+you'd never run out of storage,
+
+204
+00:09:56,070 --> 00:09:58,950
+and you never have to
+pay for storage capacity
+
+205
+00:09:58,950 --> 00:10:00,063
+that you're not using.
+
+206
+00:10:00,990 --> 00:10:04,830
+Second point is Intelligent-Tiering
+between storage tiers.
+
+207
+00:10:04,830 --> 00:10:08,970
+So we keep all your active
+data on your fast SSD
+
+208
+00:10:08,970 --> 00:10:12,740
+and automatically tier
+your less accessed data
+
+209
+00:10:12,740 --> 00:10:15,570
+to the colder, low-cost tiers.
+
+210
+00:10:15,570 --> 00:10:19,410
+And we manage all of this, you
+don't have to worry about it.
+
+211
+00:10:19,410 --> 00:10:22,503
+We do it intelligently based
+on your access patterns.
+
+212
+00:10:23,670 --> 00:10:27,003
+And finally, the economics of
+it are quite compelling, too.
+
+213
+00:10:28,950 --> 00:10:31,050
+As an example, for the colder tier,
+
+214
+00:10:31,050 --> 00:10:34,260
+you pay half a cent
+per gigabyte per month.
+
+215
+00:10:34,260 --> 00:10:36,720
+And to put this in perspective,
+
+216
+00:10:36,720 --> 00:10:38,730
+your overall solution
+
+217
+00:10:38,730 --> 00:10:42,450
+comes down to be 34% more price performant
+
+218
+00:10:42,450 --> 00:10:45,543
+compared to your HDD
+solutions on-premises.
+
+219
+00:10:49,202 --> 00:10:51,753
+Now, let's talk about speed.
+
+220
+00:10:52,770 --> 00:10:54,180
+These are the performance levels
+
+221
+00:10:54,180 --> 00:10:57,150
+we are delivering in production today.
+
+222
+00:10:57,150 --> 00:11:01,320
+FSx for Lustre is the fastest
+storage for GPUs in the cloud,
+
+223
+00:11:01,320 --> 00:11:05,100
+and it delivers the lowest
+latencies in the cloud.
+
+224
+00:11:05,100 --> 00:11:06,930
+This performance metrics
+
+225
+00:11:06,930 --> 00:11:10,803
+are what keeps your
+compute fully utilized.
+
+226
+00:11:11,670 --> 00:11:12,570
+Let me walk you through
+
+227
+00:11:12,570 --> 00:11:15,330
+how FSx for Lustre
+delivers this performance,
+
+228
+00:11:15,330 --> 00:11:17,310
+so that you can customize your file system
+
+229
+00:11:17,310 --> 00:11:19,500
+based on your workload requirements.
+
+230
+00:11:19,500 --> 00:11:21,900
+Each of the dimensions shown here,
+
+231
+00:11:21,900 --> 00:11:25,800
+you can play with them independently,
+
+232
+00:11:25,800 --> 00:11:27,570
+and that's one of the ways
+
+233
+00:11:27,570 --> 00:11:30,990
+you can even make it even
+further price-performant.
+
+234
+00:11:30,990 --> 00:11:33,570
+So, here's a simplified view.
+
+235
+00:11:33,570 --> 00:11:36,870
+On your left, you've got
+your compute instance
+
+236
+00:11:36,870 --> 00:11:38,550
+that's running your workload,
+
+237
+00:11:38,550 --> 00:11:41,580
+and on the right, you've got your storage,
+
+238
+00:11:41,580 --> 00:11:43,380
+you've got your file system.
+
+239
+00:11:43,380 --> 00:11:46,020
+File system has two kinds of servers.
+
+240
+00:11:46,020 --> 00:11:49,650
+It has the metadata server
+and it has the storage server.
+
+241
+00:11:49,650 --> 00:11:51,540
+So, your metadata server
+
+242
+00:11:51,540 --> 00:11:55,080
+is basically handling all
+your metadata requests.
+
+243
+00:11:55,080 --> 00:12:00,080
+Think about creating
+files, listing directories,
+
+244
+00:12:00,390 --> 00:12:02,010
+managing permissions,
+
+245
+00:12:02,010 --> 00:12:04,920
+your metadata server
+takes care of all of that.
+
+246
+00:12:04,920 --> 00:12:07,620
+And then we have the object server.
+
+247
+00:12:07,620 --> 00:12:09,180
+Object server is what handles
+
+248
+00:12:09,180 --> 00:12:11,670
+your actual data reads and writes
+
+249
+00:12:11,670 --> 00:12:13,353
+to and from the file system.
+
+250
+00:12:14,430 --> 00:12:17,670
+Both of these servers are
+backed by storage disks,
+
+251
+00:12:17,670 --> 00:12:20,176
+and when you talk to storage,
+
+252
+00:12:20,176 --> 00:12:21,840
+your compute instance
+
+253
+00:12:21,840 --> 00:12:24,360
+basically talks to this metadata server
+
+254
+00:12:24,360 --> 00:12:26,433
+and storage server over the network.
+
+255
+00:12:27,450 --> 00:12:28,320
+Now, I'm going to show you
+
+256
+00:12:28,320 --> 00:12:30,960
+how each of these
+components comes into play
+
+257
+00:12:30,960 --> 00:12:32,310
+when we talk about performance
+
+258
+00:12:32,310 --> 00:12:34,770
+and how you can change those
+
+259
+00:12:34,770 --> 00:12:36,753
+based on your workload requirements.
+
+260
+00:12:37,980 --> 00:12:40,500
+Let's start with throughput.
+
+261
+00:12:40,500 --> 00:12:43,380
+So when you're using
+multiple client instances,
+
+262
+00:12:43,380 --> 00:12:45,570
+you're running thousands
+of training processes,
+
+263
+00:12:45,570 --> 00:12:47,070
+simulation jobs.
+
+264
+00:12:47,070 --> 00:12:51,150
+They're all accessing the same
+file system simultaneously.
+
+265
+00:12:51,150 --> 00:12:53,880
+This means that you need more throughput,
+
+266
+00:12:53,880 --> 00:12:54,780
+and by throughput,
+
+267
+00:12:54,780 --> 00:12:56,520
+I mean how many bytes per second
+
+268
+00:12:56,520 --> 00:12:59,400
+you can read or write to the file system.
+
+269
+00:12:59,400 --> 00:13:01,620
+So, to deliver this throughput,
+
+270
+00:13:01,620 --> 00:13:03,900
+FSx for Lustre file system
+
+271
+00:13:03,900 --> 00:13:07,530
+basically scales out with
+multiple storage servers
+
+272
+00:13:07,530 --> 00:13:11,760
+working in parallel to
+serve your requests.
+
+273
+00:13:11,760 --> 00:13:13,620
+This parallel distribution
+
+274
+00:13:13,620 --> 00:13:15,510
+across hundreds of storage servers
+
+275
+00:13:15,510 --> 00:13:18,570
+is how we deliver over
+one terabytes per second
+
+276
+00:13:18,570 --> 00:13:20,220
+of aggregate throughput.
+
+277
+00:13:20,220 --> 00:13:22,590
+So, when all of your compute instances
+
+278
+00:13:22,590 --> 00:13:24,300
+are talking to the file system,
+
+279
+00:13:24,300 --> 00:13:26,070
+your requests are going to not one,
+
+280
+00:13:26,070 --> 00:13:28,260
+but multiple servers, in parallel,
+
+281
+00:13:28,260 --> 00:13:30,300
+and you're getting the power
+
+282
+00:13:30,300 --> 00:13:32,460
+of those multiple servers every time.
+
+283
+00:13:32,460 --> 00:13:34,980
+And that's how you get
+over terabyte per second
+
+284
+00:13:34,980 --> 00:13:36,660
+of aggregate throughput.
+
+285
+00:13:36,660 --> 00:13:39,510
+This enables fast parallel data access
+
+286
+00:13:39,510 --> 00:13:41,613
+to hundreds and thousands of cores.
+
+287
+00:13:43,800 --> 00:13:46,650
+All right, now most
+high-performance workloads
+
+288
+00:13:46,650 --> 00:13:50,220
+are heavy on throughput and
+relatively light on metadata.
+
+289
+00:13:50,220 --> 00:13:52,410
+But recently, we started noticing
+
+290
+00:13:52,410 --> 00:13:55,110
+that customers were using FSx for Lustre
+
+291
+00:13:55,110 --> 00:13:57,630
+for more metadata-intensive workloads.
+
+292
+00:13:57,630 --> 00:14:00,750
+So you can think about home directories,
+
+293
+00:14:00,750 --> 00:14:02,760
+user research workstations,
+
+294
+00:14:02,760 --> 00:14:04,830
+and interactive applications
+
+295
+00:14:04,830 --> 00:14:07,470
+where you're con constantly
+listing to directories,
+
+296
+00:14:07,470 --> 00:14:09,813
+opening files, checking permissions.
+
+297
+00:14:11,040 --> 00:14:13,560
+So last year, we launched a capability
+
+298
+00:14:13,560 --> 00:14:15,810
+to scale out your metadata servers,
+
+299
+00:14:15,810 --> 00:14:18,180
+very similar to your storage servers.
+
+300
+00:14:18,180 --> 00:14:19,560
+Again, your metadata servers
+
+301
+00:14:19,560 --> 00:14:23,310
+can be scaled out independent
+of your storage servers
+
+302
+00:14:23,310 --> 00:14:25,380
+and your storage capacity.
+
+303
+00:14:25,380 --> 00:14:29,190
+What this helps with is you
+get 15X higher metadata IOPS
+
+304
+00:14:29,190 --> 00:14:32,430
+when compared to before when
+you could not scale out.
+
+305
+00:14:32,430 --> 00:14:34,260
+And we are further doubling down
+
+306
+00:14:34,260 --> 00:14:35,760
+and making sure that you don't run
+
+307
+00:14:35,760 --> 00:14:37,860
+into metadata bottlenecks.
+
+308
+00:14:37,860 --> 00:14:41,430
+Recently, we made an update
+to the Lustre software,
+
+309
+00:14:41,430 --> 00:14:45,183
+which enables 5X higher
+directory listing performance.
+
+310
+00:14:46,320 --> 00:14:48,780
+Now, I walked you through
+aggregate throughput,
+
+311
+00:14:48,780 --> 00:14:50,550
+I walked you through metadata IOPS
+
+312
+00:14:50,550 --> 00:14:52,500
+of the file system as a whole.
+
+313
+00:14:52,500 --> 00:14:55,770
+Now, I want to talk about
+what happens when you have...
+
+314
+00:14:55,770 --> 00:14:57,750
+What happens with a
+single compute instance
+
+315
+00:14:57,750 --> 00:15:00,120
+interacting with the file system.
+
+316
+00:15:00,120 --> 00:15:02,970
+Why am I even talking about
+a single compute instance?
+
+317
+00:15:02,970 --> 00:15:04,590
+So we have a file...
+
+318
+00:15:04,590 --> 00:15:08,040
+We have seen that EC2 instances on Amazon,
+
+319
+00:15:08,040 --> 00:15:10,110
+and across the board compute instances
+
+320
+00:15:10,110 --> 00:15:11,400
+have really improved
+
+321
+00:15:11,400 --> 00:15:13,530
+when it comes to their network bandwidth.
+
+322
+00:15:13,530 --> 00:15:16,427
+We've gone from 25 gigabits, 200,
+
+323
+00:15:16,427 --> 00:15:21,000
+to now 3,200 gigabit per
+second with P5 instances.
+
+324
+00:15:21,000 --> 00:15:23,940
+And all of this performance is great,
+
+325
+00:15:23,940 --> 00:15:26,940
+but it's not amazing when
+you cannot leverage it
+
+326
+00:15:26,940 --> 00:15:28,710
+when talking to storage.
+
+327
+00:15:28,710 --> 00:15:31,950
+So when you're looking at
+a traditional file system,
+
+328
+00:15:31,950 --> 00:15:33,270
+your traditional file system
+
+329
+00:15:33,270 --> 00:15:37,650
+generally talks to your compute
+instances or TCP network,
+
+330
+00:15:37,650 --> 00:15:42,650
+and it only interacts with one
+NIC on the compute instance,
+
+331
+00:15:42,720 --> 00:15:45,150
+which was true for FSx for Lustre as well
+
+332
+00:15:45,150 --> 00:15:46,950
+for two years back.
+
+333
+00:15:46,950 --> 00:15:49,590
+You're only interacting with
+one NIC, and because of that,
+
+334
+00:15:49,590 --> 00:15:53,100
+your throughput gets limited
+to 100 gigabits per second,
+
+335
+00:15:53,100 --> 00:15:54,930
+and that means you're
+leaving so much throughput
+
+336
+00:15:54,930 --> 00:15:56,520
+on the table.
+
+337
+00:15:56,520 --> 00:16:00,780
+So what we did was we launched EFA,
+
+338
+00:16:00,780 --> 00:16:01,740
+EFA support.
+
+339
+00:16:01,740 --> 00:16:04,110
+EFA is Elastic Fabric Adapter,
+
+340
+00:16:04,110 --> 00:16:07,320
+which is built on Amazon's SRD protocol.
+
+341
+00:16:07,320 --> 00:16:08,400
+What it helps you do
+
+342
+00:16:08,400 --> 00:16:12,030
+is it helps you communicate
+with the compute instance
+
+343
+00:16:12,030 --> 00:16:14,010
+across multiple NICs,
+
+344
+00:16:14,010 --> 00:16:17,520
+and it bypasses the operating
+system layer completely.
+
+345
+00:16:17,520 --> 00:16:18,840
+And how that is helpful
+
+346
+00:16:18,840 --> 00:16:22,230
+is now you're not using
+a lot of your CPU cores
+
+347
+00:16:22,230 --> 00:16:24,870
+in figuring out which
+NIC to communicate with.
+
+348
+00:16:24,870 --> 00:16:26,610
+And it's much more faster,
+
+349
+00:16:26,610 --> 00:16:29,583
+it can scale up to 700
+gigabits per second.
+
+350
+00:16:30,720 --> 00:16:32,970
+And obviously knowing the power of GPUs,
+
+351
+00:16:32,970 --> 00:16:35,190
+we wanted to ensure
+that we are utilizing it
+
+352
+00:16:35,190 --> 00:16:37,710
+to the most optimal levels.
+
+353
+00:16:37,710 --> 00:16:41,340
+We also support NVIDIA GPUDirect Storage.
+
+354
+00:16:41,340 --> 00:16:44,283
+How many of you have heard
+about NVIDIA GPUDirect Storage?
+
+355
+00:16:45,750 --> 00:16:47,167
+All right.
+
+356
+00:16:47,167 --> 00:16:49,860
+We've got a lot of storage
+folks here, I love that.
+
+357
+00:16:49,860 --> 00:16:51,600
+So for NVIDIA GPUDirect Storage,
+
+358
+00:16:51,600 --> 00:16:53,910
+what happens is your computer instances
+
+359
+00:16:53,910 --> 00:16:56,160
+can basically bypass the CPU
+
+360
+00:16:56,160 --> 00:16:58,863
+and talk directly to your GPU memory.
+
+361
+00:16:59,820 --> 00:17:03,090
+Think about a general data
+path going from your storage,
+
+362
+00:17:03,090 --> 00:17:06,180
+to your CPU memory, to your GPU memory.
+
+363
+00:17:06,180 --> 00:17:09,660
+That's multiple hubs
+that need to be managed.
+
+364
+00:17:09,660 --> 00:17:12,510
+But what happens with GPUDirect
+is it allows the file system
+
+365
+00:17:12,510 --> 00:17:15,240
+to communicate directly
+with your GPU memory,
+
+366
+00:17:15,240 --> 00:17:17,100
+allowing us to give you a throughput
+
+367
+00:17:17,100 --> 00:17:21,753
+of 3,200 gigabits per second per client.
+
+368
+00:17:22,590 --> 00:17:24,243
+So 12X higher.
+
+369
+00:17:26,220 --> 00:17:29,403
+All right, finally, let's
+talk about latencies.
+
+370
+00:17:30,870 --> 00:17:33,000
+When we built FSx for Lustre,
+
+371
+00:17:33,000 --> 00:17:36,510
+we architected it to offer
+the lowest possible latencies
+
+372
+00:17:36,510 --> 00:17:38,610
+on AWS.
+
+373
+00:17:38,610 --> 00:17:39,630
+When I say latencies,
+
+374
+00:17:39,630 --> 00:17:41,880
+we are talking about how long it takes
+
+375
+00:17:41,880 --> 00:17:45,660
+for a small operation to perform.
+
+376
+00:17:45,660 --> 00:17:48,030
+So it affects the overall responsiveness
+
+377
+00:17:48,030 --> 00:17:50,010
+of your storage solution.
+
+378
+00:17:50,010 --> 00:17:52,170
+A lot of workloads we work with,
+
+379
+00:17:52,170 --> 00:17:55,080
+large compute clusters processing data
+
+380
+00:17:55,080 --> 00:17:56,220
+while at the same time,
+
+381
+00:17:56,220 --> 00:17:57,599
+end users or researchers
+
+382
+00:17:57,599 --> 00:18:01,170
+are also manipulating
+that data interactively.
+
+383
+00:18:01,170 --> 00:18:04,470
+And for these human in the loop use cases,
+
+384
+00:18:04,470 --> 00:18:08,550
+having fast responsive
+storage really matters
+
+385
+00:18:08,550 --> 00:18:10,320
+because it should not
+feel like you're setting
+
+386
+00:18:10,320 --> 00:18:14,040
+for seconds or minutes just
+to wait for your file to open
+
+387
+00:18:14,040 --> 00:18:16,953
+or do an operation that really
+matters for a researcher.
+
+388
+00:18:17,970 --> 00:18:21,180
+Now, how do we get
+sub-millisecond latencies
+
+389
+00:18:21,180 --> 00:18:24,021
+beyond just having an SSD disk
+
+390
+00:18:24,021 --> 00:18:26,820
+for your active training data?
+
+391
+00:18:26,820 --> 00:18:27,723
+Three things.
+
+392
+00:18:28,770 --> 00:18:31,290
+First of all, we allow you to...
+
+393
+00:18:31,290 --> 00:18:34,080
+FSx for Lustre is a
+zonal storage offering.
+
+394
+00:18:34,080 --> 00:18:35,600
+So you can keep your file system
+
+395
+00:18:35,600 --> 00:18:39,060
+in the same AZ as your
+storage, as your compute.
+
+396
+00:18:39,060 --> 00:18:41,490
+So that means just at a very low level,
+
+397
+00:18:41,490 --> 00:18:43,860
+the distance that the data has to travel
+
+398
+00:18:43,860 --> 00:18:45,870
+is really minimized,
+
+399
+00:18:45,870 --> 00:18:48,480
+and that helps in improving latencies.
+
+400
+00:18:48,480 --> 00:18:52,380
+Second is we do
+point-to-point communication,
+
+401
+00:18:52,380 --> 00:18:54,123
+which is single-network roundtrip.
+
+402
+00:18:55,260 --> 00:18:56,220
+Your client server
+
+403
+00:18:56,220 --> 00:18:59,070
+can directly talk to
+your file system server
+
+404
+00:18:59,070 --> 00:19:01,170
+without multiple network hubs.
+
+405
+00:19:01,170 --> 00:19:04,650
+What you would've seen
+with most storage solutions
+
+406
+00:19:04,650 --> 00:19:07,560
+is there are multiple network
+hops through the server
+
+407
+00:19:07,560 --> 00:19:09,630
+or there are load balancers.
+
+408
+00:19:09,630 --> 00:19:12,750
+And while they're there
+for like very good reasons,
+
+409
+00:19:12,750 --> 00:19:14,880
+they do have an impact
+
+410
+00:19:14,880 --> 00:19:17,043
+on the latency of the storage offering.
+
+411
+00:19:18,450 --> 00:19:21,810
+And the third one is client
+side read and write caching.
+
+412
+00:19:21,810 --> 00:19:23,160
+So with FSx for Lustre,
+
+413
+00:19:23,160 --> 00:19:25,620
+I like to say that we consider client
+
+414
+00:19:25,620 --> 00:19:27,480
+as part of the file system.
+
+415
+00:19:27,480 --> 00:19:29,640
+So anytime you read and write,
+
+416
+00:19:29,640 --> 00:19:31,440
+if you're reading and
+writing say similar files
+
+417
+00:19:31,440 --> 00:19:32,610
+over and over again,
+
+418
+00:19:32,610 --> 00:19:35,550
+FSx for Lustre can cache
+those on your client.
+
+419
+00:19:35,550 --> 00:19:36,510
+So in that case,
+
+420
+00:19:36,510 --> 00:19:39,240
+you're basically having
+no network hops at all
+
+421
+00:19:39,240 --> 00:19:41,130
+and even lower latencies.
+
+422
+00:19:41,130 --> 00:19:42,630
+So FSx for Lustre allows you
+
+423
+00:19:42,630 --> 00:19:45,750
+to get about zero to one network ops
+
+424
+00:19:45,750 --> 00:19:47,613
+and sub-millisecond latencies.
+
+425
+00:19:49,830 --> 00:19:53,190
+I've thrown a lot of
+theoretical information at you,
+
+426
+00:19:53,190 --> 00:19:56,190
+and now I want to share how this happens.
+
+427
+00:19:56,190 --> 00:19:58,350
+How this works in production.
+
+428
+00:19:58,350 --> 00:20:00,270
+Shell is a great example.
+
+429
+00:20:00,270 --> 00:20:03,060
+Shell had a GPU-based on-prem environment
+
+430
+00:20:03,060 --> 00:20:05,730
+where they were running into
+infrastructure bottlenecks.
+
+431
+00:20:05,730 --> 00:20:08,310
+So, this decided to burst into cloud
+
+432
+00:20:08,310 --> 00:20:10,413
+with FSx for Lustre and EC2.
+
+433
+00:20:11,700 --> 00:20:13,890
+They wanted to leverage the ability
+
+434
+00:20:13,890 --> 00:20:16,170
+to scale compute and storage up and down
+
+435
+00:20:16,170 --> 00:20:18,840
+based on their user requirements.
+
+436
+00:20:18,840 --> 00:20:20,250
+Now, how this helped
+
+437
+00:20:20,250 --> 00:20:23,520
+was they were able to
+increase their GPU utilization
+
+438
+00:20:23,520 --> 00:20:27,633
+from less than 90% to 100% in the cloud.
+
+439
+00:20:28,620 --> 00:20:30,030
+So, with FSx for Lustre,
+
+440
+00:20:30,030 --> 00:20:33,630
+Shell was able to fully
+utilize the compute resources
+
+441
+00:20:33,630 --> 00:20:35,250
+at full throttle.
+
+442
+00:20:35,250 --> 00:20:38,520
+And these 10, 11-point
+percentage difference
+
+443
+00:20:38,520 --> 00:20:39,690
+might not seem a lot,
+
+444
+00:20:39,690 --> 00:20:42,183
+but those of you who
+are using P5 instances,
+
+445
+00:20:43,484 --> 00:20:45,573
+this really accumulates really fast.
+
+446
+00:20:48,270 --> 00:20:50,220
+And that concludes the file section part
+
+447
+00:20:50,220 --> 00:20:51,393
+of the presentation.
+
+448
+00:20:53,430 --> 00:20:54,930
+Now, I want to hand over to Manish
+
+449
+00:20:54,930 --> 00:20:56,927
+to share the options and optimizations
+
+450
+00:20:56,927 --> 00:20:58,830
+for S3 data lake customers.
+
+451
+00:20:58,830 --> 00:20:59,790
+- All right.
+
+452
+00:20:59,790 --> 00:21:02,190
+Thanks, Aditi. Where are
+my data lake customers?
+
+453
+00:21:03,150 --> 00:21:05,850
+Great. How many of you have
+heard of Express One Zone?
+
+454
+00:21:07,410 --> 00:21:08,403
+Awesome, a few.
+
+455
+00:21:09,600 --> 00:21:10,433
+So, we'll talk about:
+
+456
+00:21:10,433 --> 00:21:11,880
+How do you reduce storage bottlenecks
+
+457
+00:21:11,880 --> 00:21:13,323
+with cloud object storage?
+
+458
+00:21:16,980 --> 00:21:19,380
+Many of you already have
+petabytes of data stored
+
+459
+00:21:19,380 --> 00:21:20,880
+on S3 data lakes.
+
+460
+00:21:20,880 --> 00:21:23,760
+Now, this is because
+you love the durability,
+
+461
+00:21:23,760 --> 00:21:26,640
+the scalability, and
+the cost-effectiveness.
+
+462
+00:21:26,640 --> 00:21:28,230
+Now, this is why S3 provides you
+
+463
+00:21:28,230 --> 00:21:31,290
+with purpose-built storage classes, right?
+
+464
+00:21:31,290 --> 00:21:33,720
+You're starting from S3 Standard,
+
+465
+00:21:33,720 --> 00:21:36,090
+that's for your frequently-accessed data;
+
+466
+00:21:36,090 --> 00:21:38,640
+Glacier, for your longtime archival;
+
+467
+00:21:38,640 --> 00:21:39,960
+and Intelligent-Tiering,
+
+468
+00:21:39,960 --> 00:21:42,750
+when you have changing
+data access patterns.
+
+469
+00:21:42,750 --> 00:21:44,310
+Now, this makes it very easy
+
+470
+00:21:44,310 --> 00:21:48,180
+for you to source your
+data directly from S3,
+
+471
+00:21:48,180 --> 00:21:50,370
+but here's the critical point.
+
+472
+00:21:50,370 --> 00:21:53,130
+Your storage must keep
+up with your compute.
+
+473
+00:21:53,130 --> 00:21:54,870
+And as other team mentioned earlier,
+
+474
+00:21:54,870 --> 00:21:57,240
+compute is your most expensive resource.
+
+475
+00:21:57,240 --> 00:21:59,070
+And when the storage cannot keep up,
+
+476
+00:21:59,070 --> 00:22:02,410
+you will waste money on idle CPU or GPUs.
+
+477
+00:22:03,474 --> 00:22:04,350
+With that said,
+
+478
+00:22:04,350 --> 00:22:06,570
+I want you to focus your attention
+
+479
+00:22:06,570 --> 00:22:09,180
+on one particular storage
+class on the left.
+
+480
+00:22:09,180 --> 00:22:11,940
+This is Amazon S3 Express One Zone.
+
+481
+00:22:11,940 --> 00:22:15,090
+This is our fastest cloud object storage,
+
+482
+00:22:15,090 --> 00:22:16,230
+and it's built specifically
+
+483
+00:22:16,230 --> 00:22:18,810
+for performance-critical applications.
+
+484
+00:22:18,810 --> 00:22:21,660
+It will give you 10 times faster access
+
+485
+00:22:21,660 --> 00:22:25,560
+and 80% lower request
+costs than S3 Standard.
+
+486
+00:22:25,560 --> 00:22:28,320
+Now, let's look at what
+makes it different.
+
+487
+00:22:28,320 --> 00:22:30,840
+First, Express One Zone
+
+488
+00:22:30,840 --> 00:22:34,650
+is a single Availability
+Zone of storage class,
+
+489
+00:22:34,650 --> 00:22:36,120
+and we built it specifically
+
+490
+00:22:36,120 --> 00:22:38,700
+to deliver single-digit millisecond...
+
+491
+00:22:38,700 --> 00:22:42,810
+Consistent single-digit millisecond access
+
+492
+00:22:42,810 --> 00:22:45,750
+for your most frequently accessed data.
+
+493
+00:22:45,750 --> 00:22:49,710
+Now, it instantly scales to
+hundreds of thousands of TPS
+
+494
+00:22:49,710 --> 00:22:52,503
+with a new bucket type
+called directory buckets.
+
+495
+00:22:53,550 --> 00:22:54,840
+Now, for the rest of the talk,
+
+496
+00:22:54,840 --> 00:22:57,510
+we will focus on S3 Express One Zone,
+
+497
+00:22:57,510 --> 00:23:00,000
+but some of the techniques
+that we talk about
+
+498
+00:23:00,000 --> 00:23:02,103
+will apply to S3 Standard as well.
+
+499
+00:23:05,130 --> 00:23:07,590
+All right, so before we dive
+into optimization techniques,
+
+500
+00:23:07,590 --> 00:23:10,623
+let's think about a mental
+model that we will use.
+
+501
+00:23:12,630 --> 00:23:15,900
+So, when your client
+sends a request to S3,
+
+502
+00:23:15,900 --> 00:23:18,150
+there are two parts to the request.
+
+503
+00:23:18,150 --> 00:23:19,920
+The part on the left that's in white
+
+504
+00:23:19,920 --> 00:23:22,233
+is called overhead or time to first bite.
+
+505
+00:23:23,130 --> 00:23:26,010
+This is where your client
+sets up the connection,
+
+506
+00:23:26,010 --> 00:23:29,430
+sets up the authentication,
+there's the roundtrip time.
+
+507
+00:23:29,430 --> 00:23:32,853
+S3 is locating where your data
+is and then serving it up.
+
+508
+00:23:34,050 --> 00:23:36,930
+Now, no data is being
+transferred during this time.
+
+509
+00:23:36,930 --> 00:23:39,270
+And then there's the second part in pink.
+
+510
+00:23:39,270 --> 00:23:41,703
+This is where the actual
+data transfer happens.
+
+511
+00:23:42,900 --> 00:23:44,700
+We're gonna use this mental model
+
+512
+00:23:44,700 --> 00:23:48,000
+for how we can evaluate your workloads.
+
+513
+00:23:48,000 --> 00:23:50,940
+Now, there are two workloads
+on the screen right now,
+
+514
+00:23:50,940 --> 00:23:53,700
+the top and bottom, they
+have the same overhead.
+
+515
+00:23:53,700 --> 00:23:55,500
+This is the part in white.
+
+516
+00:23:55,500 --> 00:23:58,140
+But notice the difference
+in the data payload.
+
+517
+00:23:58,140 --> 00:24:02,100
+On the top, you will see a
+much smaller data payload.
+
+518
+00:24:02,100 --> 00:24:04,023
+When your transfers look like this,
+
+519
+00:24:05,043 --> 00:24:07,620
+your workload is latency sensitive.
+
+520
+00:24:07,620 --> 00:24:11,760
+So think of KV caching, your
+shuffle charting workloads,
+
+521
+00:24:11,760 --> 00:24:13,710
+your realtime inference serving,
+
+522
+00:24:13,710 --> 00:24:16,890
+and this is where your
+overhead matters a lot more.
+
+523
+00:24:16,890 --> 00:24:17,730
+And on the bottom,
+
+524
+00:24:17,730 --> 00:24:21,480
+you'll see a larger data payload
+compared to the overhead.
+
+525
+00:24:21,480 --> 00:24:23,220
+Now, when your transfers look like this,
+
+526
+00:24:23,220 --> 00:24:26,193
+you care about the total
+transfer time or your throughput.
+
+527
+00:24:30,540 --> 00:24:32,730
+So now that we have a mental model,
+
+528
+00:24:32,730 --> 00:24:35,190
+let's talk about how we can optimize
+
+529
+00:24:35,190 --> 00:24:36,600
+for different parameters,
+
+530
+00:24:36,600 --> 00:24:38,310
+different performance parameters.
+
+531
+00:24:38,310 --> 00:24:39,693
+Let's start with latency.
+
+532
+00:24:41,160 --> 00:24:42,900
+Now, we're gonna talk about
+two different techniques
+
+533
+00:24:42,900 --> 00:24:45,000
+that you can use with S3 Express One Zone.
+
+534
+00:24:45,870 --> 00:24:49,260
+The first one is co-locating
+your compute instances
+
+535
+00:24:49,260 --> 00:24:52,260
+with S3 One Zone directory buckets.
+
+536
+00:24:52,260 --> 00:24:54,840
+When you do that, your data
+travels shorter distances,
+
+537
+00:24:54,840 --> 00:24:58,260
+you have a few much fewer network hops.
+
+538
+00:24:58,260 --> 00:24:59,190
+And what that lets you do
+
+539
+00:24:59,190 --> 00:25:02,133
+is reduce the latency that
+you have to the storage.
+
+540
+00:25:03,210 --> 00:25:06,480
+Now, co-locating might
+not always be possible.
+
+541
+00:25:06,480 --> 00:25:07,410
+Now, in these situations,
+
+542
+00:25:07,410 --> 00:25:11,310
+you can still take advantage
+of the latency optimizations,
+
+543
+00:25:11,310 --> 00:25:13,350
+but you might pay a
+little bit of a penalty
+
+544
+00:25:13,350 --> 00:25:14,460
+when you go across AZ.
+
+545
+00:25:14,460 --> 00:25:17,040
+So if your computer's in an adjacent AZ
+
+546
+00:25:17,040 --> 00:25:18,390
+from your directory bucket.
+
+547
+00:25:20,640 --> 00:25:23,940
+The second technique is
+session-based authentication.
+
+548
+00:25:23,940 --> 00:25:26,340
+Now, this is a new
+technique that we introduce
+
+549
+00:25:26,340 --> 00:25:27,840
+with directory buckets.
+
+550
+00:25:27,840 --> 00:25:30,390
+Now, traditionally, with
+S3 Standard buckets,
+
+551
+00:25:30,390 --> 00:25:32,463
+what you would use is IAM authentication.
+
+552
+00:25:33,810 --> 00:25:35,610
+With S3 directory buckets,
+
+553
+00:25:35,610 --> 00:25:37,260
+you would use something called
+
+554
+00:25:37,260 --> 00:25:39,540
+a session-based authentication.
+
+555
+00:25:39,540 --> 00:25:40,830
+You would create...
+
+556
+00:25:40,830 --> 00:25:43,530
+You would call it an API
+called create session.
+
+557
+00:25:43,530 --> 00:25:45,300
+This will give you a token.
+
+558
+00:25:45,300 --> 00:25:48,690
+Your application will cache
+this for a period of time
+
+559
+00:25:48,690 --> 00:25:49,620
+and reuse that
+
+560
+00:25:49,620 --> 00:25:52,410
+so that you don't incur a latency hit
+
+561
+00:25:52,410 --> 00:25:56,073
+when you are authorizing
+with a directory bucket.
+
+562
+00:25:57,330 --> 00:25:59,790
+Now, we understand that
+not every application
+
+563
+00:25:59,790 --> 00:26:00,990
+can change overnight.
+
+564
+00:26:00,990 --> 00:26:03,960
+So you can still start
+with IAM authentication
+
+565
+00:26:03,960 --> 00:26:05,700
+and then move over to session auth
+
+566
+00:26:05,700 --> 00:26:07,600
+when you want to optimize for latency.
+
+567
+00:26:08,460 --> 00:26:10,920
+And whenever you're
+diagnosing high latency,
+
+568
+00:26:10,920 --> 00:26:12,210
+we always ask customers
+
+569
+00:26:12,210 --> 00:26:15,030
+to look under the hood
+into their libraries
+
+570
+00:26:15,030 --> 00:26:17,180
+and make sure that
+session auth is enabled.
+
+571
+00:26:19,980 --> 00:26:22,079
+Okay, so latency often goes hand in hand
+
+572
+00:26:22,079 --> 00:26:24,030
+with transactions per second.
+
+573
+00:26:24,030 --> 00:26:28,240
+A lot of the workloads that
+you run with small latency
+
+574
+00:26:30,630 --> 00:26:33,660
+are request-intensive, have
+request-intensive operations.
+
+575
+00:26:33,660 --> 00:26:36,963
+So think of large-scale
+analytics or shuffle charting.
+
+576
+00:26:38,310 --> 00:26:39,990
+And with S3 general purpose buckets,
+
+577
+00:26:39,990 --> 00:26:43,650
+if you're familiar with how do
+you optimize for higher TPS,
+
+578
+00:26:43,650 --> 00:26:45,873
+you would do that through
+prefix management.
+
+579
+00:26:47,070 --> 00:26:51,420
+And the way S3 works is
+it scales with prefix.
+
+580
+00:26:51,420 --> 00:26:55,710
+So it adds TPS capacity
+when you have constant load.
+
+581
+00:26:55,710 --> 00:26:58,440
+Constant load and it'll basically scale up
+
+582
+00:26:58,440 --> 00:27:00,543
+after a period of time, but it takes time.
+
+583
+00:27:01,410 --> 00:27:02,910
+With Express One Zone,
+
+584
+00:27:02,910 --> 00:27:04,590
+you don't need to do any of that.
+
+585
+00:27:04,590 --> 00:27:07,320
+We handle the partitioning under the hood.
+
+586
+00:27:07,320 --> 00:27:09,180
+And for each directory bucket,
+
+587
+00:27:09,180 --> 00:27:12,663
+we'll give you 200K reads
+per second out of the box.
+
+588
+00:27:13,740 --> 00:27:17,640
+And of course we are continually
+innovating on your behalf.
+
+589
+00:27:17,640 --> 00:27:19,279
+So this year, we added optimizations
+
+590
+00:27:19,279 --> 00:27:22,233
+to go up to 2 million
+transactions per second.
+
+591
+00:27:23,992 --> 00:27:25,800
+Now, a couple of quick tips.
+
+592
+00:27:25,800 --> 00:27:28,530
+When you are working
+with directory buckets,
+
+593
+00:27:28,530 --> 00:27:31,800
+you should try to keep
+your directories dense.
+
+594
+00:27:31,800 --> 00:27:32,820
+What does that mean, right?
+
+595
+00:27:32,820 --> 00:27:35,430
+So you should try to flatten
+your directory structure
+
+596
+00:27:35,430 --> 00:27:38,181
+and keep the objects in the leaf nodes
+
+597
+00:27:38,181 --> 00:27:40,653
+and put a lot more
+object in the leaf nodes.
+
+598
+00:27:41,700 --> 00:27:45,720
+And the second tip is don't add entropy.
+
+599
+00:27:45,720 --> 00:27:48,420
+Typically, we advise you to
+add entropy in your prefixes
+
+600
+00:27:48,420 --> 00:27:50,460
+for your S3 Standard buckets.
+
+601
+00:27:50,460 --> 00:27:53,283
+Here, this will actually slow you down.
+
+602
+00:27:56,220 --> 00:27:57,540
+All right, let me share with you
+
+603
+00:27:57,540 --> 00:27:59,343
+how this really works in practice.
+
+604
+00:28:00,450 --> 00:28:02,910
+Tavily is an AI infrastructure company,
+
+605
+00:28:02,910 --> 00:28:05,880
+and they're building a web
+access layer for agents
+
+606
+00:28:05,880 --> 00:28:08,130
+and large language models.
+
+607
+00:28:08,130 --> 00:28:11,250
+They manage a two-tier caching system
+
+608
+00:28:11,250 --> 00:28:12,873
+and their costs were rising.
+
+609
+00:28:14,070 --> 00:28:15,750
+They would've had to
+double their investment
+
+610
+00:28:15,750 --> 00:28:18,180
+to change their hot...
+
+611
+00:28:18,180 --> 00:28:20,640
+Double their investment
+for their hot cache layer.
+
+612
+00:28:20,640 --> 00:28:24,060
+Instead, they chose S3 Express One Zone
+
+613
+00:28:24,060 --> 00:28:25,680
+because it delivered the low latency
+
+614
+00:28:25,680 --> 00:28:27,980
+and the cost efficiency
+they were looking for.
+
+615
+00:28:29,040 --> 00:28:31,230
+This is for their hot cache layer.
+
+616
+00:28:31,230 --> 00:28:33,510
+In addition, it just scaled automatically
+
+617
+00:28:33,510 --> 00:28:34,833
+as their data grew.
+
+618
+00:28:35,850 --> 00:28:37,650
+You can see the results.
+
+619
+00:28:37,650 --> 00:28:40,300
+They were able to cut costs by six times
+
+620
+00:28:41,250 --> 00:28:43,860
+while improving
+performance and reliability
+
+621
+00:28:43,860 --> 00:28:46,053
+across millions of user requests.
+
+622
+00:28:47,220 --> 00:28:50,913
+So this is latency and
+transactions per second in play.
+
+623
+00:28:52,830 --> 00:28:54,930
+Now, let's talk about high throughput.
+
+624
+00:28:54,930 --> 00:28:56,940
+Now many of you are running workloads,
+
+625
+00:28:56,940 --> 00:29:01,470
+like large-scale ML training
+or research workloads.
+
+626
+00:29:01,470 --> 00:29:03,000
+This is where data loading
+
+627
+00:29:03,000 --> 00:29:04,980
+and checkpointing becomes important.
+
+628
+00:29:04,980 --> 00:29:06,293
+You need massive throughput
+
+629
+00:29:06,293 --> 00:29:09,843
+so that you keep your
+compute fully utilized.
+
+630
+00:29:10,710 --> 00:29:12,270
+So one of the techniques
+we're gonna talk about
+
+631
+00:29:12,270 --> 00:29:13,593
+is parallelization.
+
+632
+00:29:14,460 --> 00:29:17,160
+Now, since S3 scales horizontally,
+
+633
+00:29:17,160 --> 00:29:18,570
+the way to increase throughput
+
+634
+00:29:18,570 --> 00:29:21,933
+is by breaking up your requests
+across multiple connections.
+
+635
+00:29:23,070 --> 00:29:24,450
+In this example over here,
+
+636
+00:29:24,450 --> 00:29:26,040
+you can see that each connection
+
+637
+00:29:26,040 --> 00:29:28,383
+can achieve 100 megabytes per second.
+
+638
+00:29:29,370 --> 00:29:30,630
+Now, if you need gigabytes per second
+
+639
+00:29:30,630 --> 00:29:34,563
+or terabytes per second, you
+open up multiple connections.
+
+640
+00:29:38,280 --> 00:29:41,400
+So, how do you accomplish
+this with APIs, right?
+
+641
+00:29:41,400 --> 00:29:45,300
+So when you're downloading,
+use bite range gets.
+
+642
+00:29:45,300 --> 00:29:47,670
+This is where you will
+download parts of the object,
+
+643
+00:29:47,670 --> 00:29:51,270
+and then you'll have to assemble
+that on your compute node.
+
+644
+00:29:51,270 --> 00:29:52,620
+If you want to upload,
+
+645
+00:29:52,620 --> 00:29:55,050
+you use a similar technique
+called multi-part uploads,
+
+646
+00:29:55,050 --> 00:29:58,530
+where you would upload individual parts,
+
+647
+00:29:58,530 --> 00:30:00,453
+and S3 will assemble that for you.
+
+648
+00:30:03,840 --> 00:30:06,240
+All right, so I'm very
+excited about this example.
+
+649
+00:30:06,240 --> 00:30:09,240
+This was mentioned by Andy in
+the keynote yesterday as well.
+
+650
+00:30:10,470 --> 00:30:13,530
+Meta FAIR is a research organization
+
+651
+00:30:13,530 --> 00:30:14,880
+that runs research workloads,
+
+652
+00:30:14,880 --> 00:30:18,810
+including LLM training
+across thousands of GPUs.
+
+653
+00:30:18,810 --> 00:30:21,030
+They wanted to speed
+up their checkpointing
+
+654
+00:30:21,030 --> 00:30:22,173
+and data loading,
+
+655
+00:30:23,460 --> 00:30:27,840
+and what they did was they
+used S3 Express One Zone.
+
+656
+00:30:27,840 --> 00:30:32,670
+We scaled up an AZ with 60
+petabytes of data in one AZ,
+
+657
+00:30:32,670 --> 00:30:35,580
+where their GPU clusters were located.
+
+658
+00:30:35,580 --> 00:30:39,540
+And they were able to sustain
+140 terabytes per second
+
+659
+00:30:39,540 --> 00:30:42,450
+with over 1 million
+transactions per second.
+
+660
+00:30:42,450 --> 00:30:43,283
+Isn't that neat?
+
+661
+00:30:46,350 --> 00:30:49,653
+Okay, so let's talk about the
+client-side optimizations.
+
+662
+00:30:51,600 --> 00:30:53,220
+We saw that some customers
+
+663
+00:30:53,220 --> 00:30:56,520
+were not able to fully
+utilize the compute resources
+
+664
+00:30:56,520 --> 00:30:59,340
+using the techniques
+that we just discussed.
+
+665
+00:30:59,340 --> 00:31:03,030
+So, we built the AWS
+Common Runtime, or CRT.
+
+666
+00:31:03,030 --> 00:31:04,773
+Anybody heard of CRT over here?
+
+667
+00:31:06,210 --> 00:31:08,340
+Oh, not many people, this is great.
+
+668
+00:31:08,340 --> 00:31:09,540
+So, let's talk about it, right?
+
+669
+00:31:09,540 --> 00:31:12,120
+So, it's a set of open-source libraries,
+
+670
+00:31:12,120 --> 00:31:15,180
+and what we did was we
+embedded these libraries
+
+671
+00:31:15,180 --> 00:31:16,890
+right into all our SDKs,
+
+672
+00:31:16,890 --> 00:31:19,710
+all our clients, all our connectors.
+
+673
+00:31:19,710 --> 00:31:21,420
+So you get performance improvements
+
+674
+00:31:21,420 --> 00:31:23,103
+with S3 right out of the box.
+
+675
+00:31:24,600 --> 00:31:27,120
+The great thing is you
+don't have to change much.
+
+676
+00:31:27,120 --> 00:31:29,430
+An example here is that CRT
+
+677
+00:31:29,430 --> 00:31:33,730
+will deliver up to six times
+faster data transfer with CLI
+
+678
+00:31:34,740 --> 00:31:38,070
+using some of the techniques
+that we just discussed, right?
+
+679
+00:31:38,070 --> 00:31:41,100
+Just keep in mind that for PMTRN,
+
+680
+00:31:41,100 --> 00:31:44,853
+the larger instances, we
+enable the CRT by default.
+
+681
+00:31:45,720 --> 00:31:48,270
+However, if you're using
+some other instances,
+
+682
+00:31:48,270 --> 00:31:49,290
+please look under the hood,
+
+683
+00:31:49,290 --> 00:31:52,380
+you might have to enable
+this and opt in into CRT,
+
+684
+00:31:52,380 --> 00:31:55,330
+so that you can take advantage
+of some of these techniques.
+
+685
+00:31:58,290 --> 00:32:02,190
+So, similar to how Aditi
+spoke about multiple NICs
+
+686
+00:32:02,190 --> 00:32:05,610
+and how you can increase
+the per instance throughput.
+
+687
+00:32:05,610 --> 00:32:08,580
+We have a similar feature in AWS CRT.
+
+688
+00:32:08,580 --> 00:32:11,010
+So instances such as P5 and P6
+
+689
+00:32:11,010 --> 00:32:14,910
+can achieve 800 gigabits per
+second theoretical bandwidth
+
+690
+00:32:14,910 --> 00:32:18,960
+over their EN8 network interfaces, right?
+
+691
+00:32:18,960 --> 00:32:21,000
+So this CRT feature
+
+692
+00:32:21,000 --> 00:32:23,340
+allows you to distribute your connections,
+
+693
+00:32:23,340 --> 00:32:26,760
+your S3 connections, over all
+of these network interfaces.
+
+694
+00:32:26,760 --> 00:32:29,920
+Now, this is particularly
+important if you're using EFA
+
+695
+00:32:31,425 --> 00:32:33,513
+for your compute-intensive workloads.
+
+696
+00:32:34,560 --> 00:32:37,200
+It prevents EFA slowdowns,
+
+697
+00:32:37,200 --> 00:32:39,330
+and your compute and storage traffic
+
+698
+00:32:39,330 --> 00:32:41,630
+can both run optimally
+if you spread the load.
+
+699
+00:32:43,500 --> 00:32:44,460
+How do you do that?
+
+700
+00:32:44,460 --> 00:32:46,800
+It's as simple as just setting the config
+
+701
+00:32:46,800 --> 00:32:50,493
+and picking the network interfaces
+that you need using CRT.
+
+702
+00:32:52,860 --> 00:32:54,090
+Let's look at some sample results.
+
+703
+00:32:54,090 --> 00:32:59,090
+So, we ran tests on a
+DL 24 Excel instance.
+
+704
+00:32:59,220 --> 00:33:02,070
+We downloaded 10 30-gigabyte files.
+
+705
+00:33:02,070 --> 00:33:03,930
+When we added a second NIC,
+
+706
+00:33:03,930 --> 00:33:06,483
+we were able to almost
+double the performance.
+
+707
+00:33:07,590 --> 00:33:09,510
+We could get almost double the throughput.
+
+708
+00:33:09,510 --> 00:33:10,350
+With four NICs,
+
+709
+00:33:10,350 --> 00:33:13,650
+we were able to get about
+2.5 times the performance
+
+710
+00:33:13,650 --> 00:33:15,630
+compared to a single NIC.
+
+711
+00:33:15,630 --> 00:33:17,940
+Now, the scaling doesn't look linear,
+
+712
+00:33:17,940 --> 00:33:20,370
+but you will get some
+meaningful throughput gains
+
+713
+00:33:20,370 --> 00:33:22,800
+when you add multiple NICs.
+
+714
+00:33:22,800 --> 00:33:23,700
+But the more important thing
+
+715
+00:33:23,700 --> 00:33:25,560
+is that you can spread your traffic
+
+716
+00:33:25,560 --> 00:33:29,790
+or even pin a particular
+NIC to your process,
+
+717
+00:33:29,790 --> 00:33:32,640
+so this will help you
+optimize how you control.
+
+718
+00:33:32,640 --> 00:33:36,270
+This will help you optimize your workloads
+
+719
+00:33:36,270 --> 00:33:38,973
+when you're using a much larger instance.
+
+720
+00:33:41,970 --> 00:33:44,010
+Okay, let's talk a little bit
+about integrations, right?
+
+721
+00:33:44,010 --> 00:33:46,740
+So, these were all libraries
+that we spoke about,
+
+722
+00:33:46,740 --> 00:33:47,820
+but we heard from customers
+
+723
+00:33:47,820 --> 00:33:50,670
+that they didn't want to
+change their application
+
+724
+00:33:50,670 --> 00:33:53,130
+and they wanted to take
+these best practices
+
+725
+00:33:53,130 --> 00:33:56,610
+and use them with the existing
+frameworks that they had.
+
+726
+00:33:56,610 --> 00:33:59,470
+This is why we develop
+purpose-built integrations
+
+727
+00:34:00,360 --> 00:34:02,553
+so that you could take performance off S3.
+
+728
+00:34:03,810 --> 00:34:05,250
+We're gonna only talk about three of them,
+
+729
+00:34:05,250 --> 00:34:09,723
+but we have a lot more integrations
+that we have developed.
+
+730
+00:34:11,190 --> 00:34:14,160
+So the first one is the PyTorch connector,
+
+731
+00:34:14,160 --> 00:34:15,690
+and when you use PyTorch,
+
+732
+00:34:15,690 --> 00:34:17,760
+you have to build your own data primitives
+
+733
+00:34:17,760 --> 00:34:21,390
+to load and save data when
+you wanna load the data
+
+734
+00:34:21,390 --> 00:34:22,923
+or you wanna run checkpoints.
+
+735
+00:34:24,240 --> 00:34:27,390
+So, we wanted to give you a
+high-performance integration
+
+736
+00:34:27,390 --> 00:34:29,220
+that took care of a lot of this.
+
+737
+00:34:29,220 --> 00:34:32,343
+This is where the S3 connector
+for PyTorch comes in.
+
+738
+00:34:33,450 --> 00:34:36,030
+Now, this gives you dataset,
+
+739
+00:34:36,030 --> 00:34:39,000
+this gives you built-in
+PyTorch dataset primitives
+
+740
+00:34:39,000 --> 00:34:41,430
+and it supports both map-style datasets.
+
+741
+00:34:41,430 --> 00:34:43,290
+This is for your random access data
+
+742
+00:34:43,290 --> 00:34:45,270
+and iterable-style datasets,
+
+743
+00:34:45,270 --> 00:34:47,620
+which is when you're
+streaming sequential data.
+
+744
+00:34:49,170 --> 00:34:50,130
+Now, for checkpointing,
+
+745
+00:34:50,130 --> 00:34:52,320
+the connector automatically integrates
+
+746
+00:34:52,320 --> 00:34:55,503
+with the PyTorch distributed
+checkpointing support.
+
+747
+00:34:56,490 --> 00:34:58,290
+With this, you can checkpoint
+
+748
+00:34:58,290 --> 00:35:00,810
+directly into S3 Express One Zone
+
+749
+00:35:00,810 --> 00:35:02,793
+and you can bypass the local NVMe.
+
+750
+00:35:04,020 --> 00:35:06,750
+What we found was that you could get
+
+751
+00:35:06,750 --> 00:35:09,120
+up to 40% performance increase
+
+752
+00:35:09,120 --> 00:35:10,710
+by bypassing the local storage
+
+753
+00:35:10,710 --> 00:35:12,810
+and going directly to S3 Express One Zone.
+
+754
+00:35:13,920 --> 00:35:15,270
+New for 2025,
+
+755
+00:35:15,270 --> 00:35:19,800
+we've accelerated partial
+checkpoint loading by 60%.
+
+756
+00:35:19,800 --> 00:35:21,330
+So this is another example
+
+757
+00:35:21,330 --> 00:35:23,280
+of how we're innovating on your behalf.
+
+758
+00:35:25,350 --> 00:35:28,053
+How many people here work
+with Parquet datasets?
+
+759
+00:35:29,580 --> 00:35:30,840
+Awesome, quite a few.
+
+760
+00:35:30,840 --> 00:35:35,400
+So, you probably already
+know that your query engine
+
+761
+00:35:35,400 --> 00:35:37,830
+has to read metadata from Parquet files,
+
+762
+00:35:37,830 --> 00:35:41,100
+and this metadata is stored
+
+763
+00:35:41,100 --> 00:35:43,023
+at the footer of these Parquet files.
+
+764
+00:35:44,460 --> 00:35:47,820
+This metadata stores information
+about the file structure
+
+765
+00:35:47,820 --> 00:35:50,010
+and what the schema is.
+
+766
+00:35:50,010 --> 00:35:52,713
+So, when you're scanning
+across multiple of these files,
+
+767
+00:35:52,713 --> 00:35:54,360
+what you will see is that the metadata
+
+768
+00:35:54,360 --> 00:35:57,210
+will slow down your query execution.
+
+769
+00:35:57,210 --> 00:36:02,210
+So this is where the S3
+Analytics Accelerator comes in.
+
+770
+00:36:02,430 --> 00:36:05,340
+This is an open-source library.
+
+771
+00:36:05,340 --> 00:36:08,220
+It pre-fetches metadata
+using bite range gets,
+
+772
+00:36:08,220 --> 00:36:10,293
+it reads the footer,
+
+773
+00:36:11,220 --> 00:36:14,880
+and it also caches this
+footer for subsequent reads.
+
+774
+00:36:14,880 --> 00:36:17,030
+So this eliminates
+quite a bit of overhead.
+
+775
+00:36:18,750 --> 00:36:22,170
+We tested this with TPC-DS.
+
+776
+00:36:22,170 --> 00:36:24,000
+This is a benchmark that you can run.
+
+777
+00:36:24,000 --> 00:36:26,520
+And we saw that we were able to achieve
+
+778
+00:36:26,520 --> 00:36:29,790
+up to 27% performance improvement
+
+779
+00:36:29,790 --> 00:36:31,790
+just by using the Analytics Accelerator.
+
+780
+00:36:34,140 --> 00:36:37,230
+Another integration I wanna
+talk about is SageMaker.
+
+781
+00:36:37,230 --> 00:36:39,120
+Now, if you're not familiar
+with Amazon SageMaker,
+
+782
+00:36:39,120 --> 00:36:41,073
+it's our fully managed service,
+
+783
+00:36:41,940 --> 00:36:44,100
+and it's built for building, training,
+
+784
+00:36:44,100 --> 00:36:46,320
+and deploying machine learning models.
+
+785
+00:36:46,320 --> 00:36:48,270
+Now, when you're running training jobs,
+
+786
+00:36:48,270 --> 00:36:52,590
+you need to load your training
+data often millions of,
+
+787
+00:36:52,590 --> 00:36:57,590
+if not lots of small files,
+like images or text samples.
+
+788
+00:36:58,110 --> 00:37:00,510
+And this will generate
+millions of requests per second
+
+789
+00:37:00,510 --> 00:37:02,160
+into storage.
+
+790
+00:37:02,160 --> 00:37:06,630
+Now, this is where our S3
+Express One Zone integration
+
+791
+00:37:06,630 --> 00:37:09,540
+with SageMaker Fast File mode comes in.
+
+792
+00:37:09,540 --> 00:37:11,340
+Now, what Fast File mode will do
+
+793
+00:37:11,340 --> 00:37:14,640
+is it will stream data
+directly from Express One Zone
+
+794
+00:37:14,640 --> 00:37:18,690
+into your training instance,
+bypass the local disk,
+
+795
+00:37:18,690 --> 00:37:22,230
+and accelerate your training performance.
+
+796
+00:37:22,230 --> 00:37:23,460
+Now, since Express One Zone
+
+797
+00:37:23,460 --> 00:37:27,240
+scales to hundreds of thousands of TPS,
+
+798
+00:37:27,240 --> 00:37:29,970
+you should be able to see
+meaningful performance increases
+
+799
+00:37:29,970 --> 00:37:31,143
+with this approach.
+
+800
+00:37:34,680 --> 00:37:36,030
+Great, so earlier,
+
+801
+00:37:36,030 --> 00:37:39,660
+Aditi covered how you
+can optimize interfaces
+
+802
+00:37:39,660 --> 00:37:40,740
+for high-performance...
+
+803
+00:37:40,740 --> 00:37:43,350
+File interfaces for
+high-performance workloads.
+
+804
+00:37:43,350 --> 00:37:46,800
+We went through some
+optimizations for object storage,
+
+805
+00:37:46,800 --> 00:37:48,354
+but what if you already have a lot of data
+
+806
+00:37:48,354 --> 00:37:50,020
+in your object store
+
+807
+00:37:50,880 --> 00:37:53,850
+and you want to use a file
+interface to access that?
+
+808
+00:37:53,850 --> 00:37:57,153
+So this is where will show you
+how you can bridge the two.
+
+809
+00:38:00,960 --> 00:38:02,043
+- Thanks, Manish.
+
+810
+00:38:03,030 --> 00:38:06,500
+All right, I'm only going to
+speak for five more minutes
+
+811
+00:38:06,500 --> 00:38:09,450
+and this is the favorite
+part of my presentation.
+
+812
+00:38:09,450 --> 00:38:10,833
+So, listen up.
+
+813
+00:38:13,170 --> 00:38:16,620
+So, I shared a lot about
+high-performance file systems,
+
+814
+00:38:16,620 --> 00:38:18,270
+Lustre file systems, fully managed,
+
+815
+00:38:18,270 --> 00:38:21,630
+fully elastic in the
+beginning of my presentation.
+
+816
+00:38:21,630 --> 00:38:24,933
+And if any of that resonated
+with you, where you felt,
+
+817
+00:38:24,933 --> 00:38:28,410
+"Oh, well, my data is already
+stored in S3 data lake,"
+
+818
+00:38:28,410 --> 00:38:31,170
+then don't worry, we got you.
+
+819
+00:38:31,170 --> 00:38:35,010
+We basically have the option
+to connect your file system
+
+820
+00:38:35,010 --> 00:38:36,960
+with your S3 bucket.
+
+821
+00:38:36,960 --> 00:38:40,830
+This is also just a general
+paradigm we use within AWS
+
+822
+00:38:40,830 --> 00:38:42,870
+that we want to meet where you are at,
+
+823
+00:38:42,870 --> 00:38:45,840
+and we want to minimize the
+work that you have to do
+
+824
+00:38:45,840 --> 00:38:49,653
+to move to the cloud or run
+your applications in the cloud.
+
+825
+00:38:50,700 --> 00:38:52,293
+Let me show you how this works.
+
+826
+00:38:53,340 --> 00:38:56,070
+So with FSx for Lustre,
+
+827
+00:38:56,070 --> 00:38:59,910
+you can create a file system
+and link it to the S3 bucket.
+
+828
+00:38:59,910 --> 00:39:03,210
+Under the covers, this is your S3 bucket.
+
+829
+00:39:03,210 --> 00:39:07,260
+It has all the objects,
+all the data stored in it.
+
+830
+00:39:07,260 --> 00:39:10,380
+When you connect your file
+system to the S3 bucket
+
+831
+00:39:10,380 --> 00:39:14,160
+and try to read and write data
+from your compute instance,
+
+832
+00:39:14,160 --> 00:39:18,030
+what it does is it immediately
+takes all your metadata
+
+833
+00:39:18,030 --> 00:39:19,680
+from your S3 bucket
+
+834
+00:39:19,680 --> 00:39:22,890
+and shows it as file
+metadata on the file system.
+
+835
+00:39:22,890 --> 00:39:25,260
+So for you, it would seem like the data
+
+836
+00:39:25,260 --> 00:39:27,420
+is actually on the file system.
+
+837
+00:39:27,420 --> 00:39:30,990
+When you try to read and write
+data onto the file system,
+
+838
+00:39:30,990 --> 00:39:32,871
+FSx for Lustre will automatically go
+
+839
+00:39:32,871 --> 00:39:35,013
+and fetch that data from S3.
+
+840
+00:39:36,150 --> 00:39:38,100
+Now, and another interesting fact here
+
+841
+00:39:38,100 --> 00:39:41,760
+is that we take care of
+bi-directional synchronization.
+
+842
+00:39:41,760 --> 00:39:44,640
+So, any changes you're
+making to the file system,
+
+843
+00:39:44,640 --> 00:39:47,730
+we are exporting those
+changes to the S3 bucket.
+
+844
+00:39:47,730 --> 00:39:50,430
+And any changes you make to the S3 bucket,
+
+845
+00:39:50,430 --> 00:39:52,840
+we import those changes to the file system
+
+846
+00:39:54,660 --> 00:39:56,550
+completely hands-off for you
+
+847
+00:39:56,550 --> 00:39:58,263
+and fully managed in the back end.
+
+848
+00:39:59,100 --> 00:40:01,890
+You can think of this
+as a file system cache
+
+849
+00:40:01,890 --> 00:40:03,483
+in front of your S3 bucket.
+
+850
+00:40:07,110 --> 00:40:08,759
+Let's look at a performance
+when a file system
+
+851
+00:40:08,759 --> 00:40:10,530
+is in front of S3.
+
+852
+00:40:10,530 --> 00:40:14,580
+We took a Kaggle liver dataset
+stored as a public S3 dataset
+
+853
+00:40:14,580 --> 00:40:17,610
+and measured the time to
+do patient classification
+
+854
+00:40:17,610 --> 00:40:19,140
+with different setups.
+
+855
+00:40:19,140 --> 00:40:21,150
+So the first one that you see right there
+
+856
+00:40:21,150 --> 00:40:24,240
+is where you have your data stored in S3,
+
+857
+00:40:24,240 --> 00:40:26,340
+you load it to your local storage
+
+858
+00:40:26,340 --> 00:40:29,013
+and then you train against
+that local storage.
+
+859
+00:40:30,030 --> 00:40:33,300
+What we did was we tried to do a test,
+
+860
+00:40:33,300 --> 00:40:36,090
+where we used FSx for Lustre as a cache
+
+861
+00:40:36,090 --> 00:40:39,360
+between your compute
+instance and your S3 bucket.
+
+862
+00:40:39,360 --> 00:40:41,430
+In the first run of that model,
+
+863
+00:40:41,430 --> 00:40:44,910
+we saw a 67% increase in performance.
+
+864
+00:40:44,910 --> 00:40:46,800
+Now, that increase in performance work
+
+865
+00:40:46,800 --> 00:40:48,870
+was coming from two things.
+
+866
+00:40:48,870 --> 00:40:52,260
+The first one, you see that
+green color over there?
+
+867
+00:40:52,260 --> 00:40:53,820
+That is the data loading time,
+
+868
+00:40:53,820 --> 00:40:56,760
+where your compute instance
+is copying the data
+
+869
+00:40:56,760 --> 00:40:58,200
+and it has to copy the data,
+
+870
+00:40:58,200 --> 00:40:59,760
+wait for it to be completely loaded
+
+871
+00:40:59,760 --> 00:41:01,500
+before it can start training.
+
+872
+00:41:01,500 --> 00:41:02,477
+With FSx for Lustre,
+
+873
+00:41:02,477 --> 00:41:04,290
+you spin up your instance
+
+874
+00:41:04,290 --> 00:41:06,120
+and you start training immediately.
+
+875
+00:41:06,120 --> 00:41:08,160
+So we save on the data loading time.
+
+876
+00:41:08,160 --> 00:41:10,170
+And second is just pure performance
+
+877
+00:41:10,170 --> 00:41:12,750
+that a Fast File system delivers,
+
+878
+00:41:12,750 --> 00:41:17,610
+which leads to this
+cumulative impact of 67%.
+
+879
+00:41:17,610 --> 00:41:19,230
+Now, this was the first run,
+
+880
+00:41:19,230 --> 00:41:21,840
+where FSx for Lustre was still going to S3
+
+881
+00:41:21,840 --> 00:41:23,223
+to get that data for you.
+
+882
+00:41:24,060 --> 00:41:26,280
+In the second run onwards,
+
+883
+00:41:26,280 --> 00:41:29,610
+you would see that the
+performance is improved by 83%,
+
+884
+00:41:29,610 --> 00:41:31,590
+and that's because the
+data is already cached
+
+885
+00:41:31,590 --> 00:41:32,913
+onto the file system.
+
+886
+00:41:34,470 --> 00:41:38,340
+So finally, one last customer example
+
+887
+00:41:38,340 --> 00:41:40,590
+to bring all of this together for you.
+
+888
+00:41:40,590 --> 00:41:42,390
+LG AI Research.
+
+889
+00:41:42,390 --> 00:41:44,820
+This AI research lab within LG
+
+890
+00:41:44,820 --> 00:41:46,920
+wanted to create a foundational model
+
+891
+00:41:46,920 --> 00:41:48,930
+that mimics human brain.
+
+892
+00:41:48,930 --> 00:41:51,180
+So they decided to build their own model
+
+893
+00:41:51,180 --> 00:41:54,363
+using Amazon SageMaker and FSx for Lustre.
+
+894
+00:41:55,320 --> 00:41:56,520
+On the left, you see
+
+895
+00:41:56,520 --> 00:41:58,820
+that they store machine
+learning training data
+
+896
+00:41:58,820 --> 00:42:00,810
+in their S3 bucket.
+
+897
+00:42:00,810 --> 00:42:03,420
+And for performance and a file interface,
+
+898
+00:42:03,420 --> 00:42:07,380
+they created a Lustre file
+system linked to that S3 bucket
+
+899
+00:42:07,380 --> 00:42:11,040
+and their SageMaker training
+jobs was directly talking...
+
+900
+00:42:11,040 --> 00:42:14,550
+was directly accessing their
+data through the file system.
+
+901
+00:42:14,550 --> 00:42:16,110
+When workloads finish,
+
+902
+00:42:16,110 --> 00:42:18,747
+model artifacts get written back to S3
+
+903
+00:42:18,747 --> 00:42:21,720
+for long-term storage and for inference.
+
+904
+00:42:21,720 --> 00:42:24,000
+So they use S3 for longer term storage,
+
+905
+00:42:24,000 --> 00:42:27,360
+FSx for Lustre for their
+highest-performing hot data
+
+906
+00:42:27,360 --> 00:42:29,250
+to accelerate their training run times
+
+907
+00:42:29,250 --> 00:42:32,050
+and getting the best performance
+out of their instances.
+
+908
+00:42:34,230 --> 00:42:36,210
+This concludes the presentation we had.
+
+909
+00:42:36,210 --> 00:42:38,940
+We basically try to cover
+high-performance storage options
+
+910
+00:42:38,940 --> 00:42:41,460
+depending upon whether you're
+looking to lift and shift
+
+911
+00:42:41,460 --> 00:42:42,870
+from on-premises,
+
+912
+00:42:42,870 --> 00:42:45,090
+or you prefer prefer a
+file system interface,
+
+913
+00:42:45,090 --> 00:42:46,890
+which is FSx for Lustre,
+
+914
+00:42:46,890 --> 00:42:49,860
+or if you have an S3 native application
+
+915
+00:42:49,860 --> 00:42:52,410
+where you can use S3 Express One Zone.
+
+916
+00:42:52,410 --> 00:42:54,000
+And then if you already...
+
+917
+00:42:54,000 --> 00:42:56,190
+Or if you prefer file system interface
+
+918
+00:42:56,190 --> 00:42:58,110
+but your data is stored in S3,
+
+919
+00:42:58,110 --> 00:42:59,777
+then you can basically
+mount your file system
+
+920
+00:42:59,777 --> 00:43:01,293
+to the S3 bucket.
+
+921
+00:43:02,700 --> 00:43:04,620
+Thank you, all, for attending.
+
+922
+00:43:04,620 --> 00:43:06,780
+If you haven't already,
+please complete the survey.
+
+923
+00:43:06,780 --> 00:43:09,090
+You should get a notification in your app.
+
+924
+00:43:09,090 --> 00:43:10,860
+Manish, Mark, and I will stick around
+
+925
+00:43:10,860 --> 00:43:12,520
+to answer any questions you have
+
+926
+00:43:13,710 --> 00:43:16,683
+on anything related to
+high-performance storage.
+
+927
+00:43:18,269 --> 00:43:20,070
+- [Manish] All right.
+- [Aditi] Thank you.
+
+928
+00:43:20,070 --> 00:43:21,881
+(audience applauding)
+

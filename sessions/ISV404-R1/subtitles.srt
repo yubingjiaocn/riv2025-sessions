@@ -1,0 +1,4932 @@
+1
+00:00:01,110 --> 00:00:03,120
+- [Kanniah] My co-speaker
+Frenil could not be here
+
+2
+00:00:03,120 --> 00:00:04,470
+for personal reasons.
+
+3
+00:00:04,470 --> 00:00:07,713
+Hence, today I'm privileged
+to be a solo speaker.
+
+4
+00:00:08,970 --> 00:00:11,430
+Welcome to our session ISV404,
+
+5
+00:00:11,430 --> 00:00:12,720
+Build Resilient SaaS:
+
+6
+00:00:12,720 --> 00:00:15,033
+Multi-Account Resilient Testing Patterns.
+
+7
+00:00:16,290 --> 00:00:17,790
+I'm delighted you decided to join
+
+8
+00:00:17,790 --> 00:00:20,590
+and appreciate you investing
+your valuable time with us.
+
+9
+00:00:23,310 --> 00:00:26,730
+How many of you have experienced
+that panic in using 3M call
+
+10
+00:00:26,730 --> 00:00:30,153
+about your multi-tenant
+SaaS enrollment failures?
+
+11
+00:00:31,410 --> 00:00:36,410
+Any volunteers? 1, 2, 3. Great.
+
+12
+00:00:36,780 --> 00:00:39,780
+What if you could
+proactively validate your
+
+13
+00:00:39,780 --> 00:00:42,370
+multi-account resilient architecture
+
+14
+00:00:43,380 --> 00:00:45,660
+against controlled experiments
+
+15
+00:00:45,660 --> 00:00:49,268
+in terms of injecting
+faults to ensure that,
+
+16
+00:00:49,268 --> 00:00:52,560
+you know, you have your workloads
+
+17
+00:00:52,560 --> 00:00:54,690
+tested within the tenant boundaries
+
+18
+00:00:54,690 --> 00:00:57,243
+as well as mitigating any other failures?
+
+19
+00:00:58,320 --> 00:01:01,131
+Today we'll explore how
+the leading ISVs use
+
+20
+00:01:01,131 --> 00:01:04,680
+AWS Fault Injection Service to ensure that
+
+21
+00:01:04,680 --> 00:01:08,410
+the SaaS architectural designs
+are validated and tested
+
+22
+00:01:09,600 --> 00:01:11,250
+without impacting your SaaS
+
+23
+00:01:11,250 --> 00:01:13,413
+architectural critical components.
+
+24
+00:01:14,610 --> 00:01:16,680
+And usually these failures are injected
+
+25
+00:01:16,680 --> 00:01:20,880
+to ensure that you mitigate
+any of your end customer
+
+26
+00:01:20,880 --> 00:01:24,090
+availability issues in
+terms of services or SLAs
+
+27
+00:01:24,090 --> 00:01:26,370
+that you committed to your end customers.
+
+28
+00:01:26,370 --> 00:01:29,040
+I'm Kanniah VJ, a senior
+solution architect
+
+29
+00:01:29,040 --> 00:01:31,110
+aligned with UK ISVSA team.
+
+30
+00:01:31,110 --> 00:01:33,810
+I'm with AWS over five years.
+I'm based out of Dublin.
+
+31
+00:01:37,740 --> 00:01:40,710
+So today, first we'll
+begin with understanding
+
+32
+00:01:40,710 --> 00:01:44,880
+some of the core principles
+of SaaS architectures
+
+33
+00:01:44,880 --> 00:01:49,290
+and how every successful
+SaaS solutions underpins
+
+34
+00:01:49,290 --> 00:01:51,873
+how a multi-tenant solution
+has to be operated.
+
+35
+00:01:53,910 --> 00:01:56,250
+And then we will really understand
+
+36
+00:01:56,250 --> 00:01:58,380
+how SaaS providers must adopt
+
+37
+00:01:58,380 --> 00:02:00,870
+a comprehensive resilience framework.
+
+38
+00:02:00,870 --> 00:02:02,760
+Again, we talk about
+some of the fundamentals
+
+39
+00:02:02,760 --> 00:02:07,230
+of how AWS shares our
+experience in truly building
+
+40
+00:02:07,230 --> 00:02:09,753
+resilient applications to our customers.
+
+41
+00:02:11,550 --> 00:02:15,090
+And then we will talk about
+real world user journey
+
+42
+00:02:15,090 --> 00:02:17,430
+with an AWS reference architecture
+
+43
+00:02:17,430 --> 00:02:20,010
+of a multi-tenant control plane
+
+44
+00:02:20,010 --> 00:02:22,290
+and an application plane architectures,
+
+45
+00:02:22,290 --> 00:02:25,620
+where we have set up two
+of the SaaS solutions
+
+46
+00:02:25,620 --> 00:02:28,383
+to showcase resilience testing patterns.
+
+47
+00:02:30,840 --> 00:02:33,480
+Again, core of today's
+talk is to showcase you
+
+48
+00:02:33,480 --> 00:02:35,250
+multiple resilience testing patterns
+
+49
+00:02:35,250 --> 00:02:37,800
+on how do you induce various faults
+
+50
+00:02:37,800 --> 00:02:39,630
+following the AWS best practices
+
+51
+00:02:39,630 --> 00:02:41,330
+and some of the SaaS fundamentals.
+
+52
+00:02:42,870 --> 00:02:45,600
+And then finally, you'll
+walk away with key learnings
+
+53
+00:02:45,600 --> 00:02:48,780
+on how to adopt multi-account
+resilience experiments
+
+54
+00:02:48,780 --> 00:02:50,530
+for your own SaaS architectures
+
+55
+00:02:51,390 --> 00:02:53,913
+and irrespective of your
+current maturity level.
+
+56
+00:02:55,170 --> 00:02:56,880
+And finally, I'll open up the floor
+
+57
+00:02:56,880 --> 00:02:58,730
+for any question and answer sessions.
+
+58
+00:03:00,510 --> 00:03:04,200
+So to build a truly
+resilient SaaS architectures,
+
+59
+00:03:04,200 --> 00:03:07,533
+SaaS provider must adopt
+six critical pillars.
+
+60
+00:03:08,610 --> 00:03:12,630
+Robust tenant isolation to
+prevent security breaches
+
+61
+00:03:12,630 --> 00:03:13,743
+and data breaches.
+
+62
+00:03:15,240 --> 00:03:16,650
+Noisy neighbor mitigation
+
+63
+00:03:16,650 --> 00:03:19,350
+to maintain consistent user experience
+
+64
+00:03:19,350 --> 00:03:21,630
+as well as the overall performance
+
+65
+00:03:21,630 --> 00:03:23,703
+of your multi-tenant solution.
+
+66
+00:03:26,130 --> 00:03:28,410
+Comprehensive identity
+and access management
+
+67
+00:03:28,410 --> 00:03:31,143
+to ensure that you have
+secure tenant boundaries.
+
+68
+00:03:33,030 --> 00:03:35,340
+Tenant aware observability to ensure
+
+69
+00:03:35,340 --> 00:03:39,810
+that you can instrument
+various tenant usage resources
+
+70
+00:03:39,810 --> 00:03:41,880
+and service throttling limits
+
+71
+00:03:41,880 --> 00:03:44,730
+and various other
+observability related metrics
+
+72
+00:03:44,730 --> 00:03:47,130
+so that you can withstand
+any sort of disruption
+
+73
+00:03:47,130 --> 00:03:49,053
+in terms of failures.
+
+74
+00:03:50,730 --> 00:03:52,650
+Strategic tiering to serve
+
+75
+00:03:52,650 --> 00:03:54,723
+your diversified customer segments.
+
+76
+00:03:55,830 --> 00:03:56,940
+And last but not the least,
+
+77
+00:03:56,940 --> 00:03:59,430
+the cost aware tracking
+mechanism to ensure
+
+78
+00:03:59,430 --> 00:04:02,380
+that you will be able to charge
+back to your end customers.
+
+79
+00:04:05,370 --> 00:04:08,490
+And all these fundamentals
+remains the core building block
+
+80
+00:04:08,490 --> 00:04:11,703
+for you to build truly
+resilient solution on AWS.
+
+81
+00:04:12,990 --> 00:04:15,330
+And one of the best practices
+
+82
+00:04:15,330 --> 00:04:17,970
+as part of AWS Well-Architectured
+reliability pillar
+
+83
+00:04:17,970 --> 00:04:19,620
+is a failure management,
+
+84
+00:04:19,620 --> 00:04:22,800
+where we talk about test reliability.
+
+85
+00:04:22,800 --> 00:04:25,110
+And the idea of correlating
+SaaS fundamentals
+
+86
+00:04:25,110 --> 00:04:27,620
+with the AWS Well-Architectured
+reliability pillar
+
+87
+00:04:27,620 --> 00:04:30,690
+is to ensure that you need
+to consider reliability
+
+88
+00:04:30,690 --> 00:04:35,370
+as core pillar to validate
+and test your workloads
+
+89
+00:04:35,370 --> 00:04:37,290
+against any disruptions.
+
+90
+00:04:37,290 --> 00:04:39,690
+And this will ensure that your workload is
+
+91
+00:04:39,690 --> 00:04:44,430
+ready to withstand both
+for partial failures
+
+92
+00:04:44,430 --> 00:04:46,890
+or the gray failures
+against your functional
+
+93
+00:04:46,890 --> 00:04:48,490
+and non-functional requirements.
+
+94
+00:04:49,500 --> 00:04:50,820
+And again, the objective here
+
+95
+00:04:50,820 --> 00:04:53,910
+is to have a controlled
+experiments which you'll use
+
+96
+00:04:53,910 --> 00:04:57,420
+as part of your multi-account
+SaaS architectures
+
+97
+00:04:57,420 --> 00:04:58,830
+so that you would be able to
+
+98
+00:04:58,830 --> 00:05:01,500
+either completely avoid minimal impact
+
+99
+00:05:01,500 --> 00:05:03,540
+or completely no disruptions
+
+100
+00:05:03,540 --> 00:05:05,730
+without impacting your critical workloads.
+
+101
+00:05:05,730 --> 00:05:07,260
+And if you really want to deep dive,
+
+102
+00:05:07,260 --> 00:05:08,793
+feel free to grab the QR code.
+
+103
+00:05:10,740 --> 00:05:13,860
+Now how do you approach
+a structured methodology
+
+104
+00:05:13,860 --> 00:05:17,130
+and a continuous iterative
+process for you to build
+
+105
+00:05:17,130 --> 00:05:21,063
+and manage your SaaS architectures on AWS?
+
+106
+00:05:22,500 --> 00:05:24,353
+So this is where to
+address this challenge,
+
+107
+00:05:24,353 --> 00:05:27,870
+AWS developed resilience
+lifecycle framework
+
+108
+00:05:27,870 --> 00:05:29,760
+in sharing resilience learnings
+
+109
+00:05:29,760 --> 00:05:31,590
+and some of the best practices
+
+110
+00:05:31,590 --> 00:05:34,200
+that we have learned based
+on working with hundreds
+
+111
+00:05:34,200 --> 00:05:38,283
+and thousands of customers to
+truly build resilient systems.
+
+112
+00:05:40,530 --> 00:05:43,050
+Now in terms of resilience lifecycle,
+
+113
+00:05:43,050 --> 00:05:45,900
+we have five critical stages
+
+114
+00:05:45,900 --> 00:05:48,881
+where you can adopt
+various best practices,
+
+115
+00:05:48,881 --> 00:05:50,910
+AWS services and strategies,
+
+116
+00:05:50,910 --> 00:05:54,120
+to mitigate your resiliency objectives.
+
+117
+00:05:54,120 --> 00:05:56,850
+To start with, you will
+set the objectives,
+
+118
+00:05:56,850 --> 00:05:57,990
+and at this stage,
+
+119
+00:05:57,990 --> 00:06:00,180
+your key objective would
+be to really understand
+
+120
+00:06:00,180 --> 00:06:03,120
+what level of resiliency is
+needed for your workloads.
+
+121
+00:06:03,120 --> 00:06:05,550
+This goes back to purely
+a business conversation,
+
+122
+00:06:05,550 --> 00:06:07,560
+not a technology conversation,
+
+123
+00:06:07,560 --> 00:06:10,890
+in aligning your objectives
+in terms of RTO, RPO,
+
+124
+00:06:10,890 --> 00:06:13,260
+arrival ability, or any
+SLAs that you have committed
+
+125
+00:06:13,260 --> 00:06:15,780
+as a business to your end customers.
+
+126
+00:06:15,780 --> 00:06:17,550
+With those objectives in mind,
+
+127
+00:06:17,550 --> 00:06:20,820
+you work towards the second
+phase of design and implement.
+
+128
+00:06:20,820 --> 00:06:24,480
+So this is where you would
+anticipate various failure modes
+
+129
+00:06:24,480 --> 00:06:28,110
+to ensure that your
+workloads is rightly designed
+
+130
+00:06:28,110 --> 00:06:30,180
+with the right technical architecture
+
+131
+00:06:30,180 --> 00:06:32,430
+and accordingly adopt the right tools.
+
+132
+00:06:32,430 --> 00:06:35,310
+So once you design and implement
+based on the objectives
+
+133
+00:06:35,310 --> 00:06:37,350
+that you have set in the previous stage,
+
+134
+00:06:37,350 --> 00:06:40,950
+you move towards the third
+stage of evaluate and test.
+
+135
+00:06:40,950 --> 00:06:42,330
+And the primary focus would be
+
+136
+00:06:42,330 --> 00:06:44,133
+to perform resilience testing.
+
+137
+00:06:45,150 --> 00:06:46,650
+And here again, you
+know, we are not trying
+
+138
+00:06:46,650 --> 00:06:48,450
+to bring in chaos here.
+
+139
+00:06:48,450 --> 00:06:51,810
+It's about inducing faults
+with the controlled experiments
+
+140
+00:06:51,810 --> 00:06:53,610
+to ensure that you know the limits
+
+141
+00:06:53,610 --> 00:06:56,730
+or the boundaries to
+reduce any blast radius.
+
+142
+00:06:56,730 --> 00:06:59,310
+And there are two phases
+to evaluate and test
+
+143
+00:06:59,310 --> 00:07:01,560
+where the first stage would be
+
+144
+00:07:01,560 --> 00:07:04,410
+to do a pre-deployment activities
+
+145
+00:07:04,410 --> 00:07:06,450
+related to your software
+development lifecycle
+
+146
+00:07:06,450 --> 00:07:07,950
+that you traditionally do,
+
+147
+00:07:07,950 --> 00:07:09,630
+and the post-deployment activities
+
+148
+00:07:09,630 --> 00:07:12,540
+where you focus on resilience assessments,
+
+149
+00:07:12,540 --> 00:07:13,980
+disaster recovery testing,
+
+150
+00:07:13,980 --> 00:07:16,800
+or even resilience testing using AWS
+
+151
+00:07:16,800 --> 00:07:18,300
+Fault Injection Service.
+
+152
+00:07:18,300 --> 00:07:20,220
+Depending on the nature of your
+
+153
+00:07:20,220 --> 00:07:22,560
+SaaS architectural workloads distributed,
+
+154
+00:07:22,560 --> 00:07:25,440
+either single account
+or multiple AWS account.
+
+155
+00:07:25,440 --> 00:07:28,260
+And then once you're happy
+with your test results,
+
+156
+00:07:28,260 --> 00:07:30,150
+you move on towards operate.
+
+157
+00:07:30,150 --> 00:07:32,520
+This is where you look at
+your observability tools,
+
+158
+00:07:32,520 --> 00:07:35,100
+logs, metrics, and various
+other best practices
+
+159
+00:07:35,100 --> 00:07:37,800
+to instrument various disruptions
+
+160
+00:07:37,800 --> 00:07:39,690
+causing your availability issues
+
+161
+00:07:39,690 --> 00:07:42,393
+or maybe various other
+system dependency issues.
+
+162
+00:07:43,590 --> 00:07:46,110
+And once you have the
+right instrumentation
+
+163
+00:07:46,110 --> 00:07:47,550
+in terms of observability,
+
+164
+00:07:47,550 --> 00:07:50,070
+you move on towards respond and learn,
+
+165
+00:07:50,070 --> 00:07:52,260
+where based on your various incidents
+
+166
+00:07:52,260 --> 00:07:54,780
+that your operational team manages
+
+167
+00:07:54,780 --> 00:07:57,870
+in terms of infrastructure
+failure, availability,
+
+168
+00:07:57,870 --> 00:07:59,880
+or application level failures,
+
+169
+00:07:59,880 --> 00:08:03,480
+you would really have a
+mitigation strategy on runbooks,
+
+170
+00:08:03,480 --> 00:08:06,510
+playbooks, and operating
+procedures, and all other,
+
+171
+00:08:06,510 --> 00:08:09,870
+you know, incident management
+related best practices.
+
+172
+00:08:09,870 --> 00:08:12,000
+And then you continually learn on
+
+173
+00:08:12,000 --> 00:08:14,430
+how you are mitigating those failures
+
+174
+00:08:14,430 --> 00:08:17,760
+and then you funnel those
+learnings into your set objectives
+
+175
+00:08:17,760 --> 00:08:21,390
+and various other stages as
+part of the overall flywheel.
+
+176
+00:08:21,390 --> 00:08:24,570
+And I think the key goal
+here is that you can
+
+177
+00:08:24,570 --> 00:08:27,570
+apply these flywheel for
+your existing workload
+
+178
+00:08:27,570 --> 00:08:28,863
+or even the new workload.
+
+179
+00:08:29,940 --> 00:08:32,400
+Feel free to grab the QR
+code if you're interested.
+
+180
+00:08:32,400 --> 00:08:35,313
+We have a very great
+detailed white paper on this.
+
+181
+00:08:36,750 --> 00:08:38,310
+Now this brings us to a next topic
+
+182
+00:08:38,310 --> 00:08:40,950
+of phase of resilience experiments.
+
+183
+00:08:40,950 --> 00:08:44,490
+So for every experiment that
+you want to induce fault
+
+184
+00:08:44,490 --> 00:08:46,290
+for your specific workloads,
+
+185
+00:08:46,290 --> 00:08:48,810
+you eventually get
+started with steady state.
+
+186
+00:08:48,810 --> 00:08:52,320
+Steady state is pretty much
+what a normal looks like
+
+187
+00:08:52,320 --> 00:08:53,760
+for your workload behavior,
+
+188
+00:08:53,760 --> 00:08:56,070
+depending on your user traffic patterns
+
+189
+00:08:56,070 --> 00:08:58,110
+or depending on your, you know,
+
+190
+00:08:58,110 --> 00:09:00,750
+your service that you're
+offering to your end customers.
+
+191
+00:09:00,750 --> 00:09:03,360
+So you need to measure
+your steady state behavior
+
+192
+00:09:03,360 --> 00:09:05,580
+to know based on metrics or logs
+
+193
+00:09:05,580 --> 00:09:07,740
+that how your system is behaving.
+
+194
+00:09:07,740 --> 00:09:10,440
+So once you know the baseline
+version of your steady state,
+
+195
+00:09:10,440 --> 00:09:12,810
+you move towards the hypothesis.
+
+196
+00:09:12,810 --> 00:09:15,120
+Hypothesis is nothing but a scenario
+
+197
+00:09:15,120 --> 00:09:17,790
+where you want to
+validate your assumptions
+
+198
+00:09:17,790 --> 00:09:19,800
+or weaknesses of your workload,
+
+199
+00:09:19,800 --> 00:09:21,750
+which is more of unknown.
+
+200
+00:09:21,750 --> 00:09:24,720
+And how do you know these
+unknown into a known factor is
+
+201
+00:09:24,720 --> 00:09:28,410
+defining the hypothesis with
+the clear business outcomes
+
+202
+00:09:28,410 --> 00:09:31,350
+that what is the
+weaknesses of your workload
+
+203
+00:09:31,350 --> 00:09:35,400
+and what you want to validate
+with the specific objectives.
+
+204
+00:09:35,400 --> 00:09:37,080
+And once you define the hypothesis,
+
+205
+00:09:37,080 --> 00:09:38,910
+you proceed towards the third phase
+
+206
+00:09:38,910 --> 00:09:40,380
+of running an experiment.
+
+207
+00:09:40,380 --> 00:09:42,330
+So this is where, based on the hypothesis
+
+208
+00:09:42,330 --> 00:09:43,170
+that you have defined,
+
+209
+00:09:43,170 --> 00:09:46,530
+that say I want to induce fault A
+
+210
+00:09:46,530 --> 00:09:48,780
+to the component A, B, and C.
+
+211
+00:09:48,780 --> 00:09:51,870
+And then I'm expecting
+that the system behavior
+
+212
+00:09:51,870 --> 00:09:55,620
+will be either a fault
+error rate increasing 10%
+
+213
+00:09:55,620 --> 00:09:57,870
+or maybe an infrastructure failure
+
+214
+00:09:57,870 --> 00:10:00,240
+or any other failures that
+you're planning to induce.
+
+215
+00:10:00,240 --> 00:10:01,950
+So, for example, if you have an EKS Pod,
+
+216
+00:10:01,950 --> 00:10:04,620
+then you want to induce
+an EKS Pod CPU stress,
+
+217
+00:10:04,620 --> 00:10:06,390
+or maybe if you have an RDS database,
+
+218
+00:10:06,390 --> 00:10:08,670
+you want to fail over to another region,
+
+219
+00:10:08,670 --> 00:10:11,250
+depending on the hypothesis
+that you want to define.
+
+220
+00:10:11,250 --> 00:10:12,690
+So once you run the experiments
+
+221
+00:10:12,690 --> 00:10:16,143
+using AWS Fault Injection
+Service, a multi-account setup,
+
+222
+00:10:17,040 --> 00:10:18,990
+you would really evaluate now,
+
+223
+00:10:18,990 --> 00:10:21,300
+okay, now your system has behaved
+
+224
+00:10:21,300 --> 00:10:24,480
+and you want to go back and
+verify what was the outcome
+
+225
+00:10:24,480 --> 00:10:26,970
+and what kind of metrics that you observed
+
+226
+00:10:26,970 --> 00:10:28,410
+to verify those systems.
+
+227
+00:10:28,410 --> 00:10:31,620
+And then accordingly you
+move towards improvement
+
+228
+00:10:31,620 --> 00:10:35,460
+of your architecture or runbook
+or playbook or any sort of,
+
+229
+00:10:35,460 --> 00:10:38,250
+you know, learnings that you
+had as part of this hypothesis.
+
+230
+00:10:38,250 --> 00:10:41,610
+And this flywheel has to adopt
+
+231
+00:10:41,610 --> 00:10:45,750
+for every resilience
+experiments that you define.
+
+232
+00:10:45,750 --> 00:10:48,330
+If you don't do this, then
+eventually it becomes,
+
+233
+00:10:48,330 --> 00:10:50,400
+you know, a confusion for anyone involved
+
+234
+00:10:50,400 --> 00:10:53,220
+as part of this phases of
+resilience experiments.
+
+235
+00:10:53,220 --> 00:10:55,830
+So be sure that you create this
+
+236
+00:10:55,830 --> 00:10:58,530
+and apply as part of the
+resilience lifecycle,
+
+237
+00:10:58,530 --> 00:11:00,990
+which is more of an inner flywheel
+
+238
+00:11:00,990 --> 00:11:03,213
+within the resilience framework.
+
+239
+00:11:06,030 --> 00:11:09,600
+And now this brings to a situation where,
+
+240
+00:11:09,600 --> 00:11:10,950
+now this is all sounds great,
+
+241
+00:11:10,950 --> 00:11:12,720
+but how do I get started on AWS?
+
+242
+00:11:12,720 --> 00:11:16,620
+I have tens or hundreds of AWS accounts,
+
+243
+00:11:16,620 --> 00:11:18,900
+you know, where my SaaS
+workloads are deployed,
+
+244
+00:11:18,900 --> 00:11:20,580
+how do I induce faults,
+
+245
+00:11:20,580 --> 00:11:22,920
+not in one single account
+but multiple accounts?
+
+246
+00:11:22,920 --> 00:11:25,320
+So this is where AWS
+Fault Injection Service
+
+247
+00:11:25,320 --> 00:11:26,820
+helps you to do that.
+
+248
+00:11:26,820 --> 00:11:28,173
+So the way it works is,
+
+249
+00:11:29,130 --> 00:11:30,660
+again, it's a fully managed service
+
+250
+00:11:30,660 --> 00:11:33,210
+for you to eliminate any heavy
+lifting that you have to do
+
+251
+00:11:33,210 --> 00:11:36,570
+in terms of building custom
+scripts or any other,
+
+252
+00:11:36,570 --> 00:11:38,550
+you know, implementation
+that you have to perform
+
+253
+00:11:38,550 --> 00:11:41,670
+to automate or induce these faults.
+
+254
+00:11:41,670 --> 00:11:45,240
+So the way it works is where
+FIS integrates with IAM,
+
+255
+00:11:45,240 --> 00:11:47,910
+where you have to define
+an orchestrator role
+
+256
+00:11:47,910 --> 00:11:50,970
+as a single pane of glass
+to induce various faults
+
+257
+00:11:50,970 --> 00:11:52,053
+with other accounts.
+
+258
+00:11:52,980 --> 00:11:56,220
+And then you can access FIS
+through management console,
+
+259
+00:11:56,220 --> 00:11:59,250
+CLI, or APIs, or any means
+that you want to integrate
+
+260
+00:11:59,250 --> 00:12:00,570
+or get started.
+
+261
+00:12:00,570 --> 00:12:03,540
+The very first step is to
+configure an experiment template.
+
+262
+00:12:03,540 --> 00:12:06,660
+And this experiment template
+has three critical components.
+
+263
+00:12:06,660 --> 00:12:08,220
+First is an action.
+
+264
+00:12:08,220 --> 00:12:10,620
+Action is nothing but the
+activity that you want to perform
+
+265
+00:12:10,620 --> 00:12:11,880
+in terms of the faults,
+
+266
+00:12:11,880 --> 00:12:14,910
+depending on the nature of
+your AWS service adoption.
+
+267
+00:12:14,910 --> 00:12:16,440
+And then once you define the action,
+
+268
+00:12:16,440 --> 00:12:18,780
+so it could be sequential action
+
+269
+00:12:18,780 --> 00:12:20,910
+or it could be parallel
+action you want to take
+
+270
+00:12:20,910 --> 00:12:22,500
+as part of the faults.
+
+271
+00:12:22,500 --> 00:12:25,350
+And then you would go ahead
+and define the targets.
+
+272
+00:12:25,350 --> 00:12:28,500
+In this case, the target
+would be the AWS resources
+
+273
+00:12:28,500 --> 00:12:30,570
+nature of your architectural patterns,
+
+274
+00:12:30,570 --> 00:12:34,230
+whether you're using serverless
+architectural pattern
+
+275
+00:12:34,230 --> 00:12:37,410
+or maybe traditional EC2
+based deployment models.
+
+276
+00:12:37,410 --> 00:12:40,380
+You decide on those
+specific targeted resources,
+
+277
+00:12:40,380 --> 00:12:43,110
+and accordingly, the
+action will be induced
+
+278
+00:12:43,110 --> 00:12:44,970
+with those specific targeted resources.
+
+279
+00:12:44,970 --> 00:12:48,150
+And the third critical
+element is FIS safeguard.
+
+280
+00:12:48,150 --> 00:12:50,280
+So again, as I mentioned earlier,
+
+281
+00:12:50,280 --> 00:12:52,620
+resilience testing is about
+a controlled experiment
+
+282
+00:12:52,620 --> 00:12:54,000
+to reduce the blast radius.
+
+283
+00:12:54,000 --> 00:12:57,090
+So this is where you will use safeguards
+
+284
+00:12:57,090 --> 00:12:59,460
+to define a stop condition
+for these experiments
+
+285
+00:12:59,460 --> 00:13:03,180
+to say that I have certain
+thresholds set for my experiment.
+
+286
+00:13:03,180 --> 00:13:05,070
+When those thresholds are met,
+
+287
+00:13:05,070 --> 00:13:08,280
+the experiment can be
+stopped by creating an alarm.
+
+288
+00:13:08,280 --> 00:13:10,950
+So that way you're not
+kind of creating a chaos
+
+289
+00:13:10,950 --> 00:13:13,560
+with your upstream or downstream systems.
+
+290
+00:13:13,560 --> 00:13:15,690
+And then once you define
+all these three components,
+
+291
+00:13:15,690 --> 00:13:18,030
+that's where it goes in
+as an experiment template.
+
+292
+00:13:18,030 --> 00:13:19,710
+You can also use scenario libraries,
+
+293
+00:13:19,710 --> 00:13:24,360
+which we have prebuilt as an
+AWS opinionated recommendation,
+
+294
+00:13:24,360 --> 00:13:27,690
+you know, which we think is
+a common set of experiments
+
+295
+00:13:27,690 --> 00:13:29,130
+that customers are interested,
+
+296
+00:13:29,130 --> 00:13:31,740
+where you can get started much faster.
+
+297
+00:13:31,740 --> 00:13:34,350
+So once you configure
+the experiment templates,
+
+298
+00:13:34,350 --> 00:13:36,690
+eventually you can start the experiment
+
+299
+00:13:36,690 --> 00:13:39,990
+or stop the experiment in an
+(indistinct) basis as well.
+
+300
+00:13:39,990 --> 00:13:43,470
+And another great thing about
+FIS is that it enables you to
+
+301
+00:13:43,470 --> 00:13:46,710
+have your third party
+observability tools out of AWS
+
+302
+00:13:46,710 --> 00:13:49,230
+to consume or, you know,
+
+303
+00:13:49,230 --> 00:13:51,690
+consume certain events from those tools
+
+304
+00:13:51,690 --> 00:13:53,310
+via Amazon EventBridge,
+
+305
+00:13:53,310 --> 00:13:54,720
+where you can start the experiment
+
+306
+00:13:54,720 --> 00:13:56,160
+or the start the experiment.
+
+307
+00:13:56,160 --> 00:13:58,710
+It creates sort of an
+openness platform for you
+
+308
+00:13:58,710 --> 00:14:00,810
+to have a single pane of glass
+
+309
+00:14:00,810 --> 00:14:05,043
+in terms of the FIS experiments
+against your AWS resources.
+
+310
+00:14:07,260 --> 00:14:10,770
+And again, there's a great
+case study from BMW Group
+
+311
+00:14:10,770 --> 00:14:14,640
+who have actually leveraged FIS
+to identify their weaknesses
+
+312
+00:14:14,640 --> 00:14:16,350
+of some of their critical components
+
+313
+00:14:16,350 --> 00:14:19,380
+and they have actually
+adopting this as a mental model
+
+314
+00:14:19,380 --> 00:14:21,723
+to evaluate various critical components.
+
+315
+00:14:22,800 --> 00:14:27,690
+So now we want to talk
+about a real world scenario
+
+316
+00:14:27,690 --> 00:14:29,403
+of a SaaS workload architecture.
+
+317
+00:14:31,680 --> 00:14:35,760
+So let's take an example of
+a persona who are interacting
+
+318
+00:14:35,760 --> 00:14:37,773
+with the SaaS architecture.
+
+319
+00:14:39,150 --> 00:14:43,560
+So for today's session we
+have two critical personas
+
+320
+00:14:43,560 --> 00:14:44,610
+who are trying to interact
+
+321
+00:14:44,610 --> 00:14:46,860
+with the overall SaaS architecture.
+
+322
+00:14:46,860 --> 00:14:50,790
+So one is the SaaS provider
+who are an software company
+
+323
+00:14:50,790 --> 00:14:53,460
+or an organization
+trying to design, build,
+
+324
+00:14:53,460 --> 00:14:56,190
+and deploy and manage the SaaS offering
+
+325
+00:14:56,190 --> 00:14:57,960
+to their end customers.
+
+326
+00:14:57,960 --> 00:15:00,270
+And as you know, SaaS providers typically
+
+327
+00:15:00,270 --> 00:15:01,830
+have to manage multiple tenants.
+
+328
+00:15:01,830 --> 00:15:04,350
+It's a multi-tenant solution
+we are talking about.
+
+329
+00:15:04,350 --> 00:15:06,300
+So as per AWS best practices,
+
+330
+00:15:06,300 --> 00:15:08,670
+we recommend as a SaaS provider
+
+331
+00:15:08,670 --> 00:15:11,790
+to break your overall
+SaaS workload architecture
+
+332
+00:15:11,790 --> 00:15:14,190
+into control plane and
+an application plane.
+
+333
+00:15:14,190 --> 00:15:16,290
+So as in terms of the
+control plane operations,
+
+334
+00:15:16,290 --> 00:15:18,000
+these are what you see on the screen,
+
+335
+00:15:18,000 --> 00:15:19,950
+like tenant management, admin management,
+
+336
+00:15:19,950 --> 00:15:21,960
+billing metrics, and authentication,
+
+337
+00:15:21,960 --> 00:15:24,480
+are the core common modules
+
+338
+00:15:24,480 --> 00:15:27,633
+as a global services serving
+across multiple tenants.
+
+339
+00:15:28,710 --> 00:15:30,930
+Now these SaaS providers eventually have
+
+340
+00:15:30,930 --> 00:15:33,810
+to operate their workload at scale
+
+341
+00:15:33,810 --> 00:15:35,640
+to ensure that tenants are happy
+
+342
+00:15:35,640 --> 00:15:37,020
+in terms of the service offering
+
+343
+00:15:37,020 --> 00:15:40,263
+and they are eventually paying
+for what they're consuming.
+
+344
+00:15:41,250 --> 00:15:43,380
+And the second key persona is the tenant
+
+345
+00:15:43,380 --> 00:15:46,030
+who are actually the consumer
+of the SaaS application
+
+346
+00:15:47,190 --> 00:15:49,320
+offered by the SaaS provider.
+
+347
+00:15:49,320 --> 00:15:51,630
+And for today's session,
+
+348
+00:15:51,630 --> 00:15:54,600
+I've set up two different
+SaaS solution offering.
+
+349
+00:15:54,600 --> 00:15:56,620
+One is a SaaS e-commerce solution
+
+350
+00:15:58,170 --> 00:16:00,690
+providing a tenant-specific
+product management
+
+351
+00:16:00,690 --> 00:16:02,790
+in terms of product catalog
+
+352
+00:16:02,790 --> 00:16:05,430
+where tenants can configure
+their product catalog.
+
+353
+00:16:05,430 --> 00:16:09,270
+Similarly, tenants can also
+configure their order management
+
+354
+00:16:09,270 --> 00:16:10,830
+in terms of order processing workflow
+
+355
+00:16:10,830 --> 00:16:13,180
+based on the product that
+they have configured.
+
+356
+00:16:14,310 --> 00:16:15,840
+And these tenants can also interact
+
+357
+00:16:15,840 --> 00:16:17,490
+with the second solution offering
+
+358
+00:16:17,490 --> 00:16:20,190
+about the SaaS retrieval
+augmented generation,
+
+359
+00:16:20,190 --> 00:16:24,720
+where tenants can onboard their
+organizational related data
+
+360
+00:16:24,720 --> 00:16:26,460
+and that data would be indexed,
+
+361
+00:16:26,460 --> 00:16:28,500
+you know, in a vectored store.
+
+362
+00:16:28,500 --> 00:16:32,460
+And then the vector, based on
+the tenant specific context
+
+363
+00:16:32,460 --> 00:16:34,800
+along with the user
+query from the tenants,
+
+364
+00:16:34,800 --> 00:16:37,470
+would be passed to generative AI LLMs
+
+365
+00:16:37,470 --> 00:16:38,520
+to generate the response.
+
+366
+00:16:38,520 --> 00:16:41,010
+And accordingly, the
+response is sent back.
+
+367
+00:16:41,010 --> 00:16:43,470
+In terms of both of these solutions,
+
+368
+00:16:43,470 --> 00:16:45,660
+tenant isolation, noisy neighbor,
+
+369
+00:16:45,660 --> 00:16:47,790
+in terms of the SaaS fundamentals
+that we talked about,
+
+370
+00:16:47,790 --> 00:16:49,110
+are super critical to ensure
+
+371
+00:16:49,110 --> 00:16:51,120
+that you maintain those boundaries.
+
+372
+00:16:51,120 --> 00:16:54,360
+And we will see in practical
+sense on some of the patterns
+
+373
+00:16:54,360 --> 00:16:57,600
+that how do you verify the
+tenant isolation working
+
+374
+00:16:57,600 --> 00:17:00,390
+as expected based on your
+authorization strategy
+
+375
+00:17:00,390 --> 00:17:01,500
+that you would've implemented
+
+376
+00:17:01,500 --> 00:17:03,663
+as part of your SaaS architecture.
+
+377
+00:17:04,500 --> 00:17:07,230
+Now what we have seen earlier
+is just a kind of a workflow
+
+378
+00:17:07,230 --> 00:17:10,920
+or a very logical construct of
+how tenants interact, right?
+
+379
+00:17:10,920 --> 00:17:13,650
+So beyond SaaS provider and tenants,
+
+380
+00:17:13,650 --> 00:17:15,810
+you could have multiple
+other personas as well,
+
+381
+00:17:15,810 --> 00:17:18,870
+depending on your nature of
+business and the interactions.
+
+382
+00:17:18,870 --> 00:17:22,350
+So what you see here is an AWS
+SaaS reference architecture
+
+383
+00:17:22,350 --> 00:17:23,790
+for today's setup.
+
+384
+00:17:23,790 --> 00:17:26,160
+So we have the topmost
+layer of user access layer
+
+385
+00:17:26,160 --> 00:17:30,060
+where tenants are interacting
+with the SaaS application
+
+386
+00:17:30,060 --> 00:17:31,860
+and, again, they are also interacting
+
+387
+00:17:31,860 --> 00:17:34,440
+with the RAG application
+based on the integration
+
+388
+00:17:34,440 --> 00:17:36,940
+with Cognito for authentication
+and authorization.
+
+389
+00:17:37,800 --> 00:17:40,450
+And the user access
+
+390
+00:17:42,726 --> 00:17:46,500
+the SaaS provider specific
+control plane related components.
+
+391
+00:17:46,500 --> 00:17:48,660
+You remember I talked about
+the control plane components
+
+392
+00:17:48,660 --> 00:17:50,220
+in the previous slides.
+
+393
+00:17:50,220 --> 00:17:53,070
+So all of these
+functionalities are managed
+
+394
+00:17:53,070 --> 00:17:55,860
+by the SaaS provider in
+terms of the control plane.
+
+395
+00:17:55,860 --> 00:17:58,650
+And the control plane talks
+to the application plane
+
+396
+00:17:58,650 --> 00:18:01,500
+through an Amazon EventBridge
+as an event driven pattern.
+
+397
+00:18:02,400 --> 00:18:05,280
+And the first interface
+of the control plane
+
+398
+00:18:05,280 --> 00:18:08,910
+is a core application plane
+offered through a kind of,
+
+399
+00:18:08,910 --> 00:18:12,120
+or tenant workflow authorization
+
+400
+00:18:12,120 --> 00:18:15,090
+in terms of managing the
+tenant onboarding process
+
+401
+00:18:15,090 --> 00:18:17,460
+as well as the other integration elements.
+
+402
+00:18:17,460 --> 00:18:21,030
+We also have an EKS application
+plane hosted as a pool model
+
+403
+00:18:21,030 --> 00:18:26,030
+offering the tenant specific
+name spaces in terms of order
+
+404
+00:18:26,070 --> 00:18:29,370
+and the product related microservices
+
+405
+00:18:29,370 --> 00:18:30,930
+having their respective data stored
+
+406
+00:18:30,930 --> 00:18:32,640
+in terms of the DynamoDB.
+
+407
+00:18:32,640 --> 00:18:34,920
+And we also have a siloed deployment model
+
+408
+00:18:34,920 --> 00:18:36,840
+of a serverless application plane
+
+409
+00:18:36,840 --> 00:18:38,850
+as a serverless architecture,
+
+410
+00:18:38,850 --> 00:18:42,150
+where tenants are specific
+on their deployment model
+
+411
+00:18:42,150 --> 00:18:44,340
+where they can adopt the
+serverless architecture as well
+
+412
+00:18:44,340 --> 00:18:46,710
+in terms of the order processing workflow.
+
+413
+00:18:46,710 --> 00:18:48,810
+And then we have a
+generative AI application
+
+414
+00:18:48,810 --> 00:18:51,570
+providing the retrieval
+augmented generation
+
+415
+00:18:51,570 --> 00:18:53,640
+with a shared service model of
+
+416
+00:18:53,640 --> 00:18:56,580
+where tenants are sharing
+the same infrastructure
+
+417
+00:18:56,580 --> 00:19:00,300
+in spite of isolating the
+tenants in terms of their data,
+
+418
+00:19:00,300 --> 00:19:02,430
+in terms of their
+interaction, authorization,
+
+419
+00:19:02,430 --> 00:19:05,080
+and all other SaaS fundamentals
+that we talked about.
+
+420
+00:19:06,870 --> 00:19:09,210
+Now let's talk about resilience
+testing patterns, right?
+
+421
+00:19:09,210 --> 00:19:11,370
+So I've been talking
+about resilience testing
+
+422
+00:19:11,370 --> 00:19:12,203
+all the time, right?
+
+423
+00:19:12,203 --> 00:19:14,220
+So resilience testing is about
+
+424
+00:19:14,220 --> 00:19:18,210
+how do you induce purposeful
+faults into your workload
+
+425
+00:19:18,210 --> 00:19:20,100
+to validate your assumptions
+
+426
+00:19:20,100 --> 00:19:23,100
+with the controlled bounded context
+
+427
+00:19:23,100 --> 00:19:25,920
+to ensure that doesn't impact
+your critical workloads
+
+428
+00:19:25,920 --> 00:19:28,650
+or end customer experience.
+
+429
+00:19:28,650 --> 00:19:32,340
+So this is more around how do
+you define those hypothesis
+
+430
+00:19:32,340 --> 00:19:33,360
+and induce the fault
+
+431
+00:19:33,360 --> 00:19:36,063
+and improve the overall
+resiliency posture.
+
+432
+00:19:37,890 --> 00:19:39,510
+Now before we get into the patterns,
+
+433
+00:19:39,510 --> 00:19:41,340
+I just want to quickly talk about
+
+434
+00:19:41,340 --> 00:19:43,020
+the multi-account structure
+
+435
+00:19:43,020 --> 00:19:46,440
+and the setup that we have
+done for today's patterns
+
+436
+00:19:46,440 --> 00:19:48,240
+where you can see we
+have picked two regions,
+
+437
+00:19:48,240 --> 00:19:50,730
+US East 1 and US West 2,
+
+438
+00:19:50,730 --> 00:19:53,760
+and there are multiple personas
+interact with this solution.
+
+439
+00:19:53,760 --> 00:19:57,270
+So we have a phase administrator
+who could be an SRE admin
+
+440
+00:19:57,270 --> 00:20:00,090
+or lead or DevOps SRE or elite,
+
+441
+00:20:00,090 --> 00:20:02,340
+who's trying to actually
+perform this fault.
+
+442
+00:20:02,340 --> 00:20:04,560
+And then tenants interacting
+with the solution
+
+443
+00:20:04,560 --> 00:20:06,720
+and then we have SaaS provider.
+
+444
+00:20:06,720 --> 00:20:09,600
+So we have AWS organization as a route
+
+445
+00:20:09,600 --> 00:20:11,100
+under which we have a test OU.
+
+446
+00:20:12,360 --> 00:20:15,420
+And these test OU have
+four different accounts
+
+447
+00:20:15,420 --> 00:20:20,420
+performing specific role in the
+overall multi-account setup.
+
+448
+00:20:20,820 --> 00:20:24,210
+So where we have account one representing
+
+449
+00:20:24,210 --> 00:20:28,620
+the single pane of glass
+for AWS FIS experiments
+
+450
+00:20:28,620 --> 00:20:31,770
+with the AWS FIS experiment orchestration.
+
+451
+00:20:31,770 --> 00:20:35,070
+And then we have account two
+representing the control plane
+
+452
+00:20:35,070 --> 00:20:37,560
+and the e-commerce application plane,
+
+453
+00:20:37,560 --> 00:20:41,250
+where we have system manager
+to induce custom faults
+
+454
+00:20:41,250 --> 00:20:44,490
+based on the system manager
+documents along with AWS STS
+
+455
+00:20:44,490 --> 00:20:46,980
+to perform cross account authorization
+
+456
+00:20:46,980 --> 00:20:49,200
+with the FIS experiment target.
+
+457
+00:20:49,200 --> 00:20:52,290
+And then we have again account
+three for the RAG solution
+
+458
+00:20:52,290 --> 00:20:54,570
+and then we have account four
+
+459
+00:20:54,570 --> 00:20:57,870
+where we want to actually
+observe various system behaviors
+
+460
+00:20:57,870 --> 00:20:59,400
+using Amazon CloudWatch
+
+461
+00:20:59,400 --> 00:21:01,250
+with the cross account observability.
+
+462
+00:21:02,310 --> 00:21:04,470
+We also have some bucket
+policies configured
+
+463
+00:21:04,470 --> 00:21:06,630
+for one of the patterns
+to replicate the data
+
+464
+00:21:06,630 --> 00:21:09,450
+from your primary region
+to the secondary region.
+
+465
+00:21:09,450 --> 00:21:13,620
+So this is how you would
+set up for your workload
+
+466
+00:21:13,620 --> 00:21:16,200
+in terms of multi-account architecture
+
+467
+00:21:16,200 --> 00:21:19,470
+for your fault injection service.
+
+468
+00:21:19,470 --> 00:21:21,180
+So again, if you see that account two
+
+469
+00:21:21,180 --> 00:21:24,420
+and account three is an
+example for today's stock,
+
+470
+00:21:24,420 --> 00:21:27,900
+but you could have 10 or
+20 or hundreds of accounts
+
+471
+00:21:27,900 --> 00:21:29,850
+depending on the complexity
+of your business,
+
+472
+00:21:29,850 --> 00:21:31,650
+where your workloads are running,
+
+473
+00:21:31,650 --> 00:21:33,120
+you want to induce the faults,
+
+474
+00:21:33,120 --> 00:21:35,730
+still account one and
+account four could be
+
+475
+00:21:35,730 --> 00:21:37,260
+your single pane of glass
+
+476
+00:21:37,260 --> 00:21:39,720
+from your FIS orchestration perspective
+
+477
+00:21:39,720 --> 00:21:42,301
+and observability perspective.
+
+478
+00:21:42,301 --> 00:21:44,730
+And account two and
+account three can replicate
+
+479
+00:21:44,730 --> 00:21:46,380
+across multiple accounts.
+
+480
+00:21:46,380 --> 00:21:49,800
+So you need to carefully design
+how your odd structure is,
+
+481
+00:21:49,800 --> 00:21:50,940
+how the account structure is,
+
+482
+00:21:50,940 --> 00:21:52,980
+how you want to create the hypothesis
+
+483
+00:21:52,980 --> 00:21:55,803
+to ensure that you see the
+real value out of this.
+
+484
+00:21:58,380 --> 00:22:01,050
+So let's get started with pattern one.
+
+485
+00:22:01,050 --> 00:22:03,930
+So pattern one is a
+multi-tenant noisy neighbor.
+
+486
+00:22:03,930 --> 00:22:05,430
+So how many of you have experienced
+
+487
+00:22:05,430 --> 00:22:08,373
+multi-tenant noisy neighbor
+scenario for your workloads?
+
+488
+00:22:11,430 --> 00:22:12,360
+Cool.
+
+489
+00:22:12,360 --> 00:22:15,030
+So it's a scenario where
+one tenant's activity
+
+490
+00:22:15,030 --> 00:22:17,580
+adversely affecting the
+overall service performance
+
+491
+00:22:17,580 --> 00:22:18,930
+or other tenants.
+
+492
+00:22:18,930 --> 00:22:21,510
+And to mitigate this, SaaS
+provider typically adopt
+
+493
+00:22:21,510 --> 00:22:24,510
+a workload management and
+resource allocation strategy.
+
+494
+00:22:24,510 --> 00:22:25,800
+And one of the common method
+
+495
+00:22:25,800 --> 00:22:27,450
+is to have a throttling mechanism
+
+496
+00:22:27,450 --> 00:22:30,330
+to ensure that tenants are accessing
+
+497
+00:22:30,330 --> 00:22:35,193
+or stays within their quota
+limits configured per tenant.
+
+498
+00:22:36,900 --> 00:22:40,710
+Now what you see is an AWS
+reference architecture where,
+
+499
+00:22:40,710 --> 00:22:42,360
+you know, as I mentioned earlier,
+
+500
+00:22:42,360 --> 00:22:45,180
+in terms of the resilience testing phases,
+
+501
+00:22:45,180 --> 00:22:47,880
+we start with the steady state
+in terms of Amazon CloudWatch
+
+502
+00:22:47,880 --> 00:22:50,010
+to observe how the system is behaving
+
+503
+00:22:50,010 --> 00:22:53,160
+and then we move on to
+defining an hypothesis,
+
+504
+00:22:53,160 --> 00:22:55,170
+and then we go ahead
+and run the experiment.
+
+505
+00:22:55,170 --> 00:22:56,400
+We come back and verify
+
+506
+00:22:56,400 --> 00:22:59,430
+and then we improve in
+terms of our learnings.
+
+507
+00:22:59,430 --> 00:23:03,360
+So in terms of the tenant interaction,
+
+508
+00:23:03,360 --> 00:23:05,610
+so where we have two
+tenants for pattern one,
+
+509
+00:23:05,610 --> 00:23:09,030
+tenant one is a security
+ISV, deals with threat data,
+
+510
+00:23:09,030 --> 00:23:11,160
+and we have tenant who's an HR tech ISV,
+
+511
+00:23:11,160 --> 00:23:13,380
+deals with the employee award data.
+
+512
+00:23:13,380 --> 00:23:16,200
+And both of these tenants
+performing their respective
+
+513
+00:23:16,200 --> 00:23:18,720
+RAG query against API gateway,
+
+514
+00:23:18,720 --> 00:23:23,070
+and the API gateway has been
+configured with the usage plan
+
+515
+00:23:23,070 --> 00:23:25,500
+to limit per tenant request
+
+516
+00:23:25,500 --> 00:23:29,250
+in terms of 10,000 tokens
+and 500 input tokens
+
+517
+00:23:29,250 --> 00:23:33,210
+and 500 output tokens
+with 100 requests per day.
+
+518
+00:23:33,210 --> 00:23:35,850
+And the API gateway is attached
+with the Lambda authorizer,
+
+519
+00:23:35,850 --> 00:23:38,070
+which actually extracts the JWT token,
+
+520
+00:23:38,070 --> 00:23:40,710
+understands the tenant
+specific token limits
+
+521
+00:23:40,710 --> 00:23:43,680
+and also validates the role
+
+522
+00:23:43,680 --> 00:23:47,070
+along with the dynamically
+generates the tenant scope,
+
+523
+00:23:47,070 --> 00:23:48,780
+the credentials,
+
+524
+00:23:48,780 --> 00:23:53,780
+which are passed towards Lambda
+RAG service and it also...
+
+525
+00:23:56,040 --> 00:23:57,990
+Sorry, the Lambda authorizer also checks
+
+526
+00:23:57,990 --> 00:23:59,460
+against the DynamoDB
+
+527
+00:23:59,460 --> 00:24:02,763
+to ensure that the tenant
+stays within the limit.
+
+528
+00:24:03,840 --> 00:24:06,060
+And once the response is received
+
+529
+00:24:06,060 --> 00:24:07,710
+from the Lambda authorizer,
+
+530
+00:24:07,710 --> 00:24:09,510
+then the API gateway forwards the request
+
+531
+00:24:09,510 --> 00:24:11,730
+towards Lambda RAG service,
+
+532
+00:24:11,730 --> 00:24:15,660
+and its job is to invoke
+Amazon Bedrock knowledge base
+
+533
+00:24:15,660 --> 00:24:18,930
+to specifically retrieve
+the tenant context
+
+534
+00:24:18,930 --> 00:24:21,750
+from Amazon OpenSearch vector store,
+
+535
+00:24:21,750 --> 00:24:23,010
+which are already vectorized
+
+536
+00:24:23,010 --> 00:24:24,510
+based on the data ingestion workflow,
+
+537
+00:24:24,510 --> 00:24:26,460
+which is not shown here,
+
+538
+00:24:26,460 --> 00:24:30,510
+but the context is retrieved
+along with the user query.
+
+539
+00:24:30,510 --> 00:24:33,960
+Both of those information is
+passed to Amazon Bedrock LLM
+
+540
+00:24:33,960 --> 00:24:35,070
+to generate the response,
+
+541
+00:24:35,070 --> 00:24:37,050
+and accordingly, the
+response is sent back.
+
+542
+00:24:37,050 --> 00:24:39,630
+So this covers the overall flow of,
+
+543
+00:24:39,630 --> 00:24:42,090
+you know, the retrieval
+augmented generation.
+
+544
+00:24:42,090 --> 00:24:44,460
+And on the top you see
+is an Amazon EventBridge,
+
+545
+00:24:44,460 --> 00:24:46,953
+where every one minute,
+
+546
+00:24:48,480 --> 00:24:51,150
+the EventBridge rule
+invokes the Amazon Lambda
+
+547
+00:24:51,150 --> 00:24:52,890
+in terms of the token usage,
+
+548
+00:24:52,890 --> 00:24:56,070
+and then its only job is to
+analyze the CloudWatch logs
+
+549
+00:24:56,070 --> 00:24:58,110
+and then it updates the DynamoDB table,
+
+550
+00:24:58,110 --> 00:25:00,243
+which'll be used by the Lambda authorizer.
+
+551
+00:25:01,440 --> 00:25:03,510
+Now what we want to do in
+terms of the hypothesis
+
+552
+00:25:03,510 --> 00:25:05,280
+is to induce two kind of faults.
+
+553
+00:25:05,280 --> 00:25:08,670
+One is to actually disable
+the EventBridge rule
+
+554
+00:25:08,670 --> 00:25:11,640
+and second fault is to actually delete the
+
+555
+00:25:11,640 --> 00:25:13,470
+CloudWatch log streams.
+
+556
+00:25:13,470 --> 00:25:14,880
+And after inducing this fault,
+
+557
+00:25:14,880 --> 00:25:18,150
+we want to validate what will
+happen to our system behavior
+
+558
+00:25:18,150 --> 00:25:20,970
+in terms of whether tenants
+can actually bypass those
+
+559
+00:25:20,970 --> 00:25:23,520
+throttling limits or they
+stay within the limits
+
+560
+00:25:23,520 --> 00:25:26,553
+to simulate or understand
+the noisy neighbor scenario.
+
+561
+00:25:27,750 --> 00:25:31,443
+So let's quickly jump
+onto the AWS console.
+
+562
+00:25:38,100 --> 00:25:39,660
+So hope you are able to see my screen.
+
+563
+00:25:39,660 --> 00:25:43,170
+So what you see on the
+screen is the four accounts
+
+564
+00:25:43,170 --> 00:25:44,280
+that we have set up,
+
+565
+00:25:44,280 --> 00:25:47,343
+where as an administrator I can
+further into these accounts.
+
+566
+00:25:49,650 --> 00:25:51,620
+Now in terms of the code setup...
+
+567
+00:25:54,540 --> 00:25:56,850
+Let be quickly connect.
+
+568
+00:25:56,850 --> 00:25:58,980
+So in terms of the code setup,
+
+569
+00:25:58,980 --> 00:26:01,050
+so you can see that we have a tenant,
+
+570
+00:26:01,050 --> 00:26:03,210
+so this is a project for the RAG.
+
+571
+00:26:03,210 --> 00:26:06,420
+We have a CDK under which
+we have tenant template.
+
+572
+00:26:06,420 --> 00:26:09,240
+Tenant template has
+multiple code repositories
+
+573
+00:26:09,240 --> 00:26:11,040
+in terms of the Python modules.
+
+574
+00:26:11,040 --> 00:26:13,410
+So you can see the Bedrock custom services
+
+575
+00:26:13,410 --> 00:26:16,440
+have individual modules
+related to the Python.
+
+576
+00:26:16,440 --> 00:26:21,440
+And then we also have
+multiple other TypeScript CDK,
+
+577
+00:26:22,080 --> 00:26:24,630
+which actually performs various activities
+
+578
+00:26:24,630 --> 00:26:28,080
+in terms of creating roles,
+deploying the AWS resources,
+
+579
+00:26:28,080 --> 00:26:31,170
+and trying to bundle the
+overall Python modules
+
+580
+00:26:31,170 --> 00:26:33,153
+into Lambda and deploy that.
+
+581
+00:26:34,380 --> 00:26:37,710
+And the correlation of
+these Python modules,
+
+582
+00:26:37,710 --> 00:26:40,740
+you can see for example
+we have Bedrock custom,
+
+583
+00:26:40,740 --> 00:26:43,020
+we have a Python module
+which is associated
+
+584
+00:26:43,020 --> 00:26:45,570
+with a specific TypeScript CDK,
+
+585
+00:26:45,570 --> 00:26:46,990
+where you can see that
+
+586
+00:26:50,310 --> 00:26:53,980
+the TypeScript is invoking
+or referenced towards the
+
+587
+00:26:55,380 --> 00:26:58,020
+Bedrock custom Python module
+
+588
+00:26:58,020 --> 00:27:01,740
+with the specific Bedrock
+log Python with the handler
+
+589
+00:27:01,740 --> 00:27:05,250
+and the handler with the
+specific Lambda functions.
+
+590
+00:27:05,250 --> 00:27:09,000
+And you can also see that
+based on the TypeScript CDK,
+
+591
+00:27:09,000 --> 00:27:12,660
+it generates the log group
+along with the role ARN,
+
+592
+00:27:12,660 --> 00:27:15,300
+which is passed as an
+environmental variable
+
+593
+00:27:15,300 --> 00:27:16,650
+towards the TypeScript
+
+594
+00:27:16,650 --> 00:27:20,370
+where the CDK creates the
+cloud formation script,
+
+595
+00:27:20,370 --> 00:27:22,920
+it deploys the necessary resources,
+
+596
+00:27:22,920 --> 00:27:26,640
+and it also uploads or packages
+the overall Python code
+
+597
+00:27:26,640 --> 00:27:29,820
+into Lambda function
+and it uploads into S3,
+
+598
+00:27:29,820 --> 00:27:33,570
+and the cloud formation
+actually deploys as a Lambda.
+
+599
+00:27:33,570 --> 00:27:34,890
+So this is just one example
+
+600
+00:27:34,890 --> 00:27:37,380
+for the Bedrock related functionality
+
+601
+00:27:37,380 --> 00:27:39,360
+in terms of the tenant token usage.
+
+602
+00:27:39,360 --> 00:27:41,940
+Similarly, we have the services
+
+603
+00:27:41,940 --> 00:27:44,010
+under which you can see the RAG service.
+
+604
+00:27:44,010 --> 00:27:47,250
+We have the core RAG service
+in terms of the Lambda,
+
+605
+00:27:47,250 --> 00:27:50,970
+which has the similar
+functionality of showcasing,
+
+606
+00:27:50,970 --> 00:27:52,170
+you know, like, let me go back
+
+607
+00:27:52,170 --> 00:27:54,270
+to the respective TypeScript here.
+
+608
+00:27:54,270 --> 00:27:57,450
+So we have service.ts
+which is again a TypeScript
+
+609
+00:27:57,450 --> 00:27:59,850
+specific to the RAG service.
+
+610
+00:27:59,850 --> 00:28:02,640
+And you can see here
+we have also referenced
+
+611
+00:28:02,640 --> 00:28:05,340
+the authorizer Lambda along with
+
+612
+00:28:05,340 --> 00:28:09,030
+the specific combined
+attribute based access control,
+
+613
+00:28:09,030 --> 00:28:12,360
+which we are using for the
+authorization strategy.
+
+614
+00:28:12,360 --> 00:28:14,760
+And you can see that we have
+the authorization service
+
+615
+00:28:14,760 --> 00:28:17,790
+referenced again with the
+specific Python module
+
+616
+00:28:17,790 --> 00:28:20,400
+with the Lambda handler
+in terms of the function
+
+617
+00:28:20,400 --> 00:28:23,700
+and the necessary enrollment
+variables are passed,
+
+618
+00:28:23,700 --> 00:28:26,250
+which are again correlated
+with your TypeScript
+
+619
+00:28:26,250 --> 00:28:29,013
+along with your Python module packages.
+
+620
+00:28:30,030 --> 00:28:32,610
+So the way the project is set up,
+
+621
+00:28:32,610 --> 00:28:34,620
+where we are using
+infrastructure as a code
+
+622
+00:28:34,620 --> 00:28:37,680
+along with the Python
+to bundle it, deploy it,
+
+623
+00:28:37,680 --> 00:28:39,720
+to ensure that any changes that we do
+
+624
+00:28:39,720 --> 00:28:42,690
+as part of the SaaS workload
+architecture are deployed
+
+625
+00:28:42,690 --> 00:28:45,150
+in a simplified way and easy to maintain
+
+626
+00:28:45,150 --> 00:28:48,060
+and we can mitigate any sort of failures.
+
+627
+00:28:48,060 --> 00:28:49,580
+Now what I've done is...
+
+628
+00:28:54,531 --> 00:28:59,250
+So I have two terminals here,
+terminal one and terminal two.
+
+629
+00:28:59,250 --> 00:29:02,880
+Just to save some time, I've
+already executed a script here.
+
+630
+00:29:02,880 --> 00:29:06,180
+So just to show you the
+tenant related information.
+
+631
+00:29:06,180 --> 00:29:08,223
+So let me just go back and execute.
+
+632
+00:29:12,660 --> 00:29:14,550
+So here, like as I mentioned earlier,
+
+633
+00:29:14,550 --> 00:29:17,850
+we have two tenants configured,
+tenant one and tenant two.
+
+634
+00:29:17,850 --> 00:29:20,430
+So tenant one have their
+respective registration ID
+
+635
+00:29:20,430 --> 00:29:23,430
+along with the email address
+with the tenant config,
+
+636
+00:29:23,430 --> 00:29:26,910
+reference to input token,
+output token, API gateway.
+
+637
+00:29:26,910 --> 00:29:28,710
+Similarly, we have tenant two
+
+638
+00:29:28,710 --> 00:29:32,010
+with their specific
+registration ID, email address,
+
+639
+00:29:32,010 --> 00:29:34,593
+and then the tenant specific
+configuration as well.
+
+640
+00:29:35,610 --> 00:29:37,620
+Now to understand the
+steady state behavior
+
+641
+00:29:37,620 --> 00:29:39,270
+for this pattern one,
+
+642
+00:29:39,270 --> 00:29:42,450
+I've actually executed a
+script with a invoke API
+
+643
+00:29:42,450 --> 00:29:43,860
+towards the API gateway
+
+644
+00:29:43,860 --> 00:29:47,160
+with the specific input, the tenant name.
+
+645
+00:29:47,160 --> 00:29:49,470
+And I'm trying to ask a question here,
+
+646
+00:29:49,470 --> 00:29:52,140
+what are the threats related
+to gather host information?
+
+647
+00:29:52,140 --> 00:29:54,150
+I'm sending 13 requests.
+
+648
+00:29:54,150 --> 00:29:56,070
+And as you can see,
+
+649
+00:29:56,070 --> 00:29:58,740
+each of the requests I'm
+receiving HTTP status code.
+
+650
+00:29:58,740 --> 00:30:02,520
+200, sounds great. Until
+request number seven.
+
+651
+00:30:02,520 --> 00:30:05,010
+And then from request eight onwards
+
+652
+00:30:05,010 --> 00:30:07,500
+I have received HTTP status code 403,
+
+653
+00:30:07,500 --> 00:30:09,060
+which is access denied.
+
+654
+00:30:09,060 --> 00:30:11,910
+And this is because tenant
+one has already overshooted
+
+655
+00:30:11,910 --> 00:30:14,220
+in terms of their token limits,
+
+656
+00:30:14,220 --> 00:30:16,440
+considering the noisy neighbor scenario.
+
+657
+00:30:16,440 --> 00:30:19,530
+And then we have tenant
+two, who are actually,
+
+658
+00:30:19,530 --> 00:30:20,820
+I'm performing the same query,
+
+659
+00:30:20,820 --> 00:30:22,980
+but in this case the query is different
+
+660
+00:30:22,980 --> 00:30:24,720
+because the tenant context is different.
+
+661
+00:30:24,720 --> 00:30:28,020
+So who are the employees
+received award for the teamwork?
+
+662
+00:30:28,020 --> 00:30:30,390
+And I'm sending four requests
+just to differentiate.
+
+663
+00:30:30,390 --> 00:30:32,290
+And all of the requests are succeeded.
+
+664
+00:30:33,240 --> 00:30:34,650
+Now this validates that, okay,
+
+665
+00:30:34,650 --> 00:30:37,860
+now we have the throttling
+strategy in place.
+
+666
+00:30:37,860 --> 00:30:38,700
+And now with this,
+
+667
+00:30:38,700 --> 00:30:41,430
+we want to just quickly
+jump onto the AWS console
+
+668
+00:30:41,430 --> 00:30:44,280
+where I've configured a
+dashboard for pattern one
+
+669
+00:30:44,280 --> 00:30:46,170
+where we have various
+observability metrics
+
+670
+00:30:46,170 --> 00:30:49,530
+related to the AWS
+services to understand how
+
+671
+00:30:49,530 --> 00:30:51,240
+tenants are using our services.
+
+672
+00:30:51,240 --> 00:30:53,580
+So we have a DynamoDB
+latency and throttling,
+
+673
+00:30:53,580 --> 00:30:56,880
+we have DynamoDB token
+usage, table operation,
+
+674
+00:30:56,880 --> 00:30:59,280
+Bedrock invocation metrics and all that.
+
+675
+00:30:59,280 --> 00:31:03,510
+And we also have the respective
+authorization in terms of,
+
+676
+00:31:03,510 --> 00:31:06,330
+you know, the Lambda attached
+to the API gateway to analyze,
+
+677
+00:31:06,330 --> 00:31:08,820
+and I can just show you one of the error
+
+678
+00:31:08,820 --> 00:31:10,980
+why you have received 403.
+
+679
+00:31:10,980 --> 00:31:15,003
+And the reason is because
+tenant token limit exceeded.
+
+680
+00:31:16,260 --> 00:31:18,900
+Now I want to go ahead
+and induce the fault
+
+681
+00:31:18,900 --> 00:31:19,830
+that I talked about.
+
+682
+00:31:19,830 --> 00:31:24,400
+So what you see is an AWS console
+where you have FIS service
+
+683
+00:31:25,380 --> 00:31:26,910
+aligned with the resilience testing,
+
+684
+00:31:26,910 --> 00:31:28,350
+and then we have resilience management
+
+685
+00:31:28,350 --> 00:31:30,210
+related to Resilience Hub.
+
+686
+00:31:30,210 --> 00:31:31,440
+So as I mentioned earlier,
+
+687
+00:31:31,440 --> 00:31:34,740
+the first thing is you'll
+configure the experiment templates
+
+688
+00:31:34,740 --> 00:31:36,660
+where I already configured here,
+
+689
+00:31:36,660 --> 00:31:38,460
+and you also have scenario libraries
+
+690
+00:31:39,510 --> 00:31:41,310
+based on the various
+experiments that you run
+
+691
+00:31:41,310 --> 00:31:43,290
+in terms of the overall status,
+
+692
+00:31:43,290 --> 00:31:45,510
+and you have spotlights to talk about
+
+693
+00:31:45,510 --> 00:31:47,340
+the various blocks and all that.
+
+694
+00:31:47,340 --> 00:31:50,340
+So once you understand the steady state,
+
+695
+00:31:50,340 --> 00:31:53,347
+you come to this experiment
+template where I've configured
+
+696
+00:31:53,347 --> 00:31:55,800
+"noisy neighbor fault,
+disable EventBridge rule."
+
+697
+00:31:55,800 --> 00:31:58,443
+So let me click there and
+then start the experiment.
+
+698
+00:32:01,620 --> 00:32:03,060
+So I've started the experiment.
+
+699
+00:32:03,060 --> 00:32:05,220
+Now what we are expecting
+
+700
+00:32:05,220 --> 00:32:08,010
+to do is FIS would induce
+those both of the faults
+
+701
+00:32:08,010 --> 00:32:10,620
+into our multi-tenant account.
+
+702
+00:32:10,620 --> 00:32:13,530
+And you can see that we
+have this experiment ID
+
+703
+00:32:13,530 --> 00:32:16,290
+along with the account
+targeting is a multi-account,
+
+704
+00:32:16,290 --> 00:32:18,270
+and we have IAM role configured,
+
+705
+00:32:18,270 --> 00:32:19,920
+currently it's in the running state
+
+706
+00:32:19,920 --> 00:32:22,710
+and you can export the
+experiment into reports as well.
+
+707
+00:32:22,710 --> 00:32:25,035
+And we have two actions
+based on what I explained
+
+708
+00:32:25,035 --> 00:32:26,730
+as the architectural reference.
+
+709
+00:32:26,730 --> 00:32:29,370
+So one is to disrupt the EventBridge rule
+
+710
+00:32:29,370 --> 00:32:33,540
+using AWS SSM send-command,
+which is a custom fault.
+
+711
+00:32:33,540 --> 00:32:36,660
+And again, some of the AWS
+services have native integration
+
+712
+00:32:36,660 --> 00:32:40,980
+of FIS, where FIS can induce
+the faults into AWS services.
+
+713
+00:32:40,980 --> 00:32:43,320
+But in this case, because
+it's a SaaS workload,
+
+714
+00:32:43,320 --> 00:32:47,070
+I have the flexibility to
+configure my own custom fault.
+
+715
+00:32:47,070 --> 00:32:51,270
+So that is why I'm using AWS
+SSM send manager send-command,
+
+716
+00:32:51,270 --> 00:32:54,750
+which eventually uses
+system manager documents.
+
+717
+00:32:54,750 --> 00:32:57,510
+So document is a custom
+set of steps or scripts
+
+718
+00:32:57,510 --> 00:33:00,870
+that you want to induce in your
+SaaS workload architectures.
+
+719
+00:33:00,870 --> 00:33:02,550
+So both of these actions have completed.
+
+720
+00:33:02,550 --> 00:33:05,880
+Similarly, have another
+action or activity using,
+
+721
+00:33:05,880 --> 00:33:07,800
+again, AWS systems send-command
+
+722
+00:33:07,800 --> 00:33:10,530
+where I want to delete the
+CloudWatch log streams.
+
+723
+00:33:10,530 --> 00:33:11,940
+And then you have the targets.
+
+724
+00:33:11,940 --> 00:33:16,940
+So in this case, since you're
+using an SSM system manager,
+
+725
+00:33:17,010 --> 00:33:19,410
+you would eventually use an EC2 instance,
+
+726
+00:33:19,410 --> 00:33:22,383
+which will use SSM agent
+to perform those actions.
+
+727
+00:33:23,340 --> 00:33:24,630
+And then we have a target account
+
+728
+00:33:24,630 --> 00:33:27,030
+where we have deployed the RAG solution,
+
+729
+00:33:27,030 --> 00:33:29,490
+we have tags, timeline, and log events.
+
+730
+00:33:29,490 --> 00:33:31,380
+Now this experiment is completed.
+
+731
+00:33:31,380 --> 00:33:35,550
+Now with this, I want to
+ensure that, you know,
+
+732
+00:33:35,550 --> 00:33:36,750
+in terms of the observability,
+
+733
+00:33:36,750 --> 00:33:38,900
+let me go back and show
+you the alarm here.
+
+734
+00:33:40,830 --> 00:33:42,270
+So let me refresh.
+
+735
+00:33:42,270 --> 00:33:45,303
+So I have an alarm created
+as I induce the fault.
+
+736
+00:33:47,010 --> 00:33:49,470
+And you can see this has deleted
+
+737
+00:33:49,470 --> 00:33:52,080
+one of the log stream action,
+
+738
+00:33:52,080 --> 00:33:56,070
+which ensure that we have fault induced.
+
+739
+00:33:56,070 --> 00:33:57,960
+Now can anyone guess that
+
+740
+00:33:57,960 --> 00:34:01,830
+whether if I send the
+same request query again,
+
+741
+00:34:01,830 --> 00:34:02,823
+would that succeed?
+
+742
+00:34:06,030 --> 00:34:08,880
+Because already tenant one
+has overshoot on their limits.
+
+743
+00:34:10,590 --> 00:34:11,423
+Any idea?
+
+744
+00:34:14,794 --> 00:34:18,390
+(person speaking indistinctly)
+
+745
+00:34:18,390 --> 00:34:20,392
+Yeah, the faults have been induced.
+
+746
+00:34:20,392 --> 00:34:23,168
+- [Attendee] So then there's
+nothing reverting it.
+
+747
+00:34:23,168 --> 00:34:25,830
+(speaks indistinctly)
+- [Kanniah] Exactly.
+
+748
+00:34:25,830 --> 00:34:30,183
+So it's going to fail because
+the Lambda authorizer,
+
+749
+00:34:31,260 --> 00:34:33,300
+the Lambda that was attached
+to the EventBridge rule
+
+750
+00:34:33,300 --> 00:34:36,330
+has already captured by
+analyzing the CloudWatch log
+
+751
+00:34:36,330 --> 00:34:38,220
+and it updated the DynamoDB.
+
+752
+00:34:38,220 --> 00:34:40,980
+Now any request going
+in the Lambda authorizer
+
+753
+00:34:40,980 --> 00:34:43,230
+would actually go back
+and check in the DynamoDB
+
+754
+00:34:43,230 --> 00:34:44,130
+and it says that, okay,
+
+755
+00:34:44,130 --> 00:34:47,550
+now this tenant has already
+overshooted on the limits
+
+756
+00:34:47,550 --> 00:34:49,950
+in spite of inducing the fault, right?
+
+757
+00:34:49,950 --> 00:34:51,693
+So for today's demo,
+
+758
+00:34:53,340 --> 00:34:55,350
+I'm going to reset the DynamoDB table
+
+759
+00:34:55,350 --> 00:34:57,630
+so that at least we'll see
+what'll be the behavior
+
+760
+00:34:57,630 --> 00:34:59,640
+based on the faults that we have induced.
+
+761
+00:34:59,640 --> 00:35:03,390
+So what you see on the
+screen is an DynamoDB table
+
+762
+00:35:03,390 --> 00:35:05,250
+related to the token usage.
+
+763
+00:35:05,250 --> 00:35:08,853
+So I'm just going to go
+ahead and reset this,
+
+764
+00:35:09,810 --> 00:35:11,820
+but in real world production system,
+
+765
+00:35:11,820 --> 00:35:12,900
+you won't be able to do this
+
+766
+00:35:12,900 --> 00:35:14,580
+and you don't need to do it, right,
+
+767
+00:35:14,580 --> 00:35:17,250
+because this is an example of,
+
+768
+00:35:17,250 --> 00:35:19,440
+the throttling limit is already being set
+
+769
+00:35:19,440 --> 00:35:23,250
+and we have a tracking
+mechanism using DynamoDB table,
+
+770
+00:35:23,250 --> 00:35:25,950
+because of which you
+won't be able to do it.
+
+771
+00:35:25,950 --> 00:35:28,200
+So now I've reset the DynamoDB table.
+
+772
+00:35:28,200 --> 00:35:31,050
+Now I go back and fire the
+same set of experiments
+
+773
+00:35:31,050 --> 00:35:32,223
+to see what happens.
+
+774
+00:35:35,850 --> 00:35:37,830
+So I go back to the Visual Studio Code
+
+775
+00:35:37,830 --> 00:35:40,803
+and I send the same request now.
+
+776
+00:35:43,380 --> 00:35:45,510
+So here we are validating our,
+
+777
+00:35:45,510 --> 00:35:47,550
+we actually have executed the hypothesis,
+
+778
+00:35:47,550 --> 00:35:51,000
+we run the experiment and
+now we are trying to verify.
+
+779
+00:35:51,000 --> 00:35:53,220
+So I'm going to send
+the same request here,
+
+780
+00:35:53,220 --> 00:35:55,380
+13 request for tenant one.
+
+781
+00:35:55,380 --> 00:35:58,170
+And then similarly, I'm going to send,
+
+782
+00:35:58,170 --> 00:36:00,180
+this time I'm going to send 14 requests
+
+783
+00:36:00,180 --> 00:36:02,250
+or 13 requests for tenant two,
+
+784
+00:36:02,250 --> 00:36:05,340
+just to see how both of
+these tenants perform
+
+785
+00:36:05,340 --> 00:36:08,070
+in terms of the throttling limits.
+
+786
+00:36:08,070 --> 00:36:10,800
+So this is going to take
+some time to complete,
+
+787
+00:36:10,800 --> 00:36:13,290
+probably couple of minutes.
+
+788
+00:36:13,290 --> 00:36:16,140
+Let me see if this request is proceeding
+
+789
+00:36:16,140 --> 00:36:19,010
+to ensure that after we
+reset the DynamoDB table...
+
+790
+00:36:23,670 --> 00:36:25,680
+Yes, so we are receiving the response,
+
+791
+00:36:25,680 --> 00:36:26,820
+so let it go through.
+
+792
+00:36:26,820 --> 00:36:28,960
+So meanwhile, let me quickly jump on to
+
+793
+00:36:31,110 --> 00:36:33,270
+the experiment templates to showcase you
+
+794
+00:36:33,270 --> 00:36:35,550
+how this looks in real world.
+
+795
+00:36:35,550 --> 00:36:39,450
+So again, what I've showed you
+is an AWS console version of
+
+796
+00:36:39,450 --> 00:36:41,850
+visualizing how the
+experiment has behaved.
+
+797
+00:36:41,850 --> 00:36:46,470
+You can also configure a
+JSON and upload that into,
+
+798
+00:36:46,470 --> 00:36:48,570
+you can actually import it into FIS
+
+799
+00:36:48,570 --> 00:36:50,970
+and then experiment can be configured.
+
+800
+00:36:50,970 --> 00:36:53,100
+So here I'm just going to quickly show you
+
+801
+00:36:53,100 --> 00:36:55,230
+the experiment template, how it looks.
+
+802
+00:36:55,230 --> 00:36:56,790
+It's a similar version of the UI,
+
+803
+00:36:56,790 --> 00:36:59,250
+but here it's pretty much clear that
+
+804
+00:36:59,250 --> 00:37:00,840
+first you have to configure the action.
+
+805
+00:37:00,840 --> 00:37:02,880
+In this case, we have
+two actions configured
+
+806
+00:37:02,880 --> 00:37:06,030
+with the action ID of
+SSM send-command with,
+
+807
+00:37:06,030 --> 00:37:07,560
+you can see that the document ARN.
+
+808
+00:37:07,560 --> 00:37:08,640
+So this is super critical
+
+809
+00:37:08,640 --> 00:37:11,130
+if you want to induce a custom fault.
+
+810
+00:37:11,130 --> 00:37:15,330
+And this is a system manager
+document with the document ARN
+
+811
+00:37:15,330 --> 00:37:17,130
+and the duration is one minute
+
+812
+00:37:17,130 --> 00:37:19,080
+and the target is our instance,
+
+813
+00:37:19,080 --> 00:37:21,360
+because it's a send-command.
+
+814
+00:37:21,360 --> 00:37:23,970
+So whereas if you induce a Lambda fault
+
+815
+00:37:23,970 --> 00:37:26,490
+or maybe EKS Pod actions,
+
+816
+00:37:26,490 --> 00:37:29,580
+then you would see that the action ID
+
+817
+00:37:29,580 --> 00:37:32,163
+would be respective AWS services.
+
+818
+00:37:33,420 --> 00:37:34,950
+So we have two actions configured
+
+819
+00:37:34,950 --> 00:37:36,990
+and you can see that the
+second action has again
+
+820
+00:37:36,990 --> 00:37:38,370
+a different ARN,
+
+821
+00:37:38,370 --> 00:37:40,530
+and then we have the description,
+
+822
+00:37:40,530 --> 00:37:42,150
+you can export into report,
+
+823
+00:37:42,150 --> 00:37:44,760
+you can also do a log configuration,
+
+824
+00:37:44,760 --> 00:37:46,290
+and the targets are configured
+
+825
+00:37:46,290 --> 00:37:48,300
+with their respective EC2 instances.
+
+826
+00:37:48,300 --> 00:37:51,900
+You can see that both of these
+resource ARN are associated
+
+827
+00:37:51,900 --> 00:37:54,183
+with an EC2 instance in the same account.
+
+828
+00:37:55,170 --> 00:37:56,220
+And now if you go back
+
+829
+00:37:56,220 --> 00:37:58,920
+and show you the SSM documents as well,
+
+830
+00:37:58,920 --> 00:38:01,080
+so this is how the SSM
+documents looks, right?
+
+831
+00:38:01,080 --> 00:38:04,080
+So you have a schema
+version with the parameters
+
+832
+00:38:04,080 --> 00:38:07,500
+passed as an input in terms
+of the log stream delete.
+
+833
+00:38:07,500 --> 00:38:10,350
+So you are passing which
+log stream to be deleted
+
+834
+00:38:10,350 --> 00:38:12,270
+with the run command, with the log group,
+
+835
+00:38:12,270 --> 00:38:15,840
+and set of, you know, steps
+against the AWS services.
+
+836
+00:38:15,840 --> 00:38:18,603
+Similarly, you have for the
+EventBridge rule as well.
+
+837
+00:38:20,357 --> 00:38:23,820
+So this is how you will
+configure an experiment
+
+838
+00:38:23,820 --> 00:38:26,670
+tied with the specific action commands
+
+839
+00:38:26,670 --> 00:38:28,053
+using the system manager.
+
+840
+00:38:30,870 --> 00:38:33,840
+So we are just waiting for
+this script to complete.
+
+841
+00:38:33,840 --> 00:38:37,563
+So meanwhile let me jump on to, sorry.
+
+842
+00:38:44,550 --> 00:38:47,073
+So let's quickly jump on to pattern two.
+
+843
+00:38:49,860 --> 00:38:51,990
+So pattern two about
+tenant isolation, right?
+
+844
+00:38:51,990 --> 00:38:54,210
+So one of the critical principle
+
+845
+00:38:54,210 --> 00:38:55,983
+of any multi-tenant solution,
+
+846
+00:38:57,030 --> 00:38:58,980
+how do you ensure that your tenants
+
+847
+00:38:58,980 --> 00:39:01,410
+are not able to access other tenants' data
+
+848
+00:39:01,410 --> 00:39:03,360
+or the resources, right?
+
+849
+00:39:03,360 --> 00:39:05,210
+So what kinda strategy you would use?
+
+850
+00:39:08,280 --> 00:39:09,153
+Any volunteers?
+
+851
+00:39:10,230 --> 00:39:13,263
+What is a common method of
+tenant isolation strategy?
+
+852
+00:39:16,740 --> 00:39:17,741
+Sorry?
+
+853
+00:39:17,741 --> 00:39:20,010
+- [Attendee 2] Different accounts.
+
+854
+00:39:20,010 --> 00:39:22,410
+- [Kanniah] Different accounts,
+that could be one strategy,
+
+855
+00:39:22,410 --> 00:39:24,810
+but still how do you control, you know,
+
+856
+00:39:24,810 --> 00:39:28,590
+your principles are not able to bypass
+
+857
+00:39:28,590 --> 00:39:31,440
+accessing other tenants'
+resources or even the data
+
+858
+00:39:31,440 --> 00:39:34,032
+in terms of data isolation?
+
+859
+00:39:34,032 --> 00:39:37,949
+(person speaking indistinctly)
+
+860
+00:39:39,510 --> 00:39:42,450
+Yeah, that's one strategy.
+- [Attendee 3] STP.
+
+861
+00:39:42,450 --> 00:39:46,260
+- [Kanniah] Sorry?
+- [Attendee 3] STP.
+
+862
+00:39:46,260 --> 00:39:48,780
+- [Kanniah] Yeah, that's more
+of the info certain policies
+
+863
+00:39:48,780 --> 00:39:50,340
+that you want to bring in
+
+864
+00:39:50,340 --> 00:39:52,950
+as part of your multi-account strategy.
+
+865
+00:39:52,950 --> 00:39:57,950
+So to have a robust tenant
+isolation mechanism,
+
+866
+00:39:58,500 --> 00:40:01,560
+customers typically adopt
+three authorization strategies.
+
+867
+00:40:01,560 --> 00:40:04,980
+Number one is role-based access control,
+
+868
+00:40:04,980 --> 00:40:08,080
+where every tenant will
+have their specified role
+
+869
+00:40:09,060 --> 00:40:12,000
+and that role will say that
+which specific AWS resources
+
+870
+00:40:12,000 --> 00:40:12,960
+that they can use.
+
+871
+00:40:12,960 --> 00:40:16,980
+For example, you know, you
+have an EC2 with S3 and RDS.
+
+872
+00:40:16,980 --> 00:40:19,380
+So you can have a role defined per tenant
+
+873
+00:40:19,380 --> 00:40:21,420
+and based on that
+particular authorization,
+
+874
+00:40:21,420 --> 00:40:24,870
+you can restrict those
+specific AWS resources.
+
+875
+00:40:24,870 --> 00:40:27,570
+The second mechanism is
+to dynamically generate
+
+876
+00:40:27,570 --> 00:40:32,220
+an IAM policy for each tenant
+based on IAM identities.
+
+877
+00:40:32,220 --> 00:40:35,220
+It could be IAM user or role.
+
+878
+00:40:35,220 --> 00:40:38,100
+The third common strategy
+is to use IAM role
+
+879
+00:40:38,100 --> 00:40:40,173
+with attribute based access control,
+
+880
+00:40:41,160 --> 00:40:45,150
+where you define an attribute
+based access control policy
+
+881
+00:40:45,150 --> 00:40:47,220
+and attach that to a tag
+
+882
+00:40:47,220 --> 00:40:50,790
+and that tag will decide
+which specific IAM principle
+
+883
+00:40:50,790 --> 00:40:54,000
+in terms of the role can
+access which resource.
+
+884
+00:40:54,000 --> 00:40:57,180
+Now for the RAG solution, we
+have adopted the third strategy
+
+885
+00:40:57,180 --> 00:41:00,393
+of using IAM role with
+attribute based access control.
+
+886
+00:41:03,000 --> 00:41:05,520
+So what you see is very
+similar to pattern one.
+
+887
+00:41:05,520 --> 00:41:08,560
+The only difference or the point
+that I want to highlight is
+
+888
+00:41:09,510 --> 00:41:12,300
+whenever a tenant sends their query,
+
+889
+00:41:12,300 --> 00:41:16,260
+Lambda authorizer dynamically, you know,
+
+890
+00:41:16,260 --> 00:41:18,510
+dynamically generates an attribute based
+
+891
+00:41:18,510 --> 00:41:21,180
+access control policy,
+
+892
+00:41:21,180 --> 00:41:25,770
+or tenant scoped credentials,
+as part of the request,
+
+893
+00:41:25,770 --> 00:41:28,350
+and then it passes that to the API gateway
+
+894
+00:41:28,350 --> 00:41:30,780
+and the API gateway
+passes those credentials
+
+895
+00:41:30,780 --> 00:41:34,050
+based on the principle
+in terms of the IAM role
+
+896
+00:41:34,050 --> 00:41:35,820
+attached with that tag.
+
+897
+00:41:35,820 --> 00:41:39,180
+And that tag will be eventually
+passed on to the Lambda
+
+898
+00:41:39,180 --> 00:41:42,450
+that is RAG service to
+ensure that when it invokes,
+
+899
+00:41:42,450 --> 00:41:45,660
+for example, the knowledge
+base or any other resources,
+
+900
+00:41:45,660 --> 00:41:47,610
+it will try to match that tag.
+
+901
+00:41:47,610 --> 00:41:49,200
+If both of those principle tag
+
+902
+00:41:49,200 --> 00:41:50,940
+and the resource tag matches,
+
+903
+00:41:50,940 --> 00:41:53,220
+then the request would be authorized.
+
+904
+00:41:53,220 --> 00:41:56,280
+If not, they would get access
+denied (indistinct), right?
+
+905
+00:41:56,280 --> 00:41:58,170
+So this is the common strategy
+
+906
+00:41:58,170 --> 00:42:00,063
+using attribute based access control.
+
+907
+00:42:00,990 --> 00:42:03,000
+Now in terms of the hypothesis,
+
+908
+00:42:03,000 --> 00:42:06,420
+what we want to do is we want
+to induce a microservice bug.
+
+909
+00:42:06,420 --> 00:42:08,940
+This could be a human error or any other,
+
+910
+00:42:08,940 --> 00:42:11,370
+you know, coding level issues could happen
+
+911
+00:42:11,370 --> 00:42:15,720
+that someone mistakenly
+hardcoded the knowledge base ID
+
+912
+00:42:15,720 --> 00:42:17,940
+of tenant two into tenant one, right?
+
+913
+00:42:17,940 --> 00:42:20,460
+Which may not happen but
+anything could happen
+
+914
+00:42:20,460 --> 00:42:22,110
+in terms of the failures.
+
+915
+00:42:22,110 --> 00:42:24,960
+So if that's the case,
+whether tenant one can bypass
+
+916
+00:42:24,960 --> 00:42:26,550
+and access the tenant two data
+
+917
+00:42:26,550 --> 00:42:28,550
+is what something that we will validate.
+
+918
+00:42:32,010 --> 00:42:36,247
+And let me quickly go back and see.
+
+919
+00:42:42,960 --> 00:42:45,693
+So what you all see on the
+screen for the pattern one,
+
+920
+00:42:52,260 --> 00:42:56,880
+you can see that compared
+to the previous iteration,
+
+921
+00:42:56,880 --> 00:43:00,150
+now all of those tenant
+requests have succeeded.
+
+922
+00:43:00,150 --> 00:43:02,010
+So as we induce the fault,
+
+923
+00:43:02,010 --> 00:43:05,610
+so tenant one can completely
+execute 13 requests
+
+924
+00:43:05,610 --> 00:43:09,870
+and tenant two can also
+proceed to execute 13 request.
+
+925
+00:43:09,870 --> 00:43:11,910
+So based on the fault that we've induced
+
+926
+00:43:11,910 --> 00:43:14,550
+and after we reset the DynamoDB table,
+
+927
+00:43:14,550 --> 00:43:17,013
+tenants can actually
+overshoot on their limits,
+
+928
+00:43:17,850 --> 00:43:19,680
+which is a sort of a violation
+
+929
+00:43:19,680 --> 00:43:21,510
+from a throttling mechanism
+standpoint, right?
+
+930
+00:43:21,510 --> 00:43:22,980
+So it means tenants can actually
+
+931
+00:43:22,980 --> 00:43:25,470
+create more number of volume of requests,
+
+932
+00:43:25,470 --> 00:43:28,440
+which could actually jeopardize
+the overall SaaS solution
+
+933
+00:43:28,440 --> 00:43:31,410
+in terms of the account level
+or regional level limits.
+
+934
+00:43:31,410 --> 00:43:33,630
+So some of the key
+learnings for pattern one
+
+935
+00:43:33,630 --> 00:43:37,620
+is that how do you enforce an
+IAM least privileged mechanism
+
+936
+00:43:37,620 --> 00:43:40,680
+to restrict any of your IAM identities
+
+937
+00:43:40,680 --> 00:43:43,410
+within your organization or accounts
+
+938
+00:43:43,410 --> 00:43:45,600
+cannot go ahead and delete such,
+
+939
+00:43:45,600 --> 00:43:48,420
+you know, IAM rules or logs or anything
+
+940
+00:43:48,420 --> 00:43:51,570
+that would actually restrict
+your tenant behavior.
+
+941
+00:43:51,570 --> 00:43:56,130
+The second strategies,
+if such fault happens,
+
+942
+00:43:56,130 --> 00:43:58,950
+how do you ensure that overall,
+
+943
+00:43:58,950 --> 00:44:02,430
+the legitimate tenants who
+are still within the limits,
+
+944
+00:44:02,430 --> 00:44:04,680
+because of the noisy
+neighbor of multiple tenant
+
+945
+00:44:04,680 --> 00:44:06,990
+trying to create more number of requests
+
+946
+00:44:06,990 --> 00:44:08,850
+would actually put other tenants
+
+947
+00:44:08,850 --> 00:44:10,380
+to receive a throttling error
+
+948
+00:44:10,380 --> 00:44:11,730
+because of your account level
+
+949
+00:44:11,730 --> 00:44:13,620
+or regional level quotas
+
+950
+00:44:13,620 --> 00:44:16,380
+that you have already pre-provisioned.
+
+951
+00:44:16,380 --> 00:44:18,120
+So how do you mitigate that?
+
+952
+00:44:18,120 --> 00:44:21,117
+So this is where you have to
+look at the broader scope of
+
+953
+00:44:21,117 --> 00:44:23,520
+the tenant and the noisy neighbor scenario
+
+954
+00:44:23,520 --> 00:44:26,190
+of mitigating the throttling mechanism.
+
+955
+00:44:26,190 --> 00:44:30,420
+And last but not the least is
+to have a more notification
+
+956
+00:44:30,420 --> 00:44:32,850
+and alerting strategy
+for the SaaS provider
+
+957
+00:44:32,850 --> 00:44:34,920
+to know if there are certain tenants
+
+958
+00:44:34,920 --> 00:44:37,530
+who are actually bypassing
+those throttling limits
+
+959
+00:44:37,530 --> 00:44:40,380
+and accordingly have some sort
+of automation or remediation
+
+960
+00:44:40,380 --> 00:44:42,630
+to actually go back and
+increase those quota limits
+
+961
+00:44:42,630 --> 00:44:44,930
+either at the account
+level or regional level.
+
+962
+00:44:53,880 --> 00:44:55,983
+Now, in terms of the other patterns,
+
+963
+00:44:57,780 --> 00:45:00,840
+so have pattern three for
+serverless applications.
+
+964
+00:45:00,840 --> 00:45:03,180
+How many of you have
+adopted serverless patterns
+
+965
+00:45:03,180 --> 00:45:04,353
+for your workloads?
+
+966
+00:45:05,940 --> 00:45:07,290
+Okay.
+
+967
+00:45:07,290 --> 00:45:09,750
+So, again, serverless is one of the,
+
+968
+00:45:09,750 --> 00:45:11,040
+you know, modern architecture
+
+969
+00:45:11,040 --> 00:45:14,220
+that most of the customers
+try to adopt because of,
+
+970
+00:45:14,220 --> 00:45:18,870
+you know, reliability and high
+availability as we manage,
+
+971
+00:45:18,870 --> 00:45:21,540
+you know, in terms of
+infrastructure and you try to focus
+
+972
+00:45:21,540 --> 00:45:25,200
+on your specific application
+related components.
+
+973
+00:45:25,200 --> 00:45:27,180
+Now one of the common challenge
+
+974
+00:45:27,180 --> 00:45:29,220
+with the serverless
+application is timeouts, right?
+
+975
+00:45:29,220 --> 00:45:33,930
+Because you have so many
+serverless architectural components
+
+976
+00:45:33,930 --> 00:45:36,780
+where you would have a circular dependency
+
+977
+00:45:36,780 --> 00:45:38,700
+between components and maybe upstream
+
+978
+00:45:38,700 --> 00:45:40,410
+or downstream systems as well.
+
+979
+00:45:40,410 --> 00:45:41,880
+So to work on this challenge,
+
+980
+00:45:41,880 --> 00:45:43,740
+how do you induce a purposeful fault
+
+981
+00:45:43,740 --> 00:45:45,960
+within your serverless architecture
+
+982
+00:45:45,960 --> 00:45:48,390
+to identify those system dependencies
+
+983
+00:45:48,390 --> 00:45:50,043
+or the timeout scenarios?
+
+984
+00:45:51,180 --> 00:45:52,830
+So one of the common pattern is
+
+985
+00:45:52,830 --> 00:45:57,750
+where you could actually
+induce AWS Lambda faults,
+
+986
+00:45:57,750 --> 00:45:59,010
+again using FIS,
+
+987
+00:45:59,010 --> 00:46:01,500
+which is a native
+capability that we support,
+
+988
+00:46:01,500 --> 00:46:03,210
+where you can induce the Lambda faults
+
+989
+00:46:03,210 --> 00:46:06,660
+in terms of adding a
+latency into your Lambda
+
+990
+00:46:06,660 --> 00:46:09,900
+and identify how this user behavior
+
+991
+00:46:09,900 --> 00:46:12,300
+and the various other system components,
+
+992
+00:46:12,300 --> 00:46:15,300
+like API gateway, error rates increasing,
+
+993
+00:46:15,300 --> 00:46:17,880
+or maybe the user error rates increasing
+
+994
+00:46:17,880 --> 00:46:20,313
+where user have a bad experience.
+
+995
+00:46:21,360 --> 00:46:24,570
+Now, again, you can
+leverage FIS to do this
+
+996
+00:46:24,570 --> 00:46:26,400
+and the common pattern is again know,
+
+997
+00:46:26,400 --> 00:46:28,290
+you will adopt or go
+through the same phases
+
+998
+00:46:28,290 --> 00:46:29,373
+of implementing it.
+
+999
+00:46:30,720 --> 00:46:32,760
+And the fourth pattern
+is the EKS application
+
+1000
+00:46:32,760 --> 00:46:33,693
+high availability.
+
+1001
+00:46:36,000 --> 00:46:39,150
+Managing workloads within
+EKS is complex task, right?
+
+1002
+00:46:39,150 --> 00:46:42,780
+Because of so many, you know,
+dependencies within the EKS
+
+1003
+00:46:42,780 --> 00:46:45,300
+of configuring Pods, node clusters,
+
+1004
+00:46:45,300 --> 00:46:46,800
+and various other, you know,
+
+1005
+00:46:46,800 --> 00:46:49,713
+internal dependencies of your Kubernetes.
+
+1006
+00:46:50,700 --> 00:46:54,870
+So one of the common patterns
+where customer adopt FIS
+
+1007
+00:46:54,870 --> 00:46:57,090
+is to actually induce EKS Pod actions.
+
+1008
+00:46:57,090 --> 00:47:00,150
+And we have so many Pod actions
+that we support natively
+
+1009
+00:47:00,150 --> 00:47:03,180
+in terms of terminating your instances,
+
+1010
+00:47:03,180 --> 00:47:06,210
+in terms of the node group servers,
+
+1011
+00:47:06,210 --> 00:47:08,553
+and also inducing the CPU stress.
+
+1012
+00:47:09,540 --> 00:47:12,540
+I will stress memory and latencies.
+
+1013
+00:47:12,540 --> 00:47:16,830
+So all of those faults are
+natively supported as part of FIS
+
+1014
+00:47:16,830 --> 00:47:20,730
+where you can induce the
+CPU stress, for example,
+
+1015
+00:47:20,730 --> 00:47:22,650
+you know, against multiple tenants,
+
+1016
+00:47:22,650 --> 00:47:26,280
+where tenants could be isolated
+based on the namespaces.
+
+1017
+00:47:26,280 --> 00:47:29,310
+And in this case, the tenants
+are trying to create a request
+
+1018
+00:47:29,310 --> 00:47:31,200
+towards tenant one and tenant two.
+
+1019
+00:47:31,200 --> 00:47:33,510
+And both of those tenants
+
+1020
+00:47:33,510 --> 00:47:36,450
+where you can actually label the faults
+
+1021
+00:47:36,450 --> 00:47:40,200
+based on the application selector,
+
+1022
+00:47:40,200 --> 00:47:42,600
+based on the application
+selector as your criteria,
+
+1023
+00:47:42,600 --> 00:47:44,400
+you can induce the fault.
+
+1024
+00:47:44,400 --> 00:47:47,100
+And some of the dependencies
+or prerequisites
+
+1025
+00:47:47,100 --> 00:47:48,810
+for you to induce the faults,
+
+1026
+00:47:48,810 --> 00:47:52,530
+you have to configure
+Kubernetes service accounts.
+
+1027
+00:47:52,530 --> 00:47:55,440
+The Kubernetes service account
+is a role-based mechanism
+
+1028
+00:47:55,440 --> 00:47:58,500
+where you provide certain
+permissions to FIS
+
+1029
+00:47:58,500 --> 00:48:01,590
+to actually create an FIS Pod,
+
+1030
+00:48:01,590 --> 00:48:05,610
+which will sit along
+with your existing Pods
+
+1031
+00:48:05,610 --> 00:48:08,490
+in your clusters to induce those faults
+
+1032
+00:48:08,490 --> 00:48:11,640
+to ensure that the EKS failures
+
+1033
+00:48:11,640 --> 00:48:14,433
+in terms of the Pod
+actions can be mitigated.
+
+1034
+00:48:17,160 --> 00:48:18,150
+Now I have another pattern
+
+1035
+00:48:18,150 --> 00:48:19,950
+about cross-region data replication
+
+1036
+00:48:19,950 --> 00:48:22,650
+on how to use S3 post replication,
+
+1037
+00:48:22,650 --> 00:48:23,520
+you know, if you're dealing with
+
+1038
+00:48:23,520 --> 00:48:25,920
+multi-regional architectures,
+
+1039
+00:48:25,920 --> 00:48:28,650
+where especially the data
+(indistinct) workflow
+
+1040
+00:48:28,650 --> 00:48:30,720
+have a complex steps,
+
+1041
+00:48:30,720 --> 00:48:32,070
+and if you're relying upon S3
+
+1042
+00:48:32,070 --> 00:48:35,160
+to replicate the data using cross-region,
+
+1043
+00:48:35,160 --> 00:48:37,200
+then this could be one of the
+pattern that you can adopt
+
+1044
+00:48:37,200 --> 00:48:40,740
+to induce faults across
+multiple regions as well.
+
+1045
+00:48:40,740 --> 00:48:41,917
+If anyone is interested,
+please let me know.
+
+1046
+00:48:41,917 --> 00:48:43,653
+I'm happy to discuss.
+
+1047
+00:48:45,240 --> 00:48:47,163
+Now in terms of the key takeaways,
+
+1048
+00:48:48,210 --> 00:48:49,980
+the first and fundamental element
+
+1049
+00:48:49,980 --> 00:48:52,440
+is to understand your
+workload architecture, right?
+
+1050
+00:48:52,440 --> 00:48:54,630
+So what are the system dependencies
+
+1051
+00:48:54,630 --> 00:48:56,550
+that you want to validate
+
+1052
+00:48:56,550 --> 00:49:00,730
+and are you interested to
+identify cross regional failures
+
+1053
+00:49:01,692 --> 00:49:04,290
+or you're trying to validate how
+
+1054
+00:49:04,290 --> 00:49:05,850
+one of the component would fail
+
+1055
+00:49:05,850 --> 00:49:08,430
+will have circular dependency
+on other components.
+
+1056
+00:49:08,430 --> 00:49:10,800
+So understanding your
+end-to-end workload architecture
+
+1057
+00:49:10,800 --> 00:49:12,963
+is super critical for resilience testing.
+
+1058
+00:49:14,460 --> 00:49:17,280
+And then once you understand
+your architecture,
+
+1059
+00:49:17,280 --> 00:49:20,280
+proceed towards identifying
+the key objective
+
+1060
+00:49:20,280 --> 00:49:21,750
+of resilience testing.
+
+1061
+00:49:21,750 --> 00:49:23,700
+So again, you know, if you don't know
+
+1062
+00:49:23,700 --> 00:49:26,490
+what specific hypothesis
+that you want to create
+
+1063
+00:49:26,490 --> 00:49:28,440
+in terms of resilience testing,
+
+1064
+00:49:28,440 --> 00:49:30,060
+it is going to be very difficult
+
+1065
+00:49:30,060 --> 00:49:33,030
+for you to justify what
+was the business outcome
+
+1066
+00:49:33,030 --> 00:49:36,210
+and how do you justify the outcomes
+
+1067
+00:49:36,210 --> 00:49:39,160
+aligned with the improvement
+of your workload architecture.
+
+1068
+00:49:40,020 --> 00:49:43,140
+And that is where you
+define your hypothesis
+
+1069
+00:49:43,140 --> 00:49:46,920
+with a real consideration
+of the weaknesses
+
+1070
+00:49:46,920 --> 00:49:49,770
+and what validation that you want to do.
+
+1071
+00:49:49,770 --> 00:49:51,450
+And then accordingly run the experiments.
+
+1072
+00:49:51,450 --> 00:49:53,490
+This is where you can use FIS experiments
+
+1073
+00:49:53,490 --> 00:49:56,040
+based on the various
+supports that we offered.
+
+1074
+00:49:56,040 --> 00:49:58,890
+And then finally, once
+you run the experiment,
+
+1075
+00:49:58,890 --> 00:50:01,620
+once you verify the real benefit would be
+
+1076
+00:50:01,620 --> 00:50:03,240
+based on the outcomes.
+
+1077
+00:50:03,240 --> 00:50:06,450
+The outcomes is the learning
+that you have identified
+
+1078
+00:50:06,450 --> 00:50:09,000
+and then accordingly improvise
+your resiliency posture
+
+1079
+00:50:09,000 --> 00:50:11,970
+to ensure that you can
+withstand those failures
+
+1080
+00:50:11,970 --> 00:50:14,373
+or disruptions based on your testing.
+
+1081
+00:50:15,390 --> 00:50:18,120
+And then as you mature throughout your
+
+1082
+00:50:18,120 --> 00:50:20,220
+resilience testing phases,
+
+1083
+00:50:20,220 --> 00:50:21,900
+ensure that you would be able to
+
+1084
+00:50:21,900 --> 00:50:24,660
+integrate resilience
+testing as part of your CICD
+
+1085
+00:50:24,660 --> 00:50:26,463
+as a continuous iterative process.
+
+1086
+00:50:28,230 --> 00:50:30,660
+And again, you know, resilience testing
+
+1087
+00:50:30,660 --> 00:50:32,310
+is a continuous iterative process,
+
+1088
+00:50:32,310 --> 00:50:34,140
+just not one time activity,
+
+1089
+00:50:34,140 --> 00:50:37,470
+because your system would
+evolve, team would change,
+
+1090
+00:50:37,470 --> 00:50:39,810
+and you would have various
+disruptions to handle.
+
+1091
+00:50:39,810 --> 00:50:43,530
+So ensure that you perform
+the resilience testing
+
+1092
+00:50:43,530 --> 00:50:45,573
+in a continuous iterative process.
+
+1093
+00:50:47,040 --> 00:50:49,500
+Feel free to grab this QR code
+if you're really interested
+
+1094
+00:50:49,500 --> 00:50:52,020
+to deep dive on various
+other best practices
+
+1095
+00:50:52,020 --> 00:50:53,120
+and guidance from AWS.
+
+1096
+00:50:54,900 --> 00:50:59,340
+And again, if you're interested
+to have one-to-one demos
+
+1097
+00:50:59,340 --> 00:51:01,770
+or even opportunity to
+grab some of the swags,
+
+1098
+00:51:01,770 --> 00:51:04,473
+meet us at the kiosk in the AWS Village.
+
+1099
+00:51:05,520 --> 00:51:06,960
+And last but not the least,
+
+1100
+00:51:06,960 --> 00:51:10,350
+if you really want to
+upskill your AWS knowledge,
+
+1101
+00:51:10,350 --> 00:51:13,380
+feel free to register
+on AWS Skill Builder,
+
+1102
+00:51:13,380 --> 00:51:16,500
+where you have thousands
+of on-demand trainings
+
+1103
+00:51:16,500 --> 00:51:18,450
+as well as hands-on experience as well.
+

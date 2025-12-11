@@ -1,0 +1,5964 @@
+1
+00:00:01,850 --> 00:00:04,198
+Imagine your manager comes to you
+
+2
+00:00:04,328 --> 00:00:06,709
+and asks you to build a several platform
+
+3
+00:00:06,709 --> 00:00:08,398
+for your new e-commerce application.
+
+4
+00:00:09,288 --> 00:00:11,489
+So you start building a few lambda
+
+5
+00:00:11,489 --> 00:00:13,679
+functions, and after 3 months,
+
+6
+00:00:13,769 --> 00:00:16,120
+you build hundreds of lambda functions,
+
+7
+00:00:16,260 --> 00:00:18,260
+which becomes very hard to manage.
+
+8
+00:00:18,809 --> 00:00:20,958
+In this session, we will serve serverless
+
+9
+00:00:20,958 --> 00:00:23,329
+development practices to confidently
+
+10
+00:00:23,329 --> 00:00:25,408
+scale your lambda applications.
+
+11
+00:00:26,158 --> 00:00:28,989
+Hi everyone and welcome to CNS 372.
+
+12
+00:00:29,280 --> 00:00:31,280
+Several several patterns for large
+
+13
+00:00:31,280 --> 00:00:33,560
+scale applications with AWS Lambda.
+
+14
+00:00:34,158 --> 00:00:35,668
+My name is Lefteris Carraer Yu.
+
+15
+00:00:36,359 --> 00:00:38,880
+I'm a senior solutions architect with AWS
+
+16
+00:00:39,368 --> 00:00:41,539
+and I'm thrilled to be joined by Michelle.
+
+17
+00:00:42,679 --> 00:00:44,880
+Hey everyone, I'm Michelle Chisman, a senior solutions
+
+18
+00:00:44,880 --> 00:00:46,939
+architect. I'm also at AWS.
+
+19
+00:00:48,399 --> 00:00:50,679
+Now, when companies want to build or migrate
+
+20
+00:00:50,679 --> 00:00:52,779
+their applications to serverless and
+
+21
+00:00:52,779 --> 00:00:53,880
+AWS lambda,
+
+22
+00:00:54,279 --> 00:00:56,478
+they usually start by mapping
+
+23
+00:00:56,478 --> 00:00:58,978
+one functionality to one lambda function.
+
+24
+00:00:59,829 --> 00:01:02,219
+We call this single purpose lambda
+
+25
+00:01:02,219 --> 00:01:03,039
+functions.
+
+26
+00:01:03,740 --> 00:01:05,819
+Let's take an example of an e-commerce
+
+27
+00:01:05,819 --> 00:01:07,980
+use case where we might have
+
+28
+00:01:07,980 --> 00:01:09,480
+the following architecture.
+
+29
+00:01:12,528 --> 00:01:14,838
+Now in this architecture we see a few lambda
+
+30
+00:01:14,838 --> 00:01:17,088
+functions. For example, we see a lambda
+
+31
+00:01:17,088 --> 00:01:18,528
+function to get a product,
+
+32
+00:01:19,049 --> 00:01:21,329
+to add something to our shopping cart,
+
+33
+00:01:21,569 --> 00:01:23,739
+to get something from our shopping cart, or
+
+34
+00:01:23,739 --> 00:01:25,480
+remove some something from there,
+
+35
+00:01:25,888 --> 00:01:28,290
+or we have a few lambda functions to actually
+
+36
+00:01:28,290 --> 00:01:30,329
+purchase something. So we go
+
+37
+00:01:30,329 --> 00:01:32,650
+through a series of steps which is
+
+38
+00:01:32,650 --> 00:01:34,668
+submitting an order, reserving
+
+39
+00:01:34,668 --> 00:01:35,638
+the inventory,
+
+40
+00:01:36,168 --> 00:01:38,549
+processing the payment, or fulfilling the order.
+
+41
+00:01:39,129 --> 00:01:41,250
+Now, all these lambda functions
+
+42
+00:01:41,250 --> 00:01:42,230
+are backed up
+
+43
+00:01:42,528 --> 00:01:44,888
+by Amazon API gateway, which
+
+44
+00:01:44,888 --> 00:01:47,088
+serves as the front door uh
+
+45
+00:01:47,088 --> 00:01:49,049
+for our API layer.
+
+46
+00:01:50,000 --> 00:01:52,209
+And we have a few endpoints
+
+47
+00:01:52,209 --> 00:01:54,250
+there that actually are
+
+48
+00:01:54,250 --> 00:01:56,549
+integrated and called the lambda functions.
+
+49
+00:01:57,010 --> 00:01:58,930
+Now it's lambda function
+
+50
+00:01:59,250 --> 00:02:01,388
+is also saved to a different
+
+51
+00:02:01,888 --> 00:02:04,379
+dynamo DB table. For example,
+
+52
+00:02:05,120 --> 00:02:07,138
+anything which has to do with products,
+
+53
+00:02:07,168 --> 00:02:09,649
+it's saved to a products table or
+
+54
+00:02:09,649 --> 00:02:11,689
+anything that has to do with cards is saved to
+
+55
+00:02:11,689 --> 00:02:12,278
+a card
+
+56
+00:02:12,649 --> 00:02:14,729
+uh cards table in Dynamo DB.
+
+57
+00:02:15,610 --> 00:02:17,610
+Now, this approach of having
+
+58
+00:02:17,610 --> 00:02:19,729
+one functionality mapped to one
+
+59
+00:02:19,729 --> 00:02:21,990
+lambda function is perfectly fine.
+
+60
+00:02:22,710 --> 00:02:25,000
+And many companies do exactly that.
+
+61
+00:02:25,588 --> 00:02:26,288
+However,
+
+62
+00:02:26,669 --> 00:02:28,868
+as customers grow and add
+
+63
+00:02:28,868 --> 00:02:29,860
+more features,
+
+64
+00:02:30,189 --> 00:02:32,308
+they end up with hundreds and
+
+65
+00:02:32,308 --> 00:02:34,469
+sometimes thousands of lambda functions.
+
+66
+00:02:35,349 --> 00:02:37,830
+And this introduces 3
+
+67
+00:02:37,830 --> 00:02:39,990
+major pain points that we hear
+
+68
+00:02:39,990 --> 00:02:42,710
+consistently from our customers.
+
+69
+00:02:45,580 --> 00:02:46,819
+The first is
+
+70
+00:02:47,189 --> 00:02:49,330
+how do I properly structure
+
+71
+00:02:49,330 --> 00:02:51,629
+and organize many lambda
+
+72
+00:02:51,629 --> 00:02:54,219
+functions like hundreds of lambda functions.
+
+73
+00:02:54,750 --> 00:02:57,389
+The second one is how do I reuse
+
+74
+00:02:57,389 --> 00:02:59,379
+code across those functions?
+
+75
+00:02:59,729 --> 00:03:01,899
+And the third one is how do I
+
+76
+00:03:01,899 --> 00:03:04,050
+maintain consistent deployments
+
+77
+00:03:04,349 --> 00:03:06,069
+across different environments,
+
+78
+00:03:06,349 --> 00:03:08,429
+meaning development, staging,
+
+79
+00:03:08,538 --> 00:03:09,469
+or production.
+
+80
+00:03:10,080 --> 00:03:12,439
+And this is exactly what we're going
+
+81
+00:03:12,439 --> 00:03:14,219
+to solve during the session.
+
+82
+00:03:14,838 --> 00:03:17,038
+By the end of this talk, you'll have practical
+
+83
+00:03:17,038 --> 00:03:19,159
+patterns you can apply
+
+84
+00:03:19,159 --> 00:03:21,139
+immediately to your serverless application.
+
+85
+00:03:22,330 --> 00:03:24,588
+Now, let's tackle the first problem.
+
+86
+00:03:25,288 --> 00:03:27,368
+How do I properly structure and
+
+87
+00:03:27,368 --> 00:03:29,449
+organize many lambda functions?
+
+88
+00:03:31,240 --> 00:03:33,409
+Now, in this session, I'm going to use Quiro,
+
+89
+00:03:33,719 --> 00:03:36,338
+which is our new genic AID
+
+90
+00:03:36,338 --> 00:03:37,699
+that is based upon
+
+91
+00:03:38,038 --> 00:03:39,419
+Visual Studio code.
+
+92
+00:03:40,169 --> 00:03:42,169
+And is now generally available for you
+
+93
+00:03:42,169 --> 00:03:43,830
+to use and it's really awesome.
+
+94
+00:03:45,129 --> 00:03:47,758
+So here I have all the lambda functions
+
+95
+00:03:47,758 --> 00:03:49,800
+I showed you at root level in
+
+96
+00:03:49,800 --> 00:03:52,038
+separate folders. So let's take a look.
+
+97
+00:03:53,508 --> 00:03:55,778
+We have for example the Act
+
+98
+00:03:55,778 --> 00:03:57,758
+lambda function here which is
+
+99
+00:03:58,058 --> 00:04:00,508
+which has a very basic uh functionality
+
+100
+00:04:00,909 --> 00:04:03,588
+so what it does it's actually getting an input
+
+101
+00:04:03,588 --> 00:04:05,588
+from Amazon API gateway it is
+
+102
+00:04:05,588 --> 00:04:07,409
+validating the input.
+
+103
+00:04:08,569 --> 00:04:09,949
+It is creating
+
+104
+00:04:10,210 --> 00:04:11,330
+an order,
+
+105
+00:04:11,788 --> 00:04:14,050
+uh, a cart item to be saved to Dynamo
+
+106
+00:04:14,050 --> 00:04:16,160
+D B, and it goes there
+
+107
+00:04:16,160 --> 00:04:16,949
+and saves it.
+
+108
+00:04:17,309 --> 00:04:19,649
+Nothing fancy, very simple one, the
+
+109
+00:04:19,649 --> 00:04:21,699
+same with remove cart as well, right?
+
+110
+00:04:21,850 --> 00:04:23,309
+So you remove something
+
+111
+00:04:23,649 --> 00:04:25,048
+from Dynamo D B
+
+112
+00:04:25,338 --> 00:04:26,608
+or the get card
+
+113
+00:04:27,048 --> 00:04:28,069
+you get.
+
+114
+00:04:28,798 --> 00:04:30,439
+A card from Dynamo to be
+
+115
+00:04:31,000 --> 00:04:33,040
+based on a card ID. OK?
+
+116
+00:04:33,160 --> 00:04:35,358
+Nothing fancy, very simple lamb
+
+117
+00:04:35,358 --> 00:04:36,019
+functions.
+
+118
+00:04:37,738 --> 00:04:40,100
+I also have here a template
+
+119
+00:04:40,100 --> 00:04:40,798
+YAML,
+
+120
+00:04:41,540 --> 00:04:43,399
+which is a SAM template.
+
+121
+00:04:43,939 --> 00:04:46,559
+Now SAM stands for serverless
+
+122
+00:04:46,559 --> 00:04:48,660
+application model, and it is an
+
+123
+00:04:48,660 --> 00:04:50,160
+open source framework,
+
+124
+00:04:50,660 --> 00:04:53,209
+which makes it easy to build serverless
+
+125
+00:04:53,209 --> 00:04:53,759
+applications.
+
+126
+00:04:54,470 --> 00:04:57,220
+It is, it is essentially an extension
+
+127
+00:04:57,220 --> 00:04:59,220
+of cloud formation, and
+
+128
+00:04:59,220 --> 00:05:01,178
+it consists of two parts.
+
+129
+00:05:02,269 --> 00:05:04,269
+One, you can write your infrastructure as
+
+130
+00:05:04,269 --> 00:05:06,588
+code, as we see here in the template
+
+131
+00:05:06,588 --> 00:05:07,209
+YAML.
+
+132
+00:05:08,588 --> 00:05:10,750
+And the other part is that you can
+
+133
+00:05:10,750 --> 00:05:12,889
+use CLI commands
+
+134
+00:05:13,149 --> 00:05:15,819
+to help you with local development, testing,
+
+135
+00:05:16,100 --> 00:05:17,689
+uh, and deployment as well.
+
+136
+00:05:18,829 --> 00:05:20,910
+Now, for example, some CLI commands you
+
+137
+00:05:20,910 --> 00:05:22,970
+can use with SAM to help you with your serverless
+
+138
+00:05:22,970 --> 00:05:25,329
+applications. You can initialize
+
+139
+00:05:25,329 --> 00:05:30,178
+a new serverless project using the SAM in it command,
+
+140
+00:05:30,298 --> 00:05:32,230
+and this will create a code base you need
+
+141
+00:05:33,298 --> 00:05:36,329
+to start working with uh
+
+142
+00:05:36,329 --> 00:05:38,079
+with serverless applications.
+
+143
+00:05:39,869 --> 00:05:41,129
+You can do some build to build your project.
+
+144
+00:05:43,069 --> 00:05:45,230
+Whatever programming language you might be using, if
+
+145
+00:05:45,230 --> 00:05:47,309
+it's Java Python, it will build it for you.
+
+146
+00:05:47,428 --> 00:05:49,100
+It knows how to build it.
+
+147
+00:05:49,470 --> 00:05:51,290
+And also you can do deploy
+
+148
+00:05:51,548 --> 00:05:53,230
+where you can deploy your serverless
+
+149
+00:05:53,670 --> 00:05:56,009
+application to AWS to AWS.
+
+150
+00:05:58,439 --> 00:06:00,069
+But now let's do,
+
+151
+00:06:00,369 --> 00:06:02,528
+let's let's take a look at the sam template
+
+152
+00:06:02,528 --> 00:06:03,588
+that we have here.
+
+153
+00:06:04,048 --> 00:06:06,569
+So it's a very simple sam template
+
+154
+00:06:06,889 --> 00:06:08,920
+which. Creates
+
+155
+00:06:08,920 --> 00:06:11,000
+an Amazon API gateway over
+
+156
+00:06:11,000 --> 00:06:13,389
+here. And all the lambda
+
+157
+00:06:13,389 --> 00:06:15,389
+functions that I showed you
+
+158
+00:06:15,389 --> 00:06:16,750
+we have a root level.
+
+159
+00:06:17,269 --> 00:06:19,319
+For example, you have the get card
+
+160
+00:06:19,319 --> 00:06:20,769
+lambda function here.
+
+161
+00:06:21,709 --> 00:06:23,838
+And you also create
+
+162
+00:06:24,209 --> 00:06:26,209
+an API gateway endpoint
+
+163
+00:06:26,209 --> 00:06:28,588
+that is integrated with this lambda function
+
+164
+00:06:28,829 --> 00:06:30,488
+with these five
+
+165
+00:06:31,108 --> 00:06:32,290
+lines of code,
+
+166
+00:06:32,709 --> 00:06:34,750
+OK? So we have here all our lambda
+
+167
+00:06:34,750 --> 00:06:35,588
+functions.
+
+168
+00:06:36,470 --> 00:06:38,660
+And at the bottom we have
+
+169
+00:06:39,079 --> 00:06:41,278
+the uh Dynamo DP tables
+
+170
+00:06:41,278 --> 00:06:41,858
+as well.
+
+171
+00:06:42,899 --> 00:06:45,278
+Now, you can visualize that one by
+
+172
+00:06:45,579 --> 00:06:47,298
+using uh.
+
+173
+00:06:48,420 --> 00:06:49,470
+The appli
+
+174
+00:06:49,798 --> 00:06:51,639
+the infrastructure composer.
+
+175
+00:06:52,528 --> 00:06:53,410
+Over here
+
+176
+00:06:56,410 --> 00:06:58,569
+So you see I have all my lambda functions,
+
+177
+00:06:58,850 --> 00:07:00,988
+I have my dynamo DB tables,
+
+178
+00:07:01,100 --> 00:07:03,209
+and I have my API gateway and
+
+179
+00:07:03,209 --> 00:07:04,470
+the endpoints I expose.
+
+180
+00:07:05,480 --> 00:07:06,040
+OK.
+
+181
+00:07:08,059 --> 00:07:10,730
+Now, this code base is deployed
+
+182
+00:07:10,730 --> 00:07:13,000
+to a single git repository.
+
+183
+00:07:14,019 --> 00:07:16,220
+I have already deployed that
+
+184
+00:07:16,220 --> 00:07:18,338
+to my account, so let's run some
+
+185
+00:07:18,338 --> 00:07:20,639
+tests against some endpoints.
+
+186
+00:07:21,420 --> 00:07:23,319
+So I have created a test script here.
+
+187
+00:07:23,858 --> 00:07:26,019
+So what I'm going to do is I'm going to
+
+188
+00:07:26,019 --> 00:07:27,358
+call my test script,
+
+189
+00:07:27,660 --> 00:07:28,759
+and I'm going to do
+
+190
+00:07:29,059 --> 00:07:31,290
+the single purpose lambda functions that we have here,
+
+191
+00:07:31,298 --> 00:07:32,959
+and I'm going to add something
+
+192
+00:07:33,540 --> 00:07:35,488
+to our Dynamo DB table using
+
+193
+00:07:36,500 --> 00:07:38,738
+the postcard
+
+194
+00:07:38,738 --> 00:07:41,019
+meth uh endpoint that I have in
+
+195
+00:07:41,019 --> 00:07:43,278
+my uh API gateway,
+
+196
+00:07:43,338 --> 00:07:43,879
+OK?
+
+197
+00:07:44,379 --> 00:07:46,980
+So what this does, it's actually doing a curl.
+
+198
+00:07:48,129 --> 00:07:50,480
+Which is sending like a a payload
+
+199
+00:07:50,480 --> 00:07:52,600
+there. Now, as you can
+
+200
+00:07:52,600 --> 00:07:54,759
+see, I've added something to
+
+201
+00:07:54,759 --> 00:07:56,798
+my Dynamo DB table using the
+
+202
+00:07:56,798 --> 00:07:58,108
+lambda function I wrote,
+
+203
+00:07:59,278 --> 00:08:01,278
+and it took 1.2
+
+204
+00:08:01,278 --> 00:08:02,379
+seconds to finish.
+
+205
+00:08:04,329 --> 00:08:05,790
+If I run that again.
+
+206
+00:08:07,949 --> 00:08:10,309
+I'll see that it takes 0.2
+
+207
+00:08:10,309 --> 00:08:12,559
+seconds to finish, so it's much, much
+
+208
+00:08:12,559 --> 00:08:13,170
+faster.
+
+209
+00:08:13,750 --> 00:08:14,790
+So why is that?
+
+210
+00:08:18,199 --> 00:08:20,500
+Because of the cold starts.
+
+211
+00:08:21,369 --> 00:08:23,519
+And the what, so what is a call start?
+
+212
+00:08:23,730 --> 00:08:26,449
+Call start is essentially the initialization
+
+213
+00:08:26,449 --> 00:08:27,069
+time
+
+214
+00:08:27,449 --> 00:08:29,470
+it takes for a lambda function
+
+215
+00:08:29,769 --> 00:08:31,548
+to download the code
+
+216
+00:08:31,928 --> 00:08:33,928
+to start up the environment, the
+
+217
+00:08:33,928 --> 00:08:36,129
+runtime environment, for example, JVM
+
+218
+00:08:36,129 --> 00:08:37,428
+if you're using Java,
+
+219
+00:08:38,080 --> 00:08:40,798
+right? So prepare this execution
+
+220
+00:08:40,798 --> 00:08:42,210
+environment as we call it
+
+221
+00:08:42,729 --> 00:08:44,408
+inside a micro VM.
+
+222
+00:08:45,178 --> 00:08:46,239
+And then run it
+
+223
+00:08:46,580 --> 00:08:47,609
+so this initialization time,
+
+224
+00:08:48,779 --> 00:08:51,099
+the first time is called the cold start. Now
+
+225
+00:08:51,099 --> 00:08:53,149
+the second time this is already warmed
+
+226
+00:08:53,149 --> 00:08:55,418
+up, so we won't incur a cold start
+
+227
+00:08:55,418 --> 00:08:56,418
+again, OK?
+
+228
+00:09:00,009 --> 00:09:02,129
+I can also do a get
+
+229
+00:09:02,129 --> 00:09:02,788
+here
+
+230
+00:09:03,408 --> 00:09:05,769
+now since this get is another lambda
+
+231
+00:09:05,769 --> 00:09:08,009
+function, then I will incur another cold
+
+232
+00:09:08,009 --> 00:09:10,048
+start, right? So this also takes
+
+233
+00:09:10,048 --> 00:09:12,099
+1.3 seconds to finish. If
+
+234
+00:09:12,099 --> 00:09:12,788
+I do it again,
+
+235
+00:09:13,168 --> 00:09:15,369
+I won't see the call start. It will be much, much
+
+236
+00:09:15,369 --> 00:09:16,788
+faster, 0.3,
+
+237
+00:09:17,090 --> 00:09:19,460
+OK? Now,
+
+238
+00:09:19,668 --> 00:09:21,710
+in our code, we have only a few
+
+239
+00:09:21,710 --> 00:09:23,009
+lambda functions,
+
+240
+00:09:23,509 --> 00:09:25,750
+but if you have 50
+
+241
+00:09:25,750 --> 00:09:27,979
+or 100 or 200 lambda functions,
+
+242
+00:09:28,349 --> 00:09:30,190
+this becomes really unmanageable.
+
+243
+00:09:31,168 --> 00:09:33,428
+Now, the code base is going to grow,
+
+244
+00:09:33,769 --> 00:09:35,969
+and you will have a single git
+
+245
+00:09:35,969 --> 00:09:38,129
+repository, you will have one
+
+246
+00:09:38,129 --> 00:09:39,849
+massive CICD pipeline,
+
+247
+00:09:40,408 --> 00:09:41,808
+and if anything breaks,
+
+248
+00:09:42,450 --> 00:09:43,788
+everything is at risk.
+
+249
+00:09:45,000 --> 00:09:47,048
+So what is the solution to this?
+
+250
+00:09:47,599 --> 00:09:50,440
+We are going to apply the microservices
+
+251
+00:09:50,440 --> 00:09:52,879
+principles and the bonded context
+
+252
+00:09:52,879 --> 00:09:54,320
+to our serverless architecture.
+
+253
+00:09:55,308 --> 00:09:57,609
+Now, let's take a look at those
+
+254
+00:09:57,609 --> 00:09:58,330
+3
+
+255
+00:09:58,830 --> 00:10:00,830
+card functions that we have here, the add
+
+256
+00:10:00,830 --> 00:10:02,950
+card, the get card, and the remove card.
+
+257
+00:10:03,509 --> 00:10:05,509
+Now they all operate on
+
+258
+00:10:05,509 --> 00:10:07,750
+the same domain, which is the shopping
+
+259
+00:10:07,750 --> 00:10:09,989
+cart. They share the same
+
+260
+00:10:09,989 --> 00:10:12,149
+data model, the same dynamo DB
+
+261
+00:10:12,149 --> 00:10:14,308
+table, and they are likely owned by
+
+262
+00:10:14,308 --> 00:10:15,288
+the same team.
+
+263
+00:10:16,158 --> 00:10:18,158
+Now let's group those into
+
+264
+00:10:18,158 --> 00:10:19,379
+a separate folder.
+
+265
+00:10:19,759 --> 00:10:21,989
+So let me create like a new folder,
+
+266
+00:10:22,279 --> 00:10:23,460
+which I'm going to
+
+267
+00:10:23,869 --> 00:10:25,899
+name it card service,
+
+268
+00:10:26,269 --> 00:10:28,500
+and what I'm going to do is I'm gonna
+
+269
+00:10:28,719 --> 00:10:30,879
+get the car, get card method.
+
+270
+00:10:30,960 --> 00:10:32,418
+I'm going to move it there.
+
+271
+00:10:34,678 --> 00:10:37,019
+I'm gonna get the remove card method
+
+272
+00:10:37,019 --> 00:10:39,259
+and. Move
+
+273
+00:10:39,259 --> 00:10:40,519
+it there as well
+
+274
+00:10:40,940 --> 00:10:42,500
+and I'm gonna get the.
+
+275
+00:10:44,099 --> 00:10:45,700
+Out card method and move it there.
+
+276
+00:10:49,219 --> 00:10:51,519
+So now we have a card service folder
+
+277
+00:10:51,519 --> 00:10:53,899
+and all the card related functions
+
+278
+00:10:53,899 --> 00:10:54,639
+live here.
+
+279
+00:10:55,139 --> 00:10:57,700
+Now you will apply the same principle
+
+280
+00:10:57,700 --> 00:10:58,969
+to the other functions,
+
+281
+00:10:59,259 --> 00:11:01,330
+so everything that is related to
+
+282
+00:11:01,330 --> 00:11:03,340
+the inventory you will create like a different
+
+283
+00:11:03,340 --> 00:11:05,469
+folder and put, put everything there.
+
+284
+00:11:05,899 --> 00:11:08,168
+The same for orders, the same for payments,
+
+285
+00:11:08,219 --> 00:11:09,320
+the same for products.
+
+286
+00:11:10,349 --> 00:11:12,428
+Right? Now, since we have applied
+
+287
+00:11:12,428 --> 00:11:14,178
+the microservices principles,
+
+288
+00:11:14,440 --> 00:11:16,950
+then we need to split the resources
+
+289
+00:11:16,950 --> 00:11:19,048
+into multiple repositories.
+
+290
+00:11:19,668 --> 00:11:21,830
+So for that, I would have to create
+
+291
+00:11:21,830 --> 00:11:23,288
+one sum template
+
+292
+00:11:23,548 --> 00:11:25,889
+for each microservice and repository.
+
+293
+00:11:27,349 --> 00:11:29,580
+So what I'm going to do here is I'm
+
+294
+00:11:29,580 --> 00:11:30,359
+going to create
+
+295
+00:11:31,298 --> 00:11:33,460
+a new template here inside
+
+296
+00:11:33,460 --> 00:11:34,960
+the card service folder.
+
+297
+00:11:35,908 --> 00:11:37,808
+And what I'm going to do is.
+
+298
+00:11:38,399 --> 00:11:40,599
+Inside this template YAML file,
+
+299
+00:11:40,798 --> 00:11:42,139
+I'm going to take
+
+300
+00:11:42,759 --> 00:11:45,119
+only the card related
+
+301
+00:11:45,119 --> 00:11:46,058
+function,
+
+302
+00:11:46,590 --> 00:11:47,859
+lambda functions.
+
+303
+00:11:49,418 --> 00:11:51,779
+Um, the Amazon IBA gateway API
+
+304
+00:11:51,779 --> 00:11:53,320
+and the Dynamo DB
+
+305
+00:11:53,788 --> 00:11:54,320
+card
+
+306
+00:11:54,580 --> 00:11:55,580
+table only
+
+307
+00:11:55,979 --> 00:11:56,500
+so.
+
+308
+00:11:57,629 --> 00:11:58,769
+I'm going to remove
+
+309
+00:11:59,168 --> 00:12:00,048
+everything else
+
+310
+00:12:00,469 --> 00:12:01,250
+from here.
+
+311
+00:12:02,889 --> 00:12:04,070
+And I'm going to live
+
+312
+00:12:04,928 --> 00:12:06,250
+here only.
+
+313
+00:12:07,168 --> 00:12:09,219
+The 3 lumbar
+
+314
+00:12:09,219 --> 00:12:09,908
+functions.
+
+315
+00:12:14,080 --> 00:12:21,788
+OK. Now,
+
+316
+00:12:22,099 --> 00:12:24,158
+this um template is much more clean
+
+317
+00:12:24,158 --> 00:12:26,229
+now. Usually in a
+
+318
+00:12:26,229 --> 00:12:28,129
+microservice architecture
+
+319
+00:12:28,428 --> 00:12:31,109
+you don't expose the databases
+
+320
+00:12:31,109 --> 00:12:33,450
+or anything that is related to the data
+
+321
+00:12:34,219 --> 00:12:36,690
+directly but you do it through APIs,
+
+322
+00:12:36,849 --> 00:12:39,048
+right? Because in here
+
+323
+00:12:39,229 --> 00:12:41,250
+what you could do is you could
+
+324
+00:12:41,619 --> 00:12:44,229
+output something from your some template.
+
+325
+00:12:44,548 --> 00:12:46,808
+In order for other templates
+
+326
+00:12:47,229 --> 00:12:48,700
+to have that as an input,
+
+327
+00:12:48,989 --> 00:12:51,070
+so for example, you could output
+
+328
+00:12:51,070 --> 00:12:53,349
+here the cards table or even
+
+329
+00:12:53,349 --> 00:12:55,389
+the lambda functions, but you don't want
+
+330
+00:12:55,389 --> 00:12:57,908
+to do that in a microservices
+
+331
+00:12:57,908 --> 00:12:58,969
+architecture.
+
+332
+00:12:59,349 --> 00:13:01,649
+You want everything to be exposed
+
+333
+00:13:01,830 --> 00:13:03,668
+via an API.
+
+334
+00:13:04,700 --> 00:13:05,298
+OK.
+
+335
+00:13:07,009 --> 00:13:07,548
+Now,
+
+336
+00:13:08,250 --> 00:13:09,869
+the benefits of this, it's uh
+
+337
+00:13:10,210 --> 00:13:11,469
+it's service now
+
+338
+00:13:11,889 --> 00:13:14,678
+can be developed, deployed, and scaled
+
+339
+00:13:14,678 --> 00:13:15,450
+independently.
+
+340
+00:13:15,769 --> 00:13:18,149
+It can be owned by different teams
+
+341
+00:13:18,690 --> 00:13:20,729
+and. The shared
+
+342
+00:13:20,729 --> 00:13:22,509
+dependencies no one else
+
+343
+00:13:22,928 --> 00:13:23,889
+will be using,
+
+344
+00:13:24,250 --> 00:13:26,298
+OK? And this is
+
+345
+00:13:26,298 --> 00:13:28,298
+how you actually scale the surveillance
+
+346
+00:13:28,298 --> 00:13:30,389
+architectures organize uh
+
+347
+00:13:30,389 --> 00:13:31,269
+organizers
+
+348
+00:13:32,330 --> 00:13:33,649
+organizationally, OK?
+
+349
+00:13:34,979 --> 00:13:37,139
+Now, as I said, this card
+
+350
+00:13:37,139 --> 00:13:39,168
+service will be deployed into
+
+351
+00:13:39,168 --> 00:13:41,200
+a different git repositories.
+
+352
+00:13:41,969 --> 00:13:44,058
+OK, and you will do the same for
+
+353
+00:13:44,058 --> 00:13:44,639
+all
+
+354
+00:13:45,058 --> 00:13:47,058
+the domains that you might have in
+
+355
+00:13:47,058 --> 00:13:48,918
+your microservice architecture.
+
+356
+00:13:49,500 --> 00:13:52,298
+Now let's run some tests
+
+357
+00:13:52,298 --> 00:13:54,928
+against this new card service,
+
+358
+00:13:55,139 --> 00:13:57,340
+let's say microservice that we have. I
+
+359
+00:13:57,340 --> 00:13:59,178
+have deployed that to another.
+
+360
+00:14:00,009 --> 00:14:01,190
+AWS account
+
+361
+00:14:01,729 --> 00:14:03,759
+so. I'm gonna
+
+362
+00:14:03,759 --> 00:14:05,840
+do again some tests and I'm gonna
+
+363
+00:14:05,840 --> 00:14:07,019
+do like a test.
+
+364
+00:14:07,928 --> 00:14:09,119
+A micro
+
+365
+00:14:09,649 --> 00:14:10,190
+ad.
+
+366
+00:14:11,960 --> 00:14:13,580
+Will we see any change?
+
+367
+00:14:14,239 --> 00:14:16,399
+No, right? It will be exactly the
+
+368
+00:14:16,399 --> 00:14:16,940
+same
+
+369
+00:14:17,399 --> 00:14:18,158
+because we have
+
+370
+00:14:18,558 --> 00:14:20,298
+again 3 lambda functions.
+
+371
+00:14:20,960 --> 00:14:23,070
+We have a call start for each lambda function,
+
+372
+00:14:23,158 --> 00:14:24,779
+so we'll see like the same,
+
+373
+00:14:25,080 --> 00:14:25,840
+um.
+
+374
+00:14:27,269 --> 00:14:29,288
+Duration for its lambda function,
+
+375
+00:14:29,548 --> 00:14:30,149
+OK?
+
+376
+00:14:30,590 --> 00:14:32,408
+So 1.3 to add something,
+
+377
+00:14:33,029 --> 00:14:35,288
+1.3 again to get something,
+
+378
+00:14:35,509 --> 00:14:38,048
+OK? So
+
+379
+00:14:38,048 --> 00:14:40,048
+although we've done some optimizations on
+
+380
+00:14:40,048 --> 00:14:42,308
+the organization level, we haven't
+
+381
+00:14:42,580 --> 00:14:44,690
+done any optimizations on the lambda
+
+382
+00:14:44,690 --> 00:14:45,418
+functions.
+
+383
+00:14:46,859 --> 00:14:48,859
+Now, we'll talk about an optimization
+
+384
+00:14:48,859 --> 00:14:49,639
+technique
+
+385
+00:14:50,019 --> 00:14:52,178
+for lambda, which is to reduce the
+
+386
+00:14:52,178 --> 00:14:54,460
+actual number of the lambda functions
+
+387
+00:14:54,460 --> 00:14:55,080
+we have.
+
+388
+00:14:56,219 --> 00:14:58,590
+A pattern that is gaining traction is
+
+389
+00:14:58,590 --> 00:15:01,129
+called the lambda web adapter.
+
+390
+00:15:02,190 --> 00:15:04,548
+Now, instead of having one
+
+391
+00:15:04,548 --> 00:15:06,769
+function per HTTP method,
+
+392
+00:15:07,349 --> 00:15:09,379
+you can run a traditional
+
+393
+00:15:09,379 --> 00:15:11,590
+web framework inside your Lambda
+
+394
+00:15:11,590 --> 00:15:13,830
+function and write route
+
+395
+00:15:13,830 --> 00:15:14,908
+requests internally.
+
+396
+00:15:15,859 --> 00:15:18,099
+Now let me show you how you can do that.
+
+397
+00:15:18,619 --> 00:15:20,619
+So what I'm going to do here, I
+
+398
+00:15:20,619 --> 00:15:21,960
+am going to merge
+
+399
+00:15:22,369 --> 00:15:24,859
+the add card and the remove card
+
+400
+00:15:24,859 --> 00:15:25,440
+into
+
+401
+00:15:26,599 --> 00:15:28,099
+a single manage card function.
+
+402
+00:15:29,009 --> 00:15:29,609
+OK.
+
+403
+00:15:31,070 --> 00:15:32,979
+Now I already have.
+
+404
+00:15:33,879 --> 00:15:34,940
+My code here
+
+405
+00:15:36,609 --> 00:15:37,940
+So let me do that.
+
+406
+00:15:40,239 --> 00:15:42,279
+So what I'm going to do is I'm going
+
+407
+00:15:42,279 --> 00:15:44,219
+to remove the ad card.
+
+408
+00:15:46,379 --> 00:15:47,808
+And they remove card
+
+409
+00:15:48,538 --> 00:15:50,820
+because I'm going to create a single
+
+410
+00:15:50,820 --> 00:15:52,279
+manage card function
+
+411
+00:15:52,779 --> 00:15:55,009
+and I'm going to put it under the card
+
+412
+00:15:55,009 --> 00:15:55,599
+service.
+
+413
+00:15:57,418 --> 00:15:57,969
+All right,
+
+414
+00:15:58,349 --> 00:16:00,479
+so let's see what we've done here.
+
+415
+00:16:02,219 --> 00:16:04,259
+Now, in order for the Lambda web adapter
+
+416
+00:16:04,259 --> 00:16:05,759
+to, to work,
+
+417
+00:16:06,379 --> 00:16:07,639
+you have to use
+
+418
+00:16:08,259 --> 00:16:09,960
+a library
+
+419
+00:16:10,418 --> 00:16:12,460
+that you can run a traditional
+
+420
+00:16:12,460 --> 00:16:14,460
+web framework inside lambda
+
+421
+00:16:14,460 --> 00:16:16,820
+function. Here
+
+422
+00:16:16,820 --> 00:16:18,820
+we are using FA API
+
+423
+00:16:19,288 --> 00:16:21,719
+which is a very commonly used
+
+424
+00:16:22,099 --> 00:16:24,369
+uh library for Python, and
+
+425
+00:16:24,369 --> 00:16:26,080
+we are using also Mangum
+
+426
+00:16:26,979 --> 00:16:29,500
+as the web adapter for fast API.
+
+427
+00:16:30,109 --> 00:16:32,200
+So what we are actually doing here
+
+428
+00:16:32,379 --> 00:16:33,178
+is the following.
+
+429
+00:16:34,440 --> 00:16:36,750
+As you can see here, we have
+
+430
+00:16:37,210 --> 00:16:38,869
+one function,
+
+431
+00:16:39,369 --> 00:16:41,629
+which is the add to cart function,
+
+432
+00:16:42,210 --> 00:16:44,969
+which. is
+
+433
+00:16:44,969 --> 00:16:47,009
+getting all the requests from Amazon API
+
+434
+00:16:47,009 --> 00:16:49,000
+gateway from a post method
+
+435
+00:16:49,538 --> 00:16:50,580
+slash card,
+
+436
+00:16:50,940 --> 00:16:53,538
+and we have also another lambda function
+
+437
+00:16:53,859 --> 00:16:54,479
+which is.
+
+438
+00:16:55,899 --> 00:16:57,950
+sorry, uh, we have also another function
+
+439
+00:16:57,950 --> 00:16:59,538
+in here, another method
+
+440
+00:16:59,979 --> 00:17:00,639
+which is.
+
+441
+00:17:01,658 --> 00:17:03,808
+Getting all the requests from API
+
+442
+00:17:03,808 --> 00:17:05,858
+gateway through the delete
+
+443
+00:17:05,858 --> 00:17:06,420
+card
+
+444
+00:17:06,779 --> 00:17:08,219
+endpoint, OK?
+
+445
+00:17:09,390 --> 00:17:11,689
+So this lambda function is actually
+
+446
+00:17:11,910 --> 00:17:12,449
+getting
+
+447
+00:17:13,229 --> 00:17:14,568
+from API gateway
+
+448
+00:17:15,068 --> 00:17:17,229
+to end points into a single lambda
+
+449
+00:17:17,229 --> 00:17:17,809
+function.
+
+450
+00:17:18,229 --> 00:17:19,848
+Whereas in the previous
+
+451
+00:17:20,348 --> 00:17:21,608
+example, we had
+
+452
+00:17:22,150 --> 00:17:23,729
+one entry point.
+
+453
+00:17:24,878 --> 00:17:27,138
+For our 2 lambda functions.
+
+454
+00:17:27,708 --> 00:17:28,347
+OK.
+
+455
+00:17:29,799 --> 00:17:31,380
+Now, so from 3
+
+456
+00:17:31,759 --> 00:17:33,759
+lambda functions that we had the add
+
+457
+00:17:33,759 --> 00:17:36,039
+card, the get card, and the remove
+
+458
+00:17:36,039 --> 00:17:38,098
+card, we're now down
+
+459
+00:17:38,098 --> 00:17:39,608
+to 2 lambda functions.
+
+460
+00:17:39,920 --> 00:17:42,199
+Now, same functionality but
+
+461
+00:17:42,199 --> 00:17:44,299
+less infrastructure overhead.
+
+462
+00:17:44,799 --> 00:17:46,880
+Now let's run some unit tests
+
+463
+00:17:46,880 --> 00:17:48,259
+to see what we have achieved.
+
+464
+00:17:49,719 --> 00:17:50,779
+I'm going to clear that.
+
+465
+00:17:54,049 --> 00:17:55,469
+So I'm going to do test again.
+
+466
+00:17:55,809 --> 00:17:57,348
+I'm going to do the adapter,
+
+467
+00:17:57,809 --> 00:17:59,930
+and I'm going to add something into
+
+468
+00:17:59,930 --> 00:18:00,539
+our.
+
+469
+00:18:04,068 --> 00:18:05,098
+Dynamo debatable.
+
+470
+00:18:07,809 --> 00:18:10,729
+So now the response took 2.8
+
+471
+00:18:10,729 --> 00:18:11,828
+seconds to complete.
+
+472
+00:18:13,250 --> 00:18:16,068
+Whereas in the previous example it took 1.3
+
+473
+00:18:16,529 --> 00:18:18,689
+seconds to complete. Why is that?
+
+474
+00:18:19,368 --> 00:18:21,689
+Because now we have a bigger lambda
+
+475
+00:18:21,689 --> 00:18:23,848
+function. And if you, if
+
+476
+00:18:23,848 --> 00:18:26,088
+your lambda function is bigger because you have
+
+477
+00:18:26,088 --> 00:18:28,229
+more libraries and the bigger
+
+478
+00:18:28,608 --> 00:18:29,809
+deployment size,
+
+479
+00:18:30,368 --> 00:18:32,410
+then the call starts will also
+
+480
+00:18:32,410 --> 00:18:33,910
+increase. So be aware
+
+481
+00:18:34,170 --> 00:18:36,608
+that the deployment size really matters
+
+482
+00:18:36,608 --> 00:18:38,809
+for the for the call starts
+
+483
+00:18:38,809 --> 00:18:40,930
+in your lambda function for the initialization
+
+484
+00:18:40,930 --> 00:18:42,088
+time, OK?
+
+485
+00:18:42,489 --> 00:18:44,500
+But the cool thing about that now is
+
+486
+00:18:44,500 --> 00:18:46,680
+that if I do a remove.
+
+487
+00:18:48,640 --> 00:18:50,799
+Since the add method and the remove
+
+488
+00:18:50,799 --> 00:18:53,199
+method are in the same lambda
+
+489
+00:18:53,199 --> 00:18:53,858
+function,
+
+490
+00:18:54,239 --> 00:18:56,239
+now the remove method will
+
+491
+00:18:56,239 --> 00:18:58,809
+not incur any call starts.
+
+492
+00:18:59,358 --> 00:19:02,108
+So we have now 0.2
+
+493
+00:19:02,108 --> 00:19:02,828
+seconds,
+
+494
+00:19:03,199 --> 00:19:04,979
+which is much, much faster.
+
+495
+00:19:05,479 --> 00:19:07,549
+OK? Now, the benefits
+
+496
+00:19:07,549 --> 00:19:08,180
+of using
+
+497
+00:19:08,549 --> 00:19:09,799
+a web adapter
+
+498
+00:19:10,118 --> 00:19:12,279
+is that you have fewer call starts as we
+
+499
+00:19:12,279 --> 00:19:14,640
+saw, so we have one function
+
+500
+00:19:14,640 --> 00:19:16,029
+to keep warm instead of two.
+
+501
+00:19:18,078 --> 00:19:20,539
+Uh, you can do like shared initialization.
+
+502
+00:19:20,880 --> 00:19:23,479
+So if you do like database connections
+
+503
+00:19:23,479 --> 00:19:26,078
+like SDK clients, these are initialized
+
+504
+00:19:26,078 --> 00:19:27,140
+just once,
+
+505
+00:19:27,880 --> 00:19:30,029
+right? You can use familiar
+
+506
+00:19:30,029 --> 00:19:31,009
+patterns,
+
+507
+00:19:31,479 --> 00:19:33,689
+for example, you can use fast API,
+
+508
+00:19:33,799 --> 00:19:35,799
+you can use Express, you can use
+
+509
+00:19:35,799 --> 00:19:38,000
+Springboot if you're a Java developer
+
+510
+00:19:38,318 --> 00:19:40,618
+or any web framework you know,
+
+511
+00:19:40,709 --> 00:19:42,759
+and you can plug it in into Lambda.
+
+512
+00:19:43,989 --> 00:19:46,150
+And it's also easier
+
+513
+00:19:46,150 --> 00:19:47,848
+to test your Lambda functions,
+
+514
+00:19:48,390 --> 00:19:50,209
+because the routing logic
+
+515
+00:19:50,868 --> 00:19:53,068
+is inside your lambda function,
+
+516
+00:19:53,108 --> 00:19:55,108
+you can mock everything or you can
+
+517
+00:19:55,108 --> 00:19:57,348
+use uh unit test
+
+518
+00:19:57,348 --> 00:19:58,789
+within your lambda functions.
+
+519
+00:20:00,039 --> 00:20:01,430
+But be careful,
+
+520
+00:20:02,009 --> 00:20:03,848
+don't create a monolith.
+
+521
+00:20:05,269 --> 00:20:06,939
+With these web adapters,
+
+522
+00:20:07,269 --> 00:20:08,809
+so if you have let's say
+
+523
+00:20:09,108 --> 00:20:11,670
+2030, 100 functionality
+
+524
+00:20:11,670 --> 00:20:13,670
+within your lambda function, you'll have like
+
+525
+00:20:13,670 --> 00:20:15,828
+a huge deployment. So
+
+526
+00:20:15,828 --> 00:20:17,608
+don't create a monolith.
+
+527
+00:20:18,019 --> 00:20:20,108
+Keep your functions focused on
+
+528
+00:20:20,108 --> 00:20:22,588
+the bounded context, on the microservices
+
+529
+00:20:22,588 --> 00:20:23,449
+principles.
+
+530
+00:20:24,838 --> 00:20:27,160
+Now, uh, try to also monitor
+
+531
+00:20:27,160 --> 00:20:29,160
+your function size and the memory
+
+532
+00:20:29,160 --> 00:20:30,140
+all the time.
+
+533
+00:20:31,098 --> 00:20:33,500
+And consider that one lambda function
+
+534
+00:20:33,500 --> 00:20:36,549
+failure might affect also multiple
+
+535
+00:20:36,549 --> 00:20:38,549
+operations if you use the web adopters,
+
+536
+00:20:38,858 --> 00:20:40,858
+OK? Now
+
+537
+00:20:40,858 --> 00:20:43,068
+some factors to consider when
+
+538
+00:20:43,299 --> 00:20:46,059
+doing this merging and using the web adapters
+
+539
+00:20:46,059 --> 00:20:47,078
+are the following.
+
+540
+00:20:47,500 --> 00:20:50,160
+If you have common codependencies,
+
+541
+00:20:50,739 --> 00:20:52,818
+you can merge your functionality into
+
+542
+00:20:52,818 --> 00:20:53,959
+one lambda function.
+
+543
+00:20:54,338 --> 00:20:56,380
+If you have common downstream
+
+544
+00:20:56,380 --> 00:20:58,180
+dependencies, you can do that,
+
+545
+00:20:58,660 --> 00:21:01,318
+right? You can group your functions
+
+546
+00:21:01,660 --> 00:21:03,699
+based on the initialization time that you
+
+547
+00:21:03,699 --> 00:21:04,439
+might have
+
+548
+00:21:04,858 --> 00:21:06,900
+or the memory configuration that you want
+
+549
+00:21:06,900 --> 00:21:09,098
+to configure to your lambda function.
+
+550
+00:21:09,660 --> 00:21:11,939
+Or maybe your IM permissions
+
+551
+00:21:11,939 --> 00:21:14,039
+you might want to to set
+
+552
+00:21:14,039 --> 00:21:16,380
+to your lambda functions, OK? All
+
+553
+00:21:16,380 --> 00:21:18,380
+these are like good examples
+
+554
+00:21:18,380 --> 00:21:20,598
+to consider using the web adapters.
+
+555
+00:21:23,118 --> 00:21:25,559
+Now, a very common scenario
+
+556
+00:21:25,559 --> 00:21:27,880
+that customers use Lambda for is
+
+557
+00:21:27,880 --> 00:21:29,900
+also to transport data
+
+558
+00:21:30,199 --> 00:21:31,979
+from API gateway
+
+559
+00:21:32,279 --> 00:21:34,140
+to the downstream services.
+
+560
+00:21:34,959 --> 00:21:35,818
+For example,
+
+561
+00:21:36,189 --> 00:21:38,358
+let's take a look at our get
+
+562
+00:21:38,358 --> 00:21:38,939
+card
+
+563
+00:21:39,199 --> 00:21:41,000
+method. Here
+
+564
+00:21:42,430 --> 00:21:44,630
+All we do here is
+
+565
+00:21:44,630 --> 00:21:46,719
+fetch data from Dynamo
+
+566
+00:21:46,719 --> 00:21:48,989
+DB and return it
+
+567
+00:21:48,989 --> 00:21:50,489
+to Amazon API gateway.
+
+568
+00:21:50,949 --> 00:21:53,108
+We have no business logic. We are doing
+
+569
+00:21:53,108 --> 00:21:55,469
+no transformation. We are doing nothing, just
+
+570
+00:21:55,469 --> 00:21:57,269
+fetching something and returning it.
+
+571
+00:21:58,500 --> 00:22:00,539
+Now, we can optimize that
+
+572
+00:22:00,900 --> 00:22:03,059
+by removing the lambda function and
+
+573
+00:22:03,059 --> 00:22:04,059
+replacing it
+
+574
+00:22:04,338 --> 00:22:06,949
+with what we call API gateway
+
+575
+00:22:06,949 --> 00:22:08,118
+direct integration.
+
+576
+00:22:08,809 --> 00:22:10,759
+So what is a direct integration?
+
+577
+00:22:11,328 --> 00:22:13,640
+Direct integrations allow Amazon API
+
+578
+00:22:13,640 --> 00:22:15,989
+gateway to directly communicate
+
+579
+00:22:16,209 --> 00:22:18,239
+with AWS services
+
+580
+00:22:18,368 --> 00:22:19,568
+like Dynamo DB,
+
+581
+00:22:20,049 --> 00:22:22,439
+step functions, or others
+
+582
+00:22:22,439 --> 00:22:24,588
+without needing an intermediary
+
+583
+00:22:24,588 --> 00:22:25,729
+lambda function.
+
+584
+00:22:27,318 --> 00:22:29,739
+Let's do that for our get card function.
+
+585
+00:22:31,039 --> 00:22:32,769
+So what I'm going to do is
+
+586
+00:22:33,269 --> 00:22:35,309
+delete the get card function because I
+
+587
+00:22:35,309 --> 00:22:36,309
+don't really need it.
+
+588
+00:22:37,858 --> 00:22:39,979
+Because I'll replace, I will replace
+
+589
+00:22:39,979 --> 00:22:40,559
+it with
+
+590
+00:22:40,858 --> 00:22:42,939
+a direct integration
+
+591
+00:22:42,939 --> 00:22:44,400
+from Amazon API gateway,
+
+592
+00:22:44,910 --> 00:22:46,400
+and what I'm going to do,
+
+593
+00:22:46,739 --> 00:22:48,900
+I'm going to get my template
+
+594
+00:22:48,900 --> 00:22:49,719
+from here.
+
+595
+00:22:50,759 --> 00:22:51,469
+And I'm going to
+
+596
+00:22:52,519 --> 00:22:53,500
+put it in here
+
+597
+00:22:53,959 --> 00:22:55,598
+and replace it with visual.
+
+598
+00:23:05,578 --> 00:23:07,078
+So let's see what we have here.
+
+599
+00:23:09,209 --> 00:23:11,269
+So we have our Amazon API gateway
+
+600
+00:23:11,269 --> 00:23:11,868
+like we had
+
+601
+00:23:12,209 --> 00:23:13,989
+in the previous one example,
+
+602
+00:23:14,729 --> 00:23:16,588
+but now what we see here
+
+603
+00:23:16,890 --> 00:23:19,250
+is that whenever we're doing
+
+604
+00:23:19,250 --> 00:23:21,578
+the get end point from here,
+
+605
+00:23:21,890 --> 00:23:23,630
+what we are doing, we're calling
+
+606
+00:23:23,949 --> 00:23:26,670
+an Amazon API gateway integration.
+
+607
+00:23:27,430 --> 00:23:29,618
+And the integration is
+
+608
+00:23:29,630 --> 00:23:31,309
+against Dynamo DB
+
+609
+00:23:31,789 --> 00:23:33,699
+and what we're doing, we're actually calling
+
+610
+00:23:35,160 --> 00:23:37,430
+an API from Dynamo
+
+611
+00:23:37,430 --> 00:23:39,709
+DB which is the get item
+
+612
+00:23:39,709 --> 00:23:40,529
+API.
+
+613
+00:23:41,549 --> 00:23:43,358
+So API gateway.
+
+614
+00:23:44,259 --> 00:23:45,739
+Directly calls
+
+615
+00:23:46,000 --> 00:23:48,449
+an Amazon Dynamo DB API,
+
+616
+00:23:48,500 --> 00:23:50,479
+which is the get item API.
+
+617
+00:23:51,598 --> 00:23:52,160
+It
+
+618
+00:23:52,719 --> 00:23:54,019
+sends the payload.
+
+619
+00:23:54,838 --> 00:23:55,759
+That we had
+
+620
+00:23:56,059 --> 00:23:58,400
+and it also constructs the
+
+621
+00:23:58,400 --> 00:23:59,920
+response as we see here.
+
+622
+00:24:01,828 --> 00:24:03,608
+It uses a language
+
+623
+00:24:03,949 --> 00:24:05,328
+VTL is called,
+
+624
+00:24:05,828 --> 00:24:08,108
+which actually creates
+
+625
+00:24:08,108 --> 00:24:09,368
+the response
+
+626
+00:24:11,229 --> 00:24:13,630
+from the Dynamo DB uh response that we had.
+
+627
+00:24:14,289 --> 00:24:14,809
+OK.
+
+628
+00:24:17,420 --> 00:24:19,989
+So let's run again some tests
+
+629
+00:24:19,989 --> 00:24:22,130
+and see what benefits we have in the in the
+
+630
+00:24:22,130 --> 00:24:24,430
+get uh card method.
+
+631
+00:24:26,519 --> 00:24:28,358
+I'm going to my test script again.
+
+632
+00:24:29,219 --> 00:24:30,479
+And I'm going to do
+
+633
+00:24:31,059 --> 00:24:31,739
+test
+
+634
+00:24:32,500 --> 00:24:34,680
+direct integration and the get method.
+
+635
+00:24:37,750 --> 00:24:39,469
+So now what we see here,
+
+636
+00:24:39,750 --> 00:24:41,049
+we see first of all,
+
+637
+00:24:41,469 --> 00:24:43,650
+we don't see any lambda invocation here
+
+638
+00:24:44,140 --> 00:24:46,229
+we call directly dynamo the B. So what
+
+639
+00:24:46,229 --> 00:24:48,309
+that means we don't see any cold
+
+640
+00:24:48,309 --> 00:24:50,489
+star, right? So we see
+
+641
+00:24:50,489 --> 00:24:52,509
+the first time we call that is
+
+642
+00:24:52,509 --> 00:24:54,828
+0.2, which is amazing,
+
+643
+00:24:55,108 --> 00:24:57,309
+right? So the benefits here
+
+644
+00:24:57,309 --> 00:24:58,489
+are significant.
+
+645
+00:24:58,949 --> 00:25:00,400
+You have a lower cost,
+
+646
+00:25:00,670 --> 00:25:02,868
+so you don't have any lambda
+
+647
+00:25:02,868 --> 00:25:04,250
+invocation charges.
+
+648
+00:25:04,739 --> 00:25:06,259
+You have lower latency,
+
+649
+00:25:06,630 --> 00:25:08,789
+you have one less hope in your
+
+650
+00:25:08,789 --> 00:25:10,049
+whole request path.
+
+651
+00:25:11,358 --> 00:25:13,848
+You see no concerts because FBI gateway
+
+652
+00:25:13,848 --> 00:25:14,789
+is always warm,
+
+653
+00:25:15,049 --> 00:25:15,568
+right?
+
+654
+00:25:16,390 --> 00:25:18,439
+And you have also better scalability
+
+655
+00:25:18,750 --> 00:25:19,750
+because you
+
+656
+00:25:20,348 --> 00:25:22,469
+have no lambda concurrency limits
+
+657
+00:25:22,469 --> 00:25:23,479
+to worry about,
+
+658
+00:25:23,868 --> 00:25:25,949
+right? So when should
+
+659
+00:25:25,949 --> 00:25:27,029
+you use this pattern?
+
+660
+00:25:27,709 --> 00:25:28,709
+You should use it
+
+661
+00:25:29,029 --> 00:25:31,219
+when you're doing simple crowd
+
+662
+00:25:31,219 --> 00:25:32,368
+operations, create,
+
+663
+00:25:32,670 --> 00:25:34,670
+update, delete operations.
+
+664
+00:25:35,799 --> 00:25:37,838
+You can use it when you have
+
+665
+00:25:37,838 --> 00:25:40,380
+no business logic or validation,
+
+666
+00:25:41,078 --> 00:25:43,239
+or you want the absolute lowest
+
+667
+00:25:43,239 --> 00:25:44,818
+latency and cost.
+
+668
+00:25:45,848 --> 00:25:47,890
+Right, but try to avoid
+
+669
+00:25:47,890 --> 00:25:49,969
+it when you need like complex
+
+670
+00:25:49,969 --> 00:25:51,150
+transformations
+
+671
+00:25:51,449 --> 00:25:53,459
+or business logic is required
+
+672
+00:25:53,689 --> 00:25:56,108
+on you or you need like error handling
+
+673
+00:25:56,529 --> 00:25:58,969
+beyond the HTTP status codes, right?
+
+674
+00:25:59,289 --> 00:26:01,449
+So I'm gonna take one question there,
+
+675
+00:26:01,568 --> 00:26:02,729
+yeah, we indicate.
+
+676
+00:26:06,500 --> 00:26:07,170
+Counted from a 3
+
+677
+00:26:08,088 --> 00:26:09,239
+to serve any request.
+
+678
+00:26:12,049 --> 00:26:14,209
+Uh, so S3 really
+
+679
+00:26:14,209 --> 00:26:16,368
+exposes APIs. You can expose an
+
+680
+00:26:16,368 --> 00:26:18,368
+API from S3, so I wouldn't use
+
+681
+00:26:18,368 --> 00:26:20,529
+API gateway with S3 directly with
+
+682
+00:26:20,529 --> 00:26:21,118
+S3. Uh,
+
+683
+00:26:22,650 --> 00:26:24,108
+I do need uh MLS authentication.
+
+684
+00:26:25,219 --> 00:26:27,400
+MTLS authentication with that. OK,
+
+685
+00:26:27,529 --> 00:26:29,719
+so I'm not really sure if you can
+
+686
+00:26:29,719 --> 00:26:30,779
+do it with S3,
+
+687
+00:26:31,140 --> 00:26:33,318
+uh, but, uh, I mean, maybe a gateway direct
+
+688
+00:26:33,318 --> 00:26:36,299
+integration has like more than 100 integrations,
+
+689
+00:26:36,880 --> 00:26:37,799
+um.
+
+690
+00:26:39,068 --> 00:26:41,199
+That's definitely one I think to dive into
+
+691
+00:26:41,390 --> 00:26:42,049
+after the talk.
+
+692
+00:26:42,479 --> 00:26:44,529
+Yeah, we can look into it, yeah.
+
+693
+00:26:47,259 --> 00:26:49,328
+So, uh, let's recap what we've done
+
+694
+00:26:49,328 --> 00:26:51,439
+to solve the the first pain point,
+
+695
+00:26:51,449 --> 00:26:53,568
+which is like organizing
+
+696
+00:26:53,568 --> 00:26:54,989
+the lambda functions.
+
+697
+00:26:57,328 --> 00:26:59,680
+So we went from many scattered
+
+698
+00:26:59,680 --> 00:27:01,809
+lambda functions in in one
+
+699
+00:27:01,809 --> 00:27:03,108
+git repository,
+
+700
+00:27:03,809 --> 00:27:06,289
+to a microservices and bounded
+
+701
+00:27:06,289 --> 00:27:07,549
+context approach.
+
+702
+00:27:08,358 --> 00:27:09,699
+In a multi repo
+
+703
+00:27:10,318 --> 00:27:11,199
+architecture.
+
+704
+00:27:12,880 --> 00:27:13,789
+We went to
+
+705
+00:27:14,088 --> 00:27:16,259
+fewer lambda functions using
+
+706
+00:27:16,259 --> 00:27:18,279
+the lambda web adapter
+
+707
+00:27:18,279 --> 00:27:20,900
+pattern and to zero
+
+708
+00:27:21,108 --> 00:27:23,598
+lambdas for simple operations
+
+709
+00:27:23,598 --> 00:27:25,910
+with direct uh with the Amazon API
+
+710
+00:27:25,910 --> 00:27:27,459
+gateway direct integration
+
+711
+00:27:27,769 --> 00:27:29,799
+and you can do the same for the
+
+712
+00:27:29,799 --> 00:27:31,880
+other lambda functions as well. For example,
+
+713
+00:27:32,000 --> 00:27:33,699
+the get product, you can do the same
+
+714
+00:27:34,279 --> 00:27:36,519
+API gateway direct integration and
+
+715
+00:27:36,519 --> 00:27:38,559
+remove the get product lambda function
+
+716
+00:27:38,559 --> 00:27:40,640
+entirely. Yes.
+
+717
+00:27:42,390 --> 00:27:45,269
+So, uh, you from the API API gateway,
+
+718
+00:27:45,338 --> 00:27:46,229
+there's like, uh,
+
+719
+00:27:46,618 --> 00:27:48,618
+time out of like 30 seconds, right? Like if
+
+720
+00:27:48,618 --> 00:27:50,739
+you are using like a lot of functions, 29 seconds,
+
+721
+00:27:50,818 --> 00:27:52,088
+yes, 29 seconds, yeah, yeah,
+
+722
+00:27:52,828 --> 00:27:53,848
+yeah, so I mean
+
+723
+00:27:54,769 --> 00:27:56,009
+that you can, you can, you can make it higher, right?
+
+724
+00:27:56,818 --> 00:27:59,098
+Yeah, this is a soft limit nowadays, so you can
+
+725
+00:27:59,098 --> 00:28:01,219
+like, yes, increase that 3 support ticket,
+
+726
+00:28:01,299 --> 00:28:03,469
+yes, yeah, with direct integration
+
+727
+00:28:03,779 --> 00:28:06,078
+if you have like a lot of function in between and
+
+728
+00:28:06,078 --> 00:28:08,279
+you change it to be a direct integration.
+
+729
+00:28:10,789 --> 00:28:13,108
+No, because 29 seconds is the
+
+730
+00:28:13,108 --> 00:28:14,670
+API gateway timeout.
+
+731
+00:28:15,469 --> 00:28:17,759
+Lambda functions have a timeout of 15
+
+732
+00:28:17,759 --> 00:28:19,759
+minutes. But 29
+
+733
+00:28:19,759 --> 00:28:20,890
+seconds is uh
+
+734
+00:28:21,368 --> 00:28:21,920
+API gateway.
+
+735
+00:28:25,868 --> 00:28:27,449
+So, what we've solved
+
+736
+00:28:27,709 --> 00:28:29,709
+is how to properly structure and
+
+737
+00:28:29,709 --> 00:28:31,868
+organize many lambda functions.
+
+738
+00:28:36,729 --> 00:28:37,848
+OK, so.
+
+739
+00:28:38,939 --> 00:28:40,439
+Let's say we've built now
+
+740
+00:28:40,939 --> 00:28:42,559
+8 different lambda functions.
+
+741
+00:28:43,828 --> 00:28:44,910
+And
+
+742
+00:28:45,299 --> 00:28:47,709
+whilst writing those lambda functions, you've realized
+
+743
+00:28:47,709 --> 00:28:49,709
+that actually, you've written the same database
+
+744
+00:28:49,709 --> 00:28:51,900
+connection logic, like 15 different times.
+
+745
+00:28:52,029 --> 00:28:53,469
+Does that sound familiar to anyone?
+
+746
+00:28:54,318 --> 00:28:54,979
+Yeah,
+
+747
+00:28:55,539 --> 00:28:57,680
+um, this is one of the complexities that we
+
+748
+00:28:57,680 --> 00:28:59,989
+have when we start having these isolated
+
+749
+00:28:59,989 --> 00:29:01,000
+lambda functions,
+
+750
+00:29:01,598 --> 00:29:04,180
+because they sound brilliant in principle.
+
+751
+00:29:04,519 --> 00:29:06,559
+Um, but when you've got the same thing
+
+752
+00:29:06,559 --> 00:29:08,949
+that needs to happen across multiple different functions,
+
+753
+00:29:09,019 --> 00:29:10,019
+you're ultimately having
+
+754
+00:29:10,430 --> 00:29:11,279
+code duplication.
+
+755
+00:29:13,920 --> 00:29:16,039
+So in this section what we're actually going to
+
+756
+00:29:16,039 --> 00:29:18,078
+talk about is how we start to reuse
+
+757
+00:29:18,078 --> 00:29:20,078
+code across functions and to try
+
+758
+00:29:20,078 --> 00:29:22,269
+and reduce that code duplication you might find
+
+759
+00:29:22,269 --> 00:29:23,640
+across your code bases.
+
+760
+00:29:25,430 --> 00:29:27,449
+Is it all coming up now? Excellent.
+
+761
+00:29:28,189 --> 00:29:28,709
+OK.
+
+762
+00:29:33,920 --> 00:29:36,318
+So the simplest way is to obviously have
+
+763
+00:29:36,318 --> 00:29:38,318
+everything as a single purpose function, um
+
+764
+00:29:38,318 --> 00:29:39,539
+an isolated unit.
+
+765
+00:29:40,039 --> 00:29:42,358
+And as we just mentioned, this can lead to duplicated
+
+766
+00:29:42,358 --> 00:29:44,400
+code, um, which isn't particularly
+
+767
+00:29:44,400 --> 00:29:45,160
+efficient.
+
+768
+00:29:45,719 --> 00:29:47,759
+When you're becoming aware that you've
+
+769
+00:29:47,759 --> 00:29:50,000
+got that duplicated code, you panic
+
+770
+00:29:50,000 --> 00:29:52,439
+and you start throwing multiple different
+
+771
+00:29:52,439 --> 00:29:54,680
+features into the same lambda function to try and
+
+772
+00:29:54,680 --> 00:29:55,199
+reduce
+
+773
+00:29:55,479 --> 00:29:57,838
+that duplication, because they need the same connection
+
+774
+00:29:57,838 --> 00:30:00,019
+logic. So it makes sense to have lots of different
+
+775
+00:30:00,239 --> 00:30:02,439
+database connections in just one lambda function,
+
+776
+00:30:02,519 --> 00:30:04,660
+right? Um, but then that leads
+
+777
+00:30:04,660 --> 00:30:05,838
+to other complexities.
+
+778
+00:30:06,098 --> 00:30:08,108
+Um, so if you do have
+
+779
+00:30:08,108 --> 00:30:10,660
+15 duplicated
+
+780
+00:30:10,660 --> 00:30:11,959
+database connection logic,
+
+781
+00:30:12,259 --> 00:30:13,900
+and you need to update that,
+
+782
+00:30:14,279 --> 00:30:16,618
+you've now got to find every single instance
+
+783
+00:30:16,618 --> 00:30:18,920
+of that connection logic in your code
+
+784
+00:30:19,098 --> 00:30:20,559
+and update it to be
+
+785
+00:30:20,818 --> 00:30:21,939
+what you need it to be.
+
+786
+00:30:22,338 --> 00:30:23,039
+And
+
+787
+00:30:23,299 --> 00:30:25,328
+that, that creates a mess, and no one
+
+788
+00:30:25,328 --> 00:30:27,699
+loves doing that. Everyone hates that. That's the boring
+
+789
+00:30:27,699 --> 00:30:28,900
+part of programming, right?
+
+790
+00:30:30,328 --> 00:30:32,358
+So this is why code reuse matters, we
+
+791
+00:30:32,358 --> 00:30:34,930
+want consistency and we want reliability
+
+792
+00:30:34,930 --> 00:30:36,969
+across all of our code bases and
+
+793
+00:30:36,969 --> 00:30:38,430
+across our deployments and our code.
+
+794
+00:30:39,568 --> 00:30:41,890
+If we've got authentication logic
+
+795
+00:30:41,890 --> 00:30:43,390
+that's in just one location,
+
+796
+00:30:44,170 --> 00:30:46,250
+it means that our author is handled
+
+797
+00:30:46,250 --> 00:30:48,750
+the same way across every single lambda function.
+
+798
+00:30:49,088 --> 00:30:51,390
+Likewise, if we're doing error handling,
+
+799
+00:30:51,689 --> 00:30:53,848
+and that's centralized, we can then make
+
+800
+00:30:53,848 --> 00:30:55,969
+sure that our error handling is done
+
+801
+00:30:55,969 --> 00:30:58,568
+exactly the same way across all of our lambda functions.
+
+802
+00:31:00,709 --> 00:31:03,000
+So if we're talking about code reuse, then
+
+803
+00:31:03,000 --> 00:31:05,289
+I'm sure a few of you have leapt to the conclusion
+
+804
+00:31:05,289 --> 00:31:07,509
+of what it is we're going to talk about now, and
+
+805
+00:31:07,509 --> 00:31:08,809
+that's lambda layers.
+
+806
+00:31:10,299 --> 00:31:12,578
+So lambda layers are ultimately
+
+807
+00:31:12,578 --> 00:31:14,719
+a shared library that you can share
+
+808
+00:31:14,719 --> 00:31:15,279
+across
+
+809
+00:31:15,729 --> 00:31:17,170
+all of your lambda functions.
+
+810
+00:31:18,140 --> 00:31:20,140
+You can bundle into this layer things
+
+811
+00:31:20,140 --> 00:31:23,078
+like custom runtime, any of your dependencies,
+
+812
+00:31:23,529 --> 00:31:25,779
+and you create that layer once,
+
+813
+00:31:26,180 --> 00:31:28,219
+but then have multiple lambda functions use
+
+814
+00:31:28,219 --> 00:31:30,459
+it. So it's a really, really
+
+815
+00:31:30,459 --> 00:31:32,559
+powerful way of bundling together
+
+816
+00:31:32,739 --> 00:31:35,318
+all of that code that you might need to use multiple times.
+
+817
+00:31:40,160 --> 00:31:40,779
+So
+
+818
+00:31:41,279 --> 00:31:43,279
+to show you this, I'm actually going to
+
+819
+00:31:43,279 --> 00:31:45,779
+leverage a lambda layer that already exists.
+
+820
+00:31:45,959 --> 00:31:48,039
+Um, you might have heard of this layer already,
+
+821
+00:31:48,150 --> 00:31:50,039
+and it's called Power tools for lambda.
+
+822
+00:31:50,368 --> 00:31:52,509
+This is actually a really cool lambda layer, um, an
+
+823
+00:31:52,509 --> 00:31:54,160
+open source um toolkit,
+
+824
+00:31:54,759 --> 00:31:56,920
+um, because it bundles a load of serverless best
+
+825
+00:31:56,920 --> 00:31:58,920
+practices into your lambda function, and
+
+826
+00:31:58,920 --> 00:32:00,680
+you can utilize them right there.
+
+827
+00:32:00,959 --> 00:32:03,500
+So things like um logging and monitoring,
+
+828
+00:32:03,799 --> 00:32:05,868
+um. There's these
+
+829
+00:32:05,868 --> 00:32:07,989
+best practices already there, and I really encourage
+
+830
+00:32:07,989 --> 00:32:10,088
+you to go and look into this in more detail,
+
+831
+00:32:10,588 --> 00:32:12,750
+um, because it's super useful, but I don't want to get
+
+832
+00:32:12,750 --> 00:32:14,588
+sidetracked in this talk,
+
+833
+00:32:15,068 --> 00:32:16,309
+um, talking about it.
+
+834
+00:32:18,719 --> 00:32:19,439
+So
+
+835
+00:32:20,160 --> 00:32:22,279
+because this lambda layer already exists, when it
+
+836
+00:32:22,279 --> 00:32:24,670
+comes to our template here with our lambda functions,
+
+837
+00:32:24,789 --> 00:32:27,059
+all I actually need to do is add the ARN
+
+838
+00:32:27,479 --> 00:32:28,160
+to deploy it.
+
+839
+00:32:28,689 --> 00:32:30,818
+But obviously that's great for something that's third
+
+840
+00:32:30,818 --> 00:32:32,900
+party and already exists, but you might have
+
+841
+00:32:32,900 --> 00:32:35,019
+the dependencies that you want to bundle
+
+842
+00:32:35,019 --> 00:32:37,259
+yourself. But that's really simple to do
+
+843
+00:32:37,259 --> 00:32:38,519
+because all you have to do
+
+844
+00:32:38,779 --> 00:32:40,858
+is create a zip archive of the
+
+845
+00:32:40,858 --> 00:32:43,000
+things that you want to bundle within your lambda function.
+
+846
+00:32:43,500 --> 00:32:45,618
+And then deploy a layer as you would within your
+
+847
+00:32:45,618 --> 00:32:48,019
+SAM template, your cloud formation template, terraform,
+
+848
+00:32:48,219 --> 00:32:50,299
+however it is you write your own infrastructure as
+
+849
+00:32:50,299 --> 00:32:52,338
+code. And it doesn't have to be within the same
+
+850
+00:32:52,338 --> 00:32:54,799
+template, you can obviously deploy it in another template
+
+851
+00:32:55,459 --> 00:32:57,529
+and then reference the ARN um in another
+
+852
+00:32:57,529 --> 00:33:00,049
+stack. So
+
+853
+00:33:00,189 --> 00:33:02,469
+because I can't remember ARN's off the top of my head
+
+854
+00:33:02,469 --> 00:33:04,500
+to save my life, and this one is pretty
+
+855
+00:33:04,500 --> 00:33:06,509
+complicated, I am just going to copy this
+
+856
+00:33:06,509 --> 00:33:07,890
+one. I do apologize.
+
+857
+00:33:08,578 --> 00:33:10,588
+Um, and we're going to take this first lambda
+
+858
+00:33:10,588 --> 00:33:11,368
+function here.
+
+859
+00:33:12,088 --> 00:33:13,699
+Um, and we're just going to add the layer.
+
+860
+00:33:16,789 --> 00:33:17,578
+I don't want
+
+861
+00:33:17,959 --> 00:33:19,959
+conditions. Is anyone else getting really annoyed with the
+
+862
+00:33:19,959 --> 00:33:21,719
+uh AI suggestions in
+
+863
+00:33:22,479 --> 00:33:24,000
+um IDEs at the moment?
+
+864
+00:33:24,880 --> 00:33:25,500
+OK.
+
+865
+00:33:28,000 --> 00:33:30,189
+Right. So that's now a layer
+
+866
+00:33:30,189 --> 00:33:32,199
+added into our get cart function. And obviously this
+
+867
+00:33:32,199 --> 00:33:33,180
+is our SA template.
+
+868
+00:33:33,519 --> 00:33:35,459
+So we can go ahead and just do a SAN build.
+
+869
+00:33:36,588 --> 00:33:38,979
+Not for the comfort vile, thank you, AI.
+
+870
+00:33:42,039 --> 00:33:44,078
+And then that'll go ahead and build, and then I can do a quick
+
+871
+00:33:44,078 --> 00:33:44,900
+sum deploy.
+
+872
+00:33:49,410 --> 00:33:50,848
+Now you can give me a convict vow.
+
+873
+00:33:53,348 --> 00:33:56,500
+There we go. And
+
+874
+00:33:56,500 --> 00:33:58,920
+then that'll go ahead and run the sound deploy.
+
+875
+00:33:59,689 --> 00:34:00,848
+And once it's deployed,
+
+876
+00:34:01,170 --> 00:34:03,328
+that layer will be attached to our
+
+877
+00:34:03,328 --> 00:34:04,108
+lambda layer.
+
+878
+00:34:04,838 --> 00:34:05,348
+Um,
+
+879
+00:34:05,640 --> 00:34:07,539
+now, you don't want to see
+
+880
+00:34:07,880 --> 00:34:10,000
+that deploying. So instead, we're just going to talk a little bit
+
+881
+00:34:10,000 --> 00:34:11,019
+about lambda layers.
+
+882
+00:34:11,719 --> 00:34:13,800
+So there are some key things we need to think about with lambda
+
+883
+00:34:13,800 --> 00:34:16,110
+layers, because they're not a catch-all solution,
+
+884
+00:34:16,320 --> 00:34:18,599
+right? You can only have 5 layers per lambda
+
+885
+00:34:18,599 --> 00:34:20,878
+function. And that's a real limitation.
+
+886
+00:34:22,059 --> 00:34:22,599
+But
+
+887
+00:34:22,978 --> 00:34:24,099
+in, in.
+
+888
+00:34:24,668 --> 00:34:26,079
+Sort of relation to that,
+
+889
+00:34:26,418 --> 00:34:28,458
+we also have deployment package size limits,
+
+890
+00:34:28,539 --> 00:34:30,657
+and that doesn't change when you add a lambda, a
+
+891
+00:34:30,657 --> 00:34:31,887
+lambda layer, right?
+
+892
+00:34:32,259 --> 00:34:34,358
+So a zipped deployment
+
+893
+00:34:34,358 --> 00:34:35,117
+package
+
+894
+00:34:35,418 --> 00:34:37,617
+is capped at 50 megabytes, and
+
+895
+00:34:37,617 --> 00:34:39,878
+unzipped, 250 megabytes.
+
+896
+00:34:40,259 --> 00:34:42,617
+So don't think that you can just suddenly add
+
+897
+00:34:42,617 --> 00:34:44,657
+every library or every runtime
+
+898
+00:34:44,657 --> 00:34:46,778
+that ever existed into a lambda layer, and
+
+899
+00:34:46,778 --> 00:34:47,739
+you can deploy it.
+
+900
+00:34:49,090 --> 00:34:51,369
+Um, because of these deployment package size limits,
+
+901
+00:34:51,539 --> 00:34:53,199
+so you do have to be strategic
+
+902
+00:34:53,699 --> 00:34:55,780
+about what you put into a lambda layer. Don't put
+
+903
+00:34:55,780 --> 00:34:57,679
+everything in there, only put the things in that you need.
+
+904
+00:34:58,929 --> 00:35:01,010
+Lavderros talked a lot about cold starts in
+
+905
+00:35:01,010 --> 00:35:02,090
+the beginning of this talk,
+
+906
+00:35:02,449 --> 00:35:04,809
+um, and actually lambda layers do
+
+907
+00:35:04,809 --> 00:35:06,010
+impact your cold starts
+
+908
+00:35:06,329 --> 00:35:08,438
+because anything that you bundle into your layer
+
+909
+00:35:08,438 --> 00:35:09,648
+has to be downloaded,
+
+910
+00:35:10,050 --> 00:35:12,050
+um, on each fresh and execution
+
+911
+00:35:12,050 --> 00:35:12,708
+environment.
+
+912
+00:35:13,128 --> 00:35:15,489
+So if you've put in a really large
+
+913
+00:35:15,489 --> 00:35:16,648
+ML library,
+
+914
+00:35:16,929 --> 00:35:19,050
+that's gonna take a while to download and you're
+
+915
+00:35:19,050 --> 00:35:21,168
+going to see some increase to your cold
+
+916
+00:35:21,168 --> 00:35:23,269
+starts. And
+
+917
+00:35:23,269 --> 00:35:23,938
+then finally,
+
+918
+00:35:24,269 --> 00:35:26,849
+versioning, something to pay attention to, right? Because
+
+919
+00:35:27,590 --> 00:35:28,429
+versioning
+
+920
+00:35:28,708 --> 00:35:30,128
+can be an absolute
+
+921
+00:35:30,469 --> 00:35:31,389
+godsend. It,
+
+922
+00:35:31,668 --> 00:35:34,289
+you can do AB testing, blue-green deployments,
+
+923
+00:35:34,628 --> 00:35:36,728
+um. But you can
+
+924
+00:35:36,728 --> 00:35:38,860
+also get yourself into a very sticky
+
+925
+00:35:38,918 --> 00:35:39,869
+situation with versioning,
+
+926
+00:35:40,449 --> 00:35:42,489
+because say for example, function A
+
+927
+00:35:42,489 --> 00:35:43,188
+needs version
+
+928
+00:35:43,750 --> 00:35:44,320
+1
+
+929
+00:35:44,610 --> 00:35:46,628
+and function B needs version 2.
+
+930
+00:35:47,128 --> 00:35:49,168
+Well now you're having to maintain two
+
+931
+00:35:49,168 --> 00:35:51,639
+different versions of the same lambda layer
+
+932
+00:35:51,929 --> 00:35:53,369
+because two different functions need it.
+
+933
+00:35:54,139 --> 00:35:56,300
+So make sure if you are using versioning
+
+934
+00:35:56,300 --> 00:35:58,099
+with lambda layers, you're doing so
+
+935
+00:35:58,378 --> 00:36:00,579
+um in a well thought out manner to
+
+936
+00:36:00,579 --> 00:36:02,199
+avoid falling into those pitfalls.
+
+937
+00:36:06,688 --> 00:36:08,849
+Now, this is code reuse. This
+
+938
+00:36:08,849 --> 00:36:10,889
+is being able to use the same
+
+939
+00:36:10,889 --> 00:36:13,030
+code across multiple functions, but only writing
+
+940
+00:36:13,030 --> 00:36:15,228
+it once and only having it in one
+
+941
+00:36:15,228 --> 00:36:17,250
+location. And Lefteris has already touched
+
+942
+00:36:17,250 --> 00:36:19,309
+on a more radical solution,
+
+943
+00:36:19,648 --> 00:36:20,369
+um,
+
+944
+00:36:20,809 --> 00:36:21,550
+which is just,
+
+945
+00:36:21,969 --> 00:36:23,510
+let's remove code altogether.
+
+946
+00:36:24,128 --> 00:36:26,199
+So Lefteris talked to you about these SDK
+
+947
+00:36:26,199 --> 00:36:28,070
+integrations between API gateway,
+
+948
+00:36:28,570 --> 00:36:30,449
+um, and say, Dynamo DB.
+
+949
+00:36:31,119 --> 00:36:33,159
+Um, That's great
+
+950
+00:36:33,159 --> 00:36:35,478
+for a simple workload
+
+951
+00:36:35,478 --> 00:36:37,519
+that's just making that one synchronous
+
+952
+00:36:37,519 --> 00:36:39,639
+call. But sometimes you might actually have a
+
+953
+00:36:39,639 --> 00:36:41,139
+series of calls that you need to make.
+
+954
+00:36:41,599 --> 00:36:43,300
+So if we think back to this architecture
+
+955
+00:36:43,639 --> 00:36:45,898
+um that left error showed earlier, we have our
+
+956
+00:36:46,398 --> 00:36:49,269
+um order API here at the bottom. And there's a sequence
+
+957
+00:36:49,269 --> 00:36:50,679
+of things that need to happen
+
+958
+00:36:51,079 --> 00:36:53,199
+um in order to fulfill a
+
+959
+00:36:53,199 --> 00:36:53,958
+particular order.
+
+960
+00:36:55,590 --> 00:36:57,590
+But several of these are
+
+961
+00:36:57,590 --> 00:36:59,309
+still just making dynamo D beetles,
+
+962
+00:36:59,579 --> 00:37:01,750
+and we're using a full lambda function that's got
+
+963
+00:37:01,750 --> 00:37:03,289
+code that we have to maintain.
+
+964
+00:37:04,059 --> 00:37:04,958
+To do this
+
+965
+00:37:05,739 --> 00:37:07,579
+So there's a simpler way to achieve this, right?
+
+966
+00:37:09,039 --> 00:37:10,628
+So, um,
+
+967
+00:37:11,148 --> 00:37:13,369
+we can then use a step function here.
+
+968
+00:37:13,878 --> 00:37:15,898
+The step function can orchestrate these,
+
+969
+00:37:15,918 --> 00:37:16,559
+um.
+
+970
+00:37:17,309 --> 00:37:18,590
+These lambda functions.
+
+971
+00:37:19,320 --> 00:37:21,418
+And if I open my template
+
+972
+00:37:21,418 --> 00:37:22,199
+in
+
+973
+00:37:23,469 --> 00:37:25,929
+Infrastructure composer, as we saw earlier.
+
+974
+00:37:27,668 --> 00:37:30,000
+Um, it's not just adding infrastructure
+
+975
+00:37:30,000 --> 00:37:32,280
+to our template that we can do here, we can actually
+
+976
+00:37:32,280 --> 00:37:33,978
+add a step function resource.
+
+977
+00:37:35,418 --> 00:37:37,418
+So when I add this resource to this
+
+978
+00:37:37,418 --> 00:37:39,739
+um infrastructure composer workflow
+
+979
+00:37:39,739 --> 00:37:41,750
+here, um that actually updates my
+
+980
+00:37:41,750 --> 00:37:44,019
+template to include the infrastructure
+
+981
+00:37:44,019 --> 00:37:45,760
+as code for the step function.
+
+982
+00:37:46,128 --> 00:37:48,179
+But what's really cool is I can now open
+
+983
+00:37:48,179 --> 00:37:49,119
+Workflow Studio.
+
+984
+00:37:50,179 --> 00:37:52,208
+To now build my state machine right here
+
+985
+00:37:52,208 --> 00:37:52,989
+within the ID.
+
+986
+00:37:53,329 --> 00:37:55,570
+I like visual, I like to see things, and especially
+
+987
+00:37:55,570 --> 00:37:57,688
+step functions, where ASL can be quite
+
+988
+00:37:57,688 --> 00:37:59,510
+complicated to read and understand.
+
+989
+00:37:59,849 --> 00:38:02,070
+Um, this just helps me to understand things better
+
+990
+00:38:02,648 --> 00:38:03,648
+and see things better.
+
+991
+00:38:05,429 --> 00:38:07,090
+Sorry, bear with me, dry throat.
+
+992
+00:38:12,449 --> 00:38:14,719
+OK, so we can start building out then
+
+993
+00:38:14,719 --> 00:38:15,628
+our order
+
+994
+00:38:16,559 --> 00:38:17,489
+um process here.
+
+995
+00:38:17,769 --> 00:38:19,228
+So this first lambda function,
+
+996
+00:38:19,769 --> 00:38:21,550
+and that's going to be submit order.
+
+997
+00:38:22,619 --> 00:38:24,989
+Um, don't worry, I'm not going to make you watch me build
+
+998
+00:38:24,989 --> 00:38:27,188
+the entire workflow, um, because
+
+999
+00:38:27,188 --> 00:38:28,728
+no one learns anything from that.
+
+1000
+00:38:29,188 --> 00:38:30,989
+Um, and then let's say reserve,
+
+1001
+00:38:31,309 --> 00:38:32,429
+um, the inventory.
+
+1002
+00:38:33,688 --> 00:38:35,809
+OK. Um, and we can go ahead
+
+1003
+00:38:35,809 --> 00:38:37,929
+and just keep dragging these different
+
+1004
+00:38:37,929 --> 00:38:38,610
+um.
+
+1005
+00:38:39,398 --> 00:38:41,550
+Actions into our workflow to build
+
+1006
+00:38:41,550 --> 00:38:43,590
+up the steps that we
+
+1007
+00:38:43,590 --> 00:38:44,128
+want to complete.
+
+1008
+00:38:45,909 --> 00:38:48,289
+So let's look at one I've already built
+
+1009
+00:38:48,289 --> 00:38:50,648
+so that we can see this a little bit easier.
+
+1010
+00:38:53,750 --> 00:38:55,789
+Um, if you have the AWS,
+
+1011
+00:38:55,909 --> 00:38:56,699
+um,
+
+1012
+00:38:57,228 --> 00:38:59,469
+add-on to, um, VS code or
+
+1013
+00:38:59,469 --> 00:39:01,750
+any of your other IDs, um, you can actually
+
+1014
+00:39:01,750 --> 00:39:03,789
+view all of your resources within AWS
+
+1015
+00:39:03,789 --> 00:39:05,789
+right here in the, um, ID without having to
+
+1016
+00:39:05,789 --> 00:39:07,849
+log into the console, which is really cool.
+
+1017
+00:39:08,978 --> 00:39:11,409
+Um, so I can see here.
+
+1018
+00:39:14,269 --> 00:39:16,429
+This particular step function and I'm going to open that
+
+1019
+00:39:16,429 --> 00:39:17,409
+within Workflow Studio.
+
+1020
+00:39:20,179 --> 00:39:22,559
+And you're going to open the workflow studio.
+
+1021
+00:39:27,739 --> 00:39:29,260
+Aye, or not.
+
+1022
+00:39:32,059 --> 00:39:32,820
+Try that again.
+
+1023
+00:39:33,728 --> 00:39:36,139
+OK. Open
+
+1024
+00:39:36,139 --> 00:39:37,159
+Workflow Studio.
+
+1025
+00:39:38,148 --> 00:39:39,340
+Voila, there we go.
+
+1026
+00:39:39,668 --> 00:39:40,610
+That's better.
+
+1027
+00:39:41,269 --> 00:39:43,289
+So. Um, this
+
+1028
+00:39:43,289 --> 00:39:45,429
+is one I built earlier, because nobody wants to see
+
+1029
+00:39:45,429 --> 00:39:47,648
+me build all of this. But what we can see now
+
+1030
+00:39:47,648 --> 00:39:49,590
+is the different steps of the workflow,
+
+1031
+00:39:50,168 --> 00:39:52,438
+um, all of which are lambda functions. But we've got some error
+
+1032
+00:39:52,438 --> 00:39:53,989
+handling. So if
+
+1033
+00:39:54,289 --> 00:39:56,329
+payment fails, we can reverse the
+
+1034
+00:39:56,329 --> 00:39:57,648
+process that has just happened,
+
+1035
+00:39:58,010 --> 00:40:00,119
+um, so that we can release the stock that was reserved,
+
+1036
+00:40:00,168 --> 00:40:00,849
+etc.
+
+1037
+00:40:01,289 --> 00:40:03,320
+Um, and we can trigger some events so that
+
+1038
+00:40:03,320 --> 00:40:05,378
+if we've got another microservice or another bounded
+
+1039
+00:40:05,378 --> 00:40:06,769
+context, in this case,
+
+1040
+00:40:07,050 --> 00:40:09,079
+maybe we want to just take a stock check to
+
+1041
+00:40:09,079 --> 00:40:11,208
+see whether we need to order more stock now that that item's
+
+1042
+00:40:11,208 --> 00:40:11,739
+been bought.
+
+1043
+00:40:12,978 --> 00:40:15,050
+Um, but as I mentioned, these are all lambda functions,
+
+1044
+00:40:15,059 --> 00:40:16,559
+and we want to get rid of code.
+
+1045
+00:40:17,128 --> 00:40:19,179
+Um, and if we're going to create an order, that's really
+
+1046
+00:40:19,179 --> 00:40:21,378
+just writing something into a dynamo DB table
+
+1047
+00:40:21,378 --> 00:40:22,679
+and creating an order ID.
+
+1048
+00:40:23,099 --> 00:40:25,458
+Um, so we can actually just
+
+1049
+00:40:25,458 --> 00:40:27,119
+search for actions here.
+
+1050
+00:40:27,628 --> 00:40:28,438
+And we can put
+
+1051
+00:40:29,340 --> 00:40:30,519
+a Dynamo DB.
+
+1052
+00:40:31,478 --> 00:40:32,168
+Option.
+
+1053
+00:40:36,110 --> 00:40:37,128
+Right here,
+
+1054
+00:40:37,579 --> 00:40:40,860
+Potitan. It's
+
+1055
+00:40:40,860 --> 00:40:41,958
+getting a bit small now,
+
+1056
+00:40:42,340 --> 00:40:43,610
+sorry, all right.
+
+1057
+00:40:48,340 --> 00:40:48,989
+OK,
+
+1058
+00:40:49,458 --> 00:40:51,699
+so um we can then configure the
+
+1059
+00:40:51,699 --> 00:40:53,320
+item by clicking in
+
+1060
+00:40:53,659 --> 00:40:55,938
+um to the inspector. And we can configure
+
+1061
+00:40:55,938 --> 00:40:57,079
+what the step's going to be called,
+
+1062
+00:40:57,500 --> 00:40:59,530
+which table we're going to call, and so on
+
+1063
+00:40:59,530 --> 00:41:01,519
+and so forth. And we can start to just
+
+1064
+00:41:02,179 --> 00:41:04,559
+replace each of our different lambda functions
+
+1065
+00:41:04,898 --> 00:41:06,898
+um as we go through. Now
+
+1066
+00:41:06,898 --> 00:41:08,978
+something like take payment, we don't want
+
+1067
+00:41:08,978 --> 00:41:10,978
+that to be a single SDK call. There's a lot
+
+1068
+00:41:10,978 --> 00:41:12,840
+of catches that we need to do,
+
+1069
+00:41:13,139 --> 00:41:15,219
+um and error handling we need to do within that lambda function. So
+
+1070
+00:41:15,219 --> 00:41:17,418
+that makes sense to remain as a lambda function.
+
+1071
+00:41:18,699 --> 00:41:20,699
+But this means that if we replace all
+
+1072
+00:41:20,699 --> 00:41:22,159
+the different lambda functions
+
+1073
+00:41:22,418 --> 00:41:24,360
+with direct SDK calls,
+
+1074
+00:41:25,059 --> 00:41:27,179
+we've massively reduced the amount of code
+
+1075
+00:41:27,179 --> 00:41:28,958
+that we even have to manage.
+
+1076
+00:41:29,340 --> 00:41:31,378
+Um, I know that as
+
+1077
+00:41:31,378 --> 00:41:33,418
+developers and as coders, our job is to write
+
+1078
+00:41:33,418 --> 00:41:34,000
+code.
+
+1079
+00:41:34,579 --> 00:41:36,780
+But we don't always have to. And
+
+1080
+00:41:36,780 --> 00:41:38,820
+sometimes it's easier to just let these managed
+
+1081
+00:41:38,820 --> 00:41:40,889
+services do what they were designed to do.
+
+1082
+00:41:41,300 --> 00:41:43,800
+Um, and, and do those direct integrations.
+
+1083
+00:41:46,389 --> 00:41:48,510
+Now, SDKs aren't
+
+1084
+00:41:48,510 --> 00:41:50,510
+replacement for business logic, as you can see,
+
+1085
+00:41:50,550 --> 00:41:51,369
+and as I mentioned,
+
+1086
+00:41:51,628 --> 00:41:53,739
+something like taking payment, it still makes sense
+
+1087
+00:41:53,739 --> 00:41:55,128
+to have a lambda function for that.
+
+1088
+00:41:55,469 --> 00:41:57,708
+So you still have your important logic
+
+1089
+00:41:57,708 --> 00:42:00,090
+and your important workflows written in code,
+
+1090
+00:42:00,389 --> 00:42:02,648
+um, with all the checks and balances that come with that.
+
+1091
+00:42:03,260 --> 00:42:05,309
+Um, but we can start offloading some
+
+1092
+00:42:05,309 --> 00:42:07,389
+of this lighter lifting to
+
+1093
+00:42:07,389 --> 00:42:08,659
+things like SDKs,
+
+1094
+00:42:09,148 --> 00:42:10,849
+um, to be able to.
+
+1095
+00:42:12,099 --> 00:42:12,840
+Pardon me,
+
+1096
+00:42:13,300 --> 00:42:14,800
+um, to be able to make our lives easier,
+
+1097
+00:42:15,059 --> 00:42:15,679
+ultimately.
+
+1098
+00:42:18,909 --> 00:42:20,019
+Question. Yeah.
+
+1099
+00:42:20,320 --> 00:42:22,489
+Does it make sense to pull out, like
+
+1100
+00:42:22,800 --> 00:42:24,800
+if you have a dynamo call in that business logic,
+
+1101
+00:42:24,878 --> 00:42:26,139
+does it make sense to pull that out and
+
+1102
+00:42:26,398 --> 00:42:28,599
+and have it call a lambda after that
+
+1103
+00:42:28,599 --> 00:42:30,119
+step function for that business logic?
+
+1104
+00:42:30,820 --> 00:42:33,139
+So it depends what you're doing. And ultimately,
+
+1105
+00:42:33,260 --> 00:42:35,260
+when you're using a step function, it's not
+
+1106
+00:42:35,260 --> 00:42:37,500
+the Dynamo DB call that's going to be calling that lambda
+
+1107
+00:42:37,500 --> 00:42:39,688
+function afterwards. It's just an orchestration mechanism,
+
+1108
+00:42:39,739 --> 00:42:41,938
+right? So you're just saying which step happens
+
+1109
+00:42:41,938 --> 00:42:42,619
+next.
+
+1110
+00:42:42,989 --> 00:42:45,300
+And that's powerful, because then you, you've
+
+1111
+00:42:45,300 --> 00:42:46,550
+got a definitive.
+
+1112
+00:42:46,878 --> 00:42:48,260
+Pathway that's visual
+
+1113
+00:42:48,719 --> 00:42:50,719
+um to say we know exactly
+
+1114
+00:42:50,719 --> 00:42:52,059
+what's going to happen in what situation,
+
+1115
+00:42:52,360 --> 00:42:54,360
+you can use the built-in error handling, the
+
+1116
+00:42:54,360 --> 00:42:56,438
+retry logic, and without having to
+
+1117
+00:42:56,438 --> 00:42:57,449
+write that all yourself,
+
+1118
+00:42:57,719 --> 00:42:59,969
+but still have it be as reliable
+
+1119
+00:42:59,969 --> 00:43:02,079
+as it would be if you were implementing it in
+
+1120
+00:43:02,079 --> 00:43:06,188
+code. OK.
+
+1121
+00:43:07,219 --> 00:43:09,438
+So that's code reuse.
+
+1122
+00:43:10,699 --> 00:43:11,449
+So
+
+1123
+00:43:12,728 --> 00:43:14,889
+We've talked about how we can reuse code
+
+1124
+00:43:14,889 --> 00:43:16,010
+across functions.
+
+1125
+00:43:17,989 --> 00:43:20,030
+But I actually now want to take a step
+
+1126
+00:43:20,030 --> 00:43:22,309
+back away from code altogether,
+
+1127
+00:43:22,349 --> 00:43:23,168
+just a little bit.
+
+1128
+00:43:23,550 --> 00:43:25,789
+And I know this is a code talk, but sometimes it's
+
+1129
+00:43:25,789 --> 00:43:27,250
+important to think of the bigger picture.
+
+1130
+00:43:28,648 --> 00:43:30,889
+And in this bigger picture,
+
+1131
+00:43:31,289 --> 00:43:33,369
+what we really need to think about is our account
+
+1132
+00:43:33,369 --> 00:43:35,519
+strategy when we think about deploying our lambda
+
+1133
+00:43:35,519 --> 00:43:37,599
+functions, and not just lambda functions, but
+
+1134
+00:43:37,599 --> 00:43:39,739
+actually all of our infrastructure or all of our
+
+1135
+00:43:39,739 --> 00:43:41,398
+code. Um,
+
+1136
+00:43:42,559 --> 00:43:44,639
+How many of you deploy um your
+
+1137
+00:43:44,639 --> 00:43:46,679
+workloads to one account for
+
+1138
+00:43:46,679 --> 00:43:48,909
+all of your development environments, you know, dev, test
+
+1139
+00:43:48,909 --> 00:43:52,030
+prod. OK,
+
+1140
+00:43:52,070 --> 00:43:54,070
+I'm preaching. OK, I saw, I saw a hand
+
+1141
+00:43:54,070 --> 00:43:54,869
+at the back there.
+
+1142
+00:43:55,219 --> 00:43:55,728
+Um,
+
+1143
+00:43:56,188 --> 00:43:57,070
+very, very,
+
+1144
+00:43:57,389 --> 00:43:58,208
+um,
+
+1145
+00:43:58,728 --> 00:43:59,969
+shyly put up there.
+
+1146
+00:44:00,269 --> 00:44:02,349
+Um, and I'm guessing then everybody else
+
+1147
+00:44:02,349 --> 00:44:04,750
+is, is deploying everything to different isolated
+
+1148
+00:44:04,750 --> 00:44:05,329
+accounts.
+
+1149
+00:44:05,949 --> 00:44:08,168
+Excellent. OK, so I'm going to preach to the choir here then.
+
+1150
+00:44:08,699 --> 00:44:09,280
+Um,
+
+1151
+00:44:09,780 --> 00:44:11,889
+so there, there are reasons to have
+
+1152
+00:44:11,889 --> 00:44:14,139
+everything in one account. If you're a small startup, it's
+
+1153
+00:44:14,139 --> 00:44:15,519
+easier to put everything in one account,
+
+1154
+00:44:16,059 --> 00:44:18,139
+um, because it's easier to manage. If you're not
+
+1155
+00:44:18,139 --> 00:44:20,179
+deploying an awful lot, you've only got maybe one
+
+1156
+00:44:20,179 --> 00:44:20,719
+small application,
+
+1157
+00:44:21,579 --> 00:44:23,610
+you don't necessarily want to start deploying
+
+1158
+00:44:23,610 --> 00:44:24,760
+everything to multiple accounts.
+
+1159
+00:44:26,179 --> 00:44:26,938
+Um,
+
+1160
+00:44:27,309 --> 00:44:28,090
+but.
+
+1161
+00:44:29,019 --> 00:44:30,079
+There's a major risk
+
+1162
+00:44:30,500 --> 00:44:32,360
+with deploying everything to one account.
+
+1163
+00:44:32,619 --> 00:44:34,739
+Um, and the, the immediate one is
+
+1164
+00:44:34,739 --> 00:44:36,878
+if someone compromises your account,
+
+1165
+00:44:37,699 --> 00:44:39,820
+that's a problem because they've now compromised
+
+1166
+00:44:39,820 --> 00:44:40,519
+everything in your account,
+
+1167
+00:44:40,898 --> 00:44:41,699
+including prod.
+
+1168
+00:44:42,059 --> 00:44:44,099
+Um, but also there's just the human element, is if
+
+1169
+00:44:44,099 --> 00:44:45,039
+somebody makes a mistake,
+
+1170
+00:44:45,340 --> 00:44:47,378
+they can accidentally take down prod just because
+
+1171
+00:44:47,378 --> 00:44:48,739
+everything's in one account.
+
+1172
+00:44:50,239 --> 00:44:50,800
+So
+
+1173
+00:44:51,878 --> 00:44:53,139
+A multi-account approach
+
+1174
+00:44:53,599 --> 00:44:55,639
+is also on the table where we split out
+
+1175
+00:44:55,639 --> 00:44:58,059
+everything into multiple accounts.
+
+1176
+00:44:58,559 --> 00:45:00,559
+But that has its complexities too, right?
+
+1177
+00:45:00,628 --> 00:45:02,679
+If you split everything into its own account,
+
+1178
+00:45:02,929 --> 00:45:03,458
+um,
+
+1179
+00:45:04,119 --> 00:45:06,239
+it can be more complex to manage. And again, if
+
+1180
+00:45:06,239 --> 00:45:08,239
+we're talking startup size, maybe that's not
+
+1181
+00:45:08,239 --> 00:45:10,260
+such an issue. Maybe you've only got 10 accounts.
+
+1182
+00:45:10,639 --> 00:45:12,699
+Um, but I work with global pharma companies.
+
+1183
+00:45:12,958 --> 00:45:15,360
+And I can tell you they've got something like 400
+
+1184
+00:45:15,360 --> 00:45:17,469
+accounts that they're deploying things to.
+
+1185
+00:45:17,760 --> 00:45:20,000
+So we get a completely different level
+
+1186
+00:45:20,000 --> 00:45:21,539
+of complexity to manage.
+
+1187
+00:45:22,619 --> 00:45:24,760
+However, you've got isolation.
+
+1188
+00:45:25,139 --> 00:45:27,320
+And there isn't one right or wrong answer there.
+
+1189
+00:45:27,619 --> 00:45:29,619
+Um, I personally, because of the size of
+
+1190
+00:45:29,619 --> 00:45:32,019
+customer I work with, have uh prefer to
+
+1191
+00:45:32,458 --> 00:45:34,250
+have that account separation,
+
+1192
+00:45:34,619 --> 00:45:36,090
+but at a very minimum,
+
+1193
+00:45:36,418 --> 00:45:38,780
+make sure your prod is separated from your testing
+
+1194
+00:45:38,780 --> 00:45:39,969
+and and dev accounts.
+
+1195
+00:45:40,300 --> 00:45:42,378
+So then any mistakes that happen in dev are
+
+1196
+00:45:42,378 --> 00:45:43,579
+not going to affect your prod.
+
+1197
+00:45:46,260 --> 00:45:48,329
+So let's say we do move towards this multi-account
+
+1198
+00:45:48,329 --> 00:45:50,458
+deployment then. And we
+
+1199
+00:45:50,458 --> 00:45:53,090
+want to maintain consistent deployments.
+
+1200
+00:45:53,418 --> 00:45:55,418
+I think I've got the right room here. I don't
+
+1201
+00:45:55,418 --> 00:45:57,840
+necessarily need to explain why we need consistent deployments.
+
+1202
+00:45:57,898 --> 00:45:59,340
+I think that's really clear.
+
+1203
+00:45:59,989 --> 00:46:00,699
+Um,
+
+1204
+00:46:01,329 --> 00:46:03,610
+But in order to have those consistent deployments
+
+1205
+00:46:03,610 --> 00:46:05,760
+across multiple environments and multiple accounts,
+
+1206
+00:46:06,050 --> 00:46:06,949
+taking into account
+
+1207
+00:46:07,610 --> 00:46:09,648
+everything we've discussed today about not wanting
+
+1208
+00:46:09,648 --> 00:46:10,829
+code duplication,
+
+1209
+00:46:11,329 --> 00:46:13,688
+um, we then need to start thinking about having dynamic
+
+1210
+00:46:13,688 --> 00:46:16,010
+code and then building in that um
+
+1211
+00:46:16,010 --> 00:46:18,010
+dynamicness into
+
+1212
+00:46:18,010 --> 00:46:19,489
+our deployment pipelines,
+
+1213
+00:46:19,769 --> 00:46:21,889
+um, so that we can um keep
+
+1214
+00:46:21,889 --> 00:46:24,280
+our code bases, um,
+
+1215
+00:46:24,289 --> 00:46:25,188
+manageable
+
+1216
+00:46:25,530 --> 00:46:26,668
+whilst still
+
+1217
+00:46:27,289 --> 00:46:29,369
+ensuring we're deploying the right things to the
+
+1218
+00:46:29,369 --> 00:46:30,139
+right environment.
+
+1219
+00:46:32,418 --> 00:46:34,550
+Again, I'm gonna bang the drum on reducing
+
+1220
+00:46:34,550 --> 00:46:36,128
+code um duplication.
+
+1221
+00:46:36,708 --> 00:46:38,750
+And so we'll look at how we can do that
+
+1222
+00:46:38,750 --> 00:46:41,110
+within um our code here.
+
+1223
+00:46:43,369 --> 00:46:45,208
+Oh. So
+
+1224
+00:46:46,239 --> 00:46:46,918
+Um,
+
+1225
+00:46:48,320 --> 00:46:50,219
+If we go to our template, then again,
+
+1226
+00:46:50,539 --> 00:46:52,679
+um, you'll notice at the top, we have
+
+1227
+00:46:52,679 --> 00:46:54,539
+this section called parameters.
+
+1228
+00:46:54,918 --> 00:46:56,918
+Um, and this is really your first port of call
+
+1229
+00:46:56,918 --> 00:46:58,978
+for making your code dynamic, to make it
+
+1230
+00:46:59,360 --> 00:47:01,378
+react to various different situations.
+
+1231
+00:47:01,429 --> 00:47:02,469
+In this particular case,
+
+1232
+00:47:02,878 --> 00:47:03,500
+environment.
+
+1233
+00:47:04,079 --> 00:47:06,199
+So we can have a parameter that takes in an
+
+1234
+00:47:06,199 --> 00:47:08,320
+environment, and we can do simple things like that,
+
+1235
+00:47:08,519 --> 00:47:10,679
+at like changing a function name based upon
+
+1236
+00:47:10,679 --> 00:47:12,869
+the environment. So we can add a prefix or a suffix,
+
+1237
+00:47:13,000 --> 00:47:14,539
+but depending on this input.
+
+1238
+00:47:15,489 --> 00:47:16,949
+We can also do more
+
+1239
+00:47:17,329 --> 00:47:18,679
+complicated things with this.
+
+1240
+00:47:19,050 --> 00:47:21,409
+We can do um lookups
+
+1241
+00:47:21,409 --> 00:47:23,449
+into maps to see whether
+
+1242
+00:47:23,449 --> 00:47:25,309
+or not um the memory
+
+1243
+00:47:25,570 --> 00:47:26,829
+um needs to change
+
+1244
+00:47:27,489 --> 00:47:29,849
+based on an environment, or we can
+
+1245
+00:47:29,849 --> 00:47:31,929
+um even decide whether or not a resource
+
+1246
+00:47:31,929 --> 00:47:32,889
+even gets deployed.
+
+1247
+00:47:33,429 --> 00:47:35,429
+So if you're deploying into prod,
+
+1248
+00:47:35,510 --> 00:47:37,539
+you might want everything deployed, but if you're deploying it
+
+1249
+00:47:37,539 --> 00:47:38,188
+into dev,
+
+1250
+00:47:38,750 --> 00:47:40,849
+maybe you don't want some of that heavy
+
+1251
+00:47:40,849 --> 00:47:42,688
+um logging and monitoring,
+
+1252
+00:47:42,978 --> 00:47:45,070
+um, which costs a lot of money once it starts
+
+1253
+00:47:45,070 --> 00:47:46,668
+running up into high volume.
+
+1254
+00:47:49,668 --> 00:47:52,070
+So, let's look at mappings
+
+1255
+00:47:52,070 --> 00:47:55,539
+then. So
+
+1256
+00:47:55,918 --> 00:47:56,679
+a map,
+
+1257
+00:47:57,280 --> 00:47:59,320
+and this goes not just for Sam,
+
+1258
+00:47:59,438 --> 00:48:01,478
+but for cloud formation as well. And to some
+
+1259
+00:48:01,478 --> 00:48:04,059
+extent, terraform, but it looks a little bit different in terraform.
+
+1260
+00:48:05,128 --> 00:48:07,300
+Um, a map is essentially just a map,
+
+1261
+00:48:07,378 --> 00:48:08,719
+a key value pair map
+
+1262
+00:48:09,099 --> 00:48:10,208
+of um.
+
+1263
+00:48:11,090 --> 00:48:13,179
+A key that you choose and a value you want
+
+1264
+00:48:13,179 --> 00:48:14,360
+to associate to that key.
+
+1265
+00:48:15,148 --> 00:48:17,148
+So in this particular case, I don't want conditions,
+
+1266
+00:48:17,228 --> 00:48:18,989
+but we'll leave it there because I'm going to talk about that in a minute.
+
+1267
+00:48:22,418 --> 00:48:24,449
+And if someone wants to tell me how to
+
+1268
+00:48:24,449 --> 00:48:26,699
+completely erase AI from my IDE
+
+1269
+00:48:26,699 --> 00:48:28,878
+after this talk, I would welcome that greatly.
+
+1270
+00:48:30,059 --> 00:48:30,719
+OK.
+
+1271
+00:48:31,458 --> 00:48:33,619
+So um let's do memory. So I want
+
+1272
+00:48:33,619 --> 00:48:35,840
+to have memory set dynamically
+
+1273
+00:48:35,840 --> 00:48:38,099
+in my template based upon whether or not we're deploying
+
+1274
+00:48:38,099 --> 00:48:39,898
+to dev, or we're deploying to prod.
+
+1275
+00:48:40,329 --> 00:48:42,639
+So I'm going to define a map called memory.
+
+1276
+00:48:43,639 --> 00:48:45,878
+And then I'm going to say, OK, the
+
+1277
+00:48:45,878 --> 00:48:46,659
+key of death.
+
+1278
+00:48:47,688 --> 00:48:48,648
+Size.
+
+1279
+00:48:49,590 --> 00:48:51,708
+And let's make Dev really nice and small,
+
+1280
+00:48:51,898 --> 00:48:52,610
+12 8.
+
+1281
+00:48:53,958 --> 00:48:55,510
+And then I want to do prod.
+
+1282
+00:48:56,010 --> 00:48:57,110
+Again, now.
+
+1283
+00:48:59,250 --> 00:49:00,739
+One day it will be useful.
+
+1284
+00:49:01,280 --> 00:49:02,010
+And then,
+
+1285
+00:49:02,360 --> 00:49:04,938
+let's say we want that bigger, we want that to be um
+
+1286
+00:49:05,269 --> 00:49:06,280
+124,
+
+1287
+00:49:06,639 --> 00:49:07,679
+when I can type correctly.
+
+1288
+00:49:08,500 --> 00:49:10,148
+OK, so now we have our map.
+
+1289
+00:49:11,199 --> 00:49:13,219
+So if we go into our
+
+1290
+00:49:13,679 --> 00:49:15,719
+first lambda function, then, um
+
+1291
+00:49:15,719 --> 00:49:17,800
+we can easily then fetch that value.
+
+1292
+00:49:19,208 --> 00:49:20,590
+By going memory size,
+
+1293
+00:49:21,289 --> 00:49:22,610
+find in map.
+
+1294
+00:49:23,889 --> 00:49:25,929
+And then that is actually a helpful suggestion,
+
+1295
+00:49:26,329 --> 00:49:28,329
+um, where we refer to the name of the map,
+
+1296
+00:49:28,728 --> 00:49:30,958
+we refer to that environment parameter,
+
+1297
+00:49:31,289 --> 00:49:33,188
+and then we pull out the size variable.
+
+1298
+00:49:34,208 --> 00:49:36,289
+Um, and so when this runs at runtime,
+
+1299
+00:49:36,409 --> 00:49:38,438
+and when it runs at deployment, it's now going to put
+
+1300
+00:49:38,438 --> 00:49:40,648
+the correct value in there for the environment
+
+1301
+00:49:40,648 --> 00:49:41,708
+that we're deploying to.
+
+1302
+00:49:42,010 --> 00:49:44,128
+We don't have to have two separate code bases
+
+1303
+00:49:44,128 --> 00:49:45,228
+for prod and for dev,
+
+1304
+00:49:45,519 --> 00:49:47,719
+because we can accommodate for both of them in the same
+
+1305
+00:49:47,719 --> 00:49:51,320
+template. Now,
+
+1306
+00:49:51,398 --> 00:49:54,159
+if we want to determine whether or not a
+
+1307
+00:49:54,159 --> 00:49:55,760
+resource is even deployed,
+
+1308
+00:49:56,239 --> 00:49:58,519
+depending on the environment, we can use something called
+
+1309
+00:49:58,519 --> 00:49:59,179
+conditions.
+
+1310
+00:49:59,760 --> 00:50:01,019
+So conditions,
+
+1311
+00:50:01,349 --> 00:50:04,070
+um. No.
+
+1312
+00:50:09,099 --> 00:50:10,039
+You would think
+
+1313
+00:50:10,378 --> 00:50:11,199
+it would learn.
+
+1314
+00:50:11,610 --> 00:50:13,619
+OK, so conditions, we're going to
+
+1315
+00:50:13,619 --> 00:50:14,668
+go is prod,
+
+1316
+00:50:14,938 --> 00:50:16,039
+is this prod.
+
+1317
+00:50:16,938 --> 00:50:17,938
+And we are going,
+
+1318
+00:50:18,199 --> 00:50:20,300
+there we go. It's, it's helping.
+
+1319
+00:50:20,458 --> 00:50:21,090
+It's helping.
+
+1320
+00:50:21,878 --> 00:50:24,059
+Um, so we're going to say if the value
+
+1321
+00:50:24,059 --> 00:50:26,519
+of the environment variable is prod,
+
+1322
+00:50:27,168 --> 00:50:28,739
+this is going to evaluate to true.
+
+1323
+00:50:30,329 --> 00:50:32,329
+If it evaluates the true, our resource will
+
+1324
+00:50:32,329 --> 00:50:34,409
+be deployed. If it doesn't, it won't
+
+1325
+00:50:34,409 --> 00:50:34,969
+be deployed.
+
+1326
+00:50:35,978 --> 00:50:37,978
+And so what we then do is go to our land function
+
+1327
+00:50:37,978 --> 00:50:39,360
+here. We do condition.
+
+1328
+00:50:40,168 --> 00:50:42,208
+Um, and we just refer to that condition.
+
+1329
+00:50:43,728 --> 00:50:44,628
+And so now,
+
+1330
+00:50:45,590 --> 00:50:47,769
+This resource will only get deployed
+
+1331
+00:50:48,309 --> 00:50:49,889
+if the environment
+
+1332
+00:50:50,449 --> 00:50:51,309
+equals prod.
+
+1333
+00:50:52,688 --> 00:50:54,889
+And so this means that we can make our templates really
+
+1334
+00:50:54,889 --> 00:50:57,090
+nice and variable and dynamic. And
+
+1335
+00:50:57,090 --> 00:50:59,378
+we can avoid deploying things that we don't need to deploy.
+
+1336
+00:50:59,489 --> 00:51:01,610
+So when we're doing cost um reduction
+
+1337
+00:51:01,610 --> 00:51:02,909
+or cost savings,
+
+1338
+00:51:03,199 --> 00:51:04,668
+um, we can
+
+1339
+00:51:05,010 --> 00:51:06,449
+control that all within the same template.
+
+1340
+00:51:08,329 --> 00:51:10,458
+And the one final one I just want to cover, which is
+
+1341
+00:51:10,458 --> 00:51:12,478
+SA specific in this template,
+
+1342
+00:51:12,780 --> 00:51:14,159
+and that's globals.
+
+1343
+00:51:14,619 --> 00:51:16,938
+So globals are really powerful because we can
+
+1344
+00:51:16,938 --> 00:51:19,579
+set the variable at the the parameters
+
+1345
+00:51:19,739 --> 00:51:22,059
+at the top of our template and it will apply to
+
+1346
+00:51:22,059 --> 00:51:23,519
+every one of those resources.
+
+1347
+00:51:24,519 --> 00:51:26,898
+So in this particular case, we've set some global variables
+
+1348
+00:51:26,898 --> 00:51:28,119
+for our lambda functions.
+
+1349
+00:51:28,398 --> 00:51:30,599
+So every lambda function will inherit the timeout
+
+1350
+00:51:30,599 --> 00:51:32,679
+of 30 seconds. It's always going
+
+1351
+00:51:32,679 --> 00:51:35,449
+to be deployed with the Python runtime of 3.13.
+
+1352
+00:51:35,760 --> 00:51:38,239
+Um, and then we're going to give all these environment variables
+
+1353
+00:51:38,239 --> 00:51:40,360
+to every single lambda function. So we define
+
+1354
+00:51:40,360 --> 00:51:42,478
+those variables once, and they apply to
+
+1355
+00:51:42,478 --> 00:51:44,059
+every function within the template.
+
+1356
+00:51:44,679 --> 00:51:46,800
+Really, really powerful. And as I
+
+1357
+00:51:46,800 --> 00:51:48,958
+say, this is specific to SAM. You won't
+
+1358
+00:51:48,958 --> 00:51:50,280
+find this in cal formation.
+
+1359
+00:51:52,449 --> 00:51:54,570
+Now, I'm
+
+1360
+00:51:54,570 --> 00:51:56,610
+going to finish up quickly by just
+
+1361
+00:51:57,789 --> 00:51:59,889
+Going a little bit further into how we then use
+
+1362
+00:51:59,889 --> 00:52:01,909
+this dynamicness when we're actually using
+
+1363
+00:52:01,909 --> 00:52:03,188
+deployment pipelines.
+
+1364
+00:52:04,500 --> 00:52:05,188
+So
+
+1365
+00:52:05,878 --> 00:52:08,219
+I like Git GitHub actions, um,
+
+1366
+00:52:08,320 --> 00:52:10,639
+it's one of the favorite workflows that I like
+
+1367
+00:52:10,639 --> 00:52:11,978
+um for deployments.
+
+1368
+00:52:12,559 --> 00:52:13,458
+And when we're
+
+1369
+00:52:14,360 --> 00:52:16,438
+thinking about deploying our workloads, what we
+
+1370
+00:52:16,438 --> 00:52:18,059
+want to really achieve
+
+1371
+00:52:18,478 --> 00:52:20,179
+is consistent deployments.
+
+1372
+00:52:21,030 --> 00:52:21,648
+OK.
+
+1373
+00:52:22,030 --> 00:52:23,168
+And so
+
+1374
+00:52:23,878 --> 00:52:25,128
+we can deploy
+
+1375
+00:52:25,429 --> 00:52:27,628
+um these dynamic templates
+
+1376
+00:52:27,909 --> 00:52:29,989
+using variable files or variable
+
+1377
+00:52:29,989 --> 00:52:32,219
+overrides using some workflow
+
+1378
+00:52:32,219 --> 00:52:34,429
+definitions here. So this is what a GitHub actions
+
+1379
+00:52:34,429 --> 00:52:35,610
+workflow looks like.
+
+1380
+00:52:36,110 --> 00:52:38,809
+Essentially in here, we define when we deploy,
+
+1381
+00:52:39,449 --> 00:52:41,050
+what permissions we deploy with,
+
+1382
+00:52:41,668 --> 00:52:43,780
+um, and how we're going to deploy. So
+
+1383
+00:52:43,780 --> 00:52:45,708
+in this case, we're obviously using SAM.
+
+1384
+00:52:46,250 --> 00:52:48,369
+Um, and we pass in the credentials.
+
+1385
+00:52:48,449 --> 00:52:50,809
+So in this case, I've created an OIDC provider
+
+1386
+00:52:50,809 --> 00:52:52,070
+within my AWS account.
+
+1387
+00:52:52,769 --> 00:52:55,148
+And then we give the instructions for how to deploy.
+
+1388
+00:52:56,090 --> 00:52:58,340
+And as you can see here, uh we do
+
+1389
+00:52:58,340 --> 00:52:59,679
+a variable override
+
+1390
+00:53:00,148 --> 00:53:01,840
+um to set the dev environment.
+
+1391
+00:53:02,619 --> 00:53:04,619
+Now this workflow is just deploying to dev, but
+
+1392
+00:53:04,619 --> 00:53:06,760
+we could have this workflow deployed to prod.
+
+1393
+00:53:07,059 --> 00:53:07,800
+And
+
+1394
+00:53:08,418 --> 00:53:10,840
+what we can also introduce is a human
+
+1395
+00:53:10,840 --> 00:53:11,800
+review gateway.
+
+1396
+00:53:12,260 --> 00:53:14,340
+So we can do that deployment to dev,
+
+1397
+00:53:14,739 --> 00:53:17,019
+and the prod deployment won't even begin until
+
+1398
+00:53:17,019 --> 00:53:19,070
+someone's reviewed that dev deployment and made sure it
+
+1399
+00:53:19,070 --> 00:53:20,280
+actually went correctly.
+
+1400
+00:53:20,898 --> 00:53:23,099
+Sometimes with GitHub actions, it'll say it's deployed
+
+1401
+00:53:23,099 --> 00:53:25,478
+correctly, but actually when you inspect it a little bit more.
+
+1402
+00:53:25,878 --> 00:53:27,320
+It hasn't actually deployed,
+
+1403
+00:53:27,599 --> 00:53:29,719
+um, it's just gone, yes, the action completed
+
+1404
+00:53:29,719 --> 00:53:31,800
+correctly, which isn't necessarily always useful.
+
+1405
+00:53:31,878 --> 00:53:34,260
+So sometimes having that prod human gateway
+
+1406
+00:53:34,398 --> 00:53:36,179
+is really, really fantastic.
+
+1407
+00:53:37,340 --> 00:53:39,458
+And then when you actually go
+
+1408
+00:53:39,458 --> 00:53:40,280
+into
+
+1409
+00:53:41,039 --> 00:53:42,639
+That's not,
+
+1410
+00:53:42,958 --> 00:53:45,128
+there we go. So when we go
+
+1411
+00:53:45,128 --> 00:53:47,208
+into GitHub actions, this
+
+1412
+00:53:47,208 --> 00:53:49,409
+is what the workflow looks like when it's run.
+
+1413
+00:53:49,688 --> 00:53:51,869
+So these were a few when I was setting up the,
+
+1414
+00:53:51,969 --> 00:53:52,688
+the demo.
+
+1415
+00:53:53,039 --> 00:53:55,128
+Um, Obviously, setting up credentials
+
+1416
+00:53:55,128 --> 00:53:55,989
+is
+
+1417
+00:53:56,519 --> 00:53:58,849
+often difficult. And so I had a few failed
+
+1418
+00:53:58,849 --> 00:53:59,599
+deployments.
+
+1419
+00:53:59,929 --> 00:54:01,719
+But every single one of these you click into,
+
+1420
+00:54:02,000 --> 00:54:04,159
+you can then see a full, um,
+
+1421
+00:54:04,168 --> 00:54:05,309
+you can see the workflow.
+
+1422
+00:54:06,128 --> 00:54:08,269
+But you can also see the
+
+1423
+00:54:08,849 --> 00:54:10,349
+every action that took place.
+
+1424
+00:54:10,809 --> 00:54:11,429
+Um,
+
+1425
+00:54:11,849 --> 00:54:13,969
+so you've got that full audit trail as well of
+
+1426
+00:54:13,969 --> 00:54:16,329
+how it deployed, whether it encountered any issues,
+
+1427
+00:54:16,599 --> 00:54:18,010
+and for each one of those steps.
+
+1428
+00:54:18,289 --> 00:54:20,559
+If we go to the SAM build and deploy that same output
+
+1429
+00:54:20,559 --> 00:54:22,570
+you see in the console, you'll see here in
+
+1430
+00:54:22,570 --> 00:54:23,199
+the logging.
+
+1431
+00:54:23,610 --> 00:54:25,889
+Um, so you're always able to check what's
+
+1432
+00:54:25,889 --> 00:54:33,070
+happened. OK.
+
+1433
+00:54:37,769 --> 00:54:38,349
+So
+
+1434
+00:54:39,628 --> 00:54:41,090
+You came into this talk
+
+1435
+00:54:41,628 --> 00:54:44,030
+and um we presented
+
+1436
+00:54:44,030 --> 00:54:46,409
+you with a common enterprise challenge.
+
+1437
+00:54:47,030 --> 00:54:49,349
+Um, you had lots of isolated land functions,
+
+1438
+00:54:49,389 --> 00:54:51,570
+you'd migrated from a monolith, split them out,
+
+1439
+00:54:51,789 --> 00:54:53,728
+and then realized that you had complexity.
+
+1440
+00:54:54,679 --> 00:54:56,849
+So let's recap what we've actually covered.
+
+1441
+00:54:57,478 --> 00:54:59,628
+So in the first part, we covered
+
+1442
+00:54:59,628 --> 00:55:00,898
+organizing our functions.
+
+1443
+00:55:01,228 --> 00:55:03,269
+Um, and we talked about whether or not to
+
+1444
+00:55:03,269 --> 00:55:05,619
+have single or multi-purpose lambda
+
+1445
+00:55:05,619 --> 00:55:06,389
+functions,
+
+1446
+00:55:06,708 --> 00:55:08,750
+um, and, and the context within which that would
+
+1447
+00:55:08,750 --> 00:55:10,750
+be better, and how we use bounded
+
+1448
+00:55:10,750 --> 00:55:12,969
+context to start merging functionality
+
+1449
+00:55:13,389 --> 00:55:15,429
+together. We
+
+1450
+00:55:15,429 --> 00:55:17,708
+then talked about code reuse and how we can
+
+1451
+00:55:17,989 --> 00:55:20,030
+use um lambda layers to
+
+1452
+00:55:20,030 --> 00:55:22,590
+reuse code across our functions, minimize
+
+1453
+00:55:22,590 --> 00:55:24,639
+that duplication across our code bases,
+
+1454
+00:55:24,909 --> 00:55:27,188
+um, and if we want to go really
+
+1455
+00:55:27,188 --> 00:55:29,289
+radical, remove code altogether
+
+1456
+00:55:29,469 --> 00:55:31,590
+using SDK integrations. And then
+
+1457
+00:55:31,590 --> 00:55:32,289
+finally,
+
+1458
+00:55:32,750 --> 00:55:34,829
+we talked about consistent deployments,
+
+1459
+00:55:35,070 --> 00:55:36,329
+using dynamic code
+
+1460
+00:55:36,750 --> 00:55:38,369
+um and deployment pipelines.
+
+1461
+00:55:39,590 --> 00:55:41,909
+So the key message I want to take away here is that
+
+1462
+00:55:42,349 --> 00:55:44,389
+the these points that we're talking about, it's not
+
+1463
+00:55:44,389 --> 00:55:46,090
+just about deploying landers.
+
+1464
+00:55:46,349 --> 00:55:48,590
+It's about making sure that you're um you're
+
+1465
+00:55:48,590 --> 00:55:51,148
+building scalable and maintainable
+
+1466
+00:55:51,148 --> 00:55:51,969
+platforms
+
+1467
+00:55:52,228 --> 00:55:54,688
+um that can grow with your enterprise needs.
+
+1468
+00:55:56,579 --> 00:55:58,648
+So if I want you to do anything
+
+1469
+00:55:58,648 --> 00:56:00,800
+after the talk, um, this talk, it's to go away,
+
+1470
+00:56:01,019 --> 00:56:03,458
+pick one pain point, and then start applying
+
+1471
+00:56:03,458 --> 00:56:05,349
+these principles that we've taught you today,
+
+1472
+00:56:05,699 --> 00:56:07,780
+um, and see what happens. And if you wanna talk
+
+1473
+00:56:07,780 --> 00:56:09,878
+to us on LinkedIn about anything,
+
+1474
+00:56:10,179 --> 00:56:12,539
+um, after the, you know, obviously you're not gonna experiment
+
+1475
+00:56:12,539 --> 00:56:14,648
+now. But if you do go away and experiment and you actually wanna
+
+1476
+00:56:14,648 --> 00:56:16,780
+talk to us about it, reach out to us. Um, we're,
+
+1477
+00:56:16,820 --> 00:56:18,458
+we're accessible and you can find us on LinkedIn.
+
+1478
+00:56:21,168 --> 00:56:23,329
+There are other sessions, we've picked these sessions
+
+1479
+00:56:23,329 --> 00:56:25,429
+specifically because you should still be able to make
+
+1480
+00:56:25,429 --> 00:56:27,250
+them. So these are our recommendations
+
+1481
+00:56:27,530 --> 00:56:29,780
+uh for sessions to go and um
+
+1482
+00:56:30,369 --> 00:56:31,829
+look at and watch.
+
+1483
+00:56:32,329 --> 00:56:34,409
+Um, and we also have some
+
+1484
+00:56:34,409 --> 00:56:35,679
+other resources here.
+
+1485
+00:56:36,090 --> 00:56:38,090
+So if you scan the QR code, this will take
+
+1486
+00:56:38,090 --> 00:56:40,250
+you to a lot of surus learning
+
+1487
+00:56:40,250 --> 00:56:41,829
+if you want to further your journey.
+
+1488
+00:56:43,519 --> 00:56:44,360
+And with that,
+
+1489
+00:56:44,760 --> 00:56:46,918
+I would like to thank you all, on behalf of both
+
+1490
+00:56:46,918 --> 00:56:48,360
+myself and Lef Eris.
+
+1491
+00:56:48,958 --> 00:56:49,469
+Thank you.
+

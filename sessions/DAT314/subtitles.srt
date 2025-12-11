@@ -1,0 +1,4444 @@
+1
+00:00:00,489 --> 00:00:01,739
+Well, uh, good afternoon,
+
+2
+00:00:02,048 --> 00:00:04,000
+everyone. Welcome to day 4.
+
+3
+00:00:04,288 --> 00:00:05,070
+Can't believe it.
+
+4
+00:00:05,889 --> 00:00:07,349
+How are we doing, surviving?
+
+5
+00:00:08,288 --> 00:00:09,288
+Yes, good.
+
+6
+00:00:10,130 --> 00:00:12,398
+Well, you made it to day 4, and I'm
+
+7
+00:00:12,398 --> 00:00:14,640
+super excited that you've decided to join
+
+8
+00:00:14,640 --> 00:00:16,879
+me for the next 45 minutes or
+
+9
+00:00:16,879 --> 00:00:18,158
+so attending this session.
+
+10
+00:00:19,170 --> 00:00:21,339
+This is 314.
+
+11
+00:00:21,850 --> 00:00:24,289
+My name is Shayan Sanyal. I'm a principal
+
+12
+00:00:24,289 --> 00:00:26,170
+Database Specialist at AWS.
+
+13
+00:00:26,929 --> 00:00:29,408
+Today, we are going to dive deep into
+
+14
+00:00:29,408 --> 00:00:31,609
+how to build surless chatbots using
+
+15
+00:00:31,609 --> 00:00:33,439
+Elasticash and Aurora posters.
+
+16
+00:00:34,810 --> 00:00:36,959
+Who's using Arre in production today? Just
+
+17
+00:00:36,959 --> 00:00:38,009
+a show of hands.
+
+18
+00:00:39,039 --> 00:00:40,439
+Oh, majority of you, OK.
+
+19
+00:00:40,848 --> 00:00:43,700
+And who's building chatbots using apostress
+
+20
+00:00:43,700 --> 00:00:44,750
+as the database?
+
+21
+00:00:45,840 --> 00:00:47,959
+No one. OK. Well, you're in the right
+
+22
+00:00:47,959 --> 00:00:49,908
+room. So let's dive in.
+
+23
+00:00:51,340 --> 00:00:53,380
+So our case study today is
+
+24
+00:00:53,380 --> 00:00:55,779
+flightly. It's a fictitious
+
+25
+00:00:55,779 --> 00:00:58,340
+travel platform that allows customers
+
+26
+00:00:58,340 --> 00:00:59,569
+to search flights,
+
+27
+00:00:59,880 --> 00:01:01,618
+book hotels, and plan vacations.
+
+28
+00:01:02,750 --> 00:01:05,180
+Today we'll crack open the architecture. We'll
+
+29
+00:01:05,180 --> 00:01:06,489
+help slightly build it.
+
+30
+00:01:07,680 --> 00:01:09,969
+And we'll sort of also see how to evolve
+
+31
+00:01:09,969 --> 00:01:12,120
+this basic chatbot that Flightly has
+
+32
+00:01:12,120 --> 00:01:13,650
+into an agentic AI system.
+
+33
+00:01:14,588 --> 00:01:16,638
+Along the way, we are extracting some
+
+34
+00:01:16,638 --> 00:01:18,719
+reusable architecture patterns that hopefully
+
+35
+00:01:18,719 --> 00:01:20,439
+you can apply in your own systems.
+
+36
+00:01:21,379 --> 00:01:22,260
+Let's dive in.
+
+37
+00:01:24,019 --> 00:01:24,760
+Friday afternoon,
+
+38
+00:01:25,019 --> 00:01:26,698
+I'm planning a vacation to Hawaii.
+
+39
+00:01:27,750 --> 00:01:29,829
+I type my query in slightly, and
+
+40
+00:01:29,829 --> 00:01:30,769
+it starts thinking.
+
+41
+00:01:31,750 --> 00:01:34,000
+Still thinking, still thinking, still going.
+
+42
+00:01:34,829 --> 00:01:36,629
+So I do what we all do.
+
+43
+00:01:36,909 --> 00:01:38,388
+I go and check my email.
+
+44
+00:01:40,829 --> 00:01:42,838
+And very quickly I'll notice that this
+
+45
+00:01:42,838 --> 00:01:45,079
+Island Air competitor has a flash sale.
+
+46
+00:01:46,109 --> 00:01:48,109
+Hawaii flights, ironically, great
+
+47
+00:01:48,109 --> 00:01:48,689
+price.
+
+48
+00:01:49,329 --> 00:01:50,829
+Back to flight Lee, still thinking.
+
+49
+00:01:51,909 --> 00:01:53,260
+I book with Island Air.
+
+50
+00:01:53,519 --> 00:01:55,549
+Done. Flight Lee
+
+51
+00:01:55,549 --> 00:01:57,239
+just lost me as a customer.
+
+52
+00:01:57,900 --> 00:01:59,959
+And probably thousands of others,
+
+53
+00:02:00,620 --> 00:02:02,448
+not because the product was bad,
+
+54
+00:02:02,900 --> 00:02:04,629
+but the chat was just too slow.
+
+55
+00:02:05,760 --> 00:02:08,020
+Let me show you what this costs the business.
+
+56
+00:02:10,129 --> 00:02:12,379
+30 seconds average response time
+
+57
+00:02:12,379 --> 00:02:13,278
+for a single booking.
+
+58
+00:02:14,469 --> 00:02:16,669
+About half of their users hit this
+
+59
+00:02:16,669 --> 00:02:17,368
+performance wall.
+
+60
+00:02:18,558 --> 00:02:20,729
+Average booking value is about 300
+
+61
+00:02:20,729 --> 00:02:22,849
+bucks. They handle a million
+
+62
+00:02:22,849 --> 00:02:23,808
+requests daily.
+
+63
+00:02:24,750 --> 00:02:26,909
+Now, industry data shows that
+
+64
+00:02:26,909 --> 00:02:28,349
+every second of delay
+
+65
+00:02:28,788 --> 00:02:31,058
+costs you 7% in conversions.
+
+66
+00:02:31,949 --> 00:02:34,159
+With super long response times,
+
+67
+00:02:34,278 --> 00:02:36,679
+even a tiny fraction of users abandoning
+
+68
+00:02:36,679 --> 00:02:37,599
+adds up very quickly.
+
+69
+00:02:38,659 --> 00:02:41,710
+So, if you just do the math, it's about $1500
+
+70
+00:02:41,710 --> 00:02:42,929
+lost every day,
+
+71
+00:02:43,379 --> 00:02:45,580
+which compounds to $50 million
+
+72
+00:02:45,580 --> 00:02:47,778
+annually. So
+
+73
+00:02:47,788 --> 00:02:48,788
+how do we fix this?
+
+74
+00:02:51,139 --> 00:02:51,770
+Here's the thing
+
+75
+00:02:52,550 --> 00:02:54,588
+When Flightly started, they didn't see
+
+76
+00:02:54,588 --> 00:02:55,169
+this coming.
+
+77
+00:02:55,879 --> 00:02:58,240
+They hoped they were building for speed and scale
+
+78
+00:02:58,240 --> 00:02:59,659
+like everyone does,
+
+79
+00:03:00,080 --> 00:03:02,240
+but the team did what most of us would
+
+80
+00:03:02,240 --> 00:03:04,439
+do. They built an MVP. They started quick,
+
+81
+00:03:04,800 --> 00:03:07,399
+launched the platform, user adoption accelerated.
+
+82
+00:03:08,679 --> 00:03:10,849
+But success created new problems.
+
+83
+00:03:11,308 --> 00:03:13,689
+Thousands of users became millions,
+
+84
+00:03:14,189 --> 00:03:16,710
+and suddenly they are hitting this entirely
+
+85
+00:03:16,710 --> 00:03:18,050
+new set of bottlenecks
+
+86
+00:03:18,308 --> 00:03:20,550
+that obviously doesn't appear unless you're at this scale.
+
+87
+00:03:21,719 --> 00:03:23,300
+So the question kind of shifted.
+
+88
+00:03:23,719 --> 00:03:25,838
+How do you maintain sub-second response
+
+89
+00:03:25,838 --> 00:03:26,538
+times
+
+90
+00:03:26,960 --> 00:03:29,118
+when you're processing millions of requests per
+
+91
+00:03:29,118 --> 00:03:32,028
+day? Here's
+
+92
+00:03:32,028 --> 00:03:33,508
+what Flightly's working with.
+
+93
+00:03:34,250 --> 00:03:36,490
+Customer data and company data.
+
+94
+00:03:36,649 --> 00:03:38,729
+It's similar data to what we all have
+
+95
+00:03:38,729 --> 00:03:39,758
+in our databases.
+
+96
+00:03:40,250 --> 00:03:42,288
+Customer data includes things such as past
+
+97
+00:03:42,288 --> 00:03:44,889
+bookings, search history, preferences, etc.
+
+98
+00:03:45,449 --> 00:03:47,490
+Company data is flight inventory,
+
+99
+00:03:47,719 --> 00:03:49,550
+hotel inventory, promotions, etc.
+
+100
+00:03:50,558 --> 00:03:53,139
+All of this data lives in Aurora Press.
+
+101
+00:03:53,558 --> 00:03:55,770
+Years and years of rich data.
+
+102
+00:03:56,240 --> 00:03:58,159
+Perfect foundation for a chatbot.
+
+103
+00:03:59,270 --> 00:04:00,538
+But here's the problem,
+
+104
+00:04:01,080 --> 00:04:03,199
+without a cache, every query hits the
+
+105
+00:04:03,199 --> 00:04:03,800
+database.
+
+106
+00:04:04,588 --> 00:04:06,960
+Every semantic search recomutes vector
+
+107
+00:04:06,960 --> 00:04:07,599
+distances.
+
+108
+00:04:08,338 --> 00:04:10,129
+At a million requests per day,
+
+109
+00:04:10,419 --> 00:04:11,879
+you get exactly what we saw,
+
+110
+00:04:12,639 --> 00:04:14,319
+painful response times.
+
+111
+00:04:15,909 --> 00:04:17,988
+Now, your instinct might be, let's
+
+112
+00:04:17,988 --> 00:04:20,028
+migrate to a faster database.
+
+113
+00:04:21,079 --> 00:04:23,528
+But that includes new infrastructure,
+
+114
+00:04:23,689 --> 00:04:25,949
+new ETL pipelines, migration risk.
+
+115
+00:04:26,720 --> 00:04:29,100
+And Aurora's been rock solid for years.
+
+116
+00:04:29,778 --> 00:04:31,899
+The database isn't the problem, it's the
+
+117
+00:04:31,899 --> 00:04:32,500
+access pattern.
+
+118
+00:04:33,338 --> 00:04:35,548
+So we keep Aurora as our source of truth
+
+119
+00:04:35,548 --> 00:04:37,660
+and add a caching layer. Let's
+
+120
+00:04:37,660 --> 00:04:38,579
+keep that in mind.
+
+121
+00:04:39,869 --> 00:04:41,399
+Let's understand the current architecture.
+
+122
+00:04:43,019 --> 00:04:45,379
+User query comes in, find me a beach resort
+
+123
+00:04:45,379 --> 00:04:46,019
+in Bali.
+
+124
+00:04:46,709 --> 00:04:48,949
+The system queries Aurora as a knowledge
+
+125
+00:04:48,949 --> 00:04:49,528
+base.
+
+126
+00:04:49,949 --> 00:04:52,028
+It pulls relevant context, things such
+
+127
+00:04:52,028 --> 00:04:54,069
+as availability, seasonal pricing,
+
+128
+00:04:54,108 --> 00:04:55,428
+and the user's preferences.
+
+129
+00:04:56,488 --> 00:04:59,000
+All of this gets assembled into a context
+
+130
+00:04:59,000 --> 00:05:00,170
+aware system prompt.
+
+131
+00:05:01,028 --> 00:05:03,199
+Which is nothing but the instructions set
+
+132
+00:05:03,199 --> 00:05:03,869
+for the LLM.
+
+133
+00:05:05,100 --> 00:05:07,139
+The system prompt does 2 things.
+
+134
+00:05:07,778 --> 00:05:10,019
+It defines behavior, so answer
+
+135
+00:05:10,019 --> 00:05:12,199
+travel questions, reference the knowledge base,
+
+136
+00:05:12,459 --> 00:05:14,160
+maintain conversation history,
+
+137
+00:05:14,660 --> 00:05:16,519
+and it sets personality.
+
+138
+00:05:17,059 --> 00:05:19,088
+Be warm, enthusiastic, helpful.
+
+139
+00:05:20,278 --> 00:05:22,569
+This enriched prompt plus the user's
+
+140
+00:05:22,569 --> 00:05:24,670
+question gets sent to a large language model.
+
+141
+00:05:25,639 --> 00:05:27,759
+Which then generates a tailored
+
+142
+00:05:27,759 --> 00:05:30,000
+response. Now, for
+
+143
+00:05:30,000 --> 00:05:31,209
+a single turn conversation,
+
+144
+00:05:31,629 --> 00:05:33,720
+single interaction, single user asking
+
+145
+00:05:33,720 --> 00:05:34,338
+this question,
+
+146
+00:05:35,009 --> 00:05:37,269
+This architecture works great. This is perfect.
+
+147
+00:05:38,230 --> 00:05:40,319
+But watch what happens when
+
+148
+00:05:40,319 --> 00:05:42,540
+we scale this to thousands of users
+
+149
+00:05:42,910 --> 00:05:45,040
+concurrently asking the same questions
+
+150
+00:05:45,040 --> 00:05:45,959
+or different questions.
+
+151
+00:05:47,569 --> 00:05:49,699
+So now we have multiple users
+
+152
+00:05:49,699 --> 00:05:50,500
+hitting the system.
+
+153
+00:05:51,178 --> 00:05:52,119
+And in travel,
+
+154
+00:05:52,579 --> 00:05:54,778
+I like to think of it as the potato rule. It's
+
+155
+00:05:54,778 --> 00:05:56,819
+80% of your queries are
+
+156
+00:05:56,819 --> 00:05:58,639
+just different questions,
+
+157
+00:05:59,298 --> 00:06:01,488
+uh, are just 20 questions wearing different
+
+158
+00:06:01,488 --> 00:06:02,178
+outfits.
+
+159
+00:06:02,910 --> 00:06:05,269
+Now watch the latencies stack up. The orange
+
+160
+00:06:05,269 --> 00:06:07,170
+lines are your warning zones.
+
+161
+00:06:07,670 --> 00:06:09,670
+The red lines are now we are hitting the limits of
+
+162
+00:06:09,670 --> 00:06:11,738
+the system. Every
+
+163
+00:06:11,738 --> 00:06:14,178
+single query triggers the exact
+
+164
+00:06:14,178 --> 00:06:15,540
+same expensive pipeline.
+
+165
+00:06:16,449 --> 00:06:18,730
+Your query hits your database, there is a distance
+
+166
+00:06:18,730 --> 00:06:19,509
+calculation,
+
+167
+00:06:19,769 --> 00:06:20,769
+fetches context,
+
+168
+00:06:21,088 --> 00:06:23,309
+assembles the system prompt, and sends it
+
+169
+00:06:23,309 --> 00:06:23,970
+to the LLM.
+
+170
+00:06:24,910 --> 00:06:27,230
+Each operation adds about 100 milliseconds,
+
+171
+00:06:27,238 --> 00:06:28,160
+and that stacks up.
+
+172
+00:06:29,088 --> 00:06:30,509
+You'll notice very quickly,
+
+173
+00:06:30,970 --> 00:06:32,970
+you're spending over a 0 2nd,
+
+174
+00:06:33,069 --> 00:06:35,259
+over 500 milliseconds per
+
+175
+00:06:35,259 --> 00:06:37,350
+request. And this keeps getting
+
+176
+00:06:37,350 --> 00:06:37,928
+worse.
+
+177
+00:06:38,420 --> 00:06:40,588
+Response times start degrading from 500
+
+178
+00:06:40,588 --> 00:06:42,709
+milliseconds to 5 seconds to 30
+
+179
+00:06:42,709 --> 00:06:45,019
+seconds. At a million users
+
+180
+00:06:45,019 --> 00:06:45,738
+daily,
+
+181
+00:06:46,259 --> 00:06:48,319
+this architecture is unsustainable.
+
+182
+00:06:49,220 --> 00:06:51,480
+Ask your application teams what's wrong and I'm sure
+
+183
+00:06:51,480 --> 00:06:53,338
+they'll all point straight to the database.
+
+184
+00:06:54,189 --> 00:06:56,199
+But it's not the database's fault, it's the
+
+185
+00:06:56,199 --> 00:06:58,480
+access pattern. All right.
+
+186
+00:06:58,939 --> 00:07:00,738
+We touched on caching a little bit earlier.
+
+187
+00:07:01,019 --> 00:07:03,548
+Let's dig into why it's essential for
+
+188
+00:07:03,548 --> 00:07:04,838
+conversational AI at scale.
+
+189
+00:07:06,079 --> 00:07:08,519
+When a user asks about baggage policies,
+
+190
+00:07:08,649 --> 00:07:09,988
+frequently asked questions,
+
+191
+00:07:10,410 --> 00:07:12,889
+a cache can serve that in under a millisecond.
+
+192
+00:07:13,809 --> 00:07:15,319
+If it was the database,
+
+193
+00:07:15,769 --> 00:07:16,869
+that's disk IO,
+
+194
+00:07:17,410 --> 00:07:19,809
+buffer lookups, query parsing, query
+
+195
+00:07:19,809 --> 00:07:21,689
+execution, etc. etc. etc.
+
+196
+00:07:22,088 --> 00:07:24,319
+And that's 50, about 50 milliseconds,
+
+197
+00:07:24,759 --> 00:07:26,769
+even with solid state drives, SSDs.
+
+198
+00:07:27,910 --> 00:07:29,410
+And every database connection
+
+199
+00:07:29,790 --> 00:07:32,108
+means a TCP handshake, a TLS
+
+200
+00:07:32,108 --> 00:07:34,269
+negotiation, cross AZ round trip.
+
+201
+00:07:34,709 --> 00:07:36,889
+That's about 5 milliseconds per each
+
+202
+00:07:36,889 --> 00:07:37,428
+iteration.
+
+203
+00:07:38,350 --> 00:07:40,639
+And that's just the protocol overhead
+
+204
+00:07:40,639 --> 00:07:42,678
+before your query even hits the database.
+
+205
+00:07:44,108 --> 00:07:45,500
+API economics.
+
+206
+00:07:46,040 --> 00:07:48,250
+Show me flights to Hawaii, probably gets
+
+207
+00:07:48,250 --> 00:07:49,959
+asked thousands of times every day.
+
+208
+00:07:50,850 --> 00:07:52,889
+Each uncashed request burns
+
+209
+00:07:52,889 --> 00:07:54,899
+inference costs. There's embedding
+
+210
+00:07:54,899 --> 00:07:56,528
+generation, there's LLM invocations.
+
+211
+00:07:57,178 --> 00:07:59,220
+You cash once and you amortize
+
+212
+00:07:59,220 --> 00:08:00,579
+the cost across the fleet.
+
+213
+00:08:01,709 --> 00:08:02,238
+Finally,
+
+214
+00:08:03,040 --> 00:08:05,119
+By definition, semantic search
+
+215
+00:08:05,119 --> 00:08:06,569
+and semantic lookups
+
+216
+00:08:06,959 --> 00:08:09,079
+mean cosine distance calculations
+
+217
+00:08:09,079 --> 00:08:11,879
+across these 1024, 1536,
+
+218
+00:08:11,949 --> 00:08:13,920
+3072 vector dimensions.
+
+219
+00:08:14,850 --> 00:08:17,108
+And you probably have millions and millions
+
+220
+00:08:17,108 --> 00:08:18,358
+of those vectors.
+
+221
+00:08:18,939 --> 00:08:21,358
+So caching those top K results
+
+222
+00:08:21,689 --> 00:08:23,899
+skips those heavy floating point cosine
+
+223
+00:08:23,899 --> 00:08:26,019
+distance operations entirely for those
+
+224
+00:08:26,019 --> 00:08:26,879
+repeat queries.
+
+225
+00:08:27,699 --> 00:08:29,678
+That's the kind of thing that we are looking for.
+
+226
+00:08:30,298 --> 00:08:32,298
+This is the speed layer that we're going to add to
+
+227
+00:08:32,298 --> 00:08:32,979
+our architecture.
+
+228
+00:08:34,009 --> 00:08:36,408
+Now, this is a great segue
+
+229
+00:08:36,408 --> 00:08:38,489
+on why caching is essential. Let's take a
+
+230
+00:08:38,489 --> 00:08:40,450
+little detour to the service side of things.
+
+231
+00:08:42,217 --> 00:08:44,508
+Amazon Elastic Cash is our fully managed
+
+232
+00:08:44,508 --> 00:08:45,567
+caching service.
+
+233
+00:08:46,109 --> 00:08:47,908
+It's Reddis OSS compatible,
+
+234
+00:08:48,369 --> 00:08:50,749
+MMCash T compatible, and Valy compatible.
+
+235
+00:08:52,109 --> 00:08:54,229
+Your application connects to a single
+
+236
+00:08:54,229 --> 00:08:55,250
+DNS endpoint
+
+237
+00:08:55,869 --> 00:08:58,288
+using standard REDDS or VALKI protocol.
+
+238
+00:08:58,950 --> 00:09:01,369
+Behind it is a managed proxy fleet
+
+239
+00:09:01,428 --> 00:09:03,288
+that handles connection multiplexing
+
+240
+00:09:03,590 --> 00:09:05,109
+across this distributed cluster.
+
+241
+00:09:05,769 --> 00:09:08,090
+And it gives you nice features such as consistent
+
+242
+00:09:08,090 --> 00:09:08,678
+hashing,
+
+243
+00:09:08,950 --> 00:09:10,918
+async replication across AZs,
+
+244
+00:09:11,369 --> 00:09:13,048
+sub-millisecond failover, and so on.
+
+245
+00:09:14,250 --> 00:09:16,979
+Of course, you throw in the services benefits, scaling
+
+246
+00:09:16,979 --> 00:09:17,700
+is automatic.
+
+247
+00:09:18,500 --> 00:09:20,859
+Now, this is the speed layer that eliminates
+
+248
+00:09:20,859 --> 00:09:22,239
+Flightly's bottleneck.
+
+249
+00:09:22,658 --> 00:09:24,418
+Let's see how it transforms the architecture.
+
+250
+00:09:26,320 --> 00:09:28,918
+So Elasticash's shared cluster architecture
+
+251
+00:09:28,918 --> 00:09:30,960
+serves data directly from memory,
+
+252
+00:09:31,239 --> 00:09:33,349
+regardless of which AZ the data lives in.
+
+253
+00:09:33,879 --> 00:09:36,408
+So it guarantees consistent microsecond
+
+254
+00:09:36,408 --> 00:09:37,840
+P99 latencies,
+
+255
+00:09:38,279 --> 00:09:40,279
+whether you are at 100 requests per second or
+
+256
+00:09:40,279 --> 00:09:42,000
+100,000 requests per second.
+
+257
+00:09:43,639 --> 00:09:45,798
+Now, just before reinvent, I think
+
+258
+00:09:45,798 --> 00:09:48,029
+about a week before reinvent or so,
+
+259
+00:09:48,479 --> 00:09:50,879
+we launched vector search for elastic
+
+260
+00:09:50,879 --> 00:09:53,038
+cash. And with it, durable
+
+261
+00:09:53,038 --> 00:09:54,000
+semantic caching.
+
+262
+00:09:55,590 --> 00:09:57,739
+With with Elastic cash, Valy, durable
+
+263
+00:09:57,739 --> 00:10:00,178
+semantic caching, we are actually hitting 90%
+
+264
+00:10:00,178 --> 00:10:02,239
+plus cache hit rates for
+
+265
+00:10:02,239 --> 00:10:03,158
+repeat queries.
+
+266
+00:10:03,619 --> 00:10:05,700
+What that means is 9 out of your
+
+267
+00:10:05,700 --> 00:10:07,739
+10 requests get served from memory.
+
+268
+00:10:09,808 --> 00:10:11,119
+Third is resilience.
+
+269
+00:10:11,928 --> 00:10:14,450
+Every shard maintains reed replicas
+
+270
+00:10:14,450 --> 00:10:15,889
+across availability zones.
+
+271
+00:10:16,168 --> 00:10:18,570
+When hardware fails, and during December
+
+272
+00:10:18,570 --> 00:10:19,678
+holiday traffic,
+
+273
+00:10:20,210 --> 00:10:22,210
+there are high chances that hardware might
+
+274
+00:10:22,210 --> 00:10:24,849
+fail, Elastic cache automatically
+
+275
+00:10:24,849 --> 00:10:26,928
+detects and promotes a reed replica to become
+
+276
+00:10:26,928 --> 00:10:27,489
+the new writer.
+
+277
+00:10:29,739 --> 00:10:32,109
+And of course, holiday traffic is inherently
+
+278
+00:10:32,109 --> 00:10:32,969
+unpredictable.
+
+279
+00:10:33,590 --> 00:10:35,830
+Spring breaks might spike 15 times
+
+280
+00:10:35,830 --> 00:10:37,908
+over a normal February baseline.
+
+281
+00:10:38,729 --> 00:10:40,859
+So elastic ash can monitor that and
+
+282
+00:10:40,859 --> 00:10:43,000
+provision additional shards as needed
+
+283
+00:10:43,259 --> 00:10:44,418
+to accommodate that growth.
+
+284
+00:10:45,989 --> 00:10:48,750
+Now we've solved speed, we are getting sub-millisecond
+
+285
+00:10:48,750 --> 00:10:49,408
+responses.
+
+286
+00:10:49,830 --> 00:10:51,908
+There's another component to this. Now we need
+
+287
+00:10:51,908 --> 00:10:52,808
+intelligence.
+
+288
+00:10:53,570 --> 00:10:55,519
+Your users aren't asking,
+
+289
+00:10:55,849 --> 00:10:58,090
+select start from destinations where
+
+290
+00:10:58,090 --> 00:10:59,668
+activities like beach.
+
+291
+00:11:00,349 --> 00:11:02,450
+They're asking, where can I surf and party.
+
+292
+00:11:03,649 --> 00:11:05,690
+And they don't repeat exact queries.
+
+293
+00:11:05,969 --> 00:11:07,190
+It's the intention.
+
+294
+00:11:07,460 --> 00:11:08,869
+It's they express intent
+
+295
+00:11:09,210 --> 00:11:10,168
+about those queries.
+
+296
+00:11:11,700 --> 00:11:13,820
+So, all of this relates to something called
+
+297
+00:11:13,820 --> 00:11:14,928
+semantic search.
+
+298
+00:11:15,379 --> 00:11:17,678
+So, let's see how semantic search actually works.
+
+299
+00:11:18,989 --> 00:11:20,509
+You start with your domain knowledge.
+
+300
+00:11:20,869 --> 00:11:23,109
+This would be travel guides, hotel descriptions,
+
+301
+00:11:23,190 --> 00:11:24,690
+visa policies, etc.
+
+302
+00:11:25,259 --> 00:11:27,590
+For Flightly, it's all in Auroraustress.
+
+303
+00:11:28,750 --> 00:11:31,279
+You break this corpus into bite-sized
+
+304
+00:11:31,279 --> 00:11:31,950
+chunks.
+
+305
+00:11:32,548 --> 00:11:34,950
+And then you feed this data through an embedding
+
+306
+00:11:34,950 --> 00:11:37,190
+model. Your text
+
+307
+00:11:37,190 --> 00:11:39,190
+in those documents becomes
+
+308
+00:11:39,190 --> 00:11:40,769
+multi-dimensional vectors,
+
+309
+00:11:41,029 --> 00:11:43,639
+and each dimension captures semantic
+
+310
+00:11:43,639 --> 00:11:45,908
+features, so similar concepts like
+
+311
+00:11:45,908 --> 00:11:48,139
+beach and coast clustered
+
+312
+00:11:48,139 --> 00:11:50,359
+together. Dissimilar
+
+313
+00:11:50,359 --> 00:11:51,798
+concepts will stay apart.
+
+314
+00:11:53,119 --> 00:11:55,349
+In practice, Miami's embeddings
+
+315
+00:11:55,349 --> 00:11:57,389
+will look something like this, pristine beaches
+
+316
+00:11:57,389 --> 00:11:59,009
+plus world-class clubs
+
+317
+00:11:59,570 --> 00:12:02,308
+across, let's say, those 1024 dimensions.
+
+318
+00:12:02,779 --> 00:12:05,149
+At Bali's encoding represents
+
+319
+00:12:05,149 --> 00:12:07,440
+tropical surf beaches plus wellness
+
+320
+00:12:07,440 --> 00:12:07,950
+spas.
+
+321
+00:12:08,798 --> 00:12:11,038
+Both contain beach components, mind
+
+322
+00:12:11,038 --> 00:12:13,038
+you. But then Miami
+
+323
+00:12:13,038 --> 00:12:15,239
+leans towards this urban and nightlife
+
+324
+00:12:15,239 --> 00:12:17,440
+theme, whereas Bali leans
+
+325
+00:12:17,440 --> 00:12:19,820
+more towards spiritual and wellness themes.
+
+326
+00:12:21,408 --> 00:12:23,879
+These embeddings get stored in a vector database.
+
+327
+00:12:24,849 --> 00:12:27,058
+Aurora Bres has PG vector, just
+
+328
+00:12:27,058 --> 00:12:29,080
+a show of hands who's heard of PG Vector.
+
+329
+00:12:30,090 --> 00:12:31,538
+OK, quite a lot of you, good.
+
+330
+00:12:32,119 --> 00:12:34,298
+So, PG vector for those uninitiated
+
+331
+00:12:34,298 --> 00:12:36,219
+is an extension in Postress
+
+332
+00:12:36,678 --> 00:12:39,288
+for storing and querying vector embeddings.
+
+333
+00:12:39,479 --> 00:12:41,849
+And this enables that semantic lookup, semantic
+
+334
+00:12:41,849 --> 00:12:43,859
+search. On
+
+335
+00:12:43,859 --> 00:12:46,048
+the other side, now, when your user comes and
+
+336
+00:12:46,048 --> 00:12:46,989
+asks this question, where,
+
+337
+00:12:47,330 --> 00:12:48,700
+where can I surf and party?
+
+338
+00:12:49,690 --> 00:12:52,019
+That query it's the same embedding model.
+
+339
+00:12:52,849 --> 00:12:55,000
+And gets converted into a 1024
+
+340
+00:12:55,000 --> 00:12:56,729
+dimensional vector, for example.
+
+341
+00:12:57,808 --> 00:12:59,820
+Now we run semantic search against
+
+342
+00:12:59,820 --> 00:13:01,099
+Aurora with PG vector.
+
+343
+00:13:01,979 --> 00:13:04,250
+This is what the query looks like. It's,
+
+344
+00:13:04,349 --> 00:13:06,379
+you never see it, the model handle
+
+345
+00:13:06,379 --> 00:13:07,729
+handles it behind the scenes.
+
+346
+00:13:08,570 --> 00:13:10,889
+What you do see are top matches,
+
+347
+00:13:11,139 --> 00:13:13,200
+Miami and Bali, ranked
+
+348
+00:13:13,200 --> 00:13:14,739
+ranked by a similarity score.
+
+349
+00:13:15,969 --> 00:13:18,090
+Now this is the intelligence layer. So
+
+350
+00:13:18,090 --> 00:13:20,489
+we had speed, now we added the intelligence layer.
+
+351
+00:13:21,389 --> 00:13:23,668
+This is how Flightly also moves
+
+352
+00:13:23,668 --> 00:13:25,340
+beyond a simple keyword match
+
+353
+00:13:25,639 --> 00:13:27,788
+to understanding true user intent.
+
+354
+00:13:29,298 --> 00:13:31,460
+Now, while this slide focuses
+
+355
+00:13:31,460 --> 00:13:33,038
+purely on semantic search,
+
+356
+00:13:33,538 --> 00:13:34,820
+using vector embeddings.
+
+357
+00:13:35,700 --> 00:13:37,239
+Traditional keyword based
+
+358
+00:13:37,538 --> 00:13:40,080
+full text search cannot be overlooked.
+
+359
+00:13:40,899 --> 00:13:42,479
+So Posters does have
+
+360
+00:13:42,739 --> 00:13:45,019
+a fully featured sort of full text search component
+
+361
+00:13:45,019 --> 00:13:45,639
+as well.
+
+362
+00:13:45,979 --> 00:13:47,099
+And in practice,
+
+363
+00:13:47,538 --> 00:13:49,619
+many of these search systems combine
+
+364
+00:13:49,619 --> 00:13:50,158
+both,
+
+365
+00:13:50,500 --> 00:13:52,359
+a technique which we call hybrid search.
+
+366
+00:13:52,820 --> 00:13:55,139
+Now, here, we are centered on semantic search,
+
+367
+00:13:55,469 --> 00:13:57,619
+but if you, you are interested, there is
+
+368
+00:13:57,619 --> 00:13:58,558
+also a session
+
+369
+00:13:59,580 --> 00:14:01,460
+tomorrow on hybrid search,
+
+370
+00:14:02,099 --> 00:14:02,690
+409.
+
+371
+00:14:04,219 --> 00:14:06,259
+Now, a quick detour to the service side.
+
+372
+00:14:07,450 --> 00:14:09,599
+Now, AWS offers several managed
+
+373
+00:14:09,599 --> 00:14:11,649
+databases with native vector search, and we
+
+374
+00:14:11,649 --> 00:14:13,769
+keep adding more and more databases
+
+375
+00:14:13,769 --> 00:14:15,849
+to this, uh, sort of whole
+
+376
+00:14:15,849 --> 00:14:17,129
+environment and ecosystem.
+
+377
+00:14:17,639 --> 00:14:19,798
+RDS for Postress supports vector search, so
+
+378
+00:14:19,798 --> 00:14:22,200
+does Postress, DocumentDB, OpenSearch,
+
+379
+00:14:22,320 --> 00:14:22,969
+etc.
+
+380
+00:14:24,038 --> 00:14:26,469
+Well, Flightly chose Arapustras
+
+381
+00:14:26,469 --> 00:14:28,538
+since their data already lived there. It was an easy choice.
+
+382
+00:14:29,719 --> 00:14:31,619
+Now in the aura surves architecture,
+
+383
+00:14:32,239 --> 00:14:34,599
+flight surge is usually very spiky, it
+
+384
+00:14:34,599 --> 00:14:35,960
+depends on seasonality.
+
+385
+00:14:36,928 --> 00:14:39,178
+Flash sales, etc. The way the architecture
+
+386
+00:14:39,178 --> 00:14:41,178
+works is again, you have this decoupled
+
+387
+00:14:41,178 --> 00:14:42,629
+compute and storage layer.
+
+388
+00:14:43,139 --> 00:14:45,178
+And with Aurora capacity units,
+
+389
+00:14:45,418 --> 00:14:48,099
+you can control the level of provisioning
+
+390
+00:14:48,099 --> 00:14:50,080
+required for scaling up or scaling down.
+
+391
+00:14:51,428 --> 00:14:53,440
+Now, Aurora IO optimize, which is
+
+392
+00:14:53,440 --> 00:14:54,750
+a storage configuration,
+
+393
+00:14:55,269 --> 00:14:57,389
+handles this IO intensive vector
+
+394
+00:14:57,389 --> 00:14:59,469
+search, plus your regular transactional
+
+395
+00:14:59,469 --> 00:15:00,288
+search, which is
+
+396
+00:15:00,668 --> 00:15:02,269
+bookings, payments, etc.
+
+397
+00:15:03,058 --> 00:15:05,099
+And there is no performance degradation because
+
+398
+00:15:05,099 --> 00:15:07,119
+of a little bit of better techniques that we
+
+399
+00:15:07,119 --> 00:15:08,840
+do with DI optimized configuration,
+
+400
+00:15:09,259 --> 00:15:11,379
+plus it gives you the added benefit of
+
+401
+00:15:11,379 --> 00:15:12,479
+predictable costs.
+
+402
+00:15:13,969 --> 00:15:15,570
+Data locality is a big win.
+
+403
+00:15:16,048 --> 00:15:18,048
+So vector embeddings live
+
+404
+00:15:18,048 --> 00:15:20,330
+in the same Postress tables as
+
+405
+00:15:20,330 --> 00:15:22,369
+your transactional data. This is your booking and
+
+406
+00:15:22,369 --> 00:15:23,250
+customer profiles.
+
+407
+00:15:24,149 --> 00:15:25,830
+No external database needed,
+
+408
+00:15:26,389 --> 00:15:28,668
+no ETL pipelines to set up, no migration
+
+409
+00:15:28,668 --> 00:15:29,629
+risks, and so on.
+
+410
+00:15:31,639 --> 00:15:33,759
+Finally, there is the global reach uh
+
+411
+00:15:33,759 --> 00:15:35,940
+perspective. So a global database
+
+412
+00:15:36,399 --> 00:15:38,798
+replicates across region with
+
+413
+00:15:38,798 --> 00:15:40,340
+subsecond replication lag.
+
+414
+00:15:41,340 --> 00:15:43,590
+A user in Tokyo gets served
+
+415
+00:15:43,590 --> 00:15:45,009
+from the Asia Pacific replica,
+
+416
+00:15:45,509 --> 00:15:47,950
+a user in London gets the EU replica.
+
+417
+00:15:48,849 --> 00:15:50,779
+Global data, local read performance.
+
+418
+00:15:52,219 --> 00:15:54,389
+All right. Now we have sort of the
+
+419
+00:15:54,389 --> 00:15:56,428
+complete architecture, right? So Elasticash
+
+420
+00:15:56,428 --> 00:15:58,609
+provides this sub-millisecond performance
+
+421
+00:15:58,609 --> 00:16:00,330
+for cached data.
+
+422
+00:16:00,788 --> 00:16:03,269
+Aurora is our durable sort of semantic intelligence
+
+423
+00:16:03,269 --> 00:16:04,690
+layer through PG Vector.
+
+424
+00:16:05,149 --> 00:16:07,330
+Let's see how these two integrate together.
+
+425
+00:16:07,750 --> 00:16:09,788
+We'll start with the foundational architecture and
+
+426
+00:16:09,788 --> 00:16:11,989
+add in layer and sophistication as we go.
+
+427
+00:16:13,229 --> 00:16:15,619
+Step one is simple Q&A. This is the baseline
+
+428
+00:16:15,619 --> 00:16:17,678
+pattern. I ask, can
+
+429
+00:16:17,678 --> 00:16:19,479
+you book flights from Vegas to Hawaii?
+
+430
+00:16:20,259 --> 00:16:22,418
+The query routes directly to Bedrock.
+
+431
+00:16:22,580 --> 00:16:24,658
+There's no preprocessing. There's no context
+
+432
+00:16:24,658 --> 00:16:25,250
+assembly,
+
+433
+00:16:25,538 --> 00:16:27,219
+just raw user input.
+
+434
+00:16:28,279 --> 00:16:30,298
+The LLM comes back with a response
+
+435
+00:16:30,440 --> 00:16:32,719
+using only its pre-trained knowledge, and
+
+436
+00:16:32,719 --> 00:16:34,840
+this is typically very generic. There
+
+437
+00:16:34,840 --> 00:16:37,219
+is no personalization here, nothing
+
+438
+00:16:37,219 --> 00:16:38,519
+particular to me as a user.
+
+439
+00:16:39,849 --> 00:16:41,529
+Now, here's the architectural challenge.
+
+440
+00:16:42,308 --> 00:16:44,928
+By definition, LLMs are stateless.
+
+441
+00:16:45,269 --> 00:16:46,489
+They don't remember anything.
+
+442
+00:16:47,489 --> 00:16:50,048
+So, they don't maintain any kind of a session
+
+443
+00:16:50,048 --> 00:16:52,359
+state or continuity between interactions.
+
+444
+00:16:52,759 --> 00:16:54,750
+The moment I close this chat,
+
+445
+00:16:55,570 --> 00:16:56,489
+conversation history is gone.
+
+446
+00:16:57,469 --> 00:16:59,469
+So there is, we need a
+
+447
+00:16:59,469 --> 00:17:01,830
+way for the chatbot to remember.
+
+448
+00:17:02,570 --> 00:17:04,739
+So let's add conversational memory
+
+449
+00:17:04,739 --> 00:17:05,920
+using elastic ash.
+
+450
+00:17:07,038 --> 00:17:09,358
+Step 2 is adding that conversation
+
+451
+00:17:09,358 --> 00:17:10,659
+history or chat history.
+
+452
+00:17:11,559 --> 00:17:13,598
+Now elastic ashes are layered to
+
+453
+00:17:13,598 --> 00:17:15,299
+store that conversation history.
+
+454
+00:17:15,680 --> 00:17:18,160
+So when this query arrives, which is a follow-up,
+
+455
+00:17:18,400 --> 00:17:20,219
+I'm not asking my previous question.
+
+456
+00:17:20,559 --> 00:17:22,430
+It's, what about hotels there?
+
+457
+00:17:22,750 --> 00:17:25,118
+It's assumed that elastic ash has now
+
+458
+00:17:25,118 --> 00:17:26,309
+the previous context,
+
+459
+00:17:26,598 --> 00:17:28,640
+and it can supply that context to my
+
+460
+00:17:28,640 --> 00:17:30,719
+prompt, which will again give me a
+
+461
+00:17:30,719 --> 00:17:31,900
+tailored response.
+
+462
+00:17:33,588 --> 00:17:35,989
+This is the shift. So we have now transformed
+
+463
+00:17:35,989 --> 00:17:38,229
+from stateless API calls into
+
+464
+00:17:38,229 --> 00:17:39,828
+stateless conversations.
+
+465
+00:17:40,189 --> 00:17:41,890
+Sorry, stateful conversations.
+
+466
+00:17:42,390 --> 00:17:44,430
+And elastic cache provides this
+
+467
+00:17:44,430 --> 00:17:46,108
+persistent session memory.
+
+468
+00:17:47,130 --> 00:17:49,250
+But notice, the responses here
+
+469
+00:17:49,250 --> 00:17:51,250
+are still fairly generic. There's no
+
+470
+00:17:51,250 --> 00:17:52,868
+personalization here just yet.
+
+471
+00:17:53,449 --> 00:17:55,769
+So step 3 is adding that personalization
+
+472
+00:17:55,769 --> 00:17:58,078
+layer. Now we are evolving
+
+473
+00:17:58,078 --> 00:18:00,180
+a little bit beyond the basic conversation
+
+474
+00:18:00,180 --> 00:18:02,269
+history. I ask another follow up,
+
+475
+00:18:02,489 --> 00:18:04,130
+recommend activities for my family.
+
+476
+00:18:05,029 --> 00:18:07,529
+Now elastic ash's role in this case expands.
+
+477
+00:18:08,239 --> 00:18:10,400
+We are now caching user profile data.
+
+478
+00:18:10,519 --> 00:18:12,890
+This will be hashes containing
+
+479
+00:18:12,890 --> 00:18:13,838
+family composition.
+
+480
+00:18:14,199 --> 00:18:16,390
+So I have two kids, ages 4 and 8,
+
+481
+00:18:16,719 --> 00:18:19,229
+activity preferences like outdoor adventures,
+
+482
+00:18:19,549 --> 00:18:21,838
+budget constraints like a $300 max.
+
+483
+00:18:22,640 --> 00:18:24,140
+Now, when this query arrives,
+
+484
+00:18:24,729 --> 00:18:26,699
+using elastic asset get all,
+
+485
+00:18:27,000 --> 00:18:29,338
+you can retrieve the complete preference hash
+
+486
+00:18:29,338 --> 00:18:31,219
+and inject it into the prompt.
+
+487
+00:18:32,568 --> 00:18:35,250
+The LLM will now generate a very tailored
+
+488
+00:18:35,250 --> 00:18:36,910
+response based on my
+
+489
+00:18:37,170 --> 00:18:38,078
+personalized information.
+
+490
+00:18:39,618 --> 00:18:41,660
+Activities appropriate for ages 4
+
+491
+00:18:41,660 --> 00:18:44,299
+to 8, aligned with outdoor adventures.
+
+492
+00:18:45,699 --> 00:18:46,689
+At this stage,
+
+493
+00:18:47,108 --> 00:18:48,509
+we are not just remembering,
+
+494
+00:18:48,910 --> 00:18:51,430
+we are enriching context with persistent
+
+495
+00:18:51,430 --> 00:18:53,489
+user attributes. It knows
+
+496
+00:18:53,489 --> 00:18:54,219
+information about me,
+
+497
+00:18:54,549 --> 00:18:55,868
+my family, and so on.
+
+498
+00:18:56,739 --> 00:18:58,779
+So elastic cash in this use case
+
+499
+00:18:58,779 --> 00:19:00,959
+provides both ephemeral session memory
+
+500
+00:19:01,348 --> 00:19:03,459
+and it provides the durable preference
+
+501
+00:19:03,459 --> 00:19:04,279
+storage.
+
+502
+00:19:04,699 --> 00:19:05,759
+This is the shift
+
+503
+00:19:06,019 --> 00:19:06,559
+from
+
+504
+00:19:07,098 --> 00:19:08,608
+remembering to understanding.
+
+505
+00:19:10,318 --> 00:19:12,358
+Now we are on to the final stage. So this
+
+506
+00:19:12,358 --> 00:19:14,828
+is contextual intelligence, also called retrieval
+
+507
+00:19:14,828 --> 00:19:15,699
+augmented generation.
+
+508
+00:19:16,670 --> 00:19:17,250
+I ask,
+
+509
+00:19:17,549 --> 00:19:19,670
+cheapest flight options for next month.
+
+510
+00:19:19,789 --> 00:19:22,088
+That's it. Aurora
+
+511
+00:19:22,088 --> 00:19:23,400
+postre enters the picture.
+
+512
+00:19:24,189 --> 00:19:26,709
+The application generates an embedding, executes
+
+513
+00:19:26,709 --> 00:19:28,969
+a semantic search against the flight model,
+
+514
+00:19:29,469 --> 00:19:31,670
+routes matching cheapest options
+
+515
+00:19:31,670 --> 00:19:33,789
+filtered by whatever date range that I
+
+516
+00:19:33,789 --> 00:19:35,868
+provide, joined with real-time
+
+517
+00:19:35,868 --> 00:19:38,189
+pricing to give me a very tailored
+
+518
+00:19:38,189 --> 00:19:40,439
+response. This
+
+519
+00:19:40,439 --> 00:19:41,920
+is rag in action.
+
+520
+00:19:42,259 --> 00:19:44,279
+We are now using elastic cache for
+
+521
+00:19:44,279 --> 00:19:46,318
+that sub-millisecond session state and
+
+522
+00:19:46,318 --> 00:19:47,118
+preference lookup.
+
+523
+00:19:47,890 --> 00:19:50,410
+But we are also using Aurora for
+
+524
+00:19:50,410 --> 00:19:51,309
+grounding the data
+
+525
+00:19:51,650 --> 00:19:53,769
+in our domain knowledge through semantic search.
+
+526
+00:19:54,779 --> 00:19:57,348
+Together they are providing this fast, personalized
+
+527
+00:19:57,348 --> 00:19:59,189
+and accurate customer experience.
+
+528
+00:20:00,189 --> 00:20:02,229
+So far, in 4 steps, we've built
+
+529
+00:20:02,229 --> 00:20:04,289
+a sophisticated, pretty sophisticated
+
+530
+00:20:04,289 --> 00:20:05,328
+conversational system.
+
+531
+00:20:05,750 --> 00:20:06,689
+It has memory,
+
+532
+00:20:07,108 --> 00:20:09,318
+it has chat history, it has personalization,
+
+533
+00:20:09,630 --> 00:20:11,390
+and it has contextual intelligence.
+
+534
+00:20:12,868 --> 00:20:13,890
+But remember,
+
+535
+00:20:14,400 --> 00:20:16,368
+we are still at the stage of a chatbot.
+
+536
+00:20:16,838 --> 00:20:18,880
+What if we could go beyond simple
+
+537
+00:20:18,880 --> 00:20:19,529
+Q&A?
+
+538
+00:20:20,039 --> 00:20:22,489
+What if it could go beyond just giving us
+
+539
+00:20:22,489 --> 00:20:24,358
+information about hotels availability,
+
+540
+00:20:24,838 --> 00:20:25,828
+flight availability,
+
+541
+00:20:26,199 --> 00:20:28,479
+go one step further and start booking
+
+542
+00:20:28,479 --> 00:20:29,279
+those for us.
+
+543
+00:20:30,818 --> 00:20:32,680
+That's the shift to agentic AI,
+
+544
+00:20:33,259 --> 00:20:35,680
+from answering questions to taking actions.
+
+545
+00:20:38,108 --> 00:20:40,390
+Before we get into the Asiatic layer and the architecture,
+
+546
+00:20:40,539 --> 00:20:42,549
+let's see how we got there. It's important to keep
+
+547
+00:20:42,549 --> 00:20:43,828
+this perspective in mind.
+
+548
+00:20:44,959 --> 00:20:47,118
+Before we knew it, 2 years ago, we
+
+549
+00:20:47,118 --> 00:20:49,059
+started with G AI chatbots.
+
+550
+00:20:49,588 --> 00:20:50,160
+Singleton,
+
+551
+00:20:50,420 --> 00:20:51,189
+rule-based,
+
+552
+00:20:51,469 --> 00:20:52,739
+constant human oversight.
+
+553
+00:20:53,818 --> 00:20:56,209
+Then came in Gen AI agents,
+
+554
+00:20:56,699 --> 00:20:59,000
+goal-driven systems that plan, reason,
+
+555
+00:20:59,219 --> 00:21:00,180
+and use tools.
+
+556
+00:21:00,848 --> 00:21:02,939
+A booking agent will go and search flights,
+
+557
+00:21:03,059 --> 00:21:05,140
+compare prices, execute workflows,
+
+558
+00:21:05,380 --> 00:21:06,719
+but still single domain.
+
+559
+00:21:07,828 --> 00:21:10,160
+Now we are stepping into the era of agentic
+
+560
+00:21:10,160 --> 00:21:12,640
+AI. Multi-agent systems
+
+561
+00:21:12,640 --> 00:21:15,199
+where specialized agents coordinate
+
+562
+00:21:15,199 --> 00:21:16,118
+very nicely,
+
+563
+00:21:16,680 --> 00:21:18,838
+your booking, your customer service agent, your
+
+564
+00:21:18,838 --> 00:21:19,910
+recommendation agent,
+
+565
+00:21:20,269 --> 00:21:22,680
+all communicating, delegating with minimal
+
+566
+00:21:22,680 --> 00:21:23,279
+oversight.
+
+567
+00:21:24,420 --> 00:21:26,400
+This is what we are building for Flightly.
+
+568
+00:21:26,930 --> 00:21:27,939
+Let's look at the architecture.
+
+569
+00:21:29,549 --> 00:21:31,368
+So, same travel question as before.
+
+570
+00:21:31,709 --> 00:21:34,108
+The agent retrieves cached context
+
+571
+00:21:34,108 --> 00:21:35,608
+in this case from Valy,
+
+572
+00:21:36,269 --> 00:21:38,279
+all in parallel, remember, so educate
+
+573
+00:21:38,279 --> 00:21:40,828
+all for user profile, L range for
+
+574
+00:21:40,828 --> 00:21:42,910
+conversation history, gets for session
+
+575
+00:21:42,910 --> 00:21:45,118
+state, sub-millisecond retrievals,
+
+576
+00:21:45,559 --> 00:21:47,868
+super quickly you assemble your
+
+577
+00:21:47,868 --> 00:21:49,108
+complete user context.
+
+578
+00:21:50,088 --> 00:21:51,029
+Simultaneously,
+
+579
+00:21:51,390 --> 00:21:53,529
+we are doing a semantic search against Aurora.
+
+580
+00:21:53,910 --> 00:21:56,189
+Query vectorization, similarity search, this
+
+581
+00:21:56,189 --> 00:21:58,348
+will be typically in two digit milliseconds.
+
+582
+00:21:58,828 --> 00:22:00,670
+User personalization from Valy,
+
+583
+00:22:01,019 --> 00:22:02,269
+domain knowledge from Aurora.
+
+584
+00:22:03,309 --> 00:22:05,068
+Now is where it gets interesting.
+
+585
+00:22:06,098 --> 00:22:07,358
+Tool invocation through
+
+586
+00:22:07,858 --> 00:22:09,939
+another concept called model context
+
+587
+00:22:09,939 --> 00:22:12,390
+protocol. So MCP
+
+588
+00:22:12,650 --> 00:22:14,729
+provides a standardized interface for
+
+589
+00:22:14,729 --> 00:22:15,588
+LLMs
+
+590
+00:22:16,009 --> 00:22:18,078
+to communicate with various services,
+
+591
+00:22:18,289 --> 00:22:20,588
+things such as APIs, data
+
+592
+00:22:20,598 --> 00:22:21,650
+databases, what have you.
+
+593
+00:22:22,509 --> 00:22:24,799
+The agent can also call external
+
+594
+00:22:24,799 --> 00:22:26,910
+APIs, things such as weather forecasts,
+
+595
+00:22:27,279 --> 00:22:29,759
+travel advisories, FAA regulations, etc.
+
+596
+00:22:30,750 --> 00:22:33,029
+So the result of all of this becomes
+
+597
+00:22:33,029 --> 00:22:35,299
+a super personalized, actionable
+
+598
+00:22:35,299 --> 00:22:37,588
+response. The agent asks
+
+599
+00:22:37,868 --> 00:22:40,380
+if you would like to book or explore other options.
+
+600
+00:22:40,969 --> 00:22:41,969
+This is promising,
+
+601
+00:22:42,348 --> 00:22:44,049
+but how do we actually implement this?
+
+602
+00:22:45,719 --> 00:22:47,769
+This is where Strand's Agents comes
+
+603
+00:22:47,769 --> 00:22:50,259
+in. It's an open source SDK
+
+604
+00:22:50,259 --> 00:22:51,890
+for building AI agents.
+
+605
+00:22:52,880 --> 00:22:54,640
+Lightweight, model agnostic,
+
+606
+00:22:55,118 --> 00:22:56,719
+supports Bedrock natively,
+
+607
+00:22:57,118 --> 00:22:59,118
+but it also goes beyond and has
+
+608
+00:22:59,118 --> 00:23:00,598
+integrations with OpenAI,
+
+609
+00:23:01,039 --> 00:23:02,640
+Anthropic, Olama, etc.
+
+610
+00:23:03,539 --> 00:23:05,910
+It handles this multi-agent orchestration,
+
+611
+00:23:06,189 --> 00:23:08,529
+provides native MCP tool support
+
+612
+00:23:08,709 --> 00:23:10,670
+with over 85 tools available.
+
+613
+00:23:11,029 --> 00:23:13,289
+And you can also integrate your existing
+
+614
+00:23:13,289 --> 00:23:15,348
+APIs with custom tools. We'll look at
+
+615
+00:23:15,348 --> 00:23:16,890
+a few examples later.
+
+616
+00:23:17,469 --> 00:23:18,309
+Let's look at the code.
+
+617
+00:23:19,930 --> 00:23:22,088
+So, building an agent with strands is
+
+618
+00:23:22,088 --> 00:23:24,568
+relatively straightforward. You have certain primitives
+
+619
+00:23:24,568 --> 00:23:26,348
+and you just have to implement those.
+
+620
+00:23:26,809 --> 00:23:29,000
+First, you import the core primitives
+
+621
+00:23:29,000 --> 00:23:30,469
+and configure your LLM.
+
+622
+00:23:30,890 --> 00:23:33,000
+In this case, we are using cloudsonne 4 on
+
+623
+00:23:33,000 --> 00:23:35,118
+Bedrock. Second, you
+
+624
+00:23:35,118 --> 00:23:37,180
+create the agent. It's as simple as that, one
+
+625
+00:23:37,180 --> 00:23:39,239
+line of code. That's
+
+626
+00:23:39,239 --> 00:23:41,368
+it. So, now you have a
+
+627
+00:23:41,368 --> 00:23:42,930
+functional AI agent.
+
+628
+00:23:43,289 --> 00:23:45,608
+But it's super limited, right? It can only
+
+629
+00:23:45,608 --> 00:23:46,868
+do simple Q&A.
+
+630
+00:23:47,410 --> 00:23:49,588
+Doesn't have any capabilities just yet.
+
+631
+00:23:50,009 --> 00:23:51,689
+So let's add capabilities.
+
+632
+00:23:52,769 --> 00:23:54,750
+Now we start defining the system prompt.
+
+633
+00:23:55,209 --> 00:23:57,529
+Remember, this is the personality of the agent.
+
+634
+00:23:58,088 --> 00:24:00,229
+Flight lease personality, domain expertise,
+
+635
+00:24:00,568 --> 00:24:02,890
+behavioral constraints, all go into the system
+
+636
+00:24:02,890 --> 00:24:05,000
+prompt. Your flight
+
+637
+00:24:05,000 --> 00:24:07,059
+lead, a travel assistant specializing
+
+638
+00:24:07,059 --> 00:24:09,118
+in flight booking and travel itineraries,
+
+639
+00:24:09,598 --> 00:24:11,959
+provide clear, concise, and professional
+
+640
+00:24:11,959 --> 00:24:13,959
+responses with helpful options and pricing.
+
+641
+00:24:14,650 --> 00:24:15,739
+So if a query comes in,
+
+642
+00:24:16,598 --> 00:24:17,439
+Something like
+
+643
+00:24:17,759 --> 00:24:19,328
+flights from Vegas to Hawaii,
+
+644
+00:24:19,680 --> 00:24:21,539
+the agent responds in character.
+
+645
+00:24:22,348 --> 00:24:24,368
+It'll have a travel domain focus,
+
+646
+00:24:24,828 --> 00:24:26,618
+it'll use a professional tone,
+
+647
+00:24:27,150 --> 00:24:29,489
+give you actionable options with the pricing.
+
+648
+00:24:30,578 --> 00:24:32,630
+But remember, agents can also
+
+649
+00:24:32,630 --> 00:24:34,630
+take actions. This is still a simple Q&A.
+
+650
+00:24:35,519 --> 00:24:37,559
+So let's add some tools, which is
+
+651
+00:24:37,559 --> 00:24:38,618
+the ability to act.
+
+652
+00:24:40,118 --> 00:24:42,118
+So, the fastest way to
+
+653
+00:24:42,118 --> 00:24:44,160
+give your agent access to the Aurora
+
+654
+00:24:44,160 --> 00:24:46,358
+Pore database is via
+
+655
+00:24:46,358 --> 00:24:48,439
+the Aurapustress MCP server, which becomes
+
+656
+00:24:48,439 --> 00:24:49,719
+a tool for the agent.
+
+657
+00:24:50,608 --> 00:24:53,170
+With the Eurostress MCP server, you connect
+
+658
+00:24:53,170 --> 00:24:55,250
+directly via standard connection parameters, the
+
+659
+00:24:55,250 --> 00:24:56,618
+ones that you're already used to.
+
+660
+00:24:56,930 --> 00:24:58,219
+So your host name,
+
+661
+00:24:58,650 --> 00:25:00,769
+your database credentials, there is
+
+662
+00:25:00,769 --> 00:25:02,390
+no custom tool implementation.
+
+663
+00:25:02,729 --> 00:25:05,328
+You are not writing any handwritten SQL wrappers.
+
+664
+00:25:05,809 --> 00:25:07,809
+The benefit is there is no maintenance
+
+665
+00:25:07,809 --> 00:25:08,368
+overhead.
+
+666
+00:25:09,150 --> 00:25:11,229
+Anytime your schema evolves, you can just use
+
+667
+00:25:11,229 --> 00:25:12,890
+your standard credentials to connect.
+
+668
+00:25:13,549 --> 00:25:15,549
+Now, Strands provides a list
+
+669
+00:25:15,549 --> 00:25:17,229
+tool sync API
+
+670
+00:25:17,549 --> 00:25:19,348
+which you'll see on line number 16,
+
+671
+00:25:19,949 --> 00:25:22,309
+which discovers these tools automatically.
+
+672
+00:25:22,390 --> 00:25:24,469
+This could be your MCP servers, plus
+
+673
+00:25:24,469 --> 00:25:26,469
+your custom tools, APIs, databases,
+
+674
+00:25:26,549 --> 00:25:28,689
+etc. Now, here,
+
+675
+00:25:28,828 --> 00:25:30,939
+Aurora Postress as an MCP server
+
+676
+00:25:30,939 --> 00:25:32,500
+exposes a couple of tools.
+
+677
+00:25:33,000 --> 00:25:35,150
+Get Table Schema and Run query. Get Table
+
+678
+00:25:35,150 --> 00:25:37,390
+Schema is for schema Discovery, and
+
+679
+00:25:37,390 --> 00:25:39,348
+Run Query is for running SQL queries.
+
+680
+00:25:40,890 --> 00:25:42,910
+So in this case, when we import
+
+681
+00:25:42,910 --> 00:25:45,229
+our tool and then make the tool and vocation,
+
+682
+00:25:46,209 --> 00:25:48,289
+the call to the database is about 2 digit
+
+683
+00:25:48,289 --> 00:25:50,568
+milliseconds, which is typically
+
+684
+00:25:50,568 --> 00:25:52,368
+what you'll have with a direct connection as well.
+
+685
+00:25:53,189 --> 00:25:55,078
+But then, notice this line.
+
+686
+00:25:55,739 --> 00:25:57,920
+There is a persistent MCP connection.
+
+687
+00:25:58,019 --> 00:26:00,219
+There is zero overhead of reconnection.
+
+688
+00:26:01,309 --> 00:26:03,578
+Anytime in post-ress, you're trying to re-establish
+
+689
+00:26:03,578 --> 00:26:04,410
+a connection,
+
+690
+00:26:04,789 --> 00:26:06,769
+there is a lot of overhead.
+
+691
+00:26:07,229 --> 00:26:09,348
+There is TCP handshake, TLS
+
+692
+00:26:09,348 --> 00:26:10,269
+negotiation,
+
+693
+00:26:10,608 --> 00:26:12,088
+art, etc. etc.
+
+694
+00:26:12,588 --> 00:26:15,108
+So MCP eliminates this whole bottleneck
+
+695
+00:26:15,108 --> 00:26:17,108
+and uses a persistent connection to
+
+696
+00:26:17,108 --> 00:26:17,789
+the database.
+
+697
+00:26:20,189 --> 00:26:22,229
+The other benefit is, of course, you get
+
+698
+00:26:22,229 --> 00:26:24,269
+to directly sort of uh you don't have to
+
+699
+00:26:24,269 --> 00:26:25,779
+write your own SQL query.
+
+700
+00:26:26,068 --> 00:26:28,068
+If you don't know SQL, your agent handles
+
+701
+00:26:28,068 --> 00:26:28,689
+that for you.
+
+702
+00:26:29,910 --> 00:26:30,430
+All right.
+
+703
+00:26:32,348 --> 00:26:34,719
+But your MCV servers can actually go
+
+704
+00:26:34,719 --> 00:26:36,509
+beyond these databases too.
+
+705
+00:26:36,769 --> 00:26:39,259
+Things, remember we talked about weather APIs?
+
+706
+00:26:39,719 --> 00:26:42,068
+So in this example, let's add a weather API.
+
+707
+00:26:42,719 --> 00:26:43,338
+Same pattern,
+
+708
+00:26:43,680 --> 00:26:44,439
+now for weather.
+
+709
+00:26:45,299 --> 00:26:47,390
+There is a special sort of symbol that we
+
+710
+00:26:47,390 --> 00:26:49,430
+use, the MCP tool decorator, which
+
+711
+00:26:49,430 --> 00:26:51,759
+you'll see. This defines
+
+712
+00:26:51,759 --> 00:26:54,479
+a function calling Open Weather API externally.
+
+713
+00:26:54,759 --> 00:26:55,500
+And this
+
+714
+00:26:55,920 --> 00:26:58,039
+code snippet actually exposes the weather data
+
+715
+00:26:58,039 --> 00:26:58,640
+API
+
+716
+00:26:59,118 --> 00:27:01,039
+as an MCP tool to the agent.
+
+717
+00:27:01,989 --> 00:27:04,140
+Our strands agent connects in the same way,
+
+718
+00:27:04,559 --> 00:27:05,759
+just like it did to Aurora.
+
+719
+00:27:06,529 --> 00:27:08,750
+But same protocol, different capability.
+
+720
+00:27:09,598 --> 00:27:11,380
+But here's the production challenge.
+
+721
+00:27:12,989 --> 00:27:14,559
+a million queries daily.
+
+722
+00:27:15,680 --> 00:27:17,338
+Many semantically similar,
+
+723
+00:27:17,838 --> 00:27:20,000
+whether in Hawaii, weather forecast,
+
+724
+00:27:20,368 --> 00:27:21,318
+Hawaii forecast,
+
+725
+00:27:21,588 --> 00:27:23,759
+temperature in Honolulu, etc. etc.
+
+726
+00:27:24,078 --> 00:27:25,900
+asked by a number of different users.
+
+727
+00:27:26,358 --> 00:27:28,039
+Each triggers an API call.
+
+728
+00:27:29,009 --> 00:27:31,299
+Expensive, slow, and unnecessary.
+
+729
+00:27:32,049 --> 00:27:34,289
+So we need some sort of intelligence that goes
+
+730
+00:27:34,289 --> 00:27:36,469
+beyond the standard MCP servers.
+
+731
+00:27:36,809 --> 00:27:38,848
+We need intelligence with tool caching
+
+732
+00:27:38,848 --> 00:27:40,809
+at the sort of the tool layer.
+
+733
+00:27:41,509 --> 00:27:43,828
+So, standard MCPs don't cut it. So
+
+734
+00:27:43,828 --> 00:27:45,939
+let's go a little bit beyond and add in
+
+735
+00:27:45,939 --> 00:27:46,890
+custom tools.
+
+736
+00:27:47,390 --> 00:27:49,670
+Now, I've mentioned tool a lot. Tools
+
+737
+00:27:49,670 --> 00:27:51,709
+are nothing but simply Python programs,
+
+738
+00:27:52,068 --> 00:27:53,170
+functions that give
+
+739
+00:27:53,709 --> 00:27:56,250
+business logic or execution logic to your agent.
+
+740
+00:27:57,068 --> 00:27:58,328
+Simply Python functions.
+
+741
+00:27:58,750 --> 00:28:00,910
+The tool decorator here gives you full
+
+742
+00:28:00,910 --> 00:28:02,670
+control over execution logic.
+
+743
+00:28:03,029 --> 00:28:03,890
+Here's an example.
+
+744
+00:28:04,269 --> 00:28:06,269
+So search flights takes origin,
+
+745
+00:28:06,449 --> 00:28:07,068
+destination,
+
+746
+00:28:07,348 --> 00:28:08,009
+optional date.
+
+747
+00:28:08,400 --> 00:28:10,299
+But then the dock string, which is the argument,
+
+748
+00:28:10,598 --> 00:28:12,779
+provides schema information the agent uses
+
+749
+00:28:13,000 --> 00:28:15,039
+to understand when and how to invoke it.
+
+750
+00:28:16,180 --> 00:28:17,439
+Here's where it gets powerful.
+
+751
+00:28:18,509 --> 00:28:20,689
+To logic defines that check
+
+752
+00:28:20,689 --> 00:28:21,969
+val key first.
+
+753
+00:28:22,930 --> 00:28:24,739
+If the thing exists in my cache,
+
+754
+00:28:25,680 --> 00:28:27,769
+return the results in under a milliseconds.
+
+755
+00:28:28,170 --> 00:28:29,160
+If it doesn't,
+
+756
+00:28:29,618 --> 00:28:30,640
+query Aurora.
+
+757
+00:28:31,009 --> 00:28:33,098
+There is a first time penalty. It'll hit the database,
+
+758
+00:28:33,219 --> 00:28:33,759
+yes,
+
+759
+00:28:34,140 --> 00:28:36,318
+but cash the subsequent results
+
+760
+00:28:36,578 --> 00:28:38,979
+to the, to the Valy layer. Again,
+
+761
+00:28:39,489 --> 00:28:41,479
+predictability is sort of maintaining there.
+
+762
+00:28:42,660 --> 00:28:44,759
+The key takeaway you'll notice here is
+
+763
+00:28:44,939 --> 00:28:46,939
+you want to use MCP for
+
+764
+00:28:46,939 --> 00:28:49,568
+things like schema discovery and non-critical
+
+765
+00:28:49,568 --> 00:28:50,180
+paths,
+
+766
+00:28:50,699 --> 00:28:52,739
+but you want to use custom tools when
+
+767
+00:28:52,739 --> 00:28:54,818
+you need capabilities beyond what
+
+768
+00:28:54,818 --> 00:28:57,098
+MCP provides or when performance
+
+769
+00:28:57,098 --> 00:28:57,858
+is critical.
+
+770
+00:28:59,279 --> 00:29:00,578
+This is the user output.
+
+771
+00:29:01,000 --> 00:29:02,299
+Anytime your
+
+772
+00:29:02,640 --> 00:29:04,640
+query doesn't hit the cache, it's gonna hit
+
+773
+00:29:04,640 --> 00:29:06,880
+the database. Again, two digit milliseconds,
+
+774
+00:29:07,000 --> 00:29:08,019
+about 85-ish.
+
+775
+00:29:08,640 --> 00:29:10,680
+But then the second time is the benefit. We
+
+776
+00:29:10,680 --> 00:29:12,828
+start getting those benefits right away with the
+
+777
+00:29:12,828 --> 00:29:14,078
+VALKY caching layer.
+
+778
+00:29:16,670 --> 00:29:18,838
+All right. So we've
+
+779
+00:29:18,838 --> 00:29:20,880
+built Flightly's complete architecture.
+
+780
+00:29:21,180 --> 00:29:23,799
+Now, let's extract some reusable patterns
+
+781
+00:29:23,799 --> 00:29:26,199
+that we'll use, which are basically blueprints
+
+782
+00:29:26,199 --> 00:29:27,949
+you can apply right away to your own applications.
+
+783
+00:29:30,430 --> 00:29:32,410
+Pattern one is context cache.
+
+784
+00:29:33,430 --> 00:29:35,509
+John asks, what about hotels
+
+785
+00:29:35,509 --> 00:29:37,598
+there? The agent
+
+786
+00:29:37,779 --> 00:29:39,420
+goes and queries Valy,
+
+787
+00:29:39,699 --> 00:29:42,059
+retrieves John's complete context, remember
+
+788
+00:29:42,059 --> 00:29:43,410
+the whole parallel operation,
+
+789
+00:29:43,858 --> 00:29:46,368
+chat history from the Wi Fi discussion, session
+
+790
+00:29:46,368 --> 00:29:48,598
+state, user preferences, etc.
+
+791
+00:29:48,650 --> 00:29:49,259
+etc.
+
+792
+00:29:50,009 --> 00:29:52,140
+Simultaneously, it runs a semantic search
+
+793
+00:29:52,140 --> 00:29:53,380
+with Aurora database.
+
+794
+00:29:54,630 --> 00:29:56,739
+In the end, all of this generates a
+
+795
+00:29:56,739 --> 00:29:58,750
+contextual, context-aware
+
+796
+00:29:58,750 --> 00:29:59,289
+response,
+
+797
+00:29:59,608 --> 00:30:02,150
+taking in John's preferences, etc. etc.
+
+798
+00:30:02,630 --> 00:30:04,789
+And this pattern is universally
+
+799
+00:30:04,789 --> 00:30:05,588
+applicable.
+
+800
+00:30:05,868 --> 00:30:08,269
+You can apply this to customer service, customer
+
+801
+00:30:08,269 --> 00:30:09,209
+service agents,
+
+802
+00:30:09,910 --> 00:30:11,739
+imagine maintaining ticket context,
+
+803
+00:30:12,189 --> 00:30:14,229
+virtual assistants, which will need to
+
+804
+00:30:14,229 --> 00:30:16,588
+remember preferences across sessions,
+
+805
+00:30:17,229 --> 00:30:19,390
+healthcare chatbots tracking patient
+
+806
+00:30:19,390 --> 00:30:22,019
+history. Any system where you think
+
+807
+00:30:22,019 --> 00:30:23,410
+conversation continuity matters,
+
+808
+00:30:23,818 --> 00:30:26,059
+you need that quick context retrieval, this
+
+809
+00:30:26,059 --> 00:30:27,098
+pattern will apply.
+
+810
+00:30:29,289 --> 00:30:31,390
+All right Pattern number 2 is
+
+811
+00:30:31,390 --> 00:30:32,430
+embedding cache.
+
+812
+00:30:32,699 --> 00:30:35,130
+This is where we accelerate the semantic search
+
+813
+00:30:35,259 --> 00:30:37,009
+by caching vector embeddings.
+
+814
+00:30:37,299 --> 00:30:37,989
+Pretty neat.
+
+815
+00:30:38,759 --> 00:30:40,769
+Think about users searching for things to do in
+
+816
+00:30:40,769 --> 00:30:41,598
+a new place.
+
+817
+00:30:41,890 --> 00:30:43,390
+These are almost always
+
+818
+00:30:43,729 --> 00:30:45,410
+short keyword-based lookups.
+
+819
+00:30:46,098 --> 00:30:48,219
+And chances are a lot of those users
+
+820
+00:30:48,219 --> 00:30:50,259
+are asking the same repeat questions all the
+
+821
+00:30:50,259 --> 00:30:52,578
+time. If I go to Japan, iconic
+
+822
+00:30:52,578 --> 00:30:53,559
+temples in Kyoto,
+
+823
+00:30:54,219 --> 00:30:56,219
+best food in Tokyo, etc. etc.
+
+824
+00:30:57,299 --> 00:30:59,328
+The first encounter, of course, is going
+
+825
+00:30:59,328 --> 00:31:00,568
+to be to the database.
+
+826
+00:31:00,828 --> 00:31:03,059
+And there's this whole embedding pipeline that you have to go
+
+827
+00:31:03,059 --> 00:31:05,140
+through, typically completes in about like
+
+828
+00:31:05,140 --> 00:31:06,769
+less than 200 milliseconds.
+
+829
+00:31:07,219 --> 00:31:08,439
+But then the subsequent
+
+830
+00:31:08,779 --> 00:31:11,049
+retrieval is through the caching layer,
+
+831
+00:31:11,299 --> 00:31:12,959
+which is where we get the advantage.
+
+832
+00:31:13,459 --> 00:31:15,848
+And given that these are surveillance services,
+
+833
+00:31:16,130 --> 00:31:18,439
+both of them can scale in place,
+
+834
+00:31:18,578 --> 00:31:20,098
+up or down, in or out.
+
+835
+00:31:22,160 --> 00:31:24,479
+Now pattern 3 is interesting. This is the durable
+
+836
+00:31:24,479 --> 00:31:26,459
+semantic caching by Elastic Ash.
+
+837
+00:31:27,338 --> 00:31:29,358
+So your data sources
+
+838
+00:31:29,358 --> 00:31:31,380
+come as natural to your embedding model
+
+839
+00:31:31,380 --> 00:31:33,039
+like before, this is the whole pipeline.
+
+840
+00:31:33,818 --> 00:31:36,150
+But a lot of the times, remember I said
+
+841
+00:31:36,150 --> 00:31:38,269
+people phrase things differently. They won't
+
+842
+00:31:38,269 --> 00:31:39,769
+be asking the same questions.
+
+843
+00:31:40,390 --> 00:31:42,838
+What are the best beach destinations in Hawaii?
+
+844
+00:31:43,269 --> 00:31:45,250
+Can you recommend beach resorts in Hawaii?
+
+845
+00:31:45,598 --> 00:31:47,848
+Yada yada yada, and so on and so forth.
+
+846
+00:31:48,469 --> 00:31:50,568
+Now, without semantic caching,
+
+847
+00:31:50,759 --> 00:31:52,949
+this goes through this entire pipeline
+
+848
+00:31:52,949 --> 00:31:54,309
+to get to the response.
+
+849
+00:31:54,789 --> 00:31:56,250
+Now, there is, of course,
+
+850
+00:31:57,029 --> 00:31:58,219
+LLM invocations,
+
+851
+00:31:58,588 --> 00:32:00,588
+there is embedding generation, there's a lot
+
+852
+00:32:00,588 --> 00:32:01,449
+that's going on.
+
+853
+00:32:01,828 --> 00:32:03,670
+And there is latency plus cost.
+
+854
+00:32:04,598 --> 00:32:06,799
+With semantic caching, what happens is you define
+
+855
+00:32:06,799 --> 00:32:08,338
+the similarity threshold,
+
+856
+00:32:08,759 --> 00:32:10,880
+and beyond that threshold, anytime
+
+857
+00:32:10,880 --> 00:32:12,019
+you have reached that threshold,
+
+858
+00:32:13,328 --> 00:32:15,328
+All of the questions which are similar get
+
+859
+00:32:15,328 --> 00:32:16,660
+clubbed into sort of a group,
+
+860
+00:32:17,049 --> 00:32:19,279
+and then you, the responses
+
+861
+00:32:19,279 --> 00:32:20,809
+get returned from the cache.
+
+862
+00:32:21,209 --> 00:32:23,630
+So you're caching both the similarity
+
+863
+00:32:23,890 --> 00:32:25,930
+plus the LLM responses
+
+864
+00:32:25,930 --> 00:32:27,269
+in your Valy layer.
+
+865
+00:32:27,618 --> 00:32:29,880
+And what happens is, by doing so,
+
+866
+00:32:30,368 --> 00:32:32,449
+you skip the entire pipeline
+
+867
+00:32:32,449 --> 00:32:33,269
+generation process.
+
+868
+00:32:33,568 --> 00:32:35,848
+And you're just going to the cache and retrieving
+
+869
+00:32:35,848 --> 00:32:36,390
+results.
+
+870
+00:32:37,078 --> 00:32:38,289
+Zero LLM cost,
+
+871
+00:32:38,568 --> 00:32:39,348
+no latency,
+
+872
+00:32:40,068 --> 00:32:41,348
+and sub-millisecond performance.
+
+873
+00:32:43,630 --> 00:32:45,630
+All right. So, uh, there
+
+874
+00:32:45,630 --> 00:32:47,828
+is, there was actually a deep dive session
+
+875
+00:32:47,828 --> 00:32:50,019
+on semantic caching. It was on Monday.
+
+876
+00:32:50,269 --> 00:32:52,390
+So I highly recommend uh watching the recording
+
+877
+00:32:52,390 --> 00:32:52,949
+on YouTube,
+
+878
+00:32:53,269 --> 00:32:54,049
+451.
+
+879
+00:32:55,170 --> 00:32:57,049
+This goes much deeper into semantic caching.
+
+880
+00:32:58,309 --> 00:33:00,358
+All right. This is how it looks like in
+
+881
+00:33:00,358 --> 00:33:02,779
+action. Green is good, red is bad.
+
+882
+00:33:03,239 --> 00:33:05,189
+With semantic caching on the left,
+
+883
+00:33:05,699 --> 00:33:07,759
+questions 1 through 4, we get instant
+
+884
+00:33:07,759 --> 00:33:08,959
+responses from Valy.
+
+885
+00:33:09,358 --> 00:33:10,219
+This is what we want
+
+886
+00:33:10,750 --> 00:33:13,160
+smooth, great performance, keeps users
+
+887
+00:33:13,160 --> 00:33:13,699
+engaged.
+
+888
+00:33:14,039 --> 00:33:14,670
+More importantly,
+
+889
+00:33:15,000 --> 00:33:16,160
+bookings complete on time.
+
+890
+00:33:17,059 --> 00:33:17,598
+Without,
+
+891
+00:33:18,059 --> 00:33:20,239
+same question triggers the full LLM
+
+892
+00:33:20,239 --> 00:33:21,660
+inference every single time.
+
+893
+00:33:22,588 --> 00:33:24,910
+What's worse is your users notice
+
+894
+00:33:24,910 --> 00:33:27,858
+these delays, and then they start abandoning
+
+895
+00:33:27,858 --> 00:33:29,068
+conversations mid-booking.
+
+896
+00:33:32,380 --> 00:33:34,390
+Pattern 4 is interesting. This is where we
+
+897
+00:33:34,390 --> 00:33:37,180
+get into a little bit of production architectures,
+
+898
+00:33:37,338 --> 00:33:38,920
+tiered memory management.
+
+899
+00:33:39,500 --> 00:33:40,338
+User says,
+
+900
+00:33:40,660 --> 00:33:42,779
+book family flights there, avoid
+
+901
+00:33:42,779 --> 00:33:43,459
+that airline.
+
+902
+00:33:44,269 --> 00:33:46,500
+Referencing maybe context from earlier, maybe
+
+903
+00:33:46,500 --> 00:33:47,670
+previous sessions, etc.
+
+904
+00:33:48,588 --> 00:33:51,068
+The agent passes messages
+
+905
+00:33:51,068 --> 00:33:52,410
+to VALKY for
+
+906
+00:33:52,709 --> 00:33:54,209
+short-term memory in this case.
+
+907
+00:33:54,828 --> 00:33:56,049
+We'll see it go through.
+
+908
+00:33:56,509 --> 00:33:57,209
+And then,
+
+909
+00:33:57,750 --> 00:33:59,828
+VALLKY, in this case, you'll notice
+
+910
+00:33:59,828 --> 00:34:01,828
+it stores things like chat messages, which
+
+911
+00:34:01,828 --> 00:34:03,588
+is your conversation history,
+
+912
+00:34:03,979 --> 00:34:05,068
+session state,
+
+913
+00:34:05,509 --> 00:34:07,868
+checkpoint. These are typically workflow checkpoints
+
+914
+00:34:07,868 --> 00:34:09,010
+if your agent is going through
+
+915
+00:34:09,429 --> 00:34:10,699
+certain ATL pipelines,
+
+916
+00:34:11,030 --> 00:34:11,610
+jobs,
+
+917
+00:34:11,929 --> 00:34:12,750
+or just a,
+
+918
+00:34:13,030 --> 00:34:14,429
+just a basic conversation.
+
+919
+00:34:14,798 --> 00:34:16,927
+You can define checkpoints so it can pick up
+
+920
+00:34:16,927 --> 00:34:19,268
+where it left off, similar to database checkpoints.
+
+921
+00:34:19,768 --> 00:34:21,768
+All of that can be cached and stored in
+
+922
+00:34:21,768 --> 00:34:23,878
+VALKY. Now,
+
+923
+00:34:23,998 --> 00:34:26,117
+the beauty is, you can
+
+924
+00:34:26,117 --> 00:34:28,278
+actually have this intelligence behind the
+
+925
+00:34:28,278 --> 00:34:28,918
+scenes.
+
+926
+00:34:29,398 --> 00:34:30,498
+Your lambda
+
+927
+00:34:30,958 --> 00:34:33,079
+asynchronously extracts the
+
+928
+00:34:33,079 --> 00:34:33,739
+short-term
+
+929
+00:34:33,998 --> 00:34:35,998
+nuggets of memory, so your, all
+
+930
+00:34:35,998 --> 00:34:38,079
+your conversation history, session state,
+
+931
+00:34:38,228 --> 00:34:39,197
+checkpoints, etc.
+
+932
+00:34:40,099 --> 00:34:42,128
+And push it out to Aurora as
+
+933
+00:34:42,128 --> 00:34:43,177
+your long-term storage.
+
+934
+00:34:44,139 --> 00:34:45,148
+Within Aurora,
+
+935
+00:34:45,500 --> 00:34:47,878
+with PG vector, the benefit that you get
+
+936
+00:34:48,219 --> 00:34:50,489
+is you can do things like episodic recall.
+
+937
+00:34:50,898 --> 00:34:52,239
+PG vector has
+
+938
+00:34:53,289 --> 00:34:55,289
+relatively every past
+
+939
+00:34:55,289 --> 00:34:57,079
+history stored as a long-term,
+
+940
+00:34:57,579 --> 00:34:59,840
+sort of a with a session ID memory
+
+941
+00:34:59,840 --> 00:35:01,579
+ID, the whole interaction.
+
+942
+00:35:02,418 --> 00:35:03,409
+And what you can do
+
+943
+00:35:03,708 --> 00:35:05,949
+is rebuild that entire conversation
+
+944
+00:35:05,949 --> 00:35:07,659
+looking at that long-term tiered storage.
+
+945
+00:35:08,070 --> 00:35:10,389
+This will be for this use case, things
+
+946
+00:35:10,389 --> 00:35:12,708
+like this user prefers aisle
+
+947
+00:35:12,708 --> 00:35:13,289
+seats
+
+948
+00:35:13,619 --> 00:35:14,688
+or window seats.
+
+949
+00:35:15,070 --> 00:35:17,530
+They have a budget, a strong budget of maybe $300
+
+950
+00:35:17,530 --> 00:35:18,139
+and less.
+
+951
+00:35:18,469 --> 00:35:20,590
+These are the things which will be persisted in the long term
+
+952
+00:35:20,590 --> 00:35:23,030
+storage, which can be looked upon across
+
+953
+00:35:23,030 --> 00:35:25,110
+devices, across channels every single
+
+954
+00:35:25,110 --> 00:35:27,128
+time. And of
+
+955
+00:35:27,128 --> 00:35:29,360
+course, you also have the MCPs thrown in. So,
+
+956
+00:35:29,648 --> 00:35:31,809
+and within the MCPs you can do things
+
+957
+00:35:31,809 --> 00:35:33,918
+like you can extract these memory modules,
+
+958
+00:35:34,409 --> 00:35:36,929
+you can list these memory events sequentially,
+
+959
+00:35:36,969 --> 00:35:37,639
+serially,
+
+960
+00:35:38,079 --> 00:35:40,250
+you can retrieve these memory records, rebuild
+
+961
+00:35:40,250 --> 00:35:42,320
+it, etc. A lot of things that
+
+962
+00:35:42,320 --> 00:35:43,530
+you can do with the agent.
+
+963
+00:35:44,438 --> 00:35:45,699
+So, this is sort of a
+
+964
+00:35:46,280 --> 00:35:48,510
+hot or short-term and long-term memory
+
+965
+00:35:48,510 --> 00:35:49,079
+separation.
+
+966
+00:35:50,340 --> 00:35:52,500
+Where it gets really interesting is this
+
+967
+00:35:52,500 --> 00:35:55,099
+sort of a tiered shared memory architecture
+
+968
+00:35:55,099 --> 00:35:57,179
+with multi-agent workflows, which is what
+
+969
+00:35:57,179 --> 00:35:58,378
+we are building for lightly.
+
+970
+00:35:59,510 --> 00:36:01,789
+So add travel insurance
+
+971
+00:36:01,789 --> 00:36:02,949
+before you book my flight.
+
+972
+00:36:03,789 --> 00:36:05,949
+Use the email from our support conversation.
+
+973
+00:36:06,840 --> 00:36:09,030
+This is sort of a stateful multi-agent workflow
+
+974
+00:36:09,030 --> 00:36:11,280
+where your shared memory
+
+975
+00:36:11,280 --> 00:36:12,320
+state is stored
+
+976
+00:36:12,599 --> 00:36:14,679
+in between Elasticash and Aurora
+
+977
+00:36:14,679 --> 00:36:15,378
+Press
+
+978
+00:36:15,760 --> 00:36:18,340
+for the agent to do sort of seamless handoff.
+
+979
+00:36:18,918 --> 00:36:19,539
+So Lotus,
+
+980
+00:36:20,039 --> 00:36:22,239
+you have an orchestrator, in this case, Flightly's
+
+981
+00:36:22,239 --> 00:36:22,918
+orchestrator.
+
+982
+00:36:23,938 --> 00:36:25,938
+It has 3 specialized agents. You have
+
+983
+00:36:25,938 --> 00:36:28,099
+your support agent, you have your booking agent, you have your
+
+984
+00:36:28,099 --> 00:36:28,840
+payment agent.
+
+985
+00:36:29,989 --> 00:36:31,050
+All of these
+
+986
+00:36:31,349 --> 00:36:32,559
+share memory
+
+987
+00:36:32,878 --> 00:36:35,219
+in both of these layers, your long-term storage
+
+988
+00:36:35,219 --> 00:36:36,809
+as well as your short-term memory.
+
+989
+00:36:37,309 --> 00:36:39,590
+Behind the scenes, we are still doing the same thing.
+
+990
+00:36:39,989 --> 00:36:42,309
+We are extracting the short-term memory from
+
+991
+00:36:42,309 --> 00:36:43,188
+elastic ash,
+
+992
+00:36:43,590 --> 00:36:44,909
+persisting it to Aurora.
+
+993
+00:36:45,829 --> 00:36:47,918
+And in this way, you're basically sharing the
+
+994
+00:36:47,918 --> 00:36:50,139
+state and the workflow will be your first,
+
+995
+00:36:50,199 --> 00:36:52,800
+your support agent queries Aurora semantically.
+
+996
+00:36:53,119 --> 00:36:55,280
+It will find last week's support
+
+997
+00:36:55,280 --> 00:36:57,280
+conversation, extract the email.
+
+998
+00:36:58,188 --> 00:37:00,500
+Booking agent will go and search flights,
+
+999
+00:37:00,628 --> 00:37:02,708
+reserve them and writes this confirmed
+
+1000
+00:37:02,708 --> 00:37:05,019
+booking state to Valy, that's
+
+1001
+00:37:05,019 --> 00:37:05,909
+your checkpoint.
+
+1002
+00:37:06,550 --> 00:37:08,750
+Payment agent will go and read this
+
+1003
+00:37:08,750 --> 00:37:10,949
+confirmed booking state and add the
+
+1004
+00:37:10,949 --> 00:37:12,610
+insurance and then process the payment.
+
+1005
+00:37:13,478 --> 00:37:15,559
+So, all of this is orchestrated through
+
+1006
+00:37:15,559 --> 00:37:17,219
+a common memory layer.
+
+1007
+00:37:17,958 --> 00:37:19,878
+There is no context drop off,
+
+1008
+00:37:20,228 --> 00:37:20,829
+there is no sort of
+
+1009
+00:37:21,719 --> 00:37:24,039
+continuity lost between agent handoffs,
+
+1010
+00:37:24,559 --> 00:37:26,679
+and states are synchronized in
+
+1011
+00:37:26,679 --> 00:37:28,418
+real time between the two of them.
+
+1012
+00:37:30,090 --> 00:37:32,159
+All right, We've looked at
+
+1013
+00:37:32,159 --> 00:37:34,280
+5 different patterns. We've looked at different steps
+
+1014
+00:37:34,280 --> 00:37:36,739
+in building this conversational AI system.
+
+1015
+00:37:37,320 --> 00:37:38,619
+Now the critical question.
+
+1016
+00:37:39,769 --> 00:37:41,349
+How do we scale this to production?
+
+1017
+00:37:41,679 --> 00:37:43,280
+a million daily queries,
+
+1018
+00:37:43,688 --> 00:37:45,769
+high availability, cost optimization,
+
+1019
+00:37:46,039 --> 00:37:48,208
+security. So far, our
+
+1020
+00:37:48,208 --> 00:37:50,769
+agents are running locally on our laptops.
+
+1021
+00:37:51,929 --> 00:37:54,250
+Your MCP server, a Raposters MCP
+
+1022
+00:37:54,250 --> 00:37:56,409
+server, is running as an STDIO
+
+1023
+00:37:56,409 --> 00:37:58,599
+local Python subprocess on your laptop.
+
+1024
+00:37:58,969 --> 00:38:00,469
+What if your laptop crashes?
+
+1025
+00:38:01,728 --> 00:38:04,228
+What happens mid-transaction? You lose the transaction,
+
+1026
+00:38:04,728 --> 00:38:05,889
+obviously, that's a no go.
+
+1027
+00:38:06,789 --> 00:38:08,010
+How do we scale this?
+
+1028
+00:38:08,469 --> 00:38:10,550
+So, this is where Bedrock Agent Core
+
+1029
+00:38:10,550 --> 00:38:12,769
+comes in. Just to show our fans who's
+
+1030
+00:38:13,090 --> 00:38:14,239
+not heard of Agent Core.
+
+1031
+00:38:14,969 --> 00:38:17,110
+Anyone? Everyone's heard,
+
+1032
+00:38:17,309 --> 00:38:19,289
+one person hasn't heard of Agent Core, yes.
+
+1033
+00:38:20,148 --> 00:38:22,510
+So Agent Core is an agent tech platform
+
+1034
+00:38:22,510 --> 00:38:23,110
+to build,
+
+1035
+00:38:23,429 --> 00:38:25,728
+run, and deploy agents securely
+
+1036
+00:38:25,938 --> 00:38:26,728
+at scale.
+
+1037
+00:38:27,148 --> 00:38:29,188
+Think about how we run Postress
+
+1038
+00:38:29,188 --> 00:38:31,309
+on self-managed servers versus
+
+1039
+00:38:31,309 --> 00:38:33,550
+Aurora Postress as a fully managed server.
+
+1040
+00:38:33,989 --> 00:38:36,228
+Agent Core is your fully managed capability
+
+1041
+00:38:36,228 --> 00:38:37,070
+to run agents.
+
+1042
+00:38:38,070 --> 00:38:40,168
+It has a lot of components to it, we won't go
+
+1043
+00:38:40,168 --> 00:38:41,030
+too deep into it.
+
+1044
+00:38:41,309 --> 00:38:43,300
+There's a lot of sessions around for Agent Core,
+
+1045
+00:38:43,590 --> 00:38:44,728
+but at a very high level,
+
+1046
+00:38:45,429 --> 00:38:47,458
+runtime provides your local agents
+
+1047
+00:38:47,458 --> 00:38:49,469
+and environment to run at scale on
+
+1048
+00:38:49,469 --> 00:38:51,860
+the cloud. You're not running agents locally
+
+1049
+00:38:51,860 --> 00:38:54,188
+anymore. The beauty about this framework
+
+1050
+00:38:54,188 --> 00:38:56,389
+is, you're not restricted to just
+
+1051
+00:38:56,389 --> 00:38:58,668
+bedrock models. You can use OpenAI,
+
+1052
+00:38:59,070 --> 00:39:01,269
+you can use Anthropic, you can use Gemini,
+
+1053
+00:39:01,349 --> 00:39:01,989
+it doesn't matter.
+
+1054
+00:39:02,539 --> 00:39:04,898
+Plus, you can bring your own agentic frameworks,
+
+1055
+00:39:05,300 --> 00:39:07,849
+such as crew uh Crew AI, Autogen,
+
+1056
+00:39:07,978 --> 00:39:09,219
+Lang chain, Landgraf,
+
+1057
+00:39:09,659 --> 00:39:10,219
+what have you.
+
+1058
+00:39:11,679 --> 00:39:14,199
+Agent core identity gives you that secure
+
+1059
+00:39:14,199 --> 00:39:16,639
+sort of identity and access management for your agents,
+
+1060
+00:39:16,679 --> 00:39:18,280
+which is super critical in production.
+
+1061
+00:39:19,949 --> 00:39:22,168
+Agent code gateway gives you
+
+1062
+00:39:22,590 --> 00:39:25,030
+sort of a, a gateway to your MCP
+
+1063
+00:39:25,030 --> 00:39:27,469
+servers, your custom tools, your lambda
+
+1064
+00:39:27,469 --> 00:39:29,349
+functions, your open API schemas,
+
+1065
+00:39:29,679 --> 00:39:32,188
+your existing tooling or business logic
+
+1066
+00:39:32,510 --> 00:39:34,780
+gets fronted by agent code gateway,
+
+1067
+00:39:34,958 --> 00:39:36,989
+and it gives you that routing layer to
+
+1068
+00:39:36,989 --> 00:39:38,409
+sort of make it more seamless
+
+1069
+00:39:38,708 --> 00:39:39,909
+for your existing application.
+
+1070
+00:39:41,570 --> 00:39:43,820
+There are a couple of other tools like uh browser
+
+1071
+00:39:43,820 --> 00:39:45,860
+and code interpreter. Browser is, if
+
+1072
+00:39:45,860 --> 00:39:47,898
+you're familiar with computer use for
+
+1073
+00:39:47,898 --> 00:39:49,938
+cloud, you give your agent access to your
+
+1074
+00:39:49,938 --> 00:39:51,978
+computer, which you should not, to do
+
+1075
+00:39:51,978 --> 00:39:52,550
+things.
+
+1076
+00:39:53,139 --> 00:39:54,478
+Browser is used for that.
+
+1077
+00:39:54,898 --> 00:39:56,949
+Code interpreter is more of a sandboxed code
+
+1078
+00:39:56,949 --> 00:39:57,878
+execution environment.
+
+1079
+00:39:59,260 --> 00:40:01,579
+But then you also have some other nicer features
+
+1080
+00:40:01,579 --> 00:40:03,820
+like agent core memory, which also offers
+
+1081
+00:40:03,820 --> 00:40:06,340
+out of the box, short-term and long-term memory modules.
+
+1082
+00:40:06,860 --> 00:40:09,010
+And to wrap all this around sort of good
+
+1083
+00:40:09,010 --> 00:40:11,179
+guardrails and tracing of the agent
+
+1084
+00:40:11,179 --> 00:40:11,809
+actions,
+
+1085
+00:40:12,139 --> 00:40:14,139
+you have the agent core observability layer
+
+1086
+00:40:14,139 --> 00:40:18,260
+as well. So,
+
+1087
+00:40:18,418 --> 00:40:19,909
+remember my Friday frustration?
+
+1088
+00:40:20,500 --> 00:40:21,139
+Same journey,
+
+1089
+00:40:21,438 --> 00:40:22,300
+completely rebuilt.
+
+1090
+00:40:23,128 --> 00:40:25,179
+In this case, Valy caches the
+
+1091
+00:40:25,179 --> 00:40:26,389
+frequently asked questions,
+
+1092
+00:40:26,699 --> 00:40:28,958
+baggage policies, booking templates,
+
+1093
+00:40:29,340 --> 00:40:31,579
+uh, email templates, and it returns
+
+1094
+00:40:31,579 --> 00:40:33,378
+these results in microseconds.
+
+1095
+00:40:34,360 --> 00:40:36,978
+Aurora with PG Vector handles the route
+
+1096
+00:40:36,978 --> 00:40:39,239
+information, looking up seat preferences,
+
+1097
+00:40:39,398 --> 00:40:41,438
+long-term memory, semantic search,
+
+1098
+00:40:41,668 --> 00:40:43,320
+all in two digit milliseconds.
+
+1099
+00:40:44,489 --> 00:40:46,409
+9 out of 10 customers stay,
+
+1100
+00:40:46,728 --> 00:40:48,469
+60% cost savings,
+
+1101
+00:40:49,010 --> 00:40:51,070
+performance that truly scales.
+
+1102
+00:40:52,228 --> 00:40:54,349
+And with that, Flightly is ready
+
+1103
+00:40:54,349 --> 00:40:55,179
+for Hawaii,
+
+1104
+00:40:55,478 --> 00:40:56,570
+and so are you.
+
+1105
+00:40:56,989 --> 00:40:59,389
+With that, thank you for your time, Mohalo.
+
+1106
+00:40:59,750 --> 00:41:01,728
+I do have a couple of resources to share.
+
+1107
+00:41:03,360 --> 00:41:05,769
+And if you do have questions, uh, let's
+
+1108
+00:41:05,769 --> 00:41:06,610
+take them outside.
+
+1109
+00:41:07,570 --> 00:41:10,059
+But please do remember to complete the session survey.
+
+1110
+00:41:10,250 --> 00:41:12,329
+And yes, thank you for attending. Enjoy the rest
+
+1111
+00:41:12,329 --> 00:41:12,769
+of treatment.
+

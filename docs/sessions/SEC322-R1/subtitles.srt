@@ -1,0 +1,5744 @@
+1
+00:00:00,450 --> 00:00:01,680
+- [Zach] Yeah, good morning, everybody.
+
+2
+00:00:01,680 --> 00:00:02,513
+Still morning?
+
+3
+00:00:02,513 --> 00:00:03,663
+Good afternoon, I guess.
+
+4
+00:00:04,560 --> 00:00:06,570
+Today, we're here to talk
+
+5
+00:00:06,570 --> 00:00:08,790
+about automating certificate management
+
+6
+00:00:08,790 --> 00:00:11,130
+with exportable public certificates.
+
+7
+00:00:11,130 --> 00:00:14,580
+I'm Zach Miller, I'm a
+principal security SA.
+
+8
+00:00:14,580 --> 00:00:16,200
+I cover our cryptography services
+
+9
+00:00:16,200 --> 00:00:18,390
+and Pravin, you wanna introduce yourself?
+
+10
+00:00:18,390 --> 00:00:20,760
+- [Pravin] Hi, everybody,
+my name is Pravin Nair.
+
+11
+00:00:20,760 --> 00:00:24,450
+I'm a security specialist at
+AWS focused on data protection
+
+12
+00:00:24,450 --> 00:00:25,740
+and privacy.
+
+13
+00:00:25,740 --> 00:00:29,100
+I'm hoping everybody at the
+end are able to hear me fine.
+
+14
+00:00:29,100 --> 00:00:31,770
+If not, I'm okay to speak up a little bit.
+
+15
+00:00:31,770 --> 00:00:36,180
+I sometimes speak on a lower
+note, so please be frank enough
+
+16
+00:00:36,180 --> 00:00:39,000
+to let me know if I'm
+speaking on a lower note.
+
+17
+00:00:39,000 --> 00:00:40,410
+Thank you.
+
+18
+00:00:40,410 --> 00:00:41,790
+So that's my introduction.
+
+19
+00:00:41,790 --> 00:00:44,100
+I'll pass it on to Zach.
+
+20
+00:00:44,100 --> 00:00:46,800
+- [Zach] Awesome, yeah, so like I said,
+
+21
+00:00:46,800 --> 00:00:49,590
+today we're gonna talk about
+exportable certificates
+
+22
+00:00:49,590 --> 00:00:53,280
+with a service called
+AWS Certificate Manager.
+
+23
+00:00:53,280 --> 00:00:55,650
+You may be familiar with this launch,
+
+24
+00:00:55,650 --> 00:01:00,480
+but the basic idea is that in
+the past we had certificates
+
+25
+00:01:00,480 --> 00:01:02,340
+that you could issue
+from public certificates,
+
+26
+00:01:02,340 --> 00:01:03,540
+I should say, that you should issue,
+
+27
+00:01:03,540 --> 00:01:06,180
+you could issue from ACM
+and you could assign those,
+
+28
+00:01:06,180 --> 00:01:07,470
+or bind those to resources
+
+29
+00:01:07,470 --> 00:01:09,090
+that were integrated with ACM.
+
+30
+00:01:09,090 --> 00:01:10,320
+So you could assign it
+
+31
+00:01:10,320 --> 00:01:13,050
+to a load balancer,
+application load balancer,
+
+32
+00:01:13,050 --> 00:01:15,570
+or an API gateway or CloudFront.
+
+33
+00:01:15,570 --> 00:01:19,830
+And customers said, "Hey,
+I have these use cases
+
+34
+00:01:19,830 --> 00:01:22,860
+where I have a firewall that
+
+35
+00:01:22,860 --> 00:01:25,587
+runs in my data center
+or runs on EC2 and AWS,
+
+36
+00:01:25,587 --> 00:01:27,177
+and these aren't things
+that are integrated with ACM
+
+37
+00:01:27,177 --> 00:01:30,210
+and I still wanna get public
+certificates to those devices.
+
+38
+00:01:30,210 --> 00:01:32,880
+And so that's why we
+built this new feature
+
+39
+00:01:32,880 --> 00:01:34,500
+where you're able to
+export the private key
+
+40
+00:01:34,500 --> 00:01:36,060
+of public certificates.
+
+41
+00:01:36,060 --> 00:01:38,070
+And so I'll talk a little bit about what
+
+42
+00:01:38,070 --> 00:01:40,650
+that feature is and in a
+little bit more detail,
+
+43
+00:01:40,650 --> 00:01:42,270
+we'll go through some of the challenges
+
+44
+00:01:42,270 --> 00:01:44,100
+that we see customers face when it comes
+
+45
+00:01:44,100 --> 00:01:46,140
+to certificate management in general.
+
+46
+00:01:46,140 --> 00:01:48,720
+And in particular, again, with these kind
+
+47
+00:01:48,720 --> 00:01:51,240
+of non-integrated services or devices,
+
+48
+00:01:51,240 --> 00:01:53,310
+how you can handle managed renewal,
+
+49
+00:01:53,310 --> 00:01:54,660
+or automated renewal.
+
+50
+00:01:54,660 --> 00:01:56,970
+And Pravin has some pretty cool code
+
+51
+00:01:56,970 --> 00:02:00,090
+and demo that he's gonna show
+that we built that shows you
+
+52
+00:02:00,090 --> 00:02:03,270
+how to kind of automate
+some of these renewals.
+
+53
+00:02:03,270 --> 00:02:05,550
+So we'll talk about public certificates,
+
+54
+00:02:05,550 --> 00:02:07,350
+I'll talk about the challenges
+with installing them
+
+55
+00:02:07,350 --> 00:02:09,420
+and a lot of you are
+probably already familiar
+
+56
+00:02:09,420 --> 00:02:11,130
+with some of these challenges.
+
+57
+00:02:11,130 --> 00:02:13,140
+We'll go into a kind of a
+deep dive of the architecture
+
+58
+00:02:13,140 --> 00:02:14,970
+and the code and then Pravin will show
+
+59
+00:02:14,970 --> 00:02:16,413
+a demo of how it works.
+
+60
+00:02:17,430 --> 00:02:19,680
+And do feel free to raise your hand,
+
+61
+00:02:19,680 --> 00:02:20,910
+ask questions, interrupt us.
+
+62
+00:02:20,910 --> 00:02:22,650
+That's totally fine, we
+wanna keep it interactive.
+
+63
+00:02:22,650 --> 00:02:25,320
+So if you do have questions
+throughout, let us know.
+
+64
+00:02:25,320 --> 00:02:26,420
+Happy to answer those.
+
+65
+00:02:28,080 --> 00:02:30,780
+Okay, so like I mentioned before,
+
+66
+00:02:30,780 --> 00:02:33,440
+we have this service
+AWS Certificate Manager.
+
+67
+00:02:33,440 --> 00:02:38,440
+It is used to issue both public
+and private certificates.
+
+68
+00:02:38,520 --> 00:02:41,070
+And it has this nice feature
+called Managed Renewal
+
+69
+00:02:41,070 --> 00:02:43,263
+where again, with things like ALB,
+
+70
+00:02:44,880 --> 00:02:48,300
+about 60 days before the
+certificate is about to expire,
+
+71
+00:02:48,300 --> 00:02:50,100
+ACM will issue a new certificate.
+
+72
+00:02:50,100 --> 00:02:52,320
+It will bind that certificate
+to the same resource,
+
+73
+00:02:52,320 --> 00:02:54,900
+say like in the ALB or API gateway.
+
+74
+00:02:54,900 --> 00:02:57,210
+And it'll handle that renewal for you.
+
+75
+00:02:57,210 --> 00:03:01,410
+And there's kind of two
+mechanisms for domain validation.
+
+76
+00:03:01,410 --> 00:03:04,020
+There's email validation
+and DNS name validation.
+
+77
+00:03:04,020 --> 00:03:06,990
+We highly, highly recommend
+you use DNS name validation,
+
+78
+00:03:06,990 --> 00:03:11,100
+because it allows you
+to have that no touch,
+
+79
+00:03:11,100 --> 00:03:15,180
+not think about certificate
+renewal experience.
+
+80
+00:03:15,180 --> 00:03:17,460
+Where email validation,
+still pretty simple,
+
+81
+00:03:17,460 --> 00:03:19,170
+but you have to click a link in an email
+
+82
+00:03:19,170 --> 00:03:21,870
+and many times customers
+will be on vacation,
+
+83
+00:03:21,870 --> 00:03:24,090
+or that person's left
+the company or whatever,
+
+84
+00:03:24,090 --> 00:03:26,610
+whatever the reason is, that
+email somehow gets missed,
+
+85
+00:03:26,610 --> 00:03:28,050
+that link doesn't get clicked.
+
+86
+00:03:28,050 --> 00:03:30,210
+You could face an outage or
+something of that nature.
+
+87
+00:03:30,210 --> 00:03:31,320
+And we don't want that.
+
+88
+00:03:31,320 --> 00:03:34,170
+So highly, highly recommend
+you use DNS name validation,
+
+89
+00:03:34,170 --> 00:03:37,963
+'cause it just means you
+have to create a DNS record,
+
+90
+00:03:37,963 --> 00:03:39,307
+a CNM record that basically says,
+
+91
+00:03:39,307 --> 00:03:40,857
+"Hey, yeah, I own this domain."
+
+92
+00:03:42,690 --> 00:03:44,790
+And so again, like what we saw
+
+93
+00:03:44,790 --> 00:03:45,727
+with customers is they were like,
+
+94
+00:03:45,727 --> 00:03:49,500
+"I love the managed experience
+of assigning this certificate
+
+95
+00:03:49,500 --> 00:03:51,630
+to an ALB and renewal.
+
+96
+00:03:51,630 --> 00:03:53,010
+I don't have to think about certificates."
+
+97
+00:03:53,010 --> 00:03:56,640
+That's great, but I have EC2
+instances where I run nginx
+
+98
+00:03:56,640 --> 00:03:58,080
+and terminate TLS there
+
+99
+00:03:58,080 --> 00:04:01,200
+and I have a, maybe Palo
+Alto next-gen firewall
+
+100
+00:04:01,200 --> 00:04:03,240
+that I use on-prem and I
+need a certificate for that.
+
+101
+00:04:03,240 --> 00:04:04,350
+So how do I do that?
+
+102
+00:04:04,350 --> 00:04:06,060
+And they want to consolidate down
+
+103
+00:04:06,060 --> 00:04:08,340
+to one certificate provider.
+
+104
+00:04:08,340 --> 00:04:10,440
+And so we built this feature called
+
+105
+00:04:10,440 --> 00:04:11,990
+Exportable Public Certificates.
+
+106
+00:04:13,320 --> 00:04:16,830
+And another nice feature of it
+too is you have the same type
+
+107
+00:04:16,830 --> 00:04:19,800
+of access control you're
+used to with IAM, of course,
+
+108
+00:04:19,800 --> 00:04:23,160
+and it's integrated with AWS CloudTrail
+
+109
+00:04:23,160 --> 00:04:26,070
+and Amazon CloudWatch, so
+you get nice observability on
+
+110
+00:04:26,070 --> 00:04:27,420
+how your certificates are used
+
+111
+00:04:27,420 --> 00:04:30,450
+and kind of all the
+details around rotation
+
+112
+00:04:30,450 --> 00:04:31,500
+and things like that.
+
+113
+00:04:33,090 --> 00:04:37,080
+And so when we're talking
+about the use cases for this,
+
+114
+00:04:37,080 --> 00:04:38,580
+I called out quite a few of them already,
+
+115
+00:04:38,580 --> 00:04:40,620
+but you might have servers,
+
+116
+00:04:40,620 --> 00:04:44,190
+or where you're terminating
+TLS on another cloud provider
+
+117
+00:04:44,190 --> 00:04:46,230
+and a lot of our
+customers are multi-cloud,
+
+118
+00:04:46,230 --> 00:04:47,550
+you might have on-premise systems
+
+119
+00:04:47,550 --> 00:04:49,920
+that you wanna get these certificates to.
+
+120
+00:04:49,920 --> 00:04:52,320
+Firewalls is a really big
+use case we hear about
+
+121
+00:04:52,320 --> 00:04:53,460
+and just other services
+
+122
+00:04:53,460 --> 00:04:54,480
+that aren't integrated with ACM.
+
+123
+00:04:54,480 --> 00:04:59,480
+Like EC2 instances, EKS and
+just containers in general.
+
+124
+00:05:00,090 --> 00:05:01,560
+You wanna get public certificates
+
+125
+00:05:01,560 --> 00:05:03,600
+to terminate TLS on those devices.
+
+126
+00:05:03,600 --> 00:05:06,660
+You need to be able to
+export the private key,
+
+127
+00:05:06,660 --> 00:05:10,316
+'cause you need that private
+key to actually terminate TLS.
+
+128
+00:05:10,316 --> 00:05:12,870
+I wanna talk a little
+bit about pricing too.
+
+129
+00:05:12,870 --> 00:05:15,210
+This has been a driver for
+customers to reduce their costs,
+
+130
+00:05:15,210 --> 00:05:18,090
+because as some of you know,
+
+131
+00:05:18,090 --> 00:05:20,850
+public surveys can be pretty expensive.
+
+132
+00:05:20,850 --> 00:05:23,550
+And so we've priced it, I think,
+
+133
+00:05:23,550 --> 00:05:27,390
+very competitively
+where you have each FQDN
+
+134
+00:05:27,390 --> 00:05:29,820
+is $15
+
+135
+00:05:29,820 --> 00:05:30,653
+for each cert,
+
+136
+00:05:30,653 --> 00:05:32,820
+and you only pay that once
+when you export the cert.
+
+137
+00:05:32,820 --> 00:05:35,370
+So you may know already that
+
+138
+00:05:35,370 --> 00:05:36,990
+when you request a public certificate
+
+139
+00:05:36,990 --> 00:05:39,690
+and assign it to an
+integrated service like ALB,
+
+140
+00:05:39,690 --> 00:05:40,523
+there's no charge.
+
+141
+00:05:40,523 --> 00:05:42,270
+No charge, it's a free certificate.
+
+142
+00:05:42,270 --> 00:05:44,730
+That is still true, you only pay
+
+143
+00:05:44,730 --> 00:05:47,400
+for the certificate when
+you export it the first time
+
+144
+00:05:47,400 --> 00:05:49,050
+and then never again until it's renewed.
+
+145
+00:05:49,050 --> 00:05:50,220
+So it's not like you're paying
+
+146
+00:05:50,220 --> 00:05:51,960
+for it per month or anything like that.
+
+147
+00:05:51,960 --> 00:05:53,670
+You pay for it the
+first time you export it
+
+148
+00:05:53,670 --> 00:05:55,050
+and then the next time it's renewed,
+
+149
+00:05:55,050 --> 00:05:57,390
+you'll pay again after you export.
+
+150
+00:05:57,390 --> 00:05:59,730
+So again, $15
+
+151
+00:05:59,730 --> 00:06:01,680
+per FQDN.
+
+152
+00:06:01,680 --> 00:06:04,200
+So if you have, one.example.com
+
+153
+00:06:04,200 --> 00:06:06,723
+and two.example.com, that would be $30.
+
+154
+00:06:07,620 --> 00:06:08,583
+Go ahead, yeah.
+
+155
+00:06:12,360 --> 00:06:13,193
+- [Crowd Member 1] Is it the same
+
+156
+00:06:13,193 --> 00:06:15,303
+if you had multiple SANs to assert?
+
+157
+00:06:15,303 --> 00:06:16,710
+- [Zach] Yes, good question, exactly.
+
+158
+00:06:16,710 --> 00:06:19,530
+So say you had the regular common name
+
+159
+00:06:19,530 --> 00:06:21,594
+and then you had two SANs,
+that would be three FQDN,
+
+160
+00:06:21,594 --> 00:06:22,427
+so $45.
+
+161
+00:06:23,430 --> 00:06:24,263
+Yep.
+
+162
+00:06:24,263 --> 00:06:25,129
+Hmm?
+
+163
+00:06:25,129 --> 00:06:26,573
+- [Crowd Member 1] Is that a
+one time fee for the export,
+
+164
+00:06:26,573 --> 00:06:27,898
+or every time?
+
+165
+00:06:27,898 --> 00:06:29,057
+- [Zach] One time fee for the export.
+
+166
+00:06:29,057 --> 00:06:30,660
+So you can export that
+
+167
+00:06:30,660 --> 00:06:32,130
+as many times as you like after that.
+
+168
+00:06:32,130 --> 00:06:33,600
+Yeah, absolutely.
+
+169
+00:06:33,600 --> 00:06:34,433
+Just the one time fee
+
+170
+00:06:34,433 --> 00:06:36,540
+and then the next time that
+certificate is renewed,
+
+171
+00:06:36,540 --> 00:06:38,910
+like the next year, it's
+technically a new certificate.
+
+172
+00:06:38,910 --> 00:06:40,500
+So you would pay that again.
+
+173
+00:06:40,500 --> 00:06:41,880
+But yeah, so you can continue to export
+
+174
+00:06:41,880 --> 00:06:43,980
+that certificate as
+many times as you need.
+
+175
+00:06:43,980 --> 00:06:47,580
+- [Crowd Member 1] Is it billed
+at the time of generation?
+
+176
+00:06:47,580 --> 00:06:49,738
+Like is it flagged as exportable,
+
+177
+00:06:49,738 --> 00:06:52,740
+and perhaps because it's flagged
+as exportable, it's billed?
+
+178
+00:06:52,740 --> 00:06:56,250
+Or even if I were to never export it.
+
+179
+00:06:56,250 --> 00:06:57,083
+- [Zach] No, that's a good question.
+
+180
+00:06:57,083 --> 00:06:58,980
+So I'll repeat the question
+just so people hear it.
+
+181
+00:06:58,980 --> 00:07:02,876
+So the question is when
+you create the certificate,
+
+182
+00:07:02,876 --> 00:07:05,040
+if you mark it as exportable
+are you billed then,
+
+183
+00:07:05,040 --> 00:07:07,500
+no, you are only billed
+the minute you export it.
+
+184
+00:07:07,500 --> 00:07:09,180
+So when you call the
+export certificate API
+
+185
+00:07:09,180 --> 00:07:11,670
+and you get that private key,
+that's when you'll be billed.
+
+186
+00:07:11,670 --> 00:07:14,490
+- [Crowd Member 1] So then in
+theory we can flag everything,
+
+187
+00:07:14,490 --> 00:07:19,050
+it's exportable, but as long
+as nobody actually goes in
+
+188
+00:07:19,050 --> 00:07:21,300
+and actually exports it, then?
+
+189
+00:07:21,300 --> 00:07:22,133
+- [Zach] Yes.
+
+190
+00:07:22,133 --> 00:07:22,966
+That is true.
+
+191
+00:07:22,966 --> 00:07:24,570
+The only thing I would say there is
+
+192
+00:07:24,570 --> 00:07:26,920
+a bunch of customers when
+we talk to them said,
+
+193
+00:07:28,777 --> 00:07:31,227
+"I don't want my developers to
+just export any certificate."
+
+194
+00:07:31,227 --> 00:07:34,650
+And so you have to market it
+as exportable when you create,
+
+195
+00:07:34,650 --> 00:07:35,760
+or request a certificate.
+
+196
+00:07:35,760 --> 00:07:37,800
+So if you originally request a certificate
+
+197
+00:07:37,800 --> 00:07:39,510
+and you say, "This is not exportable."
+
+198
+00:07:39,510 --> 00:07:40,830
+You will never be able to change that.
+
+199
+00:07:40,830 --> 00:07:42,630
+I mean, you could
+reissue a new certificate
+
+200
+00:07:42,630 --> 00:07:44,460
+for the same domain, but you won't be able
+
+201
+00:07:44,460 --> 00:07:46,530
+to then change it later.
+
+202
+00:07:46,530 --> 00:07:49,020
+And so my only kind of word of
+caution there is if you have
+
+203
+00:07:49,020 --> 00:07:51,240
+that use case where you're like,
+
+204
+00:07:51,240 --> 00:07:53,010
+some customers view it
+as a security feature
+
+205
+00:07:53,010 --> 00:07:55,020
+that you cannot export that private key.
+
+206
+00:07:55,020 --> 00:07:57,210
+And so I wouldn't necessarily
+advise putting everything
+
+207
+00:07:57,210 --> 00:07:58,680
+exportable unless you
+have a use case for it.
+
+208
+00:07:58,680 --> 00:08:00,120
+But yes, you could definitely do that.
+
+209
+00:08:00,120 --> 00:08:01,980
+- [Crowd Member 1] Strictly
+from the building costs.
+
+210
+00:08:01,980 --> 00:08:02,940
+- [Zach] Sure, yeah.
+
+211
+00:08:02,940 --> 00:08:04,653
+Absolutely, sure.
+
+212
+00:08:05,790 --> 00:08:07,636
+- [Crowd Member 2] Maybe I'm
+being ahead of myself here,
+
+213
+00:08:07,636 --> 00:08:11,916
+but if I'm wanted to test the
+life cycle of a certificate,
+
+214
+00:08:11,916 --> 00:08:15,453
+including exporting, then
+I only want the certificate
+
+215
+00:08:15,453 --> 00:08:18,839
+to be a couple of days at the most.
+
+216
+00:08:18,839 --> 00:08:22,800
+But I have to basically pay
+for a whole year, don't I?
+
+217
+00:08:22,800 --> 00:08:24,330
+- [Zach] Yeah, effectively, yeah, yeah.
+
+218
+00:08:24,330 --> 00:08:26,640
+There's no, it's not prorated in that way.
+
+219
+00:08:26,640 --> 00:08:27,660
+Yeah, unfortunately, yeah.
+
+220
+00:08:27,660 --> 00:08:28,493
+- [Crowd Member 2] There's no way
+
+221
+00:08:28,493 --> 00:08:31,411
+to get a short-lived
+certificate currently?
+
+222
+00:08:31,411 --> 00:08:34,980
+So there is, okay, so
+there's two services.
+
+223
+00:08:34,980 --> 00:08:36,450
+There's AWS Certificate Manager,
+
+224
+00:08:36,450 --> 00:08:38,490
+it issues public certs and private certs.
+
+225
+00:08:38,490 --> 00:08:40,200
+There is AWS Private CA,
+
+226
+00:08:40,200 --> 00:08:42,570
+which we're not gonna talk
+about too much in this session,
+
+227
+00:08:42,570 --> 00:08:44,610
+but you can absolutely,
+
+228
+00:08:44,610 --> 00:08:46,380
+there's a short-lived
+certificate mode for that.
+
+229
+00:08:46,380 --> 00:08:49,050
+And those certificates are
+priced at a lower price
+
+230
+00:08:49,050 --> 00:08:52,350
+per certificate and they
+only live up to seven days.
+
+231
+00:08:52,350 --> 00:08:54,067
+So that would be like for customers that,
+
+232
+00:08:54,067 --> 00:08:55,830
+"Hey, I have a Kubernetes workload,
+
+233
+00:08:55,830 --> 00:08:57,810
+I rebuild my pods every single day.
+
+234
+00:08:57,810 --> 00:08:59,070
+I don't need a cert that lives a year.
+
+235
+00:08:59,070 --> 00:09:00,270
+I need a cert that lives a day
+
+236
+00:09:00,270 --> 00:09:01,920
+and I don't want to pay
+for a cert for a year."
+
+237
+00:09:01,920 --> 00:09:04,080
+So you can do that with private certs.
+
+238
+00:09:04,080 --> 00:09:05,913
+With ACM, at least today,
+
+239
+00:09:08,190 --> 00:09:09,630
+the certificate template is kind
+
+240
+00:09:09,630 --> 00:09:14,340
+of set in stone and it's
+a three, what is it, 365?
+
+241
+00:09:14,340 --> 00:09:15,780
+- [Pravin] Yeah, 13 months.
+
+242
+00:09:15,780 --> 00:09:16,800
+- [Zach] Yeah, 13 months, sorry.
+
+243
+00:09:16,800 --> 00:09:17,633
+That's right, 13 months.
+
+244
+00:09:17,633 --> 00:09:18,840
+It's a 13 month certificate.
+
+245
+00:09:18,840 --> 00:09:22,650
+So you can't change that
+validity period today,
+
+246
+00:09:22,650 --> 00:09:24,060
+I can't say a whole lot more,
+
+247
+00:09:24,060 --> 00:09:27,360
+but we're thinking about
+other ways to reduce that,
+
+248
+00:09:27,360 --> 00:09:30,360
+because as you may know, the
+cab forum has made some changes
+
+249
+00:09:30,360 --> 00:09:33,570
+where they're gonna reduce
+the certificate lifetime.
+
+250
+00:09:33,570 --> 00:09:36,000
+So we will of course adjust
+our service to deal with that.
+
+251
+00:09:36,000 --> 00:09:37,310
+- [Crowd Member 1] And pricing,
+what about the pricing?
+
+252
+00:09:37,310 --> 00:09:39,750
+Is it every 30 days?
+
+253
+00:09:39,750 --> 00:09:41,310
+- [Zach] That is also
+a very good question.
+
+254
+00:09:41,310 --> 00:09:45,030
+So I can't say exactly the, here,
+
+255
+00:09:45,030 --> 00:09:46,230
+if you talk to me in the hallway after,
+
+256
+00:09:46,230 --> 00:09:47,190
+I can probably give some more detail,
+
+257
+00:09:47,190 --> 00:09:49,320
+but yes, we will be addressing that,
+
+258
+00:09:49,320 --> 00:09:51,720
+there will be a pricing
+change that will reflect
+
+259
+00:09:52,727 --> 00:09:53,760
+the shorter renewal periods.
+
+260
+00:09:53,760 --> 00:09:54,600
+Yeah, absolutely.
+
+261
+00:09:54,600 --> 00:09:56,910
+- [Crowd Member 3] Because
+the first drop is here March,
+
+262
+00:09:56,910 --> 00:09:59,070
+or April, so 200 days?
+
+263
+00:09:59,070 --> 00:10:00,270
+- [Zach] Yes, yeah.
+
+264
+00:10:00,270 --> 00:10:02,100
+I can't say too much,
+
+265
+00:10:02,100 --> 00:10:04,530
+but yes, if we talk, come
+find me after the hallway,
+
+266
+00:10:04,530 --> 00:10:05,490
+we'll talk in more detail,
+
+267
+00:10:05,490 --> 00:10:08,940
+but yes, we're absolutely
+planning for those changes
+
+268
+00:10:08,940 --> 00:10:10,170
+and the pricing will reflect that
+
+269
+00:10:10,170 --> 00:10:13,650
+and customers should not be
+paying more based on that.
+
+270
+00:10:13,650 --> 00:10:15,330
+- [Crowd Member 2] So prior to the export
+
+271
+00:10:15,330 --> 00:10:16,844
+of the private key,
+
+272
+00:10:16,844 --> 00:10:18,830
+it's in HSM?
+
+273
+00:10:18,830 --> 00:10:21,510
+- [Zach] Well, yes, so, okay,
+
+274
+00:10:21,510 --> 00:10:25,080
+so the way that ACM works
+basically is when you create
+
+275
+00:10:25,080 --> 00:10:29,370
+a certificate in ACM, we generate
+a private key and we wrap,
+
+276
+00:10:29,370 --> 00:10:32,640
+or encrypt that private key
+with a KMS key in your account.
+
+277
+00:10:32,640 --> 00:10:35,450
+So there's a KMS key
+called the AWS Managed Key.
+
+278
+00:10:35,450 --> 00:10:39,840
+It has an alias that says
+this would be aws/acm.
+
+279
+00:10:39,840 --> 00:10:41,250
+And that key is actually used
+
+280
+00:10:41,250 --> 00:10:43,680
+to protect the private
+key in your account.
+
+281
+00:10:43,680 --> 00:10:46,500
+And that KMS key is protected
+
+282
+00:10:46,500 --> 00:10:49,110
+by FIPS 140-3 level three validated HSM.
+
+283
+00:10:49,110 --> 00:10:51,703
+- [Crowd Member 2] So
+the minute it's exported,
+
+284
+00:10:51,703 --> 00:10:54,390
+it's no longer HSM, it's
+just no longer HSM, right?
+
+285
+00:10:54,390 --> 00:10:55,223
+- [Zach] That's right.
+
+286
+00:10:55,223 --> 00:10:56,673
+When you export the private key,
+
+287
+00:10:57,600 --> 00:11:00,870
+Pravin will show this, but
+it is exported encrypted.
+
+288
+00:11:00,870 --> 00:11:03,450
+You basically set a
+passphrase when you export it,
+
+289
+00:11:03,450 --> 00:11:05,403
+but yeah, it will no longer be,
+
+290
+00:11:06,330 --> 00:11:07,590
+it will be exported from the service.
+
+291
+00:11:07,590 --> 00:11:09,840
+So it wouldn't be protected by an HSM.
+
+292
+00:11:09,840 --> 00:11:11,940
+And so Pravin will get
+into this a little bit on
+
+293
+00:11:11,940 --> 00:11:15,363
+how we recommend securing
+those private keys.
+
+294
+00:11:16,200 --> 00:11:18,720
+But yes, you're right,
+once you export that key,
+
+295
+00:11:18,720 --> 00:11:20,670
+that's kind of what I
+was alluding to earlier
+
+296
+00:11:20,670 --> 00:11:23,220
+with the security consideration,
+
+297
+00:11:23,220 --> 00:11:24,720
+why you probably don't wanna mark all
+
+298
+00:11:24,720 --> 00:11:26,400
+of your searches exportable right away,
+
+299
+00:11:26,400 --> 00:11:29,160
+just because that does
+allow application teams
+
+300
+00:11:29,160 --> 00:11:31,290
+to export that private
+key if they want to.
+
+301
+00:11:31,290 --> 00:11:32,340
+And you probably wanna make sure
+
+302
+00:11:32,340 --> 00:11:34,260
+there's actually a real use case for that
+
+303
+00:11:34,260 --> 00:11:36,513
+to limit risk of key compromise.
+
+304
+00:11:37,680 --> 00:11:38,513
+Good questions.
+
+305
+00:11:39,390 --> 00:11:40,233
+Okay.
+
+306
+00:11:41,400 --> 00:11:43,860
+Yeah, so the only other thing
+I think I didn't cover is
+
+307
+00:11:43,860 --> 00:11:45,270
+the wildcard certificates.
+
+308
+00:11:45,270 --> 00:11:47,460
+So wildcard certificates
+are priced a little bit
+
+309
+00:11:47,460 --> 00:11:50,160
+differently at $149.
+
+310
+00:11:50,160 --> 00:11:50,993
+So,
+
+311
+00:11:51,840 --> 00:11:52,673
+okay.
+
+312
+00:11:54,030 --> 00:11:56,098
+Probably a lot of you,
+well, yeah, go ahead.
+
+313
+00:11:56,098 --> 00:11:56,997
+- [Crowd Member 4] So if I had wildcards
+
+314
+00:11:56,997 --> 00:11:59,580
+and I have SANs attached to that,
+
+315
+00:11:59,580 --> 00:12:02,370
+will I be charged 149 firsthand?
+
+316
+00:12:03,480 --> 00:12:04,385
+- [Zach] Sorry, say that one more time.
+
+317
+00:12:04,385 --> 00:12:09,385
+- [Crowd Member 1] So I do
+have (speaks in the distance).
+
+318
+00:12:16,140 --> 00:12:18,300
+- [Zach] Yeah, so say you had three SANs
+
+319
+00:12:18,300 --> 00:12:21,120
+and then the regular common
+name, that would be four FQDN,
+
+320
+00:12:21,120 --> 00:12:22,693
+so it'd be four times 15.
+
+321
+00:12:23,577 --> 00:12:25,350
+- [Crowd Member 4] Or
+four times three 15s.
+
+322
+00:12:25,350 --> 00:12:28,350
+- [Zach] No, no, 'cause
+the wildcard certificates,
+
+323
+00:12:28,350 --> 00:12:29,610
+there's no,
+
+324
+00:12:29,610 --> 00:12:32,070
+basically the wildcard,
+you wouldn't have SAN,
+
+325
+00:12:32,070 --> 00:12:33,300
+you wouldn't be charged
+for the SAN in that way,
+
+326
+00:12:33,300 --> 00:12:35,610
+it's the flat $140, 140.
+
+327
+00:12:35,610 --> 00:12:37,590
+Yeah, yeah, so.
+- To be sure,
+
+328
+00:12:37,590 --> 00:12:40,710
+multiple wildcard names
+on top of our certs?
+
+329
+00:12:40,710 --> 00:12:41,970
+- [Zach] No, you cannot do that.
+
+330
+00:12:41,970 --> 00:12:45,450
+So you could only protect
+the one sub-domain with,
+
+331
+00:12:45,450 --> 00:12:49,530
+so like food.example.com, bar.example.com,
+
+332
+00:12:49,530 --> 00:12:52,063
+but not food.bar.example.com.
+
+333
+00:12:52,063 --> 00:12:54,960
+(crowd member 4 speaks in the distance)
+
+334
+00:12:54,960 --> 00:12:55,910
+Yeah, that's right.
+
+335
+00:12:57,960 --> 00:13:01,920
+So let me ask, so who here
+deals with certificates daily,
+
+336
+00:13:01,920 --> 00:13:03,000
+or at least a lot?
+
+337
+00:13:03,000 --> 00:13:05,250
+You know, probably, okay,
+probably everyone's familiar.
+
+338
+00:13:05,250 --> 00:13:09,480
+Anyone have the experience
+of creating Outlook calendar
+
+339
+00:13:09,480 --> 00:13:11,880
+reminders to renew your certificates?
+
+340
+00:13:11,880 --> 00:13:15,420
+Oh yeah, yeah, I've been
+there, I've been there too.
+
+341
+00:13:15,420 --> 00:13:18,450
+So I think that's the
+obvious example of some
+
+342
+00:13:18,450 --> 00:13:19,350
+of the challenges.
+
+343
+00:13:19,350 --> 00:13:21,270
+You have things I talked about before,
+
+344
+00:13:21,270 --> 00:13:23,850
+like if you have manual processes,
+
+345
+00:13:23,850 --> 00:13:26,280
+you have a human being that
+has to go manually type in
+
+346
+00:13:26,280 --> 00:13:28,170
+that cert and put it into a key store
+
+347
+00:13:28,170 --> 00:13:30,570
+and it's kind of all this
+whole manual process.
+
+348
+00:13:30,570 --> 00:13:32,310
+Obviously there's a lot of room for error,
+
+349
+00:13:32,310 --> 00:13:34,710
+certs and TLS tend to
+be a little bit finicky,
+
+350
+00:13:34,710 --> 00:13:36,420
+as probably everyone knows.
+
+351
+00:13:36,420 --> 00:13:39,300
+And so, we do see these
+challenges from customers
+
+352
+00:13:39,300 --> 00:13:41,200
+and that's why we originally built ACM
+
+353
+00:13:42,210 --> 00:13:44,430
+and then of course why
+we built this feature
+
+354
+00:13:44,430 --> 00:13:46,770
+to export the private key.
+
+355
+00:13:46,770 --> 00:13:48,001
+And so aside from even
+
+356
+00:13:48,001 --> 00:13:50,280
+just those manual installation challenges,
+
+357
+00:13:50,280 --> 00:13:52,770
+you have things like all
+these different environments.
+
+358
+00:13:52,770 --> 00:13:55,200
+You have nginx running on EC2,
+
+359
+00:13:55,200 --> 00:13:57,870
+you have your different
+load balancers and proxies
+
+360
+00:13:57,870 --> 00:13:59,100
+and all these things where you might need
+
+361
+00:13:59,100 --> 00:14:00,240
+to put a certificate
+
+362
+00:14:00,240 --> 00:14:03,420
+and there's not a super
+consistent way always
+
+363
+00:14:03,420 --> 00:14:06,810
+to get the certificates where
+they need to go, basically.
+
+364
+00:14:06,810 --> 00:14:08,850
+And then you have things like renewal gaps
+
+365
+00:14:08,850 --> 00:14:12,060
+where you have an expired
+certificate that leads
+
+366
+00:14:12,060 --> 00:14:14,670
+to some type of outage
+and TLS stacks broken
+
+367
+00:14:14,670 --> 00:14:16,260
+and you're not able,
+
+368
+00:14:16,260 --> 00:14:17,967
+your users aren't able
+to access your service.
+
+369
+00:14:17,967 --> 00:14:20,010
+And so those are the
+things we wanna avoid.
+
+370
+00:14:20,010 --> 00:14:21,450
+We want to get to a place eventually
+
+371
+00:14:21,450 --> 00:14:24,060
+where customers never have
+to think about certificates.
+
+372
+00:14:24,060 --> 00:14:26,820
+It's just kind of an automated
+thing where they get renewed,
+
+373
+00:14:26,820 --> 00:14:28,380
+they get placed where they need to go.
+
+374
+00:14:28,380 --> 00:14:29,270
+And that's kind of what this solution
+
+375
+00:14:29,270 --> 00:14:32,163
+that Pravin is gonna
+show, is attempting to do.
+
+376
+00:14:33,120 --> 00:14:36,960
+And so when we look at
+what we wanted to kind
+
+377
+00:14:36,960 --> 00:14:38,890
+of the requirements we were looking to
+
+378
+00:14:40,320 --> 00:14:42,240
+achieve when we built this,
+
+379
+00:14:42,240 --> 00:14:46,080
+we wanted to look at things
+like event-driven architecture.
+
+380
+00:14:46,080 --> 00:14:48,270
+Make sure that you have the ability
+
+381
+00:14:48,270 --> 00:14:49,620
+to manually renew if you need to,
+
+382
+00:14:49,620 --> 00:14:51,060
+but we really want it to be automated.
+
+383
+00:14:51,060 --> 00:14:54,090
+We want it to be based on
+those CloudWatch alerts
+
+384
+00:14:54,090 --> 00:14:56,070
+and EventBridge alerts
+that are published when
+
+385
+00:14:56,070 --> 00:14:58,080
+a certificate's about to expire.
+
+386
+00:14:58,080 --> 00:15:00,180
+And so you'll see when
+Pravin shows the demo
+
+387
+00:15:00,180 --> 00:15:01,920
+that there's kind of two ways to do it.
+
+388
+00:15:01,920 --> 00:15:04,710
+You can manually renew
+or you can have a lambda,
+
+389
+00:15:04,710 --> 00:15:06,870
+or EventBridge rule
+that's basically listening
+
+390
+00:15:06,870 --> 00:15:09,037
+for these events that say,
+
+391
+00:15:09,037 --> 00:15:10,950
+"Hey, this certificate's about to expire.
+
+392
+00:15:10,950 --> 00:15:12,450
+You need to trigger a lambda."
+
+393
+00:15:12,450 --> 00:15:15,030
+And you'll see the details of everything,
+
+394
+00:15:15,030 --> 00:15:17,370
+but you need to actually export that cert
+
+395
+00:15:17,370 --> 00:15:19,070
+and place it where it needs to go.
+
+396
+00:15:20,070 --> 00:15:21,420
+We also wanted to make sure of course,
+
+397
+00:15:21,420 --> 00:15:23,613
+that that private key is secured.
+
+398
+00:15:24,510 --> 00:15:26,220
+When you do export the cert,
+
+399
+00:15:26,220 --> 00:15:28,200
+just like every other AWS API,
+
+400
+00:15:28,200 --> 00:15:29,460
+it happens over HTTPS.
+
+401
+00:15:29,460 --> 00:15:31,350
+So it is encrypted in transit,
+
+402
+00:15:31,350 --> 00:15:34,017
+but you also specify a passphrase
+
+403
+00:15:34,017 --> 00:15:36,540
+and that cert will be
+encrypted with the passphrase.
+
+404
+00:15:36,540 --> 00:15:39,000
+And in our case we store that
+passphrase in Secrets Manager
+
+405
+00:15:39,000 --> 00:15:41,163
+for more secure storage.
+
+406
+00:15:42,990 --> 00:15:43,823
+Yeah.
+
+407
+00:15:43,823 --> 00:15:46,800
+And so when we get into
+these two types of workflows,
+
+408
+00:15:46,800 --> 00:15:50,880
+like I talked about, we have
+the on-demand kind of method,
+
+409
+00:15:50,880 --> 00:15:51,817
+which would be,
+
+410
+00:15:51,817 --> 00:15:54,690
+"Hey, I'm going to
+manually renew this cert."
+
+411
+00:15:54,690 --> 00:15:56,010
+Maybe it's some type of compromise.
+
+412
+00:15:56,010 --> 00:15:57,900
+Maybe you just have a
+requirement where you need
+
+413
+00:15:57,900 --> 00:16:01,830
+to manually renew it
+earlier than you expected.
+
+414
+00:16:01,830 --> 00:16:03,973
+And so you're able to trigger an API
+
+415
+00:16:05,280 --> 00:16:07,290
+and just kind of manually renew that cert.
+
+416
+00:16:07,290 --> 00:16:09,180
+Or I shouldn't say manually,
+but manually trigger
+
+417
+00:16:09,180 --> 00:16:11,430
+the automation I guess is more accurate.
+
+418
+00:16:11,430 --> 00:16:12,840
+And then you also have, like I mentioned,
+
+419
+00:16:12,840 --> 00:16:16,170
+automated certificate renewal
+where EventBridge is doing
+
+420
+00:16:16,170 --> 00:16:17,970
+that trigger and we're listening for that
+
+421
+00:16:17,970 --> 00:16:20,160
+and we'll kind of in an automated way,
+
+422
+00:16:20,160 --> 00:16:22,460
+export that cert, put
+it where it needs to go.
+
+423
+00:16:24,180 --> 00:16:26,913
+Any other questions before
+we talk about architecture?
+
+424
+00:16:28,740 --> 00:16:30,360
+Oh, oh yeah.
+
+425
+00:16:30,360 --> 00:16:32,076
+- [Crowd Member 1] Is support centralized
+
+426
+00:16:32,076 --> 00:16:35,909
+on a single domain in
+an organization for IAM?
+
+427
+00:16:36,900 --> 00:16:39,642
+- [Zach] Single domain for?
+
+428
+00:16:39,642 --> 00:16:44,309
+(crowd member 1 speaks in the distance)
+
+429
+00:16:46,320 --> 00:16:48,690
+- [Zach] Yeah, yeah.
+
+430
+00:16:48,690 --> 00:16:52,680
+So yes, so you can, when
+you export that key,
+
+431
+00:16:52,680 --> 00:16:55,650
+you could definitely put it on
+a device in another account.
+
+432
+00:16:55,650 --> 00:16:56,483
+Does our solution
+
+433
+00:16:56,483 --> 00:16:57,330
+support that?
+- Yeah, I think it does.
+
+434
+00:16:57,330 --> 00:16:58,475
+- [Zach] Yeah.
+
+435
+00:16:58,475 --> 00:16:59,308
+Do you wanna talk about that?
+
+436
+00:16:59,308 --> 00:17:00,609
+- [Pravin] So what's the question?
+
+437
+00:17:00,609 --> 00:17:04,590
+- [Crowd Member 1] Automation
+where (speaks in the distance)
+
+438
+00:17:04,590 --> 00:17:05,520
+- [Zach] Sorry, can you repeat that?
+
+439
+00:17:05,520 --> 00:17:06,353
+It's hard to hear.
+
+440
+00:17:06,353 --> 00:17:07,440
+- [Crowd Member 1] Speaking
+more like automation.
+
+441
+00:17:07,440 --> 00:17:10,090
+I don't wanna have to really
+deal with the expertise.
+
+442
+00:17:11,207 --> 00:17:12,280
+- Oh, I see.
+- Wanna know if you can
+
+443
+00:17:12,280 --> 00:17:14,370
+do it across accounts.
+
+444
+00:17:14,370 --> 00:17:16,167
+- [Pravin] Yes, you can do that
+
+445
+00:17:16,167 --> 00:17:18,390
+and I'm gonna talk about that.
+
+446
+00:17:18,390 --> 00:17:20,190
+- [Zach] Yeah, yeah, we'll
+get into that in a second.
+
+447
+00:17:20,190 --> 00:17:21,141
+Go ahead.
+
+448
+00:17:21,141 --> 00:17:23,760
+(crowd member 1 speaks in the distance)
+
+449
+00:17:23,760 --> 00:17:26,670
+So we use domain validation, so you need
+
+450
+00:17:26,670 --> 00:17:29,640
+to create a CNAME record
+that proves you own
+
+451
+00:17:29,640 --> 00:17:31,680
+that domain when you request a cert,
+
+452
+00:17:31,680 --> 00:17:33,660
+regardless of whether
+it's wildcard or not.
+
+453
+00:17:33,660 --> 00:17:35,430
+Yeah, and you could also
+use email validation.
+
+454
+00:17:35,430 --> 00:17:36,960
+Again, it's not really
+something we recommend,
+
+455
+00:17:36,960 --> 00:17:41,790
+but yeah, either way,
+typically if you use Route 53
+
+456
+00:17:41,790 --> 00:17:43,710
+for DNS, ACM will actually go
+
+457
+00:17:43,710 --> 00:17:45,810
+and create that record on it's own.
+
+458
+00:17:45,810 --> 00:17:48,330
+Like you don't need to,
+kinda a one-click button,
+
+459
+00:17:48,330 --> 00:17:49,710
+or it'll do it on own.
+
+460
+00:17:49,710 --> 00:17:52,860
+Whereas you may need to
+update your DNS records manual
+
+461
+00:17:52,860 --> 00:17:54,240
+if you have another provider.
+
+462
+00:17:54,240 --> 00:17:55,800
+But yeah, as long as
+that CNM record is there,
+
+463
+00:17:55,800 --> 00:17:57,810
+that proves you own that domain,
+
+464
+00:17:57,810 --> 00:17:59,660
+we'll validate it and issue the cert.
+
+465
+00:18:01,590 --> 00:18:03,120
+Any other, oh yeah.
+
+466
+00:18:03,120 --> 00:18:03,953
+- [Crowd Member 2] Okay.
+
+467
+00:18:03,953 --> 00:18:06,240
+You did mention that you
+can do the one-click update,
+
+468
+00:18:06,240 --> 00:18:09,570
+but there's also a lot of times where ACM
+
+469
+00:18:09,570 --> 00:18:12,480
+and your Route 53 zone
+are in different accounts
+
+470
+00:18:12,480 --> 00:18:14,400
+that causes problems.
+
+471
+00:18:14,400 --> 00:18:18,460
+Have you guys thought of
+any solutions about allowing
+
+472
+00:18:19,440 --> 00:18:23,130
+RAM shares for ACM so
+that it can be shared
+
+473
+00:18:23,130 --> 00:18:24,360
+across multiple accounts
+
+474
+00:18:24,360 --> 00:18:26,940
+to make a lot of that easier?
+
+475
+00:18:26,940 --> 00:18:28,680
+- [Zach] Yeah, that's a good
+question and that is something
+
+476
+00:18:28,680 --> 00:18:30,150
+that customers have challenges with.
+
+477
+00:18:30,150 --> 00:18:31,320
+So the question was about,
+
+478
+00:18:31,320 --> 00:18:34,200
+maybe I have Route 53 zones
+in a different account
+
+479
+00:18:34,200 --> 00:18:35,490
+that I'm issuing the certificate
+
+480
+00:18:35,490 --> 00:18:37,500
+and it doesn't have that same kind
+
+481
+00:18:37,500 --> 00:18:39,540
+of integrated seamless workflow
+
+482
+00:18:39,540 --> 00:18:41,190
+around creating the CNAME record.
+
+483
+00:18:42,420 --> 00:18:44,640
+Maybe let's talk in the
+hallway in more detail after.
+
+484
+00:18:44,640 --> 00:18:46,920
+But yes, that is something we're aware of.
+
+485
+00:18:46,920 --> 00:18:50,370
+What I often see customers
+do in that case is,
+
+486
+00:18:50,370 --> 00:18:52,800
+as you probably know when
+you issue the certificate,
+
+487
+00:18:52,800 --> 00:18:56,460
+it publishes in the
+EventBridge notification there,
+
+488
+00:18:56,460 --> 00:18:59,130
+there's this basically the
+CNAME information you need
+
+489
+00:18:59,130 --> 00:19:00,510
+and oftentimes customers will have
+
+490
+00:19:00,510 --> 00:19:03,090
+to kind of create automation
+on their own to grab
+
+491
+00:19:03,090 --> 00:19:05,880
+that record, put it in some
+kind of central repository,
+
+492
+00:19:05,880 --> 00:19:07,560
+or feed it into another account
+
+493
+00:19:07,560 --> 00:19:09,210
+and create the record through automation.
+
+494
+00:19:09,210 --> 00:19:11,490
+It's like assume we're
+rolling in the other account
+
+495
+00:19:11,490 --> 00:19:12,323
+and do it.
+
+496
+00:19:12,323 --> 00:19:15,790
+So there are ways customers
+do it today that are
+
+497
+00:19:16,980 --> 00:19:18,420
+workarounds that you have to build.
+
+498
+00:19:18,420 --> 00:19:20,580
+We're looking at ways to
+make that experience easier,
+
+499
+00:19:20,580 --> 00:19:23,340
+but it's not something I
+can talk about right now.
+
+500
+00:19:23,340 --> 00:19:24,983
+But yeah, that's a good question.
+
+501
+00:19:26,160 --> 00:19:26,993
+Okay.
+
+502
+00:19:26,993 --> 00:19:28,969
+Oh yeah, sorry, go ahead.
+
+503
+00:19:28,969 --> 00:19:30,694
+- [Crowd Member 5] You
+mentioned that the price might
+
+504
+00:19:30,694 --> 00:19:34,560
+(speaks in the distance)
+
+505
+00:19:34,560 --> 00:19:35,610
+- [Zach] Sorry, you said,
+
+506
+00:19:35,610 --> 00:19:37,590
+you gotta speak-
+- On contract.
+
+507
+00:19:37,590 --> 00:19:39,796
+So just curious to understand,
+
+508
+00:19:39,796 --> 00:19:44,296
+does it mean before we
+continue the On-prem instances-
+
+509
+00:19:45,820 --> 00:19:48,240
+- [Zach] Yes, so Pravin will
+go into that a little bit on
+
+510
+00:19:48,240 --> 00:19:50,820
+how we do that but
+yeah, so when you export
+
+511
+00:19:50,820 --> 00:19:53,640
+that private key, I mean
+obviously you can put it wherever
+
+512
+00:19:53,640 --> 00:19:54,750
+you would like.
+
+513
+00:19:54,750 --> 00:19:56,144
+What Pravin is gonna talk about is
+
+514
+00:19:56,144 --> 00:20:00,249
+how the sample code we've written
+helps you actually install
+
+515
+00:20:00,249 --> 00:20:03,026
+that certificate securely on, for example,
+
+516
+00:20:03,026 --> 00:20:05,176
+like an on-premise server.
+
+517
+00:20:05,176 --> 00:20:06,009
+So he'll get into that.
+
+518
+00:20:06,009 --> 00:20:07,040
+So I'm not gonna get too into it,
+
+519
+00:20:07,040 --> 00:20:09,754
+'cause he'll get deep into
+that and show that in practice.
+
+520
+00:20:09,754 --> 00:20:10,803
+But yes, you can absolutely do that
+
+521
+00:20:10,803 --> 00:20:12,965
+for on-premise servers as well.
+
+522
+00:20:12,965 --> 00:20:13,798
+Yeah.
+
+523
+00:20:14,998 --> 00:20:15,835
+Okay.
+
+524
+00:20:15,835 --> 00:20:17,203
+I think I'll pass over to Pravin.
+
+525
+00:20:17,203 --> 00:20:18,690
+He's gonna talk about the architecture
+
+526
+00:20:18,690 --> 00:20:20,700
+and then he'll kind of do
+a deep dive into the code
+
+527
+00:20:20,700 --> 00:20:21,840
+and the demo.
+
+528
+00:20:21,840 --> 00:20:22,790
+- [Pravin] Yeah, so
+
+529
+00:20:25,860 --> 00:20:28,443
+I'll go over the architecture diagram.
+
+530
+00:20:32,970 --> 00:20:33,840
+So this is our,
+
+531
+00:20:33,840 --> 00:20:36,630
+there are two workflows to this solution.
+
+532
+00:20:36,630 --> 00:20:40,140
+This is the first workflow,
+this is on-demand certificate.
+
+533
+00:20:40,140 --> 00:20:43,080
+What it requires is you already
+have a certificate issued
+
+534
+00:20:43,080 --> 00:20:47,220
+with ACM with DNS
+validated and it is issued,
+
+535
+00:20:47,220 --> 00:20:48,450
+once you have the certificate,
+
+536
+00:20:48,450 --> 00:20:50,650
+you need to have the
+ARN of the certificate.
+
+537
+00:20:52,230 --> 00:20:55,560
+What we're gonna do is we
+are gonna have a API gateway,
+
+538
+00:20:55,560 --> 00:20:57,690
+which will take an API,
+
+539
+00:20:57,690 --> 00:20:59,700
+we have an API template
+which we will share.
+
+540
+00:20:59,700 --> 00:21:02,370
+It is there on the sample code as well.
+
+541
+00:21:02,370 --> 00:21:07,050
+You pass the certificate ARN
+and certificate name, details
+
+542
+00:21:07,050 --> 00:21:10,530
+and what this solution actually
+does is it actually goes
+
+543
+00:21:10,530 --> 00:21:14,670
+and installs the
+certificate on EC2 instances
+
+544
+00:21:14,670 --> 00:21:17,400
+and it can do this at scale.
+
+545
+00:21:17,400 --> 00:21:19,500
+So if you have multiple EC2 instances,
+
+546
+00:21:19,500 --> 00:21:24,333
+you can install it on more
+than one EC2 instances as well,
+
+547
+00:21:25,170 --> 00:21:26,580
+because it's tag-based.
+
+548
+00:21:26,580 --> 00:21:28,560
+So what it's doing is using tags
+
+549
+00:21:28,560 --> 00:21:32,400
+to identify which EC2 instance
+it needs to go and install
+
+550
+00:21:32,400 --> 00:21:35,580
+and what we are using internally
+
+551
+00:21:35,580 --> 00:21:37,863
+is actually systems manager.
+
+552
+00:21:39,090 --> 00:21:41,190
+How many of you here are familiar
+
+553
+00:21:41,190 --> 00:21:42,933
+with system manager?
+
+554
+00:21:44,490 --> 00:21:47,160
+Okay, so for the folks
+who are not familiar
+
+555
+00:21:47,160 --> 00:21:49,320
+with systems manager in AWS,
+
+556
+00:21:49,320 --> 00:21:52,470
+it's basically a management
+solution that people use
+
+557
+00:21:52,470 --> 00:21:56,190
+to manage their fleet of EC2 instances.
+
+558
+00:21:56,190 --> 00:21:59,010
+If you have multiple EC2
+instance, you want to patch them,
+
+559
+00:21:59,010 --> 00:22:02,760
+you want to run ad hoc
+queries, commands on them.
+
+560
+00:22:02,760 --> 00:22:06,510
+You could do that with systems manager.
+
+561
+00:22:06,510 --> 00:22:10,260
+So it has a concept called
+as automation document.
+
+562
+00:22:10,260 --> 00:22:13,260
+You can write your custom commands,
+
+563
+00:22:13,260 --> 00:22:15,720
+or scripts in that automation document
+
+564
+00:22:15,720 --> 00:22:19,890
+and you can run them at scale
+across multiple EC2 instances.
+
+565
+00:22:19,890 --> 00:22:23,160
+So there's one gentleman
+asking about on-prem.
+
+566
+00:22:23,160 --> 00:22:26,910
+So systems manager can also
+manage servers on-prem.
+
+567
+00:22:26,910 --> 00:22:31,320
+So you could actually manage
+some of your EC2 instances
+
+568
+00:22:31,320 --> 00:22:34,770
+through, so some of your on-prem servers
+
+569
+00:22:34,770 --> 00:22:37,290
+through systems manager
+and run the commands
+
+570
+00:22:37,290 --> 00:22:41,070
+and install the certificates
+on-prem as well.
+
+571
+00:22:41,070 --> 00:22:42,990
+Going back to our solution,
+what we are trying
+
+572
+00:22:42,990 --> 00:22:44,853
+to do is it's,
+
+573
+00:22:45,840 --> 00:22:48,117
+the first instance you call the API,
+
+574
+00:22:48,117 --> 00:22:52,170
+you tell what EC2
+instances you need to apply
+
+575
+00:22:52,170 --> 00:22:53,400
+the certificates on.
+
+576
+00:22:53,400 --> 00:22:54,383
+You give the name of the certificate
+
+577
+00:22:54,383 --> 00:22:57,210
+and you give the ARN of the certificate.
+
+578
+00:22:57,210 --> 00:22:59,580
+That's gonna trigger a step function.
+
+579
+00:22:59,580 --> 00:23:02,310
+A step function has
+three lambda functions.
+
+580
+00:23:02,310 --> 00:23:04,740
+The first lambda function
+is to actually go
+
+581
+00:23:04,740 --> 00:23:07,710
+and export the certificate from ACM.
+
+582
+00:23:07,710 --> 00:23:11,520
+Now, for exporting a certificate from ACM,
+
+583
+00:23:11,520 --> 00:23:13,923
+you need to pass a passphrase,
+
+584
+00:23:14,940 --> 00:23:18,510
+which means the passphrase
+actually encrypts the private key
+
+585
+00:23:18,510 --> 00:23:21,060
+as it comes out of ACM, like I said.
+
+586
+00:23:21,060 --> 00:23:24,240
+Like Zach was talking about inside ACM,
+
+587
+00:23:24,240 --> 00:23:26,820
+the private key is encrypted by KMS.
+
+588
+00:23:26,820 --> 00:23:29,250
+Once you bring it out it's not encrypted.
+
+589
+00:23:29,250 --> 00:23:32,340
+So we give you an
+encryption with a passphrase
+
+590
+00:23:32,340 --> 00:23:35,640
+so it's encrypted and once it comes out.
+
+591
+00:23:35,640 --> 00:23:38,130
+What we have done in this
+automation is you don't have
+
+592
+00:23:38,130 --> 00:23:40,530
+to create or do anything
+with the passphrase.
+
+593
+00:23:40,530 --> 00:23:42,960
+We will generate a dynamic passphrase,
+
+594
+00:23:42,960 --> 00:23:45,390
+which even the user is not aware about.
+
+595
+00:23:45,390 --> 00:23:47,760
+We're going to take that passphrase
+
+596
+00:23:47,760 --> 00:23:50,223
+and we're gonna store
+it in Secrets Manager.
+
+597
+00:23:51,090 --> 00:23:51,923
+All right.
+
+598
+00:23:51,923 --> 00:23:55,377
+And then we are gonna take the private key
+
+599
+00:23:55,377 --> 00:23:57,630
+and the public key and
+we're gonna pass it on
+
+600
+00:23:57,630 --> 00:23:59,490
+to the second Lambda function.
+
+601
+00:23:59,490 --> 00:24:01,680
+And we're also, if you see there,
+
+602
+00:24:01,680 --> 00:24:04,260
+there is a DynamoDB table out there,
+
+603
+00:24:04,260 --> 00:24:06,510
+what that DynamoDB table does
+
+604
+00:24:06,510 --> 00:24:08,610
+is it actually stores the metadata
+
+605
+00:24:08,610 --> 00:24:11,130
+about where the certificate
+is being installed.
+
+606
+00:24:11,130 --> 00:24:15,180
+A lot of times when you export
+certificates out, people,
+
+607
+00:24:15,180 --> 00:24:17,850
+or customers tend to forget
+where that certificate's gone.
+
+608
+00:24:17,850 --> 00:24:20,250
+I do not know where the
+certificate is right now.
+
+609
+00:24:20,250 --> 00:24:23,790
+So what that DynamoDB table
+does is it stores exactly
+
+610
+00:24:23,790 --> 00:24:26,313
+the tags where the EC2 instances,
+
+611
+00:24:27,210 --> 00:24:30,060
+which EC2 instances, those are installed.
+
+612
+00:24:30,060 --> 00:24:34,080
+It has the ARN, it has
+also got the expiry date
+
+613
+00:24:34,080 --> 00:24:35,470
+and everything inside that.
+
+614
+00:24:35,470 --> 00:24:36,990
+So if anytime you want to go
+
+615
+00:24:36,990 --> 00:24:39,750
+and check, hey, how many
+certificates have exported,
+
+616
+00:24:39,750 --> 00:24:42,990
+where it is, what EC2
+instances it installed,
+
+617
+00:24:42,990 --> 00:24:45,153
+all that is there in the DynamoDB table.
+
+618
+00:24:46,110 --> 00:24:47,190
+Once we have that,
+
+619
+00:24:47,190 --> 00:24:51,170
+we pass the certificate details
+like private key, public key
+
+620
+00:24:51,170 --> 00:24:53,820
+to the systems manager automation dock.
+
+621
+00:24:53,820 --> 00:24:58,820
+Now, this example installs
+it on a Linux machine,
+
+622
+00:25:00,270 --> 00:25:02,790
+which is a normal Amazon Linux machine.
+
+623
+00:25:02,790 --> 00:25:05,880
+It goes into the cert
+folders and installs it.
+
+624
+00:25:05,880 --> 00:25:09,570
+You could modify the
+automation document to do it,
+
+625
+00:25:09,570 --> 00:25:10,650
+do an installation,
+
+626
+00:25:10,650 --> 00:25:13,200
+clean installation on an nginx server,
+
+627
+00:25:13,200 --> 00:25:16,140
+or any custom application
+that you might have.
+
+628
+00:25:16,140 --> 00:25:18,180
+It's just a bunch of commands
+that you have to run,
+
+629
+00:25:18,180 --> 00:25:19,013
+you can do it.
+
+630
+00:25:19,013 --> 00:25:22,020
+You can do it for Windows as well,
+
+631
+00:25:22,020 --> 00:25:23,850
+if you have an IIS server that you want
+
+632
+00:25:23,850 --> 00:25:25,890
+to update the certificate to,
+
+633
+00:25:25,890 --> 00:25:28,440
+that's just another automation document.
+
+634
+00:25:28,440 --> 00:25:30,630
+If you want to move
+that certificate outside
+
+635
+00:25:30,630 --> 00:25:33,000
+to another cloud provider,
+you could do that too,
+
+636
+00:25:33,000 --> 00:25:36,180
+but you may not be using
+systems manager at that point,
+
+637
+00:25:36,180 --> 00:25:38,790
+you might have to use
+a different solution.
+
+638
+00:25:38,790 --> 00:25:41,520
+So I'm kind of looking at trying
+
+639
+00:25:41,520 --> 00:25:43,650
+to move this certificate
+into an external vault,
+
+640
+00:25:43,650 --> 00:25:45,540
+or somewhere from where
+it can be integrated
+
+641
+00:25:45,540 --> 00:25:47,340
+by other cloud providers as well.
+
+642
+00:25:47,340 --> 00:25:49,140
+But that's an extension I'm working,
+
+643
+00:25:50,241 --> 00:25:52,230
+which I'll be working on for the next year
+
+644
+00:25:52,230 --> 00:25:54,690
+and I'll have a solution on
+the samples updated with that.
+
+645
+00:25:54,690 --> 00:25:57,510
+But for now it does it on EC2 instances
+
+646
+00:25:57,510 --> 00:25:59,490
+and it uses systems manager
+
+647
+00:25:59,490 --> 00:26:01,230
+and if you are planning to use any of this
+
+648
+00:26:01,230 --> 00:26:03,963
+and you have a specific
+application or anything,
+
+649
+00:26:04,800 --> 00:26:06,840
+absolutely feel free to reach out.
+
+650
+00:26:06,840 --> 00:26:09,960
+I'm happy to help out if you
+are looking for any assistance,
+
+651
+00:26:09,960 --> 00:26:13,020
+or direction around how
+the code should look like.
+
+652
+00:26:13,020 --> 00:26:13,947
+- [Zach] It is also open
+source as well on GitHub.
+
+653
+00:26:13,947 --> 00:26:16,710
+So you know, feel free
+to contribute as well.
+
+654
+00:26:16,710 --> 00:26:17,880
+- [Pravin] Yeah and it's a,
+
+655
+00:26:17,880 --> 00:26:20,070
+so yeah it's a GitHub resource,
+
+656
+00:26:20,070 --> 00:26:21,390
+if you have questions you can do
+
+657
+00:26:21,390 --> 00:26:22,920
+and I'm gonna share the link
+
+658
+00:26:22,920 --> 00:26:25,563
+where it is available in
+the, it's in AWS samples.
+
+659
+00:26:27,900 --> 00:26:31,530
+So one of the key things of
+exportable certificate is
+
+660
+00:26:31,530 --> 00:26:34,113
+that once the certificate is exported,
+
+661
+00:26:35,370 --> 00:26:36,810
+it's customers,
+
+662
+00:26:36,810 --> 00:26:40,200
+it becomes, we work on
+shared responsibility model.
+
+663
+00:26:40,200 --> 00:26:42,090
+Once you export the certificate,
+
+664
+00:26:42,090 --> 00:26:45,180
+it's customer's responsibility
+to secure that private key.
+
+665
+00:26:45,180 --> 00:26:48,090
+So like I talked about, we did two things
+
+666
+00:26:48,090 --> 00:26:51,060
+to make sure your private key is secured.
+
+667
+00:26:51,060 --> 00:26:54,210
+So first one is, like I said,
+we generate the passphrase
+
+668
+00:26:54,210 --> 00:26:56,340
+for you and we store that passphrase
+
+669
+00:26:56,340 --> 00:26:59,700
+inside a Secret Manager
+in the Secret Manager
+
+670
+00:26:59,700 --> 00:27:01,983
+and then we also tag the Secret Manager,
+
+671
+00:27:04,320 --> 00:27:08,370
+that secret, same as the
+EC2 instances instances.
+
+672
+00:27:08,370 --> 00:27:11,610
+And what we are doing is
+actually we are doing ABAC,
+
+673
+00:27:11,610 --> 00:27:14,100
+which is attribute-based access control,
+
+674
+00:27:14,100 --> 00:27:19,100
+which means the EC2 instance
+tag, EC2 instance profile tag,
+
+675
+00:27:20,310 --> 00:27:23,910
+and this secret tag needs to
+match for the EC2 instance
+
+676
+00:27:23,910 --> 00:27:27,090
+to get the passphrase and
+decrypt the private key
+
+677
+00:27:27,090 --> 00:27:28,980
+and use it in the application.
+
+678
+00:27:28,980 --> 00:27:31,800
+So it's not like I put a secret somewhere
+
+679
+00:27:31,800 --> 00:27:35,280
+and any EC2 instance can
+go and access that secret.
+
+680
+00:27:35,280 --> 00:27:39,210
+It's attribute-based to
+only specific EC2 instances
+
+681
+00:27:39,210 --> 00:27:41,100
+for where the certificate is installed.
+
+682
+00:27:41,100 --> 00:27:44,970
+Only they can go and access
+that secret to encrypt,
+
+683
+00:27:44,970 --> 00:27:48,693
+or decrypt the private key for their use.
+
+684
+00:27:49,590 --> 00:27:50,940
+So those are the two key things
+
+685
+00:27:50,940 --> 00:27:53,850
+that we give with this solution.
+
+686
+00:27:53,850 --> 00:27:56,707
+Any questions on this until now?
+
+687
+00:27:58,608 --> 00:27:59,748
+All right, yep.
+
+688
+00:27:59,748 --> 00:28:01,748
+- [Crowd Member 2] So it would not go
+
+689
+00:28:01,748 --> 00:28:06,434
+auto-discover existence of
+the ACM we have installed,
+
+690
+00:28:06,434 --> 00:28:09,324
+for example, I have my
+certificates there, once again,
+
+691
+00:28:09,324 --> 00:28:13,671
+where we do all, would it
+auto-discover or do I need to do
+
+692
+00:28:13,671 --> 00:28:14,754
+it for setup?
+
+693
+00:28:15,600 --> 00:28:17,340
+- [Pravin] No, so it cannot go
+
+694
+00:28:17,340 --> 00:28:19,203
+and auto-discover certificates.
+
+695
+00:28:20,550 --> 00:28:22,986
+It's only if you issue
+the certificates to ACM
+
+696
+00:28:22,986 --> 00:28:25,410
+and you want to export it
+and install it outside,
+
+697
+00:28:25,410 --> 00:28:27,750
+that's the part it is going to automate
+
+698
+00:28:27,750 --> 00:28:31,890
+and it's going to do a
+second part of the solution,
+
+699
+00:28:31,890 --> 00:28:36,270
+which is the renewal of the certificate.
+
+700
+00:28:36,270 --> 00:28:38,890
+So what we have is we
+have an EventBridge rule
+
+701
+00:28:40,470 --> 00:28:43,260
+created with the cloud formation.
+
+702
+00:28:43,260 --> 00:28:46,200
+What it does is looks for the
+event when the certificate,
+
+703
+00:28:46,200 --> 00:28:47,970
+the public certificate is renewed.
+
+704
+00:28:47,970 --> 00:28:51,450
+So your public certificate
+which is exportable.
+
+705
+00:28:51,450 --> 00:28:55,350
+They are basically renewed
+60 days before the expiry.
+
+706
+00:28:55,350 --> 00:28:57,330
+So before the certificate,
+
+707
+00:28:57,330 --> 00:28:59,640
+so 60 days before, when
+the certificate is renewed
+
+708
+00:28:59,640 --> 00:29:02,680
+and issued, it'll trigger
+off a job which will be
+
+709
+00:29:02,680 --> 00:29:04,860
+where we call our lambda function.
+
+710
+00:29:04,860 --> 00:29:07,680
+And that lambda function actually
+
+711
+00:29:07,680 --> 00:29:09,540
+takes the certificate ARN,
+
+712
+00:29:09,540 --> 00:29:11,640
+it's able to look up based on the ARN,
+
+713
+00:29:11,640 --> 00:29:13,410
+whether that certificate was exported
+
+714
+00:29:13,410 --> 00:29:15,540
+and installed on an EC2 instance.
+
+715
+00:29:15,540 --> 00:29:17,220
+If it is, then it is going
+
+716
+00:29:17,220 --> 00:29:19,830
+to take the relevant
+details from the database
+
+717
+00:29:19,830 --> 00:29:22,950
+and it is going to
+trigger the step function.
+
+718
+00:29:22,950 --> 00:29:24,480
+And then the process is same,
+
+719
+00:29:24,480 --> 00:29:27,630
+it's going to export the
+new renewed certificate,
+
+720
+00:29:27,630 --> 00:29:29,433
+it's going to create a passphrase for it,
+
+721
+00:29:29,433 --> 00:29:32,610
+it's gonna update the passwords
+in the Secrets Manager
+
+722
+00:29:32,610 --> 00:29:35,110
+and it's gonna go and install
+those certificates exactly
+
+723
+00:29:35,110 --> 00:29:39,720
+where it installed last time,
+running the same scripts.
+
+724
+00:29:39,720 --> 00:29:44,250
+So what this means is you do
+not have to worry about renewal
+
+725
+00:29:44,250 --> 00:29:47,220
+of the certificate even
+on your EC2 instances.
+
+726
+00:29:47,220 --> 00:29:50,940
+This solution is going to
+automatically identify that and go
+
+727
+00:29:50,940 --> 00:29:53,280
+and install it on your EC2 instances.
+
+728
+00:29:53,280 --> 00:29:56,760
+And obviously we have logging
+and everything enabled.
+
+729
+00:29:56,760 --> 00:29:58,380
+So if there is any issues or anything,
+
+730
+00:29:58,380 --> 00:30:00,150
+you will be able to go and check that
+
+731
+00:30:00,150 --> 00:30:03,033
+and create alerts based on that as well.
+
+732
+00:30:04,140 --> 00:30:05,492
+Yes?
+- First of all,
+
+733
+00:30:05,492 --> 00:30:07,374
+you mentioned tags.
+
+734
+00:30:07,374 --> 00:30:10,230
+So can we use the tags
+to identify the server
+
+735
+00:30:10,230 --> 00:30:11,807
+that needs an update?
+
+736
+00:30:13,371 --> 00:30:14,483
+We're bringing the tags, if I say,
+
+737
+00:30:14,483 --> 00:30:18,816
+"Hey, this is my server
+that needs this new update."
+
+738
+00:30:20,923 --> 00:30:23,070
+- [Pravin] So that is a little,
+
+739
+00:30:23,070 --> 00:30:26,790
+fundamentally there is
+no way based on tag,
+
+740
+00:30:26,790 --> 00:30:29,640
+or EC2 instance for us to identify
+
+741
+00:30:29,640 --> 00:30:31,380
+what certificate is on that server.
+
+742
+00:30:31,380 --> 00:30:35,880
+Unless you create an
+application that actually
+
+743
+00:30:35,880 --> 00:30:39,150
+goes and does a grep
+across different folders
+
+744
+00:30:39,150 --> 00:30:41,860
+and identifies the certificates on there.
+
+745
+00:30:41,860 --> 00:30:43,740
+There is no easy way to identify
+
+746
+00:30:43,740 --> 00:30:48,540
+what sort is installed in
+which server without knowing
+
+747
+00:30:48,540 --> 00:30:50,190
+who put it there or where it is,
+
+748
+00:30:50,190 --> 00:30:51,180
+there are solutions,
+
+749
+00:30:51,180 --> 00:30:53,610
+third party solutions that try to do it.
+
+750
+00:30:53,610 --> 00:30:56,430
+The other way I've seen
+people do it is they identify
+
+751
+00:30:56,430 --> 00:30:58,163
+the endpoint and try to do a TLS
+
+752
+00:30:58,163 --> 00:31:00,879
+and get the certificate
+information based on that.
+
+753
+00:31:00,879 --> 00:31:01,712
+- [Crowd Member 6] Do
+you recommend a agent
+
+754
+00:31:01,712 --> 00:31:03,083
+where you install that and
+have the agent run that,
+
+755
+00:31:04,629 --> 00:31:05,797
+is it possible?
+
+756
+00:31:05,797 --> 00:31:06,853
+- [Pravin] Possible, so yeah.
+
+757
+00:31:06,853 --> 00:31:09,860
+So you and the agent will
+actually have to do a grep,
+
+758
+00:31:09,860 --> 00:31:12,300
+or something across the disk
+
+759
+00:31:12,300 --> 00:31:14,760
+to identify those certificate that is,
+
+760
+00:31:14,760 --> 00:31:17,550
+what certificates are
+already stored on that.
+
+761
+00:31:17,550 --> 00:31:19,620
+So this solution doesn't do that.
+
+762
+00:31:19,620 --> 00:31:21,150
+It only takes the cert,
+
+763
+00:31:21,150 --> 00:31:24,510
+it takes the exportable
+certificate, installs it on EC2
+
+764
+00:31:24,510 --> 00:31:28,269
+and then it also renews it
+for you at the end of it.
+
+765
+00:31:28,269 --> 00:31:29,853
+So, all right.
+
+766
+00:31:29,853 --> 00:31:32,017
+- [Crowd Member 6] This
+just the concept you did?
+
+767
+00:31:32,017 --> 00:31:34,860
+(speaks in distance)
+
+768
+00:31:34,860 --> 00:31:35,904
+- [Pravin] Sorry, say that again.
+
+769
+00:31:35,904 --> 00:31:38,077
+- [Crowd Member 6] This is
+like a cool concept you did,
+
+770
+00:31:38,077 --> 00:31:39,160
+it's not AWS?
+
+771
+00:31:40,140 --> 00:31:40,973
+- [Zach] That's right, yeah.
+
+772
+00:31:40,973 --> 00:31:44,220
+This is something that, yeah, we built,
+
+773
+00:31:44,220 --> 00:31:46,980
+published on GitHub as a
+sample code for customers.
+
+774
+00:31:46,980 --> 00:31:48,090
+Yeah, that's right.
+
+775
+00:31:48,090 --> 00:31:49,050
+So affordable certs feature,
+
+776
+00:31:49,050 --> 00:31:53,040
+of course, is a feature that
+the ACM service team built.
+
+777
+00:31:53,040 --> 00:31:55,500
+But what Pravin's showing
+today is something
+
+778
+00:31:55,500 --> 00:31:58,470
+that we built and to the point
+about certificate inventory,
+
+779
+00:31:58,470 --> 00:32:01,920
+I would agree with Pravin that
+I typically see customers use
+
+780
+00:32:01,920 --> 00:32:04,190
+partner solutions maybe
+familiar with Venafi,
+
+781
+00:32:04,190 --> 00:32:06,600
+or AppViewX to go out
+
+782
+00:32:06,600 --> 00:32:08,973
+and discover where
+certificates are placed.
+
+783
+00:32:10,140 --> 00:32:14,010
+And as far as ACME, today,
+ACM does not support ACME.
+
+784
+00:32:14,010 --> 00:32:16,680
+Let's talk after and we
+can talk about Roadmap.
+
+785
+00:32:16,680 --> 00:32:18,900
+But today ACME is not supported by ACM.
+
+786
+00:32:18,900 --> 00:32:21,464
+- [Crew Member] Please, please, ladies,
+
+787
+00:32:21,464 --> 00:32:24,870
+please.
+- Yep. (laughs)
+
+788
+00:32:24,870 --> 00:32:25,703
+We're being recorded.
+
+789
+00:32:25,703 --> 00:32:26,700
+So I can't really talk about Roadmap,
+
+790
+00:32:26,700 --> 00:32:29,220
+but we here, we're a
+customer-obsessed company.
+
+791
+00:32:29,220 --> 00:32:30,900
+Many, many customers have asked for ACME
+
+792
+00:32:30,900 --> 00:32:34,110
+and you can infer what you will from that.
+
+793
+00:32:34,110 --> 00:32:34,943
+- [Pravin] Yeah,
+
+794
+00:32:38,100 --> 00:32:41,033
+so the next part is a CrossAccount,
+
+795
+00:32:41,033 --> 00:32:43,067
+like some of the questions
+over here, how does it work,
+
+796
+00:32:43,067 --> 00:32:43,900
+CrossAccount.
+
+797
+00:32:43,900 --> 00:32:46,800
+So yes, this solution
+does work CrossAccount,
+
+798
+00:32:46,800 --> 00:32:48,663
+you have a cloud formation template,
+
+799
+00:32:49,740 --> 00:32:52,680
+there are a couple of cloud
+formation templates in here.
+
+800
+00:32:52,680 --> 00:32:56,130
+One is to do the central
+account implementation,
+
+801
+00:32:56,130 --> 00:32:57,750
+which is all your step function
+
+802
+00:32:57,750 --> 00:33:00,300
+and everything is in one
+account from where you want
+
+803
+00:33:00,300 --> 00:33:02,370
+to issue your certificates and stuff.
+
+804
+00:33:02,370 --> 00:33:07,019
+And then you just create some
+IAM roles for CrossAccount
+
+805
+00:33:07,019 --> 00:33:09,600
+so that your systems manager is able to go
+
+806
+00:33:09,600 --> 00:33:13,080
+and run commands on your EC2 instances
+
+807
+00:33:13,080 --> 00:33:17,367
+and then also your EC2 instances
+once created are able to go
+
+808
+00:33:17,367 --> 00:33:20,700
+and access those secrets that
+are creating in that account.
+
+809
+00:33:20,700 --> 00:33:25,110
+So what is the important thing
+here is the passphrase is
+
+810
+00:33:25,110 --> 00:33:28,110
+actually stored in the
+same account as where
+
+811
+00:33:28,110 --> 00:33:30,270
+the EC2 instances it is.
+
+812
+00:33:30,270 --> 00:33:33,600
+So we don't want, I didn't
+want the EC2 instance
+
+813
+00:33:33,600 --> 00:33:36,270
+to go back and get secrets
+from another account.
+
+814
+00:33:36,270 --> 00:33:40,173
+So that's why we kind of cleaned
+up the solution to do that.
+
+815
+00:33:41,010 --> 00:33:44,010
+So that's the solution.
+
+816
+00:33:44,010 --> 00:33:44,843
+All right.
+
+817
+00:33:47,310 --> 00:33:52,170
+Yeah, so that's the link
+for the GitHub code.
+
+818
+00:33:52,170 --> 00:33:55,870
+So if you scan it or if you just look for
+
+819
+00:33:57,180 --> 00:34:02,180
+sample-acm-export-certificate-automation
+in AWS samples,
+
+820
+00:34:02,310 --> 00:34:03,990
+you will find the solution.
+
+821
+00:34:03,990 --> 00:34:08,340
+It has a very detailed
+read me, it talks about how
+
+822
+00:34:08,340 --> 00:34:09,720
+to do the installation,
+
+823
+00:34:09,720 --> 00:34:13,020
+how to test out the
+installation and everything.
+
+824
+00:34:13,020 --> 00:34:15,990
+It's very detailed and if
+you still have any issues,
+
+825
+00:34:15,990 --> 00:34:19,860
+feel free to add and comment
+or something on there,
+
+826
+00:34:19,860 --> 00:34:22,620
+or just reach out to me based on the email
+
+827
+00:34:22,620 --> 00:34:24,170
+that will be shared at the end.
+
+828
+00:34:25,860 --> 00:34:30,810
+All right, so now I'll switch,
+I'll switch to the demo mode
+
+829
+00:34:30,810 --> 00:34:34,770
+to show exactly what we
+are doing and before that,
+
+830
+00:34:34,770 --> 00:34:36,153
+oh yeah, thanks.
+
+831
+00:34:41,490 --> 00:34:44,250
+This is Kiro, so I build
+this solution in Kiro.
+
+832
+00:34:44,250 --> 00:34:48,000
+I know Kiro is something
+everybody's talking about today.
+
+833
+00:34:48,000 --> 00:34:50,493
+If you haven't tried
+Kiro, definitely try it.
+
+834
+00:34:51,390 --> 00:34:52,680
+It's based on VSCode,
+
+835
+00:34:52,680 --> 00:34:56,343
+but it's still, it's pretty useful.
+
+836
+00:34:57,330 --> 00:34:59,550
+So the template that
+you're seeing over there
+
+837
+00:34:59,550 --> 00:35:02,313
+is the template for calling the API.
+
+838
+00:35:03,210 --> 00:35:08,210
+So like I said, it takes the
+certificate ARN, it takes,
+
+839
+00:35:08,790 --> 00:35:12,060
+you can give it a name and then you can,
+
+840
+00:35:12,060 --> 00:35:15,180
+you have to give the
+target the tag values,
+
+841
+00:35:15,180 --> 00:35:18,780
+which is env and dev is the
+tag value that I'm using
+
+842
+00:35:18,780 --> 00:35:21,870
+and the target account, so the
+account where you want to go
+
+843
+00:35:21,870 --> 00:35:23,550
+and install the certificate as well.
+
+844
+00:35:23,550 --> 00:35:26,550
+So you could do, you
+have to give these values
+
+845
+00:35:26,550 --> 00:35:28,890
+and this will trigger the step function.
+
+846
+00:35:28,890 --> 00:35:30,140
+So I'm gonna sit down and
+
+847
+00:35:32,670 --> 00:35:33,990
+do the demo.
+
+848
+00:35:33,990 --> 00:35:37,140
+If you have any questions or
+anything, raise your hands
+
+849
+00:35:37,140 --> 00:35:38,403
+and let me know.
+
+850
+00:35:42,690 --> 00:35:45,220
+The API gateway is actually
+
+851
+00:35:46,230 --> 00:35:47,520
+IAM-protected.
+
+852
+00:35:47,520 --> 00:35:50,347
+So who calls the API?
+
+853
+00:35:51,257 --> 00:35:54,210
+The person has to be or
+has to have the right,
+
+854
+00:35:54,210 --> 00:35:58,200
+or valid IAM role to
+actually invoke the API.
+
+855
+00:35:58,200 --> 00:36:00,510
+So that's a security, it's
+not like anybody can export
+
+856
+00:36:00,510 --> 00:36:02,820
+the certificate and put
+it on any EC2 instance.
+
+857
+00:36:02,820 --> 00:36:05,880
+So we have added a layer of IAM as well.
+
+858
+00:36:05,880 --> 00:36:09,720
+So what I'm gonna do is I'm
+going to use AWS curl command,
+
+859
+00:36:09,720 --> 00:36:12,450
+which basically takes my IAM profile,
+
+860
+00:36:12,450 --> 00:36:17,340
+which is on my desktop and
+uses it to call directly
+
+861
+00:36:17,340 --> 00:36:21,903
+instead of me passing the SDS
+tokens through curl command.
+
+862
+00:36:24,870 --> 00:36:28,680
+So that, you can see the execution ID.
+
+863
+00:36:28,680 --> 00:36:31,923
+I'm gonna come here.
+
+864
+00:36:33,600 --> 00:36:38,600
+So that started the execution of my code.
+
+865
+00:36:38,970 --> 00:36:41,460
+So first is the export cert.
+
+866
+00:36:41,460 --> 00:36:42,600
+We have the input
+
+867
+00:36:42,600 --> 00:36:45,543
+of the certificate ARN on all the details.
+
+868
+00:36:46,500 --> 00:36:49,590
+What it did is actually it
+exported the certificate
+
+869
+00:36:49,590 --> 00:36:53,100
+and it also did is it added
+the secret in the secret.
+
+870
+00:36:53,100 --> 00:36:56,370
+And this is the whole
+encrypted public private key
+
+871
+00:36:56,370 --> 00:36:57,770
+that you're seeing out here.
+
+872
+00:36:59,310 --> 00:37:02,130
+And this details is now,
+
+873
+00:37:02,130 --> 00:37:05,313
+so if you see the certificate
+name is Demo December 2,
+
+874
+00:37:06,690 --> 00:37:07,980
+after that it,
+
+875
+00:37:07,980 --> 00:37:10,200
+after creating everything
+in the Secrets Manager
+
+876
+00:37:10,200 --> 00:37:12,090
+and stuff, it's gonna call this,
+
+877
+00:37:12,090 --> 00:37:15,540
+it's going to call the Systems Manager
+
+878
+00:37:15,540 --> 00:37:17,880
+for the automation document.
+
+879
+00:37:17,880 --> 00:37:21,160
+So I'm passing all the certificate details
+
+880
+00:37:22,050 --> 00:37:23,760
+to the Systems Manager, I'm sorry.
+
+881
+00:37:23,760 --> 00:37:24,593
+And
+
+882
+00:37:27,180 --> 00:37:28,950
+it's gonna execute and it's gonna,
+
+883
+00:37:28,950 --> 00:37:32,130
+if you see here there is
+an automation execution ID,
+
+884
+00:37:32,130 --> 00:37:34,770
+that means that the execution has started,
+
+885
+00:37:34,770 --> 00:37:36,930
+the automation execution has started.
+
+886
+00:37:36,930 --> 00:37:38,640
+This is a CrossAccount deployment.
+
+887
+00:37:38,640 --> 00:37:42,330
+I am on account starting with 70
+
+888
+00:37:42,330 --> 00:37:45,240
+and this is gonna install
+on another account,
+
+889
+00:37:45,240 --> 00:37:47,070
+which starts with 090.
+
+890
+00:37:47,070 --> 00:37:50,760
+So you could see that it's
+going to do a CrossAccount.
+
+891
+00:37:50,760 --> 00:37:51,593
+- [Zach] Okay, perfect, yeah.
+
+892
+00:37:51,593 --> 00:37:53,910
+So we do have examples of
+CrossAccount there, great.
+
+893
+00:37:53,910 --> 00:37:55,690
+- [Pravin] Yeah, so
+
+894
+00:37:57,780 --> 00:38:00,900
+lot of times the automation
+takes some time if you are
+
+895
+00:38:00,900 --> 00:38:03,360
+installing on multiple
+EC2 instances across,
+
+896
+00:38:03,360 --> 00:38:06,330
+so that is a wait section
+on that, it basically waits
+
+897
+00:38:06,330 --> 00:38:10,260
+for the automation document
+to complete successfully.
+
+898
+00:38:10,260 --> 00:38:15,260
+And once it has the
+automation status completed,
+
+899
+00:38:15,360 --> 00:38:17,910
+it just moved to success
+rates based on the number
+
+900
+00:38:17,910 --> 00:38:19,380
+of EC2 instances.
+
+901
+00:38:19,380 --> 00:38:23,850
+If it fails to install on
+any one EC2 instance also,
+
+902
+00:38:23,850 --> 00:38:26,760
+it will generate an error
+and you'll have to go back
+
+903
+00:38:26,760 --> 00:38:28,740
+and see in the Systems Manager as to what
+
+904
+00:38:28,740 --> 00:38:30,600
+exactly happened there.
+
+905
+00:38:30,600 --> 00:38:32,973
+So this code is going to do all that.
+
+906
+00:38:36,000 --> 00:38:39,460
+So this is the DynamoDB table
+
+907
+00:38:41,610 --> 00:38:44,250
+and I told you that it's
+gonna have all the details
+
+908
+00:38:44,250 --> 00:38:45,540
+of the certificate.
+
+909
+00:38:45,540 --> 00:38:50,540
+So it has a key, a primary key,
+it has the certificate ARN,
+
+910
+00:38:50,820 --> 00:38:54,060
+it has the certificates expiry date.
+
+911
+00:38:54,060 --> 00:38:58,080
+It also has the certificate
+name that you gave.
+
+912
+00:38:58,080 --> 00:39:01,320
+So in this case we did a
+December 2, so that's the one.
+
+913
+00:39:01,320 --> 00:39:04,440
+It has the details of where
+the passphrase is stored
+
+914
+00:39:04,440 --> 00:39:06,930
+of your Secrets Manager,
+where the passphrase is stored
+
+915
+00:39:06,930 --> 00:39:10,800
+and which target account that
+certificate is installed.
+
+916
+00:39:10,800 --> 00:39:13,620
+Even that detail is
+available in the database.
+
+917
+00:39:13,620 --> 00:39:15,780
+So if you want to check
+anything, what's going on,
+
+918
+00:39:15,780 --> 00:39:17,823
+you can do that from here.
+
+919
+00:39:20,130 --> 00:39:21,423
+Any questions until now?
+
+920
+00:39:24,690 --> 00:39:26,971
+So I'm going to the other account-
+
+921
+00:39:26,971 --> 00:39:28,380
+- [Zach] Right, question there.
+
+922
+00:39:28,380 --> 00:39:29,213
+- [Pravin] Yes.
+
+923
+00:39:30,120 --> 00:39:31,756
+- [Crowd Member 7] This solution,
+
+924
+00:39:31,756 --> 00:39:35,251
+is it expandable to
+EC2's clusters as well,
+
+925
+00:39:35,251 --> 00:39:38,730
+or (speaks in the distance).
+
+926
+00:39:38,730 --> 00:39:40,430
+- [Pravin] That's a good question.
+
+927
+00:39:41,490 --> 00:39:45,720
+I actually was trying to
+do that whereas I got,
+
+928
+00:39:45,720 --> 00:39:48,810
+I didn't get any customer
+feedback on people wanting
+
+929
+00:39:48,810 --> 00:39:51,090
+to go on EC2 clusters.
+
+930
+00:39:51,090 --> 00:39:53,220
+But if it's an EC2 instance
+
+931
+00:39:53,220 --> 00:39:56,220
+and you can run an
+automation document on it,
+
+932
+00:39:56,220 --> 00:39:58,770
+you will be able to install
+it anywhere over there.
+
+933
+00:39:59,901 --> 00:40:00,734
+Should not be an issue.
+
+934
+00:40:00,734 --> 00:40:03,700
+- [Zach] The code as it
+exists today doesn't have
+
+935
+00:40:04,650 --> 00:40:06,720
+run documents like
+Pravin mentioned for ECS
+
+936
+00:40:06,720 --> 00:40:10,050
+but there's no reason
+you wouldn't be able to,
+
+937
+00:40:10,050 --> 00:40:12,090
+that's good feedback and
+I think we can adjust it
+
+938
+00:40:12,090 --> 00:40:15,120
+to include that because yeah,
+you'll definitely be able
+
+939
+00:40:15,120 --> 00:40:17,730
+to put that private key on an ECS task,
+
+940
+00:40:17,730 --> 00:40:19,800
+but we haven't built
+
+941
+00:40:19,800 --> 00:40:22,020
+that into the solution
+as of right now, yeah.
+
+942
+00:40:22,020 --> 00:40:23,217
+- [Pravin] Yep.
+
+943
+00:40:23,217 --> 00:40:25,918
+- [Crowd Member 7] You have
+a customer service mesh,
+
+944
+00:40:25,918 --> 00:40:29,335
+(speaks in the distance)
+
+945
+00:40:30,530 --> 00:40:31,830
+- [Pravin] Have a customer
+service solution for what?
+
+946
+00:40:31,830 --> 00:40:33,859
+I'm sorry.
+- Service mesh.
+
+947
+00:40:33,859 --> 00:40:35,970
+- [Pravin] Service mesh, no,
+
+948
+00:40:35,970 --> 00:40:37,500
+I don't think we did that, right?
+
+949
+00:40:37,500 --> 00:40:42,500
+- [Zach] No, so you mean for
+the MTLS between services?
+
+950
+00:40:43,080 --> 00:40:46,380
+Yeah, so really public certificates,
+
+951
+00:40:46,380 --> 00:40:48,420
+which is what we're talking about today,
+
+952
+00:40:48,420 --> 00:40:51,180
+you can no longer really
+use them for MTLS,
+
+953
+00:40:51,180 --> 00:40:53,100
+because you might be aware
+
+954
+00:40:53,100 --> 00:40:54,780
+another cab forum changed recently was
+
+955
+00:40:54,780 --> 00:40:56,580
+that public certificates
+are no longer allowed
+
+956
+00:40:56,580 --> 00:40:59,700
+to have what's called the
+client auth extended key usage,
+
+957
+00:40:59,700 --> 00:41:02,310
+which is necessary for MTM MTLS.
+
+958
+00:41:02,310 --> 00:41:04,950
+So this particular kind of solution
+
+959
+00:41:04,950 --> 00:41:07,680
+and public certificates
+would not work there.
+
+960
+00:41:07,680 --> 00:41:10,385
+I mentioned a service
+AWS private CA earlier,
+
+961
+00:41:10,385 --> 00:41:12,960
+that you can absolutely
+issue private certificates
+
+962
+00:41:12,960 --> 00:41:16,020
+of any template and as long as it's X509,
+
+963
+00:41:16,020 --> 00:41:18,180
+you can adjust that
+template however you'd like.
+
+964
+00:41:18,180 --> 00:41:20,220
+And so we do have customers
+that use that for service
+
+965
+00:41:20,220 --> 00:41:21,543
+to service communication.
+
+966
+00:41:22,500 --> 00:41:27,000
+There was a service called
+AWS App Mesh that would,
+
+967
+00:41:27,000 --> 00:41:28,650
+sometimes customers would use for that.
+
+968
+00:41:28,650 --> 00:41:31,380
+I more commonly see customers
+use partner solutions
+
+969
+00:41:31,380 --> 00:41:33,660
+like SDO today.
+
+970
+00:41:33,660 --> 00:41:37,380
+So yes, but you would not
+necessarily be doing that
+
+971
+00:41:37,380 --> 00:41:40,380
+with these public certs, as
+you're not able to anymore.
+
+972
+00:41:40,380 --> 00:41:42,210
+That would be something you
+would look at private certs
+
+973
+00:41:42,210 --> 00:41:47,210
+with AWS Private CA or Windows
+PKI or something like that.
+
+974
+00:41:47,280 --> 00:41:48,870
+Anytime you're using a private cert,
+
+975
+00:41:48,870 --> 00:41:50,100
+that's where you would do that.
+
+976
+00:41:50,100 --> 00:41:51,903
+MTLS between services for example.
+
+977
+00:41:54,420 --> 00:41:56,450
+- [Pravin] So this is the EC2 instance.
+
+978
+00:41:56,450 --> 00:41:58,764
+It has the tag, env and dev,
+
+979
+00:41:58,764 --> 00:42:01,664
+so it's going to go, it went
+and installed it on this one.
+
+980
+00:42:02,580 --> 00:42:06,420
+This is the instance profile
+of that EC2 instance.
+
+981
+00:42:06,420 --> 00:42:09,930
+Basically what IAM rules
+that EC2 instance has,
+
+982
+00:42:09,930 --> 00:42:14,100
+and if you see this is the
+IAM policy that was added
+
+983
+00:42:14,100 --> 00:42:18,320
+to the EC2 instances, which
+is using tag-based access
+
+984
+00:42:18,320 --> 00:42:22,009
+to actually go and access
+the secret that is created
+
+985
+00:42:22,009 --> 00:42:25,683
+by the automation at this point.
+
+986
+00:42:26,520 --> 00:42:28,470
+So if you go ahead
+
+987
+00:42:28,470 --> 00:42:30,960
+and check for the secrets over here,
+
+988
+00:42:30,960 --> 00:42:33,363
+you will see that it has created a secret.
+
+989
+00:42:34,350 --> 00:42:37,110
+Right now this is a new brand
+new secret created which has
+
+990
+00:42:37,110 --> 00:42:41,760
+the passphrase and it also
+has the tags attached to it.
+
+991
+00:42:41,760 --> 00:42:45,030
+So basically what it did is
+it went to the other account,
+
+992
+00:42:45,030 --> 00:42:46,017
+it installed the certificate
+
+993
+00:42:46,017 --> 00:42:49,770
+and I can show the certificates
+that are installed over here
+
+994
+00:42:49,770 --> 00:42:52,980
+and this is exactly what I
+didn't want to happen. (laughs)
+
+995
+00:42:52,980 --> 00:42:54,963
+So it logged me out.
+
+996
+00:42:56,400 --> 00:43:00,243
+All right, and we can actually
+go and check the certificate.
+
+997
+00:43:00,243 --> 00:43:02,853
+So I have commands ready on that.
+
+998
+00:43:06,420 --> 00:43:10,170
+So right now it is installing
+the certificates on EC2 SSL
+
+999
+00:43:10,170 --> 00:43:15,170
+certs doc folder in this Linux machine.
+
+1000
+00:43:15,450 --> 00:43:17,430
+So if I run the grep, if you can see
+
+1001
+00:43:17,430 --> 00:43:20,100
+those two certificate, so this
+is the public certificate,
+
+1002
+00:43:20,100 --> 00:43:23,100
+so it has the full
+chain of the certificate
+
+1003
+00:43:23,100 --> 00:43:25,560
+and the certificate as well in there.
+
+1004
+00:43:25,560 --> 00:43:29,730
+And then the private key
+actually goes in another folder,
+
+1005
+00:43:29,730 --> 00:43:31,503
+which is SSL private.
+
+1006
+00:43:33,210 --> 00:43:38,190
+Over here and that's the
+private key that is installed
+
+1007
+00:43:38,190 --> 00:43:41,130
+in that server, which is CrossAccount.
+
+1008
+00:43:41,130 --> 00:43:45,090
+Now to access that certificate,
+
+1009
+00:43:45,090 --> 00:43:48,690
+I have a small script
+which will actually extract
+
+1010
+00:43:48,690 --> 00:43:51,460
+the passphrase from the Secrets Manager
+
+1011
+00:43:54,360 --> 00:43:58,110
+and I can use that passphrase now
+
+1012
+00:43:58,110 --> 00:44:01,833
+to actually decrypt the private key,
+
+1013
+00:44:03,780 --> 00:44:08,580
+which is that, so a lot of
+times some applications ask
+
+1014
+00:44:08,580 --> 00:44:12,180
+for private key unencrypted,
+
+1015
+00:44:12,180 --> 00:44:14,700
+or some ask for private
+key with a passphrase
+
+1016
+00:44:14,700 --> 00:44:15,840
+inside the applications,
+
+1017
+00:44:15,840 --> 00:44:18,330
+or depending on how
+you want it, you could,
+
+1018
+00:44:18,330 --> 00:44:22,590
+your EC2 instance now has access
+to retrieve the passphrase
+
+1019
+00:44:22,590 --> 00:44:25,893
+and do the changes on that part.
+
+1020
+00:44:27,270 --> 00:44:28,800
+So that's the CrossAccount part.
+
+1021
+00:44:28,800 --> 00:44:33,060
+So this is the part one of the
+solution where you created,
+
+1022
+00:44:33,060 --> 00:44:34,440
+you exported a certificate
+
+1023
+00:44:34,440 --> 00:44:36,330
+and installed it on an EC2 instance.
+
+1024
+00:44:36,330 --> 00:44:40,570
+Now, the part two of the
+solution is the EventBridge part.
+
+1025
+00:44:43,260 --> 00:44:46,950
+So when you install this
+cloud formation template,
+
+1026
+00:44:46,950 --> 00:44:51,450
+this service actually
+installs a EventBridge rule,
+
+1027
+00:44:51,450 --> 00:44:55,050
+which actually looks
+for a specific pattern.
+
+1028
+00:44:55,050 --> 00:44:56,850
+Now, I modified it.
+
+1029
+00:44:56,850 --> 00:45:00,330
+If you look at the source
+over here it says test,
+
+1030
+00:45:00,330 --> 00:45:02,970
+but when you actually run
+the cloud formation template,
+
+1031
+00:45:02,970 --> 00:45:05,103
+it will be ACM service.
+
+1032
+00:45:06,000 --> 00:45:07,230
+Now, why I did that,
+
+1033
+00:45:07,230 --> 00:45:10,530
+because I want to
+manually invoke this event
+
+1034
+00:45:10,530 --> 00:45:11,820
+to show the flow,
+
+1035
+00:45:11,820 --> 00:45:13,180
+but when you actually
+
+1036
+00:45:14,610 --> 00:45:18,060
+do it, you don't need to run it manually
+
+1037
+00:45:18,060 --> 00:45:19,530
+for testing purposes.
+
+1038
+00:45:19,530 --> 00:45:24,000
+As soon as the ACM generates
+the event, your flow should be,
+
+1039
+00:45:24,000 --> 00:45:26,313
+will be kicked off, in my case,
+
+1040
+00:45:27,210 --> 00:45:30,690
+for it to renew and do the
+step, it takes a few minutes
+
+1041
+00:45:30,690 --> 00:45:34,680
+and so it's not good for demo purposes,
+
+1042
+00:45:34,680 --> 00:45:37,050
+but that's why I changed
+the source to test.
+
+1043
+00:45:37,050 --> 00:45:40,170
+So what I'm going to do is I'm
+going to trigger this event
+
+1044
+00:45:40,170 --> 00:45:43,860
+and this event is actually
+going to go and trigger
+
+1045
+00:45:43,860 --> 00:45:44,853
+a step function.
+
+1046
+00:45:45,990 --> 00:45:46,950
+So let's look at that.
+
+1047
+00:45:46,950 --> 00:45:48,750
+So there is command on how
+
+1048
+00:45:48,750 --> 00:45:53,610
+to trigger this event as
+well inside the code sample
+
+1049
+00:45:53,610 --> 00:45:55,210
+that I showed you that is there.
+
+1050
+00:45:57,030 --> 00:45:59,910
+So let's run this
+
+1051
+00:45:59,910 --> 00:46:01,053
+from here.
+
+1052
+00:46:04,266 --> 00:46:05,160
+There you go.
+
+1053
+00:46:05,160 --> 00:46:08,650
+So that should have triggered an execution
+
+1054
+00:46:10,620 --> 00:46:11,453
+over here.
+
+1055
+00:46:12,990 --> 00:46:13,823
+Let's see.
+
+1056
+00:46:16,650 --> 00:46:17,483
+So
+
+1057
+00:46:20,910 --> 00:46:22,140
+it's running three execution,
+
+1058
+00:46:22,140 --> 00:46:24,540
+because the ARN of that
+certificate is attached
+
+1059
+00:46:24,540 --> 00:46:27,810
+to three different EC2 entries.
+
+1060
+00:46:27,810 --> 00:46:31,470
+So it's going to renew
+it in all three places
+
+1061
+00:46:31,470 --> 00:46:32,303
+in the database.
+
+1062
+00:46:32,303 --> 00:46:34,140
+So that's why you're
+seeing three instances.
+
+1063
+00:46:34,140 --> 00:46:38,040
+But what it's doing now is it's actually
+
+1064
+00:46:38,040 --> 00:46:39,270
+doing the same steps.
+
+1065
+00:46:39,270 --> 00:46:42,930
+It got the details from the
+DynamoDB table as to whether
+
+1066
+00:46:42,930 --> 00:46:45,600
+that, all these certificate
+is being referenced.
+
+1067
+00:46:45,600 --> 00:46:50,070
+And then from there it's
+actually taking it and moving it
+
+1068
+00:46:50,070 --> 00:46:53,340
+and taking those details and
+going and installing it as is.
+
+1069
+00:46:53,340 --> 00:46:55,200
+So this is basically hands off
+
+1070
+00:46:55,200 --> 00:46:58,740
+just like application
+load balancer CloudFront.
+
+1071
+00:46:58,740 --> 00:47:00,990
+Once you install the certificate with ACM,
+
+1072
+00:47:00,990 --> 00:47:03,600
+you just forget about it,
+it renews on it's own.
+
+1073
+00:47:03,600 --> 00:47:05,640
+Similarly with the EC2 instance,
+
+1074
+00:47:05,640 --> 00:47:08,850
+this solution can renew
+on it's own as well.
+
+1075
+00:47:08,850 --> 00:47:11,823
+So that's how this would work.
+
+1076
+00:47:12,930 --> 00:47:16,413
+Any questions on any of this point?
+
+1077
+00:47:19,440 --> 00:47:20,610
+Yes.
+
+1078
+00:47:20,610 --> 00:47:22,587
+- [Crowd Member 8] So
+the only prerequisite
+
+1079
+00:47:22,587 --> 00:47:27,272
+for this to work is to make
+the certificate export?
+
+1080
+00:47:27,272 --> 00:47:28,355
+- Yes.
+- Okay.
+
+1081
+00:47:29,890 --> 00:47:33,687
+Is it because we have a few
+certificates that are told
+
+1082
+00:47:33,687 --> 00:47:38,090
+also you can enable AWS and
+don't require load balancers,
+
+1083
+00:47:38,090 --> 00:47:40,200
+so this would work fine
+
+1084
+00:47:40,200 --> 00:47:43,740
+for the on-prem load balancers
+certificate if you export-
+
+1085
+00:47:43,740 --> 00:47:45,360
+- [Pravin] Yeah, so if you have services
+
+1086
+00:47:45,360 --> 00:47:47,700
+that are already integrated with ACM,
+
+1087
+00:47:47,700 --> 00:47:51,330
+like application load balancer,
+CloudFront, API Gateway,
+
+1088
+00:47:51,330 --> 00:47:53,220
+et cetera, for those services,
+
+1089
+00:47:53,220 --> 00:47:55,110
+you don't have to worry about it.
+
+1090
+00:47:55,110 --> 00:47:58,980
+It'll just, yeah, it
+does it out of the box.
+
+1091
+00:47:58,980 --> 00:48:01,290
+The problem comes when
+you export the certificate
+
+1092
+00:48:01,290 --> 00:48:02,220
+and move it on,
+
+1093
+00:48:02,220 --> 00:48:06,180
+I have customers who are also
+trying to use this solution
+
+1094
+00:48:06,180 --> 00:48:10,830
+to export the certificate
+and put it on a S3 bucket,
+
+1095
+00:48:10,830 --> 00:48:12,990
+or somewhere for a third party team
+
+1096
+00:48:12,990 --> 00:48:14,100
+to pick up the certificate
+
+1097
+00:48:14,100 --> 00:48:16,860
+and install it on some
+custom solutions as well,
+
+1098
+00:48:16,860 --> 00:48:19,110
+because they don't want
+to do the automation to go
+
+1099
+00:48:19,110 --> 00:48:21,930
+and do install it
+directly inside somewhere,
+
+1100
+00:48:21,930 --> 00:48:24,240
+because they have a
+very specific use case.
+
+1101
+00:48:24,240 --> 00:48:26,250
+All they want is a self-service
+
+1102
+00:48:26,250 --> 00:48:28,560
+where somebody requests the certificate
+
+1103
+00:48:28,560 --> 00:48:31,830
+and go, you could actually
+modify the IAM rules
+
+1104
+00:48:31,830 --> 00:48:33,480
+and policies as well
+
+1105
+00:48:33,480 --> 00:48:37,950
+and the lambda function to
+allow specific teams to only
+
+1106
+00:48:37,950 --> 00:48:41,490
+request specific certificates
+based on their tag,
+
+1107
+00:48:41,490 --> 00:48:43,440
+or naming conventions as well.
+
+1108
+00:48:43,440 --> 00:48:45,960
+So you could add that customization
+
+1109
+00:48:45,960 --> 00:48:47,910
+in the Lambda function side as well.
+
+1110
+00:48:47,910 --> 00:48:50,910
+So if you have those kind of requirement,
+
+1111
+00:48:50,910 --> 00:48:52,590
+you could do the modification,
+
+1112
+00:48:52,590 --> 00:48:54,840
+or if you need any help around
+that, if there are a lot
+
+1113
+00:48:54,840 --> 00:48:56,827
+of requests coming and saying,
+
+1114
+00:48:56,827 --> 00:48:58,350
+"Hey, I want to see that."
+
+1115
+00:48:58,350 --> 00:49:00,660
+You could do that because I
+was playing around with that
+
+1116
+00:49:00,660 --> 00:49:03,120
+and yes, you could actually
+
+1117
+00:49:03,120 --> 00:49:05,460
+do a little bit more
+fine grain access control
+
+1118
+00:49:05,460 --> 00:49:06,690
+on how the certificates are made.
+
+1119
+00:49:06,690 --> 00:49:08,790
+- [Zach] Yeah, it uses IAM condition keys.
+
+1120
+00:49:08,790 --> 00:49:11,283
+So you would basically
+write a policy that says,
+
+1121
+00:49:12,397 --> 00:49:14,880
+"Only app team A can request certificates
+
+1122
+00:49:14,880 --> 00:49:16,710
+with the domain name example.com
+
+1123
+00:49:16,710 --> 00:49:20,520
+and app team B can request
+certificates with food.com,
+
+1124
+00:49:20,520 --> 00:49:21,840
+but not example.com."
+
+1125
+00:49:21,840 --> 00:49:25,710
+So you can create condition
+keys like that in IAM policy,
+
+1126
+00:49:25,710 --> 00:49:27,150
+or SCPs, for example,
+
+1127
+00:49:27,150 --> 00:49:29,850
+or service control policies
+to limit that as well
+
+1128
+00:49:29,850 --> 00:49:32,220
+as things like key type,
+
+1129
+00:49:32,220 --> 00:49:34,710
+like RSA versus ECC and things like that.
+
+1130
+00:49:34,710 --> 00:49:37,620
+So you can get fine grain
+for those permissions.
+
+1131
+00:49:37,620 --> 00:49:39,600
+And to your point about
+like having the certificate
+
+1132
+00:49:39,600 --> 00:49:41,943
+on a managed service as well as on-prem,
+
+1133
+00:49:42,870 --> 00:49:44,520
+even if the certificate is marked
+
+1134
+00:49:44,520 --> 00:49:45,990
+as exportable, managed renewal
+
+1135
+00:49:45,990 --> 00:49:47,820
+with integrated services
+still works the same way.
+
+1136
+00:49:47,820 --> 00:49:50,253
+So it would still be renewed
+in the same way on, say,
+
+1137
+00:49:50,253 --> 00:49:52,020
+your application load balancer
+
+1138
+00:49:52,020 --> 00:49:54,690
+and then you would also get a notification
+
+1139
+00:49:54,690 --> 00:49:55,523
+through EventBridge that,
+
+1140
+00:49:55,523 --> 00:49:58,290
+"Hey, a new certificate
+is available for export."
+
+1141
+00:49:58,290 --> 00:50:00,000
+And you could either manually export,
+
+1142
+00:50:00,000 --> 00:50:03,333
+or use a solution like this
+to grab it automatically.
+
+1143
+00:50:04,440 --> 00:50:06,090
+- [Crowd Member 1] Through
+that granular control
+
+1144
+00:50:06,090 --> 00:50:06,923
+that you were just talking about,
+
+1145
+00:50:06,923 --> 00:50:11,197
+would it be possible to
+restrict requests for wildcards
+
+1146
+00:50:13,400 --> 00:50:16,901
+to still allow the route naming convention
+
+1147
+00:50:16,901 --> 00:50:21,900
+but this, so any FQDN at the
+sub-domain level is fine,
+
+1148
+00:50:21,900 --> 00:50:23,550
+but not the wildcard.
+
+1149
+00:50:23,550 --> 00:50:24,383
+- [Zach] Yes, yes.
+
+1150
+00:50:24,383 --> 00:50:26,490
+You can specifically restrict wildcards
+
+1151
+00:50:26,490 --> 00:50:28,267
+from being issued, 'cause
+some customers say,
+
+1152
+00:50:28,267 --> 00:50:31,320
+"I don't want my developers
+to ever issue wildcards."
+
+1153
+00:50:31,320 --> 00:50:33,533
+Yes, you can absolutely do that.
+
+1154
+00:50:33,533 --> 00:50:37,846
+- [Pravin] Yeah, all right,
+switch it to presentation.
+
+1155
+00:50:37,846 --> 00:50:39,630
+- [Zach] Sure.
+
+1156
+00:50:39,630 --> 00:50:42,630
+Yeah, so let me kind of wrap up here
+
+1157
+00:50:42,630 --> 00:50:44,340
+and then again, if folks
+have other questions,
+
+1158
+00:50:44,340 --> 00:50:45,960
+feel free to ask.
+
+1159
+00:50:45,960 --> 00:50:47,730
+We have about nine minutes left and then
+
+1160
+00:50:47,730 --> 00:50:49,620
+after that we'll be out in
+the hallway if you wanna
+
+1161
+00:50:49,620 --> 00:50:52,620
+talk more, particularly
+about Roadmap stuff,
+
+1162
+00:50:52,620 --> 00:50:53,820
+we can absolutely talk
+a little bit about that
+
+1163
+00:50:53,820 --> 00:50:54,653
+in the hallway.
+
+1164
+00:50:55,530 --> 00:50:58,230
+So yeah, just key
+takeaways that we want you
+
+1165
+00:50:58,230 --> 00:51:00,750
+to remember after this session, obviously,
+
+1166
+00:51:00,750 --> 00:51:02,760
+we want you to think about this
+
+1167
+00:51:02,760 --> 00:51:06,450
+new feature from ACM,
+exportable public certificates.
+
+1168
+00:51:06,450 --> 00:51:09,930
+Think about how you're
+gonna manage renewals
+
+1169
+00:51:09,930 --> 00:51:13,380
+for certificates that you
+export the private key for,
+
+1170
+00:51:13,380 --> 00:51:14,610
+whether it's something like this,
+
+1171
+00:51:14,610 --> 00:51:17,580
+or a more manual process,
+obviously we want you
+
+1172
+00:51:17,580 --> 00:51:20,970
+to get to this place of
+automation when you can,
+
+1173
+00:51:20,970 --> 00:51:21,990
+but it is becoming more
+
+1174
+00:51:21,990 --> 00:51:23,310
+and more important like we talked about
+
+1175
+00:51:23,310 --> 00:51:25,560
+with those cab forum changes.
+
+1176
+00:51:25,560 --> 00:51:27,450
+Someone pointed out, I think
+in March it's going down
+
+1177
+00:51:27,450 --> 00:51:32,190
+to 180 days and then I
+believe by 2029, it's 47 days.
+
+1178
+00:51:32,190 --> 00:51:34,920
+So, for customers that
+are doing this manually,
+
+1179
+00:51:34,920 --> 00:51:36,480
+if you have hundreds of
+certificates that you have
+
+1180
+00:51:36,480 --> 00:51:40,423
+to renew manually every single,
+about every month or so,
+
+1181
+00:51:40,423 --> 00:51:43,530
+a month and a half, that's
+not super sustainable.
+
+1182
+00:51:43,530 --> 00:51:46,620
+And so even if you're not doing all this
+
+1183
+00:51:46,620 --> 00:51:48,210
+through automation today,
+
+1184
+00:51:48,210 --> 00:51:49,710
+we're definitely encouraging customers
+
+1185
+00:51:49,710 --> 00:51:53,340
+to start moving more
+towards automated solutions
+
+1186
+00:51:53,340 --> 00:51:55,053
+for replacing these certificates.
+
+1187
+00:51:56,850 --> 00:51:59,160
+And then the other thing would be,
+
+1188
+00:51:59,160 --> 00:52:02,790
+when we're looking at, when
+you look at that sample code,
+
+1189
+00:52:02,790 --> 00:52:04,260
+we just want to keep in mind
+
+1190
+00:52:04,260 --> 00:52:06,270
+that you want to protect that passphrase
+
+1191
+00:52:06,270 --> 00:52:09,103
+of that private key 'cause
+that's how it's encrypted
+
+1192
+00:52:09,103 --> 00:52:12,630
+and you want to kind of limit the risk of
+
+1193
+00:52:12,630 --> 00:52:15,540
+that public key being put
+accidentally somewhere
+
+1194
+00:52:15,540 --> 00:52:17,100
+and then being able to be decrypted.
+
+1195
+00:52:17,100 --> 00:52:20,490
+Like blog somewhere in your application,
+
+1196
+00:52:20,490 --> 00:52:23,070
+or accidentally put on
+GitHub or something.
+
+1197
+00:52:23,070 --> 00:52:25,650
+And so you want to protect
+that with a passphrase
+
+1198
+00:52:25,650 --> 00:52:28,290
+and store that passphrase
+in a very secure place.
+
+1199
+00:52:28,290 --> 00:52:30,060
+And that's why when Pravin
+
+1200
+00:52:30,060 --> 00:52:32,220
+and I built this sample code,
+we put it in Secrets Manager
+
+1201
+00:52:32,220 --> 00:52:36,900
+and we specifically generated
+it through, there's a API
+
+1202
+00:52:36,900 --> 00:52:39,420
+in Secrets Manager called
+Get Random Password
+
+1203
+00:52:39,420 --> 00:52:40,860
+or yeah, I think it's Get Random Password.
+
+1204
+00:52:40,860 --> 00:52:44,910
+And so no human being sees that secret,
+
+1205
+00:52:44,910 --> 00:52:47,970
+it's put in Secrets Manager
+and even your developers
+
+1206
+00:52:47,970 --> 00:52:49,470
+and whatnot shouldn't
+be able to access that.
+
+1207
+00:52:49,470 --> 00:52:52,590
+It's just the automated
+service can access it.
+
+1208
+00:52:52,590 --> 00:52:54,030
+And then I think like another piece is
+
+1209
+00:52:54,030 --> 00:52:57,120
+we designed it with the tag-based approach
+
+1210
+00:52:57,120 --> 00:53:00,480
+just because that makes it
+easier to understand, again,
+
+1211
+00:53:00,480 --> 00:53:02,100
+where are these certificates placed,
+
+1212
+00:53:02,100 --> 00:53:04,860
+which EC2 instances have which certificate
+
+1213
+00:53:04,860 --> 00:53:06,060
+and through those tags
+
+1214
+00:53:06,060 --> 00:53:09,810
+and that DynamoDB table that
+Pravin mentioned and showed.
+
+1215
+00:53:09,810 --> 00:53:12,240
+That's kind of how we're looking at that.
+
+1216
+00:53:12,240 --> 00:53:15,690
+And then last thing would be, of course,
+
+1217
+00:53:15,690 --> 00:53:17,040
+with the question around ECS,
+
+1218
+00:53:17,040 --> 00:53:19,227
+there are gonna be some
+customizations for this
+
+1219
+00:53:19,227 --> 00:53:21,360
+and this is just like
+we mentioned earlier,
+
+1220
+00:53:21,360 --> 00:53:23,730
+kind of a POC sample code we built.
+
+1221
+00:53:23,730 --> 00:53:26,970
+So definitely feel free
+to reach out to Pravin
+
+1222
+00:53:26,970 --> 00:53:30,570
+and I or contribute
+back to the GitHub code
+
+1223
+00:53:30,570 --> 00:53:32,640
+and make our life easier
+if you wanna do it for us.
+
+1224
+00:53:32,640 --> 00:53:34,320
+But we're happy to do it
+
+1225
+00:53:34,320 --> 00:53:36,570
+as well if you have specific things you
+
+1226
+00:53:36,570 --> 00:53:37,790
+wanna see added to this.
+
+1227
+00:53:37,790 --> 00:53:39,093
+So just let us know.
+
+1228
+00:53:40,110 --> 00:53:42,930
+- [Pravin] Also, just to add to it, Zach,
+
+1229
+00:53:42,930 --> 00:53:46,350
+so if you have, is
+anybody over here looking
+
+1230
+00:53:46,350 --> 00:53:50,940
+to actually use ACM certificate outside
+
+1231
+00:53:50,940 --> 00:53:52,530
+AWS environment,
+
+1232
+00:53:52,530 --> 00:53:55,563
+like on a third party cloud
+provider and stuff like that?
+
+1233
+00:53:56,997 --> 00:53:57,990
+- [Crowd Member 2] On-prem.
+
+1234
+00:53:57,990 --> 00:53:59,850
+- On-prem.
+- On-prem is fine.
+
+1235
+00:53:59,850 --> 00:54:00,810
+On-prem, yes.
+
+1236
+00:54:00,810 --> 00:54:02,882
+What about out-
+- Azure?
+
+1237
+00:54:02,882 --> 00:54:03,715
+- Azure?
+
+1238
+00:54:03,715 --> 00:54:06,630
+Yeah, so I'm actually working on something
+
+1239
+00:54:06,630 --> 00:54:09,310
+where it moves it to the vault over there
+
+1240
+00:54:10,230 --> 00:54:15,150
+that is recently some new
+IAM method that has come out
+
+1241
+00:54:15,150 --> 00:54:18,750
+where you could actually
+generate JW tokens authenticate
+
+1242
+00:54:18,750 --> 00:54:21,090
+to a third party and put stuff in there.
+
+1243
+00:54:21,090 --> 00:54:22,767
+So I'm trying to work on that,
+
+1244
+00:54:22,767 --> 00:54:25,170
+but that's something we can
+talk about after the survey.
+
+1245
+00:54:25,170 --> 00:54:26,216
+- [Crowd Member 9] We were in a position
+
+1246
+00:54:26,216 --> 00:54:29,383
+where our show VMs are managed by SSM.
+
+1247
+00:54:31,450 --> 00:54:33,780
+- So you say-
+- In that case,
+
+1248
+00:54:33,780 --> 00:54:34,860
+I don't know that we've tested that,
+
+1249
+00:54:34,860 --> 00:54:36,180
+but I believe that should work.
+
+1250
+00:54:36,180 --> 00:54:38,310
+If they have VMs in another cloud provider
+
+1251
+00:54:38,310 --> 00:54:40,167
+that are managed by SSM, that should-
+
+1252
+00:54:40,167 --> 00:54:42,834
+- [Pravin] Yeah, if you have an-
+
+1253
+00:54:43,922 --> 00:54:46,283
+- [Crowd Member 9] Write a
+motivation against it then,
+
+1254
+00:54:46,283 --> 00:54:50,820
+from SSM, which is
+(speaks in the distance).
+
+1255
+00:54:50,820 --> 00:54:52,650
+- [Pravin] So the way SSM works is as long
+
+1256
+00:54:52,650 --> 00:54:54,030
+as there is an agent running there
+
+1257
+00:54:54,030 --> 00:54:58,680
+and it's connectivity back
+is there, it should work.
+
+1258
+00:54:58,680 --> 00:54:59,940
+That's how on-prem works.
+
+1259
+00:54:59,940 --> 00:55:01,620
+So I don't see why it wouldn't work on
+
+1260
+00:55:01,620 --> 00:55:03,093
+any other cloud provider.
+
+1261
+00:55:03,093 --> 00:55:04,170
+- Yeah.
+- But yeah.
+
+1262
+00:55:04,170 --> 00:55:05,310
+- [Zach] Yeah, as long
+as the agent's installed
+
+1263
+00:55:05,310 --> 00:55:06,360
+and it has a network path
+
+1264
+00:55:06,360 --> 00:55:08,760
+and access to the API and whatnot,
+
+1265
+00:55:08,760 --> 00:55:09,963
+yeah, absolutely should.
+
+1266
+00:55:12,150 --> 00:55:15,030
+Okay, any other questions or
+anything before we wrap up?
+
+1267
+00:55:15,030 --> 00:55:16,650
+Happy to answer anything.
+
+1268
+00:55:16,650 --> 00:55:17,970
+- [Pravin] There's one.
+
+1269
+00:55:17,970 --> 00:55:20,235
+- [Crowd Member 3] Is
+there a link or something
+
+1270
+00:55:20,235 --> 00:55:22,050
+to your code that you're running?
+
+1271
+00:55:22,050 --> 00:55:23,820
+- [Zach] Yeah, will
+you throw that back up?
+
+1272
+00:55:23,820 --> 00:55:24,870
+- [Pravin] Should I just
+go to the next slide?
+
+1273
+00:55:24,870 --> 00:55:27,030
+- [Zach] Oh yes, thank you.
+
+1274
+00:55:27,030 --> 00:55:28,560
+Yeah, right there.
+
+1275
+00:55:28,560 --> 00:55:29,400
+Yeah, you can grab that.
+
+1276
+00:55:29,400 --> 00:55:33,030
+Or I think if you search AWS samples,
+
+1277
+00:55:33,030 --> 00:55:34,740
+export cert automation,
+it should come up as well.
+
+1278
+00:55:34,740 --> 00:55:36,510
+But yeah, that's the GitHub link there.
+
+1279
+00:55:36,510 --> 00:55:38,720
+- [Pravin] Yeah, even if
+you look up, do a ChatGPT,
+
+1280
+00:55:38,720 --> 00:55:42,210
+it actually brings up that
+solution, I've seen it.
+
+1281
+00:55:42,210 --> 00:55:43,476
+- [Zach] Okay, cool.
+
+1282
+00:55:43,476 --> 00:55:46,767
+- [Pravin] (laughs) How do you
+automate certificates in AWS,
+
+1283
+00:55:46,767 --> 00:55:49,380
+and one of the solution, is that one.
+
+1284
+00:55:49,380 --> 00:55:50,910
+- [Zach] I did not know that, that's neat.
+
+1285
+00:55:50,910 --> 00:55:52,350
+All right.
+
+1286
+00:55:52,350 --> 00:55:53,793
+Okay, any other questions?
+
+1287
+00:55:55,140 --> 00:55:57,024
+Awesome, well, I appreciate
+your time, thank you very much.
+
+1288
+00:55:57,024 --> 00:55:58,470
+And feel free to find us in the hallway
+
+1289
+00:55:58,470 --> 00:55:59,340
+if you have other questions.
+
+1290
+00:55:59,340 --> 00:56:00,660
+Wanna talk through anything, thank you.
+
+1291
+00:56:00,660 --> 00:56:01,793
+- Thank you.
+- Thanks.
+

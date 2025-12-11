@@ -1,0 +1,5283 @@
+1
+00:00:00,420 --> 00:00:03,510
+- Thanks for starting off
+your Monday with some Dynamo.
+
+2
+00:00:03,510 --> 00:00:04,830
+I'm Jason Hunter.
+
+3
+00:00:04,830 --> 00:00:07,140
+I am a principal solution architect
+
+4
+00:00:07,140 --> 00:00:09,000
+with a specialty in DynamoDB.
+
+5
+00:00:09,000 --> 00:00:12,483
+So my job is to try to
+know Dynamo thoroughly,
+
+6
+00:00:13,650 --> 00:00:15,390
+and, oh that's fun.
+
+7
+00:00:15,390 --> 00:00:16,920
+I got the transcript.
+
+8
+00:00:16,920 --> 00:00:17,850
+Try to know Dynamo thoroughly
+
+9
+00:00:17,850 --> 00:00:19,020
+and if you are using Dynamo
+
+10
+00:00:19,020 --> 00:00:21,600
+and you get stuck, you can
+talk to me or one of my peers
+
+11
+00:00:21,600 --> 00:00:22,890
+and we try to help you out.
+
+12
+00:00:22,890 --> 00:00:24,840
+You know, if you need a cost optimization,
+
+13
+00:00:24,840 --> 00:00:26,160
+we'll look at your tables.
+
+14
+00:00:26,160 --> 00:00:27,420
+If you say, you know,
+
+15
+00:00:27,420 --> 00:00:29,640
+I'm having a big launch
+coming, am I gonna be ready?
+
+16
+00:00:29,640 --> 00:00:32,010
+Is it gonna handle the
+traffic? That's what I do.
+
+17
+00:00:32,010 --> 00:00:34,140
+Today I'm going to talk
+about data modeling
+
+18
+00:00:34,140 --> 00:00:35,460
+and some of the techniques.
+
+19
+00:00:35,460 --> 00:00:39,150
+This is a 300 level so I
+assume maybe some familiarity
+
+20
+00:00:39,150 --> 00:00:41,580
+with Dynamo but not extensive.
+
+21
+00:00:41,580 --> 00:00:44,550
+And so one of the hardest
+parts of doing a talk like this
+
+22
+00:00:44,550 --> 00:00:46,260
+is to figure out how to level set.
+
+23
+00:00:46,260 --> 00:00:49,710
+How are we gonna start? Do I
+assume that you're brand new?
+
+24
+00:00:49,710 --> 00:00:51,240
+Do I assume that you're here
+
+25
+00:00:51,240 --> 00:00:52,920
+pretty familiar and wanna level up?
+
+26
+00:00:52,920 --> 00:00:54,510
+And I kind of have to assume both.
+
+27
+00:00:54,510 --> 00:00:57,750
+So what I'm gonna do is I'm
+gonna start with an analogy
+
+28
+00:00:57,750 --> 00:01:00,900
+of how Dynamo is kinda like
+phone books in a library.
+
+29
+00:01:00,900 --> 00:01:02,790
+And if you're new to
+Dynamo, this should help.
+
+30
+00:01:02,790 --> 00:01:05,190
+And if you're an old hand, it might be fun
+
+31
+00:01:05,190 --> 00:01:06,990
+to see just sort of an
+analogy of another way
+
+32
+00:01:06,990 --> 00:01:08,550
+to think about Dynamo's data modeling.
+
+33
+00:01:08,550 --> 00:01:11,040
+And then we'll talk about
+some core modeling concepts
+
+34
+00:01:11,040 --> 00:01:12,960
+using an app that we're
+gonna build together.
+
+35
+00:01:12,960 --> 00:01:14,790
+And then at the end,
+
+36
+00:01:14,790 --> 00:01:16,890
+what do you do when you
+need to scale bigger?
+
+37
+00:01:16,890 --> 00:01:18,150
+'Cause it's pretty easy
+
+38
+00:01:18,150 --> 00:01:20,460
+to write a low scale app on Dynamo,
+
+39
+00:01:20,460 --> 00:01:21,293
+but when you get big,
+
+40
+00:01:21,293 --> 00:01:23,610
+there's a couple of techniques
+you wanna know about.
+
+41
+00:01:23,610 --> 00:01:26,910
+And if there's questions we'll
+do 'em at the end, all right?
+
+42
+00:01:26,910 --> 00:01:29,340
+So let's start with a day in the library.
+
+43
+00:01:29,340 --> 00:01:33,150
+And this is an Alex
+DeBrie analogy originally
+
+44
+00:01:33,150 --> 00:01:35,520
+and so I'm kind of stealing
+it and expanding on it.
+
+45
+00:01:35,520 --> 00:01:36,990
+He said Dynamo's a lot like phone books.
+
+46
+00:01:36,990 --> 00:01:39,600
+Does anyone remember what phone books are?
+
+47
+00:01:39,600 --> 00:01:40,650
+Are we old enough here?
+
+48
+00:01:40,650 --> 00:01:41,700
+Yeah, a few of us.
+
+49
+00:01:41,700 --> 00:01:44,340
+Before your cell phone knew everybody,
+
+50
+00:01:44,340 --> 00:01:46,110
+before you could Google a name,
+
+51
+00:01:46,110 --> 00:01:48,303
+you had these actual physical books.
+
+52
+00:01:49,740 --> 00:01:52,230
+And on the spine was a city.
+
+53
+00:01:52,230 --> 00:01:53,970
+And so you'd say like, all
+right, I'm gonna be in Denver.
+
+54
+00:01:53,970 --> 00:01:55,110
+And you'd open up the Denver book,
+
+55
+00:01:55,110 --> 00:01:58,020
+and in there would be a sorted
+list of the people in Denver.
+
+56
+00:01:58,020 --> 00:02:00,720
+And yes, we all shared our
+numbers with everybody.
+
+57
+00:02:00,720 --> 00:02:03,060
+And so you'd find they're
+usually sorted by last name
+
+58
+00:02:03,060 --> 00:02:04,560
+and you could then find by the last name
+
+59
+00:02:04,560 --> 00:02:05,393
+and by the first name.
+
+60
+00:02:05,393 --> 00:02:08,640
+And that's kind of a lot
+like what a base table is
+
+61
+00:02:08,640 --> 00:02:12,300
+in DynamoDB, where the partition key,
+
+62
+00:02:12,300 --> 00:02:15,780
+the thing that you use first
+to kind of find your zone,
+
+63
+00:02:15,780 --> 00:02:19,353
+your item collection we call
+it in Dynamo, is the city.
+
+64
+00:02:20,370 --> 00:02:21,450
+And that's the partition key,
+
+65
+00:02:21,450 --> 00:02:23,040
+the PK that we call it by short.
+
+66
+00:02:23,040 --> 00:02:24,300
+And so here we're in Las Vegas
+
+67
+00:02:24,300 --> 00:02:26,040
+so we're looking at the Las Vegas book.
+
+68
+00:02:26,040 --> 00:02:29,730
+Inside of there is a sort key
+which is sorted by last name
+
+69
+00:02:29,730 --> 00:02:32,220
+or maybe with a company,
+just their regular name,
+
+70
+00:02:32,220 --> 00:02:34,143
+and sorted alphabetically.
+
+71
+00:02:35,910 --> 00:02:38,640
+There's a payload with each
+item, a phone number, a ZIP,
+
+72
+00:02:38,640 --> 00:02:40,410
+maybe an entity type, you name it.
+
+73
+00:02:40,410 --> 00:02:42,240
+This is a lot like what
+the Dynamo base table is
+
+74
+00:02:42,240 --> 00:02:44,280
+because there's a partition
+key and a sort key
+
+75
+00:02:44,280 --> 00:02:46,020
+and you specify the partition key
+
+76
+00:02:46,020 --> 00:02:48,180
+and then you specify the
+sort key to find an item.
+
+77
+00:02:48,180 --> 00:02:51,060
+But what kind of queries
+can we do with this?
+
+78
+00:02:51,060 --> 00:02:54,480
+Well, given a PK SK combo,
+I can get the payload,
+
+79
+00:02:54,480 --> 00:02:57,150
+I can find people whose
+name starts with Hunter.
+
+80
+00:02:57,150 --> 00:02:59,400
+I can find ones who start with H.
+
+81
+00:02:59,400 --> 00:03:02,670
+Can I find Jasons? No.
+
+82
+00:03:02,670 --> 00:03:05,370
+And so if someone is on
+Stack Overflow asking,
+
+83
+00:03:05,370 --> 00:03:08,940
+I'd like to do my sort key
+but I wanna do ends with,
+
+84
+00:03:08,940 --> 00:03:10,240
+what's the answer to that?
+
+85
+00:03:11,640 --> 00:03:13,470
+There's two answers to that really.
+
+86
+00:03:13,470 --> 00:03:14,310
+One is no.
+
+87
+00:03:14,310 --> 00:03:16,830
+The other one is, well if
+you reversed your sort key,
+
+88
+00:03:16,830 --> 00:03:17,880
+then you could do it.
+
+89
+00:03:19,440 --> 00:03:20,273
+Right?
+
+90
+00:03:20,273 --> 00:03:21,810
+And sometimes in Dynamo
+you do that kind of thing.
+
+91
+00:03:21,810 --> 00:03:23,370
+Like if you really want ends with
+
+92
+00:03:23,370 --> 00:03:25,530
+and if you had another
+copy of it reversed,
+
+93
+00:03:25,530 --> 00:03:26,880
+then you could do it.
+
+94
+00:03:26,880 --> 00:03:28,740
+Can I look up by phone number?
+
+95
+00:03:28,740 --> 00:03:30,390
+Not with this data model.
+
+96
+00:03:30,390 --> 00:03:32,130
+By ZIP, no. By entity type, no.
+
+97
+00:03:32,130 --> 00:03:33,180
+There's some things you can do,
+
+98
+00:03:33,180 --> 00:03:34,500
+there's some things you can't do,
+
+99
+00:03:34,500 --> 00:03:36,240
+and that's why Dynamo is so efficient.
+
+100
+00:03:36,240 --> 00:03:38,280
+Because when you issue your query,
+
+101
+00:03:38,280 --> 00:03:40,020
+you go to the book, you
+find the sorted list
+
+102
+00:03:40,020 --> 00:03:41,640
+and then you either find
+the item or the starts with
+
+103
+00:03:41,640 --> 00:03:42,900
+or the between or the range,
+
+104
+00:03:42,900 --> 00:03:45,150
+you know, and that's how you find it.
+
+105
+00:03:45,150 --> 00:03:48,090
+But if you're thinking
+that that's a limiting
+
+106
+00:03:48,090 --> 00:03:51,510
+set of queries you can do,
+that's why we have indexes.
+
+107
+00:03:51,510 --> 00:03:54,930
+One type is called the local
+secondary index, an LSI.
+
+108
+00:03:54,930 --> 00:03:58,170
+This is where you say I want to have
+
+109
+00:03:58,170 --> 00:04:00,480
+the same partition key but
+maybe a different sort key.
+
+110
+00:04:00,480 --> 00:04:03,180
+And in phone books, that's
+what the yellow pages were.
+
+111
+00:04:03,180 --> 00:04:05,100
+So for those of us old enough
+to remember phone books,
+
+112
+00:04:05,100 --> 00:04:07,590
+in the back, the pages were yellow.
+
+113
+00:04:07,590 --> 00:04:08,850
+That's why they called it yellow pages.
+
+114
+00:04:08,850 --> 00:04:11,130
+And that was sorted by like plumbers
+
+115
+00:04:11,130 --> 00:04:14,340
+and appliance repairman
+or whatever that is.
+
+116
+00:04:14,340 --> 00:04:17,430
+And so here I'm doing a
+sort key of casino or hotel,
+
+117
+00:04:17,430 --> 00:04:19,230
+and now I've expanded my ability to query
+
+118
+00:04:19,230 --> 00:04:22,470
+'cause I can go say hey,
+find me casinos in Vegas.
+
+119
+00:04:22,470 --> 00:04:25,170
+It's not hard. Or hotels also not hard.
+
+120
+00:04:25,170 --> 00:04:27,390
+So this is one way to think
+about what the base table is
+
+121
+00:04:27,390 --> 00:04:30,060
+and an LSI is an
+automatically updated thing.
+
+122
+00:04:30,060 --> 00:04:31,710
+When you update the one,
+it kind of propagates
+
+123
+00:04:31,710 --> 00:04:32,543
+into the other one.
+
+124
+00:04:32,543 --> 00:04:34,440
+It gives you another way to query it.
+
+125
+00:04:34,440 --> 00:04:36,540
+What can we do and can't we do?
+
+126
+00:04:36,540 --> 00:04:39,030
+I still can't look up
+by name or phone number
+
+127
+00:04:39,030 --> 00:04:40,620
+or ZIP here.
+
+128
+00:04:40,620 --> 00:04:42,770
+I could do the name
+against the base table.
+
+129
+00:04:43,680 --> 00:04:46,800
+There's another thing called
+the global secondary index.
+
+130
+00:04:46,800 --> 00:04:48,480
+Nothing to do with
+global tables by the way.
+
+131
+00:04:48,480 --> 00:04:52,140
+Common naming issue we have there.
+
+132
+00:04:52,140 --> 00:04:53,400
+But in this case you say you know,
+
+133
+00:04:53,400 --> 00:04:56,070
+I might want a different partition key.
+
+134
+00:04:56,070 --> 00:04:58,170
+And so instead of looking
+by city as the book,
+
+135
+00:04:58,170 --> 00:05:01,140
+maybe I want by ZIP code as the book.
+
+136
+00:05:01,140 --> 00:05:03,900
+And that would be a smaller
+book probably usually.
+
+137
+00:05:03,900 --> 00:05:06,420
+And in there would be its
+own sorted list of names
+
+138
+00:05:06,420 --> 00:05:07,770
+by that ZIP code
+
+139
+00:05:07,770 --> 00:05:10,470
+if I have name as the sort key on my GSI.
+
+140
+00:05:10,470 --> 00:05:12,420
+And so now I can say well
+I know he's in Denver,
+
+141
+00:05:12,420 --> 00:05:13,320
+I know he's in this ZIP code,
+
+142
+00:05:13,320 --> 00:05:16,290
+and I can pick which one
+I want to do as my access.
+
+143
+00:05:16,290 --> 00:05:18,720
+Make sense? And so what can we do?
+
+144
+00:05:18,720 --> 00:05:21,150
+We can do now a different partition key
+
+145
+00:05:21,150 --> 00:05:22,740
+and possibly a different sort key.
+
+146
+00:05:22,740 --> 00:05:24,720
+I've chosen here to do
+the name as the sort key.
+
+147
+00:05:24,720 --> 00:05:25,553
+What else could I do?
+
+148
+00:05:25,553 --> 00:05:28,623
+I could do a phone number as a sort key,
+
+149
+00:05:29,460 --> 00:05:32,460
+and then I could find a certain
+phone number and a ZIP code.
+
+150
+00:05:32,460 --> 00:05:34,710
+What if I wanna look up
+by phone number in general
+
+151
+00:05:34,710 --> 00:05:35,913
+in the whole database?
+
+152
+00:05:37,500 --> 00:05:39,570
+Then I would have a
+GSI with a phone number
+
+153
+00:05:39,570 --> 00:05:41,310
+as the partition key.
+
+154
+00:05:41,310 --> 00:05:42,900
+And that would have a different,
+
+155
+00:05:42,900 --> 00:05:44,906
+that'd be very little phone books.
+
+156
+00:05:44,906 --> 00:05:45,739
+There'd be like kind of like a little book
+
+157
+00:05:45,739 --> 00:05:46,860
+for every phone number in the world.
+
+158
+00:05:46,860 --> 00:05:48,090
+But then going to the partition key,
+
+159
+00:05:48,090 --> 00:05:49,410
+I don't even need a sort key.
+
+160
+00:05:49,410 --> 00:05:50,970
+Sort key's optional in Dynamo.
+
+161
+00:05:50,970 --> 00:05:52,680
+I could look up by phone number.
+
+162
+00:05:52,680 --> 00:05:54,240
+So one copy of the data
+
+163
+00:05:54,240 --> 00:05:55,380
+and then you use these indexes
+
+164
+00:05:55,380 --> 00:05:57,660
+to pick the different ways
+that you wanna access it.
+
+165
+00:05:57,660 --> 00:05:59,430
+And that's the basic
+way that Dynamo works.
+
+166
+00:05:59,430 --> 00:06:02,193
+Always with a PK and an optional sort key.
+
+167
+00:06:03,420 --> 00:06:06,630
+All right, how are we gonna
+wanna update these things?
+
+168
+00:06:06,630 --> 00:06:08,460
+The easiest way to do
+it is we're gonna update
+
+169
+00:06:08,460 --> 00:06:09,720
+just the base table
+
+170
+00:06:09,720 --> 00:06:12,393
+and we're gonna let the
+other ones propagate out.
+
+171
+00:06:13,770 --> 00:06:15,970
+They're a little bit different
+between LSIs and GSIs.
+
+172
+00:06:15,970 --> 00:06:19,200
+LSIs, because they're
+in the same phone book,
+
+173
+00:06:19,200 --> 00:06:21,690
+you know, the white pages and
+the yellow pages together,
+
+174
+00:06:21,690 --> 00:06:23,880
+that one's done strongly consistently.
+
+175
+00:06:23,880 --> 00:06:25,920
+When you update the base
+table, the LSI is updated
+
+176
+00:06:25,920 --> 00:06:28,413
+at same time 'cause it
+went to the same place.
+
+177
+00:06:29,490 --> 00:06:32,490
+GSIs are in a different kind of place.
+
+178
+00:06:32,490 --> 00:06:33,597
+They're in like a whole separate books
+
+179
+00:06:33,597 --> 00:06:35,340
+and a whole other set of shelves.
+
+180
+00:06:35,340 --> 00:06:37,740
+That one is eventually consistent.
+
+181
+00:06:37,740 --> 00:06:39,180
+People want strongly consistent.
+
+182
+00:06:39,180 --> 00:06:40,013
+I look forward to the day
+
+183
+00:06:40,013 --> 00:06:40,846
+when we get that.
+
+184
+00:06:40,846 --> 00:06:42,090
+We don't have it today.
+
+185
+00:06:42,090 --> 00:06:43,170
+But if you update the base table,
+
+186
+00:06:43,170 --> 00:06:44,520
+it will usually in a millisecond,
+
+187
+00:06:44,520 --> 00:06:45,900
+but it can be longer,
+
+188
+00:06:45,900 --> 00:06:48,360
+propagate over to the
+global secondary index,
+
+189
+00:06:48,360 --> 00:06:50,760
+and then you only have
+to update in one place.
+
+190
+00:06:50,760 --> 00:06:52,143
+And, guess that works.
+
+191
+00:06:53,220 --> 00:06:55,200
+If we think about storing this stuff,
+
+192
+00:06:55,200 --> 00:06:57,330
+I picture a library holding the books.
+
+193
+00:06:57,330 --> 00:06:59,670
+And so you know, I'm gonna have a library
+
+194
+00:06:59,670 --> 00:07:00,503
+and on there is gonna be
+
+195
+00:07:00,503 --> 00:07:02,010
+a whole bunch of phone books
+that I have to go find.
+
+196
+00:07:02,010 --> 00:07:04,800
+But do I want just one library?
+
+197
+00:07:04,800 --> 00:07:06,180
+What if there's a fire?
+
+198
+00:07:06,180 --> 00:07:07,530
+What if one of 'em is down, right?
+
+199
+00:07:07,530 --> 00:07:08,670
+What if there's road construction?
+
+200
+00:07:08,670 --> 00:07:10,110
+It's hard to get to one of 'em.
+
+201
+00:07:10,110 --> 00:07:12,660
+Well, let's keep three
+copies of the phone book
+
+202
+00:07:12,660 --> 00:07:14,880
+and let's separate them by, you know,
+
+203
+00:07:14,880 --> 00:07:16,020
+a meaningful distance,
+
+204
+00:07:16,020 --> 00:07:18,330
+possibly in different availability zones.
+
+205
+00:07:18,330 --> 00:07:20,880
+And then we'll make Dynamo
+into a regional service.
+
+206
+00:07:20,880 --> 00:07:23,250
+So if even one availability zone is down,
+
+207
+00:07:23,250 --> 00:07:24,450
+you've still got two other copies
+
+208
+00:07:24,450 --> 00:07:25,283
+and life continues.
+
+209
+00:07:25,283 --> 00:07:26,756
+It's great that you don't
+have to think about this.
+
+210
+00:07:26,756 --> 00:07:28,110
+You don't have to think about subnets.
+
+211
+00:07:28,110 --> 00:07:29,610
+You just talk to a public endpoint
+
+212
+00:07:29,610 --> 00:07:31,560
+and we've got three copies of your data
+
+213
+00:07:31,560 --> 00:07:34,470
+across three different
+availability zones all the time.
+
+214
+00:07:34,470 --> 00:07:37,713
+And how do we update if
+we have three copies?
+
+215
+00:07:39,690 --> 00:07:42,060
+Well, amongst the three nodes
+
+216
+00:07:42,060 --> 00:07:45,420
+they will elect a
+leader, and it'll rotate.
+
+217
+00:07:45,420 --> 00:07:46,950
+You're the leader then you're the leader.
+
+218
+00:07:46,950 --> 00:07:50,910
+They kind of do a vote, and one
+leader gets all the updates.
+
+219
+00:07:50,910 --> 00:07:52,260
+Now when you're doing Dynamo calls,
+
+220
+00:07:52,260 --> 00:07:54,210
+have you ever seen that you
+can do a strongly consistent
+
+221
+00:07:54,210 --> 00:07:56,010
+or eventually consistent read?
+
+222
+00:07:56,010 --> 00:07:58,050
+Strongly consistent says go to the leader.
+
+223
+00:07:58,050 --> 00:07:59,670
+You know you always have the latest data.
+
+224
+00:07:59,670 --> 00:08:03,030
+Eventually consistent says
+any of the three will do.
+
+225
+00:08:03,030 --> 00:08:05,340
+And you got a small
+chance of seeing something
+
+226
+00:08:05,340 --> 00:08:07,260
+that has not had the full propagation.
+
+227
+00:08:07,260 --> 00:08:09,870
+A write is durable as soon as it hits one
+
+228
+00:08:09,870 --> 00:08:12,150
+and the other one acknowledges as well.
+
+229
+00:08:12,150 --> 00:08:13,830
+So you have to hit the two.
+
+230
+00:08:13,830 --> 00:08:15,390
+The third one, we don't wait for it,
+
+231
+00:08:15,390 --> 00:08:16,950
+we acknowledge it after the two.
+
+232
+00:08:16,950 --> 00:08:18,840
+And so if you do an
+eventually consistent read,
+
+233
+00:08:18,840 --> 00:08:21,254
+you might get that third
+one that is not necessarily
+
+234
+00:08:21,254 --> 00:08:25,230
+as caught up, but eventually
+consistent reads are half price
+
+235
+00:08:25,230 --> 00:08:27,360
+and eventually consistent
+reads have three targets
+
+236
+00:08:27,360 --> 00:08:29,560
+instead of one which
+increases availability.
+
+237
+00:08:30,420 --> 00:08:33,450
+Make sense? All right.
+
+238
+00:08:33,450 --> 00:08:35,370
+And then this is where I think
+it really gets interesting
+
+239
+00:08:35,370 --> 00:08:37,350
+'cause most people with Dynamo
+
+240
+00:08:37,350 --> 00:08:38,430
+who've been doing it for a couple months
+
+241
+00:08:38,430 --> 00:08:39,263
+understand all that.
+
+242
+00:08:39,263 --> 00:08:41,010
+But let's understand how partitions work.
+
+243
+00:08:41,010 --> 00:08:42,570
+I think there's a common misconception
+
+244
+00:08:42,570 --> 00:08:44,460
+that a partition key
+makes its own partition
+
+245
+00:08:44,460 --> 00:08:45,860
+and that's not how it works.
+
+246
+00:08:46,800 --> 00:08:48,600
+Think of it that in the physical library
+
+247
+00:08:48,600 --> 00:08:52,080
+we have to have our books
+on shelves, all right?
+
+248
+00:08:52,080 --> 00:08:54,293
+And each of these shelves
+acts like a partition.
+
+249
+00:08:55,200 --> 00:08:56,820
+They're only so big, so
+we have to figure out
+
+250
+00:08:56,820 --> 00:08:58,270
+how many of them we wanna do.
+
+251
+00:08:59,280 --> 00:09:02,520
+How many shall we start with?
+One seems like not enough.
+
+252
+00:09:02,520 --> 00:09:03,990
+10 seems like quite a lot.
+
+253
+00:09:03,990 --> 00:09:07,110
+Let's do four. And why
+did I pick four here?
+
+254
+00:09:07,110 --> 00:09:09,120
+A default on-demand table actually creates
+
+255
+00:09:09,120 --> 00:09:10,800
+four partitions on the backend.
+
+256
+00:09:10,800 --> 00:09:12,630
+We had to pick a number that was enough
+
+257
+00:09:12,630 --> 00:09:13,890
+to handle decent amount of traffic
+
+258
+00:09:13,890 --> 00:09:15,090
+but not so much as to be wasteful.
+
+259
+00:09:15,090 --> 00:09:16,830
+You don't wanna have more
+partitions than you need.
+
+260
+00:09:16,830 --> 00:09:18,540
+So by default it does four.
+
+261
+00:09:18,540 --> 00:09:21,090
+If you've heard about warm throughput,
+
+262
+00:09:21,090 --> 00:09:23,190
+that's where you can hint
+to a on-demand table.
+
+263
+00:09:23,190 --> 00:09:27,000
+You're gonna be a big
+table, start out big,
+
+264
+00:09:27,000 --> 00:09:28,590
+and that would increase
+the number of partitions
+
+265
+00:09:28,590 --> 00:09:31,110
+on the back end of a table.
+
+266
+00:09:31,110 --> 00:09:32,310
+And that's a really nice feature.
+
+267
+00:09:32,310 --> 00:09:34,650
+Now with cloud formation,
+you can in an on-demand table
+
+268
+00:09:34,650 --> 00:09:36,840
+say start large, you say
+that you want a lot of reads
+
+269
+00:09:36,840 --> 00:09:37,920
+and a lot of writes.
+
+270
+00:09:37,920 --> 00:09:41,370
+I have seen enterprises that
+go live with an on-demand table
+
+271
+00:09:41,370 --> 00:09:43,434
+and they didn't do warm throughput
+
+272
+00:09:43,434 --> 00:09:45,960
+and as a result, the first hour,
+
+273
+00:09:45,960 --> 00:09:47,070
+they're sending more traffic
+
+274
+00:09:47,070 --> 00:09:48,870
+than a four partition
+table would wanna handle.
+
+275
+00:09:48,870 --> 00:09:51,270
+And so it splits, as I'll talk about here,
+
+276
+00:09:51,270 --> 00:09:54,300
+but it takes a little bit
+of time to do the splitting.
+
+277
+00:09:54,300 --> 00:09:55,290
+All right, so first thing we have to do
+
+278
+00:09:55,290 --> 00:09:58,470
+is figure out how do we
+assign data to shelves?
+
+279
+00:09:58,470 --> 00:10:00,570
+How do we assign items to partitions?
+
+280
+00:10:00,570 --> 00:10:02,370
+I think the obvious one
+is alphabetically, right?
+
+281
+00:10:02,370 --> 00:10:03,750
+If you go to a library,
+
+282
+00:10:03,750 --> 00:10:07,020
+you're probably gonna find
+the cities alphabetical.
+
+283
+00:10:07,020 --> 00:10:09,543
+That's pretty good. But we don't do that.
+
+284
+00:10:10,860 --> 00:10:11,693
+And why not?
+
+285
+00:10:11,693 --> 00:10:14,550
+We don't do that because city
+names are not evenly spread.
+
+286
+00:10:14,550 --> 00:10:17,010
+I'm from the Bay area.
+Everything starts with S.
+
+287
+00:10:17,010 --> 00:10:19,590
+It's a San this or a San that, right?
+
+288
+00:10:19,590 --> 00:10:20,423
+So if we did that
+
+289
+00:10:20,423 --> 00:10:21,600
+and we didn't know
+about what our data was,
+
+290
+00:10:21,600 --> 00:10:23,760
+all the data would kind of
+go to the same partition
+
+291
+00:10:23,760 --> 00:10:25,080
+if it was alphabetical, right,
+
+292
+00:10:25,080 --> 00:10:29,280
+everything would end up on the
+last one here, Q through Z.
+
+293
+00:10:29,280 --> 00:10:31,290
+So what else could we do?
+
+294
+00:10:31,290 --> 00:10:32,910
+Well if you want a nice even distribution,
+
+295
+00:10:32,910 --> 00:10:35,250
+the easiest thing to do is hash the name,
+
+296
+00:10:35,250 --> 00:10:37,050
+hash the partition key.
+
+297
+00:10:37,050 --> 00:10:38,670
+Now you're gonna get nice distribution.
+
+298
+00:10:38,670 --> 00:10:41,580
+Even if the partition keys
+are very lexically similar,
+
+299
+00:10:41,580 --> 00:10:42,960
+they'll hash all over the place
+
+300
+00:10:42,960 --> 00:10:44,670
+and now you're gonna
+get a nice distribution,
+
+301
+00:10:44,670 --> 00:10:45,840
+where about one quarter of items
+
+302
+00:10:45,840 --> 00:10:48,600
+naturally end up on each
+of our four shelves.
+
+303
+00:10:48,600 --> 00:10:50,700
+And that's why you'll
+see the partition key
+
+304
+00:10:50,700 --> 00:10:52,590
+called a hash key internally.
+
+305
+00:10:52,590 --> 00:10:53,700
+'Cause we hash.
+
+306
+00:10:53,700 --> 00:10:55,650
+I kinda like the hash key name more.
+
+307
+00:10:55,650 --> 00:10:57,510
+'Cause the partition key is
+what leads people to thinking
+
+308
+00:10:57,510 --> 00:10:59,130
+that a partition key means one partition,
+
+309
+00:10:59,130 --> 00:11:01,350
+but what it is is that
+we hash the partition key
+
+310
+00:11:01,350 --> 00:11:03,840
+to help determine where it goes.
+
+311
+00:11:03,840 --> 00:11:07,113
+But you don't get a whole
+shelf for each book.
+
+312
+00:11:08,340 --> 00:11:09,750
+Each shelf is only so big,
+
+313
+00:11:09,750 --> 00:11:11,730
+so at some point we're gonna fill it up.
+
+314
+00:11:11,730 --> 00:11:13,200
+I start with a table of four partitions,
+
+315
+00:11:13,200 --> 00:11:14,033
+I keep loading data.
+
+316
+00:11:14,033 --> 00:11:15,960
+At some point we're gonna
+say all right, that's enough.
+
+317
+00:11:15,960 --> 00:11:18,990
+In Dynamo the enough
+is around 10 gigabytes.
+
+318
+00:11:18,990 --> 00:11:21,450
+So if you've loaded enough, a
+partition gets around 10 gig,
+
+319
+00:11:21,450 --> 00:11:22,283
+we're gonna start thinking,
+
+320
+00:11:22,283 --> 00:11:23,820
+hey, maybe we should
+do something with that.
+
+321
+00:11:23,820 --> 00:11:25,590
+What we do is we split it.
+
+322
+00:11:25,590 --> 00:11:27,690
+Generally when it gets
+big we split it in half,
+
+323
+00:11:27,690 --> 00:11:28,860
+right in the middle,
+
+324
+00:11:28,860 --> 00:11:30,630
+and now we have two
+different shelves there.
+
+325
+00:11:30,630 --> 00:11:34,831
+We split the 40 to 5A, hex prefix,
+
+326
+00:11:34,831 --> 00:11:37,833
+in half with the 5B, 7F
+being the other half.
+
+327
+00:11:39,240 --> 00:11:40,590
+And now we can add more space.
+
+328
+00:11:40,590 --> 00:11:43,830
+And so we do this all the
+time. In the background.
+
+329
+00:11:43,830 --> 00:11:45,840
+A table that's been around
+a long time is gonna have
+
+330
+00:11:45,840 --> 00:11:48,240
+a lot of partitions 'cause as data grows,
+
+331
+00:11:48,240 --> 00:11:50,603
+we're gonna be splitting
+it on the back end for you.
+
+332
+00:11:51,990 --> 00:11:52,823
+Some edge cases.
+
+333
+00:11:52,823 --> 00:11:54,510
+What if a city, or maybe a ZIP,
+
+334
+00:11:54,510 --> 00:11:55,410
+but like especially a city,
+
+335
+00:11:55,410 --> 00:11:57,273
+what if it gets bigger than a shelf?
+
+336
+00:12:00,600 --> 00:12:01,953
+What do I do there?
+
+337
+00:12:03,030 --> 00:12:06,270
+The answer is exactly what
+you do in New York City.
+
+338
+00:12:06,270 --> 00:12:08,070
+If you ever saw a New
+York City phone book,
+
+339
+00:12:08,070 --> 00:12:10,020
+it wasn't a book, it was several books
+
+340
+00:12:10,020 --> 00:12:11,820
+where they had split it by the last name.
+
+341
+00:12:11,820 --> 00:12:14,700
+This is A through H or
+something and so on so forth.
+
+342
+00:12:14,700 --> 00:12:16,050
+They split by the sort key.
+
+343
+00:12:16,890 --> 00:12:19,620
+And we do the same thing. We
+split by the sort key too.
+
+344
+00:12:19,620 --> 00:12:22,230
+If we see that it gets really big,
+
+345
+00:12:22,230 --> 00:12:23,970
+we can split that thing.
+
+346
+00:12:23,970 --> 00:12:25,080
+Right in the middle of an item collection,
+
+347
+00:12:25,080 --> 00:12:26,970
+we can split the partition.
+
+348
+00:12:26,970 --> 00:12:29,520
+With a caveat. This is a pro level caveat.
+
+349
+00:12:29,520 --> 00:12:31,683
+We can't do it if the table has an LSI.
+
+350
+00:12:33,780 --> 00:12:35,790
+'Cause remember the LSI,
+the idea is that I have
+
+351
+00:12:35,790 --> 00:12:37,860
+the white pages and the
+yellow pages together
+
+352
+00:12:37,860 --> 00:12:38,850
+in the same physical place.
+
+353
+00:12:38,850 --> 00:12:41,700
+So I can't start splitting the white pages
+
+354
+00:12:41,700 --> 00:12:43,200
+in three because now I
+don't have a good place
+
+355
+00:12:43,200 --> 00:12:44,460
+for the yellow pages to go.
+
+356
+00:12:44,460 --> 00:12:46,020
+This is why if you have an LSI,
+
+357
+00:12:46,020 --> 00:12:49,170
+you can't have an item collection
+bigger than 10 gigabytes.
+
+358
+00:12:49,170 --> 00:12:51,420
+'Cause of what's going
+on underneath the table.
+
+359
+00:12:51,420 --> 00:12:52,710
+We are like, nope.
+
+360
+00:12:52,710 --> 00:12:54,300
+An item collection has to be contiguous.
+
+361
+00:12:54,300 --> 00:12:56,340
+A book has to be one book,
+
+362
+00:12:56,340 --> 00:12:57,630
+which is a downside of LSIs.
+
+363
+00:12:57,630 --> 00:13:00,390
+The upside is the strongly
+consistent read nature.
+
+364
+00:13:00,390 --> 00:13:05,370
+The downside is you can
+never get rid of 'em.
+
+365
+00:13:05,370 --> 00:13:06,960
+Once they're on a table
+you can't remove them.
+
+366
+00:13:06,960 --> 00:13:08,730
+So they're at table creation,
+
+367
+00:13:08,730 --> 00:13:10,620
+and also they limit how big
+an item collection can be.
+
+368
+00:13:10,620 --> 00:13:13,200
+10 gigabytes is a pretty
+big item collection.
+
+369
+00:13:13,200 --> 00:13:16,620
+It doesn't hit a lot of people,
+but it is there as a rule.
+
+370
+00:13:16,620 --> 00:13:19,320
+All right, something else that
+happens in the physical world
+
+371
+00:13:19,320 --> 00:13:20,550
+is that there's only so much traffic
+
+372
+00:13:20,550 --> 00:13:22,080
+that can go to one of these shells.
+
+373
+00:13:22,080 --> 00:13:24,600
+Each partition has hard limits.
+
+374
+00:13:24,600 --> 00:13:26,340
+Do we know what they are in Dynamo?
+
+375
+00:13:26,340 --> 00:13:29,340
+Each partition gets 3,000
+read capacity units,
+
+376
+00:13:29,340 --> 00:13:31,500
+1,000 write capacity units.
+
+377
+00:13:31,500 --> 00:13:33,333
+And that's a hard limit there.
+
+378
+00:13:34,560 --> 00:13:36,000
+At some point it gets a lot of traffic.
+
+379
+00:13:36,000 --> 00:13:37,200
+Too many people are coming to write
+
+380
+00:13:37,200 --> 00:13:39,270
+or too many people are coming to read.
+
+381
+00:13:39,270 --> 00:13:41,943
+So what do we do about it? We split.
+
+382
+00:13:43,200 --> 00:13:45,140
+So we can split the books across shelves
+
+383
+00:13:45,140 --> 00:13:46,410
+if we think it would help.
+
+384
+00:13:46,410 --> 00:13:49,500
+So before and after.
+
+385
+00:13:49,500 --> 00:13:51,900
+We've said this one book is so popular
+
+386
+00:13:51,900 --> 00:13:56,130
+that we're just gonna split it
+into its own item partition.
+
+387
+00:13:56,130 --> 00:13:57,720
+This item collection, 'cause it's a book,
+
+388
+00:13:57,720 --> 00:13:59,520
+an item collection gets its own shelf
+
+389
+00:13:59,520 --> 00:14:03,420
+and now that item collection
+can have up to 1,000 writes
+
+390
+00:14:03,420 --> 00:14:05,553
+and 3,000 read units per second.
+
+391
+00:14:06,420 --> 00:14:08,920
+What if everyone wants the
+same item in that book?
+
+392
+00:14:09,960 --> 00:14:14,880
+We can actually split one
+item to its own partition.
+
+393
+00:14:14,880 --> 00:14:16,470
+It goes down to that level.
+
+394
+00:14:16,470 --> 00:14:18,030
+So you can, in Dynamo,
+
+395
+00:14:18,030 --> 00:14:20,490
+if you're gonna really bang on one item
+
+396
+00:14:20,490 --> 00:14:22,470
+and you're gonna update
+it 1,000 times a second,
+
+397
+00:14:22,470 --> 00:14:26,400
+you can, you can update it, you
+can read it 3,000 read units
+
+398
+00:14:26,400 --> 00:14:27,750
+with eventually consistent reads.
+
+399
+00:14:27,750 --> 00:14:29,580
+That would be 6,000 calls.
+
+400
+00:14:29,580 --> 00:14:31,940
+So you can read the same
+item 6,000 times a second
+
+401
+00:14:31,940 --> 00:14:33,570
+because of how we split it.
+
+402
+00:14:33,570 --> 00:14:35,820
+Now, you don't get it the first second,
+
+403
+00:14:35,820 --> 00:14:38,583
+but we will very quickly
+split when we see the traffic.
+
+404
+00:14:39,750 --> 00:14:41,010
+Split for heat we call internally.
+
+405
+00:14:41,010 --> 00:14:42,990
+And if you Google up
+split for heat Dynamo,
+
+406
+00:14:42,990 --> 00:14:46,140
+you'll find a blog that
+has me testing this
+
+407
+00:14:46,140 --> 00:14:48,330
+under all kinds of circumstances
+
+408
+00:14:48,330 --> 00:14:50,640
+to see what happens under pressure
+
+409
+00:14:50,640 --> 00:14:52,440
+and you really quick expansion,
+
+410
+00:14:52,440 --> 00:14:54,330
+and the order of minutes, right?
+
+411
+00:14:54,330 --> 00:14:56,130
+So hopefully now if you're new to Dynamo
+
+412
+00:14:56,130 --> 00:14:58,200
+you kind of get a sense
+of how Dynamo thinks
+
+413
+00:14:58,200 --> 00:15:01,080
+and why it's a key value store
+but with a sort key as well.
+
+414
+00:15:01,080 --> 00:15:02,280
+Not just simple key value.
+
+415
+00:15:02,280 --> 00:15:03,780
+And if you've seen Dynamo before,
+
+416
+00:15:03,780 --> 00:15:06,090
+maybe that was a little
+fun trip to the library.
+
+417
+00:15:06,090 --> 00:15:08,250
+So now let's think about
+some real data modeling.
+
+418
+00:15:08,250 --> 00:15:09,200
+Let's make it real.
+
+419
+00:15:10,170 --> 00:15:14,310
+So first thing. A table
+has a partition key always.
+
+420
+00:15:14,310 --> 00:15:18,000
+You get to pick the type.
+String, number, binary.
+
+421
+00:15:18,000 --> 00:15:21,183
+We like string a lot because
+string is very flexible.
+
+422
+00:15:22,200 --> 00:15:23,940
+If you wanna do it with an account number,
+
+423
+00:15:23,940 --> 00:15:24,917
+you can, we're there for you.
+
+424
+00:15:24,917 --> 00:15:28,170
+If you wanna do a binary, you can, fine.
+
+425
+00:15:28,170 --> 00:15:29,190
+But we kinda like string
+
+426
+00:15:29,190 --> 00:15:31,050
+and we sometimes like
+to mingle our strings
+
+427
+00:15:31,050 --> 00:15:32,220
+to say what they are.
+
+428
+00:15:32,220 --> 00:15:36,690
+Like a customer ID string,
+we might say CUSTID#123,
+
+429
+00:15:36,690 --> 00:15:38,190
+hash being a common separator.
+
+430
+00:15:38,190 --> 00:15:39,750
+We do that because later on this table
+
+431
+00:15:39,750 --> 00:15:43,020
+I might wanna store something
+that's not just a customer ID.
+
+432
+00:15:43,020 --> 00:15:44,820
+We a lot of times like
+to use the same table
+
+433
+00:15:44,820 --> 00:15:46,830
+and put different kinds
+of things in there.
+
+434
+00:15:46,830 --> 00:15:48,870
+And if I have a partition
+key that's a string
+
+435
+00:15:48,870 --> 00:15:52,590
+that self describes what
+it is, I have that choice.
+
+436
+00:15:52,590 --> 00:15:54,480
+You don't always have to,
+
+437
+00:15:54,480 --> 00:15:58,320
+but a lot of times we'll
+name our partition key PK
+
+438
+00:15:58,320 --> 00:16:00,540
+and our sort key SK,
+
+439
+00:16:00,540 --> 00:16:02,430
+and that way we're very
+flexible of what's coming.
+
+440
+00:16:02,430 --> 00:16:04,530
+I actually think if I were
+to create Dynamo today,
+
+441
+00:16:04,530 --> 00:16:06,900
+I might say I'm not even gonna
+ask you for names and types.
+
+442
+00:16:06,900 --> 00:16:09,660
+They're going be PK SK, they're
+gonna be strings, the end,
+
+443
+00:16:09,660 --> 00:16:12,120
+and let's just like get rid
+of the whole idea of schemas
+
+444
+00:16:12,120 --> 00:16:13,140
+and then you tell me.
+
+445
+00:16:13,140 --> 00:16:14,610
+But you know, SKs are optional,
+
+446
+00:16:14,610 --> 00:16:17,010
+so I guess you'd have to
+at least tell me that.
+
+447
+00:16:17,010 --> 00:16:19,055
+You can't change a key value if it is
+
+448
+00:16:19,055 --> 00:16:21,270
+an indexed item of partition key or SK.
+
+449
+00:16:21,270 --> 00:16:22,920
+You have to delete it and reinsert it.
+
+450
+00:16:22,920 --> 00:16:24,870
+You can change a payload attribute
+
+451
+00:16:24,870 --> 00:16:27,360
+but you can't change one
+of the index attributes.
+
+452
+00:16:27,360 --> 00:16:31,800
+All right? So what kind of
+partition keys do you see?
+
+453
+00:16:31,800 --> 00:16:35,820
+A lot of times you see a
+descriptive one like Zip#89109,
+
+454
+00:16:35,820 --> 00:16:38,160
+and this says this is a ZIP code.
+
+455
+00:16:38,160 --> 00:16:40,770
+I know that 'cause I put
+a ZIP hash in front of it.
+
+456
+00:16:40,770 --> 00:16:43,920
+Sometimes, as we'll see
+later when we start sharding,
+
+457
+00:16:43,920 --> 00:16:46,020
+because we get so much
+traffic we wanna support like,
+
+458
+00:16:46,020 --> 00:16:47,820
+more than 1,000 writes a second,
+
+459
+00:16:47,820 --> 00:16:50,733
+we might add a suffix at the end, #01234,
+
+460
+00:16:51,810 --> 00:16:55,680
+and that way I'll have more
+partition keys to write to
+
+461
+00:16:55,680 --> 00:16:58,440
+to handle an influx of data
+that's coming really quickly.
+
+462
+00:16:58,440 --> 00:16:59,610
+Comes a little bit later.
+
+463
+00:16:59,610 --> 00:17:01,260
+And sometimes we see multi value.
+
+464
+00:17:02,370 --> 00:17:04,260
+In multi value, it's
+like I have a ZIP code
+
+465
+00:17:04,260 --> 00:17:05,820
+and a type together,
+
+466
+00:17:05,820 --> 00:17:10,820
+and you can do Zip#89109#type#casino.
+
+467
+00:17:11,640 --> 00:17:14,463
+It's up to you. Or you
+just do 89109#casino.
+
+468
+00:17:15,600 --> 00:17:16,590
+It gets awkward.
+
+469
+00:17:16,590 --> 00:17:20,130
+Has anyone seen the announcement
+from about a week ago
+
+470
+00:17:20,130 --> 00:17:23,100
+where we now let you do
+multi-attribute partition keys
+
+471
+00:17:23,100 --> 00:17:24,690
+and sort keys?
+
+472
+00:17:24,690 --> 00:17:27,420
+On GSIs. Not on base
+tables yet. But on GSIs.
+
+473
+00:17:27,420 --> 00:17:31,440
+So this whole main goal
+to have multi values,
+
+474
+00:17:31,440 --> 00:17:33,630
+you don't have to do it anymore for GSIs.
+
+475
+00:17:33,630 --> 00:17:34,470
+Really nice. Why?
+
+476
+00:17:34,470 --> 00:17:36,150
+Because when you do a GSI sometimes,
+
+477
+00:17:36,150 --> 00:17:37,530
+you're like you know, I want a GSI lookup
+
+478
+00:17:37,530 --> 00:17:40,650
+and I wanna do where it's in this ZIP code
+
+479
+00:17:40,650 --> 00:17:41,820
+and it's of this type,
+
+480
+00:17:41,820 --> 00:17:44,340
+and if you didn't previously
+on your base table
+
+481
+00:17:44,340 --> 00:17:47,400
+have an attribute that was
+those two joined together,
+
+482
+00:17:47,400 --> 00:17:49,710
+you now have to write to
+all your base table items
+
+483
+00:17:49,710 --> 00:17:50,790
+to have something to project
+
+484
+00:17:50,790 --> 00:17:52,620
+into the global secondary index.
+
+485
+00:17:52,620 --> 00:17:54,210
+That's a lot of writes.
+
+486
+00:17:54,210 --> 00:17:55,800
+It's a pain on you.
+
+487
+00:17:55,800 --> 00:17:56,997
+Now you just say I'd like a GSI
+
+488
+00:17:56,997 --> 00:17:58,980
+and I'd like it to be
+synthetically created
+
+489
+00:17:58,980 --> 00:18:00,900
+as if these were joined together.
+
+490
+00:18:00,900 --> 00:18:03,120
+And we're like right away
+boss, no base table writes,
+
+491
+00:18:03,120 --> 00:18:04,560
+no ugliness in your base table,
+
+492
+00:18:04,560 --> 00:18:06,560
+no increased storage in your base table.
+
+493
+00:18:08,010 --> 00:18:09,570
+I love a good feature.
+
+494
+00:18:09,570 --> 00:18:11,400
+So that's a very nice feature
+
+495
+00:18:11,400 --> 00:18:13,403
+that we just introduced about a week ago.
+
+496
+00:18:14,310 --> 00:18:16,890
+Too recent for it to be on the slides.
+
+497
+00:18:16,890 --> 00:18:18,000
+When you see sort keys,
+
+498
+00:18:18,000 --> 00:18:19,770
+sometimes you see 'em typed.
+
+499
+00:18:19,770 --> 00:18:21,900
+Like Name#Hunter or whatever.
+
+500
+00:18:21,900 --> 00:18:24,150
+We do that because a very
+common convention in Dynamo
+
+501
+00:18:24,150 --> 00:18:26,370
+is to have a partition key be the thing.
+
+502
+00:18:26,370 --> 00:18:29,400
+It's a customer, it's a device,
+
+503
+00:18:29,400 --> 00:18:32,190
+and then the sort key prefix
+is like the different things
+
+504
+00:18:32,190 --> 00:18:33,570
+that you know about it.
+
+505
+00:18:33,570 --> 00:18:36,870
+Like for online shopping,
+I might have address
+
+506
+00:18:36,870 --> 00:18:38,250
+and then I might have another one
+
+507
+00:18:38,250 --> 00:18:39,150
+that's like your credit card
+
+508
+00:18:39,150 --> 00:18:40,590
+and another one that's like your orders,
+
+509
+00:18:40,590 --> 00:18:42,120
+another one's your shopping cart.
+
+510
+00:18:42,120 --> 00:18:44,490
+And the sort key prefix
+is like a description
+
+511
+00:18:44,490 --> 00:18:45,480
+of what we know about this.
+
+512
+00:18:45,480 --> 00:18:47,940
+So it might be like
+order ID 1, order ID 2,
+
+513
+00:18:47,940 --> 00:18:49,410
+order ID 3, and I'll remember the orders
+
+514
+00:18:49,410 --> 00:18:50,910
+that this person previously did.
+
+515
+00:18:50,910 --> 00:18:52,230
+We call this single table design
+
+516
+00:18:52,230 --> 00:18:55,470
+because we do different entity
+types in the same table.
+
+517
+00:18:55,470 --> 00:18:57,480
+And it's popular because
+if I wanna learn about you
+
+518
+00:18:57,480 --> 00:18:59,910
+in one go, I can just go to the database
+
+519
+00:18:59,910 --> 00:19:01,260
+and make one query call
+
+520
+00:19:01,260 --> 00:19:04,320
+and bring all of it back
+really fast cheaply,
+
+521
+00:19:04,320 --> 00:19:05,880
+'cause one quick call,
+
+522
+00:19:05,880 --> 00:19:08,220
+and we price by the
+amount of data returned,
+
+523
+00:19:08,220 --> 00:19:09,570
+or at least scanned.
+
+524
+00:19:09,570 --> 00:19:12,210
+So that's a common convention
+
+525
+00:19:12,210 --> 00:19:15,540
+and we see the typing here
+when we're doing such things.
+
+526
+00:19:15,540 --> 00:19:17,400
+Sometimes people put a timestamp.
+
+527
+00:19:17,400 --> 00:19:19,080
+It's a pretty common sort key.
+
+528
+00:19:19,080 --> 00:19:20,010
+If you have a device
+
+529
+00:19:20,010 --> 00:19:22,170
+and you have different
+measurements at different times,
+
+530
+00:19:22,170 --> 00:19:24,570
+we see the the timestamp there.
+
+531
+00:19:24,570 --> 00:19:27,000
+And sometimes you see hierarchical.
+
+532
+00:19:27,000 --> 00:19:30,270
+Like country, state, location,
+
+533
+00:19:30,270 --> 00:19:34,830
+and that way, because on a sort
+key, I can do a starts with,
+
+534
+00:19:34,830 --> 00:19:36,030
+I can say starts with USA
+
+535
+00:19:36,030 --> 00:19:37,890
+and I can read everything in the USA,
+
+536
+00:19:37,890 --> 00:19:40,290
+USA NV and I can read
+everything in Nevada,
+
+537
+00:19:40,290 --> 00:19:43,380
+USA NV LAS and I can read
+everything in Las Vegas.
+
+538
+00:19:43,380 --> 00:19:45,210
+So that single sort key gives me
+
+539
+00:19:45,210 --> 00:19:47,820
+three different access
+patterns by doing this.
+
+540
+00:19:47,820 --> 00:19:50,310
+Again, this is gonna be
+nice with the new feature
+
+541
+00:19:50,310 --> 00:19:52,020
+because it's a little bit more expressive
+
+542
+00:19:52,020 --> 00:19:53,640
+than you having to think through
+
+543
+00:19:53,640 --> 00:19:55,590
+it's a string and I'm prefixing.
+
+544
+00:19:55,590 --> 00:19:58,490
+Now you can just say where these
+three things are like this.
+
+545
+00:19:58,490 --> 00:20:00,090
+Oh yeah.
+
+546
+00:20:00,090 --> 00:20:02,910
+It's syntactic sugar
+and I got a sweet tooth.
+
+547
+00:20:02,910 --> 00:20:06,480
+All right so let's put it in action.
+
+548
+00:20:06,480 --> 00:20:07,620
+A somewhat realistic example.
+
+549
+00:20:07,620 --> 00:20:10,350
+So I have to dream up an example
+of something we all know.
+
+550
+00:20:10,350 --> 00:20:12,123
+Here's my only AI in the talk.
+
+551
+00:20:12,990 --> 00:20:14,070
+We're gonna design a schema
+
+552
+00:20:14,070 --> 00:20:16,053
+which is a history of a chat bot.
+
+553
+00:20:17,820 --> 00:20:20,130
+So you ask your questions,
+you get your answers,
+
+554
+00:20:20,130 --> 00:20:22,200
+and I need to remember this history
+
+555
+00:20:22,200 --> 00:20:24,480
+so that I can feed it back to the chat bot
+
+556
+00:20:24,480 --> 00:20:26,680
+to remember the state when you come back
+
+557
+00:20:28,050 --> 00:20:28,883
+and things like that.
+
+558
+00:20:28,883 --> 00:20:30,360
+So I'm gonna try to scale this big.
+
+559
+00:20:30,360 --> 00:20:31,410
+I'm gonna have millions of users,
+
+560
+00:20:31,410 --> 00:20:33,390
+threaded conversations
+and each conversation
+
+561
+00:20:33,390 --> 00:20:35,820
+has its own specific metadata.
+
+562
+00:20:35,820 --> 00:20:38,190
+All right, doable.
+
+563
+00:20:38,190 --> 00:20:39,900
+What are we gonna do?
+
+564
+00:20:39,900 --> 00:20:41,520
+Here's some requirements.
+
+565
+00:20:41,520 --> 00:20:43,680
+Given a user id, I wanna
+pull all the threads
+
+566
+00:20:43,680 --> 00:20:44,513
+and thread metadata.
+
+567
+00:20:44,513 --> 00:20:45,780
+Just gimme everything about the user.
+
+568
+00:20:45,780 --> 00:20:46,770
+I'm building the interface,
+
+569
+00:20:46,770 --> 00:20:50,250
+I'm gonna the left
+sidebar with everything.
+
+570
+00:20:50,250 --> 00:20:52,830
+Given a user and a thread,
+pull just that thread.
+
+571
+00:20:52,830 --> 00:20:54,060
+Okay, so not everything
+
+572
+00:20:54,060 --> 00:20:55,137
+but just like I expand a thread
+
+573
+00:20:55,137 --> 00:20:56,250
+and I wanna see what's in there.
+
+574
+00:20:56,250 --> 00:20:58,710
+Okay. Given a user id,
+pull a recent thread.
+
+575
+00:20:58,710 --> 00:21:00,813
+So like pull the last stuff. Okay.
+
+576
+00:21:02,490 --> 00:21:03,960
+It's always fun when you get requirements
+
+577
+00:21:03,960 --> 00:21:06,060
+and you have to think of a schema.
+
+578
+00:21:06,060 --> 00:21:07,080
+I think it's pretty obvious
+
+579
+00:21:07,080 --> 00:21:08,910
+that the partition
+key's gonna be a user ID
+
+580
+00:21:08,910 --> 00:21:12,390
+because every one of these
+requirements is given a user ID.
+
+581
+00:21:12,390 --> 00:21:13,650
+And one of the nice things of Dynamo
+
+582
+00:21:13,650 --> 00:21:16,620
+is that you know if I
+solve it for one user
+
+583
+00:21:16,620 --> 00:21:17,760
+and that user works well,
+
+584
+00:21:17,760 --> 00:21:20,400
+I know I can solve it for a trillion users
+
+585
+00:21:20,400 --> 00:21:23,640
+because of how each
+partition key can be isolated
+
+586
+00:21:23,640 --> 00:21:26,430
+in the database to its own
+partition if I have to.
+
+587
+00:21:26,430 --> 00:21:28,290
+And even smaller sometimes.
+
+588
+00:21:28,290 --> 00:21:29,640
+I know that it's gonna scale out.
+
+589
+00:21:29,640 --> 00:21:31,500
+That's the scale to any level.
+
+590
+00:21:31,500 --> 00:21:33,960
+So you can often think about your world
+
+591
+00:21:33,960 --> 00:21:36,780
+as did I do well for one partition key
+
+592
+00:21:36,780 --> 00:21:38,640
+and the amount of reads
+and writes that it accepts,
+
+593
+00:21:38,640 --> 00:21:41,070
+and if so, it'll scale to whatever I need.
+
+594
+00:21:41,070 --> 00:21:44,430
+And you can sleep well at
+night without any surprises
+
+595
+00:21:44,430 --> 00:21:47,670
+because there's no dependence
+on what one partition key
+
+596
+00:21:47,670 --> 00:21:49,050
+is doing with another one if they've split
+
+597
+00:21:49,050 --> 00:21:50,580
+to different partitions.
+
+598
+00:21:50,580 --> 00:21:52,759
+So the PK is going to be UserID,
+
+599
+00:21:52,759 --> 00:21:57,720
+the SK is gonna be thread
+metadata and thread messages.
+
+600
+00:21:57,720 --> 00:21:59,550
+So this is pretty common convention
+
+601
+00:21:59,550 --> 00:22:01,680
+where you have one item
+in the item collection
+
+602
+00:22:01,680 --> 00:22:03,360
+that is like the metadata about it,
+
+603
+00:22:03,360 --> 00:22:05,190
+and then a bunch of other
+little payload ones,
+
+604
+00:22:05,190 --> 00:22:07,680
+maybe by timestamp here
+with a create time,
+
+605
+00:22:07,680 --> 00:22:10,200
+which is gonna be each message
+and the time of that message.
+
+606
+00:22:10,200 --> 00:22:13,350
+Pick your thing, you can do
+IDs, but times is easy to model.
+
+607
+00:22:13,350 --> 00:22:15,810
+And so given this, given a user ID,
+
+608
+00:22:15,810 --> 00:22:19,140
+I can pull everything by just
+saying no sort key constraint,
+
+609
+00:22:19,140 --> 00:22:20,460
+give it everything.
+
+610
+00:22:20,460 --> 00:22:22,950
+I can do a sort key
+starts with a create date
+
+611
+00:22:22,950 --> 00:22:25,490
+and thread ID, and I can learn
+everything about that thread
+
+612
+00:22:25,490 --> 00:22:28,080
+as long as I know the date
+and the thread ID together.
+
+613
+00:22:28,080 --> 00:22:29,580
+And I can also pull recent
+
+614
+00:22:29,580 --> 00:22:31,770
+by just saying start at the bottom
+
+615
+00:22:31,770 --> 00:22:34,320
+and sort backward by time,
+
+616
+00:22:34,320 --> 00:22:36,960
+maybe pulling in batches
+of 50 or 100 or whatever
+
+617
+00:22:36,960 --> 00:22:38,520
+until I've read enough.
+
+618
+00:22:38,520 --> 00:22:40,080
+And that'll get you the last ones.
+
+619
+00:22:40,080 --> 00:22:41,940
+'Cause it says recent
+threads, it isn't specific.
+
+620
+00:22:41,940 --> 00:22:43,350
+So I'm just gonna be able
+to go in the sort key,
+
+621
+00:22:43,350 --> 00:22:45,083
+starting at the bottom and go back up.
+
+622
+00:22:46,260 --> 00:22:48,420
+NoSQL Workbench is a
+client side application
+
+623
+00:22:48,420 --> 00:22:50,880
+that we often use to visualize our data,
+
+624
+00:22:50,880 --> 00:22:52,890
+and here is a screenshot from it.
+
+625
+00:22:52,890 --> 00:22:55,860
+This is all for one user ID, 12345
+
+626
+00:22:55,860 --> 00:22:57,990
+We see a sort key which is the timestamp
+
+627
+00:22:57,990 --> 00:23:01,140
+with, yep, down to the seconds.
+
+628
+00:23:01,140 --> 00:23:04,020
+And then we have threat
+IDs, user IDs, all that.
+
+629
+00:23:04,020 --> 00:23:06,930
+Notice that the bottom item is
+different than the first two.
+
+630
+00:23:06,930 --> 00:23:11,070
+It is meta, so that bottom
+one has different attributes.
+
+631
+00:23:11,070 --> 00:23:13,500
+It is a metadata about this.
+
+632
+00:23:13,500 --> 00:23:15,030
+And this is weird for relational people
+
+633
+00:23:15,030 --> 00:23:16,530
+'cause they're like
+wait, did you just switch
+
+634
+00:23:16,530 --> 00:23:19,020
+attribute names in the middle of a table?
+
+635
+00:23:19,020 --> 00:23:21,390
+I sure did. I can do that.
+
+636
+00:23:21,390 --> 00:23:24,270
+It's NoSQL. It's one of
+the things you can do.
+
+637
+00:23:24,270 --> 00:23:27,570
+And so what's nice is I
+can, for a given thread ID,
+
+638
+00:23:27,570 --> 00:23:29,820
+just pull all this stuff in one go.
+
+639
+00:23:29,820 --> 00:23:32,880
+Even though like one's
+metadata and one's the details.
+
+640
+00:23:32,880 --> 00:23:34,500
+So I've satisfied the requirements.
+
+641
+00:23:34,500 --> 00:23:35,640
+But you know how the real world works.
+
+642
+00:23:35,640 --> 00:23:37,590
+They gimme more requirements.
+
+643
+00:23:37,590 --> 00:23:39,720
+All right, what's the new requirement?
+
+644
+00:23:39,720 --> 00:23:42,930
+Given a user id, I just
+want the thread metadata.
+
+645
+00:23:42,930 --> 00:23:46,020
+You just want the meta
+objects across all threads.
+
+646
+00:23:46,020 --> 00:23:48,270
+All right, that's harder, right?
+
+647
+00:23:48,270 --> 00:23:49,470
+With my current model,
+
+648
+00:23:49,470 --> 00:23:51,630
+I would have to scan all
+the detailed messages
+
+649
+00:23:51,630 --> 00:23:52,593
+to get the metas.
+
+650
+00:23:53,490 --> 00:23:56,040
+I just want the metas, I
+wanna pluck out the metas.
+
+651
+00:23:57,480 --> 00:24:00,000
+What do I do? I have indexes.
+
+652
+00:24:00,000 --> 00:24:00,944
+A lot of times when you have an issue
+
+653
+00:24:00,944 --> 00:24:03,990
+about a different access pattern,
+you think I have indexes.
+
+654
+00:24:03,990 --> 00:24:07,950
+So we make a GSI, and we're
+gonna make a GSI that's sparse.
+
+655
+00:24:07,950 --> 00:24:10,320
+Sparse meaning not every
+item in the base table
+
+656
+00:24:10,320 --> 00:24:11,940
+is going into the GSI.
+
+657
+00:24:11,940 --> 00:24:12,900
+When you do sparse ones,
+
+658
+00:24:12,900 --> 00:24:15,180
+it's kind of nice because
+you pay by the storage.
+
+659
+00:24:15,180 --> 00:24:16,260
+You don't have much storage.
+
+660
+00:24:16,260 --> 00:24:19,050
+And you pay by the writes and
+you don't have many writes.
+
+661
+00:24:19,050 --> 00:24:22,890
+So a sparse GSI is a very
+affordable construct to create.
+
+662
+00:24:22,890 --> 00:24:25,080
+I'll have the same GSI partition key,
+
+663
+00:24:25,080 --> 00:24:27,030
+but I'm gonna have to have a sort key.
+
+664
+00:24:27,030 --> 00:24:27,863
+You know what?
+
+665
+00:24:27,863 --> 00:24:31,650
+Anything, anything that
+I put on the meta item,
+
+666
+00:24:31,650 --> 00:24:35,460
+which only exists on the meta
+item, will be my sort key.
+
+667
+00:24:35,460 --> 00:24:37,110
+If it exists, it goes into the GSI.
+
+668
+00:24:37,110 --> 00:24:39,150
+If it doesn't exist, it's out of the GSI.
+
+669
+00:24:39,150 --> 00:24:40,620
+And that's how we make a sparse GSI.
+
+670
+00:24:40,620 --> 00:24:43,290
+You do it on an attribute
+that's not always there.
+
+671
+00:24:43,290 --> 00:24:45,090
+And if I do this,
+
+672
+00:24:45,090 --> 00:24:50,090
+then I have a nice GSI
+ready to query just for you.
+
+673
+00:24:50,610 --> 00:24:51,840
+And so it looks kinda like this.
+
+674
+00:24:51,840 --> 00:24:53,190
+This is two different users.
+
+675
+00:24:53,190 --> 00:24:57,060
+12345 and 67890 and their metadata items.
+
+676
+00:24:57,060 --> 00:24:58,740
+When you project into the GSI,
+
+677
+00:24:58,740 --> 00:25:01,440
+you can choose which
+attributes you wanna project.
+
+678
+00:25:01,440 --> 00:25:03,030
+You can project all of them.
+
+679
+00:25:03,030 --> 00:25:04,860
+You at least have to do the keys,
+
+680
+00:25:04,860 --> 00:25:06,140
+which is the partition key and sort key
+
+681
+00:25:06,140 --> 00:25:08,610
+of the base table, they get projected in.
+
+682
+00:25:08,610 --> 00:25:11,160
+And so now I can read just the meta.
+
+683
+00:25:11,160 --> 00:25:13,620
+It's kind of a nice optimization.
+
+684
+00:25:13,620 --> 00:25:14,850
+When you do this kinda stuff,
+
+685
+00:25:14,850 --> 00:25:16,710
+you think how often do I want to do this,
+
+686
+00:25:16,710 --> 00:25:18,090
+because I could brute force it
+
+687
+00:25:18,090 --> 00:25:21,150
+by just reading the whole
+item collection, you know?
+
+688
+00:25:21,150 --> 00:25:22,530
+But if you're gonna do this a lot,
+
+689
+00:25:22,530 --> 00:25:25,500
+then I probably wanna spend
+the effort doing the writes,
+
+690
+00:25:25,500 --> 00:25:28,170
+the write cost, to save
+my read costs later.
+
+691
+00:25:28,170 --> 00:25:30,480
+So a lot of read versus write trade offs.
+
+692
+00:25:30,480 --> 00:25:33,633
+Oh, but I said GSIs were
+eventually consistent, didn't I?
+
+693
+00:25:35,152 --> 00:25:37,023
+Huh. What do we do about that?
+
+694
+00:25:38,100 --> 00:25:41,220
+Well one thing we can do
+is we can just say yep,
+
+695
+00:25:41,220 --> 00:25:43,470
+GSIs usually, you know,
+tens of milliseconds,
+
+696
+00:25:43,470 --> 00:25:45,630
+a lot of times it's one
+millisecond, 10 milliseconds.
+
+697
+00:25:45,630 --> 00:25:46,590
+Are we okay with that?
+
+698
+00:25:46,590 --> 00:25:47,580
+I'm gonna get the meta
+
+699
+00:25:47,580 --> 00:25:50,010
+and how fast is this really anyway?
+
+700
+00:25:50,010 --> 00:25:51,870
+A lot of times we just do that.
+
+701
+00:25:51,870 --> 00:25:52,890
+Sometimes you say, you know what?
+
+702
+00:25:52,890 --> 00:25:54,870
+This is my time for an LSI.
+
+703
+00:25:54,870 --> 00:25:55,770
+I'm gonna create an LSI
+
+704
+00:25:55,770 --> 00:25:58,167
+'cause I need the strongly
+consistent nature of an LSI.
+
+705
+00:25:58,167 --> 00:25:59,520
+You just gotta be careful, right?
+
+706
+00:25:59,520 --> 00:26:01,230
+Because it limits your
+item collection size.
+
+707
+00:26:01,230 --> 00:26:04,263
+You can't delete an LSI after
+creation like you can a GSI.
+
+708
+00:26:05,220 --> 00:26:07,170
+Another thing you can do
+is you could dual write.
+
+709
+00:26:07,170 --> 00:26:10,950
+You could say I'm gonna manually
+insert into a thread table
+
+710
+00:26:10,950 --> 00:26:12,753
+and into the main table,
+
+711
+00:26:13,800 --> 00:26:15,210
+and you can pick which one goes first.
+
+712
+00:26:15,210 --> 00:26:17,400
+'Cause sometimes it's okay
+if it's like in the meta
+
+713
+00:26:17,400 --> 00:26:18,960
+but it's not in the main table.
+
+714
+00:26:18,960 --> 00:26:19,793
+And if you read it,
+
+715
+00:26:19,793 --> 00:26:22,680
+you're like oh it's all
+right, it'll come in a second.
+
+716
+00:26:22,680 --> 00:26:25,500
+Lemme try again. If you're
+kind of doing this yourself.
+
+717
+00:26:25,500 --> 00:26:28,110
+But you have the chance
+that your program crashes
+
+718
+00:26:28,110 --> 00:26:29,820
+in between the two writes,
+
+719
+00:26:29,820 --> 00:26:33,240
+and now you've left a
+dangling index entry.
+
+720
+00:26:33,240 --> 00:26:35,250
+So another thing you can do
+is a transact write call.
+
+721
+00:26:35,250 --> 00:26:36,690
+We have transactions,
+
+722
+00:26:36,690 --> 00:26:39,030
+and you just say insert
+these into both tables
+
+723
+00:26:39,030 --> 00:26:41,550
+and it succeeds or fails as one unit.
+
+724
+00:26:41,550 --> 00:26:44,670
+Transactions are twice the
+cost of non transactions.
+
+725
+00:26:44,670 --> 00:26:48,090
+So, if you like that, how
+often are you gonna do it?
+
+726
+00:26:48,090 --> 00:26:50,040
+You know? Do I wanna pay double?
+
+727
+00:26:50,040 --> 00:26:52,110
+Do I want the GSI that's
+eventually consistent?
+
+728
+00:26:52,110 --> 00:26:53,043
+It's your choice.
+
+729
+00:26:54,120 --> 00:26:55,470
+All right, so up to this point,
+
+730
+00:26:55,470 --> 00:26:57,390
+this is pretty standard Dynamo stuff.
+
+731
+00:26:57,390 --> 00:26:58,620
+I feel like using Dynamo
+
+732
+00:26:58,620 --> 00:26:59,700
+for lower scale stuff
+
+733
+00:26:59,700 --> 00:27:01,290
+is like weight lifting with lightweights.
+
+734
+00:27:01,290 --> 00:27:02,520
+You can really do it with bad form
+
+735
+00:27:02,520 --> 00:27:04,740
+and still succeed, you know?
+
+736
+00:27:04,740 --> 00:27:06,540
+But now we're gonna lift the heavy stuff,
+
+737
+00:27:06,540 --> 00:27:07,800
+we're gonna deadlift 500 pounds.
+
+738
+00:27:07,800 --> 00:27:10,470
+Like, all right, let's
+talk about form exactly.
+
+739
+00:27:10,470 --> 00:27:12,390
+So first thing.
+
+740
+00:27:12,390 --> 00:27:15,930
+We were successful, this
+was great. Reduced costs.
+
+741
+00:27:15,930 --> 00:27:17,850
+You always get this call as
+a database person, right?
+
+742
+00:27:17,850 --> 00:27:19,650
+You launched, it was good.
+
+743
+00:27:19,650 --> 00:27:21,930
+You were doing things with scans, right?
+
+744
+00:27:21,930 --> 00:27:23,700
+Scans is where you just scan the table
+
+745
+00:27:23,700 --> 00:27:24,843
+to find what you want.
+
+746
+00:27:26,130 --> 00:27:28,050
+Just like a relational
+database full table scan,
+
+747
+00:27:28,050 --> 00:27:29,220
+you can do it at small tables.
+
+748
+00:27:29,220 --> 00:27:30,870
+It gets expensive for big tables.
+
+749
+00:27:31,980 --> 00:27:33,060
+All right, so let's see, what can we do?
+
+750
+00:27:33,060 --> 00:27:34,800
+First thing is I noticed that user message
+
+751
+00:27:34,800 --> 00:27:36,870
+and bot response, which
+are the big text fields,
+
+752
+00:27:36,870 --> 00:27:39,150
+are just stored plain in there.
+
+753
+00:27:39,150 --> 00:27:42,120
+And there's a cost with
+Dynamo for storing things.
+
+754
+00:27:42,120 --> 00:27:44,130
+There's the storage unit.
+
+755
+00:27:44,130 --> 00:27:48,990
+You pay by default in US
+East 1.25 per gigabyte month.
+
+756
+00:27:48,990 --> 00:27:51,090
+There's the write units
+because writes are charged
+
+757
+00:27:51,090 --> 00:27:52,860
+by the kilobytes written.
+
+758
+00:27:52,860 --> 00:27:54,450
+There's the read units which are charged
+
+759
+00:27:54,450 --> 00:27:56,730
+by the four kilobytes read.
+
+760
+00:27:56,730 --> 00:27:58,710
+There's Point in Time Recovery.
+
+761
+00:27:58,710 --> 00:28:01,620
+That's a kind of backup where
+you keep a write ahead log
+
+762
+00:28:01,620 --> 00:28:04,290
+and it is proportional
+to the size of the table.
+
+763
+00:28:04,290 --> 00:28:06,300
+And there's backups which are costly,
+
+764
+00:28:06,300 --> 00:28:08,130
+proportional to the size of the table.
+
+765
+00:28:08,130 --> 00:28:10,860
+So the smaller your data,
+the smaller your bill.
+
+766
+00:28:10,860 --> 00:28:15,860
+So if you ever get a chance to
+reduce the size, you should.
+
+767
+00:28:16,350 --> 00:28:19,770
+So what do we do? Well the
+easiest thing, we compress it.
+
+768
+00:28:19,770 --> 00:28:21,870
+We store the data as you hand it to us.
+
+769
+00:28:21,870 --> 00:28:23,130
+If you wanna hand it to us compressed,
+
+770
+00:28:23,130 --> 00:28:25,440
+we'll store it for you in
+that way and you'll pay less.
+
+771
+00:28:25,440 --> 00:28:26,460
+You'll pay fewer writes,
+
+772
+00:28:26,460 --> 00:28:28,560
+you'll pay less on all
+the storage aspects.
+
+773
+00:28:28,560 --> 00:28:30,810
+So gzip and lz4, two, ones.
+
+774
+00:28:30,810 --> 00:28:33,270
+I did a little math, fake data here,
+
+775
+00:28:33,270 --> 00:28:35,400
+and lz4 was a little superior.
+
+776
+00:28:35,400 --> 00:28:36,420
+So let me point you that way
+
+777
+00:28:36,420 --> 00:28:38,010
+if you're gonna pick between the two.
+
+778
+00:28:38,010 --> 00:28:39,900
+But what's the pros and cons?
+
+779
+00:28:39,900 --> 00:28:41,610
+The pro is way less space.
+
+780
+00:28:41,610 --> 00:28:44,400
+The con is like I can't do
+a filter against the text
+
+781
+00:28:44,400 --> 00:28:45,780
+in the database now 'cause the database
+
+782
+00:28:45,780 --> 00:28:47,070
+doesn't know what the text is.
+
+783
+00:28:47,070 --> 00:28:48,078
+The database is blind.
+
+784
+00:28:48,078 --> 00:28:51,373
+I hold a payload, I
+don't know what it means.
+
+785
+00:28:51,373 --> 00:28:52,950
+But a lot of times you don't care.
+
+786
+00:28:52,950 --> 00:28:54,600
+In this application, I
+don't think the database
+
+787
+00:28:54,600 --> 00:28:56,370
+needed to be able to read that string.
+
+788
+00:28:56,370 --> 00:28:58,530
+You weren't indexing it or anything.
+
+789
+00:28:58,530 --> 00:29:00,360
+Maybe if you moved it to another system,
+
+790
+00:29:00,360 --> 00:29:01,290
+but then the other system
+
+791
+00:29:01,290 --> 00:29:03,360
+would have to do the decompression.
+
+792
+00:29:03,360 --> 00:29:05,820
+And another thing that
+might not be as obvious
+
+793
+00:29:05,820 --> 00:29:07,920
+is if you have a lot of little attributes,
+
+794
+00:29:07,920 --> 00:29:10,650
+model, model version,
+temperature, top P, top K,
+
+795
+00:29:10,650 --> 00:29:12,120
+max tokens, all this stuff.
+
+796
+00:29:12,120 --> 00:29:14,310
+Sometimes if it's just payload,
+
+797
+00:29:14,310 --> 00:29:15,480
+you're not gonna index on 'em.
+
+798
+00:29:15,480 --> 00:29:16,710
+You're not gonna filter by them.
+
+799
+00:29:16,710 --> 00:29:18,480
+You don't need the database
+to be aware of 'em.
+
+800
+00:29:18,480 --> 00:29:20,460
+They just need to be handed to the client.
+
+801
+00:29:20,460 --> 00:29:23,700
+You can make it into a
+JSON, a MAP in Dynamo.
+
+802
+00:29:23,700 --> 00:29:27,240
+You can compress that, store
+it as a binary in Dynamo,
+
+803
+00:29:27,240 --> 00:29:30,000
+and now you've got a smaller set of data.
+
+804
+00:29:30,000 --> 00:29:32,970
+It also serializes a
+little faster I think.
+
+805
+00:29:32,970 --> 00:29:35,010
+So, might not always think about that.
+
+806
+00:29:35,010 --> 00:29:36,270
+You can also do just a string.
+
+807
+00:29:36,270 --> 00:29:38,640
+Sometimes people have like
+a lot of little attributes.
+
+808
+00:29:38,640 --> 00:29:39,840
+You can make one attribute with a string.
+
+809
+00:29:39,840 --> 00:29:42,660
+It's a little tighter as far
+as its internal representation.
+
+810
+00:29:42,660 --> 00:29:44,670
+It's not a huge win, but it is a win.
+
+811
+00:29:44,670 --> 00:29:46,530
+Again, if you don't need the database
+
+812
+00:29:46,530 --> 00:29:50,160
+to be aware of what it
+is, a way to save money.
+
+813
+00:29:50,160 --> 00:29:51,513
+Another thing you see.
+
+814
+00:29:52,440 --> 00:29:55,653
+How much does it cost to
+update an item in Dynamo?
+
+815
+00:29:56,520 --> 00:30:00,030
+The answer is it's proportional
+to the size of the item.
+
+816
+00:30:00,030 --> 00:30:01,310
+If you update one little value
+
+817
+00:30:01,310 --> 00:30:04,410
+in a six kilobyte item,
+it costs six write units
+
+818
+00:30:04,410 --> 00:30:07,920
+because it's the larger
+of the before or after.
+
+819
+00:30:07,920 --> 00:30:09,930
+How much does it cost to do a delete?
+
+820
+00:30:09,930 --> 00:30:12,240
+It costs the size of the item.
+
+821
+00:30:12,240 --> 00:30:14,400
+So one thing that you
+see people do sometimes
+
+822
+00:30:14,400 --> 00:30:17,310
+is they have like a
+timestamp in our meta here,
+
+823
+00:30:17,310 --> 00:30:19,380
+which is the last update time,
+
+824
+00:30:19,380 --> 00:30:20,850
+and the meta is six kilobytes
+
+825
+00:30:20,850 --> 00:30:22,860
+in my hypothetical example.
+
+826
+00:30:22,860 --> 00:30:25,890
+Huh, I'm doing a frequent update here.
+
+827
+00:30:25,890 --> 00:30:29,040
+What I could do instead is I
+could break it into two items,
+
+828
+00:30:29,040 --> 00:30:30,900
+a static and a dynamic portion.
+
+829
+00:30:30,900 --> 00:30:33,030
+I could only do my updates in the dynamic.
+
+830
+00:30:33,030 --> 00:30:37,623
+Now my writes are one instead
+of six. Is that good or bad?
+
+831
+00:30:39,030 --> 00:30:40,020
+I think it feels good.
+
+832
+00:30:40,020 --> 00:30:42,000
+It's bad if you never do the update
+
+833
+00:30:42,000 --> 00:30:45,180
+because the initial write
+needed to do two items
+
+834
+00:30:45,180 --> 00:30:47,010
+and maybe the first one was like 5.8,
+
+835
+00:30:47,010 --> 00:30:48,240
+which rounds to 6.
+
+836
+00:30:48,240 --> 00:30:49,470
+And then you also have
+to do the other one.
+
+837
+00:30:49,470 --> 00:30:52,293
+So that's 7. So maybe
+the initial write is 7.
+
+838
+00:30:53,310 --> 00:30:56,670
+And later on you get the 1-1-1.
+
+839
+00:30:56,670 --> 00:30:57,960
+So I'd say it's a win
+
+840
+00:30:57,960 --> 00:31:01,260
+so long as your update is
+often enough to math out
+
+841
+00:31:01,260 --> 00:31:05,223
+that I'd rather pay 7
+plus 1-1-1 than 6-6-6-6.
+
+842
+00:31:06,120 --> 00:31:07,680
+And this is a common thing.
+
+843
+00:31:07,680 --> 00:31:10,500
+One of the fun things is
+when you're doing video games
+
+844
+00:31:10,500 --> 00:31:12,690
+and you have to keep a list of things
+
+845
+00:31:12,690 --> 00:31:14,430
+in your knapsack, right?
+
+846
+00:31:14,430 --> 00:31:16,650
+Do you wanna have like one knapsack item
+
+847
+00:31:16,650 --> 00:31:18,720
+which is just big, but every
+time you change your knapsack
+
+848
+00:31:18,720 --> 00:31:20,250
+I have to rewrite the knapsack?
+
+849
+00:31:20,250 --> 00:31:21,870
+Or do I wanna have every
+item in the knapsack
+
+850
+00:31:21,870 --> 00:31:22,773
+be its own item?
+
+851
+00:31:23,790 --> 00:31:25,710
+Discuss. It's a challenge.
+
+852
+00:31:25,710 --> 00:31:27,060
+Do I wanna have little knapsacks,
+
+853
+00:31:27,060 --> 00:31:29,220
+like every unit of update is a knapsack?
+
+854
+00:31:29,220 --> 00:31:31,650
+What is the best way to store n-many items
+
+855
+00:31:31,650 --> 00:31:33,720
+for a video game player for their payload?
+
+856
+00:31:33,720 --> 00:31:35,520
+And this gets into it.
+
+857
+00:31:35,520 --> 00:31:37,670
+The cost of writes and
+the cost of storage.
+
+858
+00:31:38,610 --> 00:31:41,610
+Oh man, these people keep
+coming up with requirements.
+
+859
+00:31:41,610 --> 00:31:46,610
+Okay. Users can now
+delete threads. All right.
+
+860
+00:31:47,820 --> 00:31:50,160
+And the threads might be really big.
+
+861
+00:31:50,160 --> 00:31:51,810
+All right, so what I
+probably don't wanna do
+
+862
+00:31:51,810 --> 00:31:55,800
+is have the user wait around
+while I'm actively deleting.
+
+863
+00:31:55,800 --> 00:31:56,633
+What do we do?
+
+864
+00:31:56,633 --> 00:31:59,760
+This is a classic soft
+delete situation, right?
+
+865
+00:31:59,760 --> 00:32:01,980
+Where I'm going to mark
+something as deleted,
+
+866
+00:32:01,980 --> 00:32:04,110
+act like it's deleted from
+the user point of view
+
+867
+00:32:04,110 --> 00:32:06,090
+and then later on in the background
+
+868
+00:32:06,090 --> 00:32:09,003
+do all the sweeping, right?
+
+869
+00:32:10,050 --> 00:32:12,000
+All right. Hmm.
+
+870
+00:32:12,000 --> 00:32:15,030
+I'll update an attribute
+on the metadata item.
+
+871
+00:32:15,030 --> 00:32:16,980
+I'll delete the conversation later.
+
+872
+00:32:16,980 --> 00:32:19,113
+How do I know which threads are deleted?
+
+873
+00:32:23,640 --> 00:32:27,360
+Almost every one of these has
+an answer as an index, right?
+
+874
+00:32:27,360 --> 00:32:30,120
+There's an index on the deleted threads.
+
+875
+00:32:30,120 --> 00:32:31,590
+Okay, I can do that.
+
+876
+00:32:31,590 --> 00:32:34,470
+So what I will do is I'll create a GSI,
+
+877
+00:32:34,470 --> 00:32:35,790
+I'll make it a sparse GSI
+
+878
+00:32:35,790 --> 00:32:38,970
+because it'll only be the
+deleted thread metadata.
+
+879
+00:32:38,970 --> 00:32:43,680
+And now if I delete a thread,
+I will create a new attribute.
+
+880
+00:32:43,680 --> 00:32:45,450
+I don't care what it's called,
+
+881
+00:32:45,450 --> 00:32:46,950
+but it will be the attribute name
+
+882
+00:32:46,950 --> 00:32:49,980
+that gets projected into my sparse GSI.
+
+883
+00:32:49,980 --> 00:32:51,240
+And then I can go to that GSI
+
+884
+00:32:51,240 --> 00:32:53,370
+and I can see only items
+
+885
+00:32:53,370 --> 00:32:55,500
+which are representing deleted threads.
+
+886
+00:32:55,500 --> 00:32:58,920
+So maybe I will pick a GSI
+partition key of a thread state
+
+887
+00:32:58,920 --> 00:33:02,700
+to say it's deleted, and a
+GSI sort key of a timestamp
+
+888
+00:33:02,700 --> 00:33:03,630
+of when it was deleted,
+
+889
+00:33:03,630 --> 00:33:06,720
+so that I could like clean up
+the oldest first or something.
+
+890
+00:33:06,720 --> 00:33:09,300
+So I go here and I do a query,
+
+891
+00:33:09,300 --> 00:33:11,910
+and I say find me in
+this GSI partition key
+
+892
+00:33:11,910 --> 00:33:13,500
+equals S# delete.
+
+893
+00:33:13,500 --> 00:33:17,940
+What's the S#? State? I'm
+doing that name mingling thing.
+
+894
+00:33:17,940 --> 00:33:19,650
+You see that a lot, you don't have to,
+
+895
+00:33:19,650 --> 00:33:20,670
+but I'm doing it.
+
+896
+00:33:20,670 --> 00:33:22,653
+T timestamp, T representing timestamp.
+
+897
+00:33:24,630 --> 00:33:25,463
+And I can say, all right,
+
+898
+00:33:25,463 --> 00:33:27,870
+find me all the deleted ones forward,
+
+899
+00:33:27,870 --> 00:33:29,550
+gimme the first 10 and
+I'll go off and actually
+
+900
+00:33:29,550 --> 00:33:31,170
+actively delete them.
+
+901
+00:33:31,170 --> 00:33:32,870
+Is there anything wrong with this?
+
+902
+00:33:33,750 --> 00:33:35,280
+We're in the scaling section.
+
+903
+00:33:35,280 --> 00:33:36,113
+We're in the one
+
+904
+00:33:36,113 --> 00:33:38,362
+where we try to say, you
+know, how do we do this
+
+905
+00:33:38,362 --> 00:33:42,243
+when the scale gets to enterprise level?
+
+906
+00:33:44,250 --> 00:33:46,380
+One of the issues is that in that GSI,
+
+907
+00:33:46,380 --> 00:33:47,820
+the partition key of deleted,
+
+908
+00:33:47,820 --> 00:33:51,630
+it can only accept 1,000
+writes a second, right?
+
+909
+00:33:51,630 --> 00:33:54,390
+Are you gonna delete more
+than 1,000 threads a second?
+
+910
+00:33:54,390 --> 00:33:55,473
+Most people don't.
+
+911
+00:33:56,490 --> 00:33:58,435
+Some people do.
+
+912
+00:33:58,435 --> 00:33:59,268
+So what do I do about that?
+
+913
+00:33:59,268 --> 00:34:01,770
+And this is actually where you
+get a lot of hot partitions,
+
+914
+00:34:01,770 --> 00:34:02,790
+as we call it,
+
+915
+00:34:02,790 --> 00:34:05,100
+is the base table has a beautiful
+
+916
+00:34:05,100 --> 00:34:06,660
+high cardinality partition key.
+
+917
+00:34:06,660 --> 00:34:10,975
+But the sort key has like
+state as the partition key.
+
+918
+00:34:10,975 --> 00:34:13,470
+I chose this here just
+because it's so common.
+
+919
+00:34:13,470 --> 00:34:14,730
+I wanted to get it out there.
+
+920
+00:34:14,730 --> 00:34:16,230
+And the state can be an issue.
+
+921
+00:34:17,070 --> 00:34:18,633
+So this is where you can shard.
+
+922
+00:34:19,560 --> 00:34:21,900
+So if I was gonna do
+10,000 deletes a second,
+
+923
+00:34:21,900 --> 00:34:22,920
+then instead of deleted,
+
+924
+00:34:22,920 --> 00:34:25,323
+I would have like deleted# random number,
+
+925
+00:34:26,490 --> 00:34:28,650
+and now I can accept as many items
+
+926
+00:34:28,650 --> 00:34:31,410
+as 1,000 times the unique
+number of partition keys.
+
+927
+00:34:31,410 --> 00:34:32,730
+So maybe I should do 20
+
+928
+00:34:32,730 --> 00:34:34,880
+so that none of 'em
+are close to being hot.
+
+929
+00:34:36,570 --> 00:34:38,280
+All right. This is sharding.
+
+930
+00:34:38,280 --> 00:34:40,410
+You'll hear it all the time there.
+
+931
+00:34:40,410 --> 00:34:42,870
+I'd love a built in
+feature but it's not there.
+
+932
+00:34:42,870 --> 00:34:44,100
+But this is where you have to be aware
+
+933
+00:34:44,100 --> 00:34:45,660
+that sometimes my partition,
+
+934
+00:34:45,660 --> 00:34:47,070
+my one partition key
+
+935
+00:34:47,070 --> 00:34:48,510
+can get more than 1,000 writes a second.
+
+936
+00:34:48,510 --> 00:34:51,690
+Now we will sometimes be
+able to split it for you,
+
+937
+00:34:51,690 --> 00:34:54,390
+but if you do this, you're
+guaranteed it'll work.
+
+938
+00:34:54,390 --> 00:34:57,840
+The details on when we
+can split hot partitions
+
+939
+00:34:57,840 --> 00:34:58,710
+is kind of complex.
+
+940
+00:34:58,710 --> 00:35:00,450
+Happy to talk about it, but I blogged it.
+
+941
+00:35:00,450 --> 00:35:02,640
+If you do that Split
+for Heat DynamoDB blog,
+
+942
+00:35:02,640 --> 00:35:04,563
+it tests out various scenarios.
+
+943
+00:35:05,520 --> 00:35:06,570
+All right, so what if later
+
+944
+00:35:06,570 --> 00:35:08,613
+I have more values like archived?
+
+945
+00:35:10,110 --> 00:35:10,943
+I mean, I can do this.
+
+946
+00:35:10,943 --> 00:35:15,840
+S#archived0123456. S#somethingelse012345.
+
+947
+00:35:15,840 --> 00:35:17,310
+Another way I wanted to show you though
+
+948
+00:35:17,310 --> 00:35:20,010
+is that you can just
+pick the partition key.
+
+949
+00:35:20,010 --> 00:35:22,680
+You don't care what the
+partition key is that much.
+
+950
+00:35:22,680 --> 00:35:23,513
+So look at this.
+
+951
+00:35:23,513 --> 00:35:25,637
+Now my partition key is S.
+
+952
+00:35:25,637 --> 00:35:28,470
+I don't know S, shard?
+S stands for shard now.
+
+953
+00:35:28,470 --> 00:35:29,940
+Yeah, that works.
+
+954
+00:35:29,940 --> 00:35:33,000
+Shard012, as many as you want.
+
+955
+00:35:33,000 --> 00:35:35,150
+And I've moved the
+value into the sort key.
+
+956
+00:35:37,620 --> 00:35:40,680
+So now I can do a query which
+is like give me everything
+
+957
+00:35:40,680 --> 00:35:43,800
+in S0 bucket there, S1 bucket.
+
+958
+00:35:43,800 --> 00:35:48,210
+Or I could say S1 starts with S#deleted.
+
+959
+00:35:48,210 --> 00:35:50,160
+And now I can say gimme
+all the deleted ones
+
+960
+00:35:50,160 --> 00:35:53,280
+from the bucket 1, and I could now find
+
+961
+00:35:53,280 --> 00:35:55,290
+all the deleted threads
+by going to my 10 buckets,
+
+962
+00:35:55,290 --> 00:35:56,123
+and for each one saying,
+
+963
+00:35:56,123 --> 00:35:58,532
+gimme the sort key starts with this.
+
+964
+00:35:58,532 --> 00:36:00,630
+And I just wanna show this
+because sometimes you put a value
+
+965
+00:36:00,630 --> 00:36:02,040
+in the partition key
+
+966
+00:36:02,040 --> 00:36:05,190
+and sometimes you put at
+the prefix of the sort key,
+
+967
+00:36:05,190 --> 00:36:06,780
+and they both work just fine.
+
+968
+00:36:06,780 --> 00:36:09,142
+I think this one's kind of elegant.
+
+969
+00:36:09,142 --> 00:36:09,975
+I don't know.
+
+970
+00:36:09,975 --> 00:36:10,890
+I pick as many shards as
+I want 'cause I'm like,
+
+971
+00:36:10,890 --> 00:36:13,560
+well I'm gonna update this many times
+
+972
+00:36:13,560 --> 00:36:16,110
+and I'm gonna have X many shards.
+
+973
+00:36:16,110 --> 00:36:17,550
+And then the value just becomes something
+
+974
+00:36:17,550 --> 00:36:20,280
+that goes into the sort key
+
+975
+00:36:20,280 --> 00:36:22,170
+as opposed to me having
+all these partition keys
+
+976
+00:36:22,170 --> 00:36:23,490
+with all the different values there.
+
+977
+00:36:23,490 --> 00:36:24,540
+But there's no real difference
+
+978
+00:36:24,540 --> 00:36:26,430
+from the database performance
+or the cost or anything.
+
+979
+00:36:26,430 --> 00:36:27,843
+It's just a style thing.
+
+980
+00:36:28,950 --> 00:36:29,783
+All right.
+
+981
+00:36:29,783 --> 00:36:32,280
+Boy, these people keep
+coming up with requirements.
+
+982
+00:36:32,280 --> 00:36:34,890
+I wanna count the total
+cost per model per day
+
+983
+00:36:34,890 --> 00:36:36,960
+and I wanna count the total cost per model
+
+984
+00:36:36,960 --> 00:36:39,483
+for each user to do some billing.
+
+985
+00:36:40,740 --> 00:36:43,800
+Okay, and this is one of those situations
+
+986
+00:36:43,800 --> 00:36:47,220
+where I probably don't wanna
+put it on the main write path
+
+987
+00:36:47,220 --> 00:36:48,630
+because if I put it on
+the main write path,
+
+988
+00:36:48,630 --> 00:36:50,160
+I slow down the user
+
+989
+00:36:50,160 --> 00:36:51,330
+and there's really no need for that
+
+990
+00:36:51,330 --> 00:36:52,740
+to just do my accounting.
+
+991
+00:36:52,740 --> 00:36:54,750
+This feels like a backend thing.
+
+992
+00:36:54,750 --> 00:36:56,880
+And so I wanna scale to any usage
+
+993
+00:36:56,880 --> 00:36:59,580
+and I want to not make the user wait.
+
+994
+00:36:59,580 --> 00:37:03,480
+So have we heard about
+streams in DynamoDB?
+
+995
+00:37:03,480 --> 00:37:05,820
+Streams are Dynamo's change data capture
+
+996
+00:37:05,820 --> 00:37:08,070
+where every mutation
+that happens to a table
+
+997
+00:37:08,070 --> 00:37:10,380
+will be put into a stream
+
+998
+00:37:10,380 --> 00:37:11,970
+and you can then watch that stream
+
+999
+00:37:11,970 --> 00:37:13,770
+to do something with the data.
+
+1000
+00:37:13,770 --> 00:37:14,670
+And some people do this
+
+1001
+00:37:14,670 --> 00:37:16,140
+if you're doing a shopping cart checkout,
+
+1002
+00:37:16,140 --> 00:37:18,060
+they'll be oh, the order placed,
+
+1003
+00:37:18,060 --> 00:37:20,820
+and then they proceed
+to propagate it down.
+
+1004
+00:37:20,820 --> 00:37:23,820
+Sometimes people do it to
+propagate to a downstream system.
+
+1005
+00:37:23,820 --> 00:37:25,320
+So I can watch that and I can push it
+
+1006
+00:37:25,320 --> 00:37:26,550
+into some other database
+
+1007
+00:37:26,550 --> 00:37:28,200
+that's gonna have a different index model.
+
+1008
+00:37:28,200 --> 00:37:29,880
+Or I can write it to S3
+
+1009
+00:37:29,880 --> 00:37:32,850
+or I can check for bad
+behavior or whatnot.
+
+1010
+00:37:32,850 --> 00:37:34,620
+And you can also do event filters on it
+
+1011
+00:37:34,620 --> 00:37:37,380
+to say I only wanna be
+notified about certain things.
+
+1012
+00:37:37,380 --> 00:37:39,600
+And there's a tight
+integration with streams
+
+1013
+00:37:39,600 --> 00:37:42,150
+and Lambda where you can
+create a Lambda function
+
+1014
+00:37:42,150 --> 00:37:45,630
+that says I watch this stream
+and it's just called for you.
+
+1015
+00:37:45,630 --> 00:37:48,420
+You don't have to iterate streams and all.
+
+1016
+00:37:48,420 --> 00:37:49,530
+There's a lot of work
+
+1017
+00:37:49,530 --> 00:37:51,870
+to go find the latest
+data out of the stream.
+
+1018
+00:37:51,870 --> 00:37:54,193
+But if you hook up with
+Lambda, it's all done for you.
+
+1019
+00:37:54,193 --> 00:37:56,400
+And so you create a Lambda function
+
+1020
+00:37:56,400 --> 00:38:00,300
+that updates the count and would
+probably buffer internally.
+
+1021
+00:38:00,300 --> 00:38:04,230
+So a Lambda will be handed,
+not just one item at a time,
+
+1022
+00:38:04,230 --> 00:38:06,210
+but some batch of items
+and you can control that.
+
+1023
+00:38:06,210 --> 00:38:07,650
+So you can make a bigger batch,
+
+1024
+00:38:07,650 --> 00:38:09,900
+and you can have 1,000 items
+
+1025
+00:38:09,900 --> 00:38:11,160
+and you have your Lambda
+be like, all right,
+
+1026
+00:38:11,160 --> 00:38:12,990
+let me aggregate this together
+
+1027
+00:38:12,990 --> 00:38:15,390
+and update once instead
+of update 1,000 times.
+
+1028
+00:38:15,390 --> 00:38:18,600
+That saves write costs
+and it improves efficiency
+
+1029
+00:38:18,600 --> 00:38:22,650
+because probably the
+Claude model on one day
+
+1030
+00:38:22,650 --> 00:38:24,210
+across all users is going to be used
+
+1031
+00:38:24,210 --> 00:38:26,160
+more than 1,000 times a second.
+
+1032
+00:38:26,160 --> 00:38:28,950
+So better I update with a buffered value.
+
+1033
+00:38:28,950 --> 00:38:32,250
+It kind of depends on how
+accurate you need to be though.
+
+1034
+00:38:32,250 --> 00:38:34,050
+Streams are really nice
+
+1035
+00:38:34,050 --> 00:38:38,580
+because they are exactly once delivery.
+
+1036
+00:38:38,580 --> 00:38:42,150
+You don't find this often in
+any sort of streaming event.
+
+1037
+00:38:42,150 --> 00:38:46,710
+They're exactly once in order
+delivery out of your database.
+
+1038
+00:38:46,710 --> 00:38:47,910
+Pretty cool.
+
+1039
+00:38:47,910 --> 00:38:51,000
+But if a Lambda function
+has issues, what happens?
+
+1040
+00:38:51,000 --> 00:38:53,883
+If a Lambda crashes we restart
+it with the same payload.
+
+1041
+00:38:55,050 --> 00:38:56,580
+So you gotta be careful because the Lambda
+
+1042
+00:38:56,580 --> 00:38:59,430
+might increment once and then
+die and then be restarted,
+
+1043
+00:38:59,430 --> 00:39:01,200
+then increment once again.
+
+1044
+00:39:01,200 --> 00:39:03,510
+So you gotta be careful when
+you're doing the Lambda stuff.
+
+1045
+00:39:03,510 --> 00:39:06,240
+And there's no simple
+straightforward like,
+
+1046
+00:39:06,240 --> 00:39:07,770
+push a button and it's all good.
+
+1047
+00:39:07,770 --> 00:39:10,230
+You basically have to
+have some state remembered
+
+1048
+00:39:10,230 --> 00:39:13,230
+where the Lambda can know if
+it already did the work or not.
+
+1049
+00:39:13,230 --> 00:39:16,830
+One technique is that
+you'd make a message ID set
+
+1050
+00:39:16,830 --> 00:39:19,590
+in the item of recent updates.
+
+1051
+00:39:19,590 --> 00:39:20,880
+Like hey, I'm doing an update
+
+1052
+00:39:20,880 --> 00:39:22,650
+and I hashed my payload and here's my hash
+
+1053
+00:39:22,650 --> 00:39:24,660
+and let me make a note
+that I did the work,
+
+1054
+00:39:24,660 --> 00:39:26,400
+and here's a recent set of work.
+
+1055
+00:39:26,400 --> 00:39:27,720
+So if I crash and I come back,
+
+1056
+00:39:27,720 --> 00:39:28,830
+I can say, did I already do it?
+
+1057
+00:39:28,830 --> 00:39:30,870
+Did my previous incarnation do this work?
+
+1058
+00:39:30,870 --> 00:39:32,013
+If so, I'll skip it.
+
+1059
+00:39:33,660 --> 00:39:35,760
+You can also maybe use transactions
+
+1060
+00:39:35,760 --> 00:39:37,080
+with a client request token,
+
+1061
+00:39:37,080 --> 00:39:39,083
+which is a way to get
+item potency out of it,
+
+1062
+00:39:39,083 --> 00:39:41,070
+so long as you can get a deterministic
+
+1063
+00:39:41,070 --> 00:39:43,440
+client request token out of your payload.
+
+1064
+00:39:43,440 --> 00:39:45,870
+'Cause the Lambda is
+always, well not always,
+
+1065
+00:39:45,870 --> 00:39:48,060
+it's usually invoked with the same payload
+
+1066
+00:39:48,060 --> 00:39:49,050
+unless you say split on error,
+
+1067
+00:39:49,050 --> 00:39:51,150
+in which case it will split
+it down to different payloads
+
+1068
+00:39:51,150 --> 00:39:52,860
+to try to isolate the error out.
+
+1069
+00:39:52,860 --> 00:39:54,840
+But it's complex enough
+that I wrote a blog on it
+
+1070
+00:39:54,840 --> 00:39:57,120
+with I think seven or nine or some such
+
+1071
+00:39:57,120 --> 00:39:58,410
+different ways to do it.
+
+1072
+00:39:58,410 --> 00:40:01,023
+All of which are a little bit like, okay,
+
+1073
+00:40:02,310 --> 00:40:03,510
+as a technical term.
+
+1074
+00:40:03,510 --> 00:40:05,910
+So you can look up that if
+you wanna see ways to do this.
+
+1075
+00:40:05,910 --> 00:40:07,140
+But I wanted to point that out.
+
+1076
+00:40:07,140 --> 00:40:08,940
+When you're doing the Lambda processing,
+
+1077
+00:40:08,940 --> 00:40:12,060
+the stream is exactly once
+in order, perfect delivery,
+
+1078
+00:40:12,060 --> 00:40:13,910
+but your processing of it may not be.
+
+1079
+00:40:15,420 --> 00:40:17,130
+And then something else.
+
+1080
+00:40:17,130 --> 00:40:19,230
+Gosh these people, this PM,
+
+1081
+00:40:19,230 --> 00:40:22,050
+they keep making all their
+money giving me work.
+
+1082
+00:40:22,050 --> 00:40:23,010
+I wanna be a PM someday
+
+1083
+00:40:23,010 --> 00:40:25,200
+and make other people solve my problems.
+
+1084
+00:40:25,200 --> 00:40:27,183
+So service-side search.
+
+1085
+00:40:28,410 --> 00:40:30,420
+Right now you can do a client-side search,
+
+1086
+00:40:30,420 --> 00:40:32,940
+search your past chats, but
+it's gotten a little slow
+
+1087
+00:40:32,940 --> 00:40:34,170
+'cause it's un-indexed.
+
+1088
+00:40:34,170 --> 00:40:36,540
+So I'd really rather
+have a server-side search
+
+1089
+00:40:36,540 --> 00:40:38,670
+that I maintain for everybody.
+
+1090
+00:40:38,670 --> 00:40:39,780
+What do I do with that?
+
+1091
+00:40:39,780 --> 00:40:42,603
+What's the query in Dynamo
+that does tech search?
+
+1092
+00:40:45,690 --> 00:40:47,100
+Yeah, there isn't one.
+
+1093
+00:40:47,100 --> 00:40:48,750
+Was anyone excited?
+
+1094
+00:40:48,750 --> 00:40:51,483
+Like really? There is
+one? No, there's not one.
+
+1095
+00:40:52,920 --> 00:40:55,350
+So what we do though is we
+integrate with OpenSearch.
+
+1096
+00:40:55,350 --> 00:40:56,370
+So there's Zero-ETL,
+
+1097
+00:40:56,370 --> 00:40:58,740
+I think this was about
+two years ago introduced
+
+1098
+00:40:58,740 --> 00:41:02,280
+and you can without
+having your own servers,
+
+1099
+00:41:02,280 --> 00:41:04,470
+it's all serverless and managed for you.
+
+1100
+00:41:04,470 --> 00:41:07,170
+You define the configuration of how Dynamo
+
+1101
+00:41:07,170 --> 00:41:08,550
+will propagate to OpenSearch
+
+1102
+00:41:08,550 --> 00:41:10,560
+and then have a copy of
+your data in OpenSearch,
+
+1103
+00:41:10,560 --> 00:41:12,300
+or a subset of your data if you want.
+
+1104
+00:41:12,300 --> 00:41:14,820
+And against OpenSearch
+you can do all the stuff
+
+1105
+00:41:14,820 --> 00:41:16,530
+that is advanced indexing.
+
+1106
+00:41:16,530 --> 00:41:18,720
+'Cause OpenSearch is
+really about index tools.
+
+1107
+00:41:18,720 --> 00:41:20,610
+So you can do relevance ordered search,
+
+1108
+00:41:20,610 --> 00:41:25,610
+you can do an analytics
+type query, you can do RAG.
+
+1109
+00:41:25,710 --> 00:41:28,320
+And we have a workshop at
+3:00 o'clock that I'm leading
+
+1110
+00:41:28,320 --> 00:41:30,780
+where we're going to do
+this actual integration,
+
+1111
+00:41:30,780 --> 00:41:33,330
+where we're going to use
+OpenSearch and Bedrock
+
+1112
+00:41:33,330 --> 00:41:35,580
+and do natural language
+processing with RAG
+
+1113
+00:41:35,580 --> 00:41:37,620
+driven by OpenSearch and vectors.
+
+1114
+00:41:37,620 --> 00:41:40,890
+So this is one way to do it
+with Dynamo and OpenSearch.
+
+1115
+00:41:40,890 --> 00:41:41,723
+Pretty straightforward.
+
+1116
+00:41:41,723 --> 00:41:44,115
+You'll see that there's just a definition
+
+1117
+00:41:44,115 --> 00:41:47,583
+of this goes to there and that's it.
+
+1118
+00:41:49,650 --> 00:41:51,210
+So then one last tip.
+
+1119
+00:41:51,210 --> 00:41:53,160
+And I just put this in all my talks
+
+1120
+00:41:53,160 --> 00:41:54,810
+because it's gonna save you so much money
+
+1121
+00:41:54,810 --> 00:41:56,760
+the day that you need it.
+
+1122
+00:41:56,760 --> 00:41:57,593
+So this is your money saver.
+
+1123
+00:41:57,593 --> 00:42:00,120
+This pays for your reInvent ticket.
+
+1124
+00:42:00,120 --> 00:42:01,980
+The new requirement is we wanna be ready
+
+1125
+00:42:01,980 --> 00:42:04,563
+to recover from an
+application level corruption.
+
+1126
+00:42:05,400 --> 00:42:06,510
+So something went wrong.
+
+1127
+00:42:06,510 --> 00:42:07,983
+a bulk load happened.
+
+1128
+00:42:09,600 --> 00:42:11,310
+I deleted an item I didn't mean to.
+
+1129
+00:42:11,310 --> 00:42:13,260
+That level of corruption.
+
+1130
+00:42:13,260 --> 00:42:14,910
+It's our job as AWS to make sure
+
+1131
+00:42:14,910 --> 00:42:16,320
+that your database doesn't corrupt,
+
+1132
+00:42:16,320 --> 00:42:17,730
+but it doesn't mean that your application
+
+1133
+00:42:17,730 --> 00:42:19,620
+couldn't make a call that
+you didn't mean to make
+
+1134
+00:42:19,620 --> 00:42:21,690
+and actually did something
+bad with the data.
+
+1135
+00:42:21,690 --> 00:42:23,040
+And the thing you do with that
+
+1136
+00:42:23,040 --> 00:42:24,030
+is a push button.
+
+1137
+00:42:24,030 --> 00:42:26,970
+You can turn on Point
+in Time Recovery, PITR,
+
+1138
+00:42:26,970 --> 00:42:30,780
+and PITR maintains the
+change log for up to 35 days.
+
+1139
+00:42:30,780 --> 00:42:32,190
+Now you can configure it smaller
+
+1140
+00:42:32,190 --> 00:42:34,350
+if you wanna forget things after a day.
+
+1141
+00:42:34,350 --> 00:42:36,840
+But we will remember
+up to 35 days for you.
+
+1142
+00:42:36,840 --> 00:42:39,720
+And against that you can then typically
+
+1143
+00:42:39,720 --> 00:42:42,416
+do a full table restore before the damage.
+
+1144
+00:42:42,416 --> 00:42:44,910
+This is you after doing the bad load.
+
+1145
+00:42:44,910 --> 00:42:46,560
+You're like, I'm gonna get fired.
+
+1146
+00:42:46,560 --> 00:42:47,393
+I can't believe it.
+
+1147
+00:42:47,393 --> 00:42:49,500
+So you just ran a bad bulk load.
+
+1148
+00:42:49,500 --> 00:42:52,290
+And the full table restore is
+a way to solve the problem,
+
+1149
+00:42:52,290 --> 00:42:54,183
+but it costs $150 a terabyte.
+
+1150
+00:42:56,460 --> 00:42:58,560
+15 cents a gigabyte is a way
+to make it sound smaller,
+
+1151
+00:42:58,560 --> 00:43:00,990
+but it's $150 a terabyte, right?
+
+1152
+00:43:00,990 --> 00:43:03,960
+You might get fired, man.
+How big is your table?
+
+1153
+00:43:03,960 --> 00:43:06,600
+So what else could you
+do? There's a cheaper way.
+
+1154
+00:43:06,600 --> 00:43:09,900
+And the cheaper way was
+introduced two years ago.
+
+1155
+00:43:09,900 --> 00:43:13,710
+Anyone remember? It is called
+incremental export to S3.
+
+1156
+00:43:13,710 --> 00:43:15,930
+If you have Point in Time Recovery on,
+
+1157
+00:43:15,930 --> 00:43:19,110
+you have access then to
+doing an incremental export,
+
+1158
+00:43:19,110 --> 00:43:20,280
+you can do a full export too.
+
+1159
+00:43:20,280 --> 00:43:21,570
+We've had that for a long time.
+
+1160
+00:43:21,570 --> 00:43:23,100
+An incremental export
+though is where you say,
+
+1161
+00:43:23,100 --> 00:43:24,990
+I want the list of changes that happened
+
+1162
+00:43:24,990 --> 00:43:26,733
+between these two points.
+
+1163
+00:43:27,570 --> 00:43:30,810
+Give that to me as JSON on S3.
+
+1164
+00:43:30,810 --> 00:43:33,690
+So now, think about it.
+
+1165
+00:43:33,690 --> 00:43:37,590
+If I get this on disc,
+which tells me the time,
+
+1166
+00:43:37,590 --> 00:43:39,900
+the partition key, sort
+key, if there's a key,
+
+1167
+00:43:39,900 --> 00:43:41,670
+the primary key of the item,
+
+1168
+00:43:41,670 --> 00:43:44,460
+the old image and the new image.
+
+1169
+00:43:44,460 --> 00:43:46,530
+I can see that at this
+time I changed Mary Grace
+
+1170
+00:43:46,530 --> 00:43:47,373
+to Mary Smith.
+
+1171
+00:43:48,390 --> 00:43:49,620
+I can now undo the damage
+
+1172
+00:43:49,620 --> 00:43:52,110
+without having to go make
+another table, right?
+
+1173
+00:43:52,110 --> 00:43:53,280
+One is restore a table.
+
+1174
+00:43:53,280 --> 00:43:55,470
+Now I've got two tables,
+I gotta delta them,
+
+1175
+00:43:55,470 --> 00:43:56,760
+I gotta figure out what happened,
+
+1176
+00:43:56,760 --> 00:43:57,840
+and then put it back.
+
+1177
+00:43:57,840 --> 00:43:59,100
+Or I gotta point to the new table.
+
+1178
+00:43:59,100 --> 00:43:59,933
+But that's awkward, right?
+
+1179
+00:43:59,933 --> 00:44:01,470
+'Cause you can't rename the
+table to be the old name.
+
+1180
+00:44:01,470 --> 00:44:03,000
+You gotta point at the new name.
+
+1181
+00:44:03,000 --> 00:44:05,880
+But here I can just do
+an incremental export.
+
+1182
+00:44:05,880 --> 00:44:07,980
+I can then process it and say, all right,
+
+1183
+00:44:07,980 --> 00:44:10,800
+items for this set of item collections,
+
+1184
+00:44:10,800 --> 00:44:13,350
+these partition keys, these
+are the ones that are bad,
+
+1185
+00:44:13,350 --> 00:44:14,183
+roll it back.
+
+1186
+00:44:14,183 --> 00:44:15,016
+Whatever is the old image,
+
+1187
+00:44:15,016 --> 00:44:17,640
+make that the new image
+basically in the table.
+
+1188
+00:44:17,640 --> 00:44:22,500
+And the cost is what? Well,
+it was $150 per table here.
+
+1189
+00:44:22,500 --> 00:44:25,920
+Incremental export is 10
+cents per gig of log size.
+
+1190
+00:44:25,920 --> 00:44:29,400
+And assuming that you had
+like a gigabyte of logs
+
+1191
+00:44:29,400 --> 00:44:31,650
+during the time window of your bad load,
+
+1192
+00:44:31,650 --> 00:44:33,843
+it changes $150 to 10 cents.
+
+1193
+00:44:35,160 --> 00:44:36,510
+There you go.
+
+1194
+00:44:36,510 --> 00:44:38,490
+Bigger if you have a a larger table.
+
+1195
+00:44:38,490 --> 00:44:40,050
+And the recovery time from hours
+
+1196
+00:44:40,050 --> 00:44:42,960
+to restore a 10 terabyte table to minutes
+
+1197
+00:44:42,960 --> 00:44:47,550
+to export and process the
+export and be able to do it.
+
+1198
+00:44:47,550 --> 00:44:49,260
+So I'm just putting that
+in my various talks.
+
+1199
+00:44:49,260 --> 00:44:50,880
+If you ever hit the PITR issue, be ready.
+
+1200
+00:44:50,880 --> 00:44:52,980
+You should probably dry run this.
+
+1201
+00:44:52,980 --> 00:44:55,050
+But then that's a way to undo the damage
+
+1202
+00:44:55,050 --> 00:44:57,300
+if you ever make a mistake and not get,
+
+1203
+00:44:57,300 --> 00:44:58,710
+did you wanna go back?
+
+1204
+00:44:58,710 --> 00:45:00,160
+All right, thanks for coming.
+

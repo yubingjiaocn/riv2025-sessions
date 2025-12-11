@@ -1,0 +1,5524 @@
+1
+00:00:00,120 --> 00:00:01,440
+- Thank you guys so much for coming.
+
+2
+00:00:01,440 --> 00:00:04,170
+I really appreciate your support
+in coming out to re:Invent
+
+3
+00:00:04,170 --> 00:00:06,300
+and coming to see our talk.
+
+4
+00:00:06,300 --> 00:00:09,300
+So if you've been alive in the last year,
+
+5
+00:00:09,300 --> 00:00:11,040
+you've probably heard about Gen AI,
+
+6
+00:00:11,040 --> 00:00:13,260
+you've probably heard
+about agentic revolution
+
+7
+00:00:13,260 --> 00:00:16,050
+that's been going on, and
+hopefully you've also heard
+
+8
+00:00:16,050 --> 00:00:17,790
+about Amazon Bedrock AgentCore,
+
+9
+00:00:17,790 --> 00:00:18,990
+and hopefully that's why you're here,
+
+10
+00:00:18,990 --> 00:00:20,160
+because that is the topic.
+
+11
+00:00:20,160 --> 00:00:22,470
+And we're gonna talk a little
+bit about what it means
+
+12
+00:00:22,470 --> 00:00:26,640
+to build multi-tenant SaaS
+agents in Amazon Bedrock,
+
+13
+00:00:26,640 --> 00:00:30,600
+Bedrock, (laughs) Amazon
+Bedrock AgentCore.
+
+14
+00:00:30,600 --> 00:00:32,070
+Ah, that's a good start.
+
+15
+00:00:32,070 --> 00:00:34,200
+So with that, I want you
+
+16
+00:00:34,200 --> 00:00:36,795
+to think a little bit
+about any SaaS applications
+
+17
+00:00:36,795 --> 00:00:38,520
+you've built or any that you've used
+
+18
+00:00:38,520 --> 00:00:40,020
+and how they've evolved over the years
+
+19
+00:00:40,020 --> 00:00:41,910
+and the best practices as we know them.
+
+20
+00:00:41,910 --> 00:00:43,950
+And we'll get into a little
+bit about what it means
+
+21
+00:00:43,950 --> 00:00:45,630
+to take those same practices
+
+22
+00:00:45,630 --> 00:00:47,790
+and apply them to Agentic solutions.
+
+23
+00:00:47,790 --> 00:00:48,750
+My name is Bill Tarr,
+
+24
+00:00:48,750 --> 00:00:50,760
+I'm a principal partner
+solutions architect,
+
+25
+00:00:50,760 --> 00:00:52,500
+and I'm lucky enough to
+be joined by Ujwal Bukka,
+
+26
+00:00:52,500 --> 00:00:54,270
+senior principal architect,
+
+27
+00:00:54,270 --> 00:00:57,273
+senior partner solutions
+architect with AWS.
+
+28
+00:00:57,273 --> 00:00:59,250
+With that, before we get started,
+
+29
+00:00:59,250 --> 00:01:01,710
+this is a 400 level
+session, so we're going
+
+30
+00:01:01,710 --> 00:01:04,050
+to spend some time digging into code,
+
+31
+00:01:04,050 --> 00:01:05,640
+showing actual examples.
+
+32
+00:01:05,640 --> 00:01:07,350
+We will set the table a little bit,
+
+33
+00:01:07,350 --> 00:01:08,670
+but we do have an expectation.
+
+34
+00:01:08,670 --> 00:01:11,280
+You'll have some background a
+little bit in terms of coding,
+
+35
+00:01:11,280 --> 00:01:12,600
+in terms of perhaps a little bit
+
+36
+00:01:12,600 --> 00:01:14,460
+around AgentCore already.
+
+37
+00:01:14,460 --> 00:01:15,810
+So with that,
+
+38
+00:01:15,810 --> 00:01:19,230
+I wanna talk about
+something else really quick.
+
+39
+00:01:19,230 --> 00:01:21,600
+I want you to know that
+there's also a workshop
+
+40
+00:01:21,600 --> 00:01:23,910
+that reflects almost all of the practices
+
+41
+00:01:23,910 --> 00:01:26,910
+as we've talked about
+them in this session.
+
+42
+00:01:26,910 --> 00:01:29,820
+So if you like getting your hands dirty,
+
+43
+00:01:29,820 --> 00:01:31,980
+getting into the code,
+figuring out what's going on,
+
+44
+00:01:31,980 --> 00:01:35,190
+this is going to be today and tomorrow,
+
+45
+00:01:35,190 --> 00:01:37,500
+it's listed as session
+full in the catalog.
+
+46
+00:01:37,500 --> 00:01:39,150
+Don't hesitate to go wait in line.
+
+47
+00:01:39,150 --> 00:01:40,650
+This is a great workshop.
+
+48
+00:01:40,650 --> 00:01:42,420
+All of the things you see today
+
+49
+00:01:42,420 --> 00:01:45,600
+and even a little bit more are
+reflected in that workshop.
+
+50
+00:01:45,600 --> 00:01:49,020
+And really it is the
+basis of this entire talk.
+
+51
+00:01:49,020 --> 00:01:51,600
+And if you aren't somebody
+who can likes workshops,
+
+52
+00:01:51,600 --> 00:01:54,060
+or you don't want to go do the
+workshop, you can just go out
+
+53
+00:01:54,060 --> 00:01:56,130
+to GitHub and you can grab the code.
+
+54
+00:01:56,130 --> 00:01:57,630
+So there's an actual code base
+
+55
+00:01:57,630 --> 00:01:59,730
+with actual working code
+that is behind this.
+
+56
+00:01:59,730 --> 00:02:02,160
+This isn't vaporware, this
+isn't us waving our hands.
+
+57
+00:02:02,160 --> 00:02:05,220
+This is a real solution with
+a workshop you can attend.
+
+58
+00:02:05,220 --> 00:02:07,140
+And if you can't get
+to the workshops here,
+
+59
+00:02:07,140 --> 00:02:08,730
+reach out to your AWS SSA.
+
+60
+00:02:08,730 --> 00:02:11,730
+They can help you get
+access to this workshop.
+
+61
+00:02:11,730 --> 00:02:14,400
+So what is this workshop that we built?
+
+62
+00:02:14,400 --> 00:02:16,290
+Well, here's the sample architecture.
+
+63
+00:02:16,290 --> 00:02:17,940
+I don't wanna spend too much time on it,
+
+64
+00:02:17,940 --> 00:02:19,980
+but I want you to see
+this in the beginning,
+
+65
+00:02:19,980 --> 00:02:22,710
+because what you're gonna
+see is a number of components
+
+66
+00:02:22,710 --> 00:02:25,770
+that will be reflected
+throughout this entire talk.
+
+67
+00:02:25,770 --> 00:02:28,290
+So you'll see that there's
+an AgentCore runtime.
+
+68
+00:02:28,290 --> 00:02:29,430
+This is where our code lives
+
+69
+00:02:29,430 --> 00:02:31,980
+and this is where where we're
+gonna execute our agents.
+
+70
+00:02:31,980 --> 00:02:33,240
+We have several agents.
+
+71
+00:02:33,240 --> 00:02:34,980
+There's gonna be an orchestrator agent
+
+72
+00:02:34,980 --> 00:02:36,570
+that's gonna call a knowledge base agent,
+
+73
+00:02:36,570 --> 00:02:38,700
+a log analysis agent, and a coder agent.
+
+74
+00:02:38,700 --> 00:02:39,750
+Why?
+
+75
+00:02:39,750 --> 00:02:43,620
+Because it's going to help
+us solve code problems
+
+76
+00:02:43,620 --> 00:02:44,550
+as they occur.
+
+77
+00:02:44,550 --> 00:02:46,050
+So it's actually going to be able to code
+
+78
+00:02:46,050 --> 00:02:48,630
+to a knowledge base, look
+at our documentation,
+
+79
+00:02:48,630 --> 00:02:50,370
+see how the code should operate.
+
+80
+00:02:50,370 --> 00:02:54,090
+It's gonna be able to go to
+our logs through Athena and S3
+
+81
+00:02:54,090 --> 00:02:55,170
+and examine our logs
+
+82
+00:02:55,170 --> 00:02:58,080
+and see if we can find a
+reason that the problem
+
+83
+00:02:58,080 --> 00:03:00,090
+is happening and as a coder agent
+
+84
+00:03:00,090 --> 00:03:02,010
+that perhaps can actually create code,
+
+85
+00:03:02,010 --> 00:03:05,370
+or review code as we wanna roll fixes out.
+
+86
+00:03:05,370 --> 00:03:06,600
+Around all of these,
+
+87
+00:03:06,600 --> 00:03:10,170
+we have the tools that
+live in AgentCore Gateway,
+
+88
+00:03:10,170 --> 00:03:12,000
+we're gonna get it into what it means
+
+89
+00:03:12,000 --> 00:03:14,790
+to manage tools in AgentCore.
+
+90
+00:03:14,790 --> 00:03:17,610
+We're gonna talk a little
+bit about AgentCore identity.
+
+91
+00:03:17,610 --> 00:03:20,250
+What does it mean to manage authorization
+
+92
+00:03:20,250 --> 00:03:23,100
+and authentication in a SaaS
+solution in a multi-tenant
+
+93
+00:03:23,100 --> 00:03:25,440
+solution and in an AgentCore itself?
+
+94
+00:03:25,440 --> 00:03:27,210
+And then finally, observability.
+
+95
+00:03:27,210 --> 00:03:28,830
+I wouldn't wanna do any talk
+
+96
+00:03:28,830 --> 00:03:31,350
+around multi-tenancy without
+talking about observability
+
+97
+00:03:31,350 --> 00:03:33,180
+and how we implement the ability
+
+98
+00:03:33,180 --> 00:03:36,093
+to get visibility into the
+operations of our solution.
+
+99
+00:03:37,800 --> 00:03:39,780
+With that, I said I was
+going to talk a little bit
+
+100
+00:03:39,780 --> 00:03:41,160
+about SaaS.
+
+101
+00:03:41,160 --> 00:03:44,190
+We're gonna focus in on
+five main SaaS architectural
+
+102
+00:03:44,190 --> 00:03:47,190
+challenges that we see
+with the customers we talk
+
+103
+00:03:47,190 --> 00:03:49,410
+to who are building SaaS today,
+
+104
+00:03:49,410 --> 00:03:51,758
+Before you even think about agents.
+
+105
+00:03:51,758 --> 00:03:54,660
+One of them are challenges
+with tenant onboarding.
+
+106
+00:03:54,660 --> 00:03:57,060
+When we say onboarding
+in SaaS, what we mean is
+
+107
+00:03:57,060 --> 00:03:59,400
+how quickly you can get your
+customers from learning about
+
+108
+00:03:59,400 --> 00:04:01,950
+your product to getting
+value out of your product.
+
+109
+00:04:01,950 --> 00:04:04,200
+This is one of the core
+components of SaaS.
+
+110
+00:04:04,200 --> 00:04:06,270
+If your customers have a
+bad onboarding experience,
+
+111
+00:04:06,270 --> 00:04:08,490
+if it takes them a week to
+start using the software,
+
+112
+00:04:08,490 --> 00:04:11,310
+there's a pretty good
+chance they've wandered off.
+
+113
+00:04:11,310 --> 00:04:12,360
+SaaS identity.
+
+114
+00:04:12,360 --> 00:04:14,790
+Again, what does it mean to authorize
+
+115
+00:04:14,790 --> 00:04:16,050
+and authenticate a user?
+
+116
+00:04:16,050 --> 00:04:17,520
+And how does tenant identity
+
+117
+00:04:17,520 --> 00:04:20,940
+and tenant context inject
+itself into this process?
+
+118
+00:04:20,940 --> 00:04:22,410
+And how do we make sure that propagates
+
+119
+00:04:22,410 --> 00:04:24,450
+through our whole solution?
+
+120
+00:04:24,450 --> 00:04:25,860
+Data partitioning.
+
+121
+00:04:25,860 --> 00:04:28,830
+What does it mean to properly
+manage our tenant data?
+
+122
+00:04:28,830 --> 00:04:32,820
+How do we segregate our
+tenant data into either logic,
+
+123
+00:04:32,820 --> 00:04:34,110
+or physical buckets
+
+124
+00:04:34,110 --> 00:04:36,993
+that keeps the data safe
+from other tenant's data?
+
+125
+00:04:38,220 --> 00:04:40,800
+Tenant isolation, what are the policies
+
+126
+00:04:40,800 --> 00:04:43,650
+that we use that define
+what a tenant has access
+
+127
+00:04:43,650 --> 00:04:45,450
+to and what they don't?
+
+128
+00:04:45,450 --> 00:04:47,280
+This tenant can access this service,
+
+129
+00:04:47,280 --> 00:04:49,290
+this tenant can access this database
+
+130
+00:04:49,290 --> 00:04:51,810
+and they shouldn't ever
+cross those boundaries.
+
+131
+00:04:51,810 --> 00:04:54,240
+Tenant resources should be specific
+
+132
+00:04:54,240 --> 00:04:56,523
+and explicitly defined for the tenant.
+
+133
+00:04:57,570 --> 00:04:59,490
+And finally, SaaS observability, right?
+
+134
+00:04:59,490 --> 00:05:01,830
+I've said that I would never
+have a SaaS talk without
+
+135
+00:05:01,830 --> 00:05:03,210
+talking about observability.
+
+136
+00:05:03,210 --> 00:05:07,110
+The ability to monitor your
+tenant's health applies across
+
+137
+00:05:07,110 --> 00:05:08,490
+the board to every SaaS solution.
+
+138
+00:05:08,490 --> 00:05:10,200
+In fact, I mean every solution,
+
+139
+00:05:10,200 --> 00:05:12,030
+if you're building a solution
+and you're putting on AWS
+
+140
+00:05:12,030 --> 00:05:14,100
+and you don't have any
+sort of observability,
+
+141
+00:05:14,100 --> 00:05:15,600
+I wanna have a conversation with you.
+
+142
+00:05:15,600 --> 00:05:17,370
+But if you're building an agentic solution
+
+143
+00:05:17,370 --> 00:05:18,960
+where there could be many moving parts,
+
+144
+00:05:18,960 --> 00:05:21,160
+I really wanna have a
+conversation with you.
+
+145
+00:05:22,260 --> 00:05:24,360
+So with that Ujwal, could
+you kind of kick us off
+
+146
+00:05:24,360 --> 00:05:26,370
+and tell us how we get
+started with AgentCore
+
+147
+00:05:26,370 --> 00:05:27,990
+and agents in general?
+
+148
+00:05:27,990 --> 00:05:28,823
+- Sure.
+
+149
+00:05:28,823 --> 00:05:30,210
+So the topic of discussion today
+
+150
+00:05:30,210 --> 00:05:32,670
+is building multi-tenant agents using
+
+151
+00:05:32,670 --> 00:05:34,320
+Amazon Bedrock AgentCore.
+
+152
+00:05:34,320 --> 00:05:36,690
+So in there the fundamental component
+
+153
+00:05:36,690 --> 00:05:39,210
+as you folks can see is the agent.
+
+154
+00:05:39,210 --> 00:05:41,880
+So let's start with defining an agent
+
+155
+00:05:41,880 --> 00:05:45,330
+and then try to add more
+layers on top of it.
+
+156
+00:05:45,330 --> 00:05:48,630
+So in here, now, I'll try
+to obviously try to define
+
+157
+00:05:48,630 --> 00:05:50,040
+what an agent is,
+
+158
+00:05:50,040 --> 00:05:52,380
+but by now most of the
+folks might be knowing
+
+159
+00:05:52,380 --> 00:05:53,610
+what an agent is.
+
+160
+00:05:53,610 --> 00:05:56,340
+So what I'll try to do is
+when I'm trying to explain
+
+161
+00:05:56,340 --> 00:05:58,710
+what an agent is, try to highlight some
+
+162
+00:05:58,710 --> 00:06:01,320
+of the architecture challenges
+you might encounter when
+
+163
+00:06:01,320 --> 00:06:03,456
+you're trying to build an agent.
+
+164
+00:06:03,456 --> 00:06:06,270
+To start off with, you'll
+write just a piece of a code
+
+165
+00:06:06,270 --> 00:06:08,340
+and then you have to deploy that code
+
+166
+00:06:08,340 --> 00:06:10,350
+and run it in some kind of a compute.
+
+167
+00:06:10,350 --> 00:06:13,320
+Here, when you see that an agent,
+
+168
+00:06:13,320 --> 00:06:15,450
+assume that that is just
+a piece of a code running
+
+169
+00:06:15,450 --> 00:06:17,010
+in some compute,
+
+170
+00:06:17,010 --> 00:06:20,280
+then you configure that agent
+with a large language model
+
+171
+00:06:20,280 --> 00:06:22,770
+and then expose that
+agent to your customers so
+
+172
+00:06:22,770 --> 00:06:25,650
+that they can interact
+with that particular agent.
+
+173
+00:06:25,650 --> 00:06:28,230
+And then to extend the
+functionality of the agent,
+
+174
+00:06:28,230 --> 00:06:30,630
+you need to write some tools code.
+
+175
+00:06:30,630 --> 00:06:32,760
+Tool, again, when I say
+the tool is just a piece
+
+176
+00:06:32,760 --> 00:06:35,310
+of a code which will
+help you to reach out,
+
+177
+00:06:35,310 --> 00:06:37,320
+which will help you to reach
+out to some external system,
+
+178
+00:06:37,320 --> 00:06:38,940
+or external resource.
+
+179
+00:06:38,940 --> 00:06:40,380
+So, and again, at the end of the day,
+
+180
+00:06:40,380 --> 00:06:42,870
+the tool code has to run
+in some kind of a compute
+
+181
+00:06:42,870 --> 00:06:44,940
+through which the agent tries
+to reach out to some kind
+
+182
+00:06:44,940 --> 00:06:49,590
+of an AWS resource or some
+other external resource.
+
+183
+00:06:49,590 --> 00:06:53,370
+Now that you have this agent,
+the user might be interacting
+
+184
+00:06:53,370 --> 00:06:54,720
+with this agent.
+
+185
+00:06:54,720 --> 00:06:57,180
+So there is an inbound
+call, which you might have
+
+186
+00:06:57,180 --> 00:06:59,310
+to authorize that inbound call
+
+187
+00:06:59,310 --> 00:07:02,790
+and the agent might be reaching
+out to an external resource.
+
+188
+00:07:02,790 --> 00:07:05,310
+There is an outbound call, so
+you need to do authorization
+
+189
+00:07:05,310 --> 00:07:07,050
+of that outbound call too.
+
+190
+00:07:07,050 --> 00:07:09,270
+So what I'm trying to
+get to here is you need
+
+191
+00:07:09,270 --> 00:07:12,120
+to have some kind of an
+identity which helps you with
+
+192
+00:07:12,120 --> 00:07:14,580
+that inbound authorization
+of the inbound call
+
+193
+00:07:14,580 --> 00:07:16,980
+and also the authorization
+of the outbound call.
+
+194
+00:07:18,270 --> 00:07:21,090
+And as you folks know,
+when we talk about agents,
+
+195
+00:07:21,090 --> 00:07:23,220
+there should be some kind of
+a memory management component
+
+196
+00:07:23,220 --> 00:07:25,680
+which you need to have so that you could
+
+197
+00:07:25,680 --> 00:07:29,080
+store the agent's conversation
+memory so that the agent can
+
+198
+00:07:30,270 --> 00:07:32,070
+resolve a task assigned to it within
+
+199
+00:07:32,070 --> 00:07:33,603
+that particular context.
+
+200
+00:07:34,950 --> 00:07:37,380
+Last but not the least,
+as Bill was mentioning,
+
+201
+00:07:37,380 --> 00:07:40,410
+we need some kind of an
+observability component which will
+
+202
+00:07:40,410 --> 00:07:42,330
+help you to have eyes
+
+203
+00:07:42,330 --> 00:07:44,790
+and ears into the agent to understand
+
+204
+00:07:44,790 --> 00:07:48,240
+what an agent is doing,
+why to particular decision
+
+205
+00:07:48,240 --> 00:07:49,440
+and all that good stuff.
+
+206
+00:07:50,370 --> 00:07:52,140
+So hopefully you can see that in here
+
+207
+00:07:52,140 --> 00:07:54,690
+when I define the agent, I
+also try to touch upon some
+
+208
+00:07:54,690 --> 00:07:57,870
+of the architecture challenges
+which you have encountered.
+
+209
+00:07:57,870 --> 00:08:00,420
+That brings us to the next
+slide where I would like
+
+210
+00:08:00,420 --> 00:08:04,410
+to introduce you to the
+Amazon Bedrock AgentCore,
+
+211
+00:08:04,410 --> 00:08:06,420
+which kinda addresses the
+challenges which we have
+
+212
+00:08:06,420 --> 00:08:08,700
+established in the previous slide.
+
+213
+00:08:08,700 --> 00:08:11,280
+To start off with, you
+could build your AgentCore
+
+214
+00:08:11,280 --> 00:08:14,670
+and deploy that in
+AgentCore Runtime Primitive
+
+215
+00:08:14,670 --> 00:08:18,003
+to securely scale and
+deploy your agent code.
+
+216
+00:08:18,870 --> 00:08:21,150
+And you can deploy your tools code
+
+217
+00:08:21,150 --> 00:08:23,550
+in an AgentCore Gateway Primitive.
+
+218
+00:08:23,550 --> 00:08:27,360
+Think of this primitive
+as just MCP as a service.
+
+219
+00:08:27,360 --> 00:08:29,730
+And then you could
+configure the agent running
+
+220
+00:08:29,730 --> 00:08:32,520
+in the AgentCore Runtime
+with the AgentCore Gateway
+
+221
+00:08:32,520 --> 00:08:36,090
+through MCP so that it
+can invoke those tools.
+
+222
+00:08:36,090 --> 00:08:39,960
+Now, again here, the
+user invoking the agent
+
+223
+00:08:39,960 --> 00:08:40,793
+for the inbound call,
+
+224
+00:08:40,793 --> 00:08:42,870
+there is an inbound call
+and the agent reaching out
+
+225
+00:08:42,870 --> 00:08:44,160
+to the external resources,
+
+226
+00:08:44,160 --> 00:08:45,720
+there is an outbound call to help
+
+227
+00:08:45,720 --> 00:08:47,520
+with those inbound authorization
+
+228
+00:08:47,520 --> 00:08:49,200
+and the outbound authorization,
+
+229
+00:08:49,200 --> 00:08:52,230
+we could use another primitive
+called AgentCore Identity,
+
+230
+00:08:52,230 --> 00:08:55,650
+which will help you with those two calls.
+
+231
+00:08:55,650 --> 00:08:57,030
+And for the memory management,
+
+232
+00:08:57,030 --> 00:08:59,640
+you could use another primitive
+call AgentCore memory,
+
+233
+00:08:59,640 --> 00:09:01,770
+which will have a short-term
+memory, a long-term memory,
+
+234
+00:09:01,770 --> 00:09:03,420
+which we will talk in a bit here.
+
+235
+00:09:04,590 --> 00:09:07,560
+And then you could leverage
+AgentCore observability,
+
+236
+00:09:07,560 --> 00:09:09,270
+which primarily as I mentioned earlier,
+
+237
+00:09:09,270 --> 00:09:12,240
+helps you to understand
+why particular agent
+
+238
+00:09:12,240 --> 00:09:14,160
+is doing a particular
+task in a certain way
+
+239
+00:09:14,160 --> 00:09:16,680
+and also helps you to capture any kind
+
+240
+00:09:16,680 --> 00:09:19,330
+of a custom metrics related
+to that particular agent.
+
+241
+00:09:20,310 --> 00:09:21,660
+Last but not the least,
+
+242
+00:09:21,660 --> 00:09:24,990
+the AgentCore also gives you
+some custom tools which you
+
+243
+00:09:24,990 --> 00:09:28,713
+could leverage if it makes
+sense for your architecture.
+
+244
+00:09:30,120 --> 00:09:32,310
+So Bill, now that we have established some
+
+245
+00:09:32,310 --> 00:09:35,400
+of these fundamental
+components, can you let us know
+
+246
+00:09:35,400 --> 00:09:39,270
+how we could bring in a
+multi-tenants flavor here?
+
+247
+00:09:39,270 --> 00:09:40,560
+- Yeah, absolutely.
+
+248
+00:09:40,560 --> 00:09:43,350
+So again, when we think
+about SaaS in general,
+
+249
+00:09:43,350 --> 00:09:45,450
+one of the concepts we
+want to be thinking about
+
+250
+00:09:45,450 --> 00:09:47,850
+is how we want to deploy
+our solution to get
+
+251
+00:09:47,850 --> 00:09:49,647
+to different types of customers.
+
+252
+00:09:49,647 --> 00:09:52,590
+And we very rarely with a
+SaaS solution find ourselves
+
+253
+00:09:52,590 --> 00:09:54,300
+with a single archetype of customers.
+
+254
+00:09:54,300 --> 00:09:55,650
+We might want to go up
+market to bigger customers,
+
+255
+00:09:55,650 --> 00:09:58,470
+we might wanna go down
+market to smaller customers,
+
+256
+00:09:58,470 --> 00:10:00,870
+we might wanna have more configurability,
+
+257
+00:10:00,870 --> 00:10:03,000
+but there's different concerns
+we have to think about.
+
+258
+00:10:03,000 --> 00:10:04,320
+The first of those is
+
+259
+00:10:04,320 --> 00:10:07,620
+how we apply multi-tenancy
+in those different models.
+
+260
+00:10:07,620 --> 00:10:10,050
+When we talk about these,
+there's a couple primary models
+
+261
+00:10:10,050 --> 00:10:11,490
+that really start to emerge.
+
+262
+00:10:11,490 --> 00:10:14,460
+The first of which you'll
+hear us call either silo,
+
+263
+00:10:14,460 --> 00:10:15,870
+or dedicated.
+
+264
+00:10:15,870 --> 00:10:17,880
+Now, in a silo or dedicated model,
+
+265
+00:10:17,880 --> 00:10:19,980
+in fact, it's pretty straightforward,
+
+266
+00:10:19,980 --> 00:10:21,540
+everybody gets their own stack.
+
+267
+00:10:21,540 --> 00:10:23,910
+You get your own web server,
+you get your own web server,
+
+268
+00:10:23,910 --> 00:10:25,950
+you get your own compute,
+you get your own compute.
+
+269
+00:10:25,950 --> 00:10:29,250
+Everybody has their own
+independent architecture,
+
+270
+00:10:29,250 --> 00:10:31,140
+usually top to bottom.
+
+271
+00:10:31,140 --> 00:10:35,820
+On the other extreme is pooled
+or shared infrastructure.
+
+272
+00:10:35,820 --> 00:10:38,700
+And in here, it's an
+entirely different challenge
+
+273
+00:10:38,700 --> 00:10:41,400
+and in fact most of the
+architecture will be shared.
+
+274
+00:10:41,400 --> 00:10:43,980
+And at runtime we're gonna
+have to make decisions.
+
+275
+00:10:43,980 --> 00:10:44,970
+Who are you?
+
+276
+00:10:44,970 --> 00:10:45,960
+What are you trying to do?
+
+277
+00:10:45,960 --> 00:10:47,040
+And do you have permission
+
+278
+00:10:47,040 --> 00:10:50,100
+to do the operations you're
+currently trying to do?
+
+279
+00:10:50,100 --> 00:10:52,260
+And there are trade-offs
+
+280
+00:10:52,260 --> 00:10:55,500
+and those usually boil down
+to a couple primary facts.
+
+281
+00:10:55,500 --> 00:10:58,680
+One, silo is a simpler architecture.
+
+282
+00:10:58,680 --> 00:11:01,860
+Any of us could take a
+complete AWS stack, run it once
+
+283
+00:11:01,860 --> 00:11:04,620
+and then turn around, run
+it another AWS account.
+
+284
+00:11:04,620 --> 00:11:06,450
+It's not very hard.
+
+285
+00:11:06,450 --> 00:11:09,690
+On the other hand, it's
+also not terribly efficient.
+
+286
+00:11:09,690 --> 00:11:11,190
+If you think about it,
+when you have two accounts,
+
+287
+00:11:11,190 --> 00:11:12,450
+it doesn't seem so bad.
+
+288
+00:11:12,450 --> 00:11:14,250
+What about when you have
+a thousand accounts,
+
+289
+00:11:14,250 --> 00:11:16,560
+it's gonna get a lot harder to operate
+
+290
+00:11:16,560 --> 00:11:18,003
+and maintain that solution.
+
+291
+00:11:19,020 --> 00:11:22,290
+On the other side, we
+have more complexity.
+
+292
+00:11:22,290 --> 00:11:25,350
+To really properly do
+pooled or shared solutions,
+
+293
+00:11:25,350 --> 00:11:27,030
+we have to think deeply about
+
+294
+00:11:27,030 --> 00:11:29,130
+what the multi-tenant concerns are
+
+295
+00:11:29,130 --> 00:11:30,570
+and how we've handled them.
+
+296
+00:11:30,570 --> 00:11:31,920
+How do we apply governance?
+
+297
+00:11:31,920 --> 00:11:33,660
+How do we think about tenant isolation?
+
+298
+00:11:33,660 --> 00:11:35,220
+How have we done data partitioning?
+
+299
+00:11:35,220 --> 00:11:38,430
+All of those questions
+become very, very important
+
+300
+00:11:38,430 --> 00:11:41,640
+and these trade-offs all become
+in sort of different flavors
+
+301
+00:11:41,640 --> 00:11:44,670
+because you won't necessarily
+make a clean choice
+
+302
+00:11:44,670 --> 00:11:45,630
+between these two.
+
+303
+00:11:45,630 --> 00:11:47,370
+You might just not have
+a completely siloed,
+
+304
+00:11:47,370 --> 00:11:48,450
+or pooled architecture.
+
+305
+00:11:48,450 --> 00:11:51,030
+You might have a hybrid
+or bridge architecture
+
+306
+00:11:51,030 --> 00:11:53,190
+where perhaps one piece
+is completely shared,
+
+307
+00:11:53,190 --> 00:11:56,010
+other pieces are completely
+dedicated, even all the way down
+
+308
+00:11:56,010 --> 00:11:57,990
+to a workload by workload decision,
+
+309
+00:11:57,990 --> 00:12:00,360
+you might be deciding is
+this a pooled solution,
+
+310
+00:12:00,360 --> 00:12:03,003
+or is this a completely siloed solution?
+
+311
+00:12:06,240 --> 00:12:08,460
+So with that, Ujwal, hand it back to you
+
+312
+00:12:08,460 --> 00:12:10,590
+and talk a little bit
+about multi-tenant agents
+
+313
+00:12:10,590 --> 00:12:13,080
+and how those fit into these
+different deployment models.
+
+314
+00:12:13,080 --> 00:12:14,460
+- Sure.
+
+315
+00:12:14,460 --> 00:12:17,217
+So, so far we kind of
+defined what an agent is
+
+316
+00:12:17,217 --> 00:12:20,700
+and we also got you
+introduced to the AgentCore.
+
+317
+00:12:20,700 --> 00:12:22,170
+And then Bill has introduced us to some
+
+318
+00:12:22,170 --> 00:12:24,120
+of the multi-tenant concepts.
+
+319
+00:12:24,120 --> 00:12:25,890
+Let's try to bring all of them together
+
+320
+00:12:25,890 --> 00:12:27,660
+and try to build our agents,
+
+321
+00:12:27,660 --> 00:12:30,360
+or turn our agents into
+multi-tenant agents.
+
+322
+00:12:30,360 --> 00:12:32,670
+So that, let's start with silo agent.
+
+323
+00:12:32,670 --> 00:12:33,780
+When I say a silo agent,
+
+324
+00:12:33,780 --> 00:12:36,150
+it's an agent dedicated
+for a particular tenant.
+
+325
+00:12:36,150 --> 00:12:38,370
+The way you could create
+that is you could have
+
+326
+00:12:38,370 --> 00:12:40,470
+your dedicated agent deployed in
+
+327
+00:12:40,470 --> 00:12:42,300
+a dedicated AgentCore runtime.
+
+328
+00:12:42,300 --> 00:12:45,690
+It can be configured with a
+dedicated AgentCore memory.
+
+329
+00:12:45,690 --> 00:12:50,160
+And then you could extend that
+agent with the tools core,
+
+330
+00:12:50,160 --> 00:12:51,810
+which are dedicated for
+that particular tenant,
+
+331
+00:12:51,810 --> 00:12:55,050
+which are deployed in a
+dedicated AgentCore Gateway,
+
+332
+00:12:55,050 --> 00:12:55,980
+which would reach out
+
+333
+00:12:55,980 --> 00:12:59,310
+to your dedicated
+tenant-specific resources.
+
+334
+00:12:59,310 --> 00:13:02,340
+In this case, I'm just showcasing
+some of the AWS resources
+
+335
+00:13:02,340 --> 00:13:04,190
+and also it can be a third party API.
+
+336
+00:13:05,310 --> 00:13:08,100
+This would be the silo
+agent, whereas moving on
+
+337
+00:13:08,100 --> 00:13:11,400
+to the pool agent, similar
+pattern using similar pattern
+
+338
+00:13:11,400 --> 00:13:14,460
+where you have your pool agent deployed
+
+339
+00:13:14,460 --> 00:13:17,340
+in a pool AgentCore runtime configured
+
+340
+00:13:17,340 --> 00:13:20,100
+with pool AgentCore runtime, sorry,
+
+341
+00:13:20,100 --> 00:13:22,770
+configured with the pool AgentCore memory.
+
+342
+00:13:22,770 --> 00:13:25,230
+And then it is also configured
+
+343
+00:13:25,230 --> 00:13:26,970
+with the pool AgentCore Gateway
+
+344
+00:13:26,970 --> 00:13:29,040
+where you have the pool tools
+which are trying to reach out
+
+345
+00:13:29,040 --> 00:13:30,753
+to the pool AWS resources.
+
+346
+00:13:31,950 --> 00:13:34,590
+So again here when we introduce
+a silo and pool model,
+
+347
+00:13:34,590 --> 00:13:37,050
+kind of like, we showcase
+two extreme cases,
+
+348
+00:13:37,050 --> 00:13:39,540
+but in reality some of the components
+
+349
+00:13:39,540 --> 00:13:41,610
+of these components would be shared
+
+350
+00:13:41,610 --> 00:13:42,870
+and some of them would be dedicated.
+
+351
+00:13:42,870 --> 00:13:44,400
+So you would build a bridge,
+
+352
+00:13:44,400 --> 00:13:47,463
+or a hybrid model which Bill
+was trying to elude earlier.
+
+353
+00:13:48,510 --> 00:13:50,280
+And again, I would like
+to point your attention
+
+354
+00:13:50,280 --> 00:13:51,540
+to the AgentCore memory.
+
+355
+00:13:51,540 --> 00:13:52,590
+This is the first time where
+
+356
+00:13:52,590 --> 00:13:55,770
+I'm introducing short-term
+memory and the long-term memory.
+
+357
+00:13:55,770 --> 00:13:58,260
+So let me briefly explain what those are.
+
+358
+00:13:58,260 --> 00:14:00,480
+Short-term memory is a memory where
+
+359
+00:14:00,480 --> 00:14:04,260
+you could store some raw
+events on a per-session basis,
+
+360
+00:14:04,260 --> 00:14:07,080
+like user inputs, agent replies,
+
+361
+00:14:07,080 --> 00:14:09,780
+or any kind of a system level changes.
+
+362
+00:14:09,780 --> 00:14:13,350
+Long-term memory is a memory,
+which you could leverage
+
+363
+00:14:13,350 --> 00:14:17,100
+to store conversation
+summaries across the sessions,
+
+364
+00:14:17,100 --> 00:14:21,840
+or user preferences or any
+kind of system level changes,
+
+365
+00:14:21,840 --> 00:14:23,520
+or system preferences.
+
+366
+00:14:23,520 --> 00:14:25,420
+You could store these things in there.
+
+367
+00:14:26,790 --> 00:14:28,440
+So now that we have established some
+
+368
+00:14:28,440 --> 00:14:32,190
+of the fundamental components
+of some multi-tenant agents,
+
+369
+00:14:32,190 --> 00:14:34,290
+let's try to take these things
+
+370
+00:14:34,290 --> 00:14:37,140
+and start resolving the SaaS
+architecture challenges,
+
+371
+00:14:37,140 --> 00:14:39,540
+which Bill has explained earlier.
+
+372
+00:14:39,540 --> 00:14:42,800
+To start off with, we'll
+start with tenant onboarding.
+
+373
+00:14:43,950 --> 00:14:46,140
+So for the tenant onboarding
+as SaaS best practice,
+
+374
+00:14:46,140 --> 00:14:47,940
+we have been always saying that,
+
+375
+00:14:47,940 --> 00:14:50,250
+or advocating that as a SaaS provider,
+
+376
+00:14:50,250 --> 00:14:53,280
+you need to build some kind
+of a control plane experience
+
+377
+00:14:53,280 --> 00:14:56,910
+where it has bunch of services
+like onboarding service,
+
+378
+00:14:56,910 --> 00:14:57,990
+tenant provisioning service,
+
+379
+00:14:57,990 --> 00:15:00,720
+or tenant management service,
+tenant registration service.
+
+380
+00:15:00,720 --> 00:15:04,170
+All these services will
+help you to manage, operate
+
+381
+00:15:04,170 --> 00:15:07,140
+and deploy or onboard your tenants.
+
+382
+00:15:07,140 --> 00:15:08,610
+When you're trying to onboard your tenant,
+
+383
+00:15:08,610 --> 00:15:11,700
+that's when your
+tenant-specific architecture
+
+384
+00:15:11,700 --> 00:15:14,460
+will be deployed in a
+SaaS application plane.
+
+385
+00:15:14,460 --> 00:15:16,410
+That's where your
+multi-tenant architecture,
+
+386
+00:15:16,410 --> 00:15:17,943
+or your secret source lies in.
+
+387
+00:15:19,020 --> 00:15:21,900
+So now leveraging this SaaS control plane,
+
+388
+00:15:21,900 --> 00:15:25,020
+you could onboard a tenant
+which would map to a silo model
+
+389
+00:15:25,020 --> 00:15:26,970
+and then you would provision
+this silo architecture,
+
+390
+00:15:26,970 --> 00:15:29,460
+which you saw in the previous slide.
+
+391
+00:15:29,460 --> 00:15:31,170
+And since it's a silo model,
+
+392
+00:15:31,170 --> 00:15:33,996
+you could pretty much provision
+these resources only when
+
+393
+00:15:33,996 --> 00:15:35,940
+you are onboarding a particular tenant,
+
+394
+00:15:35,940 --> 00:15:38,730
+because it is a dedicated resources plane.
+
+395
+00:15:38,730 --> 00:15:42,300
+Similarly, you would use the
+same control plane experience
+
+396
+00:15:42,300 --> 00:15:44,850
+and you would onboard
+another tenant, maybe the map
+
+397
+00:15:44,850 --> 00:15:48,450
+to a pool model where
+you would provision this
+
+398
+00:15:48,450 --> 00:15:50,250
+infrastructure for that particular tenant.
+
+399
+00:15:50,250 --> 00:15:52,500
+Again, since this is a
+pool model which is shared
+
+400
+00:15:52,500 --> 00:15:55,290
+across multiple tenants,
+you could upfront provision,
+
+401
+00:15:55,290 --> 00:15:58,020
+or pre-provision this
+particular infrastructure.
+
+402
+00:15:58,020 --> 00:16:00,750
+Similarly, you could
+extend this experience
+
+403
+00:16:00,750 --> 00:16:02,910
+where if you could onboard
+tenant three, which is mapping
+
+404
+00:16:02,910 --> 00:16:05,220
+to the pool model, then
+you would just map it
+
+405
+00:16:05,220 --> 00:16:07,260
+to that particular model.
+
+406
+00:16:07,260 --> 00:16:09,690
+And the way you would expose these models
+
+407
+00:16:09,690 --> 00:16:12,240
+to your customers through
+maybe through tiers,
+
+408
+00:16:12,240 --> 00:16:15,510
+in a sense you could have a
+basic tier which is mapping
+
+409
+00:16:15,510 --> 00:16:16,800
+to a pool model,
+
+410
+00:16:16,800 --> 00:16:20,373
+or you could have a premium
+tier which maps to a silo model.
+
+411
+00:16:22,500 --> 00:16:25,690
+So Bill, now that we have resolved one
+
+412
+00:16:25,690 --> 00:16:27,030
+of these SaaS architectural challenges,
+
+413
+00:16:27,030 --> 00:16:28,890
+can you set us the stage here
+
+414
+00:16:28,890 --> 00:16:31,230
+for resolving the next SaaS
+architectural challenge?
+
+415
+00:16:31,230 --> 00:16:32,670
+- Yeah, absolutely.
+
+416
+00:16:32,670 --> 00:16:33,660
+So yeah, we're clicking
+
+417
+00:16:33,660 --> 00:16:35,340
+through our architectural
+challenges one at a time.
+
+418
+00:16:35,340 --> 00:16:36,630
+We talked about onboarding,
+
+419
+00:16:36,630 --> 00:16:38,430
+let's get into identity a little bit.
+
+420
+00:16:38,430 --> 00:16:41,850
+Now, SaaS identity has
+always been true across
+
+421
+00:16:41,850 --> 00:16:43,290
+all SaaS applications.
+
+422
+00:16:43,290 --> 00:16:45,540
+Some of the concepts
+still remain the same.
+
+423
+00:16:45,540 --> 00:16:47,640
+Quick refresher, I want to go over some
+
+424
+00:16:47,640 --> 00:16:49,920
+of the primary tenants
+and just a little bit
+
+425
+00:16:49,920 --> 00:16:52,350
+of a twist on why we think
+about this slightly differently
+
+426
+00:16:52,350 --> 00:16:54,315
+when we're building AgentCore.
+
+427
+00:16:54,315 --> 00:16:56,670
+It's always been true we've
+got tenant users coming in
+
+428
+00:16:56,670 --> 00:16:59,100
+and there's gonna be some
+form of an identity provider.
+
+429
+00:16:59,100 --> 00:17:01,740
+We need something to
+manage all of these users.
+
+430
+00:17:01,740 --> 00:17:04,980
+In our particular example, we
+decided to use Amazon Cognito.
+
+431
+00:17:04,980 --> 00:17:06,390
+It is an identity provider
+
+432
+00:17:06,390 --> 00:17:09,270
+that does provide tenant
+boundaries, the tenant boundaries,
+
+433
+00:17:09,270 --> 00:17:10,920
+and we have choices in Cognito,
+
+434
+00:17:10,920 --> 00:17:14,880
+but the one we chose to use
+is a user pool per tenant.
+
+435
+00:17:14,880 --> 00:17:17,250
+So user pool per tenant simply means we've
+
+436
+00:17:17,250 --> 00:17:18,480
+got a nice tenant boundary.
+
+437
+00:17:18,480 --> 00:17:21,300
+All of our users for each
+tenant are bucketed up nicely.
+
+438
+00:17:21,300 --> 00:17:24,990
+This particular user right
+here belongs to tenant one
+
+439
+00:17:24,990 --> 00:17:27,360
+and as you can see, they've
+got some custom claims,
+
+440
+00:17:27,360 --> 00:17:29,970
+or what we're calling custom
+claims here on this user.
+
+441
+00:17:29,970 --> 00:17:33,120
+And the reason I say calling
+custom claims is in fact if you
+
+442
+00:17:33,120 --> 00:17:36,240
+look in Cognito, we call
+these attributes in Cognito,
+
+443
+00:17:36,240 --> 00:17:38,790
+but downstream, when
+we instantiate and vent
+
+444
+00:17:38,790 --> 00:17:40,290
+to this JUUT token,
+
+445
+00:17:40,290 --> 00:17:42,060
+you're gonna find them
+called custom claims
+
+446
+00:17:42,060 --> 00:17:43,590
+inside the JUUT token.
+
+447
+00:17:43,590 --> 00:17:46,050
+So we can have tenant status here,
+
+448
+00:17:46,050 --> 00:17:50,070
+any number of other
+metadata about this user
+
+449
+00:17:50,070 --> 00:17:51,180
+that we wanna proliferate
+
+450
+00:17:51,180 --> 00:17:53,310
+through the rest of our application.
+
+451
+00:17:53,310 --> 00:17:55,590
+Now, the JUUT token is a
+vehicle for how we pass
+
+452
+00:17:55,590 --> 00:17:57,030
+that data downstream.
+
+453
+00:17:57,030 --> 00:17:58,830
+And I want you to keep in mind,
+
+454
+00:17:58,830 --> 00:18:00,990
+if you haven't done JUUT
+tokens before, it's okay,
+
+455
+00:18:00,990 --> 00:18:03,870
+we don't have to understand
+this representation,
+
+456
+00:18:03,870 --> 00:18:06,450
+but in fact they're just
+basically JSON in there.
+
+457
+00:18:06,450 --> 00:18:07,770
+And there's a couple different parts,
+
+458
+00:18:07,770 --> 00:18:10,500
+and this is kind of relevant
+when we talk about AgentCore,
+
+459
+00:18:10,500 --> 00:18:13,410
+there's the identity token
+which automatically inherits all
+
+460
+00:18:13,410 --> 00:18:15,900
+of the custom claims I
+was just talking about.
+
+461
+00:18:15,900 --> 00:18:17,850
+That can be useful for some applications.
+
+462
+00:18:17,850 --> 00:18:21,810
+Sometimes you can simply rely
+on that identity token alone.
+
+463
+00:18:21,810 --> 00:18:23,250
+On the other hand, there's another part
+
+464
+00:18:23,250 --> 00:18:25,680
+to the token which is
+called the access token.
+
+465
+00:18:25,680 --> 00:18:29,460
+And the access token actually
+doesn't inherently inherit all
+
+466
+00:18:29,460 --> 00:18:30,570
+of those custom claims
+
+467
+00:18:30,570 --> 00:18:32,700
+and the access token is going to be passed
+
+468
+00:18:32,700 --> 00:18:34,410
+around inside AgentCore.
+
+469
+00:18:34,410 --> 00:18:36,570
+One strategy we can use is
+
+470
+00:18:36,570 --> 00:18:39,540
+to use a pre-token
+generation lambda trigger
+
+471
+00:18:39,540 --> 00:18:41,340
+that can take all of those custom claims
+
+472
+00:18:41,340 --> 00:18:44,760
+and copy them into the access
+token, which can be convenient
+
+473
+00:18:44,760 --> 00:18:46,050
+for when you're passing it around
+
+474
+00:18:46,050 --> 00:18:48,060
+and you're gonna see usual talk about how
+
+475
+00:18:48,060 --> 00:18:50,130
+that access token is passed around
+
+476
+00:18:50,130 --> 00:18:53,100
+and reused at different
+layers of AgentCore.
+
+477
+00:18:53,100 --> 00:18:54,510
+So Ujwal, could you walk us through what
+
+478
+00:18:54,510 --> 00:18:56,670
+that looks like in
+AgentCore with the identity?
+
+479
+00:18:56,670 --> 00:18:57,503
+- Sure.
+
+480
+00:18:58,350 --> 00:18:59,680
+So now that
+
+481
+00:19:00,840 --> 00:19:02,980
+Bill has established how we need
+
+482
+00:19:04,212 --> 00:19:07,800
+to create a SaaS identity, now
+let me walk you through here
+
+483
+00:19:07,800 --> 00:19:09,660
+how you could leverage AgentCore identity
+
+484
+00:19:09,660 --> 00:19:12,870
+and let the SaaS identity flow
+through your architecture.
+
+485
+00:19:12,870 --> 00:19:14,310
+And also we'll walk you through
+
+486
+00:19:14,310 --> 00:19:16,110
+how you could leverage getting context
+
+487
+00:19:16,110 --> 00:19:17,730
+from that SaaS identity
+
+488
+00:19:17,730 --> 00:19:20,040
+and use the AgentCore identity primitive
+
+489
+00:19:20,040 --> 00:19:22,143
+and enforce authorization.
+
+490
+00:19:23,070 --> 00:19:26,040
+So earlier when I was
+talking about the agent,
+
+491
+00:19:26,040 --> 00:19:28,050
+when you talk about the
+agent, I mentioned that now
+
+492
+00:19:28,050 --> 00:19:30,870
+there are two types of
+authorizations you have to do,
+
+493
+00:19:30,870 --> 00:19:34,410
+one for the inbound call and
+another for the outbound call.
+
+494
+00:19:34,410 --> 00:19:38,250
+Inbound call comes into play
+when a particular user is
+
+495
+00:19:38,250 --> 00:19:40,740
+invoking particular tenant,
+which is running in some
+
+496
+00:19:40,740 --> 00:19:42,570
+kind of an AgentCore runtime environment,
+
+497
+00:19:42,570 --> 00:19:44,340
+or something on those lines.
+
+498
+00:19:44,340 --> 00:19:46,980
+The outbound authorization
+comes into play when your agent
+
+499
+00:19:46,980 --> 00:19:49,500
+is trying to reach out
+to an external system.
+
+500
+00:19:49,500 --> 00:19:51,750
+So in here I'll first talk about
+
+501
+00:19:51,750 --> 00:19:54,060
+how you could leverage AgentCore identity
+
+502
+00:19:54,060 --> 00:19:56,163
+and do the inbound authorization.
+
+503
+00:19:57,390 --> 00:19:58,920
+So my assumption here is
+
+504
+00:19:58,920 --> 00:20:00,570
+that you have some kind
+of an identity provider.
+
+505
+00:20:00,570 --> 00:20:03,270
+You're configured in such
+a way that it provides you
+
+506
+00:20:03,270 --> 00:20:06,420
+with a SaaS identity, which
+Bill has explained earlier.
+
+507
+00:20:06,420 --> 00:20:10,410
+So now for your, when a
+user hits your website,
+
+508
+00:20:10,410 --> 00:20:12,960
+you would redirect them
+to the identity provider
+
+509
+00:20:12,960 --> 00:20:15,330
+where they will authenticate and it
+
+510
+00:20:15,330 --> 00:20:16,770
+generates identity token.
+
+511
+00:20:16,770 --> 00:20:19,110
+It can be an access token or an ID token,
+
+512
+00:20:19,110 --> 00:20:20,640
+but it has the user information
+
+513
+00:20:20,640 --> 00:20:23,460
+and also the tenant-specific information.
+
+514
+00:20:23,460 --> 00:20:25,470
+So basically it's a SaaS identity.
+
+515
+00:20:25,470 --> 00:20:27,060
+Using the JW token,
+
+516
+00:20:27,060 --> 00:20:29,640
+the tenants can invoke
+the agents running in
+
+517
+00:20:29,640 --> 00:20:30,873
+the AgentCore runtime.
+
+518
+00:20:31,830 --> 00:20:35,190
+In here, I am just using AgentCore runtime
+
+519
+00:20:35,190 --> 00:20:38,103
+and deploying the agent code
+and also the tools code here.
+
+520
+00:20:38,940 --> 00:20:42,840
+So now, now, the agent code runtime
+
+521
+00:20:42,840 --> 00:20:44,910
+has to authorize that particular
+
+522
+00:20:44,910 --> 00:20:47,850
+JW token coming from a
+particular user invocation.
+
+523
+00:20:47,850 --> 00:20:50,370
+For that, you could
+leverage agent core identity
+
+524
+00:20:50,370 --> 00:20:52,740
+where you could configure
+your AgentCore runtime
+
+525
+00:20:52,740 --> 00:20:54,120
+with the AgentCore identity
+
+526
+00:20:54,120 --> 00:20:56,280
+and also you could configure
+the AgentCore identity
+
+527
+00:20:56,280 --> 00:20:58,320
+with your identity provider.
+
+528
+00:20:58,320 --> 00:21:02,250
+So once you do this
+configuration, AgentCore identity
+
+529
+00:21:02,250 --> 00:21:06,180
+will get hold of that inbound
+JW token, talks to your IDP
+
+530
+00:21:06,180 --> 00:21:08,340
+and authorizes that particular call.
+
+531
+00:21:08,340 --> 00:21:10,530
+Once it authorizes that particular call,
+
+532
+00:21:10,530 --> 00:21:12,390
+then the JW token will be
+
+533
+00:21:12,390 --> 00:21:15,360
+available within the AgentCore runtime.
+
+534
+00:21:15,360 --> 00:21:18,180
+That's how the inbound
+authorization can be implemented
+
+535
+00:21:18,180 --> 00:21:19,800
+using AgentCore identity.
+
+536
+00:21:19,800 --> 00:21:21,800
+Kinda like pretty straightforward thing.
+
+537
+00:21:22,830 --> 00:21:25,560
+Now, let's move on to the
+outbound authorization.
+
+538
+00:21:25,560 --> 00:21:27,150
+For the outbound authorization,
+
+539
+00:21:27,150 --> 00:21:28,620
+this piece of an architecture which we saw
+
+540
+00:21:28,620 --> 00:21:32,340
+previously in the previous
+slide, as I mentioned earlier,
+
+541
+00:21:32,340 --> 00:21:35,700
+the outbound authorization
+comes into play when your agents
+
+542
+00:21:35,700 --> 00:21:38,460
+are trying to reach out
+to an external resource.
+
+543
+00:21:38,460 --> 00:21:41,340
+Let's assume this external
+resource is an AWS resource.
+
+544
+00:21:41,340 --> 00:21:44,760
+If it's an AWS resource,
+you could piggyback on IAM,
+
+545
+00:21:44,760 --> 00:21:47,070
+you could leverage IAM
+to authorize that call
+
+546
+00:21:47,070 --> 00:21:49,440
+where basically you'll
+attach an execution role
+
+547
+00:21:49,440 --> 00:21:51,000
+to your AgentCore runtime,
+
+548
+00:21:51,000 --> 00:21:53,100
+which will authorize that particular call.
+
+549
+00:21:54,330 --> 00:21:56,910
+But things becomes interesting
+when your tools are trying
+
+550
+00:21:56,910 --> 00:21:58,620
+to reach out to an external resource,
+
+551
+00:21:58,620 --> 00:22:03,180
+or an agent which expects
+a auth token or an API key.
+
+552
+00:22:03,180 --> 00:22:06,720
+In those cases, you could
+leverage AgentCore identity.
+
+553
+00:22:06,720 --> 00:22:09,630
+First, what you could do is
+for those external resources,
+
+554
+00:22:09,630 --> 00:22:12,053
+they might have some kind of an IDP,
+
+555
+00:22:12,053 --> 00:22:13,800
+or some kind of credential provider,
+
+556
+00:22:13,800 --> 00:22:15,810
+you could configure your AgentCore entity
+
+557
+00:22:15,810 --> 00:22:19,023
+with those credential providers or IDPs.
+
+558
+00:22:20,730 --> 00:22:24,600
+Since you deployed your agent
+in the AgentCore runtime,
+
+559
+00:22:24,600 --> 00:22:27,000
+AgentCore identity inherently what it does
+
+560
+00:22:27,000 --> 00:22:29,280
+is it creates a identity
+
+561
+00:22:29,280 --> 00:22:33,690
+for your each agent that's
+called workload identities.
+
+562
+00:22:33,690 --> 00:22:35,790
+Just hold onto that
+thought, in a bit second,
+
+563
+00:22:35,790 --> 00:22:38,100
+you will see how this
+workload identity will be
+
+564
+00:22:38,100 --> 00:22:41,553
+leveraged by the AgentCore identity.
+
+565
+00:22:42,960 --> 00:22:46,020
+Now, using, again, using
+the AgentCore identity,
+
+566
+00:22:46,020 --> 00:22:48,460
+you could bring in a
+human in the loop where
+
+567
+00:22:49,440 --> 00:22:50,550
+you could surface a form,
+
+568
+00:22:50,550 --> 00:22:52,837
+or something where
+saying to the user that,
+
+569
+00:22:52,837 --> 00:22:54,870
+"Hey, your tool is trying to reach out
+
+570
+00:22:54,870 --> 00:22:56,850
+to some external resource,
+
+571
+00:22:56,850 --> 00:22:59,340
+will you authorize this particular call?"
+
+572
+00:22:59,340 --> 00:23:02,880
+Assuming that the user has
+authorized that particular call,
+
+573
+00:23:02,880 --> 00:23:05,070
+now, AgentCore runtime
+
+574
+00:23:05,070 --> 00:23:08,160
+and AgentCore identity
+has to talk to each other
+
+575
+00:23:08,160 --> 00:23:11,820
+and generate a access token,
+which will give access
+
+576
+00:23:11,820 --> 00:23:14,853
+to the tools to interact
+with that external resources.
+
+577
+00:23:15,750 --> 00:23:19,920
+The way it does is the
+AgentCore runtime makes a call
+
+578
+00:23:19,920 --> 00:23:21,937
+to AgentCore identity saying that,
+
+579
+00:23:21,937 --> 00:23:24,840
+"Hey, for this particular agent,
+
+580
+00:23:24,840 --> 00:23:26,547
+can you generate an access token?"
+
+581
+00:23:27,420 --> 00:23:31,770
+AgentCore identity takes that
+request, maps that request
+
+582
+00:23:31,770 --> 00:23:35,190
+to an workload identity that
+is identity of the agent,
+
+583
+00:23:35,190 --> 00:23:36,450
+and then in turn maps that
+
+584
+00:23:36,450 --> 00:23:38,940
+to the configured identity provider
+
+585
+00:23:38,940 --> 00:23:41,313
+and generates a workload access token.
+
+586
+00:23:42,480 --> 00:23:46,680
+Now, the agent tools using
+this workload access token
+
+587
+00:23:46,680 --> 00:23:49,353
+can interact with the external resources.
+
+588
+00:23:50,460 --> 00:23:53,340
+Again, since you have
+deployed these agents
+
+589
+00:23:53,340 --> 00:23:55,140
+in the AgentCore runtime,
+
+590
+00:23:55,140 --> 00:23:57,330
+all the steps which I just mentioned
+
+591
+00:23:57,330 --> 00:24:00,300
+happens out of the box
+for you, all you just have
+
+592
+00:24:00,300 --> 00:24:02,760
+to do in the code is use one annotation.
+
+593
+00:24:02,760 --> 00:24:05,850
+That is the rate it requires access token,
+
+594
+00:24:05,850 --> 00:24:08,763
+then you'll get hold of that
+particular access token.
+
+595
+00:24:10,920 --> 00:24:13,953
+The similar process happens
+even for the API keys.
+
+596
+00:24:15,840 --> 00:24:19,890
+So now you can also bring
+in a multi-tenant angle
+
+597
+00:24:19,890 --> 00:24:21,490
+for this outbound authorization.
+
+598
+00:24:22,380 --> 00:24:26,850
+Let's assume that your downstream
+external resource or your,
+
+599
+00:24:26,850 --> 00:24:29,940
+this downstream external
+resource can be some third party
+
+600
+00:24:29,940 --> 00:24:32,130
+API or it can be some other service within
+
+601
+00:24:32,130 --> 00:24:33,870
+your organization.
+
+602
+00:24:33,870 --> 00:24:36,240
+They're expecting some
+more additional information
+
+603
+00:24:36,240 --> 00:24:39,240
+within that access token,
+that workload access token.
+
+604
+00:24:39,240 --> 00:24:41,070
+That additional information
+can be metadata,
+
+605
+00:24:41,070 --> 00:24:43,020
+or tenant-specific information.
+
+606
+00:24:43,020 --> 00:24:45,480
+You could pretty much build that into it
+
+607
+00:24:45,480 --> 00:24:47,700
+by leveraging AgentCore identity.
+
+608
+00:24:47,700 --> 00:24:49,530
+The way you can do that is
+
+609
+00:24:49,530 --> 00:24:51,600
+since the AgentCore identity
+is already configured
+
+610
+00:24:51,600 --> 00:24:53,520
+with the identity providers,
+
+611
+00:24:53,520 --> 00:24:57,900
+that external identity providers
+can customize the workflow,
+
+612
+00:24:57,900 --> 00:25:01,890
+which generates the access
+token and add the custom claims.
+
+613
+00:25:01,890 --> 00:25:04,650
+The thing which I'm alluding
+here is the one which Bill has
+
+614
+00:25:04,650 --> 00:25:07,100
+explained when he's
+explaining the SaaS identity.
+
+615
+00:25:08,040 --> 00:25:10,890
+Assuming that you've
+implemented that thing here,
+
+616
+00:25:10,890 --> 00:25:13,020
+now, AgentCore identity,
+
+617
+00:25:13,020 --> 00:25:15,450
+when it generates this
+workload access token,
+
+618
+00:25:15,450 --> 00:25:18,840
+it can also have this additional
+metadata which you could
+
+619
+00:25:18,840 --> 00:25:20,913
+pass into the external resources.
+
+620
+00:25:22,230 --> 00:25:25,440
+So now, so far, when we talked
+about all this good stuff,
+
+621
+00:25:25,440 --> 00:25:28,950
+we are only talked in the
+context of AgentCore runtime.
+
+622
+00:25:28,950 --> 00:25:31,530
+But again, all the best practices
+
+623
+00:25:31,530 --> 00:25:33,360
+of the things which I talked about here
+
+624
+00:25:33,360 --> 00:25:36,420
+will still apply for the
+AgentCore Gateway too.
+
+625
+00:25:36,420 --> 00:25:39,360
+The way it looks is this is
+the same architecture which
+
+626
+00:25:39,360 --> 00:25:40,410
+you saw in the previous slide.
+
+627
+00:25:40,410 --> 00:25:41,700
+The only difference here is
+
+628
+00:25:41,700 --> 00:25:45,870
+that the tools code now is
+deployed in the AgentCore Gateway
+
+629
+00:25:45,870 --> 00:25:48,753
+and it is reaching out to
+the external resources.
+
+630
+00:25:49,710 --> 00:25:54,090
+Now the agent code running
+in the AgentCore runtime can,
+
+631
+00:25:54,090 --> 00:25:57,360
+using the JWT inbound
+JW token can reach out,
+
+632
+00:25:57,360 --> 00:25:59,730
+or make the call to the AgentCore Gateway
+
+633
+00:25:59,730 --> 00:26:01,830
+and the AgentCore
+Gateway can be configured
+
+634
+00:26:01,830 --> 00:26:03,570
+with AgentCore identity to do
+
+635
+00:26:03,570 --> 00:26:06,519
+that authorization of
+that particular request.
+
+636
+00:26:06,519 --> 00:26:09,690
+Additionally, AgentCore
+Gateway has a new feature
+
+637
+00:26:09,690 --> 00:26:11,880
+called Gateway Interceptor,
+
+638
+00:26:11,880 --> 00:26:15,030
+which can intercept
+the request coming into
+
+639
+00:26:15,030 --> 00:26:16,530
+that particular AgentCore Gateway
+
+640
+00:26:16,530 --> 00:26:19,110
+and get hold of all the headers in it
+
+641
+00:26:19,110 --> 00:26:21,690
+and you could also get
+hold of the JW token
+
+642
+00:26:21,690 --> 00:26:24,360
+and from that JW token, you
+could make that available
+
+643
+00:26:24,360 --> 00:26:27,450
+for your tools or you could
+also get the tenant context
+
+644
+00:26:27,450 --> 00:26:29,763
+from it and then leverage
+those things here.
+
+645
+00:26:32,370 --> 00:26:35,670
+So Bill, now moving on to
+the next data partitioning
+
+646
+00:26:35,670 --> 00:26:38,850
+SaaS architecture challenges,
+can you just do a quick recap
+
+647
+00:26:38,850 --> 00:26:40,530
+and set the stage for us here?
+
+648
+00:26:40,530 --> 00:26:41,363
+- Right on.
+
+649
+00:26:42,300 --> 00:26:44,370
+I told you the identity
+part was hard, right?
+
+650
+00:26:44,370 --> 00:26:45,540
+That's probably the hardest part.
+
+651
+00:26:45,540 --> 00:26:47,790
+I promise you none of 'em
+gonna be quite as challenging.
+
+652
+00:26:47,790 --> 00:26:50,580
+Data partitioning is actually
+pretty straightforward
+
+653
+00:26:50,580 --> 00:26:51,420
+to think about.
+
+654
+00:26:51,420 --> 00:26:53,880
+As we mentioned, it's
+really how we bucket up
+
+655
+00:26:53,880 --> 00:26:55,110
+our tenant data.
+
+656
+00:26:55,110 --> 00:26:56,880
+What are the challenges we face?
+
+657
+00:26:56,880 --> 00:26:58,260
+Well, there's cost challenges,
+
+658
+00:26:58,260 --> 00:26:59,940
+there's operational challenges,
+
+659
+00:26:59,940 --> 00:27:01,800
+but there's only so many
+ways we can do this.
+
+660
+00:27:01,800 --> 00:27:03,480
+You have to have some sort of separation,
+
+661
+00:27:03,480 --> 00:27:05,940
+logical or physical between the data.
+
+662
+00:27:05,940 --> 00:27:08,310
+Now, in terms of data partitioning,
+
+663
+00:27:08,310 --> 00:27:10,620
+we've kind of seen some
+hints already, right?
+
+664
+00:27:10,620 --> 00:27:12,180
+We've heard the term, memory,
+
+665
+00:27:12,180 --> 00:27:14,100
+so memory probably makes us
+think there's gonna be some
+
+666
+00:27:14,100 --> 00:27:17,160
+partitioning somewhere and
+we've seen some downstream AWS
+
+667
+00:27:17,160 --> 00:27:19,020
+services too that might
+need to be partitioned.
+
+668
+00:27:19,020 --> 00:27:20,490
+So Ujwal, let me add it back to you.
+
+669
+00:27:20,490 --> 00:27:21,510
+Tell us a little bit about
+
+670
+00:27:21,510 --> 00:27:23,970
+how we can apply data
+partitioning in AgentCore.
+
+671
+00:27:23,970 --> 00:27:24,803
+- Sure.
+
+672
+00:27:24,803 --> 00:27:27,030
+So when we say about
+the data partitioning,
+
+673
+00:27:27,030 --> 00:27:30,720
+so it's basically you
+need to look at the areas
+
+674
+00:27:30,720 --> 00:27:33,300
+where in this architecture
+you're dealing with data.
+
+675
+00:27:33,300 --> 00:27:35,970
+One area is with the AgentCore memory
+
+676
+00:27:35,970 --> 00:27:38,520
+where you're storing
+the tenant-specific data
+
+677
+00:27:38,520 --> 00:27:41,640
+and the other area is the AWS resources.
+
+678
+00:27:41,640 --> 00:27:43,968
+In here, we are just
+showcasing a knowledge base
+
+679
+00:27:43,968 --> 00:27:45,870
+and the DynamoDB table.
+
+680
+00:27:45,870 --> 00:27:49,050
+Now, let's pick these two
+areas and double click into it
+
+681
+00:27:49,050 --> 00:27:50,990
+and understand how you could
+implement data partitioning
+
+682
+00:27:50,990 --> 00:27:53,523
+when it's a silo model or a pool model.
+
+683
+00:27:54,420 --> 00:27:58,680
+To start off with, Silo AgentCore
+Memory where you have a,
+
+684
+00:27:58,680 --> 00:27:59,513
+as I mentioned earlier,
+
+685
+00:27:59,513 --> 00:28:01,260
+you have dedicated AgentCore runtime.
+
+686
+00:28:01,260 --> 00:28:03,540
+In here you have a dedicated agent.
+
+687
+00:28:03,540 --> 00:28:05,280
+The white box, which I'm showcasing is,
+
+688
+00:28:05,280 --> 00:28:08,820
+think of this as an
+agent implementation code
+
+689
+00:28:08,820 --> 00:28:12,060
+and then you would have a
+Dedicated AgentCore Memory
+
+690
+00:28:12,060 --> 00:28:13,620
+specific to that particular tenant.
+
+691
+00:28:13,620 --> 00:28:16,200
+And if you have multiple
+tenants then you see something
+
+692
+00:28:16,200 --> 00:28:17,490
+like this.
+
+693
+00:28:17,490 --> 00:28:19,830
+Now, let's say if the
+agent is trying to make,
+
+694
+00:28:19,830 --> 00:28:22,650
+or create an event in
+the short-term memory,
+
+695
+00:28:22,650 --> 00:28:25,110
+the way it can create an
+event in the short-term memory
+
+696
+00:28:25,110 --> 00:28:27,420
+is it needs a memory ID.
+
+697
+00:28:27,420 --> 00:28:30,200
+Memory ID is a unique ID
+created when you are creating
+
+698
+00:28:30,200 --> 00:28:34,140
+a AgentCore memory and
+then it needs a session ID
+
+699
+00:28:34,140 --> 00:28:36,540
+as I mentioned earlier,
+in the short-term memory,
+
+700
+00:28:36,540 --> 00:28:38,460
+you store the events by session ID.
+
+701
+00:28:38,460 --> 00:28:39,720
+So each session ID,
+
+702
+00:28:39,720 --> 00:28:42,450
+for each session you
+have a unique session ID
+
+703
+00:28:42,450 --> 00:28:45,780
+and then you need some
+kind of an actor ID.
+
+704
+00:28:45,780 --> 00:28:48,460
+Think of this actor ID as a unique key
+
+705
+00:28:49,740 --> 00:28:51,930
+for your agent or for the user.
+
+706
+00:28:51,930 --> 00:28:53,670
+Other way to look at this is think of this
+
+707
+00:28:53,670 --> 00:28:57,450
+as a primary key kind of
+a thing in our database
+
+708
+00:28:57,450 --> 00:28:58,440
+kind of thing.
+
+709
+00:28:58,440 --> 00:29:00,060
+Here, what convention you could use
+
+710
+00:29:00,060 --> 00:29:01,770
+is you could partition the data
+
+711
+00:29:01,770 --> 00:29:05,250
+by tenant ID calling subject.
+
+712
+00:29:05,250 --> 00:29:08,910
+These values are coming
+from your input JW token
+
+713
+00:29:08,910 --> 00:29:12,330
+and then making this tenant
+ID, sorry, this actor ID
+
+714
+00:29:12,330 --> 00:29:15,540
+as tenantid subject,
+you're making it unique for
+
+715
+00:29:15,540 --> 00:29:17,580
+that particular tenant user.
+
+716
+00:29:17,580 --> 00:29:20,010
+That way you're kind of
+partitioning the data
+
+717
+00:29:20,010 --> 00:29:21,993
+by that particular ID.
+
+718
+00:29:23,850 --> 00:29:25,200
+For the long-term memory,
+
+719
+00:29:25,200 --> 00:29:27,390
+the way the long-term memory
+stores the information
+
+720
+00:29:27,390 --> 00:29:30,240
+is by namespaces and
+what you could see there
+
+721
+00:29:30,240 --> 00:29:31,980
+is the convention which you have
+
+722
+00:29:31,980 --> 00:29:34,740
+to use for naming the namespaces.
+
+723
+00:29:34,740 --> 00:29:36,240
+And in here I would like
+
+724
+00:29:36,240 --> 00:29:39,630
+to point your attention
+towards the actor ID there.
+
+725
+00:29:39,630 --> 00:29:43,410
+So before I do that,
+you see some variables
+
+726
+00:29:43,410 --> 00:29:44,550
+with the curly braces, right?
+
+727
+00:29:44,550 --> 00:29:45,960
+Those are nothing but the variables
+
+728
+00:29:45,960 --> 00:29:48,510
+where you could inject
+the values in real time.
+
+729
+00:29:48,510 --> 00:29:52,500
+So leverage that same actor
+ID in this namespace so
+
+730
+00:29:52,500 --> 00:29:54,480
+that you have a unique namespace
+
+731
+00:29:54,480 --> 00:29:56,250
+for that particular tenant user so
+
+732
+00:29:56,250 --> 00:29:58,860
+that the data is partitioned that way.
+
+733
+00:29:58,860 --> 00:30:00,990
+But again, I would like to
+point your attention back
+
+734
+00:30:00,990 --> 00:30:02,730
+to the actor ID is equal to tenant ID
+
+735
+00:30:02,730 --> 00:30:05,250
+and subject where my assumption here is
+
+736
+00:30:05,250 --> 00:30:09,090
+that I wanna partition
+the data by tenant users,
+
+737
+00:30:09,090 --> 00:30:14,090
+but for some reason if you
+wanna just partition by tenant,
+
+738
+00:30:14,280 --> 00:30:16,170
+then in those cases the actor ID
+
+739
+00:30:16,170 --> 00:30:17,620
+can be just a tenant ID idea.
+
+740
+00:30:18,960 --> 00:30:21,990
+But again, in that, the follow-up
+question there would be,
+
+741
+00:30:21,990 --> 00:30:25,260
+if that is the case then this
+convention might not be a big
+
+742
+00:30:25,260 --> 00:30:27,690
+help for you folks because
+you're already creating
+
+743
+00:30:27,690 --> 00:30:29,880
+a dedicated memory for
+that particular tenant.
+
+744
+00:30:29,880 --> 00:30:31,593
+So it might not be of much help,
+
+745
+00:30:32,430 --> 00:30:35,010
+but this convention comes
+in handy when you move
+
+746
+00:30:35,010 --> 00:30:37,410
+to the pool model where
+
+747
+00:30:37,410 --> 00:30:42,240
+you are creating a pool
+agent in a pooling runtime
+
+748
+00:30:42,240 --> 00:30:45,780
+environment, which is
+interacting with a pool memory,
+
+749
+00:30:45,780 --> 00:30:47,910
+which is shared across multiple tenants.
+
+750
+00:30:47,910 --> 00:30:50,250
+And now when this agent
+is trying to reach out
+
+751
+00:30:50,250 --> 00:30:53,070
+to the short-term memory,
+it uses this convention
+
+752
+00:30:53,070 --> 00:30:56,700
+where you're basically partitioning
+the data by tenant user.
+
+753
+00:30:56,700 --> 00:31:00,090
+And similarly, when you're interacting
+
+754
+00:31:00,090 --> 00:31:03,029
+with the long-term memory, you
+could use this namespace with
+
+755
+00:31:03,029 --> 00:31:05,880
+that actor ID so that you're partitioning
+
+756
+00:31:05,880 --> 00:31:07,533
+for each of the tenant user.
+
+757
+00:31:09,450 --> 00:31:12,180
+And now, I'll quickly
+walk you through some
+
+758
+00:31:12,180 --> 00:31:14,670
+of the AWS resources which you have seen,
+
+759
+00:31:14,670 --> 00:31:17,070
+which you have been seeing
+in this architecture
+
+760
+00:31:17,070 --> 00:31:19,670
+and talk about how you could
+partition the data there.
+
+761
+00:31:19,670 --> 00:31:24,060
+To start off with, we'll do
+this knowledge base, silo model,
+
+762
+00:31:24,060 --> 00:31:25,650
+you create a dedicated
+knowledge base for each
+
+763
+00:31:25,650 --> 00:31:27,090
+of your tenant, which is configured
+
+764
+00:31:27,090 --> 00:31:31,050
+with a dedicated vector
+database and pool model,
+
+765
+00:31:31,050 --> 00:31:33,480
+you could have a pool knowledge
+base which is configured
+
+766
+00:31:33,480 --> 00:31:34,530
+with a pooled vector store,
+
+767
+00:31:34,530 --> 00:31:36,911
+which is shared across multiple tenants.
+
+768
+00:31:36,911 --> 00:31:39,990
+In here, the way that
+the data is partitioned
+
+769
+00:31:39,990 --> 00:31:41,880
+or tagged here is that
+when you're talking about
+
+770
+00:31:41,880 --> 00:31:43,320
+a pool knowledge base,
+
+771
+00:31:43,320 --> 00:31:46,380
+you would ingest all the
+tenant-specific data,
+
+772
+00:31:46,380 --> 00:31:49,200
+along with that, it also provides,
+
+773
+00:31:49,200 --> 00:31:51,090
+Amazon knowledge base
+provides you a feature
+
+774
+00:31:51,090 --> 00:31:53,760
+where you could attach
+additional metadata to it.
+
+775
+00:31:53,760 --> 00:31:56,520
+So what you could do is when
+you're ingesting the data into
+
+776
+00:31:56,520 --> 00:31:58,950
+the knowledge base, you could
+also attach the tenant ID
+
+777
+00:31:58,950 --> 00:32:01,290
+to it so that the data goes in there
+
+778
+00:32:01,290 --> 00:32:03,480
+even though it's living
+in the knowledge base,
+
+779
+00:32:03,480 --> 00:32:06,270
+it is kind of tagged with
+that particular tenant ID.
+
+780
+00:32:06,270 --> 00:32:08,070
+You will see that how this will be useful
+
+781
+00:32:08,070 --> 00:32:09,630
+for you later when you're trying
+
+782
+00:32:09,630 --> 00:32:12,360
+to pull the tenant-specific
+data from this shared,
+
+783
+00:32:12,360 --> 00:32:13,743
+or pool knowledge base.
+
+784
+00:32:14,790 --> 00:32:17,400
+Applying the same principle
+for another AWS resource,
+
+785
+00:32:17,400 --> 00:32:20,100
+Amazon DynamoDB table, silo model would be
+
+786
+00:32:20,100 --> 00:32:23,730
+table per tenant or a pool
+model would be single table
+
+787
+00:32:23,730 --> 00:32:25,290
+shared across multiple tenants.
+
+788
+00:32:25,290 --> 00:32:27,960
+But you would have a tenant
+that has a partition key.
+
+789
+00:32:27,960 --> 00:32:30,570
+So that is unique for
+the particular tenant.
+
+790
+00:32:30,570 --> 00:32:33,120
+Applying the same principle for S3 bucket,
+
+791
+00:32:33,120 --> 00:32:35,610
+you would create a silo model
+would be bucket for each
+
+792
+00:32:35,610 --> 00:32:38,040
+of your tenant, whereas a
+pool model you would create
+
+793
+00:32:38,040 --> 00:32:39,090
+a prefix for each
+
+794
+00:32:39,090 --> 00:32:42,393
+of your particular tenant
+within the same bucket.
+
+795
+00:32:43,830 --> 00:32:47,223
+So now moving on to the next
+SaaS architecture challenges,
+
+796
+00:32:48,600 --> 00:32:50,610
+partitioning the data is not enough.
+
+797
+00:32:50,610 --> 00:32:53,460
+We need to make sure that
+particular tenant is able
+
+798
+00:32:53,460 --> 00:32:56,760
+to only get tenant-specific resources.
+
+799
+00:32:56,760 --> 00:33:00,090
+That's what the definition
+of tenant isolation.
+
+800
+00:33:00,090 --> 00:33:02,130
+So now, what we'll do is we'll go back
+
+801
+00:33:02,130 --> 00:33:04,889
+to the all the areas where
+we partition the data
+
+802
+00:33:04,889 --> 00:33:07,830
+and see how we could
+implement tenant isolation
+
+803
+00:33:07,830 --> 00:33:08,973
+for those areas.
+
+804
+00:33:10,290 --> 00:33:12,540
+To start off with, again, we'll go back
+
+805
+00:33:12,540 --> 00:33:15,300
+to the Silo AgentCore Memory.
+
+806
+00:33:15,300 --> 00:33:19,650
+You have this dedicated
+agent which is interacting
+
+807
+00:33:19,650 --> 00:33:22,590
+with your AgentCore,
+Dedicated AgentCore Memory.
+
+808
+00:33:22,590 --> 00:33:24,420
+And then with the short-term memory
+
+809
+00:33:24,420 --> 00:33:27,600
+and the long-term memory, it
+is using this namespace prefix,
+
+810
+00:33:27,600 --> 00:33:28,713
+which you've defined.
+
+811
+00:33:29,760 --> 00:33:31,230
+Since it is a dedicated resource,
+
+812
+00:33:31,230 --> 00:33:34,260
+you could pretty much
+piggyback on IAM where
+
+813
+00:33:34,260 --> 00:33:35,910
+you could attach an execution role
+
+814
+00:33:35,910 --> 00:33:39,210
+to this AgentCore runtime,
+which gives access only
+
+815
+00:33:39,210 --> 00:33:41,490
+to the tenant-specific resources.
+
+816
+00:33:41,490 --> 00:33:44,730
+That's how you could enforce
+tenant isolation here.
+
+817
+00:33:44,730 --> 00:33:47,580
+But again, the assumption
+which I'm making here is
+
+818
+00:33:47,580 --> 00:33:48,700
+that if you look at the actor ID,
+
+819
+00:33:48,700 --> 00:33:50,580
+which is equal to tenant ID
+
+820
+00:33:50,580 --> 00:33:55,580
+where I'm kind partitioning
+the data only by tenant.
+
+821
+00:33:55,920 --> 00:33:59,130
+If you wanna, even in the
+silo model, if you wanna do
+
+822
+00:33:59,130 --> 00:34:00,630
+partition by tenant ID
+
+823
+00:34:00,630 --> 00:34:02,760
+and the tenant user level,
+
+824
+00:34:02,760 --> 00:34:06,570
+then this might not be handy for you.
+
+825
+00:34:06,570 --> 00:34:09,900
+You need to do a little bit
+more fine grain authorization
+
+826
+00:34:09,900 --> 00:34:13,410
+to enforce tenant isolation,
+which you will learn
+
+827
+00:34:13,410 --> 00:34:16,200
+when we are talking about the pool model.
+
+828
+00:34:16,200 --> 00:34:17,820
+Again, for the pool model,
+
+829
+00:34:17,820 --> 00:34:20,487
+you have the pool agent
+running in a pool runtime
+
+830
+00:34:20,487 --> 00:34:22,890
+and then it is interacting
+with the pool memory,
+
+831
+00:34:22,890 --> 00:34:25,080
+short-term memory using this actor ID
+
+832
+00:34:25,080 --> 00:34:26,730
+and the namespace.
+
+833
+00:34:26,730 --> 00:34:30,270
+In here, since it is pool
+shared across multiple tenants,
+
+834
+00:34:30,270 --> 00:34:33,730
+what you could do is the agent can
+
+835
+00:34:34,590 --> 00:34:36,330
+assume this particular
+role, basically you have
+
+836
+00:34:36,330 --> 00:34:38,520
+to create some kind of ABAC role.
+
+837
+00:34:38,520 --> 00:34:41,340
+This is nothing but an
+attribute-based access control role.
+
+838
+00:34:41,340 --> 00:34:45,000
+In that role, if you look
+at the highlighted area,
+
+839
+00:34:45,000 --> 00:34:46,410
+what I'm trying to do there is
+
+840
+00:34:46,410 --> 00:34:47,557
+I'm putting a condition saying that,
+
+841
+00:34:47,557 --> 00:34:52,440
+"Hey, give access to these
+contents in this memory
+
+842
+00:34:52,440 --> 00:34:54,690
+only for this actor ID."
+
+843
+00:34:54,690 --> 00:34:57,510
+And then similarly for
+the long-term memory,
+
+844
+00:34:57,510 --> 00:35:01,020
+you could have another IAM
+policy which has this condition
+
+845
+00:35:01,020 --> 00:35:05,550
+which is giving only access
+to that particular namespace.
+
+846
+00:35:05,550 --> 00:35:09,180
+So now trying to sum up
+everything together here,
+
+847
+00:35:09,180 --> 00:35:13,290
+the pool agent from the JW
+token gets the tenant context,
+
+848
+00:35:13,290 --> 00:35:15,676
+it can create the actor ID with tenant ID
+
+849
+00:35:15,676 --> 00:35:20,190
+and the subject, inject that
+actor ID into this IAM policy
+
+850
+00:35:20,190 --> 00:35:23,670
+and then it can interact with
+a security token service.
+
+851
+00:35:23,670 --> 00:35:24,900
+It's another service
+
+852
+00:35:24,900 --> 00:35:26,730
+through which it assumes
+this particular role
+
+853
+00:35:26,730 --> 00:35:28,710
+and get some scope credentials which are
+
+854
+00:35:28,710 --> 00:35:30,510
+specific to this particular tenant.
+
+855
+00:35:30,510 --> 00:35:33,930
+And using those credentials
+it can only access,
+
+856
+00:35:33,930 --> 00:35:37,770
+or interact with tenant-specific
+data in the shared,
+
+857
+00:35:37,770 --> 00:35:39,990
+or the pool AgentCore memory.
+
+858
+00:35:39,990 --> 00:35:43,953
+That's how you would enforce
+tenant isolation in this model.
+
+859
+00:35:45,840 --> 00:35:49,770
+Now, moving on to the
+AWS resources silo model.
+
+860
+00:35:49,770 --> 00:35:51,090
+You have siloed agents running
+
+861
+00:35:51,090 --> 00:35:54,150
+in the silo tenant AgentCore runtime,
+
+862
+00:35:54,150 --> 00:35:55,400
+which is interacting with
+
+863
+00:35:56,550 --> 00:36:00,300
+silo tools which interacts
+with the silo resources.
+
+864
+00:36:00,300 --> 00:36:02,400
+Again, since everything is siloed,
+
+865
+00:36:02,400 --> 00:36:04,440
+you could piggyback on IAM resources
+
+866
+00:36:04,440 --> 00:36:08,280
+where you could create an
+execution role or IAM role,
+
+867
+00:36:08,280 --> 00:36:10,530
+which gives access only to
+tenant-specific resources
+
+868
+00:36:10,530 --> 00:36:13,410
+and you can attach those
+execution role to the pool tools,
+
+869
+00:36:13,410 --> 00:36:16,140
+or to your AgentCore runtime,
+which will give you only
+
+870
+00:36:16,140 --> 00:36:17,700
+that particular access.
+
+871
+00:36:17,700 --> 00:36:19,470
+Pretty straightforward.
+
+872
+00:36:19,470 --> 00:36:22,440
+Whereas a pool AWS resources, again,
+
+873
+00:36:22,440 --> 00:36:25,140
+you have the pool agent
+running interacting
+
+874
+00:36:25,140 --> 00:36:28,290
+with the pool tools, which
+goes to the pool resources.
+
+875
+00:36:28,290 --> 00:36:31,720
+In here when you're
+implementing the isolation
+
+876
+00:36:33,120 --> 00:36:35,190
+for some AWS services, like what you saw
+
+877
+00:36:35,190 --> 00:36:36,570
+in the AgentCore memory
+
+878
+00:36:36,570 --> 00:36:39,270
+and for other service
+Amazon DynamoDB table,
+
+879
+00:36:39,270 --> 00:36:41,100
+you have good integration with IAM
+
+880
+00:36:41,100 --> 00:36:43,800
+where you could create an
+attribute-based access control
+
+881
+00:36:43,800 --> 00:36:46,380
+role and then enforce isolation.
+
+882
+00:36:46,380 --> 00:36:48,540
+But for some reasons it won't be the case.
+
+883
+00:36:48,540 --> 00:36:50,970
+But let's speak how in
+this case, let's talk about
+
+884
+00:36:50,970 --> 00:36:53,280
+how you would implement
+with DynamoDB table.
+
+885
+00:36:53,280 --> 00:36:55,170
+Similar to what you have seen earlier,
+
+886
+00:36:55,170 --> 00:36:57,946
+you could create an IAM role, ABAC role,
+
+887
+00:36:57,946 --> 00:36:59,760
+which gives only permission to
+
+888
+00:36:59,760 --> 00:37:02,010
+that particular DynamoDB table item in
+
+889
+00:37:02,010 --> 00:37:03,750
+that particular DynamoDB table.
+
+890
+00:37:03,750 --> 00:37:05,130
+If you look at the
+highlighted piece there,
+
+891
+00:37:05,130 --> 00:37:07,987
+you're kind of creating a
+condition there saying that,
+
+892
+00:37:07,987 --> 00:37:10,290
+"Hey, for this particular tenant only
+
+893
+00:37:10,290 --> 00:37:13,500
+give only this particular tenant items."
+
+894
+00:37:13,500 --> 00:37:18,480
+So now in this case the
+pool tools from the JW token
+
+895
+00:37:18,480 --> 00:37:21,540
+get the tenant ID, injects
+that into the ABAC role
+
+896
+00:37:21,540 --> 00:37:23,550
+and gets the scope credentials,
+using the scope credentials,
+
+897
+00:37:23,550 --> 00:37:26,070
+it can interact with the DynamoDB.
+
+898
+00:37:26,070 --> 00:37:28,830
+But if you move towards
+the pool knowledge base,
+
+899
+00:37:28,830 --> 00:37:31,980
+you cannot, pool knowledge
+base as of today,
+
+900
+00:37:31,980 --> 00:37:35,370
+doesn't provide you way to do
+implement this ABAC approach.
+
+901
+00:37:35,370 --> 00:37:37,380
+But in turn you can
+piggyback on another feature
+
+902
+00:37:37,380 --> 00:37:39,150
+provided by the pool knowledge base,
+
+903
+00:37:39,150 --> 00:37:41,700
+or the knowledge base is
+called metadata filtering.
+
+904
+00:37:42,870 --> 00:37:44,550
+So if you remember earlier
+when I talked about
+
+905
+00:37:44,550 --> 00:37:45,960
+the pool knowledge base, I said,
+
+906
+00:37:45,960 --> 00:37:47,340
+as a best practice when you're ingesting
+
+907
+00:37:47,340 --> 00:37:48,930
+this tenant-specific data,
+
+908
+00:37:48,930 --> 00:37:51,600
+attach tenant-specific
+metadata like tenant ID to it
+
+909
+00:37:51,600 --> 00:37:53,460
+and the data would be tagged to it.
+
+910
+00:37:53,460 --> 00:37:56,520
+Now, using this metadata filtering,
+
+911
+00:37:56,520 --> 00:37:58,440
+what you could do is you could pull
+
+912
+00:37:58,440 --> 00:38:02,190
+only tenant-specific data
+by using your tenant ID.
+
+913
+00:38:02,190 --> 00:38:05,250
+Think of this as like a
+SQL query you are making
+
+914
+00:38:05,250 --> 00:38:07,650
+and you need to attach a
+aware clause like tenant ID
+
+915
+00:38:07,650 --> 00:38:09,250
+is equal to the tenant ID value.
+
+916
+00:38:10,230 --> 00:38:12,060
+So to put it in the context,
+
+917
+00:38:12,060 --> 00:38:15,180
+the pool tools from the JW
+token gets the tenant ID,
+
+918
+00:38:15,180 --> 00:38:18,510
+constructs that metadata
+filtering query with the tenant ID
+
+919
+00:38:18,510 --> 00:38:20,490
+and gets only tenant-specific
+resources from
+
+920
+00:38:20,490 --> 00:38:22,470
+this pool knowledge base.
+
+921
+00:38:22,470 --> 00:38:25,110
+So that's how you could
+enforce tenant isolation
+
+922
+00:38:25,110 --> 00:38:25,953
+for this case.
+
+923
+00:38:27,030 --> 00:38:31,560
+Now, let me hand it over
+to Bill to help us run
+
+924
+00:38:31,560 --> 00:38:34,290
+through the next SaaS
+architecture challenge.
+
+925
+00:38:34,290 --> 00:38:35,430
+- Right on.
+
+926
+00:38:35,430 --> 00:38:37,080
+So you probably gathered already
+
+927
+00:38:37,080 --> 00:38:39,390
+that I feel pretty seriously
+about observability in
+
+928
+00:38:39,390 --> 00:38:40,440
+a SaaS application.
+
+929
+00:38:40,440 --> 00:38:42,600
+So let's get into some of the details of
+
+930
+00:38:42,600 --> 00:38:45,900
+what we mean when we're talking
+about applying observability
+
+931
+00:38:45,900 --> 00:38:48,000
+in a multi-tenant solution.
+
+932
+00:38:48,000 --> 00:38:50,370
+So in general, the challenges
+
+933
+00:38:50,370 --> 00:38:53,370
+around SaaS observability
+haven't exactly changed
+
+934
+00:38:53,370 --> 00:38:54,660
+in an agentic world.
+
+935
+00:38:54,660 --> 00:38:56,520
+There are some specifics that do change,
+
+936
+00:38:56,520 --> 00:38:58,650
+but overall we still have tenants
+
+937
+00:38:58,650 --> 00:39:00,620
+and they're calling specific resources.
+
+938
+00:39:00,620 --> 00:39:02,640
+In this case they happen to be agents.
+
+939
+00:39:02,640 --> 00:39:04,440
+We could apply the same
+practice if we were using
+
+940
+00:39:04,440 --> 00:39:06,390
+microservices or features.
+
+941
+00:39:06,390 --> 00:39:09,210
+All of these calls need
+to be instrumented.
+
+942
+00:39:09,210 --> 00:39:10,590
+Now, typically you'll have logs,
+
+943
+00:39:10,590 --> 00:39:12,690
+you might emit activity events,
+
+944
+00:39:12,690 --> 00:39:14,580
+you might pick consumption events,
+
+945
+00:39:14,580 --> 00:39:16,740
+whatever you're emitting
+out of your application,
+
+946
+00:39:16,740 --> 00:39:19,560
+you need to inject tenant
+SaaS context into that,
+
+947
+00:39:19,560 --> 00:39:21,480
+which includes tenancy.
+
+948
+00:39:21,480 --> 00:39:22,530
+What does that look like?
+
+949
+00:39:22,530 --> 00:39:24,330
+It might look something like this, right?
+
+950
+00:39:24,330 --> 00:39:28,170
+It might be a simple JSON
+that has agents and tiers,
+
+951
+00:39:28,170 --> 00:39:29,730
+tenant IDs and regions.
+
+952
+00:39:29,730 --> 00:39:32,220
+It could be any number of other items.
+
+953
+00:39:32,220 --> 00:39:34,440
+Really this is an exercise in reaching out
+
+954
+00:39:34,440 --> 00:39:35,520
+to our business users
+
+955
+00:39:35,520 --> 00:39:37,950
+who will operate their
+business intelligence tools
+
+956
+00:39:37,950 --> 00:39:41,220
+and finding out how they wanna
+slice and dice this data.
+
+957
+00:39:41,220 --> 00:39:44,370
+Because especially with
+agents with the expense
+
+958
+00:39:44,370 --> 00:39:46,770
+that can be added onto your
+solution, they're gonna have
+
+959
+00:39:46,770 --> 00:39:48,990
+to be rethinking how they're
+pricing the solution.
+
+960
+00:39:48,990 --> 00:39:49,950
+They're gonna be thinking about
+
+961
+00:39:49,950 --> 00:39:52,620
+how their customers are
+consuming the solution.
+
+962
+00:39:52,620 --> 00:39:54,390
+All of those are measured
+
+963
+00:39:54,390 --> 00:39:57,420
+by sending out metrics which
+will allow their analytics
+
+964
+00:39:57,420 --> 00:39:59,610
+to operate the business more efficiently.
+
+965
+00:39:59,610 --> 00:40:01,683
+Now, as we mentioned,
+
+966
+00:40:02,550 --> 00:40:04,710
+AgentCore has an observability component.
+
+967
+00:40:04,710 --> 00:40:06,090
+So we've talked about runtime,
+
+968
+00:40:06,090 --> 00:40:07,230
+we've talked about the gateways
+
+969
+00:40:07,230 --> 00:40:08,970
+and the identity, the memory,
+
+970
+00:40:08,970 --> 00:40:11,040
+all of these things we've sort of covered.
+
+971
+00:40:11,040 --> 00:40:13,939
+I think probably a nice
+telling slide though is all
+
+972
+00:40:13,939 --> 00:40:16,410
+of these things, each of the
+pieces we've talked about
+
+973
+00:40:16,410 --> 00:40:19,953
+so far are directly tied
+into observability already.
+
+974
+00:40:20,820 --> 00:40:22,470
+This is one of the really nice things
+
+975
+00:40:22,470 --> 00:40:24,240
+that they've done in AgentCore,
+
+976
+00:40:24,240 --> 00:40:26,940
+because this isn't built
+up from scratch product,
+
+977
+00:40:26,940 --> 00:40:29,970
+instead of observability
+being a bolt on that somebody
+
+978
+00:40:29,970 --> 00:40:31,620
+thinks on after the fact, like, "Oh yeah,
+
+979
+00:40:31,620 --> 00:40:33,720
+I guess we should probably
+do some observability."
+
+980
+00:40:33,720 --> 00:40:35,190
+It's there from the start
+
+981
+00:40:35,190 --> 00:40:36,023
+and all of the different components
+
+982
+00:40:36,023 --> 00:40:39,540
+of AgentCore can actually send
+observability off to there
+
+983
+00:40:39,540 --> 00:40:42,360
+and in fact it has some
+nice built-in tools already,
+
+984
+00:40:42,360 --> 00:40:46,140
+like an open telemetry
+implementation, open telemetry,
+
+985
+00:40:46,140 --> 00:40:48,690
+what we call the Addock
+SDK that we can use
+
+986
+00:40:48,690 --> 00:40:51,510
+to send the tenant ID
+off of custom metrics.
+
+987
+00:40:51,510 --> 00:40:53,880
+It has a nice integration
+with CloudWatch already.
+
+988
+00:40:53,880 --> 00:40:57,120
+I think if you haven't used
+it yet, write an agent,
+
+989
+00:40:57,120 --> 00:40:58,470
+have it do some logs
+
+990
+00:40:58,470 --> 00:41:01,680
+and you're gonna find a
+pretty nice agentic dashboard
+
+991
+00:41:01,680 --> 00:41:03,780
+that already exists in
+CloudWatch that you could use
+
+992
+00:41:03,780 --> 00:41:05,400
+to troubleshoot your agents
+
+993
+00:41:05,400 --> 00:41:07,920
+and understand in general what it means
+
+994
+00:41:07,920 --> 00:41:09,720
+to see the operation of your agents.
+
+995
+00:41:09,720 --> 00:41:11,763
+Now, this is a bit of a rant,
+
+996
+00:41:12,930 --> 00:41:17,220
+tenant ID is not a first class
+concept in observability.
+
+997
+00:41:17,220 --> 00:41:18,330
+It isn't for CloudWatch,
+
+998
+00:41:18,330 --> 00:41:20,130
+it isn't for our third party solutions.
+
+999
+00:41:20,130 --> 00:41:21,840
+It rarely is anywhere.
+
+1000
+00:41:21,840 --> 00:41:23,730
+And this kind of makes sense,
+
+1001
+00:41:23,730 --> 00:41:26,070
+not everything is a SaaS solution, right?
+
+1002
+00:41:26,070 --> 00:41:28,800
+So there are solutions out
+there that don't need tenant ID.
+
+1003
+00:41:28,800 --> 00:41:30,810
+So when we're slicing and dicing our data
+
+1004
+00:41:30,810 --> 00:41:32,550
+and thinking about how we do this,
+
+1005
+00:41:32,550 --> 00:41:34,770
+it usually comes down to custom metrics
+
+1006
+00:41:34,770 --> 00:41:37,170
+and custom dashboards when we're building
+
+1007
+00:41:37,170 --> 00:41:38,460
+multi-tenant solutions.
+
+1008
+00:41:38,460 --> 00:41:40,140
+Because tenant ID has
+
+1009
+00:41:40,140 --> 00:41:42,930
+to be a first class
+concept when we're building
+
+1010
+00:41:42,930 --> 00:41:44,130
+multi-tenant solutions.
+
+1011
+00:41:44,130 --> 00:41:46,650
+And this is just as true
+for agents as anywhere else.
+
+1012
+00:41:46,650 --> 00:41:49,530
+While the AgentCore built in
+dashboards can be very helpful,
+
+1013
+00:41:49,530 --> 00:41:51,510
+you're very likely still going to have
+
+1014
+00:41:51,510 --> 00:41:55,260
+to compliment those with custom
+dashboards that you create
+
+1015
+00:41:55,260 --> 00:41:57,828
+that revolve around your tenant ID.
+
+1016
+00:41:57,828 --> 00:42:01,440
+Now, why is this so important?
+
+1017
+00:42:01,440 --> 00:42:04,380
+Why is observability so
+important in multi-tenancy?
+
+1018
+00:42:04,380 --> 00:42:07,320
+One example that we almost
+always end out talking
+
+1019
+00:42:07,320 --> 00:42:12,300
+to our customers about is
+understanding the unit economics
+
+1020
+00:42:12,300 --> 00:42:13,620
+of SaaS.
+
+1021
+00:42:13,620 --> 00:42:16,560
+What is the cost of operating
+an individual tenant?
+
+1022
+00:42:16,560 --> 00:42:18,120
+How do we measure that?
+
+1023
+00:42:18,120 --> 00:42:21,300
+And the answer is it's
+actually not that easy to do.
+
+1024
+00:42:21,300 --> 00:42:24,540
+We have to build some custom observability
+
+1025
+00:42:24,540 --> 00:42:26,640
+and we have to emit custom metrics.
+
+1026
+00:42:26,640 --> 00:42:30,420
+Now, when we talk about this,
+one of the things we say is,
+
+1027
+00:42:30,420 --> 00:42:33,660
+because this is hard to
+do, we wanna prioritize
+
+1028
+00:42:33,660 --> 00:42:35,910
+what we want to measure.
+
+1029
+00:42:35,910 --> 00:42:39,090
+What's the expensive part
+of an agentic solution?
+
+1030
+00:42:39,090 --> 00:42:40,320
+Usually it's our models.
+
+1031
+00:42:40,320 --> 00:42:43,560
+All of those, all those
+invocations actually add up,
+
+1032
+00:42:43,560 --> 00:42:46,470
+the inference costs are
+probably the primary thing that
+
+1033
+00:42:46,470 --> 00:42:48,300
+your business is gonna
+be raising their hand
+
+1034
+00:42:48,300 --> 00:42:51,060
+and saying, "Hey, why does
+this thing cost so much?"
+
+1035
+00:42:51,060 --> 00:42:52,010
+And the answer to that is
+
+1036
+00:42:52,010 --> 00:42:54,300
+to actually measure the token's input
+
+1037
+00:42:54,300 --> 00:42:58,020
+and output out of the LLM
+with your observability,
+
+1038
+00:42:58,020 --> 00:43:00,390
+you can see this is
+actually pretty simple code.
+
+1039
+00:43:00,390 --> 00:43:03,480
+This is just a custom
+library recording metrics
+
+1040
+00:43:03,480 --> 00:43:04,770
+that do the model indications.
+
+1041
+00:43:04,770 --> 00:43:07,770
+It counts the number of
+input and output tokens.
+
+1042
+00:43:07,770 --> 00:43:09,540
+We're gonna collect those
+and we're gonna pass them
+
+1043
+00:43:09,540 --> 00:43:13,230
+downstream so our agents can
+send those off to CloudWatch
+
+1044
+00:43:13,230 --> 00:43:15,720
+and CloudWatch can collect those
+
+1045
+00:43:15,720 --> 00:43:18,870
+and you can start to see that
+the tenant-specific metrics
+
+1046
+00:43:18,870 --> 00:43:20,070
+are flowing through.
+
+1047
+00:43:20,070 --> 00:43:22,890
+And if we're using CloudWatch,
+we can certainly get
+
+1048
+00:43:22,890 --> 00:43:24,990
+to the point where we can filter those
+
+1049
+00:43:24,990 --> 00:43:27,720
+with CloudWatch log insights, right?
+
+1050
+00:43:27,720 --> 00:43:30,510
+So logged insights is a
+simple query language.
+
+1051
+00:43:30,510 --> 00:43:32,580
+If you're using Datadog,
+if you're using New Relic,
+
+1052
+00:43:32,580 --> 00:43:33,990
+if you're using Honeycomb,
+
+1053
+00:43:33,990 --> 00:43:35,610
+they all have their own query languages.
+
+1054
+00:43:35,610 --> 00:43:37,050
+It's not like if you're
+using third parties
+
+1055
+00:43:37,050 --> 00:43:39,390
+it'll be any different, but this is ours.
+
+1056
+00:43:39,390 --> 00:43:40,890
+And if you look there, you don't even have
+
+1057
+00:43:40,890 --> 00:43:42,930
+to understand the whole thing,
+just look toward the bottom
+
+1058
+00:43:42,930 --> 00:43:45,270
+and you'll see some by tenant ID.
+
+1059
+00:43:45,270 --> 00:43:47,490
+And that's really all this
+query is doing for us.
+
+1060
+00:43:47,490 --> 00:43:49,890
+It's taking all those
+indications, breaking them down
+
+1061
+00:43:49,890 --> 00:43:52,470
+by tenant so that in
+turn we can pass that off
+
+1062
+00:43:52,470 --> 00:43:54,750
+to our observability tools.
+
+1063
+00:43:54,750 --> 00:43:57,210
+Or in the case of what
+we're gonna try to do here,
+
+1064
+00:43:57,210 --> 00:44:00,423
+use those to calculate the
+actual cost per tenant.
+
+1065
+00:44:01,500 --> 00:44:03,720
+So here what we're gonna do on
+the next step is we're gonna
+
+1066
+00:44:03,720 --> 00:44:07,350
+correlate our agent usage
+with the actual costs.
+
+1067
+00:44:07,350 --> 00:44:09,000
+So we've already done the first part,
+
+1068
+00:44:09,000 --> 00:44:10,980
+we've already actually created
+the CloudWatch insights.
+
+1069
+00:44:10,980 --> 00:44:14,760
+So maybe we use a Lambda to
+occasionally invoke that,
+
+1070
+00:44:14,760 --> 00:44:18,870
+take those costs and get the
+actual underlying costs, right?
+
+1071
+00:44:18,870 --> 00:44:22,290
+So we've got usage, what is
+the cost and usage report say?
+
+1072
+00:44:22,290 --> 00:44:25,020
+How much did it cost for each
+one of those invocations?
+
+1073
+00:44:25,020 --> 00:44:27,030
+Combine those two concepts
+
+1074
+00:44:27,030 --> 00:44:28,797
+and perhaps we could
+store them in DynamoDB
+
+1075
+00:44:28,797 --> 00:44:30,630
+and they might look something like this,
+
+1076
+00:44:30,630 --> 00:44:33,420
+tenant one having so many invocations.
+
+1077
+00:44:33,420 --> 00:44:36,690
+Now that we've broken down our individual
+
+1078
+00:44:36,690 --> 00:44:39,870
+inference cost per tenant,
+we can visualize those
+
+1079
+00:44:39,870 --> 00:44:42,840
+perhaps with QuickSight or another BI tool
+
+1080
+00:44:42,840 --> 00:44:45,840
+and create nice dashboards that
+our business users can drive
+
+1081
+00:44:45,840 --> 00:44:47,790
+to understand a deeper understanding
+
+1082
+00:44:47,790 --> 00:44:50,100
+of what it means to operate our tenants.
+
+1083
+00:44:50,100 --> 00:44:52,560
+Cost per tenant might
+look something like this
+
+1084
+00:44:52,560 --> 00:44:55,440
+and cost per tier might look
+something like this, right?
+
+1085
+00:44:55,440 --> 00:44:56,377
+Where we can actually say,
+
+1086
+00:44:56,377 --> 00:44:58,500
+"Okay, this is about the cost per tenant."
+
+1087
+00:44:58,500 --> 00:45:01,530
+And tools like QuickSight
+with their own integrations
+
+1088
+00:45:01,530 --> 00:45:04,620
+with models now can also let
+those business users drill into
+
+1089
+00:45:04,620 --> 00:45:06,870
+those individual tiers
+and see how much it costs
+
+1090
+00:45:06,870 --> 00:45:08,850
+for the tenants inside those tiers.
+
+1091
+00:45:08,850 --> 00:45:10,350
+As long as we've
+
+1092
+00:45:10,350 --> 00:45:13,200
+provided 'em with that data,
+it's our responsibility
+
+1093
+00:45:13,200 --> 00:45:15,900
+as the builders of the
+agent to emit that data
+
+1094
+00:45:15,900 --> 00:45:18,000
+that unlocks all of those cases
+
+1095
+00:45:18,000 --> 00:45:20,910
+where business users can actually
+drill down into this data
+
+1096
+00:45:20,910 --> 00:45:24,060
+and understand what's
+happening under the hood.
+
+1097
+00:45:24,060 --> 00:45:25,530
+With that, Ujwal,
+
+1098
+00:45:25,530 --> 00:45:27,600
+we started off with the
+sample architecture.
+
+1099
+00:45:27,600 --> 00:45:29,610
+Could you take us back to
+the sample architecture
+
+1100
+00:45:29,610 --> 00:45:30,960
+and walk through it with all
+
+1101
+00:45:30,960 --> 00:45:32,490
+of the different things
+we've talked about today
+
+1102
+00:45:32,490 --> 00:45:35,010
+and talk about how they
+apply to that architecture?
+
+1103
+00:45:35,010 --> 00:45:36,240
+- Sure, yep.
+
+1104
+00:45:36,240 --> 00:45:39,390
+So now I'll present you the
+same sample architecture,
+
+1105
+00:45:39,390 --> 00:45:42,480
+but let's look from the lens
+of what we have learned,
+
+1106
+00:45:42,480 --> 00:45:44,150
+in order to touch upon the things here.
+
+1107
+00:45:44,150 --> 00:45:45,153
+To start off with,
+
+1108
+00:45:46,560 --> 00:45:49,320
+the architecture which I'm
+presenting would ease pool model,
+
+1109
+00:45:49,320 --> 00:45:51,390
+which is all shared
+across multiple tenants.
+
+1110
+00:45:51,390 --> 00:45:56,070
+So what you see is we
+created a bunch of agents,
+
+1111
+00:45:56,070 --> 00:45:58,980
+which are deployed in a
+pool AgentCore runtime.
+
+1112
+00:45:58,980 --> 00:46:01,230
+And these agents are shared
+across multiple tenants
+
+1113
+00:46:01,230 --> 00:46:04,230
+and they're configured with
+a large language model.
+
+1114
+00:46:04,230 --> 00:46:05,400
+And hopefully you could see
+
+1115
+00:46:05,400 --> 00:46:08,520
+that we are using SaaS
+framework to build these agents.
+
+1116
+00:46:08,520 --> 00:46:10,650
+And then we are using a supervisor pattern
+
+1117
+00:46:10,650 --> 00:46:13,530
+where you have an orchestrator
+agent, which is configured
+
+1118
+00:46:13,530 --> 00:46:15,870
+with a bunch of sub-agents.
+
+1119
+00:46:15,870 --> 00:46:17,700
+Now, when you assign a task
+
+1120
+00:46:17,700 --> 00:46:19,800
+to this particular orchestrator agent,
+
+1121
+00:46:19,800 --> 00:46:21,810
+it will invoke the knowledge base agent,
+
+1122
+00:46:21,810 --> 00:46:26,340
+which will in turn try
+to invoke a tool, again,
+
+1123
+00:46:26,340 --> 00:46:28,830
+which is a knowledge base
+tool which is shared across
+
+1124
+00:46:28,830 --> 00:46:29,880
+multiple tenants,
+
+1125
+00:46:29,880 --> 00:46:32,460
+which is deployed in a
+Pool AgentCore Gateway,
+
+1126
+00:46:32,460 --> 00:46:35,370
+which is interacting with
+a pooled knowledge base,
+
+1127
+00:46:35,370 --> 00:46:39,510
+which is again plugged in
+with a pooled vector database.
+
+1128
+00:46:39,510 --> 00:46:42,360
+So everything is shared
+across multiple tenants.
+
+1129
+00:46:42,360 --> 00:46:43,860
+And one, assuming that you know,
+
+1130
+00:46:43,860 --> 00:46:46,530
+the orchestrator agent
+did not get a meaty answer
+
+1131
+00:46:46,530 --> 00:46:48,693
+for this particular request
+from this particular subagent
+
+1132
+00:46:48,693 --> 00:46:52,080
+that is a knowledge base agent,
+then it would invoke the log
+
+1133
+00:46:52,080 --> 00:46:55,290
+analysis agent, which in turn configured
+
+1134
+00:46:55,290 --> 00:46:59,610
+to use this log analysis
+agent to pull the data
+
+1135
+00:46:59,610 --> 00:47:01,740
+from the S3 bucket,
+
+1136
+00:47:01,740 --> 00:47:05,100
+which has the application
+logs where we have
+
+1137
+00:47:05,100 --> 00:47:07,773
+all the tenant-specific application logs.
+
+1138
+00:47:08,820 --> 00:47:12,240
+And then in here, this
+whole architecture, again,
+
+1139
+00:47:12,240 --> 00:47:14,310
+you will see in this work workshop that,
+
+1140
+00:47:14,310 --> 00:47:16,140
+we have used a SaaS control plane
+
+1141
+00:47:16,140 --> 00:47:17,460
+and tenant onboarding experience
+
+1142
+00:47:17,460 --> 00:47:20,673
+to provision this pool model
+into the SaaS application play.
+
+1143
+00:47:22,080 --> 00:47:25,140
+And then from the SaaS
+identity concepts perspective,
+
+1144
+00:47:25,140 --> 00:47:28,020
+again you will see that when
+you're invoking this agent,
+
+1145
+00:47:28,020 --> 00:47:30,600
+what we do is we ask for your credentials
+
+1146
+00:47:30,600 --> 00:47:35,400
+where you authenticate you against an ATP,
+
+1147
+00:47:35,400 --> 00:47:39,990
+and then generate a JW token,
+
+1148
+00:47:39,990 --> 00:47:42,270
+which is nothing but an access token,
+
+1149
+00:47:42,270 --> 00:47:44,430
+which has the tenant information in it
+
+1150
+00:47:44,430 --> 00:47:46,740
+and then the tenant information,
+
+1151
+00:47:46,740 --> 00:47:49,170
+using the JW token, you
+would invoke this agent,
+
+1152
+00:47:49,170 --> 00:47:50,790
+which is running AgentCore runtime.
+
+1153
+00:47:50,790 --> 00:47:54,300
+Then as we talked earlier,
+we use AgentCore identity
+
+1154
+00:47:54,300 --> 00:47:56,160
+to authorize that particular request
+
+1155
+00:47:56,160 --> 00:47:58,380
+and make the JW token available
+
+1156
+00:47:58,380 --> 00:48:01,410
+for the agents within
+the AgentCore runtime.
+
+1157
+00:48:01,410 --> 00:48:04,620
+And then those agents would, again,
+
+1158
+00:48:04,620 --> 00:48:05,690
+when they're making a call
+
+1159
+00:48:05,690 --> 00:48:08,340
+to the tools in the AgentCore Gateway,
+
+1160
+00:48:08,340 --> 00:48:10,770
+use the JW token again there
+
+1161
+00:48:10,770 --> 00:48:12,450
+to authorize that particular call.
+
+1162
+00:48:12,450 --> 00:48:13,860
+We use AgentCore identity
+
+1163
+00:48:13,860 --> 00:48:15,633
+and again here,
+
+1164
+00:48:18,300 --> 00:48:21,420
+we are only trying to
+interact with AWS resources.
+
+1165
+00:48:21,420 --> 00:48:22,980
+But again, as I mentioned earlier,
+
+1166
+00:48:22,980 --> 00:48:25,260
+you could extend AgentCore
+identity concepts,
+
+1167
+00:48:25,260 --> 00:48:27,750
+apply for the outbound
+authorization calls also
+
+1168
+00:48:27,750 --> 00:48:28,680
+when you're trying to reach out
+
+1169
+00:48:28,680 --> 00:48:31,803
+to an external resource or external agent.
+
+1170
+00:48:32,970 --> 00:48:35,280
+From the data partitioning point of view,
+
+1171
+00:48:35,280 --> 00:48:37,140
+the areas where you need
+to do the data partitioning
+
+1172
+00:48:37,140 --> 00:48:38,130
+is obviously,
+
+1173
+00:48:38,130 --> 00:48:40,680
+as we discussed earlier,
+the knowledge base,
+
+1174
+00:48:40,680 --> 00:48:43,650
+the knowledge base is shared
+across multiple tenants.
+
+1175
+00:48:43,650 --> 00:48:46,140
+We used, as we talked about
+using metadata filtering
+
+1176
+00:48:46,140 --> 00:48:49,980
+concept, we ingest the data
+with tenant-specific data in it
+
+1177
+00:48:49,980 --> 00:48:52,740
+and we partition the data in that way.
+
+1178
+00:48:52,740 --> 00:48:55,410
+Whereas for the log analysis tool agent,
+
+1179
+00:48:55,410 --> 00:48:56,730
+we have a shared S3 bucket.
+
+1180
+00:48:56,730 --> 00:48:59,040
+We have partitioned the
+data with prefix per each
+
+1181
+00:48:59,040 --> 00:49:02,250
+of the tenant with the
+prefix name as a tenant ID.
+
+1182
+00:49:02,250 --> 00:49:05,340
+And then for enforcing the
+tenant isolation, again,
+
+1183
+00:49:05,340 --> 00:49:06,780
+going back to the knowledge base,
+
+1184
+00:49:06,780 --> 00:49:09,000
+we use a metadata filtering
+
+1185
+00:49:09,000 --> 00:49:11,880
+where the knowledge base
+tool from the JW token gets
+
+1186
+00:49:11,880 --> 00:49:13,980
+the tenant context
+
+1187
+00:49:13,980 --> 00:49:16,980
+and then uses the tenant context
+using metadata filtering,
+
+1188
+00:49:16,980 --> 00:49:18,960
+tries to get only
+tenant-specific resources,
+
+1189
+00:49:18,960 --> 00:49:21,930
+or tenant-specific data from the Amazon
+
+1190
+00:49:21,930 --> 00:49:23,403
+Bedrock Knowledge Base.
+
+1191
+00:49:23,403 --> 00:49:26,820
+And whereas for the tool analysis agent,
+
+1192
+00:49:26,820 --> 00:49:30,180
+the way we enforce isolation
+here since S3 bucket
+
+1193
+00:49:30,180 --> 00:49:32,302
+has a good integration with ABAC,
+
+1194
+00:49:32,302 --> 00:49:34,533
+or a attribute-based access control role.
+
+1195
+00:49:34,533 --> 00:49:36,360
+This basically has a
+good integration with IAM
+
+1196
+00:49:36,360 --> 00:49:38,550
+where you could create an ABAC role.
+
+1197
+00:49:38,550 --> 00:49:40,050
+So log analysis tool,
+
+1198
+00:49:40,050 --> 00:49:43,770
+what it does is from the JW
+token, gets tenant context,
+
+1199
+00:49:43,770 --> 00:49:46,230
+injects that into the ABAC role
+
+1200
+00:49:46,230 --> 00:49:47,640
+and gets access only
+
+1201
+00:49:47,640 --> 00:49:51,540
+to the tenant-specific application
+logs within that prefix
+
+1202
+00:49:51,540 --> 00:49:54,240
+of that particular
+tenant in the S3 bucket.
+
+1203
+00:49:54,240 --> 00:49:56,670
+That's how it enforces tenant isolation.
+
+1204
+00:49:56,670 --> 00:49:58,860
+And then last but not the
+least, as Bill mentioned,
+
+1205
+00:49:58,860 --> 00:50:01,830
+we used AgentCore
+observability specifically
+
+1206
+00:50:01,830 --> 00:50:04,890
+to capture the tenant-specific
+metrics related to the number
+
+1207
+00:50:04,890 --> 00:50:06,300
+of input tokens and output tokens
+
+1208
+00:50:06,300 --> 00:50:08,580
+generated for that particular tenant.
+
+1209
+00:50:08,580 --> 00:50:10,800
+When the agents are
+executing a particular task
+
+1210
+00:50:10,800 --> 00:50:12,210
+and takes those things
+
+1211
+00:50:12,210 --> 00:50:14,280
+and logs using AgentCore observability,
+
+1212
+00:50:14,280 --> 00:50:16,353
+we log it to the CloudWatch logs.
+
+1213
+00:50:17,460 --> 00:50:19,830
+So hopefully you can see
+that where we started off,
+
+1214
+00:50:19,830 --> 00:50:22,655
+where we introduced you folks
+to all the different concepts
+
+1215
+00:50:22,655 --> 00:50:25,260
+and we'll try to bring them all together
+
+1216
+00:50:25,260 --> 00:50:28,350
+and try to build an
+architecture which would
+
+1217
+00:50:28,350 --> 00:50:31,323
+check all the boxes of
+what we talked about.
+
+1218
+00:50:34,020 --> 00:50:36,240
+So that's all we had for you folks today.
+
+1219
+00:50:36,240 --> 00:50:40,230
+Hopefully this is helpful for you folks.
+
+1220
+00:50:40,230 --> 00:50:42,540
+- And don't forget about the
+workshop that that is today
+
+1221
+00:50:42,540 --> 00:50:44,190
+and tomorrow, right?
+- Yep, yes.
+
+1222
+00:50:44,190 --> 00:50:45,540
+- Today and tomorrow.
+
+1223
+00:50:45,540 --> 00:50:47,040
+Definitely, it's worth waiting in line for
+
+1224
+00:50:47,040 --> 00:50:48,120
+if you haven't signed up already.
+
+1225
+00:50:48,120 --> 00:50:49,556
+Thank you, everybody.
+- Thank you.
+
+1226
+00:50:49,556 --> 00:50:51,973
+(hands clap)
+

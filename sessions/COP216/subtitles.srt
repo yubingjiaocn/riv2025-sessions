@@ -1,0 +1,5663 @@
+1
+00:00:00,240 --> 00:00:04,200
+- Hey, so hello and welcome
+everyone to re:Invent 2025.
+
+2
+00:00:04,200 --> 00:00:05,910
+Thanks for being here,
+especially considering
+
+3
+00:00:05,910 --> 00:00:07,530
+this is a 9:00 AM session.
+
+4
+00:00:07,530 --> 00:00:10,473
+I hope jet lag is treating you all well.
+
+5
+00:00:11,310 --> 00:00:13,230
+We are here today to talk about incident
+
+6
+00:00:13,230 --> 00:00:14,063
+and it's a really good thing
+
+7
+00:00:14,063 --> 00:00:16,140
+that we haven't had one in a while, right?
+
+8
+00:00:20,460 --> 00:00:23,220
+So let's start off off
+with a bit of background on
+
+9
+00:00:23,220 --> 00:00:25,083
+who we are and why we are here today.
+
+10
+00:00:27,240 --> 00:00:28,440
+I'm muted, okay?
+
+11
+00:00:28,440 --> 00:00:30,770
+I'm Giorgio, I'm a principal
+in AWS Enterprise support,
+
+12
+00:00:30,770 --> 00:00:32,430
+that is the organization
+
+13
+00:00:32,430 --> 00:00:35,880
+that supports our customers in
+their day-to-day improvement
+
+14
+00:00:35,880 --> 00:00:38,100
+of operations and resilience.
+
+15
+00:00:38,100 --> 00:00:38,933
+- And I'm Anthony.
+
+16
+00:00:38,933 --> 00:00:42,150
+I'm a principal engineer in
+the AWS event management team.
+
+17
+00:00:42,150 --> 00:00:44,700
+We're part of the AWS Health organization.
+
+18
+00:00:44,700 --> 00:00:46,830
+- And together we have more than 20 years
+
+19
+00:00:46,830 --> 00:00:50,550
+of combined experience in
+all things incident at AWS,
+
+20
+00:00:50,550 --> 00:00:52,380
+from detection to resolution
+
+21
+00:00:52,380 --> 00:00:54,450
+and implementation of action items,
+
+22
+00:00:54,450 --> 00:00:57,270
+and we are here today to share
+some lessons we have learned
+
+23
+00:00:57,270 --> 00:00:58,680
+over time, tips and tricks,
+
+24
+00:00:58,680 --> 00:01:01,203
+and discuss how we do
+things here at Amazon.
+
+25
+00:01:03,720 --> 00:01:05,790
+- Okay, so with a show of hands,
+
+26
+00:01:05,790 --> 00:01:07,590
+how many folks here have
+been involved either
+
+27
+00:01:07,590 --> 00:01:09,933
+in an incident or after an incident?
+
+28
+00:01:12,480 --> 00:01:15,690
+Okay, looks like most of us,
+well, you're in the right spot.
+
+29
+00:01:15,690 --> 00:01:17,850
+So today we're gonna go through
+a couple different things.
+
+30
+00:01:17,850 --> 00:01:20,790
+We're gonna talk about event
+management at AWS, specifically
+
+31
+00:01:20,790 --> 00:01:24,630
+how we do it, how we
+detect, how we engage,
+
+32
+00:01:24,630 --> 00:01:25,890
+and then we're gonna focus the discussion
+
+33
+00:01:25,890 --> 00:01:28,260
+around the retrospective phase, which is
+
+34
+00:01:28,260 --> 00:01:31,680
+where we'll focus on specifically
+how we do that at scale,
+
+35
+00:01:31,680 --> 00:01:34,020
+and we'll start with how we
+trigger and manage events
+
+36
+00:01:34,020 --> 00:01:34,860
+and then zoom into that.
+
+37
+00:01:34,860 --> 00:01:36,390
+But I want to key in on the fact
+
+38
+00:01:36,390 --> 00:01:39,810
+that the post incident
+is not just the creation
+
+39
+00:01:39,810 --> 00:01:40,680
+of a document, right?
+
+40
+00:01:40,680 --> 00:01:42,390
+It's really deep diving
+
+41
+00:01:42,390 --> 00:01:44,490
+and truly understanding the root cause.
+
+42
+00:01:44,490 --> 00:01:46,080
+And so we'll talk about the five why's
+
+43
+00:01:46,080 --> 00:01:48,360
+and a couple different
+ways to get to that.
+
+44
+00:01:48,360 --> 00:01:50,490
+And then to wrap up, we'll
+talk about specifically how
+
+45
+00:01:50,490 --> 00:01:52,833
+to scale it across a
+very large organization.
+
+46
+00:01:55,530 --> 00:01:57,000
+Okay, so we're gonna start with detection.
+
+47
+00:01:57,000 --> 00:01:58,980
+So all events start with detection
+
+48
+00:01:58,980 --> 00:02:01,780
+and they end at least in the
+short term with mitigation.
+
+49
+00:02:03,450 --> 00:02:07,200
+So for detection, we have two
+broad categories of events.
+
+50
+00:02:07,200 --> 00:02:09,630
+The first is service-driven.
+
+51
+00:02:09,630 --> 00:02:12,450
+And service-driven metrics
+include things like
+
+52
+00:02:12,450 --> 00:02:13,710
+alarms on the service, right,
+
+53
+00:02:13,710 --> 00:02:18,660
+so EC2 launch instances,
+launch latency, et cetera.
+
+54
+00:02:18,660 --> 00:02:21,750
+But we also have metrics and
+alarms on the subsystem layer.
+
+55
+00:02:21,750 --> 00:02:24,270
+And so those might
+include other subsystems
+
+56
+00:02:24,270 --> 00:02:26,790
+in the path for the co-plan
+
+57
+00:02:26,790 --> 00:02:29,640
+or in the data plan in the
+creation of the instances.
+
+58
+00:02:29,640 --> 00:02:32,411
+But we also supplement that
+with synthetic monitoring,
+
+59
+00:02:32,411 --> 00:02:34,110
+we call them canaries,
+
+60
+00:02:34,110 --> 00:02:34,943
+and these are intended
+
+61
+00:02:34,943 --> 00:02:37,620
+to emulate the customer
+experience end to end.
+
+62
+00:02:37,620 --> 00:02:41,010
+And so you can think of
+launching an EC2 instance,
+
+63
+00:02:41,010 --> 00:02:41,910
+certainly we're monitoring
+
+64
+00:02:41,910 --> 00:02:44,940
+whether the launch was
+successful, but we also want
+
+65
+00:02:44,940 --> 00:02:46,800
+to know whether that
+instance is available,
+
+66
+00:02:46,800 --> 00:02:48,840
+whether it can be contacted
+
+67
+00:02:48,840 --> 00:02:51,660
+and responding to DNS requests.
+
+68
+00:02:51,660 --> 00:02:54,750
+And so those are the two
+main categories of metrics
+
+69
+00:02:54,750 --> 00:02:56,310
+and how we detect issues.
+
+70
+00:02:56,310 --> 00:02:59,220
+But the third one is maybe
+a little bit unique to AWS
+
+71
+00:02:59,220 --> 00:03:01,500
+and these are what we
+call aggregate alarms.
+
+72
+00:03:01,500 --> 00:03:03,990
+And so these are alarms that
+trigger when multiple services
+
+73
+00:03:03,990 --> 00:03:07,173
+are in an alarm at the same
+time or multiple metrics.
+
+74
+00:03:08,490 --> 00:03:09,390
+Those are a little bit different
+
+75
+00:03:09,390 --> 00:03:12,478
+in that they engage a
+full incident response
+
+76
+00:03:12,478 --> 00:03:14,913
+and we'll talk about that
+here in just a second.
+
+77
+00:03:15,960 --> 00:03:18,540
+- And the second category
+of metrics that we use
+
+78
+00:03:18,540 --> 00:03:21,270
+for detection are what
+we call customer-driven.
+
+79
+00:03:21,270 --> 00:03:22,950
+So those are of two types.
+
+80
+00:03:22,950 --> 00:03:25,890
+The first one is we monitor
+for traffic anomalies.
+
+81
+00:03:25,890 --> 00:03:28,440
+We have models that allow
+us to predict the amount
+
+82
+00:03:28,440 --> 00:03:30,960
+of traffic that should
+be hitting a service
+
+83
+00:03:30,960 --> 00:03:33,690
+as ascertain time of the
+day in a certain region,
+
+84
+00:03:33,690 --> 00:03:35,550
+and if the traffic is not there,
+
+85
+00:03:35,550 --> 00:03:38,820
+then we trigger alarms
+that start investigations
+
+86
+00:03:38,820 --> 00:03:40,970
+on why the traffic
+cannot reach the service
+
+87
+00:03:40,970 --> 00:03:44,790
+and related, we track
+impact report customers.
+
+88
+00:03:44,790 --> 00:03:48,510
+So this goes from noise on social media,
+
+89
+00:03:48,510 --> 00:03:49,890
+to reports on social media
+
+90
+00:03:49,890 --> 00:03:52,980
+to support cases raised by customers
+
+91
+00:03:52,980 --> 00:03:54,240
+and we analyze those trends.
+
+92
+00:03:54,240 --> 00:03:57,570
+And if there is an uptick on
+cases about a specific service,
+
+93
+00:03:57,570 --> 00:03:59,370
+then it might be a sign
+that we need to engage
+
+94
+00:03:59,370 --> 00:04:01,290
+and start investigating a potential issue
+
+95
+00:04:01,290 --> 00:04:03,720
+that the first category
+of metrics is not good.
+
+96
+00:04:06,000 --> 00:04:07,860
+- Okay, so let's talk about
+detection a little bit.
+
+97
+00:04:07,860 --> 00:04:10,677
+So I wanna show you the AWS dashboard.
+
+98
+00:04:10,677 --> 00:04:13,080
+And so this dashboard
+legend has, it was built
+
+99
+00:04:13,080 --> 00:04:16,530
+in 2008, 2009 time by
+an engineer from Dublin
+
+100
+00:04:16,530 --> 00:04:18,000
+who was visiting Seattle
+
+101
+00:04:18,000 --> 00:04:19,830
+and had identified the
+problem that as we scale,
+
+102
+00:04:19,830 --> 00:04:23,340
+we needed a centralized view
+into the health of AWS services
+
+103
+00:04:23,340 --> 00:04:24,483
+and AWS regions.
+
+104
+00:04:26,160 --> 00:04:27,480
+They also wanted to be able to deep dive
+
+105
+00:04:27,480 --> 00:04:28,610
+by partition as well.
+
+106
+00:04:28,610 --> 00:04:32,340
+And so what we have here is
+we have a view of all of that
+
+107
+00:04:32,340 --> 00:04:35,070
+and we can drill into each
+service and each region.
+
+108
+00:04:35,070 --> 00:04:36,390
+And each service onboards three
+
+109
+00:04:36,390 --> 00:04:39,000
+to five key performance
+metrics that indicate
+
+110
+00:04:39,000 --> 00:04:41,760
+their services overall health,
+
+111
+00:04:41,760 --> 00:04:43,800
+and ultimately over the years
+we've continued to develop
+
+112
+00:04:43,800 --> 00:04:46,110
+and own the same tool
+and not much has changed,
+
+113
+00:04:46,110 --> 00:04:47,790
+but the goal remains the same, right?
+
+114
+00:04:47,790 --> 00:04:50,440
+We need that centralized
+view into AWS' (indistinct).
+
+115
+00:04:51,480 --> 00:04:54,540
+So after detection we have engagement.
+
+116
+00:04:54,540 --> 00:04:56,580
+And so engagement, we have two categories
+
+117
+00:04:56,580 --> 00:04:57,413
+of events here as well.
+
+118
+00:04:57,413 --> 00:04:59,100
+We have single service events
+
+119
+00:04:59,100 --> 00:05:01,740
+that are triggered by service alarms.
+
+120
+00:05:01,740 --> 00:05:03,330
+We'll start with that.
+
+121
+00:05:03,330 --> 00:05:06,330
+These are alarms that engage
+these, the service team
+
+122
+00:05:06,330 --> 00:05:09,130
+and generally only the service
+team for what's in alarm.
+
+123
+00:05:09,990 --> 00:05:11,850
+They can engage others as required
+
+124
+00:05:11,850 --> 00:05:14,370
+and ultimately they can engage AWS support
+
+125
+00:05:14,370 --> 00:05:16,050
+and AWS support is in the loop
+
+126
+00:05:16,050 --> 00:05:17,950
+if customers are impacted by an issue.
+
+127
+00:05:19,800 --> 00:05:22,680
+Secondarily, we have multi-service events.
+
+128
+00:05:22,680 --> 00:05:24,000
+And so these are the
+ones that are triggered
+
+129
+00:05:24,000 --> 00:05:26,220
+by the aggregate alarms that
+I was mentioning before.
+
+130
+00:05:26,220 --> 00:05:29,790
+And so these ones are engagement at scale,
+
+131
+00:05:29,790 --> 00:05:31,500
+and so they trigger engagements
+
+132
+00:05:31,500 --> 00:05:33,389
+of a couple different teams.
+
+133
+00:05:33,389 --> 00:05:34,950
+So the first one is AWS Incident Response,
+
+134
+00:05:34,950 --> 00:05:36,303
+or as we call AIR.
+
+135
+00:05:37,260 --> 00:05:39,540
+Additionally, AWS support is involved
+
+136
+00:05:39,540 --> 00:05:41,880
+and engaged at the onset of the event,
+
+137
+00:05:41,880 --> 00:05:44,550
+all impacted services from
+the creation of the event,
+
+138
+00:05:44,550 --> 00:05:47,310
+all the way down to the
+full lifecycle of the event.
+
+139
+00:05:47,310 --> 00:05:49,050
+So not just what's an
+alarm with the creation,
+
+140
+00:05:49,050 --> 00:05:51,690
+but throughout the entire time.
+
+141
+00:05:51,690 --> 00:05:53,790
+And at the onset of these, we also engage
+
+142
+00:05:53,790 --> 00:05:55,530
+what we like to call the usual suspects.
+
+143
+00:05:55,530 --> 00:05:58,110
+And so these will be,
+you know, foundational
+
+144
+00:05:58,110 --> 00:06:00,600
+or core services that are low in the stack
+
+145
+00:06:00,600 --> 00:06:04,383
+that are often a root cause
+of multi-service events.
+
+146
+00:06:05,259 --> 00:06:07,950
+So these are things like authentication,
+
+147
+00:06:07,950 --> 00:06:09,540
+DNS, networking, et cetera.
+
+148
+00:06:09,540 --> 00:06:14,540
+So we'll engage Route 53,
+IM and our networking teams.
+
+149
+00:06:19,620 --> 00:06:22,260
+- So after engagements we
+have the coordination phase.
+
+150
+00:06:22,260 --> 00:06:24,720
+And you can imagine
+coordinating incident response
+
+151
+00:06:24,720 --> 00:06:28,020
+at AWS scale is quite a challenge.
+
+152
+00:06:28,020 --> 00:06:31,020
+We do this by breaking
+down into work streams,
+
+153
+00:06:31,020 --> 00:06:34,143
+each one coordinated by a related call.
+
+154
+00:06:34,980 --> 00:06:36,780
+The first one is the tech call.
+
+155
+00:06:36,780 --> 00:06:40,740
+It involves engineers and
+leaders of the affected services
+
+156
+00:06:40,740 --> 00:06:42,810
+and it's focused on delivering
+
+157
+00:06:42,810 --> 00:06:44,490
+the fastest possible mitigation a
+
+158
+00:06:44,490 --> 00:06:46,293
+and their solution for customers.
+
+159
+00:06:47,790 --> 00:06:50,130
+- And then secondarily,
+we have the support call,
+
+160
+00:06:50,130 --> 00:06:52,080
+and the support call
+focuses on communicating
+
+161
+00:06:52,080 --> 00:06:56,490
+with impacted customers, but
+also giving customers advice
+
+162
+00:06:56,490 --> 00:06:58,290
+and how to recover faster.
+
+163
+00:06:58,290 --> 00:06:59,760
+There's oftentimes scenarios
+
+164
+00:06:59,760 --> 00:07:01,290
+where we can provide information
+
+165
+00:07:01,290 --> 00:07:02,790
+to get you outta pain earlier.
+
+166
+00:07:04,230 --> 00:07:06,120
+The participants on that
+call include support
+
+167
+00:07:06,120 --> 00:07:08,310
+and service leadership.
+
+168
+00:07:08,310 --> 00:07:11,070
+- So the way we think about
+the tech call is that we want
+
+169
+00:07:11,070 --> 00:07:14,250
+to run a large scale
+parallel investigation
+
+170
+00:07:14,250 --> 00:07:15,120
+instead of serial.
+
+171
+00:07:15,120 --> 00:07:18,030
+So the way we'll do this
+is we will engage all
+
+172
+00:07:18,030 --> 00:07:19,170
+of the impacted teams
+
+173
+00:07:19,170 --> 00:07:21,570
+and ask them to review their
+services, their metrics,
+
+174
+00:07:21,570 --> 00:07:23,460
+and come up with impact statements.
+
+175
+00:07:23,460 --> 00:07:24,750
+This might be slightly different
+
+176
+00:07:24,750 --> 00:07:26,550
+from what you are generally used to see.
+
+177
+00:07:26,550 --> 00:07:28,140
+That is a sequential investigation
+
+178
+00:07:28,140 --> 00:07:31,410
+where each possible root
+cause is removed in order.
+
+179
+00:07:31,410 --> 00:07:34,140
+So let's dive a bit
+deeper into the tech call.
+
+180
+00:07:34,140 --> 00:07:35,850
+So Anthony mentioned it's supported
+
+181
+00:07:35,850 --> 00:07:40,850
+by a team called AWS Incident
+Response, AWS AIR for France.
+
+182
+00:07:41,700 --> 00:07:43,530
+This is not the classic operation team.
+
+183
+00:07:43,530 --> 00:07:46,920
+They are not just here
+to operate the cause
+
+184
+00:07:46,920 --> 00:07:47,940
+and coordinate the incident response,
+
+185
+00:07:47,940 --> 00:07:50,220
+they own the process end to end.
+
+186
+00:07:50,220 --> 00:07:53,220
+They own the mental models,
+they own the foundations
+
+187
+00:07:53,220 --> 00:07:54,420
+of our incident response
+
+188
+00:07:54,420 --> 00:07:56,520
+and they own all of the related tooling.
+
+189
+00:07:56,520 --> 00:07:58,230
+So they are quite active in the process,
+
+190
+00:07:58,230 --> 00:08:00,180
+they're not here just for coordination.
+
+191
+00:08:01,710 --> 00:08:03,960
+As we say, this call
+is focused on one thing
+
+192
+00:08:03,960 --> 00:08:06,963
+that is mitigation and
+after mitigation resolution.
+
+193
+00:08:08,520 --> 00:08:11,520
+Large events are supported by
+what we call a call leader.
+
+194
+00:08:11,520 --> 00:08:14,670
+Now the industry standard term
+
+195
+00:08:14,670 --> 00:08:16,110
+for call leaders is probably
+
+196
+00:08:16,110 --> 00:08:17,820
+something like incident commander.
+
+197
+00:08:17,820 --> 00:08:20,370
+And this is the person,
+extremely senior person
+
+198
+00:08:20,370 --> 00:08:22,800
+that is in the call and takes decisions
+
+199
+00:08:22,800 --> 00:08:25,860
+where we face scenarios that
+we have not experienced before.
+
+200
+00:08:25,860 --> 00:08:27,600
+It's a really small number of individuals,
+
+201
+00:08:27,600 --> 00:08:30,330
+it's single digit across the entire of AWS
+
+202
+00:08:30,330 --> 00:08:31,920
+and they are here to break ties
+
+203
+00:08:31,920 --> 00:08:35,010
+or just to take those
+split second decisions
+
+204
+00:08:35,010 --> 00:08:37,083
+that help with incident integration.
+
+205
+00:08:38,670 --> 00:08:40,950
+The call is paired to a ticket,
+
+206
+00:08:40,950 --> 00:08:43,860
+and we have quite a strong mindset about
+
+207
+00:08:43,860 --> 00:08:45,660
+what is discussed in the call.
+
+208
+00:08:45,660 --> 00:08:49,830
+Imagine this call we often run
+in the hundreds of attendees.
+
+209
+00:08:49,830 --> 00:08:54,750
+So having a mindset, a clear
+definition of what needs
+
+210
+00:08:54,750 --> 00:08:55,800
+to be said in the call
+
+211
+00:08:55,800 --> 00:08:57,720
+and what can be written
+in the ticket instead
+
+212
+00:08:57,720 --> 00:08:59,400
+and what must be written in the ticket
+
+213
+00:08:59,400 --> 00:09:03,030
+because we want to study it
+for long term is really key.
+
+214
+00:09:03,030 --> 00:09:05,430
+And we support this to a stronger ticket.
+
+215
+00:09:05,430 --> 00:09:08,153
+So it's quite clear on who's
+supposed to talk, it's clear
+
+216
+00:09:08,153 --> 00:09:11,580
+who has the microphone at
+any certain point in time.
+
+217
+00:09:11,580 --> 00:09:14,100
+I wish we were a bit
+better with muting people
+
+218
+00:09:14,100 --> 00:09:15,720
+because it's not an (indistinct)
+
+219
+00:09:15,720 --> 00:09:17,580
+to have dogs barking in the background,
+
+220
+00:09:17,580 --> 00:09:19,280
+helicopters taking off or similar.
+
+221
+00:09:21,780 --> 00:09:24,720
+And this call is the one
+
+222
+00:09:24,720 --> 00:09:26,937
+and main coordination
+bridge for the design.
+
+223
+00:09:26,937 --> 00:09:28,890
+But when a service team needs some time
+
+224
+00:09:28,890 --> 00:09:31,380
+to maybe look deeper into
+their functionalities
+
+225
+00:09:31,380 --> 00:09:33,830
+and involve different
+engineers, they're gonna follow
+
+226
+00:09:33,830 --> 00:09:36,870
+to a separate one and still
+keep at least one engineer
+
+227
+00:09:36,870 --> 00:09:38,970
+that has a bridge between the two.
+
+228
+00:09:38,970 --> 00:09:41,940
+So the tech call remains the
+core of incident response
+
+229
+00:09:41,940 --> 00:09:44,010
+that can be worked out as appropriate
+
+230
+00:09:44,010 --> 00:09:45,903
+and as required from time to time.
+
+231
+00:09:47,190 --> 00:09:49,290
+So I mentioned the tech
+tickets that we use
+
+232
+00:09:49,290 --> 00:09:51,360
+for long term storage of observation.
+
+233
+00:09:51,360 --> 00:09:53,580
+I want to share with
+you a couple of examples
+
+234
+00:09:53,580 --> 00:09:56,380
+of those observation that
+might make this more tangible.
+
+235
+00:09:58,080 --> 00:10:00,270
+So in the first example, we have a cat
+
+236
+00:10:00,270 --> 00:10:03,660
+or an engineer passing an error log.
+
+237
+00:10:03,660 --> 00:10:06,510
+Now you might think
+this is quite redundant
+
+238
+00:10:06,510 --> 00:10:09,990
+since the error log is
+stored somewhere else
+
+239
+00:10:09,990 --> 00:10:12,270
+and it's got a timestamp already,
+
+240
+00:10:12,270 --> 00:10:14,580
+but putting it here makes
+it immediately visible
+
+241
+00:10:14,580 --> 00:10:17,100
+to the hundred software
+solvers that are involved
+
+242
+00:10:17,100 --> 00:10:19,770
+and also gives us an indirect
+piece of information.
+
+243
+00:10:19,770 --> 00:10:22,560
+We are gonna know later
+in the post-mortem review
+
+244
+00:10:22,560 --> 00:10:23,910
+that at this point in time,
+
+245
+00:10:23,910 --> 00:10:25,410
+we were aware of this error, right?
+
+246
+00:10:25,410 --> 00:10:27,840
+The fact that it was
+written in a log somewhere
+
+247
+00:10:27,840 --> 00:10:28,890
+is not the entire story,
+
+248
+00:10:28,890 --> 00:10:31,440
+we want to remember that at
+this time we were looking at
+
+249
+00:10:31,440 --> 00:10:34,140
+this service, we were looking
+at this other condition.
+
+250
+00:10:35,520 --> 00:10:37,590
+Then we have another
+engineer that is reporting,
+
+251
+00:10:37,590 --> 00:10:39,063
+having started a rollback.
+
+252
+00:10:40,565 --> 00:10:44,100
+Now our pipeline tooling
+obviously track time stamped
+
+253
+00:10:44,100 --> 00:10:47,070
+and start of rollback, but
+again, it's shared here
+
+254
+00:10:47,070 --> 00:10:49,230
+for immediate visibility to everyone.
+
+255
+00:10:49,230 --> 00:10:51,360
+And the other thing that they
+are doing, they share the link
+
+256
+00:10:51,360 --> 00:10:54,540
+to the pipeline for reviewing
+the deployment status.
+
+257
+00:10:54,540 --> 00:10:55,770
+Again, this is one of those measures
+
+258
+00:10:55,770 --> 00:10:57,960
+that help keeping the
+traffic on the tech call low
+
+259
+00:10:57,960 --> 00:10:59,910
+because you will not hear anyone asking
+
+260
+00:10:59,910 --> 00:11:01,170
+about the deployment status,
+
+261
+00:11:01,170 --> 00:11:03,300
+there are back status, they're
+just gonna click on that link
+
+262
+00:11:03,300 --> 00:11:04,533
+and see for themselves.
+
+263
+00:11:06,090 --> 00:11:08,130
+Here is a case where we share metrics
+
+264
+00:11:08,130 --> 00:11:12,330
+and here we see the engineer
+reporting 100% recovery
+
+265
+00:11:12,330 --> 00:11:13,163
+on their fleet.
+
+266
+00:11:13,163 --> 00:11:14,580
+And they do this by sharing a matrix
+
+267
+00:11:14,580 --> 00:11:17,970
+that shows the steady state,
+shows when the anomaly started,
+
+268
+00:11:17,970 --> 00:11:21,180
+shows when the anomaly crossed
+the alarming threshold,
+
+269
+00:11:21,180 --> 00:11:22,440
+and then the back to normal.
+
+270
+00:11:22,440 --> 00:11:24,300
+And again, this is all data
+
+271
+00:11:24,300 --> 00:11:25,800
+that is gonna be stored somewhere else,
+
+272
+00:11:25,800 --> 00:11:28,020
+but we put it here for easier reference,
+
+273
+00:11:28,020 --> 00:11:30,153
+especially in the post event review phase.
+
+274
+00:11:31,620 --> 00:11:35,130
+And finally, another,
+I'd say quite common type
+
+275
+00:11:35,130 --> 00:11:36,870
+of observation, here we have an engineer
+
+276
+00:11:36,870 --> 00:11:38,130
+that is just looking around
+
+277
+00:11:38,130 --> 00:11:40,170
+while trying to figure out a root cause
+
+278
+00:11:40,170 --> 00:11:42,510
+and spots a potential
+correlation with the metric.
+
+279
+00:11:42,510 --> 00:11:44,610
+Now this might be a red erroring,
+
+280
+00:11:44,610 --> 00:11:46,200
+but sharing it here for everyone
+
+281
+00:11:46,200 --> 00:11:48,330
+to see might have just
+triggering someone else
+
+282
+00:11:48,330 --> 00:11:51,210
+into looking at their
+service and figuring out that
+
+283
+00:11:51,210 --> 00:11:55,260
+that correlation was
+effective, relevant and related
+
+284
+00:11:55,260 --> 00:11:57,273
+to the root cause of the land.
+
+285
+00:12:00,660 --> 00:12:03,300
+- Okay, let's take a
+look at the support call.
+
+286
+00:12:03,300 --> 00:12:06,690
+And so the support call
+owns customer communication.
+
+287
+00:12:06,690 --> 00:12:09,100
+It is run by AWS event management,
+
+288
+00:12:09,100 --> 00:12:10,380
+most frequently, the ones
+
+289
+00:12:10,380 --> 00:12:12,750
+that are communicating to
+you for operational issues
+
+290
+00:12:12,750 --> 00:12:15,240
+that you see on the
+personal health dashboard
+
+291
+00:12:15,240 --> 00:12:16,890
+and the service health dashboard.
+
+292
+00:12:18,240 --> 00:12:19,920
+Additionally, we proactively engage
+
+293
+00:12:19,920 --> 00:12:21,630
+with account teams, right?
+
+294
+00:12:21,630 --> 00:12:23,640
+So we want to engage the account
+teams, we wanna make sure
+
+295
+00:12:23,640 --> 00:12:25,620
+that they're prepared to respond
+
+296
+00:12:25,620 --> 00:12:27,320
+and check in with customers early.
+
+297
+00:12:28,740 --> 00:12:31,440
+We also place a heavy
+focus on recovery guidance
+
+298
+00:12:31,440 --> 00:12:33,483
+and best practices wherever possible.
+
+299
+00:12:35,580 --> 00:12:38,040
+For some events, there's is actions
+
+300
+00:12:38,040 --> 00:12:39,540
+that customers can take
+that can get them out
+
+301
+00:12:39,540 --> 00:12:41,220
+of pain earlier and we want to provide
+
+302
+00:12:41,220 --> 00:12:43,980
+that information as soon as we have it.
+
+303
+00:12:43,980 --> 00:12:47,130
+Additionally, we're gonna use
+the data from the case trends,
+
+304
+00:12:47,130 --> 00:12:49,290
+the customer impact
+reports and the sentiment
+
+305
+00:12:49,290 --> 00:12:51,630
+as an additional data point
+
+306
+00:12:51,630 --> 00:12:55,230
+to verify that our mitigations
+are working as we expect
+
+307
+00:12:55,230 --> 00:12:58,383
+and that we understand the
+customer experience correctly.
+
+308
+00:13:00,600 --> 00:13:03,510
+In order to provide detailed
+and real time updates,
+
+309
+00:13:03,510 --> 00:13:05,370
+it's super important that we're in contact
+
+310
+00:13:05,370 --> 00:13:09,294
+with the tech call that
+Giorgio was just discussing.
+
+311
+00:13:09,294 --> 00:13:11,610
+And so we need that real time
+update, right, to be able
+
+312
+00:13:11,610 --> 00:13:14,474
+to send communications
+to you, the customers.
+
+313
+00:13:14,474 --> 00:13:17,160
+And so we have a two-way communication
+
+314
+00:13:17,160 --> 00:13:19,470
+that's occurring the entire time
+
+315
+00:13:19,470 --> 00:13:21,180
+where we're providing information
+
+316
+00:13:21,180 --> 00:13:23,640
+about the customer experience,
+so that technical call
+
+317
+00:13:23,640 --> 00:13:25,500
+and we're getting information back as
+
+318
+00:13:25,500 --> 00:13:27,513
+to what's happening in real time,
+
+319
+00:13:27,513 --> 00:13:29,873
+where we're at in mitigation,
+recovery efforts, et cetera.
+
+320
+00:13:31,860 --> 00:13:36,854
+I wanna show you a visual
+here of Command Center.
+
+321
+00:13:36,854 --> 00:13:38,940
+And so Command Center is
+our all-in-one support tool
+
+322
+00:13:38,940 --> 00:13:40,920
+and this is a Command Center notice.
+
+323
+00:13:40,920 --> 00:13:44,100
+And so we use Command Center
+notices to track and centralize
+
+324
+00:13:44,100 --> 00:13:46,623
+and share information as
+it pertains to an event.
+
+325
+00:13:48,020 --> 00:13:50,190
+In this example, what you
+see on the left hand side is
+
+326
+00:13:50,190 --> 00:13:52,320
+you see some metadata about the incident.
+
+327
+00:13:52,320 --> 00:13:55,230
+And so this will include
+the service or services
+
+328
+00:13:55,230 --> 00:13:57,210
+that are impacted.
+
+329
+00:13:57,210 --> 00:13:59,850
+You'll see the start time
+and on the bottom left,
+
+330
+00:13:59,850 --> 00:14:01,860
+you will see the customer contacts
+
+331
+00:14:01,860 --> 00:14:04,503
+as we have them and we're relating them.
+
+332
+00:14:06,480 --> 00:14:07,530
+In the middle,
+
+333
+00:14:07,530 --> 00:14:10,230
+the very bottom here you'll
+see the internal summary.
+
+334
+00:14:10,230 --> 00:14:11,760
+And so this is where we're
+keeping that up to date
+
+335
+00:14:11,760 --> 00:14:15,450
+so that our customer
+facing teams have access
+
+336
+00:14:15,450 --> 00:14:18,333
+to that real time information
+as to what's happening.
+
+337
+00:14:19,740 --> 00:14:20,940
+Additionally, you'll see at the top here
+
+338
+00:14:20,940 --> 00:14:21,960
+there's a messaging tab,
+
+339
+00:14:21,960 --> 00:14:24,330
+and that messaging tab
+is where communications
+
+340
+00:14:24,330 --> 00:14:26,100
+that have been sent to
+customers are visible
+
+341
+00:14:26,100 --> 00:14:27,650
+to those account teams as well.
+
+342
+00:14:28,830 --> 00:14:31,770
+Finally, we have the
+sentiments tab here at the top,
+
+343
+00:14:31,770 --> 00:14:33,090
+and that's where we're tracking
+
+344
+00:14:33,090 --> 00:14:35,163
+and reporting on customer feedback.
+
+345
+00:14:40,590 --> 00:14:43,020
+So communication is key
+on the support call.
+
+346
+00:14:43,020 --> 00:14:45,630
+And so it's important to
+communicate to the right audience.
+
+347
+00:14:45,630 --> 00:14:46,830
+There's two different audiences
+
+348
+00:14:46,830 --> 00:14:48,330
+that are our main stakeholders here
+
+349
+00:14:48,330 --> 00:14:52,230
+and those are internal stakeholders
+and external customers.
+
+350
+00:14:52,230 --> 00:14:54,960
+And so external customers
+get regular updates,
+
+351
+00:14:54,960 --> 00:14:56,643
+they get regular recommendations,
+
+352
+00:14:57,540 --> 00:15:00,030
+and we're communicating
+to them specificity about
+
+353
+00:15:00,030 --> 00:15:03,630
+what's impacted, right,
+and clarity over time.
+
+354
+00:15:03,630 --> 00:15:06,240
+In addition, we're providing
+live status updates
+
+355
+00:15:06,240 --> 00:15:09,810
+to our field teams, the
+customer facing account teams,
+
+356
+00:15:09,810 --> 00:15:11,190
+we want to empower them,
+
+357
+00:15:11,190 --> 00:15:13,110
+ensure that they have
+the latest information
+
+358
+00:15:13,110 --> 00:15:14,760
+and that they're not caught off guard.
+
+359
+00:15:14,760 --> 00:15:15,840
+But ultimately we also want
+
+360
+00:15:15,840 --> 00:15:17,940
+to ingest customer inquiries, right?
+
+361
+00:15:17,940 --> 00:15:20,610
+And so we can respond by creating FAQs
+
+362
+00:15:20,610 --> 00:15:22,810
+or bolstering the FAQs
+that we already have.
+
+363
+00:15:28,200 --> 00:15:31,290
+So let's take a deep
+dive into communication,
+
+364
+00:15:31,290 --> 00:15:33,540
+the external communication specifically.
+
+365
+00:15:33,540 --> 00:15:35,880
+So communication is a matter of balance
+
+366
+00:15:35,880 --> 00:15:38,430
+and we bias towards speed, right?
+
+367
+00:15:38,430 --> 00:15:40,140
+We want to communicate as soon as we know
+
+368
+00:15:40,140 --> 00:15:43,233
+that something is occurring,
+we want to give that heads up.
+
+369
+00:15:45,030 --> 00:15:46,770
+Secondarily though, we have accuracy.
+
+370
+00:15:46,770 --> 00:15:49,530
+So accuracy we define here as, you know,
+
+371
+00:15:49,530 --> 00:15:51,540
+we wanna target customers
+that are actually impacted,
+
+372
+00:15:51,540 --> 00:15:53,520
+we want the communications to be relevant
+
+373
+00:15:53,520 --> 00:15:54,900
+and to be actionable.
+
+374
+00:15:54,900 --> 00:15:57,720
+We also want them to have as
+much detail as possible, right?
+
+375
+00:15:57,720 --> 00:15:59,583
+So effective resources, et cetera.
+
+376
+00:16:01,020 --> 00:16:03,690
+Finally, we have depth
+of our communications.
+
+377
+00:16:03,690 --> 00:16:05,550
+And so this is where
+clarity is incremental
+
+378
+00:16:05,550 --> 00:16:06,383
+when it comes with time.
+
+379
+00:16:06,383 --> 00:16:09,540
+Our first communication
+often is very generic
+
+380
+00:16:09,540 --> 00:16:11,310
+in the sense of we're investigating,
+
+381
+00:16:11,310 --> 00:16:13,380
+you know, increased error
+rates and latencies, but it's
+
+382
+00:16:13,380 --> 00:16:15,090
+because we want to give you
+that communication first
+
+383
+00:16:15,090 --> 00:16:16,563
+and we do bias towards speed,
+
+384
+00:16:17,790 --> 00:16:20,820
+but over time, we update
+those communications
+
+385
+00:16:20,820 --> 00:16:24,240
+and we provide details
+with specificity as to
+
+386
+00:16:24,240 --> 00:16:26,730
+what exactly is happening,
+what we're seeing about it,
+
+387
+00:16:26,730 --> 00:16:28,800
+what we're gonna be doing
+next, any workarounds
+
+388
+00:16:28,800 --> 00:16:30,240
+that are available, and time
+
+389
+00:16:30,240 --> 00:16:32,103
+that we think those steps will take.
+
+390
+00:16:34,290 --> 00:16:35,550
+- Okay, so here,
+
+391
+00:16:35,550 --> 00:16:38,160
+you see probably what's
+the most common quote
+
+392
+00:16:38,160 --> 00:16:40,560
+from our tech call and
+it's the call leader asking
+
+393
+00:16:40,560 --> 00:16:42,810
+about a rollback.
+
+394
+00:16:42,810 --> 00:16:45,870
+I want to discuss now a bunch of measures
+
+395
+00:16:45,870 --> 00:16:47,340
+that we take for mitigation.
+
+396
+00:16:47,340 --> 00:16:51,120
+Remember when we started
+the event management process
+
+397
+00:16:51,120 --> 00:16:52,860
+and when we set the incident response,
+
+398
+00:16:52,860 --> 00:16:56,100
+our one focus is mitigating
+the impact for our customers.
+
+399
+00:16:56,100 --> 00:16:58,920
+We want the service to
+recover as soon as possible,
+
+400
+00:16:58,920 --> 00:17:01,350
+sometimes through side measures.
+
+401
+00:17:01,350 --> 00:17:03,510
+And without tackling the real root cause,
+
+402
+00:17:03,510 --> 00:17:06,120
+we want our customers to go
+back to their normal operations
+
+403
+00:17:06,120 --> 00:17:08,613
+so we gain some time for
+a deeper investigation.
+
+404
+00:17:09,510 --> 00:17:11,910
+Now what's probably our most common type
+
+405
+00:17:11,910 --> 00:17:14,730
+of response is shifting
+away from the failure.
+
+406
+00:17:14,730 --> 00:17:18,360
+Now this is about removing the component
+
+407
+00:17:18,360 --> 00:17:21,120
+that is failing when we can identify it.
+
+408
+00:17:21,120 --> 00:17:23,850
+And this goes from simple things
+like imagine a large fleet
+
+409
+00:17:23,850 --> 00:17:26,400
+of instances where we
+identify that only a bunch
+
+410
+00:17:26,400 --> 00:17:30,480
+of them are responding
+with increased latency
+
+411
+00:17:30,480 --> 00:17:31,740
+and we have an uncheck
+
+412
+00:17:31,740 --> 00:17:33,810
+that automatically takes
+them out of the fleet.
+
+413
+00:17:33,810 --> 00:17:35,460
+Those instances remain broken,
+
+414
+00:17:35,460 --> 00:17:37,440
+so we are not really
+resolving the root cause,
+
+415
+00:17:37,440 --> 00:17:39,720
+but for the customer,
+impact just goes away,
+
+416
+00:17:39,720 --> 00:17:42,270
+your customers recover
+and you get some more time
+
+417
+00:17:42,270 --> 00:17:44,193
+to conduct a deeper investigation.
+
+418
+00:17:46,190 --> 00:17:48,900
+Or also more complex cases we
+might be investigating again
+
+419
+00:17:48,900 --> 00:17:50,490
+an increase latency and service
+
+420
+00:17:50,490 --> 00:17:52,342
+and our metrics showed that
+
+421
+00:17:52,342 --> 00:17:54,531
+that increase in latency is happening only
+
+422
+00:17:54,531 --> 00:17:55,860
+in a specific availability zone.
+
+423
+00:17:55,860 --> 00:17:57,060
+So the first measure here,
+
+424
+00:17:57,060 --> 00:17:59,160
+remove that availability
+zone from service,
+
+425
+00:17:59,160 --> 00:18:01,590
+let traffic hit only the remaining two
+
+426
+00:18:01,590 --> 00:18:03,570
+and allow customers to recover.
+
+427
+00:18:03,570 --> 00:18:05,850
+Once they're recovered you have more time
+
+428
+00:18:05,850 --> 00:18:09,873
+and just under last way
+less pressure to resolve.
+
+429
+00:18:10,950 --> 00:18:12,300
+Similarly rollbacks.
+
+430
+00:18:12,300 --> 00:18:15,330
+So when we start the instant management,
+
+431
+00:18:15,330 --> 00:18:18,240
+the first thing we look at
+is if there is any deployment
+
+432
+00:18:18,240 --> 00:18:19,650
+that is ongoing
+
+433
+00:18:19,650 --> 00:18:23,670
+or that started at around the
+time the event itself started,
+
+434
+00:18:23,670 --> 00:18:26,460
+we do not only look at the
+company that is affected
+
+435
+00:18:26,460 --> 00:18:30,090
+with some type book at all of AWS.
+
+436
+00:18:30,090 --> 00:18:34,530
+And again here, if we
+suspect some correlation,
+
+437
+00:18:34,530 --> 00:18:36,930
+we don't waste time to
+confirm that correlation.
+
+438
+00:18:36,930 --> 00:18:38,250
+We just bring everything back
+
+439
+00:18:38,250 --> 00:18:40,330
+to the previous non unstable state
+
+440
+00:18:41,790 --> 00:18:44,193
+to mitigate again as soon as we can.
+
+441
+00:18:45,120 --> 00:18:46,860
+And third, we are in the cloud
+
+442
+00:18:46,860 --> 00:18:49,440
+and there is a large category of events
+
+443
+00:18:49,440 --> 00:18:51,870
+that result in increased resource usage.
+
+444
+00:18:51,870 --> 00:18:54,510
+So because of your increased latency
+
+445
+00:18:54,510 --> 00:18:56,823
+you might be increased CPU usage.
+
+446
+00:18:56,823 --> 00:19:00,210
+While you work to
+understand what that type
+
+447
+00:19:00,210 --> 00:19:02,910
+of request is using today
+more CPU power than it
+
+448
+00:19:02,910 --> 00:19:04,230
+was using yesterday,
+
+449
+00:19:04,230 --> 00:19:06,030
+you can just scale the fleet up
+
+450
+00:19:06,030 --> 00:19:07,530
+and provide more resources
+
+451
+00:19:07,530 --> 00:19:10,020
+so that the latency goes back to normal,
+
+452
+00:19:10,020 --> 00:19:12,990
+and at that point you can investigate.
+
+453
+00:19:12,990 --> 00:19:15,600
+And then there are a couple
+of measures that are part
+
+454
+00:19:15,600 --> 00:19:18,423
+of the toolkit, we generally
+prefer not to take them.
+
+455
+00:19:19,440 --> 00:19:21,660
+The first one is the turn it off
+
+456
+00:19:21,660 --> 00:19:23,040
+and done again kind of thing.
+
+457
+00:19:23,040 --> 00:19:26,400
+So software carries
+state, there are caches,
+
+458
+00:19:26,400 --> 00:19:29,250
+there are buffers and sometimes
+restarting a component
+
+459
+00:19:29,250 --> 00:19:31,260
+can help with recovery.
+
+460
+00:19:31,260 --> 00:19:33,600
+It's quite a tricky
+kind of measure to take
+
+461
+00:19:33,600 --> 00:19:36,150
+because sometimes with the
+restart you're also gonna lose
+
+462
+00:19:36,150 --> 00:19:38,343
+the state if there are conditions.
+
+463
+00:19:39,295 --> 00:19:40,860
+So whenever we have to do this, we try
+
+464
+00:19:40,860 --> 00:19:43,620
+to isolate some nodes on
+the side that we can use
+
+465
+00:19:43,620 --> 00:19:46,920
+for the investigation and
+we restart everything else.
+
+466
+00:19:46,920 --> 00:19:50,790
+And finally, changes are challenging,
+
+467
+00:19:50,790 --> 00:19:52,740
+especially when non completely tested.
+
+468
+00:19:52,740 --> 00:19:56,160
+But some events are clearly solved
+
+469
+00:19:56,160 --> 00:19:58,110
+by a small change in configuration
+
+470
+00:19:58,110 --> 00:20:00,330
+or by rolling out a new software version
+
+471
+00:20:00,330 --> 00:20:03,690
+that we were testing to improve
+that specific component.
+
+472
+00:20:03,690 --> 00:20:06,270
+When it's really our last
+option, that's what we will do,
+
+473
+00:20:06,270 --> 00:20:09,840
+and if we have extreme confidence that
+
+474
+00:20:09,840 --> 00:20:12,390
+that change in configuration
+is gonna help the problem,
+
+475
+00:20:12,390 --> 00:20:13,984
+if we have extreme confidence
+
+476
+00:20:13,984 --> 00:20:15,720
+that there is a new software
+version that is stable,
+
+477
+00:20:15,720 --> 00:20:18,993
+can be trusted and solves the
+issue, we will roll forward.
+
+478
+00:20:20,910 --> 00:20:24,870
+So once you have mitigated
+the issue there is
+
+479
+00:20:24,870 --> 00:20:27,930
+the deeper resolution phase
+
+480
+00:20:27,930 --> 00:20:31,440
+and one of the first questions
+you ask is about the risk
+
+481
+00:20:31,440 --> 00:20:32,730
+of recurrence, right?
+
+482
+00:20:32,730 --> 00:20:37,560
+So before disengaging, there
+are a few things that we want
+
+483
+00:20:37,560 --> 00:20:40,890
+to do and the first one is we,
+
+484
+00:20:40,890 --> 00:20:42,870
+Anthony mentioned multiple times
+
+485
+00:20:42,870 --> 00:20:46,650
+how we also use data
+coming from our customers
+
+486
+00:20:46,650 --> 00:20:47,700
+to detect events,
+
+487
+00:20:47,700 --> 00:20:49,620
+and we use data coming from our customers
+
+488
+00:20:49,620 --> 00:20:52,200
+throughout the event process
+to improve our communication
+
+489
+00:20:52,200 --> 00:20:53,550
+and overall to make sure
+
+490
+00:20:53,550 --> 00:20:56,880
+that our internal metrics are
+telling us the right story.
+
+491
+00:20:56,880 --> 00:20:58,740
+We do exactly the same with mitigation.
+
+492
+00:20:58,740 --> 00:21:02,310
+Once we are confident that we
+have mitigated (indistinct),
+
+493
+00:21:02,310 --> 00:21:03,930
+our metrics are back in the clear,
+
+494
+00:21:03,930 --> 00:21:06,420
+we just spend that additional
+5 minutes, 10 minutes
+
+495
+00:21:06,420 --> 00:21:07,830
+to confirm with some customers
+
+496
+00:21:07,830 --> 00:21:09,690
+that they are seeing the same.
+
+497
+00:21:09,690 --> 00:21:12,060
+Hopefully they will, but if
+they want, you can just go back
+
+498
+00:21:12,060 --> 00:21:13,593
+to incident management mode.
+
+499
+00:21:15,360 --> 00:21:17,010
+Second one is the risk of recurrence.
+
+500
+00:21:17,010 --> 00:21:19,350
+So if you made a small
+configuration change
+
+501
+00:21:19,350 --> 00:21:20,970
+or you changed something at runtime,
+
+502
+00:21:20,970 --> 00:21:24,090
+there might be a pipeline,
+a recurring process
+
+503
+00:21:24,090 --> 00:21:26,040
+or a scheduled change
+that is gonna undo it.
+
+504
+00:21:26,040 --> 00:21:28,290
+You want to put that
+whatever temporary patch
+
+505
+00:21:28,290 --> 00:21:31,110
+you have implemented, it's there to stay.
+
+506
+00:21:31,110 --> 00:21:34,410
+And additionally, we do it at AWS,
+
+507
+00:21:34,410 --> 00:21:37,173
+but I guess everyone asks
+us the two components,
+
+508
+00:21:38,040 --> 00:21:39,120
+software components,
+
+509
+00:21:39,120 --> 00:21:43,350
+SDKs library are reused across services.
+
+510
+00:21:43,350 --> 00:21:46,020
+So if we suspect a specific library
+
+511
+00:21:46,020 --> 00:21:48,750
+or a specific piece of code
+with a culprit, we want
+
+512
+00:21:48,750 --> 00:21:52,080
+to go check other services
+that are using the same
+
+513
+00:21:52,080 --> 00:21:54,857
+and we want to validate that
+they are not just on the brink
+
+514
+00:21:54,857 --> 00:21:57,363
+of facing that same issue as well.
+
+515
+00:21:58,740 --> 00:22:00,090
+And finally, this is the point
+
+516
+00:22:00,090 --> 00:22:02,160
+where we start forming
+root cause hypothesis.
+
+517
+00:22:02,160 --> 00:22:04,260
+So they don't have to be detailed,
+
+518
+00:22:04,260 --> 00:22:07,260
+something that you do in 15, 20 minutes,
+
+519
+00:22:07,260 --> 00:22:10,110
+but we want to have an
+idea on what services are
+
+520
+00:22:10,110 --> 00:22:11,970
+where we want to conduct a deeper dive
+
+521
+00:22:11,970 --> 00:22:13,533
+in the following hours today.
+
+522
+00:22:14,730 --> 00:22:17,730
+So ready to close the instant bridge,
+
+523
+00:22:17,730 --> 00:22:21,150
+the attack call in the case
+of AWS, just a small list
+
+524
+00:22:21,150 --> 00:22:24,240
+of things that we always make sure we do
+
+525
+00:22:24,240 --> 00:22:26,130
+before closing it.
+
+526
+00:22:26,130 --> 00:22:27,930
+So we obviously want to validate
+
+527
+00:22:27,930 --> 00:22:30,870
+that all of the short term fixes critical
+
+528
+00:22:30,870 --> 00:22:32,793
+to preventing recurrence are complete.
+
+529
+00:22:33,750 --> 00:22:35,640
+We do not consider the incident result
+
+530
+00:22:35,640 --> 00:22:38,073
+until we have this done and validated.
+
+531
+00:22:39,330 --> 00:22:42,300
+And second, we talked
+about the tech tickets
+
+532
+00:22:42,300 --> 00:22:45,150
+and we make sure that
+we are preserving all
+
+533
+00:22:45,150 --> 00:22:47,460
+of the data and logs
+that we might need later.
+
+534
+00:22:47,460 --> 00:22:49,590
+And this ranges from logs
+
+535
+00:22:49,590 --> 00:22:52,500
+that might be flushed out
+in systems every 24 hours
+
+536
+00:22:52,500 --> 00:22:55,140
+to screenshots that leave
+in the laptop of a developer
+
+537
+00:22:55,140 --> 00:22:57,540
+that was involved in
+the incidental solution.
+
+538
+00:22:57,540 --> 00:22:58,860
+Here is where we check that everything
+
+539
+00:22:58,860 --> 00:23:01,770
+that we might need later
+is stored essentially
+
+540
+00:23:01,770 --> 00:23:03,363
+forever in the tech ticket.
+
+541
+00:23:05,790 --> 00:23:08,250
+This is also when we start
+assigning the post-mortems.
+
+542
+00:23:08,250 --> 00:23:12,750
+So every team where we see an opportunity
+
+543
+00:23:12,750 --> 00:23:15,559
+for improvement, maybe we page the team
+
+544
+00:23:15,559 --> 00:23:17,010
+and they're on the call,
+join five minutes late
+
+545
+00:23:17,010 --> 00:23:19,530
+or there was another team
+that wasn't really sure
+
+546
+00:23:19,530 --> 00:23:21,150
+on their automation to remove traffic
+
+547
+00:23:21,150 --> 00:23:22,500
+from an availability zone,
+
+548
+00:23:22,500 --> 00:23:25,290
+you will have large amount
+of engineers taking notes
+
+549
+00:23:25,290 --> 00:23:28,830
+and all of this stuff during
+the event resolution phase,
+
+550
+00:23:28,830 --> 00:23:30,930
+and at the end we just come together
+
+551
+00:23:30,930 --> 00:23:34,200
+and assign those post-mortems
+to everyone that was involved
+
+552
+00:23:34,200 --> 00:23:37,260
+and where we see
+opportunities for improvement.
+
+553
+00:23:37,260 --> 00:23:40,230
+It's not a blaming
+process, this is just where
+
+554
+00:23:40,230 --> 00:23:44,130
+we look at how we responded,
+we start being self-critical
+
+555
+00:23:44,130 --> 00:23:46,890
+and just ask teams to deeper investigate
+
+556
+00:23:46,890 --> 00:23:48,890
+if they could have done anything better.
+
+557
+00:23:50,070 --> 00:23:51,720
+And finally, well quite obvious,
+
+558
+00:23:51,720 --> 00:23:54,254
+but we want to make sure that
+there is common understanding
+
+559
+00:23:54,254 --> 00:23:55,110
+of what are the next steps.
+
+560
+00:23:55,110 --> 00:23:58,650
+We are gonna move out of
+the 24/7 operation mode,
+
+561
+00:23:58,650 --> 00:24:00,990
+we are gonna disengage from the incident,
+
+562
+00:24:00,990 --> 00:24:03,150
+if someone was paged
+overnight, go back to bed.,
+
+563
+00:24:03,150 --> 00:24:04,380
+but there are two
+
+564
+00:24:04,380 --> 00:24:06,690
+or three days where work
+is still gonna be intense.
+
+565
+00:24:06,690 --> 00:24:08,550
+We want to make sure that
+there is coordination
+
+566
+00:24:08,550 --> 00:24:10,683
+and a plan for what everyone needs to do.
+
+567
+00:24:16,080 --> 00:24:17,010
+- Okay, let's take a look
+
+568
+00:24:17,010 --> 00:24:19,503
+at phase two, reflecting and planning.
+
+569
+00:24:20,580 --> 00:24:23,820
+So after an incident,
+there's gonna be an author
+
+570
+00:24:23,820 --> 00:24:25,650
+or someone responsible for deep diving
+
+571
+00:24:25,650 --> 00:24:28,645
+and performing that
+post-incident analysis, right?
+
+572
+00:24:28,645 --> 00:24:31,140
+And it's critical to ensure
+that you're examining it
+
+573
+00:24:31,140 --> 00:24:32,823
+through an effective lens.
+
+574
+00:24:33,720 --> 00:24:35,430
+So how can you do that?
+
+575
+00:24:35,430 --> 00:24:38,130
+Well first and foremost, you
+need to create a safe space
+
+576
+00:24:38,130 --> 00:24:40,230
+so that you can understand
+the context of decisions
+
+577
+00:24:40,230 --> 00:24:44,130
+that were made both before,
+when the software was designed,
+
+578
+00:24:44,130 --> 00:24:47,460
+during an incident, but
+also after the incident,
+
+579
+00:24:47,460 --> 00:24:48,293
+in hindsight.
+
+580
+00:24:49,530 --> 00:24:51,210
+Also assume that decisions were made
+
+581
+00:24:51,210 --> 00:24:53,280
+with the best intent, right?
+
+582
+00:24:53,280 --> 00:24:54,510
+Everyone's doing their best
+
+583
+00:24:54,510 --> 00:24:57,210
+and again, you want it to be a safe space
+
+584
+00:24:57,210 --> 00:24:59,700
+so that folks feel
+comfortable challenging,
+
+585
+00:24:59,700 --> 00:25:02,403
+they feel comfortable
+criticizing, but constructively.
+
+586
+00:25:06,750 --> 00:25:09,060
+Sometimes it's also important
+to do multiple retrospectives.
+
+587
+00:25:09,060 --> 00:25:12,840
+So don't assume that one
+can cover it all, right?
+
+588
+00:25:12,840 --> 00:25:14,640
+It's important to deep dive any lesson
+
+589
+00:25:14,640 --> 00:25:17,340
+or any failure that you want
+to prevent recurrence of.
+
+590
+00:25:18,734 --> 00:25:20,760
+And so it's not uncommon for
+that to happen with us, right?
+
+591
+00:25:20,760 --> 00:25:23,340
+If there's a multi-service event
+
+592
+00:25:23,340 --> 00:25:25,110
+and there's different
+learnings that we want
+
+593
+00:25:25,110 --> 00:25:26,220
+to take away from different teams
+
+594
+00:25:26,220 --> 00:25:28,110
+and share broadly, we'll do so,
+
+595
+00:25:28,110 --> 00:25:30,878
+and each team will be responsible
+for kind of deep diving
+
+596
+00:25:30,878 --> 00:25:34,200
+that every failure, everything
+
+597
+00:25:34,200 --> 00:25:35,363
+that we want to prevent recurrence of.
+
+598
+00:25:37,830 --> 00:25:40,173
+Okay, so at AWS we call them COEs,
+
+599
+00:25:41,419 --> 00:25:43,740
+that stands for correction of errors
+
+600
+00:25:43,740 --> 00:25:47,220
+and this is our post-incident
+analysis mechanism
+
+601
+00:25:47,220 --> 00:25:48,053
+that we have.
+
+602
+00:25:48,901 --> 00:25:49,734
+So what is a COE?
+
+603
+00:25:49,734 --> 00:25:51,690
+So A COE is an impact summary
+
+604
+00:25:51,690 --> 00:25:52,680
+and that's what it starts with.
+
+605
+00:25:52,680 --> 00:25:56,190
+And it goes over specifically
+the timeline of the incident,
+
+606
+00:25:56,190 --> 00:25:59,070
+what exactly was the customer experience?
+
+607
+00:25:59,070 --> 00:26:00,990
+It should stand on its own,
+
+608
+00:26:00,990 --> 00:26:04,170
+be multiple paragraphs
+generally in a narrative format,
+
+609
+00:26:04,170 --> 00:26:06,620
+and again, talk about
+the customer experience
+
+610
+00:26:06,620 --> 00:26:08,521
+and the lifecycle of the event.
+
+611
+00:26:08,521 --> 00:26:10,373
+It should hit on all the key
+milestones of an incident.
+
+612
+00:26:12,540 --> 00:26:14,610
+It also goes into the root causes.
+
+613
+00:26:14,610 --> 00:26:17,127
+We do that through the five why's, right?
+
+614
+00:26:17,127 --> 00:26:18,240
+And the five why's allow
+you to really deep dive
+
+615
+00:26:18,240 --> 00:26:19,710
+and get to the true root cause
+
+616
+00:26:19,710 --> 00:26:22,860
+and we'll go over that in a
+little bit more detail shortly.
+
+617
+00:26:22,860 --> 00:26:25,020
+But it's super critical
+that you're actually getting
+
+618
+00:26:25,020 --> 00:26:29,310
+to the true root causes in order to ensure
+
+619
+00:26:29,310 --> 00:26:30,143
+that you're taking the right lessons
+
+620
+00:26:30,143 --> 00:26:32,340
+and implementing the right actions.
+
+621
+00:26:32,340 --> 00:26:34,560
+So what comes next are
+those learnings, right?
+
+622
+00:26:34,560 --> 00:26:36,660
+These are the lessons they
+should directly come from
+
+623
+00:26:36,660 --> 00:26:39,363
+and flow from those five
+why's and those root causes.
+
+624
+00:26:41,790 --> 00:26:43,890
+From those lessons, each
+of them will generally have
+
+625
+00:26:43,890 --> 00:26:45,960
+an action item, right?
+
+626
+00:26:45,960 --> 00:26:47,340
+The lessons are usually things
+
+627
+00:26:47,340 --> 00:26:49,980
+that we didn't know beforehand
+that we want to ensure
+
+628
+00:26:49,980 --> 00:26:52,977
+that we're capturing for posterity
+
+629
+00:26:52,977 --> 00:26:55,710
+and taking actions to either educate
+
+630
+00:26:55,710 --> 00:26:58,473
+or resolve their technical issue.
+
+631
+00:27:02,520 --> 00:27:05,340
+- So there are a couple of
+things we are really big on
+
+632
+00:27:05,340 --> 00:27:08,130
+when doing COEs and
+the first one is we try
+
+633
+00:27:08,130 --> 00:27:11,910
+to be extremely self-critical
+about detection.
+
+634
+00:27:11,910 --> 00:27:14,220
+We just ask ourselves whether we detected
+
+635
+00:27:14,220 --> 00:27:15,390
+the event fast enough
+
+636
+00:27:15,390 --> 00:27:17,613
+and we are happy with our response time.
+
+637
+00:27:18,540 --> 00:27:22,053
+The chance is that the answer
+to this question is no.
+
+638
+00:27:23,220 --> 00:27:25,740
+Until detection gets
+really sort of immediate
+
+639
+00:27:25,740 --> 00:27:27,270
+and you have an automated mitigation,
+
+640
+00:27:27,270 --> 00:27:31,230
+there is always gonna be an
+opportunity for improvement.
+
+641
+00:27:31,230 --> 00:27:32,880
+So if the answer is no
+
+642
+00:27:32,880 --> 00:27:34,680
+and we believe that
+there are opportunities
+
+643
+00:27:34,680 --> 00:27:37,050
+for detecting faster, we
+will create action items
+
+644
+00:27:37,050 --> 00:27:39,240
+for this just as we do for the root cause
+
+645
+00:27:39,240 --> 00:27:40,533
+of the event itself.
+
+646
+00:27:41,610 --> 00:27:44,640
+Additionally, now we mentioned a few times
+
+647
+00:27:44,640 --> 00:27:46,350
+how we use our internal metrics,
+
+648
+00:27:46,350 --> 00:27:48,060
+we use customers to confirm
+
+649
+00:27:48,060 --> 00:27:50,040
+that those metrics are
+telling us the right story,
+
+650
+00:27:50,040 --> 00:27:51,660
+but we also want to validate this.
+
+651
+00:27:51,660 --> 00:27:53,760
+We want to make sure that
+throughout the event, we have
+
+652
+00:27:53,760 --> 00:27:55,530
+the right observability.
+
+653
+00:27:55,530 --> 00:27:57,330
+So we want to validate
+
+654
+00:27:57,330 --> 00:27:59,490
+that our metrics were
+giving us the real status
+
+655
+00:27:59,490 --> 00:28:02,163
+and that we're reflective
+of the customer experience.
+
+656
+00:28:03,660 --> 00:28:06,300
+And finally, this is when we
+started zooming out a bit.
+
+657
+00:28:06,300 --> 00:28:09,690
+So we do not focus on
+this very specific event,
+
+658
+00:28:09,690 --> 00:28:11,910
+this other condition,
+but look a bit broadly
+
+659
+00:28:11,910 --> 00:28:15,270
+and try to figure out if we
+are confident with our ability
+
+660
+00:28:15,270 --> 00:28:17,670
+of detecting similar event patterns
+
+661
+00:28:17,670 --> 00:28:19,713
+and similar incidents in the future.
+
+662
+00:28:21,750 --> 00:28:24,480
+The second part where we
+are big on is dependencies.
+
+663
+00:28:24,480 --> 00:28:29,190
+Now whether them being
+either internal or external,
+
+664
+00:28:29,190 --> 00:28:31,500
+so using a piece of
+software from another team
+
+665
+00:28:31,500 --> 00:28:34,590
+or from a third party,
+dependencies are really useful
+
+666
+00:28:34,590 --> 00:28:37,260
+as they help avoiding repeated work.
+
+667
+00:28:37,260 --> 00:28:39,600
+You might just use a component
+built by someone else
+
+668
+00:28:39,600 --> 00:28:43,143
+and focus on what's the core
+of your software component.
+
+669
+00:28:44,700 --> 00:28:46,590
+When an event is caused by a dependence,
+
+670
+00:28:46,590 --> 00:28:49,290
+it might be really tempting
+to just target as such
+
+671
+00:28:49,290 --> 00:28:52,560
+and completely disengage from
+the post incident review.
+
+672
+00:28:52,560 --> 00:28:54,477
+We do not really allow our teams to do so
+
+673
+00:28:54,477 --> 00:28:58,023
+and we want them to still
+analyze what happened.
+
+674
+00:28:59,010 --> 00:29:01,800
+The first question, probably
+the most obvious is we validate
+
+675
+00:29:01,800 --> 00:29:05,010
+that the dependency worked as promised.
+
+676
+00:29:05,010 --> 00:29:07,680
+So every dependency is gonna come
+
+677
+00:29:07,680 --> 00:29:11,243
+with either an availability
+problems or RPO or RTO,
+
+678
+00:29:11,243 --> 00:29:13,080
+or those sort of metrics,
+we want to make sure
+
+679
+00:29:13,080 --> 00:29:18,080
+that they delivered on
+what was sold it was,
+
+680
+00:29:18,120 --> 00:29:19,203
+internally sold.
+
+681
+00:29:20,610 --> 00:29:23,820
+The second one is validating
+the implementation.
+
+682
+00:29:23,820 --> 00:29:26,093
+So dependency is not the world story.
+
+683
+00:29:26,093 --> 00:29:29,370
+How you implement it in
+your software might affect
+
+684
+00:29:29,370 --> 00:29:32,673
+whether an out on that dependence
+impacts customers or not.
+
+685
+00:29:34,890 --> 00:29:36,930
+Then we look at the failure mode
+
+686
+00:29:36,930 --> 00:29:39,360
+and check if it's something
+we should have expected,
+
+687
+00:29:39,360 --> 00:29:42,000
+something we should have
+planned for and didn't
+
+688
+00:29:42,000 --> 00:29:43,440
+or whether it's something completely new
+
+689
+00:29:43,440 --> 00:29:44,940
+that there was no way to plan for
+
+690
+00:29:44,940 --> 00:29:47,553
+and we need to shift to
+immediate contingency.
+
+691
+00:29:48,390 --> 00:29:51,150
+And overall we use those three questions
+
+692
+00:29:51,150 --> 00:29:54,240
+to find opportunities for
+reducing the blast radius.
+
+693
+00:29:54,240 --> 00:29:56,520
+Now some dependence are just not critical
+
+694
+00:29:56,520 --> 00:29:58,980
+and think about a webpage that is created
+
+695
+00:29:58,980 --> 00:30:02,580
+through involving multiple
+components in the PIs.
+
+696
+00:30:02,580 --> 00:30:06,300
+You might just gracefully
+degrade the page experience
+
+697
+00:30:06,300 --> 00:30:08,040
+and not load the component from
+
+698
+00:30:08,040 --> 00:30:10,320
+that dependence in case
+it's not available.
+
+699
+00:30:10,320 --> 00:30:13,650
+It is, a degraded
+experience as the word say,
+
+700
+00:30:13,650 --> 00:30:14,970
+but it's gonna be much better
+
+701
+00:30:14,970 --> 00:30:17,370
+that timing out on the entire page
+
+702
+00:30:17,370 --> 00:30:19,680
+or similarly, you might
+be able to cache results.
+
+703
+00:30:19,680 --> 00:30:21,750
+So be able to still serve a requests
+
+704
+00:30:21,750 --> 00:30:23,490
+that you have already previous researched.
+
+705
+00:30:23,490 --> 00:30:26,370
+And again, it's not gonna
+be 100% availability
+
+706
+00:30:26,370 --> 00:30:29,253
+but it's certainly better
+than 0% availability.
+
+707
+00:30:30,900 --> 00:30:33,153
+Okay, that's the wrong section.
+
+708
+00:30:34,530 --> 00:30:36,420
+So Henry mentioned the five whys
+
+709
+00:30:36,420 --> 00:30:41,420
+and the five whys are a
+really appealing topic
+
+710
+00:30:41,820 --> 00:30:43,980
+and I think they are one
+of the most misunderstood
+
+711
+00:30:43,980 --> 00:30:45,960
+concepts in the industry.
+
+712
+00:30:45,960 --> 00:30:49,590
+So they are often explained
+as a sequence of questions
+
+713
+00:30:49,590 --> 00:30:51,270
+where you identify one root cause
+
+714
+00:30:51,270 --> 00:30:54,060
+and then you ask yourself
+what caused the root cause
+
+715
+00:30:54,060 --> 00:30:56,613
+and then what caused the
+second layer and so on.
+
+716
+00:30:57,478 --> 00:31:01,020
+And the first thing is you
+shouldn't really stop at five,
+
+717
+00:31:01,020 --> 00:31:04,170
+five is a number to give an
+idea that is more than two
+
+718
+00:31:04,170 --> 00:31:06,030
+and less than 100.
+
+719
+00:31:06,030 --> 00:31:08,970
+But you should really keep
+going until you find something
+
+720
+00:31:08,970 --> 00:31:11,700
+that is meaningful,
+until you find a measure
+
+721
+00:31:11,700 --> 00:31:14,460
+and opportunity for
+improvement that if taken helps
+
+722
+00:31:14,460 --> 00:31:16,353
+with a large range of root causes.
+
+723
+00:31:17,399 --> 00:31:20,640
+And the second one, the way
+they are often explained is
+
+724
+00:31:20,640 --> 00:31:24,360
+as a chain, and this is
+really not the best way
+
+725
+00:31:24,360 --> 00:31:27,480
+to think about this,
+looking at them as a tree
+
+726
+00:31:27,480 --> 00:31:30,360
+and acknowledging that
+events are rarely caused
+
+727
+00:31:30,360 --> 00:31:32,460
+by a single root, caused
+by a single trigger,
+
+728
+00:31:32,460 --> 00:31:33,930
+but they are often a contribution
+
+729
+00:31:33,930 --> 00:31:36,540
+of multiple factors is key.
+
+730
+00:31:36,540 --> 00:31:41,540
+So to make this more tangible,
+let's look at an example.
+
+731
+00:31:41,730 --> 00:31:43,110
+So we started from the issue
+
+732
+00:31:43,110 --> 00:31:44,880
+that these API calls are failing,
+
+733
+00:31:44,880 --> 00:31:46,470
+probably most common failure
+
+734
+00:31:46,470 --> 00:31:49,953
+or some API third party
+internal was erroring out.
+
+735
+00:31:51,420 --> 00:31:55,710
+And we track down those errors
+to one host in the fleet
+
+736
+00:31:55,710 --> 00:31:58,710
+that was returning 500 errors.
+
+737
+00:31:58,710 --> 00:32:00,360
+So we ask the next why,
+
+738
+00:32:00,360 --> 00:32:02,550
+it's why was disaster turning 500 errors
+
+739
+00:32:02,550 --> 00:32:07,550
+and we find some IO
+issue errors in its logs
+
+740
+00:32:07,890 --> 00:32:09,900
+and then we look into those IO errors
+
+741
+00:32:09,900 --> 00:32:13,080
+and find a problem with
+the underlying BS volume.
+
+742
+00:32:13,080 --> 00:32:14,790
+We look at the underlying BS volume
+
+743
+00:32:14,790 --> 00:32:18,060
+and find a problem with a
+portion of an availability zone.
+
+744
+00:32:18,060 --> 00:32:20,820
+Now this is really effective,
+you are going really deep
+
+745
+00:32:20,820 --> 00:32:25,470
+and I found fourth layer root cause
+
+746
+00:32:25,470 --> 00:32:30,120
+that explains the land
+but it's only covering one
+
+747
+00:32:30,120 --> 00:32:32,163
+of the various potential root causes.
+
+748
+00:32:33,180 --> 00:32:35,433
+So let's look at a better option.
+
+749
+00:32:36,330 --> 00:32:37,860
+We start with the same question
+
+750
+00:32:37,860 --> 00:32:42,860
+but not one thing and this is
+gonna become apparent soon,
+
+751
+00:32:42,990 --> 00:32:44,070
+we added some data.
+
+752
+00:32:44,070 --> 00:32:46,845
+So now we are specifically
+talking about 3%
+
+753
+00:32:46,845 --> 00:32:49,923
+of API errors over a time of 45 minutes.
+
+754
+00:32:51,630 --> 00:32:53,400
+The first question, the first answer
+
+755
+00:32:53,400 --> 00:32:54,540
+is the same than before.
+
+756
+00:32:54,540 --> 00:32:58,920
+So we have one asked out of 100
+that is a return $500 errors
+
+757
+00:32:58,920 --> 00:33:01,421
+and we go down the same branch of before.
+
+758
+00:33:01,421 --> 00:33:04,020
+It is gonna point out to
+a temporary BS failure
+
+759
+00:33:04,020 --> 00:33:05,270
+in the availability zone.
+
+760
+00:33:06,150 --> 00:33:08,760
+In parallel to we go
+look at our health checks
+
+761
+00:33:08,760 --> 00:33:11,310
+because reality is that if
+health checks were working
+
+762
+00:33:11,310 --> 00:33:13,320
+and remove that failing
+cost from the fleet,
+
+763
+00:33:13,320 --> 00:33:15,750
+our service would have
+kept working regardless
+
+764
+00:33:15,750 --> 00:33:18,870
+of the underlying disruption
+to the storage layer
+
+765
+00:33:18,870 --> 00:33:23,190
+and figure out that there was a bug, a gap
+
+766
+00:33:23,190 --> 00:33:27,750
+in our service templates that
+was incorrectly implementing
+
+767
+00:33:27,750 --> 00:33:28,653
+the health check.
+
+768
+00:33:29,550 --> 00:33:31,800
+Then find the problem
+
+769
+00:33:31,800 --> 00:33:33,060
+with those 45 minutes, right?
+
+770
+00:33:33,060 --> 00:33:34,470
+45 minutes of impact due
+
+771
+00:33:34,470 --> 00:33:37,260
+to single loss failure
+are quite significant.
+
+772
+00:33:37,260 --> 00:33:38,310
+Start looking into that
+
+773
+00:33:38,310 --> 00:33:40,320
+and we find out that the
+engineer was not engaged
+
+774
+00:33:40,320 --> 00:33:41,340
+for the first 30.
+
+775
+00:33:41,340 --> 00:33:44,490
+And again, this is an
+immediately visible opportunity
+
+776
+00:33:44,490 --> 00:33:46,290
+for improving the detection time, right?
+
+777
+00:33:46,290 --> 00:33:48,120
+If this detection was 15 minutes,
+
+778
+00:33:48,120 --> 00:33:49,980
+then that error would've been 20 minutes
+
+779
+00:33:49,980 --> 00:33:52,430
+even without changing
+anything on the resolution.
+
+780
+00:33:53,970 --> 00:33:56,100
+And finally I was talking
+about numbers, I dunno how many
+
+781
+00:33:56,100 --> 00:34:00,150
+of you picked it up, but we
+are saying that a 1% loss
+
+782
+00:34:00,150 --> 00:34:02,910
+of capacity because the 3% error rate
+
+783
+00:34:02,910 --> 00:34:05,550
+and there is created disconnection there.
+
+784
+00:34:05,550 --> 00:34:07,920
+We go look into that and find a problem
+
+785
+00:34:07,920 --> 00:34:09,600
+with the load balancing algorithm.
+
+786
+00:34:09,600 --> 00:34:12,990
+Now, this connection is quite
+a painful algorithm to use
+
+787
+00:34:12,990 --> 00:34:15,047
+because when services are running out,
+
+788
+00:34:15,047 --> 00:34:19,998
+errors are generally third
+faster than actual responses.
+
+789
+00:34:19,998 --> 00:34:22,260
+So a single failing node attracts
+more traffic than it does
+
+790
+00:34:22,260 --> 00:34:24,300
+when it's effectively working.
+
+791
+00:34:24,300 --> 00:34:28,440
+And you see how by doing
+this, we have not arrived
+
+792
+00:34:28,440 --> 00:34:32,130
+to a single action that in the
+previous cases basically wait
+
+793
+00:34:32,130 --> 00:34:34,560
+for AWS to solve the AWS problem,
+
+794
+00:34:34,560 --> 00:34:38,040
+but for nearly completely
+independent root causes
+
+795
+00:34:38,040 --> 00:34:40,650
+and tackling one, two or
+three of them is gonna build
+
+796
+00:34:40,650 --> 00:34:44,790
+the layered resilience towards
+that failure condition.
+
+797
+00:34:44,790 --> 00:34:48,930
+So to a couple of these, when
+you think about the five whys,
+
+798
+00:34:48,930 --> 00:34:51,450
+do not imagine a chain but
+rather think about a tree.
+
+799
+00:34:51,450 --> 00:34:54,840
+It is gonna bring a
+range of different issues
+
+800
+00:34:54,840 --> 00:34:58,023
+and does a range of
+different preventive actions.
+
+801
+00:35:00,630 --> 00:35:03,810
+So when we are done with
+this and with internal part,
+
+802
+00:35:03,810 --> 00:35:07,230
+we start looking at the customer
+facing root cause analysis.
+
+803
+00:35:07,230 --> 00:35:09,780
+And not go too deep into this one,
+
+804
+00:35:09,780 --> 00:35:12,180
+but one thing we try to do
+
+805
+00:35:12,180 --> 00:35:14,340
+and we recommend everyone does is
+
+806
+00:35:14,340 --> 00:35:17,340
+when you write a root cause
+analysis for your customers,
+
+807
+00:35:17,340 --> 00:35:18,990
+start from their point of view
+
+808
+00:35:18,990 --> 00:35:21,420
+and not from your internal components.
+
+809
+00:35:21,420 --> 00:35:23,520
+So we try to open a root cause analysis
+
+810
+00:35:23,520 --> 00:35:25,950
+by explaining the impact to customers,
+
+811
+00:35:25,950 --> 00:35:29,790
+and you know, when we need to
+go deeper into the sequence
+
+812
+00:35:29,790 --> 00:35:32,160
+of events, we try to
+focus on the functions
+
+813
+00:35:32,160 --> 00:35:34,320
+that customers are familiar with
+
+814
+00:35:34,320 --> 00:35:36,240
+and not with our internal services
+
+815
+00:35:36,240 --> 00:35:37,773
+that provide those functions.
+
+816
+00:35:39,210 --> 00:35:40,110
+And this is overall
+
+817
+00:35:40,110 --> 00:35:42,120
+about removing unnecessary
+complexity, right?
+
+818
+00:35:42,120 --> 00:35:45,120
+Spending one pager to
+describe an internal service,
+
+819
+00:35:45,120 --> 00:35:48,250
+but the only relevant thing
+you have to say is that 20%
+
+820
+00:35:48,250 --> 00:35:50,220
+of (indistinct) in that
+service were misbehaving
+
+821
+00:35:50,220 --> 00:35:53,370
+and were not detected, we
+just gonna drift the attention
+
+822
+00:35:53,370 --> 00:35:54,603
+and not be productive.
+
+823
+00:35:57,180 --> 00:35:58,890
+While writing the root cause analysis,
+
+824
+00:35:58,890 --> 00:36:00,990
+there is a really important
+balance to take that is
+
+825
+00:36:00,990 --> 00:36:02,343
+between quality and speed.
+
+826
+00:36:04,410 --> 00:36:08,460
+Anthony mentioned that how
+in event communications,
+
+827
+00:36:08,460 --> 00:36:10,350
+speed is our primary metric.
+
+828
+00:36:10,350 --> 00:36:12,180
+We want to be out with a notification
+
+829
+00:36:12,180 --> 00:36:15,690
+that something is wrong as soon as we can,
+
+830
+00:36:15,690 --> 00:36:17,430
+and through iteration we are gonna explain
+
+831
+00:36:17,430 --> 00:36:18,540
+what that something is.
+
+832
+00:36:18,540 --> 00:36:20,760
+We're gonna share data us on
+the service, on the region,
+
+833
+00:36:20,760 --> 00:36:22,260
+on the type of failure.
+
+834
+00:36:22,260 --> 00:36:25,230
+Now our SCAs are a document
+that is delivered once.
+
+835
+00:36:25,230 --> 00:36:28,170
+So we do not get this
+opportunity to iterate,
+
+836
+00:36:28,170 --> 00:36:30,690
+but we're also aware that our
+customers are waiting for it.
+
+837
+00:36:30,690 --> 00:36:34,530
+They are waiting for our RCAs
+to understand what happened,
+
+838
+00:36:34,530 --> 00:36:37,440
+but more importantly to read
+what we are doing about it
+
+839
+00:36:37,440 --> 00:36:40,143
+and by when we are
+planning to do such things.
+
+840
+00:36:44,040 --> 00:36:47,340
+One thing that might be
+not immediately visible is
+
+841
+00:36:47,340 --> 00:36:51,510
+that RCAs are not only a way
+to explain a technical failure,
+
+842
+00:36:51,510 --> 00:36:52,343
+but they're also a way
+
+843
+00:36:52,343 --> 00:36:54,030
+to regain the trust of your customers.
+
+844
+00:36:54,030 --> 00:36:56,730
+So if you're writing, one,
+it's because you failed
+
+845
+00:36:56,730 --> 00:36:58,710
+and customers are gonna inspect you,
+
+846
+00:36:58,710 --> 00:37:00,690
+they're gonna inspect your response,
+
+847
+00:37:00,690 --> 00:37:02,430
+they're gonna inspect your long-term plans
+
+848
+00:37:02,430 --> 00:37:04,230
+and they're gonna use
+that to decide whether
+
+849
+00:37:04,230 --> 00:37:05,790
+to keep using your service or not.
+
+850
+00:37:05,790 --> 00:37:09,720
+So I think RCAs as an opportunity
+to earn customer trust
+
+851
+00:37:09,720 --> 00:37:12,420
+or to regain their confidence is quite key
+
+852
+00:37:12,420 --> 00:37:14,853
+to delivering high quality documents.
+
+853
+00:37:17,460 --> 00:37:22,290
+Okay, so after this part is done
+
+854
+00:37:22,290 --> 00:37:25,500
+and we have an eye level
+prompt to customers,
+
+855
+00:37:25,500 --> 00:37:28,260
+we start looking into the
+detail of our action items.
+
+856
+00:37:28,260 --> 00:37:32,690
+Now we categorize action items
+based on how long it takes
+
+857
+00:37:32,690 --> 00:37:36,450
+to plan them and how stable they are.
+
+858
+00:37:36,450 --> 00:37:39,840
+The first type that really
+doesn't happen at this stage,
+
+859
+00:37:39,840 --> 00:37:43,170
+the first type is the short
+term ones that we discussed
+
+860
+00:37:43,170 --> 00:37:44,550
+in terms of things that happen
+
+861
+00:37:44,550 --> 00:37:46,770
+before we close the incident bridge.
+
+862
+00:37:46,770 --> 00:37:50,199
+So they happen in hours, we work 24/7
+
+863
+00:37:50,199 --> 00:37:52,470
+until they are implemented,
+
+864
+00:37:52,470 --> 00:37:55,620
+and they are focused on preventing
+the immediate recurrence.
+
+865
+00:37:55,620 --> 00:38:00,180
+Now, short term action items are effective
+
+866
+00:38:00,180 --> 00:38:02,370
+but might not be particularly sustainable.
+
+867
+00:38:02,370 --> 00:38:03,390
+Like you can imagine this
+
+868
+00:38:03,390 --> 00:38:06,540
+as starting a software
+component once a day
+
+869
+00:38:06,540 --> 00:38:08,190
+to clear the buffers and caches
+
+870
+00:38:08,190 --> 00:38:10,270
+or to overengaging engineers
+
+871
+00:38:10,270 --> 00:38:14,430
+every time a matrix starts
+spiking in the wrong direction.
+
+872
+00:38:14,430 --> 00:38:15,390
+It's fine to keep them
+
+873
+00:38:15,390 --> 00:38:18,303
+for a few days, it's not
+fine to keep them forever.
+
+874
+00:38:20,010 --> 00:38:22,050
+The second category is the midterm ones.
+
+875
+00:38:22,050 --> 00:38:25,635
+This is when you start building
+a self-sustaining solution
+
+876
+00:38:25,635 --> 00:38:26,610
+that allows your teams
+
+877
+00:38:26,610 --> 00:38:28,950
+to go back to the priorities
+they were working on
+
+878
+00:38:28,950 --> 00:38:29,783
+before that.
+
+879
+00:38:30,660 --> 00:38:34,260
+They're generally
+implemented in days to weeks,
+
+880
+00:38:34,260 --> 00:38:37,740
+more rarely months, and
+those tend to be the promise
+
+881
+00:38:37,740 --> 00:38:40,490
+that we put in the customer-facing
+root cause analysis.
+
+882
+00:38:42,151 --> 00:38:44,160
+Then we have a third type
+
+883
+00:38:44,160 --> 00:38:46,080
+that is really long term action items.
+
+884
+00:38:46,080 --> 00:38:48,450
+And this is when we think
+about systemic change
+
+885
+00:38:48,450 --> 00:38:49,860
+or when we start reinventing.
+
+886
+00:38:49,860 --> 00:38:52,410
+And this type of actions may be building
+
+887
+00:38:52,410 --> 00:38:55,020
+a completely new service
+that solves a problem better
+
+888
+00:38:55,020 --> 00:38:57,840
+than the previous version,
+or that solves a problem
+
+889
+00:38:57,840 --> 00:38:59,583
+that no service is solving.
+
+890
+00:39:03,090 --> 00:39:05,310
+This is a real quote, quite fun
+
+891
+00:39:05,310 --> 00:39:07,440
+because shows how while building
+
+892
+00:39:07,440 --> 00:39:09,420
+this action item tion not just focus
+
+893
+00:39:09,420 --> 00:39:11,340
+on incremental improvement,
+
+894
+00:39:11,340 --> 00:39:13,500
+and once again it's a matter
+
+895
+00:39:13,500 --> 00:39:15,300
+of trade offs and balances.
+
+896
+00:39:15,300 --> 00:39:16,650
+There are four forces
+
+897
+00:39:16,650 --> 00:39:20,070
+that are really relevant when
+looking at long-term plans
+
+898
+00:39:20,070 --> 00:39:21,870
+and preventive actions.
+
+899
+00:39:21,870 --> 00:39:24,510
+So the first one is the trade off
+
+900
+00:39:24,510 --> 00:39:28,504
+between incremental
+change versus innovation.
+
+901
+00:39:28,504 --> 00:39:29,790
+So incremental change, you
+can see it as something
+
+902
+00:39:29,790 --> 00:39:32,220
+that is rolled out slowly,
+
+903
+00:39:32,220 --> 00:39:33,930
+that is always retro compatible
+
+904
+00:39:33,930 --> 00:39:37,110
+and doesn't require any
+action from the customers,
+
+905
+00:39:37,110 --> 00:39:41,400
+from the user of API or from
+downstream dependencies.
+
+906
+00:39:41,400 --> 00:39:45,570
+It's easy to implement
+but it's slow and easy
+
+907
+00:39:45,570 --> 00:39:47,940
+to use for the end customers.
+
+908
+00:39:47,940 --> 00:39:49,800
+Innovation is building new solutions.
+
+909
+00:39:49,800 --> 00:39:54,800
+New solutions are categorized two things.
+
+910
+00:39:55,020 --> 00:39:58,650
+So the first one is they are new,
+
+911
+00:39:58,650 --> 00:40:00,540
+so it's gonna be a new service customers
+
+912
+00:40:00,540 --> 00:40:02,550
+are gonna have to move to.
+
+913
+00:40:02,550 --> 00:40:04,560
+And this doesn't really
+discount from fixing
+
+914
+00:40:04,560 --> 00:40:07,360
+the previous version because
+there is gonna be a ramp up
+
+915
+00:40:08,340 --> 00:40:10,920
+down from the old one and
+the ramp up to the new one
+
+916
+00:40:10,920 --> 00:40:14,220
+that is gonna take quite a
+significant amount of time.
+
+917
+00:40:14,220 --> 00:40:16,650
+And then they might be
+completely incompatible.
+
+918
+00:40:16,650 --> 00:40:18,706
+Might be a new service that behaves
+
+919
+00:40:18,706 --> 00:40:20,610
+in a completely different way
+that doesn't have the full
+
+920
+00:40:20,610 --> 00:40:22,503
+functionality that the previous one.
+
+921
+00:40:23,940 --> 00:40:25,860
+And the second one is related to timing.
+
+922
+00:40:25,860 --> 00:40:28,950
+So after an event, it's really
+common to start focusing
+
+923
+00:40:28,950 --> 00:40:30,810
+on what seemed to be perfect solutions.
+
+924
+00:40:30,810 --> 00:40:33,270
+So you're gonna completely
+rebuild a component
+
+925
+00:40:33,270 --> 00:40:36,243
+or you're gonna deprecate an
+API or stop doing something.
+
+926
+00:40:37,110 --> 00:40:40,320
+The problem is it's really key
+
+927
+00:40:40,320 --> 00:40:42,183
+to have realistic completion dates.
+
+928
+00:40:43,110 --> 00:40:45,840
+When internal and external
+customers have been impacted
+
+929
+00:40:45,840 --> 00:40:48,750
+by a failure on a dependency,
+
+930
+00:40:48,750 --> 00:40:51,210
+they are gonna expect
+some significant actions
+
+931
+00:40:51,210 --> 00:40:53,130
+and some significant prevention happening
+
+932
+00:40:53,130 --> 00:40:55,350
+in weeks to months maximum.
+
+933
+00:40:55,350 --> 00:40:57,840
+So here is when you take a decision
+
+934
+00:40:57,840 --> 00:41:01,020
+between promising a perfect
+solution maybe two years out
+
+935
+00:41:01,020 --> 00:41:03,420
+that doesn't really solve
+the immediate problem,
+
+936
+00:41:03,420 --> 00:41:05,040
+or promising something in the middle
+
+937
+00:41:05,040 --> 00:41:06,270
+that you can deliver quicker,
+
+938
+00:41:06,270 --> 00:41:07,380
+and after you have done that,
+
+939
+00:41:07,380 --> 00:41:08,693
+then you can go (indistinct) mode.
+
+940
+00:41:12,750 --> 00:41:13,650
+Okay, so at this stage
+
+941
+00:41:13,650 --> 00:41:15,150
+you have your action items defined,
+
+942
+00:41:15,150 --> 00:41:17,850
+promise to the customers and
+you have internal resourcing
+
+943
+00:41:17,850 --> 00:41:19,950
+and planning to carry them on.
+
+944
+00:41:19,950 --> 00:41:23,250
+It's really common since
+all of this phase happened
+
+945
+00:41:23,250 --> 00:41:24,510
+in days after the event.
+
+946
+00:41:24,510 --> 00:41:27,660
+The RCA needs to be out
+in seven days maximum,
+
+947
+00:41:27,660 --> 00:41:29,670
+and by that point you're making a promise.
+
+948
+00:41:29,670 --> 00:41:31,380
+And then you go into
+an implementation phase
+
+949
+00:41:31,380 --> 00:41:33,810
+that might last 3, 4, 5 weeks.
+
+950
+00:41:33,810 --> 00:41:35,280
+And as you do that,
+
+951
+00:41:35,280 --> 00:41:36,990
+you might find better opportunities.
+
+952
+00:41:36,990 --> 00:41:39,510
+So you might decide that
+the plan you promise
+
+953
+00:41:39,510 --> 00:41:42,120
+to your customers is not really the best.
+
+954
+00:41:42,120 --> 00:41:45,060
+We are generally fine
+with changing those plans
+
+955
+00:41:45,060 --> 00:41:47,460
+as long as we don't change
+the goal and the promise.
+
+956
+00:41:47,460 --> 00:41:49,890
+So if you have a
+different way to implement
+
+957
+00:41:49,890 --> 00:41:53,370
+a similar solution that prevents
+the same failure condition,
+
+958
+00:41:53,370 --> 00:41:54,203
+we will do that.
+
+959
+00:41:56,062 --> 00:41:58,320
+While doing this, it's
+extremely important to stick
+
+960
+00:41:58,320 --> 00:42:00,750
+to the estimated completion dates
+
+961
+00:42:00,750 --> 00:42:02,370
+that you have promised to your customers.
+
+962
+00:42:02,370 --> 00:42:06,180
+Now they are really not set in stone,
+
+963
+00:42:06,180 --> 00:42:08,010
+it's fine to push them out by one
+
+964
+00:42:08,010 --> 00:42:09,990
+or two days if you need them, if you need
+
+965
+00:42:09,990 --> 00:42:11,760
+to validate a solution,
+
+966
+00:42:11,760 --> 00:42:14,070
+but it's important to not
+push them out by month.
+
+967
+00:42:14,070 --> 00:42:16,200
+So I was trying to come up with a number
+
+968
+00:42:16,200 --> 00:42:20,370
+before this talk to say like
+being 20% slower is fine,
+
+969
+00:42:20,370 --> 00:42:24,270
+being 2000% slower is maybe
+not, I didn't find this number,
+
+970
+00:42:24,270 --> 00:42:27,273
+but I have the feeling
+it's gonna be quite low.
+
+971
+00:42:29,370 --> 00:42:33,450
+And finally, this is
+drilled into our mindset,
+
+972
+00:42:33,450 --> 00:42:36,600
+but preventive action is not completed
+
+973
+00:42:36,600 --> 00:42:37,860
+the moment implemented,
+
+974
+00:42:37,860 --> 00:42:39,750
+it's completed the moment you test it
+
+975
+00:42:39,750 --> 00:42:42,450
+and validated the same
+underlying conditions do not
+
+976
+00:42:42,450 --> 00:42:44,220
+lead to the same failure.
+
+977
+00:42:44,220 --> 00:42:45,870
+Again, this is key in communication,
+
+978
+00:42:45,870 --> 00:42:47,670
+but those in terms of thinking,
+
+979
+00:42:47,670 --> 00:42:49,680
+the job doesn't stop at implementation,
+
+980
+00:42:49,680 --> 00:42:51,750
+stops after you are confirmed
+
+981
+00:42:51,750 --> 00:42:54,573
+that what's implemented was
+right and works at scale.
+
+982
+00:42:58,950 --> 00:43:00,420
+- Okay, let's look at phase three.
+
+983
+00:43:00,420 --> 00:43:02,310
+So phase three is learning and scaling.
+
+984
+00:43:02,310 --> 00:43:05,433
+So the most important
+COEs get to phase three.
+
+985
+00:43:06,990 --> 00:43:09,330
+Here's a quote here and
+it's worth acknowledging
+
+986
+00:43:09,330 --> 00:43:11,700
+that as privileged male technical folks,
+
+987
+00:43:11,700 --> 00:43:13,380
+Malcolm X was probably not thinking
+
+988
+00:43:13,380 --> 00:43:15,300
+of us when writing these words,
+
+989
+00:43:15,300 --> 00:43:17,940
+but their words are
+inspirational nonetheless, right?
+
+990
+00:43:17,940 --> 00:43:19,720
+And so it's super important
+
+991
+00:43:21,429 --> 00:43:23,610
+to take every opportunity
+to learn a lesson
+
+992
+00:43:23,610 --> 00:43:26,010
+and improve your
+performance the next time.
+
+993
+00:43:26,010 --> 00:43:28,890
+And it's the mental model
+that we have here at AWS
+
+994
+00:43:28,890 --> 00:43:31,320
+and it's part of our
+operational excellence
+
+995
+00:43:31,320 --> 00:43:36,300
+and it's critical in the
+process here for COEs.
+
+996
+00:43:38,250 --> 00:43:41,010
+Okay, so let's look at learning.
+
+997
+00:43:41,010 --> 00:43:43,050
+So there's a couple
+different phases of learning.
+
+998
+00:43:43,050 --> 00:43:45,573
+So we review all COEs within a team.
+
+999
+00:43:46,470 --> 00:43:49,230
+Every service or author that writes a COE,
+
+1000
+00:43:49,230 --> 00:43:51,570
+they're gonna review that
+with their individual team.
+
+1001
+00:43:51,570 --> 00:43:53,040
+Additionally, they'll review that
+
+1002
+00:43:53,040 --> 00:43:55,110
+with their wider organization,
+
+1003
+00:43:55,110 --> 00:43:58,770
+but we also have the AWS
+operational metrics meetings.
+
+1004
+00:43:58,770 --> 00:44:01,110
+And so these are meetings
+that occur on Wednesdays
+
+1005
+00:44:01,110 --> 00:44:03,630
+and everyone is involved,
+everyone is invited
+
+1006
+00:44:03,630 --> 00:44:05,100
+in all of AWS.
+
+1007
+00:44:05,100 --> 00:44:06,450
+That includes product managers,
+
+1008
+00:44:06,450 --> 00:44:10,980
+that includes engineers,
+from leaders, everyone.
+
+1009
+00:44:10,980 --> 00:44:14,040
+And it's super important that
+they're all engaged as well.
+
+1010
+00:44:14,040 --> 00:44:16,410
+And this is part of our
+culture that allows us
+
+1011
+00:44:16,410 --> 00:44:19,860
+to scale these lessons across
+not only one organization
+
+1012
+00:44:19,860 --> 00:44:21,573
+or one team, but all of AWS.
+
+1013
+00:44:22,613 --> 00:44:26,220
+And so it's super important,
+it's a critical mechanism
+
+1014
+00:44:26,220 --> 00:44:28,590
+to ensure that these are learned once
+
+1015
+00:44:28,590 --> 00:44:30,123
+and not multiple times.
+
+1016
+00:44:32,070 --> 00:44:34,260
+The other key here is
+looking for patterns, right?
+
+1017
+00:44:34,260 --> 00:44:35,760
+And looking for patterns and ensuring
+
+1018
+00:44:35,760 --> 00:44:38,610
+that you're leveraging solutions
+across the organization.
+
+1019
+00:44:41,640 --> 00:44:43,887
+Again, a safe space is
+super important, right,
+
+1020
+00:44:43,887 --> 00:44:46,320
+and so there's some ground rules there.
+
+1021
+00:44:46,320 --> 00:44:48,420
+Open discussion is absolutely welcome,
+
+1022
+00:44:48,420 --> 00:44:50,370
+but everyone should feel
+comfortable speaking up,
+
+1023
+00:44:50,370 --> 00:44:54,060
+everyone should feel comfortable
+challenging action items,
+
+1024
+00:44:54,060 --> 00:44:55,710
+asking whether they're the right things,
+
+1025
+00:44:55,710 --> 00:44:57,900
+you know, and challenging the five why's
+
+1026
+00:44:57,900 --> 00:45:00,100
+and how we got to the
+solutions that we did.
+
+1027
+00:45:02,310 --> 00:45:05,700
+You'd be surprised, but for
+a meeting with thousands
+
+1028
+00:45:05,700 --> 00:45:08,670
+of folks, it is incredible amount
+
+1029
+00:45:08,670 --> 00:45:10,703
+of value that we get out of that meeting.
+
+1030
+00:45:15,150 --> 00:45:16,920
+Okay, so let's look at
+the scaling aspect of it.
+
+1031
+00:45:16,920 --> 00:45:18,330
+So I kind of alluded to it there,
+
+1032
+00:45:18,330 --> 00:45:20,640
+but scaling goes through
+three phases, right?
+
+1033
+00:45:20,640 --> 00:45:22,680
+So the first one is team education.
+
+1034
+00:45:22,680 --> 00:45:26,430
+And so in order of increased
+effectiveness, right?
+
+1035
+00:45:26,430 --> 00:45:27,933
+So the first one is education.
+
+1036
+00:45:28,830 --> 00:45:30,960
+They're the best intention,
+it's not necessarily mechanistic
+
+1037
+00:45:30,960 --> 00:45:32,070
+and they don't necessarily scale
+
+1038
+00:45:32,070 --> 00:45:34,020
+to other teams and other organizations.
+
+1039
+00:45:35,280 --> 00:45:36,780
+Then you have a distributed change,
+
+1040
+00:45:36,780 --> 00:45:38,310
+and a distributed change is one
+
+1041
+00:45:38,310 --> 00:45:40,110
+where everyone has to go do something.
+
+1042
+00:45:40,110 --> 00:45:44,283
+And so it can be expensive
+but ultimately it can scale.
+
+1043
+00:45:46,920 --> 00:45:48,507
+And then finally we have
+a centralized change.
+
+1044
+00:45:48,507 --> 00:45:50,490
+And so a centralized
+change is where you go
+
+1045
+00:45:50,490 --> 00:45:51,990
+and you make a centralized change,
+
+1046
+00:45:51,990 --> 00:45:54,390
+and so everyone gets
+that by default, right?
+
+1047
+00:45:54,390 --> 00:45:56,100
+They consume that, these are changes
+
+1048
+00:45:56,100 --> 00:45:58,803
+to the SDKs, default behaviors, et cetera.
+
+1049
+00:46:04,920 --> 00:46:06,630
+So one example of a team education is
+
+1050
+00:46:06,630 --> 00:46:08,790
+not only just reviewing
+the COEs within your team
+
+1051
+00:46:08,790 --> 00:46:10,367
+and within your organization, but tenets.
+
+1052
+00:46:10,367 --> 00:46:15,367
+And so tenets are our core
+foundational principles
+
+1053
+00:46:15,870 --> 00:46:17,490
+that we use to help guide us.
+
+1054
+00:46:17,490 --> 00:46:22,080
+And so here's an example of
+some of our operational tenets.
+
+1055
+00:46:22,080 --> 00:46:23,370
+I'm not gonna talk about all of them,
+
+1056
+00:46:23,370 --> 00:46:24,570
+but the first one obviously,
+
+1057
+00:46:24,570 --> 00:46:27,870
+failures must not impact
+multiple regions is certainly
+
+1058
+00:46:27,870 --> 00:46:32,553
+a lesson that everyone at
+AWS is very well aware of.
+
+1059
+00:46:34,350 --> 00:46:36,240
+And additionally, there's
+detecting failures
+
+1060
+00:46:36,240 --> 00:46:37,800
+before your customers do.
+
+1061
+00:46:37,800 --> 00:46:39,360
+And so this is an obvious one where
+
+1062
+00:46:39,360 --> 00:46:43,500
+in that operational metrics
+meeting, if we determine
+
+1063
+00:46:43,500 --> 00:46:44,820
+that customers were the root cause
+
+1064
+00:46:44,820 --> 00:46:48,282
+or the catalyst rather
+of identifying an issue,
+
+1065
+00:46:48,282 --> 00:46:52,320
+it's a easy COE to write in
+the sense that it was a failure
+
+1066
+00:46:52,320 --> 00:46:54,090
+and we have to go figure out why.
+
+1067
+00:46:54,090 --> 00:46:55,920
+There's improvements to monitoring,
+
+1068
+00:46:55,920 --> 00:46:57,600
+there's improvements to metrics
+
+1069
+00:46:57,600 --> 00:46:59,913
+and alarming that we need to go take.
+
+1070
+00:47:03,150 --> 00:47:06,150
+And so for an example
+of distributed change,
+
+1071
+00:47:06,150 --> 00:47:08,520
+distributed change here
+is trusted advisor.
+
+1072
+00:47:08,520 --> 00:47:10,380
+And so trusted advisor is
+a service that we built
+
+1073
+00:47:10,380 --> 00:47:12,927
+to scale our learnings
+directly with customers, right?
+
+1074
+00:47:12,927 --> 00:47:15,180
+And so it monitors your infrastructure,
+
+1075
+00:47:15,180 --> 00:47:18,600
+categorize recommendations
+based on severity.
+
+1076
+00:47:18,600 --> 00:47:20,760
+On the left here you can see an example
+
+1077
+00:47:20,760 --> 00:47:22,830
+of four critical recommendations.
+
+1078
+00:47:22,830 --> 00:47:24,450
+I think Giorgio,
+
+1079
+00:47:24,450 --> 00:47:26,730
+you might have a couple
+unread notifications here
+
+1080
+00:47:26,730 --> 00:47:29,180
+in the AWS Health console
+on the top right there.
+
+1081
+00:47:30,510 --> 00:47:32,100
+Well, they're not only
+categorized by priority
+
+1082
+00:47:32,100 --> 00:47:33,930
+but they're also related to performance,
+
+1083
+00:47:33,930 --> 00:47:35,700
+cost optimization, et cetera.
+
+1084
+00:47:35,700 --> 00:47:40,020
+The key here is that we have
+identified lessons, right,
+
+1085
+00:47:40,020 --> 00:47:42,720
+and we wanna scale those
+lessons to customers
+
+1086
+00:47:42,720 --> 00:47:45,660
+and that's the distributed
+change model here.
+
+1087
+00:47:45,660 --> 00:47:48,870
+But ultimately customers
+have to prioritize them.
+
+1088
+00:47:48,870 --> 00:47:51,240
+And so it's not necessarily
+the most effective
+
+1089
+00:47:51,240 --> 00:47:53,733
+but it's certainly well worth doing.
+
+1090
+00:47:58,110 --> 00:47:58,980
+- Thank you.
+
+1091
+00:47:58,980 --> 00:48:02,340
+Just to clarify, that's
+a non-production account.
+
+1092
+00:48:02,340 --> 00:48:05,310
+I was looking for example
+of bad trusted advisor pages
+
+1093
+00:48:05,310 --> 00:48:08,880
+and so i had to go dig in an
+account that I rarely use.
+
+1094
+00:48:08,880 --> 00:48:10,920
+So the third type, the centralized change
+
+1095
+00:48:10,920 --> 00:48:13,200
+and invention that we have
+mentioned multiple times.
+
+1096
+00:48:13,200 --> 00:48:14,970
+Now you might not know that,
+
+1097
+00:48:14,970 --> 00:48:18,960
+but most of the services you
+use today in AWS are coming
+
+1098
+00:48:18,960 --> 00:48:21,510
+from our experience of
+a world without them
+
+1099
+00:48:21,510 --> 00:48:23,700
+and they are solutions we
+build to actual problems
+
+1100
+00:48:23,700 --> 00:48:24,603
+we were facing.
+
+1101
+00:48:25,740 --> 00:48:28,110
+A really common one in case
+
+1102
+00:48:28,110 --> 00:48:30,300
+you were managing DNS 15 years ago
+
+1103
+00:48:30,300 --> 00:48:35,300
+or fun fact, Route 53 is
+turning 15 in like three days.
+
+1104
+00:48:35,640 --> 00:48:39,900
+You knew how hard it was not
+only for building scalable
+
+1105
+00:48:39,900 --> 00:48:41,460
+and resilient data plane
+
+1106
+00:48:41,460 --> 00:48:45,090
+but also for managing control
+at an organizational scale.
+
+1107
+00:48:45,090 --> 00:48:46,980
+So building the right policies
+
+1108
+00:48:46,980 --> 00:48:48,660
+for only the right individuals being able
+
+1109
+00:48:48,660 --> 00:48:50,640
+to modify a certain DNS ad so on
+
+1110
+00:48:50,640 --> 00:48:53,070
+or some records was just not easy,
+
+1111
+00:48:53,070 --> 00:48:55,470
+and that's why we built Amazon Route 53.
+
+1112
+00:48:55,470 --> 00:48:59,280
+Similarly, load balancers
+used to be physical,
+
+1113
+00:48:59,280 --> 00:49:01,920
+they used to be physical
+appliances that you were packing,
+
+1114
+00:49:01,920 --> 00:49:05,730
+that you were managing and
+updating, quite painful overall.
+
+1115
+00:49:05,730 --> 00:49:06,900
+And that's one of the reasons
+
+1116
+00:49:06,900 --> 00:49:08,430
+why we built a Elastic Load Balancer.
+
+1117
+00:49:08,430 --> 00:49:10,380
+We built it for us in the first place
+
+1118
+00:49:10,380 --> 00:49:12,090
+and to solve a problem we were having,
+
+1119
+00:49:12,090 --> 00:49:15,870
+we wanted a really scalable
+virtual load balancer
+
+1120
+00:49:15,870 --> 00:49:17,880
+that could be provisioned on demand.
+
+1121
+00:49:17,880 --> 00:49:19,230
+We just wanted to stop,
+
+1122
+00:49:19,230 --> 00:49:21,240
+we link in servers every time we needed
+
+1123
+00:49:21,240 --> 00:49:24,780
+to launch a new server service
+and that's how it came to be.
+
+1124
+00:49:24,780 --> 00:49:27,300
+And similarly, I dunno,
+
+1125
+00:49:27,300 --> 00:49:30,150
+but if you were to manage
+a certificate rotation
+
+1126
+00:49:30,150 --> 00:49:31,500
+in a large organization,
+
+1127
+00:49:31,500 --> 00:49:34,140
+you're not doing this through
+spreadsheets and meetings,
+
+1128
+00:49:34,140 --> 00:49:36,360
+it's not the best possible idea,
+
+1129
+00:49:36,360 --> 00:49:39,630
+and AWS certificate managers
+today makes it so simple,
+
+1130
+00:49:39,630 --> 00:49:41,640
+you basically forget about certificates
+
+1131
+00:49:41,640 --> 00:49:42,780
+and you can also afford
+
+1132
+00:49:42,780 --> 00:49:46,173
+to rotate them way more often
+than we were used to before.
+
+1133
+00:49:48,780 --> 00:49:50,670
+There is a little bit of
+a case study that I want
+
+1134
+00:49:50,670 --> 00:49:53,280
+to show on all of those
+things come together
+
+1135
+00:49:53,280 --> 00:49:54,533
+and also a case study
+
+1136
+00:49:54,533 --> 00:49:57,450
+and now we sometimes get the timing wrong,
+
+1137
+00:49:57,450 --> 00:49:59,010
+but you should have heard about Identity
+
+1138
+00:49:59,010 --> 00:50:01,560
+and Access Management, AWS IAM.
+
+1139
+00:50:01,560 --> 00:50:03,690
+So it's a globally consistent service
+
+1140
+00:50:03,690 --> 00:50:08,010
+that you use in the build phase
+or while deploying a service
+
+1141
+00:50:08,010 --> 00:50:10,380
+to define permission, success policies,
+
+1142
+00:50:10,380 --> 00:50:12,423
+and define what users and roles can do.
+
+1143
+00:50:13,620 --> 00:50:18,210
+Next IAM there is a security
+token service, AKA AWS STS.
+
+1144
+00:50:18,210 --> 00:50:21,150
+So the service is regional
+instead, it's stateless,
+
+1145
+00:50:21,150 --> 00:50:25,050
+and at runtime to generate
+temporary credentials
+
+1146
+00:50:25,050 --> 00:50:29,280
+that then are used to connect
+
+1147
+00:50:29,280 --> 00:50:31,500
+and make requests with AWS services.
+
+1148
+00:50:31,500 --> 00:50:33,510
+Now this services is sort
+of in the critical path
+
+1149
+00:50:33,510 --> 00:50:35,370
+because it's not in the
+middle of every request,
+
+1150
+00:50:35,370 --> 00:50:37,500
+but temporary credentials
+are really short lived.
+
+1151
+00:50:37,500 --> 00:50:40,593
+So you need this SDS to
+be extremely resilient.
+
+1152
+00:50:42,630 --> 00:50:45,330
+As many things, SDS was at the beginning
+
+1153
+00:50:45,330 --> 00:50:46,440
+all in a single region.
+
+1154
+00:50:46,440 --> 00:50:48,780
+So when we started
+launching multiple regions
+
+1155
+00:50:48,780 --> 00:50:50,220
+across the globe,
+
+1156
+00:50:50,220 --> 00:50:52,950
+for a few years, it would've
+had to make a request
+
+1157
+00:50:52,950 --> 00:50:54,810
+to US-east-1, get credentials
+
+1158
+00:50:54,810 --> 00:50:58,260
+and then be allowed to use
+services in the regions field.
+
+1159
+00:50:58,260 --> 00:51:01,320
+By 2015, we figured out this was a problem
+
+1160
+00:51:01,320 --> 00:51:04,680
+and launched the regional SDS assistance.
+
+1161
+00:51:04,680 --> 00:51:07,740
+This allowed customers to
+isolate their workloads
+
+1162
+00:51:07,740 --> 00:51:10,380
+and make sure that a
+failure in an region was
+
+1163
+00:51:10,380 --> 00:51:11,850
+not spreading to others.
+
+1164
+00:51:11,850 --> 00:51:13,560
+This also when we changed
+the best practice,
+
+1165
+00:51:13,560 --> 00:51:15,750
+so this is when we start
+talking about team education.
+
+1166
+00:51:15,750 --> 00:51:17,370
+We immediately documented the fact
+
+1167
+00:51:17,370 --> 00:51:21,210
+that using regional was better
+and a more resilient option,
+
+1168
+00:51:21,210 --> 00:51:22,860
+but left it pretty much it there.
+
+1169
+00:51:24,981 --> 00:51:25,814
+And by 2022 we figured out
+
+1170
+00:51:25,814 --> 00:51:28,530
+that traffic was still
+significant on the legacy endpoint
+
+1171
+00:51:28,530 --> 00:51:31,110
+and that there was quite a
+significant availability risk
+
+1172
+00:51:31,110 --> 00:51:31,943
+for our customers.
+
+1173
+00:51:31,943 --> 00:51:33,150
+So we changed the defaults
+
+1174
+00:51:33,150 --> 00:51:35,670
+and we started with active campaigns
+
+1175
+00:51:35,670 --> 00:51:36,870
+for customers to move off.
+
+1176
+00:51:36,870 --> 00:51:39,870
+So this is when you get a
+personal dashboard notification
+
+1177
+00:51:39,870 --> 00:51:41,850
+that asked to stop using a certain thing
+
+1178
+00:51:41,850 --> 00:51:43,893
+or implement a change by a date.
+
+1179
+00:51:45,210 --> 00:51:47,250
+Unfortunately by 2024, traffic
+
+1180
+00:51:47,250 --> 00:51:49,410
+on the global endpoint was
+still really substantial,
+
+1181
+00:51:49,410 --> 00:51:50,640
+and this is when we figured out
+
+1182
+00:51:50,640 --> 00:51:52,950
+that giving the right guidance
+
+1183
+00:51:52,950 --> 00:51:55,950
+or the distributed kind of
+change were not effective
+
+1184
+00:51:55,950 --> 00:51:58,200
+and we are to take a
+measure that will allow us
+
+1185
+00:51:58,200 --> 00:52:00,030
+to solve this quickly and for everyone
+
+1186
+00:52:00,030 --> 00:52:01,920
+and without customer action.
+
+1187
+00:52:01,920 --> 00:52:05,040
+And that's why in April this
+year we implemented a change
+
+1188
+00:52:05,040 --> 00:52:07,950
+that essentially naming
+here gets really confusing
+
+1189
+00:52:07,950 --> 00:52:10,860
+because the global endpoint is now served
+
+1190
+00:52:10,860 --> 00:52:14,520
+for regions enabled by
+default by the region itself.
+
+1191
+00:52:14,520 --> 00:52:16,320
+So customers don't change anything,
+
+1192
+00:52:16,320 --> 00:52:17,820
+use the same endpoint than before,
+
+1193
+00:52:17,820 --> 00:52:20,100
+but the request instead
+of getting to US-east-1,
+
+1194
+00:52:20,100 --> 00:52:22,700
+gets to the same region and
+removes this dependency.
+
+1195
+00:52:23,700 --> 00:52:27,753
+And to give you an idea
+on how this worked.
+
+1196
+00:52:28,680 --> 00:52:32,190
+So here we have a graph,
+it goes from early February
+
+1197
+00:52:32,190 --> 00:52:37,190
+to mid April, it's normalized,
+the 100% on the Y is
+
+1198
+00:52:38,430 --> 00:52:42,690
+the starting point where we
+consider the starting point 100%
+
+1199
+00:52:42,690 --> 00:52:44,460
+of affected accounts.
+
+1200
+00:52:44,460 --> 00:52:47,370
+And this out traffic changes
+on the global endpoint
+
+1201
+00:52:47,370 --> 00:52:49,512
+as we roll out the change.
+
+1202
+00:52:49,512 --> 00:52:52,710
+So this shows a deployment
+that starts slowly
+
+1203
+00:52:52,710 --> 00:52:55,230
+and tests just to make
+sure we are deploying
+
+1204
+00:52:55,230 --> 00:52:56,580
+the right thing.
+
+1205
+00:52:56,580 --> 00:52:58,560
+And then towards the end
+you'll see the deployment going
+
+1206
+00:52:58,560 --> 00:53:00,660
+at increasing speed and hitting regions,
+
+1207
+00:53:00,660 --> 00:53:04,893
+and traffic cross region traffic
+near drops to nearly zero.
+
+1208
+00:53:08,940 --> 00:53:11,220
+- Okay, so there's a couple
+of takeaways that we want you
+
+1209
+00:53:11,220 --> 00:53:13,203
+to remember leaving this talk.
+
+1210
+00:53:14,610 --> 00:53:17,370
+So first and foremost,
+engage early, engage often,
+
+1211
+00:53:17,370 --> 00:53:20,340
+ensure that leaders are
+engaged, everyone wants
+
+1212
+00:53:20,340 --> 00:53:22,530
+to be involved and they
+should welcome engagement
+
+1213
+00:53:22,530 --> 00:53:23,580
+and make sure that you
+have the right folks
+
+1214
+00:53:23,580 --> 00:53:24,480
+at the right time.
+
+1215
+00:53:25,380 --> 00:53:27,630
+- The second one is focus
+on fast communications
+
+1216
+00:53:27,630 --> 00:53:28,463
+during event.
+
+1217
+00:53:28,463 --> 00:53:30,060
+Make sure you send out a notification
+
+1218
+00:53:30,060 --> 00:53:31,230
+that tells your customers
+
+1219
+00:53:31,230 --> 00:53:32,970
+that something is potentially going wrong
+
+1220
+00:53:32,970 --> 00:53:35,133
+and think about iterating on depth later.
+
+1221
+00:53:37,170 --> 00:53:38,670
+- Mitigate first and root cause later.
+
+1222
+00:53:38,670 --> 00:53:41,220
+So we're all engineers,
+we want to deep dive
+
+1223
+00:53:41,220 --> 00:53:42,720
+and figure out what the
+root cause is, right?
+
+1224
+00:53:42,720 --> 00:53:44,250
+But during an incident is not the time
+
+1225
+00:53:44,250 --> 00:53:45,990
+to figure out the root cause,
+
+1226
+00:53:45,990 --> 00:53:48,807
+mitigate customer impact
+and root cause has its time
+
+1227
+00:53:48,807 --> 00:53:50,253
+and its place afterwards.
+
+1228
+00:53:51,240 --> 00:53:53,970
+- Finally, incidents are
+really powerful lessons.
+
+1229
+00:53:53,970 --> 00:53:56,100
+The problem is that they
+are extremely expensive
+
+1230
+00:53:56,100 --> 00:53:57,990
+and come with customer impact.
+
+1231
+00:53:57,990 --> 00:53:59,850
+You want to make sure that you learn once
+
+1232
+00:53:59,850 --> 00:54:00,960
+as an organization.
+
+1233
+00:54:00,960 --> 00:54:03,630
+So don't limit the learnings
+to the team that was affected
+
+1234
+00:54:03,630 --> 00:54:05,580
+or the team that was the
+cause of the incident,
+
+1235
+00:54:05,580 --> 00:54:07,950
+but make sure that whatever
+they learn, spread across all
+
+1236
+00:54:07,950 --> 00:54:09,933
+of the engineers in the team.
+
+1237
+00:54:11,820 --> 00:54:13,710
+- And then ensure that when
+you reflect, you reflect
+
+1238
+00:54:13,710 --> 00:54:15,240
+with empathy, you create a safe space
+
+1239
+00:54:15,240 --> 00:54:17,910
+where folks are welcome to ask questions
+
+1240
+00:54:17,910 --> 00:54:19,533
+and feel confident in doing so.
+
+1241
+00:54:21,360 --> 00:54:23,730
+- And finally, whenever you
+need a really simple set
+
+1242
+00:54:23,730 --> 00:54:26,250
+of rules that are easy to
+remember, that are easy to teach
+
+1243
+00:54:26,250 --> 00:54:27,840
+to new (indistinct) and that can be used
+
+1244
+00:54:27,840 --> 00:54:30,720
+as a tiebreaker when there
+is our decisions to take,
+
+1245
+00:54:30,720 --> 00:54:32,100
+just define tenets.
+
+1246
+00:54:32,100 --> 00:54:35,250
+You have seen ours,
+something similar can be done
+
+1247
+00:54:35,250 --> 00:54:37,980
+and tenets are supposed to
+be really short sentences
+
+1248
+00:54:37,980 --> 00:54:40,530
+that withstand the test of time
+
+1249
+00:54:40,530 --> 00:54:42,480
+and can help driving decisions.
+
+1250
+00:54:42,480 --> 00:54:44,730
+You will find them extremely
+useful when two teams
+
+1251
+00:54:44,730 --> 00:54:46,860
+that maybe are not closely
+working together need
+
+1252
+00:54:46,860 --> 00:54:48,300
+to collaborate to launch a service,
+
+1253
+00:54:48,300 --> 00:54:49,710
+that set of five tenets,
+
+1254
+00:54:49,710 --> 00:54:52,980
+ten tenets is gonna help them
+just building a shared roadmap
+
+1255
+00:54:52,980 --> 00:54:55,680
+and shared outcomes that are
+relevant for the company.
+
+1256
+00:54:57,780 --> 00:55:00,810
+- Alright, well Giorgio and
+I both wanna thank you all
+
+1257
+00:55:00,810 --> 00:55:03,330
+for coming. Feel free to
+take a picture of this slide.
+
+1258
+00:55:03,330 --> 00:55:05,230
+We'll be available outside the room
+
+1259
+00:55:05,230 --> 00:55:08,490
+after the presentation here.
+
+1260
+00:55:08,490 --> 00:55:10,020
+We're obviously passionate
+about this topic
+
+1261
+00:55:10,020 --> 00:55:12,480
+and so we're happy to discuss.
+
+1262
+00:55:12,480 --> 00:55:14,820
+Please complete this session in the,
+
+1263
+00:55:14,820 --> 00:55:17,040
+sorry, the session
+survey in the mobile app.
+
+1264
+00:55:17,040 --> 00:55:19,853
+We'd love your feedback and
+we want to improve next time.
+

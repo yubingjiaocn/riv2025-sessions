@@ -1,0 +1,6080 @@
+1
+00:00:00,309 --> 00:00:02,490
+Morning. Hi, everyone. Um, welcome
+
+2
+00:00:02,490 --> 00:00:03,479
+to our session today.
+
+3
+00:00:03,769 --> 00:00:05,889
+Uh, we'll be talking about Checkpointless
+
+4
+00:00:05,889 --> 00:00:07,889
+and elastic training on Amazon
+
+5
+00:00:07,889 --> 00:00:09,009
+Sage Maker Hyperpod.
+
+6
+00:00:09,528 --> 00:00:11,810
+I am Airud Visvanathan. I'm a senior
+
+7
+00:00:11,810 --> 00:00:14,009
+product manager with the Amazon Sage Maker Hyperpod
+
+8
+00:00:14,009 --> 00:00:16,170
+team. I work primarily
+
+9
+00:00:16,170 --> 00:00:18,318
+on distributed training at scale
+
+10
+00:00:18,318 --> 00:00:20,250
+and framework level optimization.
+
+11
+00:00:20,568 --> 00:00:22,638
+I'm here with uh my colleague,
+
+12
+00:00:22,649 --> 00:00:23,228
+Arun.
+
+13
+00:00:23,769 --> 00:00:26,079
+Hi, everyone. My name is Arun Nagarajan.
+
+14
+00:00:26,329 --> 00:00:28,609
+I'm a principal engineer with the Amazon
+
+15
+00:00:28,609 --> 00:00:29,809
+Sagemaker AI team.
+
+16
+00:00:30,600 --> 00:00:32,639
+I provide technical leadership for many
+
+17
+00:00:32,639 --> 00:00:34,048
+of our products in SageMaker,
+
+18
+00:00:34,759 --> 00:00:35,439
+including Hyperpot.
+
+19
+00:00:36,368 --> 00:00:38,579
+Thanks Arun, and we have a special guest. Um,
+
+20
+00:00:38,689 --> 00:00:40,700
+we also have Antonio from Salesforce.
+
+21
+00:00:41,079 --> 00:00:43,098
+Hey everyone, I'm Antonio. I'm a
+
+22
+00:00:43,098 --> 00:00:45,340
+researcher on our Salesforce AI
+
+23
+00:00:45,340 --> 00:00:47,500
+research team. Um, been using
+
+24
+00:00:47,500 --> 00:00:49,539
+Hyperpod for almost 2
+
+25
+00:00:49,539 --> 00:00:51,700
+years, um, and happy to tell you
+
+26
+00:00:51,700 --> 00:00:53,819
+about some of our experiences and some of the
+
+27
+00:00:53,819 --> 00:00:56,139
+cool things we've been working on with HyperPod.
+
+28
+00:00:57,429 --> 00:00:58,500
+Awesome. Thank you.
+
+29
+00:01:00,329 --> 00:01:01,969
+So let's dive straight in.
+
+30
+00:01:03,848 --> 00:01:06,278
+So, uh, today, here's the agenda for
+
+31
+00:01:06,278 --> 00:01:06,930
+our talk.
+
+32
+00:01:07,409 --> 00:01:09,489
+We'll cover an overview of what
+
+33
+00:01:09,489 --> 00:01:11,189
+Amazon's SageMaker Hyperpod does.
+
+34
+00:01:11,769 --> 00:01:12,308
+We'll
+
+35
+00:01:12,769 --> 00:01:14,930
+set the background on what it takes
+
+36
+00:01:14,930 --> 00:01:17,239
+to train models at scale, and then
+
+37
+00:01:17,250 --> 00:01:19,370
+walk through two new features, elastic training
+
+38
+00:01:19,370 --> 00:01:20,558
+and checkpointless training,
+
+39
+00:01:20,849 --> 00:01:22,989
+uh, followed by a session from Tony
+
+40
+00:01:22,989 --> 00:01:24,510
+and close with a few takeaways.
+
+41
+00:01:25,730 --> 00:01:28,528
+So let's start off with uh what Hyperpod
+
+42
+00:01:28,528 --> 00:01:29,069
+does.
+
+43
+00:01:29,689 --> 00:01:31,540
+Amazon Sage Maker Hyperpod
+
+44
+00:01:32,159 --> 00:01:33,189
+offers you
+
+45
+00:01:34,620 --> 00:01:35,439
+Essentially,
+
+46
+00:01:35,739 --> 00:01:38,159
+purpose-built infrastructure for
+
+47
+00:01:38,299 --> 00:01:40,760
+foundational model training and deployment.
+
+48
+00:01:41,299 --> 00:01:43,439
+With hyperpod, essentially, we've taken away
+
+49
+00:01:43,439 --> 00:01:45,620
+all of the heavy lifting associated
+
+50
+00:01:45,620 --> 00:01:47,620
+with manual cluster
+
+51
+00:01:47,620 --> 00:01:49,859
+creation and managing your
+
+52
+00:01:49,859 --> 00:01:52,400
+own uh self-managed environment,
+
+53
+00:01:52,500 --> 00:01:54,918
+and have sort of built training
+
+54
+00:01:55,058 --> 00:01:57,058
+and deployment stacks up from the
+
+55
+00:01:57,058 --> 00:01:59,299
+ground. Essentially
+
+56
+00:01:59,299 --> 00:02:00,250
+providing you
+
+57
+00:02:00,540 --> 00:02:02,939
+a, a way to improve your efficiency
+
+58
+00:02:02,939 --> 00:02:04,219
+of model training,
+
+59
+00:02:04,620 --> 00:02:06,739
+which in turn reduces the amount of time it
+
+60
+00:02:06,739 --> 00:02:08,979
+takes for you to train and also lowers
+
+61
+00:02:08,979 --> 00:02:09,520
+costs.
+
+62
+00:02:10,338 --> 00:02:12,419
+So the benefits of Hyperpod is that it
+
+63
+00:02:12,419 --> 00:02:14,960
+offers you an extremely resilient training environment.
+
+64
+00:02:15,300 --> 00:02:17,500
+The idea is that when you're training on Hyperpod,
+
+65
+00:02:17,618 --> 00:02:20,020
+you're typically training on multiple
+
+66
+00:02:20,020 --> 00:02:22,088
+AI accelerators or GPU devices,
+
+67
+00:02:22,379 --> 00:02:25,020
+and the idea with Hyperpod is that it proactively
+
+68
+00:02:25,020 --> 00:02:26,985
+screens every. Node or every device
+
+69
+00:02:27,444 --> 00:02:29,633
+that's part of the training cluster for
+
+70
+00:02:29,633 --> 00:02:30,463
+health checks
+
+71
+00:02:30,724 --> 00:02:33,304
+and make sure that the environment is set up correctly
+
+72
+00:02:33,324 --> 00:02:34,883
+to give you the best training performance.
+
+73
+00:02:35,163 --> 00:02:37,264
+All of this is done automatically for you
+
+74
+00:02:37,264 --> 00:02:39,835
+and the environment is managed
+
+75
+00:02:39,835 --> 00:02:41,125
+by Amazon.
+
+76
+00:02:42,288 --> 00:02:44,699
+It also offers an extremely scalable environment
+
+77
+00:02:44,699 --> 00:02:46,038
+for model training where
+
+78
+00:02:46,338 --> 00:02:48,569
+essentially you can run training workloads
+
+79
+00:02:48,569 --> 00:02:50,580
+on single spine topology, where
+
+80
+00:02:50,580 --> 00:02:51,800
+essentially all of these
+
+81
+00:02:52,849 --> 00:02:54,979
+devices are on the same rack and have the
+
+82
+00:02:54,979 --> 00:02:57,038
+same physical wiring, so it gives you the best
+
+83
+00:02:57,618 --> 00:02:59,399
+training throughput and performance.
+
+84
+00:02:59,740 --> 00:03:01,939
+It supports a variety of
+
+85
+00:03:01,939 --> 00:03:04,258
+instance types spanning the newest accelerators
+
+86
+00:03:04,258 --> 00:03:06,419
+for both GPU-based and trainium-based
+
+87
+00:03:06,419 --> 00:03:08,508
+instances. And essentially Hyperpod
+
+88
+00:03:08,508 --> 00:03:10,588
+offers this managed service which
+
+89
+00:03:10,588 --> 00:03:11,939
+is fully observable,
+
+90
+00:03:12,229 --> 00:03:14,770
+lets you highly customize your environment,
+
+91
+00:03:15,149 --> 00:03:15,669
+and
+
+92
+00:03:15,960 --> 00:03:18,270
+has a variety of uh deal armies
+
+93
+00:03:18,270 --> 00:03:19,929
+that can run on Hyperport as well.
+
+94
+00:03:21,689 --> 00:03:24,110
+So here's an overview of what Hyperpot
+
+95
+00:03:24,110 --> 00:03:26,719
+offers. It offers essentially a choice of
+
+96
+00:03:26,719 --> 00:03:29,210
+both Amazon, EKS or Slum for orchestration.
+
+97
+00:03:29,569 --> 00:03:31,929
+It's compatible with a variety of frameworks
+
+98
+00:03:31,929 --> 00:03:33,689
+from PyTorch, Tensorflow,
+
+99
+00:03:34,169 --> 00:03:35,229
+Nemo, and so on.
+
+100
+00:03:35,599 --> 00:03:37,679
+And under the hood, it runs
+
+101
+00:03:37,679 --> 00:03:40,050
+either with the Nvidia
+
+102
+00:03:40,050 --> 00:03:42,229
+uh Nicol libraries, which is the collective
+
+103
+00:03:42,229 --> 00:03:43,270
+communication library,
+
+104
+00:03:43,599 --> 00:03:46,038
+or with the neuron runtime for ranium-based
+
+105
+00:03:46,038 --> 00:03:48,189
+instances, and it also supports both GPU
+
+106
+00:03:48,189 --> 00:03:50,439
+and cranium-based accelerators, and
+
+107
+00:03:50,439 --> 00:03:52,679
+of course you can connect a variety of storage via
+
+108
+00:03:52,679 --> 00:03:53,588
+your data microcide
+
+109
+00:03:54,199 --> 00:03:55,139
+for model training.
+
+110
+00:03:56,368 --> 00:03:57,788
+So, with this background,
+
+111
+00:03:58,050 --> 00:04:00,189
+let's now transition into the crux of the talk.
+
+112
+00:04:01,460 --> 00:04:03,939
+So let's step back and think about some of the fundamental
+
+113
+00:04:03,939 --> 00:04:06,139
+challenges with large scale model
+
+114
+00:04:06,139 --> 00:04:08,288
+training. I'd like to leave
+
+115
+00:04:08,288 --> 00:04:10,469
+this up on the screen for a moment, and
+
+116
+00:04:10,770 --> 00:04:12,229
+the graph here is
+
+117
+00:04:12,569 --> 00:04:14,649
+data from an organization called
+
+118
+00:04:14,649 --> 00:04:16,928
+Epoch AI, and they've tracked usage
+
+119
+00:04:16,928 --> 00:04:19,088
+patterns in terms of cluster sizes used
+
+120
+00:04:19,088 --> 00:04:20,869
+for model training over the past decade.
+
+121
+00:04:21,677 --> 00:04:23,728
+We've seen the size of these clusters
+
+122
+00:04:23,728 --> 00:04:26,127
+grow from 100s of accelerators to 1,000s
+
+123
+00:04:26,127 --> 00:04:28,437
+to now 100s of thousands of accelerators,
+
+124
+00:04:28,807 --> 00:04:31,088
+which is nearly a 20 times
+
+125
+00:04:31,088 --> 00:04:33,127
+increase over the past 10 years. And
+
+126
+00:04:33,127 --> 00:04:35,238
+so cluster sizes are essentially becoming
+
+127
+00:04:35,238 --> 00:04:36,588
+larger as
+
+128
+00:04:36,927 --> 00:04:38,329
+models become more sophisticated.
+
+129
+00:04:39,178 --> 00:04:41,420
+And the challenge is that as you have
+
+130
+00:04:41,420 --> 00:04:42,470
+larger clusters,
+
+131
+00:04:42,869 --> 00:04:44,869
+the likelihood of failure also goes
+
+132
+00:04:44,869 --> 00:04:46,869
+up. So what we've got
+
+133
+00:04:46,869 --> 00:04:48,949
+here, and let me walk you through this chart,
+
+134
+00:04:49,009 --> 00:04:49,649
+is that
+
+135
+00:04:50,028 --> 00:04:52,199
+every column represents a different
+
+136
+00:04:52,199 --> 00:04:53,019
+cluster size.
+
+137
+00:04:53,309 --> 00:04:55,829
+So a cluster with 4 nodes essentially has
+
+138
+00:04:56,019 --> 00:04:58,069
+32 GPUs, and we go all the
+
+139
+00:04:58,069 --> 00:05:00,269
+way up to 1000 plus
+
+140
+00:05:00,269 --> 00:05:02,350
+nodes, which is upwards of 8000
+
+141
+00:05:02,350 --> 00:05:03,069
+GPUs.
+
+142
+00:05:03,389 --> 00:05:04,809
+And every row out here
+
+143
+00:05:05,189 --> 00:05:06,608
+represents the probability
+
+144
+00:05:06,910 --> 00:05:09,189
+of a node in that cluster failing
+
+145
+00:05:09,189 --> 00:05:10,389
+during a specific hour.
+
+146
+00:05:11,108 --> 00:05:11,910
+And so
+
+147
+00:05:12,350 --> 00:05:14,389
+the way we read this chart is that essentially
+
+148
+00:05:14,389 --> 00:05:16,329
+as cluster sizes grow larger,
+
+149
+00:05:16,869 --> 00:05:18,910
+the likelihood of a failure
+
+150
+00:05:18,910 --> 00:05:20,949
+actually increases, which means that if you're
+
+151
+00:05:20,949 --> 00:05:23,290
+on a cluster with 1000 nodes
+
+152
+00:05:23,509 --> 00:05:26,149
+and you have a probability of failure at 0.02%,
+
+153
+00:05:26,509 --> 00:05:28,509
+that cluster is going to likely
+
+154
+00:05:28,509 --> 00:05:30,670
+experience a fault every 4
+
+155
+00:05:30,670 --> 00:05:31,528
+or 5 hours.
+
+156
+00:05:32,600 --> 00:05:34,829
+So, let's just think about this practically, right, which
+
+157
+00:05:34,829 --> 00:05:36,899
+means that over the duration of a single day's
+
+158
+00:05:36,899 --> 00:05:37,738
+worth of training,
+
+159
+00:05:38,000 --> 00:05:40,079
+this cluster is gonna be experiencing 4 or
+
+160
+00:05:40,079 --> 00:05:40,889
+5 faults,
+
+161
+00:05:41,199 --> 00:05:43,540
+each of which can probably take upwards of 1 hour
+
+162
+00:05:43,540 --> 00:05:44,939
+for recovery operations.
+
+163
+00:05:46,119 --> 00:05:47,028
+Think about this,
+
+164
+00:05:47,309 --> 00:05:49,629
+that's essentially 1000
+
+165
+00:05:49,629 --> 00:05:51,670
+nodes, 8000 GPUs
+
+166
+00:05:51,670 --> 00:05:53,738
+sitting completely idle during recovery
+
+167
+00:05:53,738 --> 00:05:55,750
+operations, just waiting for
+
+168
+00:05:55,750 --> 00:05:58,028
+um recovery and resuming from your checkpoint.
+
+169
+00:05:58,470 --> 00:06:00,750
+That's essentially a significant
+
+170
+00:06:00,750 --> 00:06:01,329
+challenge.
+
+171
+00:06:01,709 --> 00:06:03,170
+So here's what happens when
+
+172
+00:06:03,428 --> 00:06:05,269
+model training actually kicks off.
+
+173
+00:06:05,709 --> 00:06:07,790
+So, typically with model training, you have
+
+174
+00:06:07,790 --> 00:06:10,108
+a sequence of steps where at every
+
+175
+00:06:10,108 --> 00:06:12,189
+step, there's some amount of data that the model
+
+176
+00:06:12,189 --> 00:06:14,278
+sees, does a weights
+
+177
+00:06:14,278 --> 00:06:16,048
+update and then goes on to the next step.
+
+178
+00:06:17,000 --> 00:06:19,319
+There are periodically model snapshots
+
+179
+00:06:19,319 --> 00:06:21,189
+or or checkpoints that get saved,
+
+180
+00:06:21,519 --> 00:06:23,639
+and checkpoints are typically done at
+
+181
+00:06:23,639 --> 00:06:25,809
+a, you know, a a a cadence or
+
+182
+00:06:25,809 --> 00:06:27,019
+predefined frequency.
+
+183
+00:06:27,559 --> 00:06:29,639
+And anytime there's a failure, so in this case
+
+184
+00:06:29,639 --> 00:06:31,670
+there's a failure that happens after step
+
+185
+00:06:31,670 --> 00:06:32,428
+number 4,
+
+186
+00:06:32,720 --> 00:06:34,759
+you need to essentially roll back
+
+187
+00:06:34,759 --> 00:06:36,088
+to your last safe checkpoint,
+
+188
+00:06:36,519 --> 00:06:38,720
+redo steps 3 and 4 because they happened
+
+189
+00:06:38,720 --> 00:06:40,720
+after the last safe checkpoint, and then resume
+
+190
+00:06:40,720 --> 00:06:43,119
+training. And so during this entire
+
+191
+00:06:43,119 --> 00:06:45,298
+process of checkpoint-based recovery,
+
+192
+00:06:45,509 --> 00:06:47,548
+you need to roll back training, redo
+
+193
+00:06:47,548 --> 00:06:49,540
+a bunch of steps, and then resume training,
+
+194
+00:06:49,829 --> 00:06:52,290
+which means that you're essentially
+
+195
+00:06:52,389 --> 00:06:54,420
+paying a cost where a cluster is sitting idle,
+
+196
+00:06:54,629 --> 00:06:56,629
+and you're redoing work that was already previously
+
+197
+00:06:56,629 --> 00:06:58,689
+done. So
+
+198
+00:06:58,689 --> 00:07:00,809
+that's one challenge where as cluster
+
+199
+00:07:00,809 --> 00:07:03,048
+sizes grow, the probability of failure tends to
+
+200
+00:07:03,048 --> 00:07:05,160
+increase, and recovery
+
+201
+00:07:05,160 --> 00:07:07,509
+from failure also starts to become more complex.
+
+202
+00:07:08,548 --> 00:07:09,329
+Additionally
+
+203
+00:07:10,178 --> 00:07:12,449
+There are other challenges with clusters
+
+204
+00:07:12,449 --> 00:07:14,579
+that become larger. So the larger the cluster,
+
+205
+00:07:14,819 --> 00:07:16,819
+the more likely is this cluster going to be used
+
+206
+00:07:16,819 --> 00:07:18,838
+by multiple teams within the same organization.
+
+207
+00:07:19,459 --> 00:07:21,600
+And so you can think of this cluster running
+
+208
+00:07:21,819 --> 00:07:23,488
+a bunch of fine tuning jobs,
+
+209
+00:07:23,819 --> 00:07:25,238
+short-lived experiments,
+
+210
+00:07:25,649 --> 00:07:26,928
+inference workloads,
+
+211
+00:07:27,338 --> 00:07:29,399
+long-lived pre-training runs, and so on.
+
+212
+00:07:29,699 --> 00:07:31,238
+And even if you look at
+
+213
+00:07:31,579 --> 00:07:33,209
+specific inference, you know,
+
+214
+00:07:33,540 --> 00:07:34,488
+workload patterns,
+
+215
+00:07:34,819 --> 00:07:36,983
+those are. right, so you have
+
+216
+00:07:36,983 --> 00:07:39,064
+essentially a peak during the day, and
+
+217
+00:07:39,064 --> 00:07:40,403
+then a drop off at night,
+
+218
+00:07:40,694 --> 00:07:42,744
+which means that your cluster utilization
+
+219
+00:07:42,744 --> 00:07:43,564
+is sort of
+
+220
+00:07:43,824 --> 00:07:45,903
+going to vary over time, and there are going to be
+
+221
+00:07:45,903 --> 00:07:47,944
+these pockets of opportunity at night
+
+222
+00:07:47,944 --> 00:07:50,024
+and during weekends where the cluster is
+
+223
+00:07:50,024 --> 00:07:51,125
+completely underutilized.
+
+224
+00:07:51,858 --> 00:07:54,048
+Again, this means millions of dollars
+
+225
+00:07:54,048 --> 00:07:55,410
+potentially sitting idle,
+
+226
+00:07:55,869 --> 00:07:58,189
+where other workloads could have opportunistically
+
+227
+00:07:58,189 --> 00:07:59,250
+used this capacity.
+
+228
+00:07:59,750 --> 00:08:01,949
+So, with that background, let's talk
+
+229
+00:08:01,949 --> 00:08:03,988
+about the first feature that we've launched. It's
+
+230
+00:08:03,988 --> 00:08:05,988
+called elastic training on Amazon Sage
+
+231
+00:08:05,988 --> 00:08:06,709
+Maker Hyperpod.
+
+232
+00:08:08,189 --> 00:08:10,470
+So the fundamental challenge that we're solving
+
+233
+00:08:10,470 --> 00:08:11,629
+with elastic training
+
+234
+00:08:11,988 --> 00:08:15,009
+is this problem of infrastructure underutilization.
+
+235
+00:08:15,548 --> 00:08:17,588
+And going back to the previous graph where
+
+236
+00:08:17,588 --> 00:08:18,160
+we saw,
+
+237
+00:08:18,509 --> 00:08:20,970
+you know, diurnal cluster utilization patterns.
+
+238
+00:08:21,790 --> 00:08:22,329
+We
+
+239
+00:08:22,588 --> 00:08:24,588
+wanted to think about ways to optimize cluster
+
+240
+00:08:24,588 --> 00:08:26,410
+utilization, and the fundamental
+
+241
+00:08:26,670 --> 00:08:27,949
+challenge that we have today
+
+242
+00:08:28,230 --> 00:08:30,230
+is that training workloads are
+
+243
+00:08:30,230 --> 00:08:32,428
+fixed in the sense that once you kick off a
+
+244
+00:08:32,428 --> 00:08:33,168
+training job,
+
+245
+00:08:33,590 --> 00:08:35,750
+you have the same number of nodes and the same number
+
+246
+00:08:35,750 --> 00:08:37,070
+of accelerators
+
+247
+00:08:37,349 --> 00:08:39,460
+that participate in this job from start to
+
+248
+00:08:39,460 --> 00:08:40,048
+finish.
+
+249
+00:08:40,509 --> 00:08:42,590
+And what this means is that anytime
+
+250
+00:08:42,590 --> 00:08:44,830
+there are more resources available, these
+
+251
+00:08:44,830 --> 00:08:46,989
+might be nodes that free up from other jobs
+
+252
+00:08:46,989 --> 00:08:47,830
+that had finished.
+
+253
+00:08:48,489 --> 00:08:50,489
+You need to essentially stop this training
+
+254
+00:08:50,489 --> 00:08:52,889
+job, reconfigure a bunch of hyperparametters,
+
+255
+00:08:52,960 --> 00:08:54,349
+and then resume training to use
+
+256
+00:08:54,678 --> 00:08:56,009
+the additional set of resources.
+
+257
+00:08:56,899 --> 00:08:58,940
+On the flip side, let's say there's a higher
+
+258
+00:08:58,940 --> 00:09:00,379
+priority uh
+
+259
+00:09:00,739 --> 00:09:03,019
+workload that's, that needs nodes occupied
+
+260
+00:09:03,019 --> 00:09:04,340
+by this current training job.
+
+261
+00:09:04,940 --> 00:09:07,070
+The only way to sort of give back nodes
+
+262
+00:09:07,070 --> 00:09:09,200
+is to halt this training job completely
+
+263
+00:09:09,340 --> 00:09:10,538
+and return resources.
+
+264
+00:09:11,019 --> 00:09:13,019
+So it's this all or nothing choice
+
+265
+00:09:13,019 --> 00:09:15,570
+that customers face, where you have to
+
+266
+00:09:15,570 --> 00:09:17,570
+either overprovision the cluster to ensure training
+
+267
+00:09:17,570 --> 00:09:18,359
+continuity,
+
+268
+00:09:18,700 --> 00:09:21,019
+or essentially stop the job entirely
+
+269
+00:09:21,019 --> 00:09:22,418
+to give back resources.
+
+270
+00:09:23,399 --> 00:09:25,509
+And so this entire overhead of workload
+
+271
+00:09:25,509 --> 00:09:26,080
+management
+
+272
+00:09:27,009 --> 00:09:29,739
+can mean customers spend hours sort of observing
+
+273
+00:09:30,109 --> 00:09:31,229
+resources in their cluster,
+
+274
+00:09:31,639 --> 00:09:33,879
+manually defining hooks to dynamically scale
+
+275
+00:09:33,879 --> 00:09:35,599
+up or scale down their training workloads.
+
+276
+00:09:36,649 --> 00:09:38,769
+So, with elastic scaling on
+
+277
+00:09:38,769 --> 00:09:40,239
+Amazon Sage Maker Hyperpod,
+
+278
+00:09:40,599 --> 00:09:43,129
+we've enabled your training workloads to dynamically
+
+279
+00:09:43,129 --> 00:09:45,408
+scale up and down in response
+
+280
+00:09:45,408 --> 00:09:46,440
+to available um
+
+281
+00:09:47,729 --> 00:09:49,149
+available cluster capacity.
+
+282
+00:09:49,450 --> 00:09:51,349
+And what this means is that
+
+283
+00:09:51,889 --> 00:09:54,129
+training jobs on Hyperpod can now
+
+284
+00:09:54,129 --> 00:09:56,369
+automatically scale up when free
+
+285
+00:09:56,369 --> 00:09:58,369
+resources become available, and scale
+
+286
+00:09:58,369 --> 00:10:00,450
+back down when those resources are
+
+287
+00:10:00,450 --> 00:10:02,330
+requested by higher priority workloads.
+
+288
+00:10:03,288 --> 00:10:04,918
+All of this happens under the hood.
+
+289
+00:10:05,210 --> 00:10:07,250
+You simply configure your training job,
+
+290
+00:10:07,450 --> 00:10:08,029
+kick it off,
+
+291
+00:10:08,450 --> 00:10:10,570
+and then anytime new resources become available,
+
+292
+00:10:10,609 --> 00:10:12,729
+the job scales up and it scales back
+
+293
+00:10:12,729 --> 00:10:15,070
+down when those resources get consumed.
+
+294
+00:10:16,250 --> 00:10:18,298
+In turn, this simplifies your operations
+
+295
+00:10:18,298 --> 00:10:20,340
+because you no longer need to manually babysit
+
+296
+00:10:20,340 --> 00:10:21,099
+the cluster,
+
+297
+00:10:21,500 --> 00:10:23,779
+observe free nodes, and reconfigure
+
+298
+00:10:23,779 --> 00:10:26,139
+these training parameters manually. This
+
+299
+00:10:26,139 --> 00:10:28,178
+is taken care of completely under the
+
+300
+00:10:28,178 --> 00:10:30,178
+hood, and it also
+
+301
+00:10:30,178 --> 00:10:32,418
+preserves training convergence by ensuring
+
+302
+00:10:32,418 --> 00:10:34,460
+that the global batch size or the
+
+303
+00:10:34,460 --> 00:10:35,519
+amount of data that
+
+304
+00:10:35,820 --> 00:10:38,340
+is seen at every step, remains constant
+
+305
+00:10:38,340 --> 00:10:39,840
+across the duration of the training job.
+
+306
+00:10:41,158 --> 00:10:41,859
+With this,
+
+307
+00:10:42,158 --> 00:10:44,558
+customers can easily get started either
+
+308
+00:10:44,558 --> 00:10:46,700
+through the Hyperpod recipes, or
+
+309
+00:10:46,918 --> 00:10:48,918
+you can make custom modifications for
+
+310
+00:10:48,918 --> 00:10:51,259
+your own scripts to accelerate your training workflow.
+
+311
+00:10:52,200 --> 00:10:53,538
+So here's what it looks like
+
+312
+00:10:53,879 --> 00:10:55,960
+um in an animation. So let's say you start off a
+
+313
+00:10:55,960 --> 00:10:57,070
+job with 4 nodes.
+
+314
+00:10:57,399 --> 00:10:59,558
+That job now can scale up to 8
+
+315
+00:10:59,558 --> 00:11:01,668
+nodes because 4 additional nodes
+
+316
+00:11:01,668 --> 00:11:02,219
+became available.
+
+317
+00:11:02,960 --> 00:11:05,090
+It's running at 8 nodes, 4 more nodes
+
+318
+00:11:05,090 --> 00:11:07,288
+become available, so we've gone from 4 to 8
+
+319
+00:11:07,288 --> 00:11:08,029
+to 12.
+
+320
+00:11:09,538 --> 00:11:11,590
+At 12 nodes, what happens is there might
+
+321
+00:11:11,590 --> 00:11:13,710
+be a higher priority workload that needs
+
+322
+00:11:13,710 --> 00:11:16,308
+a couple of nodes. And so instead of halting
+
+323
+00:11:16,308 --> 00:11:18,428
+completely, this job is able to scale back
+
+324
+00:11:18,428 --> 00:11:21,029
+down from 12 nodes to 8 nodes and
+
+325
+00:11:21,029 --> 00:11:22,450
+continue to run in the cluster.
+
+326
+00:11:23,109 --> 00:11:25,469
+Once resources open up, it scales back up to 12
+
+327
+00:11:25,469 --> 00:11:26,739
+nodes and concludes.
+
+328
+00:11:27,190 --> 00:11:27,849
+What's
+
+329
+00:11:28,389 --> 00:11:30,668
+notable to observe here is that despite
+
+330
+00:11:30,668 --> 00:11:33,210
+the number of nodes participating in this workload
+
+331
+00:11:33,509 --> 00:11:34,769
+fluctuating over time,
+
+332
+00:11:35,109 --> 00:11:37,269
+the loss function continues to decrease,
+
+333
+00:11:37,500 --> 00:11:38,129
+which is.
+
+334
+00:11:39,418 --> 00:11:41,590
+Most important for training continuity.
+
+335
+00:11:42,009 --> 00:11:44,090
+With that background, let's uh dive under
+
+336
+00:11:44,090 --> 00:11:46,129
+the hood, and I invite Arun to
+
+337
+00:11:46,129 --> 00:11:46,750
+walk us through
+
+338
+00:11:47,129 --> 00:11:49,450
+some of these details in terms of how elastic
+
+339
+00:11:49,450 --> 00:11:50,229
+training works.
+
+340
+00:11:50,678 --> 00:11:51,408
+Arun, over to you.
+
+341
+00:11:54,820 --> 00:11:59,229
+Thanks. Thanks,
+
+342
+00:11:59,308 --> 00:12:01,038
+Aero Now,
+
+343
+00:12:01,849 --> 00:12:04,450
+let's dive into the technical architecture
+
+344
+00:12:04,450 --> 00:12:06,168
+behind elastic training.
+
+345
+00:12:07,509 --> 00:12:09,308
+We have modified the
+
+346
+00:12:10,000 --> 00:12:12,038
+Hyperpot training operator to
+
+347
+00:12:12,038 --> 00:12:13,639
+support elastic training mode.
+
+348
+00:12:14,918 --> 00:12:16,099
+The operator
+
+349
+00:12:16,359 --> 00:12:18,950
+works through 4 key features,
+
+350
+00:12:19,158 --> 00:12:20,379
+and we will talk through them.
+
+351
+00:12:20,719 --> 00:12:23,000
+The first is the continuous cluster
+
+352
+00:12:23,000 --> 00:12:23,599
+monitoring.
+
+353
+00:12:24,599 --> 00:12:26,599
+Where whenever you have new
+
+354
+00:12:26,599 --> 00:12:28,599
+resources available in your cluster, for
+
+355
+00:12:28,599 --> 00:12:30,739
+example, you scaled up your cluster
+
+356
+00:12:31,019 --> 00:12:33,399
+or a currently running training job
+
+357
+00:12:33,399 --> 00:12:33,969
+completed,
+
+358
+00:12:34,479 --> 00:12:35,940
+new resources are available,
+
+359
+00:12:36,210 --> 00:12:38,759
+and this cluster sends a scale-up
+
+360
+00:12:38,759 --> 00:12:39,639
+notification
+
+361
+00:12:40,029 --> 00:12:40,940
+for your jobs.
+
+362
+00:12:42,200 --> 00:12:44,548
+The second is the graceful preemption.
+
+363
+00:12:45,830 --> 00:12:48,029
+Whenever you have a lower priority
+
+364
+00:12:48,029 --> 00:12:50,469
+job, currently the only
+
+365
+00:12:50,469 --> 00:12:52,509
+option for you to give up resources
+
+366
+00:12:52,509 --> 00:12:54,048
+is to fully terminate the job.
+
+367
+00:12:55,649 --> 00:12:57,629
+You cannot give partial resources.
+
+368
+00:12:58,019 --> 00:13:00,058
+Even if the higher priority job did
+
+369
+00:13:00,058 --> 00:13:00,940
+not need
+
+370
+00:13:01,298 --> 00:13:03,340
+all of the resources occupied by the
+
+371
+00:13:03,340 --> 00:13:04,428
+lower priority job,
+
+372
+00:13:05,000 --> 00:13:07,250
+we simply have to terminate the lower priority
+
+373
+00:13:07,250 --> 00:13:09,219
+job. With our system,
+
+374
+00:13:09,840 --> 00:13:11,869
+We are offering an ability so that
+
+375
+00:13:11,869 --> 00:13:12,940
+you can continue
+
+376
+00:13:13,359 --> 00:13:14,979
+to run the lower priority job
+
+377
+00:13:15,239 --> 00:13:17,460
+with reduced resources.
+
+378
+00:13:18,548 --> 00:13:20,548
+Sure, the lower priority job will
+
+379
+00:13:20,548 --> 00:13:21,250
+run with
+
+380
+00:13:21,668 --> 00:13:22,548
+lower throughput,
+
+381
+00:13:23,029 --> 00:13:25,109
+but your cluster utilization is going
+
+382
+00:13:25,109 --> 00:13:25,798
+to be high.
+
+383
+00:13:27,500 --> 00:13:28,889
+This is a game changer
+
+384
+00:13:29,149 --> 00:13:31,178
+because of two things. One is that
+
+385
+00:13:31,190 --> 00:13:31,928
+previously
+
+386
+00:13:32,229 --> 00:13:34,308
+the lower priority job, which would have been
+
+387
+00:13:34,308 --> 00:13:35,070
+kicked out,
+
+388
+00:13:35,389 --> 00:13:37,639
+is currently running and making progress.
+
+389
+00:13:37,950 --> 00:13:40,229
+And the second thing is that your cluster
+
+390
+00:13:40,229 --> 00:13:42,308
+utilization previously would have been
+
+391
+00:13:42,308 --> 00:13:44,428
+lower because nobody was going to
+
+392
+00:13:44,428 --> 00:13:45,509
+use that compute.
+
+393
+00:13:46,070 --> 00:13:47,769
+Now it's going to be used for
+
+394
+00:13:48,029 --> 00:13:50,308
+the lower priority job to make progress.
+
+395
+00:13:53,019 --> 00:13:55,099
+The third part is the automatic training
+
+396
+00:13:55,099 --> 00:13:56,678
+stack reconfiguration,
+
+397
+00:13:57,219 --> 00:13:59,548
+and You may know that whenever
+
+398
+00:13:59,548 --> 00:14:01,729
+you have to scale your training job
+
+399
+00:14:02,099 --> 00:14:04,178
+from Smaller count
+
+400
+00:14:04,178 --> 00:14:06,308
+to a larger count or vice versa,
+
+401
+00:14:07,139 --> 00:14:09,500
+you have to adjust the training parameters
+
+402
+00:14:09,500 --> 00:14:10,519
+which are critical
+
+403
+00:14:10,820 --> 00:14:13,019
+to maintaining the training quality and
+
+404
+00:14:13,019 --> 00:14:13,779
+convergence.
+
+405
+00:14:14,710 --> 00:14:16,830
+And you typically have to manually
+
+406
+00:14:16,830 --> 00:14:19,109
+adjust these parameters and restart your job
+
+407
+00:14:19,109 --> 00:14:21,389
+whenever you change your world size.
+
+408
+00:14:22,440 --> 00:14:23,859
+Our system offers you
+
+409
+00:14:24,320 --> 00:14:26,899
+an ability to specify scaling policies.
+
+410
+00:14:27,658 --> 00:14:28,460
+So that
+
+411
+00:14:28,859 --> 00:14:29,418
+you can.
+
+412
+00:14:30,570 --> 00:14:32,908
+You can tell sage maker, here is the
+
+413
+00:14:33,369 --> 00:14:34,590
+set of parameters
+
+414
+00:14:34,889 --> 00:14:36,830
+which we need to apply for various
+
+415
+00:14:37,168 --> 00:14:38,048
+world sizes.
+
+416
+00:14:39,399 --> 00:14:41,570
+And you don't have to manually be
+
+417
+00:14:41,570 --> 00:14:42,798
+involved in this process.
+
+418
+00:14:43,250 --> 00:14:45,288
+The training operator automatically
+
+419
+00:14:45,288 --> 00:14:47,649
+applies these training parameters
+
+420
+00:14:47,928 --> 00:14:50,090
+at the right point whenever the scaling activities
+
+421
+00:14:50,090 --> 00:14:52,678
+happen. And
+
+422
+00:14:52,678 --> 00:14:54,989
+the 4th 1 is the automated workload
+
+423
+00:14:54,989 --> 00:14:56,399
+management where
+
+424
+00:14:58,080 --> 00:15:00,599
+The training operator works
+
+425
+00:15:00,599 --> 00:15:03,000
+with the hyperpower task governance system
+
+426
+00:15:03,000 --> 00:15:05,479
+so that your cluster utilization is maintained
+
+427
+00:15:05,479 --> 00:15:08,340
+high. Your administrator
+
+428
+00:15:08,479 --> 00:15:10,979
+can continue to set the policies
+
+429
+00:15:11,119 --> 00:15:12,700
+on limits and quota
+
+430
+00:15:13,000 --> 00:15:15,440
+on the workloads and teams and
+
+431
+00:15:15,719 --> 00:15:17,428
+projects involved in your cluster,
+
+432
+00:15:17,759 --> 00:15:19,840
+and the elastic training still
+
+433
+00:15:19,840 --> 00:15:21,099
+respects those policies
+
+434
+00:15:21,359 --> 00:15:21,940
+so that
+
+435
+00:15:22,239 --> 00:15:24,239
+your cluster utilization can
+
+436
+00:15:24,239 --> 00:15:25,178
+be maintained high.
+
+437
+00:15:26,710 --> 00:15:28,609
+The key thing to note here is that
+
+438
+00:15:28,869 --> 00:15:31,190
+all of this is happening automatically.
+
+439
+00:15:31,950 --> 00:15:33,149
+Your data scientists
+
+440
+00:15:33,418 --> 00:15:34,928
+can focus on model building
+
+441
+00:15:35,269 --> 00:15:37,989
+and not have to worry about infrastructure
+
+442
+00:15:37,989 --> 00:15:41,690
+stuff. Now,
+
+443
+00:15:41,700 --> 00:15:43,940
+building on that understanding, let's
+
+444
+00:15:43,940 --> 00:15:44,558
+walk through
+
+445
+00:15:45,019 --> 00:15:47,058
+how the system works end
+
+446
+00:15:47,058 --> 00:15:49,840
+to end during one of these scaling activities.
+
+447
+00:15:50,379 --> 00:15:52,700
+As we talked about, the system continuously
+
+448
+00:15:52,700 --> 00:15:55,250
+monitors changes in resources,
+
+449
+00:15:55,849 --> 00:15:58,219
+including addition or removal of resources.
+
+450
+00:16:00,879 --> 00:16:03,029
+Once the system observes a
+
+451
+00:16:03,029 --> 00:16:03,668
+change,
+
+452
+00:16:04,109 --> 00:16:06,288
+it kicks off a scaling
+
+453
+00:16:06,750 --> 00:16:08,859
+process. And
+
+454
+00:16:08,869 --> 00:16:11,259
+this system will send a synchronized
+
+455
+00:16:11,259 --> 00:16:13,658
+coordination signal to all the training
+
+456
+00:16:13,658 --> 00:16:14,239
+processes.
+
+457
+00:16:15,529 --> 00:16:17,690
+Tell that a scaling
+
+458
+00:16:17,690 --> 00:16:19,009
+event is imminent.
+
+459
+00:16:19,529 --> 00:16:21,450
+Now the training processes,
+
+460
+00:16:21,769 --> 00:16:22,548
+they know that
+
+461
+00:16:22,849 --> 00:16:24,330
+they need to take a checkpoint
+
+462
+00:16:24,690 --> 00:16:26,969
+so that at a later point in time, you can resume.
+
+463
+00:16:28,879 --> 00:16:30,899
+The checkpoint typically consists of the
+
+464
+00:16:30,899 --> 00:16:32,750
+optimizer state and model weights,
+
+465
+00:16:33,279 --> 00:16:35,320
+and presumably your training code
+
+466
+00:16:35,320 --> 00:16:36,178
+already has
+
+467
+00:16:37,950 --> 00:16:39,840
+Code for taking the checkpoints
+
+468
+00:16:40,298 --> 00:16:41,558
+in the traditional sense.
+
+469
+00:16:43,719 --> 00:16:45,798
+Now that the operator has
+
+470
+00:16:45,798 --> 00:16:47,590
+told all the training processes that,
+
+471
+00:16:47,879 --> 00:16:49,479
+hey, you need to go take a checkpoint,
+
+472
+00:16:49,759 --> 00:16:52,019
+now the the training operator will
+
+473
+00:16:52,239 --> 00:16:54,019
+terminate all the training processes.
+
+474
+00:16:55,000 --> 00:16:56,308
+And restarts them
+
+475
+00:16:56,849 --> 00:16:58,889
+with a new configuration, that would be
+
+476
+00:16:58,889 --> 00:17:01,048
+either with more number of training processes
+
+477
+00:17:01,048 --> 00:17:03,168
+if it's a scale-up event or a lesser number
+
+478
+00:17:03,168 --> 00:17:05,250
+of training processes if it's a scale down
+
+479
+00:17:05,250 --> 00:17:07,577
+event. And when these training
+
+480
+00:17:07,577 --> 00:17:08,388
+processes bootstrap,
+
+481
+00:17:08,868 --> 00:17:11,067
+they realize that they have been restarted, they
+
+482
+00:17:11,067 --> 00:17:12,448
+will load the checkpoint,
+
+483
+00:17:13,229 --> 00:17:15,347
+understand that they need to reconfigure and
+
+484
+00:17:15,347 --> 00:17:16,648
+redistribute the checkpoint,
+
+485
+00:17:16,979 --> 00:17:18,208
+and they will continue training.
+
+486
+00:17:19,390 --> 00:17:21,390
+All of this happens automatically for
+
+487
+00:17:21,390 --> 00:17:23,449
+you, and it takes
+
+488
+00:17:23,828 --> 00:17:25,969
+a few seconds for this to complete,
+
+489
+00:17:26,108 --> 00:17:28,289
+so that your training job can continue
+
+490
+00:17:28,509 --> 00:17:30,588
+and your GPUs don't have to sit
+
+491
+00:17:30,588 --> 00:17:35,439
+idle. All
+
+492
+00:17:35,439 --> 00:17:37,479
+right, now to the fun part. How do you get
+
+493
+00:17:37,479 --> 00:17:38,059
+started?
+
+494
+00:17:38,598 --> 00:17:40,680
+We have made this incredibly simple
+
+495
+00:17:40,680 --> 00:17:41,838
+for you to get started.
+
+496
+00:17:42,640 --> 00:17:44,789
+If you are using standard architectures
+
+497
+00:17:44,838 --> 00:17:46,420
+like Lama, Queen, Deep Seek.
+
+498
+00:17:47,989 --> 00:17:49,130
+You can get started
+
+499
+00:17:49,420 --> 00:17:51,630
+with zero code change. That's right. There
+
+500
+00:17:51,630 --> 00:17:52,910
+is no code change needed.
+
+501
+00:17:54,199 --> 00:17:55,338
+All you have to do is
+
+502
+00:17:55,640 --> 00:17:56,858
+bring up, bring in your data
+
+503
+00:17:57,239 --> 00:17:58,299
+and set up the
+
+504
+00:17:58,719 --> 00:18:00,838
+minimum note count and maximum note count,
+
+505
+00:18:01,118 --> 00:18:03,439
+and that's it. You can kick off the training
+
+506
+00:18:03,439 --> 00:18:05,000
+on hyperpod with the
+
+507
+00:18:05,259 --> 00:18:07,880
+QBCTL command or with the Hyperpod
+
+508
+00:18:07,880 --> 00:18:09,618
+CLI and you're good to go.
+
+509
+00:18:10,160 --> 00:18:12,358
+The Hyperpod recipes do
+
+510
+00:18:12,358 --> 00:18:14,140
+all the heavy lifting needed,
+
+511
+00:18:14,759 --> 00:18:16,920
+including setting the right parameters to
+
+512
+00:18:16,920 --> 00:18:19,098
+invoke the Hyperpod training operator
+
+513
+00:18:19,719 --> 00:18:21,420
+to be running in an elastic mode.
+
+514
+00:18:21,699 --> 00:18:22,559
+And also
+
+515
+00:18:22,900 --> 00:18:25,059
+supplying the elastic scaling
+
+516
+00:18:25,059 --> 00:18:27,380
+policies needed for
+
+517
+00:18:27,380 --> 00:18:29,358
+various node counts so that
+
+518
+00:18:29,739 --> 00:18:32,098
+the learning rate and batch size parameters
+
+519
+00:18:32,180 --> 00:18:34,500
+are optimized for various node counts.
+
+520
+00:18:35,759 --> 00:18:37,828
+Now, if you, if you
+
+521
+00:18:37,828 --> 00:18:39,259
+have advanced setup
+
+522
+00:18:39,719 --> 00:18:42,150
+and you have custom training scripts,
+
+523
+00:18:42,430 --> 00:18:44,439
+then we have a path for adoption as well. This
+
+524
+00:18:44,439 --> 00:18:45,838
+is slightly more involved.
+
+525
+00:18:47,130 --> 00:18:49,449
+Where you have to make some changes to the
+
+526
+00:18:49,449 --> 00:18:50,449
+job specification.
+
+527
+00:18:51,449 --> 00:18:53,459
+And you need to supply the elastic
+
+528
+00:18:53,459 --> 00:18:55,559
+scaling policy where you have to say,
+
+529
+00:18:56,219 --> 00:18:58,259
+The minimum replicas needed, maximum
+
+530
+00:18:58,259 --> 00:19:00,420
+replicas needed, and the scaling unit,
+
+531
+00:19:00,500 --> 00:19:01,358
+which is what we call
+
+532
+00:19:01,858 --> 00:19:03,400
+the incremental step count.
+
+533
+00:19:05,229 --> 00:19:07,229
+Then you need to make some changes to
+
+534
+00:19:07,229 --> 00:19:09,368
+the training script itself.
+
+535
+00:19:10,660 --> 00:19:12,509
+Where you have to import the
+
+536
+00:19:13,279 --> 00:19:14,098
+Elastic
+
+537
+00:19:14,640 --> 00:19:16,559
+event handler from our elastic agent.
+
+538
+00:19:17,949 --> 00:19:19,209
+And you have to handle the
+
+539
+00:19:19,509 --> 00:19:21,709
+events sent by our operator. Remember
+
+540
+00:19:21,709 --> 00:19:22,769
+how we talked about
+
+541
+00:19:23,108 --> 00:19:25,529
+the operator being responsible for notifying
+
+542
+00:19:25,529 --> 00:19:27,549
+all the training processes that a scaling
+
+543
+00:19:27,549 --> 00:19:29,750
+event is imminent, and this is the code
+
+544
+00:19:29,750 --> 00:19:30,479
+behind that.
+
+545
+00:19:30,910 --> 00:19:32,439
+You can see that you can,
+
+546
+00:19:32,699 --> 00:19:34,930
+you can register for those notifications
+
+547
+00:19:35,108 --> 00:19:36,650
+and you can invoke your
+
+548
+00:19:37,029 --> 00:19:39,539
+existing checkpoint load and save primitives,
+
+549
+00:19:39,989 --> 00:19:41,108
+and that's all you need to do.
+
+550
+00:19:42,368 --> 00:19:44,588
+I want to highlight that even with
+
+551
+00:19:45,358 --> 00:19:47,170
+the custom adoption path.
+
+552
+00:19:48,029 --> 00:19:50,108
+The heavy lifting is done
+
+553
+00:19:50,108 --> 00:19:51,568
+still by the operator
+
+554
+00:19:51,910 --> 00:19:54,019
+on detecting the resource changes,
+
+555
+00:19:54,108 --> 00:19:55,868
+notifying all the training processes,
+
+556
+00:19:56,189 --> 00:19:58,779
+terminating them, and restarting them with a new configuration,
+
+557
+00:19:58,959 --> 00:20:01,269
+and applying various scaling policies. All
+
+558
+00:20:01,269 --> 00:20:03,630
+of that is handled for you automatically.
+
+559
+00:20:03,930 --> 00:20:06,529
+You just need to implement certain hooks
+
+560
+00:20:06,709 --> 00:20:09,170
+so that the operator and your training code
+
+561
+00:20:09,170 --> 00:20:10,108
+can work together.
+
+562
+00:20:12,449 --> 00:20:14,519
+Here's a visualization of the
+
+563
+00:20:14,769 --> 00:20:16,039
+elastic scaling
+
+564
+00:20:16,539 --> 00:20:18,959
+job in action. You can see that
+
+565
+00:20:19,618 --> 00:20:21,318
+we had varied the
+
+566
+00:20:22,098 --> 00:20:24,618
+world size from 1 to 2 to 8
+
+567
+00:20:24,618 --> 00:20:25,338
+and uh.
+
+568
+00:20:27,289 --> 00:20:29,449
+You can see the tokens per second
+
+569
+00:20:29,449 --> 00:20:30,670
+closely following
+
+570
+00:20:31,009 --> 00:20:33,160
+the throughput is closely following the
+
+571
+00:20:33,489 --> 00:20:35,489
+world size available for the training.
+
+572
+00:20:36,568 --> 00:20:38,118
+You can also observe that
+
+573
+00:20:38,489 --> 00:20:40,489
+the loss continues to decrease
+
+574
+00:20:40,489 --> 00:20:42,529
+and the training job was not interrupted
+
+575
+00:20:42,529 --> 00:20:43,469
+in this process.
+
+576
+00:20:47,670 --> 00:20:48,509
+To wrap up
+
+577
+00:20:49,150 --> 00:20:50,170
+Elastic training
+
+578
+00:20:51,410 --> 00:20:52,479
+Marks a.
+
+579
+00:20:53,959 --> 00:20:56,019
+Fundamental shift in the way you
+
+580
+00:20:56,019 --> 00:20:57,880
+think about AI infrastructure.
+
+581
+00:21:00,068 --> 00:21:02,269
+Long gone are the days where you have
+
+582
+00:21:02,269 --> 00:21:04,348
+to manually allocate certain
+
+583
+00:21:04,348 --> 00:21:05,890
+resources for certain jobs
+
+584
+00:21:06,150 --> 00:21:07,608
+and then you have to play Tetris
+
+585
+00:21:07,949 --> 00:21:09,989
+to make sure that every job
+
+586
+00:21:09,989 --> 00:21:11,209
+fits in your system.
+
+587
+00:21:11,828 --> 00:21:13,049
+We now have a system
+
+588
+00:21:13,309 --> 00:21:15,469
+where you can configure it
+
+589
+00:21:15,469 --> 00:21:17,489
+to dynamically adjust
+
+590
+00:21:17,489 --> 00:21:18,930
+to the cluster
+
+591
+00:21:19,348 --> 00:21:20,118
+reality,
+
+592
+00:21:20,519 --> 00:21:22,568
+and we also offer you a mechanism
+
+593
+00:21:22,568 --> 00:21:25,049
+so that you can continue your training
+
+594
+00:21:25,779 --> 00:21:28,029
+without sacrificing your training quality
+
+595
+00:21:28,029 --> 00:21:29,049
+and convergence.
+
+596
+00:21:30,130 --> 00:21:32,640
+Whether you use the recipes
+
+597
+00:21:32,640 --> 00:21:34,739
+or you go with the custom path,
+
+598
+00:21:35,250 --> 00:21:37,368
+the path to adoption is pretty
+
+599
+00:21:37,368 --> 00:21:38,088
+straightforward.
+
+600
+00:21:39,410 --> 00:21:41,568
+We encourage you to start with a pilot
+
+601
+00:21:41,568 --> 00:21:43,920
+project. And see the gains for
+
+602
+00:21:43,920 --> 00:21:46,068
+yourself. With that, I will
+
+603
+00:21:46,068 --> 00:21:47,229
+hand it over to Anirud,
+
+604
+00:21:47,588 --> 00:21:49,650
+who's going to talk about our
+
+605
+00:21:50,029 --> 00:21:52,338
+next part, which is the checkpointless
+
+606
+00:21:52,338 --> 00:21:53,430
+training on hyperpod.
+
+607
+00:21:54,189 --> 00:21:56,719
+Thank you, Arun. All
+
+608
+00:21:56,719 --> 00:21:59,039
+right, so this is the next shiny feature that
+
+609
+00:21:59,039 --> 00:22:00,719
+um we have for you today.
+
+610
+00:22:01,039 --> 00:22:03,078
+Uh checkpointless training on hyperpod
+
+611
+00:22:03,078 --> 00:22:05,118
+was announced yesterday during Swami's
+
+612
+00:22:05,118 --> 00:22:07,160
+Keynote. Uh, in this section, we'll
+
+613
+00:22:07,160 --> 00:22:09,160
+sort of dive deeper into how it works
+
+614
+00:22:09,160 --> 00:22:09,759
+under the hood.
+
+615
+00:22:10,578 --> 00:22:12,578
+So, going back to sort of set
+
+616
+00:22:12,578 --> 00:22:14,160
+the context here, right? The,
+
+617
+00:22:14,539 --> 00:22:16,439
+the fundamental challenge is that
+
+618
+00:22:16,699 --> 00:22:18,400
+with large clusters, and
+
+619
+00:22:18,660 --> 00:22:20,338
+even smaller clusters for that matter,
+
+620
+00:22:21,630 --> 00:22:23,699
+Checkpoint-based recovery leads to idle
+
+621
+00:22:23,699 --> 00:22:25,098
+time during training.
+
+622
+00:22:25,368 --> 00:22:26,939
+So anytime there is a fault,
+
+623
+00:22:27,219 --> 00:22:28,959
+essentially you need to halt the cluster,
+
+624
+00:22:29,500 --> 00:22:31,500
+reload your last safe checkpoint, and
+
+625
+00:22:31,500 --> 00:22:32,559
+then resume training.
+
+626
+00:22:33,890 --> 00:22:36,650
+But the challenge is that even recovering
+
+627
+00:22:36,650 --> 00:22:38,769
+from the last safe checkpoint isn't as trivial
+
+628
+00:22:38,769 --> 00:22:39,630
+as it sounds,
+
+629
+00:22:40,009 --> 00:22:41,828
+and this is primarily because
+
+630
+00:22:42,328 --> 00:22:44,449
+with checkpoint-based recovery, there's
+
+631
+00:22:44,449 --> 00:22:46,689
+a sequence of events where every
+
+632
+00:22:46,689 --> 00:22:48,509
+event needs to happen first
+
+633
+00:22:48,769 --> 00:22:50,868
+before the next event can happen. So it's this
+
+634
+00:22:51,009 --> 00:22:53,719
+cascade of events that are blocking and sequential.
+
+635
+00:22:54,009 --> 00:22:56,170
+So the idea is that the moment there's a failure,
+
+636
+00:22:56,410 --> 00:22:57,750
+failure needs to be detected.
+
+637
+00:22:58,239 --> 00:23:00,739
+Then you need to reinitialize communication
+
+638
+00:23:00,739 --> 00:23:02,779
+and set up the topology of all of the nodes
+
+639
+00:23:02,779 --> 00:23:04,239
+that participate in training,
+
+640
+00:23:04,799 --> 00:23:07,299
+go back, identify your last safe checkpoint,
+
+641
+00:23:07,709 --> 00:23:09,828
+reload that, reload data loaders,
+
+642
+00:23:09,880 --> 00:23:12,118
+and a whole sequence of events happen
+
+643
+00:23:12,118 --> 00:23:14,160
+before you have that first training
+
+644
+00:23:14,160 --> 00:23:14,818
+step that,
+
+645
+00:23:15,559 --> 00:23:17,078
+that happens post recovery.
+
+646
+00:23:17,420 --> 00:23:19,489
+So the challenge essentially here is that
+
+647
+00:23:19,489 --> 00:23:21,608
+the sequence and the sequence of sets
+
+648
+00:23:21,608 --> 00:23:23,029
+of steps which are blocking
+
+649
+00:23:23,289 --> 00:23:25,529
+means the cluster is idle, and with hundreds
+
+650
+00:23:25,529 --> 00:23:27,529
+of nodes or thousands of nodes, that's
+
+651
+00:23:27,529 --> 00:23:29,568
+millions of dollars in wasted compute during
+
+652
+00:23:29,568 --> 00:23:30,789
+recovery operations.
+
+653
+00:23:32,588 --> 00:23:34,670
+So with checkpointless training,
+
+654
+00:23:35,309 --> 00:23:37,380
+we've enabled cluster recovery
+
+655
+00:23:37,588 --> 00:23:39,699
+to drop from hours on self-managed
+
+656
+00:23:39,699 --> 00:23:42,568
+clusters to under a few minutes on hyperpod.
+
+657
+00:23:42,949 --> 00:23:45,509
+And in turn, accelerating
+
+658
+00:23:45,509 --> 00:23:46,529
+recovery times
+
+659
+00:23:46,828 --> 00:23:49,180
+essentially means that you come to market faster,
+
+660
+00:23:49,469 --> 00:23:51,588
+because if you're training models over
+
+661
+00:23:51,588 --> 00:23:52,410
+a long duration.
+
+662
+00:23:53,019 --> 00:23:55,098
+There can be days often spent in
+
+663
+00:23:55,098 --> 00:23:57,140
+recovery operations over a
+
+664
+00:23:57,140 --> 00:23:58,368
+long running training workload,
+
+665
+00:23:58,699 --> 00:24:00,358
+which now can be done in
+
+666
+00:24:00,618 --> 00:24:03,118
+basically a few minutes. That's the fundamental
+
+667
+00:24:03,489 --> 00:24:05,199
+shift in checkpointless training
+
+668
+00:24:05,559 --> 00:24:06,588
+and what it enables.
+
+669
+00:24:07,209 --> 00:24:09,219
+The idea with checkpointless training is that once you've
+
+670
+00:24:09,219 --> 00:24:10,328
+configured and set it up,
+
+671
+00:24:10,608 --> 00:24:12,338
+failure recovery is fully automated.
+
+672
+00:24:12,680 --> 00:24:14,689
+And there's no longer sort of any
+
+673
+00:24:14,689 --> 00:24:16,769
+manual overhead that you need to take care
+
+674
+00:24:16,769 --> 00:24:17,469
+of when
+
+675
+00:24:17,809 --> 00:24:19,439
+recovering from training.
+
+676
+00:24:19,769 --> 00:24:22,009
+The idea is that you are able to maintain
+
+677
+00:24:22,009 --> 00:24:24,250
+continuous training progress without having
+
+678
+00:24:24,250 --> 00:24:24,949
+to roll back
+
+679
+00:24:25,368 --> 00:24:26,880
+to your last safe checkpoint.
+
+680
+00:24:27,400 --> 00:24:29,410
+In turn, that means essentially no
+
+681
+00:24:29,410 --> 00:24:31,910
+more lost progress or no more wasted compute
+
+682
+00:24:32,250 --> 00:24:34,469
+because you essentially pick up from
+
+683
+00:24:34,689 --> 00:24:36,279
+the current epoch that you are running,
+
+684
+00:24:36,608 --> 00:24:38,439
+even if in the event of a fault,
+
+685
+00:24:38,769 --> 00:24:40,670
+without having to roll back a few steps
+
+686
+00:24:41,209 --> 00:24:42,328
+to the last safe checkpoint.
+
+687
+00:24:42,750 --> 00:24:44,949
+And so this capability essentially
+
+688
+00:24:44,949 --> 00:24:47,410
+enables you to scale with ease across
+
+689
+00:24:47,630 --> 00:24:50,459
+10s to 100s of thousands of accelerators,
+
+690
+00:24:50,618 --> 00:24:53,029
+and we have pre-created recipes
+
+691
+00:24:53,029 --> 00:24:55,150
+that you can use for your own training workloads,
+
+692
+00:24:55,348 --> 00:24:57,868
+as well as offer a suite of components
+
+693
+00:24:57,868 --> 00:24:59,979
+that you can pick and choose and integrate with your
+
+694
+00:24:59,979 --> 00:25:02,108
+own custom Pytorch-based scripts.
+
+695
+00:25:03,029 --> 00:25:04,689
+So, here's an overview of
+
+696
+00:25:05,068 --> 00:25:07,269
+what checkpoint-based recovery looks
+
+697
+00:25:07,269 --> 00:25:09,269
+like and versus what checkpointless training
+
+698
+00:25:09,269 --> 00:25:09,900
+really does.
+
+699
+00:25:10,309 --> 00:25:12,949
+So, on the left, we have a cluster
+
+700
+00:25:12,949 --> 00:25:13,709
+which is
+
+701
+00:25:14,068 --> 00:25:16,108
+showcasing traditional checkpoint-based
+
+702
+00:25:16,108 --> 00:25:18,150
+recovery, and the one on the right is
+
+703
+00:25:18,150 --> 00:25:19,618
+essentially checkpointless training.
+
+704
+00:25:19,949 --> 00:25:21,368
+So we start off where
+
+705
+00:25:21,630 --> 00:25:22,809
+essentially the cluster might,
+
+706
+00:25:23,150 --> 00:25:24,750
+you know, experience a fault.
+
+707
+00:25:25,430 --> 00:25:27,130
+So let's just let this loop in
+
+708
+00:25:27,430 --> 00:25:28,449
+one sequence. So,
+
+709
+00:25:28,858 --> 00:25:30,380
+If you look at node 7,
+
+710
+00:25:30,660 --> 00:25:33,078
+node 7 is going to experience a fault, so
+
+711
+00:25:33,219 --> 00:25:34,959
+it turns color, and
+
+712
+00:25:35,539 --> 00:25:37,519
+essentially that's that's a fault that occurs.
+
+713
+00:25:38,019 --> 00:25:40,019
+With checkpoint-based recovery, you need to
+
+714
+00:25:40,019 --> 00:25:42,219
+sequentially reinitialize each of those
+
+715
+00:25:42,219 --> 00:25:44,239
+nodes, which means that it can take
+
+716
+00:25:44,699 --> 00:25:46,519
+several minutes for that initialization process to happen.
+
+717
+00:25:48,019 --> 00:25:50,039
+You need to then reload your last
+
+718
+00:25:50,039 --> 00:25:50,979
+safe checkpoint.
+
+719
+00:25:51,809 --> 00:25:53,838
+Once that's done, you rehydrate your
+
+720
+00:25:53,838 --> 00:25:54,979
+data loaders, so
+
+721
+00:25:55,529 --> 00:25:57,680
+you essentially preprocess all of the data
+
+722
+00:25:57,680 --> 00:25:59,858
+batches that need to get fed to the model
+
+723
+00:26:00,078 --> 00:26:01,229
+and then resume training.
+
+724
+00:26:01,680 --> 00:26:03,769
+This entire sequence of recovery
+
+725
+00:26:03,769 --> 00:26:05,578
+operations can mean tens of minutes
+
+726
+00:26:05,838 --> 00:26:07,098
+to potentially an hour
+
+727
+00:26:07,400 --> 00:26:09,920
+on large clusters versus with checkpointless
+
+728
+00:26:09,920 --> 00:26:12,039
+training you're able to recover in a couple
+
+729
+00:26:12,039 --> 00:26:12,838
+of minutes or so.
+
+730
+00:26:14,180 --> 00:26:16,299
+So here's what performance actually looks
+
+731
+00:26:16,299 --> 00:26:18,338
+like. The latest
+
+732
+00:26:19,049 --> 00:26:21,140
+generation of Amazon Nova models were trained
+
+733
+00:26:21,140 --> 00:26:22,479
+using this capability
+
+734
+00:26:22,779 --> 00:26:24,979
+on thousands of AI accelerators.
+
+735
+00:26:25,750 --> 00:26:27,818
+Internally we've tested
+
+736
+00:26:27,818 --> 00:26:29,130
+with cluster sizes
+
+737
+00:26:29,390 --> 00:26:31,539
+with upwards of 2000 GPUs,
+
+738
+00:26:31,828 --> 00:26:33,828
+and traditional recovery, which is checkpoint
+
+739
+00:26:33,828 --> 00:26:36,140
+based, can be anywhere between 15 to 30 minutes,
+
+740
+00:26:36,430 --> 00:26:38,509
+but with checkpointless training we're able to recover
+
+741
+00:26:38,509 --> 00:26:39,660
+in under 2 minutes,
+
+742
+00:26:40,029 --> 00:26:42,150
+and this is essentially an 80%
+
+743
+00:26:42,150 --> 00:26:44,489
+improvement in fault recovery capabilities.
+
+744
+00:26:45,259 --> 00:26:47,469
+We have similar results that hold true even at
+
+745
+00:26:47,469 --> 00:26:49,930
+smaller cluster sizes. So even with clusters
+
+746
+00:26:49,930 --> 00:26:52,150
+with 16 GPUs
+
+747
+00:26:52,150 --> 00:26:53,469
+or 256 GPUs,
+
+748
+00:26:53,789 --> 00:26:56,009
+we see that traditional recovery might take
+
+749
+00:26:56,348 --> 00:26:57,549
+about 5 minutes or so,
+
+750
+00:26:57,868 --> 00:26:59,868
+but with checkpointless training, it's
+
+751
+00:26:59,939 --> 00:27:02,269
+an order of magnitude faster, and recovery
+
+752
+00:27:02,269 --> 00:27:03,588
+happens in under a minute.
+
+753
+00:27:04,160 --> 00:27:06,439
+And what this enables essentially is that
+
+754
+00:27:06,439 --> 00:27:08,719
+even with clusters, with thousands
+
+755
+00:27:08,719 --> 00:27:09,680
+of accelerators,
+
+756
+00:27:10,219 --> 00:27:12,400
+goodput is upwards of 95%. So
+
+757
+00:27:12,400 --> 00:27:15,160
+you're basically maximizing utilization
+
+758
+00:27:15,160 --> 00:27:17,019
+of your training infrastructure
+
+759
+00:27:17,390 --> 00:27:18,500
+with this capability.
+
+760
+00:27:19,118 --> 00:27:21,118
+So to put this in perspective, right, if
+
+761
+00:27:21,118 --> 00:27:23,338
+we look at this cluster of
+
+762
+00:27:23,989 --> 00:27:25,500
+2300 GPUs,
+
+763
+00:27:25,828 --> 00:27:28,229
+If you have a training run that's spanning
+
+764
+00:27:28,229 --> 00:27:29,259
+a couple of months,
+
+765
+00:27:29,588 --> 00:27:32,039
+traditional checkpoint-based recovery overhead
+
+766
+00:27:32,039 --> 00:27:34,068
+over the duration of that training run
+
+767
+00:27:34,068 --> 00:27:36,108
+of 2 months can mean multiple
+
+768
+00:27:36,108 --> 00:27:37,969
+days are spent cumulatively
+
+769
+00:27:38,259 --> 00:27:39,449
+just in recovery operation.
+
+770
+00:27:40,170 --> 00:27:42,430
+Whereas with checkpointless training that now drops
+
+771
+00:27:42,430 --> 00:27:43,868
+to a few minutes,
+
+772
+00:27:44,328 --> 00:27:46,108
+saving you millions in
+
+773
+00:27:46,489 --> 00:27:48,529
+essentially uh training costs over
+
+774
+00:27:48,529 --> 00:27:49,930
+the duration of this training run.
+
+775
+00:27:50,328 --> 00:27:52,650
+So, with that, with that overview
+
+776
+00:27:52,650 --> 00:27:54,739
+and uh of performance, I invite
+
+777
+00:27:54,739 --> 00:27:57,170
+Arun back to walk us through how checkpointless
+
+778
+00:27:57,170 --> 00:27:58,348
+training works under the hood.
+
+779
+00:27:58,729 --> 00:27:59,368
+Arun, over to you.
+
+780
+00:28:02,309 --> 00:28:09,500
+Thanks, Annu. Checkpointless
+
+781
+00:28:09,500 --> 00:28:11,588
+training is built on 4
+
+782
+00:28:11,588 --> 00:28:12,809
+key innovations.
+
+783
+00:28:13,608 --> 00:28:16,390
+That work together to eliminate
+
+784
+00:28:16,390 --> 00:28:18,729
+bottlenecks in the traditional
+
+785
+00:28:18,729 --> 00:28:20,449
+distributor training systems.
+
+786
+00:28:21,130 --> 00:28:22,449
+Let's walk through one by one.
+
+787
+00:28:25,019 --> 00:28:27,118
+The first one is the optimized
+
+788
+00:28:27,118 --> 00:28:29,098
+collective communication initialization.
+
+789
+00:28:31,949 --> 00:28:34,009
+Typically in a distributed system
+
+790
+00:28:34,439 --> 00:28:36,059
+for training, you have
+
+791
+00:28:36,439 --> 00:28:38,660
+many processes running across many nodes.
+
+792
+00:28:39,479 --> 00:28:41,750
+And they need to talk to each other
+
+793
+00:28:42,250 --> 00:28:44,328
+to exchange data during training.
+
+794
+00:28:44,559 --> 00:28:45,318
+For example,
+
+795
+00:28:45,689 --> 00:28:46,390
+in a
+
+796
+00:28:46,650 --> 00:28:48,390
+distributed data parallel training.
+
+797
+00:28:49,180 --> 00:28:51,328
+The ranks need to all reduce
+
+798
+00:28:51,328 --> 00:28:53,568
+the gradients after finishing
+
+799
+00:28:53,568 --> 00:28:55,009
+the back propagation operation.
+
+800
+00:28:56,809 --> 00:28:57,368
+However,
+
+801
+00:28:57,769 --> 00:28:58,299
+before the,
+
+802
+00:28:58,650 --> 00:29:00,729
+before the ranks can talk to each other, they need
+
+803
+00:29:00,729 --> 00:29:02,910
+to establish communication with each other,
+
+804
+00:29:03,289 --> 00:29:05,848
+and typically this is done through a centralized
+
+805
+00:29:05,848 --> 00:29:07,049
+coordinating system,
+
+806
+00:29:07,539 --> 00:29:09,630
+which is going to be a bottleneck when we are talking
+
+807
+00:29:09,630 --> 00:29:11,650
+about the thousands and thousands
+
+808
+00:29:11,650 --> 00:29:12,650
+of processes
+
+809
+00:29:12,930 --> 00:29:15,130
+which we demonstrated in our previous slide.
+
+810
+00:29:16,500 --> 00:29:18,000
+This can add up to minutes
+
+811
+00:29:18,439 --> 00:29:20,719
+because of this bottleneck in the centralized
+
+812
+00:29:20,719 --> 00:29:22,108
+initialization system.
+
+813
+00:29:22,459 --> 00:29:25,039
+With our system, we eliminated this bottleneck
+
+814
+00:29:25,039 --> 00:29:27,338
+by moving away from the centralized
+
+815
+00:29:27,338 --> 00:29:27,959
+coordinating
+
+816
+00:29:28,650 --> 00:29:29,559
+uh system
+
+817
+00:29:29,900 --> 00:29:30,868
+towards a
+
+818
+00:29:31,699 --> 00:29:34,140
+towards a peer to peer connection establishment
+
+819
+00:29:34,140 --> 00:29:35,739
+through hyperpod signals.
+
+820
+00:29:36,098 --> 00:29:37,318
+This helped us save
+
+821
+00:29:37,699 --> 00:29:39,699
+minutes and we were able to do this in
+
+822
+00:29:39,699 --> 00:29:40,358
+seconds.
+
+823
+00:29:42,189 --> 00:29:44,189
+The second innovation is about
+
+824
+00:29:44,358 --> 00:29:45,779
+memory mapped data loading.
+
+825
+00:29:47,170 --> 00:29:49,578
+As you know, the training processes need
+
+826
+00:29:49,578 --> 00:29:50,719
+access to the data
+
+827
+00:29:51,338 --> 00:29:52,799
+whenever they need to start training.
+
+828
+00:29:53,338 --> 00:29:53,858
+However,
+
+829
+00:29:54,299 --> 00:29:56,380
+the data needs to go through
+
+830
+00:29:56,380 --> 00:29:58,539
+some sort of pre-processing before the
+
+831
+00:29:58,539 --> 00:29:59,739
+actual training can begin.
+
+832
+00:30:01,479 --> 00:30:03,598
+And depending on how complicated your
+
+833
+00:30:03,598 --> 00:30:05,299
+preprocessing pipeline is.
+
+834
+00:30:06,259 --> 00:30:06,880
+This
+
+835
+00:30:07,930 --> 00:30:10,199
+step take up to minutes as well.
+
+836
+00:30:11,779 --> 00:30:14,199
+You may be wondering what's the big deal about
+
+837
+00:30:14,219 --> 00:30:16,618
+spending a few minutes before the training start
+
+838
+00:30:16,900 --> 00:30:18,400
+to finish the pre-processing.
+
+839
+00:30:18,900 --> 00:30:20,098
+That intuition is right,
+
+840
+00:30:20,420 --> 00:30:21,078
+however,
+
+841
+00:30:21,989 --> 00:30:24,068
+When you have failures, you still have to pay
+
+842
+00:30:24,068 --> 00:30:26,150
+the cost repeatedly. So every time
+
+843
+00:30:26,150 --> 00:30:28,459
+a failure happens, you need to pay the cost
+
+844
+00:30:28,459 --> 00:30:29,009
+of
+
+845
+00:30:29,750 --> 00:30:31,009
+pre-processing your data,
+
+846
+00:30:31,269 --> 00:30:32,489
+feeding it into
+
+847
+00:30:32,828 --> 00:30:33,368
+training,
+
+848
+00:30:34,029 --> 00:30:34,828
+training pipeline.
+
+849
+00:30:35,439 --> 00:30:37,588
+And during this time, this is a synchronous
+
+850
+00:30:37,588 --> 00:30:38,818
+operation. All of the compute,
+
+851
+00:30:39,479 --> 00:30:41,259
+expensive compute is sitting idle.
+
+852
+00:30:42,799 --> 00:30:45,368
+We solve this by introducing a cache
+
+853
+00:30:45,598 --> 00:30:46,140
+so that
+
+854
+00:30:46,439 --> 00:30:48,059
+the preprocessed
+
+855
+00:30:48,598 --> 00:30:50,939
+data is saved in the cache using
+
+856
+00:30:51,358 --> 00:30:53,400
+a shared memory and memory mapped
+
+857
+00:30:53,400 --> 00:30:54,380
+data files
+
+858
+00:30:54,880 --> 00:30:57,430
+so that when the training processes resume,
+
+859
+00:30:57,838 --> 00:30:59,259
+they do not have to wait
+
+860
+00:30:59,598 --> 00:31:01,640
+for reprocessing of the of
+
+861
+00:31:01,640 --> 00:31:02,180
+the data
+
+862
+00:31:03,160 --> 00:31:05,199
+which they are, which they are expected to wait
+
+863
+00:31:05,199 --> 00:31:06,969
+on. In this new world,
+
+864
+00:31:07,318 --> 00:31:09,358
+they can instantly get started
+
+865
+00:31:09,358 --> 00:31:11,568
+because. The pre-processed data
+
+866
+00:31:11,568 --> 00:31:13,630
+is already readily available
+
+867
+00:31:13,630 --> 00:31:16,430
+for them. The
+
+868
+00:31:16,430 --> 00:31:18,588
+3rd innovation is the in-process
+
+869
+00:31:18,588 --> 00:31:19,150
+recovery.
+
+870
+00:31:22,959 --> 00:31:25,039
+In traditional distributed systems as we
+
+871
+00:31:25,039 --> 00:31:27,608
+talked about, there are many processes and
+
+872
+00:31:28,430 --> 00:31:29,368
+Many nodes
+
+873
+00:31:30,789 --> 00:31:32,858
+Which are collectively running together
+
+874
+00:31:33,400 --> 00:31:36,130
+and the current failure recovery mechanisms,
+
+875
+00:31:36,479 --> 00:31:37,900
+what they do is that
+
+876
+00:31:38,439 --> 00:31:40,479
+you are required to terminate the whole job
+
+877
+00:31:40,479 --> 00:31:42,180
+and restart it, meaning
+
+878
+00:31:42,838 --> 00:31:44,660
+all the processes are terminated
+
+879
+00:31:45,000 --> 00:31:46,979
+and all their state is lost
+
+880
+00:31:47,289 --> 00:31:49,338
+and the new processes are kicked off
+
+881
+00:31:50,000 --> 00:31:51,098
+and then they need to
+
+882
+00:31:51,358 --> 00:31:52,779
+they need to rehydrate their state.
+
+883
+00:31:54,189 --> 00:31:55,150
+With our system
+
+884
+00:31:55,848 --> 00:31:56,759
+We are
+
+885
+00:31:57,299 --> 00:31:59,838
+replacing the failed processes
+
+886
+00:31:59,838 --> 00:32:01,759
+with hard spare processes.
+
+887
+00:32:02,969 --> 00:32:05,390
+And we do not touch the healthy
+
+888
+00:32:05,390 --> 00:32:07,469
+processes. We leave them alone with their
+
+889
+00:32:07,469 --> 00:32:08,029
+states.
+
+890
+00:32:09,469 --> 00:32:11,660
+These spare processes join
+
+891
+00:32:11,660 --> 00:32:12,439
+the training.
+
+892
+00:32:13,189 --> 00:32:14,529
+And they continue to train
+
+893
+00:32:14,868 --> 00:32:16,229
+with minimal interruption.
+
+894
+00:32:19,088 --> 00:32:21,449
+The 4th and most innovative component
+
+895
+00:32:21,689 --> 00:32:24,088
+is the checkpointless recovery
+
+896
+00:32:24,088 --> 00:32:27,660
+itself. Traditionally
+
+897
+00:32:28,799 --> 00:32:30,930
+You will have to take checkpoints. The training
+
+898
+00:32:30,930 --> 00:32:33,088
+processes need to take checkpoint at certain
+
+899
+00:32:33,088 --> 00:32:33,890
+intervals.
+
+900
+00:32:34,500 --> 00:32:36,098
+And when a failure happens,
+
+901
+00:32:36,739 --> 00:32:38,358
+the processes need to roll back.
+
+902
+00:32:39,130 --> 00:32:41,209
+Repeat some of the steps and
+
+903
+00:32:41,209 --> 00:32:43,660
+continue. With
+
+904
+00:32:43,660 --> 00:32:45,779
+our system building on top of
+
+905
+00:32:45,779 --> 00:32:48,289
+the In process recovery
+
+906
+00:32:49,150 --> 00:32:50,130
+What we have
+
+907
+00:32:50,449 --> 00:32:53,068
+achieved is that the newly joined
+
+908
+00:32:53,068 --> 00:32:54,250
+training processes
+
+909
+00:32:54,789 --> 00:32:57,368
+do not need to load from the checkpoint,
+
+910
+00:32:57,789 --> 00:32:58,689
+but rather
+
+911
+00:32:58,989 --> 00:33:00,449
+they hydrate their memory
+
+912
+00:33:00,709 --> 00:33:02,848
+from the other healthy processes
+
+913
+00:33:03,509 --> 00:33:05,189
+directly using the high-speed network.
+
+914
+00:33:07,140 --> 00:33:07,939
+This way
+
+915
+00:33:08,769 --> 00:33:11,229
+The training interruption time
+
+916
+00:33:11,229 --> 00:33:13,229
+is reduced dramatically,
+
+917
+00:33:13,578 --> 00:33:15,318
+and that's how we achieve the
+
+918
+00:33:15,900 --> 00:33:18,098
+sub-minute recoveries that Anil
+
+919
+00:33:18,098 --> 00:33:20,519
+shared, and also the 95% goodput,
+
+920
+00:33:20,670 --> 00:33:21,838
+even at the
+
+921
+00:33:22,180 --> 00:33:22,939
+large scale.
+
+922
+00:33:28,650 --> 00:33:30,818
+All right, that sounds exciting. So
+
+923
+00:33:30,818 --> 00:33:31,858
+how do you get started?
+
+924
+00:33:33,269 --> 00:33:35,170
+Just like the elastic training,
+
+925
+00:33:35,588 --> 00:33:38,130
+we have made this quite simple for you to get started,
+
+926
+00:33:38,390 --> 00:33:40,469
+and we have two approaches. First is, of course,
+
+927
+00:33:40,588 --> 00:33:42,410
+the hyperpowered recipes,
+
+928
+00:33:43,150 --> 00:33:45,309
+where you can get started if
+
+929
+00:33:45,309 --> 00:33:46,689
+you're using standard
+
+930
+00:33:47,068 --> 00:33:48,170
+architectures
+
+931
+00:33:48,670 --> 00:33:50,789
+by using the recipes, downloading
+
+932
+00:33:50,789 --> 00:33:53,348
+it, and then using the cubecuttle
+
+933
+00:33:53,348 --> 00:33:55,630
+command to run it on Hyperpot.
+
+934
+00:33:56,838 --> 00:33:59,250
+The recipes do the heavy lifting for you,
+
+935
+00:33:59,920 --> 00:34:02,029
+including setting up the operator to run
+
+936
+00:34:02,029 --> 00:34:03,750
+in this checkpointless mode,
+
+937
+00:34:04,199 --> 00:34:05,219
+setting up the
+
+938
+00:34:05,799 --> 00:34:07,828
+collective communication optimization,
+
+939
+00:34:08,260 --> 00:34:10,478
+and then the memory memory
+
+940
+00:34:10,478 --> 00:34:12,679
+map data loader in process recovery,
+
+941
+00:34:12,760 --> 00:34:14,840
+all of that setup is handled for you
+
+942
+00:34:15,119 --> 00:34:16,438
+and you can just kick it off.
+
+943
+00:34:17,639 --> 00:34:20,128
+We think this is the fastest path for adoption
+
+944
+00:34:20,289 --> 00:34:21,208
+for most teens.
+
+945
+00:34:22,409 --> 00:34:24,769
+But if you have special requirements
+
+946
+00:34:24,769 --> 00:34:26,090
+and custom training code,
+
+947
+00:34:26,409 --> 00:34:28,510
+we have an incremental
+
+948
+00:34:28,688 --> 00:34:29,929
+adoption path for you.
+
+949
+00:34:30,769 --> 00:34:32,800
+We have componentized each of these
+
+950
+00:34:32,989 --> 00:34:35,260
+so that you can incrementally adopt
+
+951
+00:34:35,260 --> 00:34:35,978
+each component,
+
+952
+00:34:36,260 --> 00:34:38,300
+observe the benefits, and continue
+
+953
+00:34:38,300 --> 00:34:40,378
+to Adopt all
+
+954
+00:34:40,378 --> 00:34:41,458
+of the features together.
+
+955
+00:34:42,748 --> 00:34:44,128
+The first one is the
+
+956
+00:34:45,938 --> 00:34:48,840
+Optimized collective communication initialization,
+
+957
+00:34:48,889 --> 00:34:50,139
+and it's the easiest to adopt.
+
+958
+00:34:50,458 --> 00:34:53,079
+You just need to set a couple of environment variables
+
+959
+00:34:53,219 --> 00:34:55,659
+to your training jobs. The first one is instructing
+
+960
+00:34:55,659 --> 00:34:58,239
+it to not use the centralized
+
+961
+00:34:58,418 --> 00:35:00,500
+initialization system. The
+
+962
+00:35:00,500 --> 00:35:02,039
+second one is telling
+
+963
+00:35:02,378 --> 00:35:05,059
+that it needs to use the hyperpot-based
+
+964
+00:35:05,059 --> 00:35:06,840
+optimized initialization,
+
+965
+00:35:07,219 --> 00:35:09,219
+and that's it. You already saved a few
+
+966
+00:35:09,219 --> 00:35:11,378
+minutes of recovery time every
+
+967
+00:35:11,378 --> 00:35:12,760
+time a fault happens.
+
+968
+00:35:14,949 --> 00:35:17,418
+The second one is the memory mapped data loader.
+
+969
+00:35:19,199 --> 00:35:21,360
+We talked about how we have a cache
+
+970
+00:35:21,360 --> 00:35:23,139
+where you can store the
+
+971
+00:35:23,639 --> 00:35:25,639
+pre-processed training data so that during
+
+972
+00:35:25,639 --> 00:35:26,800
+fault recovery,
+
+973
+00:35:27,280 --> 00:35:30,079
+you do not need to spend all the time reprocessing
+
+974
+00:35:30,079 --> 00:35:30,719
+those data.
+
+975
+00:35:32,949 --> 00:35:35,059
+This one is also pretty easy to adopt.
+
+976
+00:35:35,389 --> 00:35:37,188
+We have provided a library
+
+977
+00:35:37,668 --> 00:35:40,349
+with a wrapper, which is quite non-intrusive,
+
+978
+00:35:40,628 --> 00:35:42,708
+and all you have to do is to point
+
+979
+00:35:42,708 --> 00:35:43,610
+to a,
+
+980
+00:35:43,989 --> 00:35:46,030
+a cache location for storing
+
+981
+00:35:46,030 --> 00:35:48,148
+the memory mapped files.
+
+982
+00:35:53,378 --> 00:35:54,478
+Moving on to the
+
+983
+00:35:54,739 --> 00:35:56,889
+in-process recovery and checkpointless recovery
+
+984
+00:35:56,889 --> 00:35:57,500
+components,
+
+985
+00:35:58,059 --> 00:35:58,719
+this one
+
+986
+00:35:59,340 --> 00:36:00,938
+is a little more involved.
+
+987
+00:36:04,219 --> 00:36:06,128
+You have to do a couple of changes,
+
+988
+00:36:06,500 --> 00:36:08,199
+including changing the,
+
+989
+00:36:08,860 --> 00:36:11,610
+the strategy used by your Pytoch
+
+990
+00:36:12,059 --> 00:36:13,449
+training code
+
+991
+00:36:13,820 --> 00:36:15,039
+to point to the
+
+992
+00:36:15,688 --> 00:36:17,860
+Hyperpot specified checkpointless
+
+993
+00:36:17,860 --> 00:36:18,418
+strategy.
+
+994
+00:36:19,438 --> 00:36:20,469
+This instructs
+
+995
+00:36:21,090 --> 00:36:22,969
+The framework to not use the
+
+996
+00:36:23,369 --> 00:36:25,769
+classic checkpointing, but rather use the restart
+
+997
+00:36:25,769 --> 00:36:27,929
+list checkpoint that we have implemented.
+
+998
+00:36:29,039 --> 00:36:29,639
+Secondly,
+
+999
+00:36:29,958 --> 00:36:32,039
+you do have to wrap your training
+
+1000
+00:36:32,039 --> 00:36:32,619
+loop
+
+1001
+00:36:33,280 --> 00:36:35,898
+with. The hyperpod rapper.
+
+1002
+00:36:36,628 --> 00:36:38,208
+Annotation that we have provided.
+
+1003
+00:36:39,579 --> 00:36:42,010
+Which takes care of the heavy lifting for
+
+1004
+00:36:42,349 --> 00:36:43,289
+health checks
+
+1005
+00:36:43,869 --> 00:36:46,070
+and having the coordination with
+
+1006
+00:36:46,070 --> 00:36:47,909
+the hyperpot by Touch operator.
+
+1007
+00:36:48,869 --> 00:36:50,949
+You can imagine that all the complicated
+
+1008
+00:36:50,949 --> 00:36:53,500
+handshakes which are needed to rehydrate
+
+1009
+00:36:53,500 --> 00:36:55,668
+the state from healthy peers, all of that
+
+1010
+00:36:55,668 --> 00:36:56,688
+is taken care of
+
+1011
+00:36:57,070 --> 00:36:59,168
+for you by these two changes.
+
+1012
+00:37:07,309 --> 00:37:09,250
+I want to conclude by saying that
+
+1013
+00:37:09,668 --> 00:37:11,090
+we took a deep look.
+
+1014
+00:37:12,208 --> 00:37:13,639
+At the existing
+
+1015
+00:37:14,280 --> 00:37:16,300
+framework level limitations that
+
+1016
+00:37:16,300 --> 00:37:16,918
+are present
+
+1017
+00:37:17,208 --> 00:37:18,519
+in the traditional.
+
+1018
+00:37:19,958 --> 00:37:21,559
+Distributor training systems.
+
+1019
+00:37:22,668 --> 00:37:25,110
+And we have eliminated
+
+1020
+00:37:25,610 --> 00:37:28,010
+a lot of bottlenecks from these systems
+
+1021
+00:37:28,369 --> 00:37:30,559
+so that you as our customers
+
+1022
+00:37:30,570 --> 00:37:33,090
+get the most value out of the
+
+1023
+00:37:33,090 --> 00:37:35,260
+compute instances that Hyperpod
+
+1024
+00:37:35,260 --> 00:37:35,869
+offers.
+
+1025
+00:37:37,929 --> 00:37:40,070
+I hope that we have convinced you
+
+1026
+00:37:40,289 --> 00:37:42,789
+to give it a try on all these new features,
+
+1027
+00:37:43,409 --> 00:37:45,409
+and I'm, and I'm excited
+
+1028
+00:37:45,409 --> 00:37:46,969
+what you're going to build with them.
+
+1029
+00:37:49,050 --> 00:37:49,750
+With that,
+
+1030
+00:37:50,208 --> 00:37:51,188
+I am thrilled
+
+1031
+00:37:51,728 --> 00:37:52,969
+to invite Tony,
+
+1032
+00:37:53,369 --> 00:37:55,550
+who's going to talk to us about how
+
+1033
+00:37:55,809 --> 00:37:57,148
+Salesforce is using
+
+1034
+00:37:57,489 --> 00:37:58,349
+Hyperpot.
+
+1035
+00:37:58,769 --> 00:38:01,909
+Tony. Thank
+
+1036
+00:38:01,909 --> 00:38:07,510
+you. Hey
+
+1037
+00:38:07,510 --> 00:38:09,590
+everyone, so I'm Tony,
+
+1038
+00:38:09,789 --> 00:38:12,208
+uh, with Salesforce AI Research,
+
+1039
+00:38:12,789 --> 00:38:15,659
+and we've been hyperpod customers,
+
+1040
+00:38:15,668 --> 00:38:16,969
+uh, for
+
+1041
+00:38:17,349 --> 00:38:18,409
+over 2 years now
+
+1042
+00:38:18,949 --> 00:38:19,869
+and.
+
+1043
+00:38:20,469 --> 00:38:22,668
+I wanted to take a little moment to just
+
+1044
+00:38:22,668 --> 00:38:24,610
+share with you what our use case looks like.
+
+1045
+00:38:24,989 --> 00:38:26,128
+So we have
+
+1046
+00:38:26,429 --> 00:38:28,550
+very heterogeneous workloads, of
+
+1047
+00:38:28,550 --> 00:38:30,500
+course, standard alum training,
+
+1048
+00:38:30,789 --> 00:38:33,148
+but we also have things involving
+
+1049
+00:38:33,148 --> 00:38:35,148
+multimodality, which is a lot of
+
+1050
+00:38:35,148 --> 00:38:37,349
+like speech and image
+
+1051
+00:38:37,349 --> 00:38:39,550
+processing that also happens on the cluster.
+
+1052
+00:38:39,985 --> 00:38:41,864
+We do a lot of fine tuning in RL,
+
+1053
+00:38:42,144 --> 00:38:44,224
+so these are high volume
+
+1054
+00:38:44,224 --> 00:38:46,503
+jobs that are often much shorter than
+
+1055
+00:38:46,503 --> 00:38:48,695
+long running LLM training, um,
+
+1056
+00:38:48,744 --> 00:38:51,103
+and can be kind of bespoke and custom, and
+
+1057
+00:38:51,103 --> 00:38:53,204
+we've got batch inference jobs which,
+
+1058
+00:38:53,543 --> 00:38:54,074
+um,
+
+1059
+00:38:54,543 --> 00:38:57,175
+can run at, uh, varying sizes
+
+1060
+00:38:57,175 --> 00:38:58,824
+or varying time periods.
+
+1061
+00:39:01,269 --> 00:39:03,550
+And checkpointless elastic checkpointless
+
+1062
+00:39:03,550 --> 00:39:05,409
+and elastic training helps us
+
+1063
+00:39:05,989 --> 00:39:08,139
+manage this heterogeny in an
+
+1064
+00:39:08,139 --> 00:39:08,929
+easy way.
+
+1065
+00:39:09,389 --> 00:39:11,809
+So I'm gonna dive a little bit deeper
+
+1066
+00:39:11,978 --> 00:39:14,188
+into what exactly we do
+
+1067
+00:39:14,188 --> 00:39:15,228
+for batch inference.
+
+1068
+00:39:15,590 --> 00:39:17,750
+So I like to use SG Lang. It's
+
+1069
+00:39:17,750 --> 00:39:19,789
+an open serving framework, happens to
+
+1070
+00:39:19,789 --> 00:39:20,809
+be my favorite,
+
+1071
+00:39:21,070 --> 00:39:23,110
+um, and the way we set this up
+
+1072
+00:39:23,110 --> 00:39:25,708
+is we have a job script
+
+1073
+00:39:25,708 --> 00:39:27,938
+which can run on kind of, uh. A
+
+1074
+00:39:27,938 --> 00:39:30,668
+head or a login node style architecture
+
+1075
+00:39:30,668 --> 00:39:32,969
+it's really lightweight. All it does
+
+1076
+00:39:33,148 --> 00:39:35,148
+is load balance to one of your
+
+1077
+00:39:35,148 --> 00:39:37,228
+end worker nodes, and each
+
+1078
+00:39:37,228 --> 00:39:39,369
+worker node is a very simple,
+
+1079
+00:39:39,378 --> 00:39:41,188
+straightforward SGLAN server.
+
+1080
+00:39:41,559 --> 00:39:44,070
+Um, of course all of the workers are
+
+1081
+00:39:44,070 --> 00:39:45,128
+connected by,
+
+1082
+00:39:45,559 --> 00:39:46,168
+um,
+
+1083
+00:39:46,829 --> 00:39:48,829
+disk substrate distributed file system or
+
+1084
+00:39:48,829 --> 00:39:49,449
+S3,
+
+1085
+00:39:49,909 --> 00:39:51,090
+anything of that nature,
+
+1086
+00:39:51,628 --> 00:39:52,208
+uh.
+
+1087
+00:39:52,668 --> 00:39:53,510
+And
+
+1088
+00:39:53,800 --> 00:39:55,878
+I'll explain, I'm gonna dive a little bit
+
+1089
+00:39:55,878 --> 00:39:56,898
+deeper into
+
+1090
+00:39:57,599 --> 00:39:58,378
+one particular
+
+1091
+00:39:58,708 --> 00:40:01,199
+use case within the umbrella of batch inference
+
+1092
+00:40:01,199 --> 00:40:02,179
+because we have several,
+
+1093
+00:40:02,478 --> 00:40:04,639
+um, and I will motivate this
+
+1094
+00:40:04,639 --> 00:40:05,909
+use case as follows,
+
+1095
+00:40:06,360 --> 00:40:07,039
+so.
+
+1096
+00:40:07,628 --> 00:40:10,188
+I want to pause and draw a little bit of contrast
+
+1097
+00:40:10,188 --> 00:40:12,550
+between kind of when we think of AI
+
+1098
+00:40:12,550 --> 00:40:14,570
+or even just learned software
+
+1099
+00:40:14,570 --> 00:40:15,728
+and how that
+
+1100
+00:40:16,110 --> 00:40:17,219
+is a little different than
+
+1101
+00:40:18,070 --> 00:40:20,070
+how we've come to
+
+1102
+00:40:20,070 --> 00:40:21,289
+traditionally consider
+
+1103
+00:40:21,628 --> 00:40:23,800
+human programmed software and one
+
+1104
+00:40:23,800 --> 00:40:25,369
+key contrast is this idea
+
+1105
+00:40:25,708 --> 00:40:26,989
+of nondeterminism.
+
+1106
+00:40:27,478 --> 00:40:29,969
+And you can think about this at each layer
+
+1107
+00:40:29,969 --> 00:40:32,539
+of the stack, so you can think about the app layer
+
+1108
+00:40:32,539 --> 00:40:34,000
+where traditionally
+
+1109
+00:40:34,378 --> 00:40:36,458
+if software was working correctly, it would
+
+1110
+00:40:36,458 --> 00:40:38,119
+give you the same answer every time
+
+1111
+00:40:38,378 --> 00:40:40,780
+and now we have a lot of
+
+1112
+00:40:40,780 --> 00:40:42,978
+AI systems where even in the app layer
+
+1113
+00:40:42,978 --> 00:40:45,059
+there are, you know, key icons
+
+1114
+00:40:45,059 --> 00:40:47,398
+like regenerate and regenerating
+
+1115
+00:40:47,398 --> 00:40:50,139
+responses and trying different prompts and tweaking
+
+1116
+00:40:50,139 --> 00:40:52,289
+is actually a core part of the
+
+1117
+00:40:52,289 --> 00:40:53,119
+application experience.
+
+1118
+00:40:54,179 --> 00:40:56,199
+Even at the algorithmic layer though,
+
+1119
+00:40:56,500 --> 00:40:58,699
+outside of the application you have things
+
+1120
+00:40:58,699 --> 00:41:00,918
+where the neural networks themselves
+
+1121
+00:41:00,918 --> 00:41:02,938
+are sampled in a stochastic
+
+1122
+00:41:02,938 --> 00:41:05,300
+manner and that's actually at the algorithmic
+
+1123
+00:41:05,300 --> 00:41:07,300
+level the entire way that it's supposed to
+
+1124
+00:41:07,300 --> 00:41:09,500
+run again in contrast with
+
+1125
+00:41:09,500 --> 00:41:11,559
+how most applications have been built on
+
+1126
+00:41:11,559 --> 00:41:13,599
+determinis deterministic algorithms
+
+1127
+00:41:14,219 --> 00:41:16,340
+and even going one layer lower into
+
+1128
+00:41:16,340 --> 00:41:17,119
+the stack.
+
+1129
+00:41:17,648 --> 00:41:19,878
+Standard CPUs are highly
+
+1130
+00:41:19,878 --> 00:41:22,039
+deterministic pieces of software, whereas
+
+1131
+00:41:22,039 --> 00:41:24,148
+when you're running on AI
+
+1132
+00:41:24,148 --> 00:41:25,280
+accelerators.
+
+1133
+00:41:26,059 --> 00:41:28,179
+It's actually very it's, it's
+
+1134
+00:41:28,179 --> 00:41:30,280
+in the spec that you can get
+
+1135
+00:41:30,280 --> 00:41:32,320
+nondeterminism when running
+
+1136
+00:41:32,320 --> 00:41:34,708
+uh due to non-commutative properties
+
+1137
+00:41:34,708 --> 00:41:36,780
+of, of the floating point arithmetic on, on,
+
+1138
+00:41:36,860 --> 00:41:39,000
+on these, um, accelerators
+
+1139
+00:41:39,179 --> 00:41:41,199
+and so all of this is to say is that.
+
+1140
+00:41:41,769 --> 00:41:44,050
+There's a very deep way
+
+1141
+00:41:44,050 --> 00:41:46,250
+in which nondeterminism and sarcastic
+
+1142
+00:41:46,250 --> 00:41:48,289
+behavior is embedded in the AI stack,
+
+1143
+00:41:48,489 --> 00:41:49,010
+and
+
+1144
+00:41:49,449 --> 00:41:51,679
+from our perspective at Salesforce we think about
+
+1145
+00:41:51,769 --> 00:41:54,030
+what is the business impact of this because
+
+1146
+00:41:54,039 --> 00:41:55,208
+we have customers
+
+1147
+00:41:55,728 --> 00:41:57,429
+across a variety of industries.
+
+1148
+00:41:57,769 --> 00:41:59,889
+Um, healthcare and financial services
+
+1149
+00:41:59,889 --> 00:42:02,438
+are two industries in particular that are
+
+1150
+00:42:02,648 --> 00:42:04,668
+very much concerned with this concept of
+
+1151
+00:42:04,889 --> 00:42:05,849
+nondeterminism.
+
+1152
+00:42:06,110 --> 00:42:08,148
+Right, so they care a lot about
+
+1153
+00:42:08,148 --> 00:42:10,659
+having deterministic and auditable outputs
+
+1154
+00:42:10,800 --> 00:42:11,898
+and for them
+
+1155
+00:42:12,228 --> 00:42:14,309
+having uh a way
+
+1156
+00:42:14,309 --> 00:42:16,728
+to grapple with this nondeterminism is important
+
+1157
+00:42:17,110 --> 00:42:17,648
+and
+
+1158
+00:42:17,909 --> 00:42:20,128
+they kind of are still figuring out
+
+1159
+00:42:20,590 --> 00:42:22,789
+how to handle this and they're
+
+1160
+00:42:22,789 --> 00:42:23,530
+really.
+
+1161
+00:42:24,168 --> 00:42:26,199
+Trying to navigate this and one thing that
+
+1162
+00:42:26,199 --> 00:42:28,309
+could be of interest to them is
+
+1163
+00:42:28,599 --> 00:42:29,780
+how could you
+
+1164
+00:42:30,199 --> 00:42:32,239
+build AI systems that help bridge
+
+1165
+00:42:32,239 --> 00:42:34,300
+this at kind of various levels
+
+1166
+00:42:34,300 --> 00:42:35,079
+of the stack.
+
+1167
+00:42:35,559 --> 00:42:37,679
+So as I mentioned it was a multi
+
+1168
+00:42:37,679 --> 00:42:39,860
+layer problem that was kind of setting
+
+1169
+00:42:40,159 --> 00:42:41,340
+the broader picture.
+
+1170
+00:42:41,878 --> 00:42:43,878
+Let's now kind of zoom in
+
+1171
+00:42:43,878 --> 00:42:46,458
+and take a look at what actually happens
+
+1172
+00:42:46,800 --> 00:42:49,289
+with an AI model. How does this manifest?
+
+1173
+00:42:49,739 --> 00:42:50,260
+so.
+
+1174
+00:42:51,079 --> 00:42:53,300
+In sampling of a language model,
+
+1175
+00:42:53,429 --> 00:42:54,750
+there's this parameter where
+
+1176
+00:42:55,208 --> 00:42:57,208
+you may have seen, depending on if you've
+
+1177
+00:42:57,208 --> 00:42:58,228
+used things like
+
+1178
+00:42:58,688 --> 00:43:00,849
+an open source or an open uh
+
+1179
+00:43:00,849 --> 00:43:02,030
+open AI API
+
+1180
+00:43:02,289 --> 00:43:04,329
+where there's a temperature flag, and
+
+1181
+00:43:04,329 --> 00:43:06,590
+this temperature flag can be set to
+
+1182
+00:43:06,590 --> 00:43:09,128
+uh various values, zeros,
+
+1183
+00:43:09,369 --> 00:43:11,800
+deterministic in, in theory, um,
+
+1184
+00:43:11,809 --> 00:43:14,320
+again, of course there's there's hardware nondeterminism,
+
+1185
+00:43:14,769 --> 00:43:16,849
+but you can set this higher
+
+1186
+00:43:16,849 --> 00:43:19,030
+and that makes the answers more or less
+
+1187
+00:43:19,030 --> 00:43:19,668
+random.
+
+1188
+00:43:20,728 --> 00:43:23,070
+And so what can happen
+
+1189
+00:43:23,070 --> 00:43:25,148
+is that when you have reasoning models.
+
+1190
+00:43:25,978 --> 00:43:28,110
+And you set too low of a temperature,
+
+1191
+00:43:28,329 --> 00:43:30,340
+the reasoning model will degenerate,
+
+1192
+00:43:30,409 --> 00:43:32,000
+and it will basically produce
+
+1193
+00:43:33,090 --> 00:43:35,250
+completions that are re re
+
+1194
+00:43:35,250 --> 00:43:36,519
+repetitive nonsense.
+
+1195
+00:43:36,898 --> 00:43:37,619
+And
+
+1196
+00:43:38,019 --> 00:43:40,300
+the reasoning models, for
+
+1197
+00:43:40,300 --> 00:43:42,300
+example, many providers no
+
+1198
+00:43:42,300 --> 00:43:44,570
+longer even expose the temperature flag
+
+1199
+00:43:44,570 --> 00:43:46,039
+on those APIs
+
+1200
+00:43:46,378 --> 00:43:48,438
+because they are,
+
+1201
+00:43:49,059 --> 00:43:51,219
+they don't want you to basically run into this edge
+
+1202
+00:43:51,219 --> 00:43:53,469
+case. So they basically set a higher
+
+1203
+00:43:53,469 --> 00:43:55,119
+temperature and you, they don't let you lower it.
+
+1204
+00:43:55,639 --> 00:43:56,228
+Um,
+
+1205
+00:43:56,679 --> 00:43:58,780
+and so you may also recall the
+
+1206
+00:43:58,780 --> 00:44:01,280
+frequency and the
+
+1207
+00:44:01,280 --> 00:44:03,719
+repetition flags, which were
+
+1208
+00:44:03,719 --> 00:44:05,219
+two kind of tools
+
+1209
+00:44:05,519 --> 00:44:07,840
+in the API that helped you.
+
+1210
+00:44:08,619 --> 00:44:10,628
+More easily control this and
+
+1211
+00:44:10,628 --> 00:44:12,128
+kind of mitigate against this
+
+1212
+00:44:12,628 --> 00:44:13,309
+and
+
+1213
+00:44:13,668 --> 00:44:15,668
+as we've seen it doesn't
+
+1214
+00:44:15,668 --> 00:44:17,750
+fully always work so to
+
+1215
+00:44:17,750 --> 00:44:20,090
+motivate why we're studying this problem
+
+1216
+00:44:20,469 --> 00:44:22,648
+you can actually see this screenshot
+
+1217
+00:44:22,750 --> 00:44:24,889
+this is an actual um
+
+1218
+00:44:25,110 --> 00:44:27,099
+this is an actual screenshot from
+
+1219
+00:44:27,469 --> 00:44:28,050
+a
+
+1220
+00:44:28,429 --> 00:44:29,329
+leading
+
+1221
+00:44:29,708 --> 00:44:30,688
+software
+
+1222
+00:44:31,409 --> 00:44:32,929
+agentic coding tool.
+
+1223
+00:44:33,909 --> 00:44:35,989
+You've probably used it if you've written code and
+
+1224
+00:44:35,989 --> 00:44:38,179
+or tested it and as you can see
+
+1225
+00:44:38,179 --> 00:44:40,668
+there is very clearly degenerate repetition.
+
+1226
+00:44:40,938 --> 00:44:42,949
+So while this is infrequent, it does happen in
+
+1227
+00:44:42,949 --> 00:44:43,769
+the wild,
+
+1228
+00:44:44,110 --> 00:44:46,179
+and the main penalties to
+
+1229
+00:44:46,179 --> 00:44:46,909
+address this
+
+1230
+00:44:47,168 --> 00:44:49,219
+fail in all cases or
+
+1231
+00:44:49,219 --> 00:44:51,530
+in all they, they don't succeed in all cases I should say.
+
+1232
+00:44:51,789 --> 00:44:53,849
+And so one work we did that
+
+1233
+00:44:54,110 --> 00:44:56,228
+heavily relied on batch inference on
+
+1234
+00:44:56,228 --> 00:44:58,590
+hyperpod was this LZ
+
+1235
+00:44:58,590 --> 00:45:00,628
+penalty development that we worked
+
+1236
+00:45:00,628 --> 00:45:01,469
+out this year.
+
+1237
+00:45:03,119 --> 00:45:05,159
+So why are we working on a new penalty? As
+
+1238
+00:45:05,159 --> 00:45:07,239
+I mentioned, there's already industry standard
+
+1239
+00:45:07,239 --> 00:45:09,539
+penalties that you can find in standard
+
+1240
+00:45:10,079 --> 00:45:12,079
+inference APIs, the repetition
+
+1241
+00:45:12,079 --> 00:45:13,469
+penalty and the frequency penalty,
+
+1242
+00:45:13,760 --> 00:45:15,840
+but neither of them fully solves the problem.
+
+1243
+00:45:16,159 --> 00:45:18,199
+So what is the repetition penalty? You can think
+
+1244
+00:45:18,199 --> 00:45:20,478
+of it as a binary approach, which
+
+1245
+00:45:20,478 --> 00:45:21,500
+basically says
+
+1246
+00:45:21,958 --> 00:45:24,228
+if the token already appears in the
+
+1247
+00:45:24,228 --> 00:45:26,280
+generation, I'm gonna downsample and make
+
+1248
+00:45:26,280 --> 00:45:28,398
+it less likely for that
+
+1249
+00:45:28,398 --> 00:45:29,619
+token to appear again.
+
+1250
+00:45:30,398 --> 00:45:32,909
+This basically entirely ignores
+
+1251
+00:45:32,909 --> 00:45:35,030
+token frequency. It's a very kind of
+
+1252
+00:45:35,030 --> 00:45:36,309
+crude metric
+
+1253
+00:45:36,708 --> 00:45:38,750
+and so it's also lacking
+
+1254
+00:45:38,750 --> 00:45:40,989
+in memory. It penalizes all tokens
+
+1255
+00:45:40,989 --> 00:45:43,530
+equally regardless of recency, so
+
+1256
+00:45:43,668 --> 00:45:45,708
+it doesn't actually work and experiences up
+
+1257
+00:45:45,708 --> 00:45:47,969
+to 4% to generate repetition rates
+
+1258
+00:45:48,269 --> 00:45:50,389
+for the frequency penalty, which is the other
+
+1259
+00:45:50,389 --> 00:45:51,188
+industry standard,
+
+1260
+00:45:51,510 --> 00:45:54,128
+we can also see that empirically
+
+1261
+00:45:54,128 --> 00:45:55,333
+it doesn't. Fully work
+
+1262
+00:45:55,652 --> 00:45:57,972
+it tries to be more sophisticated than the repetition
+
+1263
+00:45:57,972 --> 00:45:59,193
+penalty by,
+
+1264
+00:45:59,672 --> 00:46:01,552
+uh, actually scaling
+
+1265
+00:46:01,811 --> 00:46:02,751
+the number of
+
+1266
+00:46:03,052 --> 00:46:05,291
+appearances and scaling the penalty based
+
+1267
+00:46:05,291 --> 00:46:05,913
+on this,
+
+1268
+00:46:06,291 --> 00:46:08,652
+but the problem is that it doesn't actually
+
+1269
+00:46:08,652 --> 00:46:10,652
+account or normalize for the length of
+
+1270
+00:46:10,652 --> 00:46:11,791
+the sequence
+
+1271
+00:46:12,052 --> 00:46:14,512
+which can result in a
+
+1272
+00:46:14,561 --> 00:46:16,663
+situation where for very long completions,
+
+1273
+00:46:16,693 --> 00:46:18,916
+which is what you get when you. On
+
+1274
+00:46:18,916 --> 00:46:21,456
+reasoning because the models can basically
+
+1275
+00:46:21,795 --> 00:46:23,835
+think and for thousands
+
+1276
+00:46:23,835 --> 00:46:26,496
+of tokens let's say you get very long sequences
+
+1277
+00:46:26,675 --> 00:46:28,996
+that also the frequency penalty
+
+1278
+00:46:28,996 --> 00:46:31,155
+start to fail catastrophically when
+
+1279
+00:46:31,155 --> 00:46:33,394
+common tokens eventually get banned. So
+
+1280
+00:46:33,394 --> 00:46:35,554
+after basically it's like saying you have a certain number
+
+1281
+00:46:35,554 --> 00:46:37,695
+of commas you're allowed to use in your response
+
+1282
+00:46:38,074 --> 00:46:40,155
+once you exceed that number of commas you
+
+1283
+00:46:40,155 --> 00:46:41,335
+can't use anymore
+
+1284
+00:46:41,766 --> 00:46:42,534
+and what.
+
+1285
+00:46:43,349 --> 00:46:45,469
+Results is the model wants to use a comma but it
+
+1286
+00:46:45,469 --> 00:46:47,489
+can't, so then it makes up another token
+
+1287
+00:46:47,789 --> 00:46:49,969
+in its place, and it starts to
+
+1288
+00:46:50,199 --> 00:46:52,349
+degrade the response until it just
+
+1289
+00:46:52,349 --> 00:46:53,889
+becomes degenerate nonsense.
+
+1290
+00:46:55,360 --> 00:46:57,820
+So I'm gonna tell you about the LZ penalty,
+
+1291
+00:46:57,958 --> 00:46:59,958
+which was, is, is, is you can think of it as a
+
+1292
+00:46:59,958 --> 00:47:02,429
+variant of the two previous penalties, but
+
+1293
+00:47:02,429 --> 00:47:04,708
+it's different on a fundamental level. It's
+
+1294
+00:47:04,840 --> 00:47:07,320
+based on information theoretic principles
+
+1295
+00:47:07,438 --> 00:47:09,949
+that enabled you to more rigorously
+
+1296
+00:47:09,949 --> 00:47:10,938
+address this problem.
+
+1297
+00:47:11,398 --> 00:47:13,719
+So you may have heard of LZ 77,
+
+1298
+00:47:13,760 --> 00:47:15,878
+but I'm certain you've used it because you've
+
+1299
+00:47:15,878 --> 00:47:17,429
+zipped a file on your computer.
+
+1300
+00:47:17,760 --> 00:47:19,300
+So if you've done that,
+
+1301
+00:47:19,679 --> 00:47:21,800
+that's LZ 77. It's a data
+
+1302
+00:47:21,800 --> 00:47:24,159
+compression algorithm that has this property
+
+1303
+00:47:24,159 --> 00:47:26,500
+of being universal, which means it can
+
+1304
+00:47:26,579 --> 00:47:28,340
+basically work for any data type.
+
+1305
+00:47:28,840 --> 00:47:29,938
+Uh, there's a.
+
+1306
+00:47:30,458 --> 00:47:32,510
+Uh, we won't go too much into the details
+
+1307
+00:47:32,510 --> 00:47:34,728
+of it, but essentially what it does is
+
+1308
+00:47:34,829 --> 00:47:37,030
+it lets you look at the historical
+
+1309
+00:47:37,030 --> 00:47:39,148
+parts of the file and then looking
+
+1310
+00:47:39,148 --> 00:47:41,510
+forward to the next chunk of the file, it
+
+1311
+00:47:41,510 --> 00:47:43,639
+allows you to pattern match the next chunk
+
+1312
+00:47:43,639 --> 00:47:44,648
+compared to,
+
+1313
+00:47:44,949 --> 00:47:47,188
+um, let's say a lookup table or a sliding
+
+1314
+00:47:47,188 --> 00:47:49,590
+window of previous chunks, and that pattern
+
+1315
+00:47:49,590 --> 00:47:51,590
+match is what enables the compression.
+
+1316
+00:47:52,159 --> 00:47:54,688
+So as I mentioned, n-gram repetitions,
+
+1317
+00:47:55,030 --> 00:47:57,389
+and it's based on, on pattern matching.
+
+1318
+00:47:58,000 --> 00:48:00,329
+Uh, not just naive frequency
+
+1319
+00:48:00,329 --> 00:48:00,989
+counts.
+
+1320
+00:48:03,398 --> 00:48:05,898
+So how do we actually apply this LZ algorithm
+
+1321
+00:48:05,898 --> 00:48:07,079
+to the language model?
+
+1322
+00:48:07,478 --> 00:48:09,719
+During the sampling of a language model,
+
+1323
+00:48:09,918 --> 00:48:11,978
+it looks like this, where we have a context,
+
+1324
+00:48:12,320 --> 00:48:14,550
+that context gets fed into the language model,
+
+1325
+00:48:14,800 --> 00:48:17,469
+which produces what's called logits.
+
+1326
+00:48:17,760 --> 00:48:20,260
+These logits is what tells the sampler
+
+1327
+00:48:20,438 --> 00:48:22,438
+what probability to assign to every
+
+1328
+00:48:22,438 --> 00:48:23,519
+possible next token.
+
+1329
+00:48:24,849 --> 00:48:26,978
+With the LZ penalty, we in
+
+1330
+00:48:26,978 --> 00:48:29,438
+parallel from the language model
+
+1331
+00:48:29,438 --> 00:48:31,739
+are running the data compression algorithm.
+
+1332
+00:48:31,869 --> 00:48:34,159
+So you can basically think of it as running
+
+1333
+00:48:34,159 --> 00:48:36,260
+GZI or a Vera or something very
+
+1334
+00:48:36,260 --> 00:48:38,489
+similar to GSI right there in parallel with the
+
+1335
+00:48:38,489 --> 00:48:39,188
+language model,
+
+1336
+00:48:39,500 --> 00:48:41,539
+and then we're taking the output of that
+
+1337
+00:48:41,539 --> 00:48:42,559
+data compressor,
+
+1338
+00:48:42,860 --> 00:48:45,019
+and then we're fusing that output with the logits
+
+1339
+00:48:45,019 --> 00:48:46,360
+that come out of the language model,
+
+1340
+00:48:46,938 --> 00:48:49,500
+and then we're using this fused representation
+
+1341
+00:48:49,500 --> 00:48:50,469
+for the sampler,
+
+1342
+00:48:51,019 --> 00:48:53,179
+and what this enables
+
+1343
+00:48:53,179 --> 00:48:54,019
+is that.
+
+1344
+00:48:54,860 --> 00:48:55,760
+The,
+
+1345
+00:48:56,559 --> 00:48:58,739
+the outcomes that the data compression
+
+1346
+00:48:58,739 --> 00:48:59,570
+algorithm
+
+1347
+00:48:59,849 --> 00:49:01,699
+thinks are very repetitive,
+
+1348
+00:49:02,769 --> 00:49:05,179
+become very much uh downweighted
+
+1349
+00:49:05,179 --> 00:49:06,599
+in the
+
+1350
+00:49:07,769 --> 00:49:08,918
+generations from the model.
+
+1351
+00:49:10,148 --> 00:49:12,148
+Uh, because this data compression algorithm is
+
+1352
+00:49:12,148 --> 00:49:14,639
+actually the perfect thing to in some sense, detect
+
+1353
+00:49:14,639 --> 00:49:16,840
+this kind of degeneration and repetition
+
+1354
+00:49:16,840 --> 00:49:17,519
+and redundancy.
+
+1355
+00:49:18,269 --> 00:49:19,369
+So empirically,
+
+1356
+00:49:19,909 --> 00:49:22,110
+uh, we can see here, so the
+
+1357
+00:49:22,110 --> 00:49:24,208
+charts on, on, on the left
+
+1358
+00:49:24,349 --> 00:49:26,610
+are showing average score
+
+1359
+00:49:27,219 --> 00:49:28,610
+across temperatures
+
+1360
+00:49:29,148 --> 00:49:31,590
+and so the temperature again is this parameter
+
+1361
+00:49:31,590 --> 00:49:32,769
+that controls
+
+1362
+00:49:33,148 --> 00:49:35,148
+how random uh the sampler
+
+1363
+00:49:35,148 --> 00:49:36,989
+is. Temperature 0
+
+1364
+00:49:37,269 --> 00:49:39,269
+being the, the value
+
+1365
+00:49:39,269 --> 00:49:41,750
+most there to your left is gonna be greedy
+
+1366
+00:49:41,750 --> 00:49:43,750
+decoding that's perfectly deterministic.
+
+1367
+00:49:44,469 --> 00:49:46,688
+And so as we can swipe or
+
+1368
+00:49:46,688 --> 00:49:48,809
+scan the temperatures we can see
+
+1369
+00:49:48,809 --> 00:49:50,809
+that the LZ penalty there, the NCA
+
+1370
+00:49:50,809 --> 00:49:52,889
+penalty there in red, is consistently within
+
+1371
+00:49:52,889 --> 00:49:54,969
+error bars of the best with no
+
+1372
+00:49:54,969 --> 00:49:57,128
+penalty and the best with the
+
+1373
+00:49:57,128 --> 00:49:59,168
+various two other penalties, frequency
+
+1374
+00:49:59,168 --> 00:50:01,510
+and repetition. Again, those are our baseline penalties.
+
+1375
+00:50:02,188 --> 00:50:02,699
+Um,
+
+1376
+00:50:03,559 --> 00:50:05,648
+And without degrading accuracy, which
+
+1377
+00:50:05,648 --> 00:50:07,849
+is very important, you don't want to degrade your accuracy.
+
+1378
+00:50:08,050 --> 00:50:10,159
+This is, by the way, reasoning model, a
+
+1379
+00:50:10,159 --> 00:50:12,449
+Queen 32 billion parameter reasoning model open
+
+1380
+00:50:12,449 --> 00:50:13,849
+source. Uh,
+
+1381
+00:50:14,168 --> 00:50:16,110
+we can see that the generate repetitions
+
+1382
+00:50:16,369 --> 00:50:18,889
+are uniformly, um, essentially
+
+1383
+00:50:18,889 --> 00:50:21,389
+virtually eliminated with the LSC penalty
+
+1384
+00:50:21,599 --> 00:50:23,628
+uniformly across the board at any temperature.
+
+1385
+00:50:24,125 --> 00:50:26,525
+Below 0.1% empirical uh
+
+1386
+00:50:26,726 --> 00:50:27,706
+discovery of
+
+1387
+00:50:28,045 --> 00:50:30,445
+of any kind of degenerate repetition whereas
+
+1388
+00:50:30,445 --> 00:50:31,585
+all the other penalties
+
+1389
+00:50:32,364 --> 00:50:32,905
+are
+
+1390
+00:50:33,246 --> 00:50:35,324
+maybe generously let's say somewhere between 1
+
+1391
+00:50:35,324 --> 00:50:37,065
+to 4% which
+
+1392
+00:50:37,394 --> 00:50:39,565
+is again pretty infrequent
+
+1393
+00:50:39,565 --> 00:50:41,545
+but it also depends on your perspective because
+
+1394
+00:50:42,045 --> 00:50:44,045
+getting a situation where you actually
+
+1395
+00:50:44,045 --> 00:50:44,686
+do see.
+
+1396
+00:50:45,152 --> 00:50:46,021
+Uh, repetition
+
+1397
+00:50:46,362 --> 00:50:48,391
+is, is, uh, a degenerate repetition is
+
+1398
+00:50:48,391 --> 00:50:50,581
+very bad and so this also again
+
+1399
+00:50:50,581 --> 00:50:51,652
+goes back to
+
+1400
+00:50:51,922 --> 00:50:54,302
+why many of the model APIs
+
+1401
+00:50:54,760 --> 00:50:56,780
+don't actually, don't let you
+
+1402
+00:50:56,922 --> 00:50:59,121
+use reasoning models at temperature zero
+
+1403
+00:50:59,280 --> 00:51:00,940
+to let you kind of
+
+1404
+00:51:01,362 --> 00:51:02,661
+not have to deal with this,
+
+1405
+00:51:02,922 --> 00:51:05,322
+uh, problem of running into these degenerate repetitions.
+
+1406
+00:51:06,458 --> 00:51:08,978
+So here is a little bit more of an in-depth
+
+1407
+00:51:08,978 --> 00:51:11,039
+result. So these heat maps show
+
+1408
+00:51:11,418 --> 00:51:13,539
+every value of the repetition
+
+1409
+00:51:13,539 --> 00:51:15,099
+penalty in terms of its strength.
+
+1410
+00:51:15,458 --> 00:51:17,820
+So again, if you can tune
+
+1411
+00:51:17,820 --> 00:51:19,898
+both the temperature and then you can tune the strength
+
+1412
+00:51:19,898 --> 00:51:22,099
+of the penalty, and the stronger the penalty,
+
+1413
+00:51:22,179 --> 00:51:24,478
+the more it impacts. The
+
+1414
+00:51:24,478 --> 00:51:26,418
+ultimate sampling from the model,
+
+1415
+00:51:26,878 --> 00:51:29,139
+um, that's the very top row
+
+1416
+00:51:29,139 --> 00:51:31,320
+of every heat map is the row
+
+1417
+00:51:31,320 --> 00:51:33,438
+that is the LZ penalty, so that's
+
+1418
+00:51:33,438 --> 00:51:35,820
+kind of like our row, um,
+
+1419
+00:51:35,878 --> 00:51:37,918
+at just the one strength
+
+1420
+00:51:37,918 --> 00:51:40,000
+that you need it you don't
+
+1421
+00:51:40,000 --> 00:51:40,860
+need to tune it
+
+1422
+00:51:41,159 --> 00:51:41,699
+and
+
+1423
+00:51:42,000 --> 00:51:44,239
+again you don't need to tune it because of
+
+1424
+00:51:44,239 --> 00:51:46,628
+the universal property of the
+
+1425
+00:51:46,639 --> 00:51:48,978
+data compression algorithm. It works for any data distribution.
+
+1426
+00:51:49,829 --> 00:51:52,079
+But the other ones you do need to tune and
+
+1427
+00:51:52,079 --> 00:51:53,340
+you can see that
+
+1428
+00:51:53,760 --> 00:51:56,019
+um on the repetition penalty heat maps,
+
+1429
+00:51:56,159 --> 00:51:58,519
+you very often at low temperatures
+
+1430
+00:51:58,519 --> 00:52:00,918
+and occasionally sometimes even at higher temperatures
+
+1431
+00:52:00,918 --> 00:52:02,179
+do run into these
+
+1432
+00:52:02,610 --> 00:52:03,139
+um
+
+1433
+00:52:03,478 --> 00:52:06,059
+kind of catastrophic failures with the generate repetitions.
+
+1434
+00:52:07,878 --> 00:52:09,510
+Bringing things back to inference.
+
+1435
+00:52:10,260 --> 00:52:12,260
+You might be asking, OK, while you're doing all this
+
+1436
+00:52:12,260 --> 00:52:14,300
+extra work with the LSE penalty, how
+
+1437
+00:52:14,300 --> 00:52:16,320
+does it impact your inference performance?
+
+1438
+00:52:16,579 --> 00:52:18,659
+And the answer is that the amount of work you
+
+1439
+00:52:18,659 --> 00:52:21,079
+do with the LSZ penalty compared to the language model
+
+1440
+00:52:21,260 --> 00:52:23,780
+is very small. 1, it paralyzes
+
+1441
+00:52:23,780 --> 00:52:25,099
+very neatly on the GPU,
+
+1442
+00:52:25,458 --> 00:52:27,559
+and 2, as I mentioned, very, very
+
+1443
+00:52:27,559 --> 00:52:29,619
+small. At even a just
+
+1444
+00:52:29,619 --> 00:52:31,860
+a 1.5 billion parameter model,
+
+1445
+00:52:32,340 --> 00:52:34,070
+the throughput slowdown
+
+1446
+00:52:34,340 --> 00:52:36,369
+is less than half a right,
+
+1447
+00:52:36,500 --> 00:52:37,708
+right about 0.5%.
+
+1448
+00:52:38,019 --> 00:52:38,789
+Latency
+
+1449
+00:52:39,099 --> 00:52:41,099
+is, um, nearly
+
+1450
+00:52:41,099 --> 00:52:43,418
+on par, and then as you go up
+
+1451
+00:52:43,418 --> 00:52:45,655
+to. Um, even 32B,
+
+1452
+00:52:46,184 --> 00:52:48,184
+it goes down from 0.5%
+
+1453
+00:52:48,184 --> 00:52:48,724
+to,
+
+1454
+00:52:49,023 --> 00:52:50,894
+uh, 0.03%,
+
+1455
+00:52:51,264 --> 00:52:53,264
+essentially vanishing as the model even
+
+1456
+00:52:53,264 --> 00:52:55,695
+reaches med medium size, the
+
+1457
+00:52:55,945 --> 00:52:58,063
+kind of inference impact of having to do this
+
+1458
+00:52:58,063 --> 00:52:59,625
+extra work for the LC penalty.
+
+1459
+00:53:02,340 --> 00:53:02,929
+So,
+
+1460
+00:53:03,458 --> 00:53:06,039
+one thing that we did was
+
+1461
+00:53:06,039 --> 00:53:06,570
+we were,
+
+1462
+00:53:06,978 --> 00:53:09,059
+you know, this is one line of research we worked on
+
+1463
+00:53:09,300 --> 00:53:11,500
+in parallel with dozens of other
+
+1464
+00:53:11,500 --> 00:53:13,570
+jobs all running on the same hyperpod.
+
+1465
+00:53:13,860 --> 00:53:16,139
+The final set of experiments that we presented,
+
+1466
+00:53:16,219 --> 00:53:17,320
+a subset of them here,
+
+1467
+00:53:17,860 --> 00:53:20,019
+um, you can reference our technical report
+
+1468
+00:53:20,019 --> 00:53:21,769
+for the full set of experiments.
+
+1469
+00:53:22,300 --> 00:53:24,340
+That was validated over about a week with other
+
+1470
+00:53:24,340 --> 00:53:25,739
+jobs scaling up and down.
+
+1471
+00:53:26,019 --> 00:53:26,719
+We went through
+
+1472
+00:53:27,639 --> 00:53:29,659
+over 25 billion tokens and over
+
+1473
+00:53:29,659 --> 00:53:31,478
+a zeta flop of computes.
+
+1474
+00:53:31,958 --> 00:53:32,878
+And
+
+1475
+00:53:33,458 --> 00:53:34,639
+yeah, so
+
+1476
+00:53:35,139 --> 00:53:37,300
+again, being able to run
+
+1477
+00:53:37,300 --> 00:53:39,438
+this and have having
+
+1478
+00:53:39,438 --> 00:53:41,280
+elastic and checkpointless
+
+1479
+00:53:41,780 --> 00:53:44,010
+scaling up and down is
+
+1480
+00:53:44,010 --> 00:53:46,019
+very synergistic with how we wanna scale
+
+1481
+00:53:46,019 --> 00:53:48,300
+up and down our batch inference and all of other job
+
+1482
+00:53:48,300 --> 00:53:49,188
+workloads.
+
+1483
+00:53:49,860 --> 00:53:51,938
+So with that, I'll uh have Anna Rud
+
+1484
+00:53:51,938 --> 00:53:53,639
+come back and wrap us up.
+
+1485
+00:53:54,820 --> 00:53:55,599
+Uh, thanks, Tony.
+
+1486
+00:53:56,458 --> 00:53:58,579
+So, uh, folks, to summarize, we covered
+
+1487
+00:53:58,579 --> 00:53:59,398
+a couple of
+
+1488
+00:53:59,728 --> 00:54:01,610
+key launches, um, in the session.
+
+1489
+00:54:01,958 --> 00:54:03,579
+So with elastic training,
+
+1490
+00:54:03,878 --> 00:54:05,878
+it fundamentally changes the way training
+
+1491
+00:54:05,878 --> 00:54:06,918
+jobs run on Hyperport,
+
+1492
+00:54:07,239 --> 00:54:09,438
+and so we can dynamically scale them up or
+
+1493
+00:54:09,438 --> 00:54:11,800
+down to take advantage of idle capacity
+
+1494
+00:54:11,800 --> 00:54:12,599
+in the cluster.
+
+1495
+00:54:12,918 --> 00:54:14,260
+This ensures training cluster,
+
+1496
+00:54:14,599 --> 00:54:16,639
+training continuity and better cluster
+
+1497
+00:54:16,639 --> 00:54:18,639
+utilization. You can think of elastic
+
+1498
+00:54:18,639 --> 00:54:19,820
+training as sort of playing
+
+1499
+00:54:20,280 --> 00:54:21,909
+Tetris with your cluster capacity,
+
+1500
+00:54:22,280 --> 00:54:24,320
+growing and shrinking jobs as more
+
+1501
+00:54:24,320 --> 00:54:25,539
+capacity becomes available.
+
+1502
+00:54:25,978 --> 00:54:28,010
+And the second key launch is checkpointless
+
+1503
+00:54:28,010 --> 00:54:30,139
+training. This is a paradigm shift in
+
+1504
+00:54:30,139 --> 00:54:31,030
+terms of
+
+1505
+00:54:31,289 --> 00:54:33,728
+training resilience, and instead of going
+
+1506
+00:54:33,728 --> 00:54:35,929
+through a checkpoint-based recovery, which can
+
+1507
+00:54:35,929 --> 00:54:36,898
+take up to 1 hour,
+
+1508
+00:54:37,239 --> 00:54:38,898
+checkpointless training can
+
+1509
+00:54:39,719 --> 00:54:41,760
+Offer you recovery times that are in minutes.
+
+1510
+00:54:42,199 --> 00:54:44,269
+This has good put numbers
+
+1511
+00:54:44,269 --> 00:54:46,320
+upwards of 95% on clusters with
+
+1512
+00:54:46,320 --> 00:54:47,418
+thousands of nodes,
+
+1513
+00:54:47,760 --> 00:54:49,829
+and with that, um, we wrap
+
+1514
+00:54:49,829 --> 00:54:50,398
+up our talk.
+
+1515
+00:54:50,679 --> 00:54:51,929
+Here are some resources,
+
+1516
+00:54:52,199 --> 00:54:54,239
+we're excited to see what you build with
+
+1517
+00:54:54,239 --> 00:54:56,378
+this. We'll be available offstage
+
+1518
+00:54:56,378 --> 00:54:58,300
+for any questions that you might have.
+
+1519
+00:54:58,570 --> 00:55:00,780
+Uh, please do leave feedback on the session
+
+1520
+00:55:00,780 --> 00:55:01,978
+within the app. Thank you so much.
+

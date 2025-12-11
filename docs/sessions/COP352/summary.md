@@ -1,99 +1,57 @@
-# AWS re:Invent 2025 技术分享会总结
+# AWS re:Invent 2025 基础设施即代码治理会议总结
 
 ## 会议概述
 
-本次分享会由AWS首席工程师David Kilman和高级解决方案架构师Sephi Abra共同主讲,主题聚焦于基础设施即代码(Infrastructure as Code, IaC)的治理与安全控制。会议在re:Invent的最后一天(周四)举行,两位讲师以轻松幽默的方式向观众展示了如何使用主动控制(Proactive Controls)来防止不安全或不合规的基础设施部署。
+本次会议由AWS首席工程师David Kilman和高级解决方案架构师Sefi Abrech主讲，主题为"基础设施即代码治理：让IAC部署更安全"。会议重点介绍了AWS CloudFormation Hooks功能，展示了如何通过主动控制机制防止不安全或不合规的基础设施部署。
 
-David分享了多个真实案例,包括他自己因创建不安全的Lambda函数端点而被安全团队告警的经历,以及实习生意外修改生产环境配置的故事。这些案例生动地说明了为什么需要在部署前就阻止错误配置,而不是依赖事后检测。会议重点介绍了CloudFormation Hooks功能,这是一种可以在资源创建前进行策略验证的机制,能够确保所有部署都符合组织的安全、合规和成本优化要求。
-
-讲师们通过大量现场演示展示了如何使用CloudFormation Guard编写策略规则,如何配置Hooks,以及如何在CloudFormation和Terraform中应用这些控制。整个分享会强调了"左移"(Shift Left)的理念——在开发早期就发现并修复问题,而不是等到生产环境出现故障后再补救。
+演讲者通过生动的实际案例和现场演示，展示了从被动检测控制向主动预防控制的转变。会议涵盖了CloudFormation Guard规则编写、Hooks配置、以及如何在组织级别通过Control Tower实施治理策略。同时也演示了如何在Terraform中使用AWSCC provider实现相同的治理效果。
 
 ## 详细时间线与关键要点
 
-### 开场与背景介绍 (00:00 - 05:30)
-- **00:00** - 会议开始,David Kilman进行开场互动,调动现场气氛
-- **01:20** - 介绍演讲者背景:David是AWS CloudFormation团队的首席工程师,Sephi专注于治理、合规和安全领域
-- **02:15** - 现场调查:询问观众使用IaC工具的情况(CloudFormation、Terraform、Pulumi等)
-- **03:30** - 展示典型的IaC工作流程:编写代码 → 推送到Git → CI/CD流水线 → 部署到AWS账户
-- **04:45** - 提出核心问题:如何在这个流程中实施安全防护措施?
+### 0:00-5:00 开场介绍
+- David Kilman自我介绍，AWS CloudFormation首席工程师
+- Sefi Abrech介绍，专注治理、合规和安全的高级解决方案架构师
+- 现场调研：100%参会者使用基础设施即代码
+- 介绍会议互动形式和主题概览
 
-### 主动控制的价值与用例 (05:30 - 15:00)
-- **05:30** - 演示CloudFormation Hooks的基本概念:在资源创建前进行策略检查
-- **06:45** - 用例一:安全与治理 - David分享Lambda函数端点事件:创建了一个公开可访问的Lambda端点,被安全团队检测到并要求删除
-- **09:20** - 强调主动控制的优势:在问题发生前阻止,而不是事后补救
-- **10:30** - 用例二:防止意外错误 - 实习生案例:意外将生产环境的Auto Scaling组从100个实例改为10个,被Hook及时拦截
-- **12:15** - 介绍COE(Correction of Errors)文化:从错误中学习并建立机制防止重复发生
-- **13:45** - 用例三:成本优化 - 限制EC2实例类型,确保使用有折扣的实例类型
+### 5:00-15:00 主动控制的重要性
+- 展示传统CICD流程中的治理挑战
+- David分享Lambda Function Endpoints的真实故事：创建了全球可访问的端点，被安全团队检测到并要求删除
+- 强调主动控制优于被动检测的原因：防止问题发生而非事后修复
+- 介绍另一个案例：实习生意外修改Auto Scaling Group配置，Hooks成功阻止了生产环境的潜在故障
 
-### CloudFormation Guard与Hooks实战演示 (15:00 - 35:00)
-- **15:00** - 开始现场编码演示环节
-- **16:00** - 介绍CloudFormation Guard:AWS的策略即代码DSL(领域特定语言)
-- **17:30** - 访问GitHub上的Guard规则注册表,展示社区预编写的规则库
-- **18:45** - 演示如何从规则库中选择S3、IAM、Lambda、DynamoDB相关的安全规则
-- **20:00** - 在CloudFormation控制台创建Hook:命名为"Gotcha Hook",上传Guard规则到S3
-- **21:30** - 配置Hook触发条件:在资源创建和更新时运行,失败模式设置为"阻止"
-- **23:00** - 展示AI生成的CloudFormation模板:包含Lambda函数、DynamoDB表和S3存储桶
-- **24:15** - 第一次部署尝试失败:S3存储桶因缺少对象锁定(Object Lock)和公共访问阻止配置而被Hook拦截
-- **26:30** - 查看Hook失败详情:详细的错误消息指出缺少哪些配置
-- **27:45** - 修复S3存储桶配置:添加ObjectLockEnabled和PublicAccessBlockConfiguration属性
-- **29:00** - 第二次部署尝试:仍然失败,DynamoDB表缺少加密配置,IAM角色包含管理员权限
-- **31:00** - 介绍Change Set功能:类似Terraform Plan,在实际部署前预览变更
-- **32:30** - 演示Change Set与Hook结合:在Change Set阶段就能看到所有策略违规,无需等待实际部署
-- **34:00** - 展示修复后的成功部署:所有资源通过Hook验证
+### 15:00-25:00 成本控制和最佳实践
+- 讨论如何通过Hooks防止意外的高成本资源创建
+- 介绍组织级别的成本优化策略：强制使用有折扣的EC2实例类型
+- 解释COE（Correction of Error）文化和如何将经验教训编码化为自动化控制
+- 强调主动控制在合规性框架（如FedRAMP、NIST）中的重要作用
 
-### CloudFormation Guard规则详解 (35:00 - 40:00)
-- **35:00** - 深入讲解Guard规则语法结构
-- **36:15** - 展示S3对象锁定规则示例:检查资源类型,断言属性存在且为true
-- **37:30** - 说明如何在规则中添加自定义错误消息,帮助开发者快速定位问题
-- **38:45** - 强调Guard规则的可读性和可维护性
+### 25:00-35:00 CloudFormation Guard和Hooks实战
+- 介绍CloudFormation Guard作为策略即代码DSL
+- 演示从GitHub Guard Rules Registry获取预写规则
+- 创建"Gotcha Hook"，配置为在资源创建/更新时运行
+- 展示Hook在失败模式下的工作原理
 
-### AWS Control Catalog简化Hook创建 (40:00 - 48:00)
-- **40:00** - 介绍AWS Control Catalog:预构建的合规控制库
-- **41:30** - 演示如何通过Control Catalog快速创建Hook,无需手写Guard规则
-- **43:00** - 展示Control Catalog中的各种预定义控制:S3加密、IAM权限、VPC配置等
-- **44:30** - 一键部署控制到账户:选择控制 → 配置参数 → 激活
-- **46:00** - 对比手动编写Guard规则与使用Control Catalog的效率差异
-- **47:15** - 说明Control Catalog支持多种合规框架:PCI-DSS、NIST、FedRAMP等
+### 35:00-45:00 实际部署演示
+- 使用生成式AI创建包含Lambda、DynamoDB和S3的CloudFormation模板
+- 演示部署失败场景：S3 bucket缺少object lock和public access block配置
+- 展示如何通过Change Sets提前发现所有合规性问题
+- 逐步修复模板中的合规性问题
 
-### Terraform集成演示 (48:00 - 55:00)
-- **48:00** - Sephi接手演示,展示Hooks如何与Terraform配合使用
-- **49:15** - 介绍Terraform与CloudFormation的集成机制
-- **50:30** - 演示Terraform配置文件中的资源定义
-- **51:45** - 执行terraform plan,展示Hook在计划阶段的验证
-- **53:00** - 演示terraform apply被Hook拦截的场景
-- **54:15** - 强调跨IaC工具的统一治理策略
+### 45:00-50:00 Control Catalog简化体验
+- 介绍AWS Control Catalog作为预构建策略的解决方案
+- 展示如何通过点击界面快速启用多个合规性控制
+- 演示按合规框架（如NIST）分组的控制策略
+- 强调无需编写代码即可实现治理的便利性
 
-### 高级功能与最佳实践 (55:00 - 65:00)
-- **55:00** - 介绍Hook的警告模式(Warn Mode):不阻止部署,仅记录违规
-- **56:30** - 讨论Hook的作用域:账户级别、组织级别、特定资源类型
-- **58:00** - 演示如何查看Hook执行历史和审计日志
-- **59:30** - 分享Hook性能优化建议:规则复杂度、执行时间限制
-- **61:00** - 讨论异常处理:如何为特定场景创建豁免机制
-- **62:30** - 介绍与AWS Config、Security Hub的集成
-- **64:00** - 强调文档化的重要性:让开发者理解为什么某些配置被要求
+### 50:00-55:00 Terraform集成演示
+- Sefi演示使用AWSCC provider在Terraform中实现Hooks
+- 展示Lambda运行时版本检查和S3安全配置验证
+- 解释AWSCC provider与标准AWS provider的区别
+- 演示Terraform中的错误输出和调试信息
 
-### 组织级部署与治理 (65:00 - 72:00)
-- **65:00** - 介绍AWS Organizations中的Hook部署策略
-- **66:30** - 演示如何使用StackSets在多账户中部署Hook
-- **68:00** - 讨论集中式治理与分布式开发的平衡
-- **69:30** - 分享大型组织的Hook管理最佳实践
-- **71:00** - 介绍Hook版本管理和更新策略
-
-### 问答与总结 (72:00 - 结束)
-- **72:00** - 开放问答环节
-- **73:30** - 观众提问:如何处理遗留资源的合规性?
-- **75:00** - 观众提问:Hook的性能影响有多大?
-- **76:30** - 观众提问:是否支持自定义编程语言编写Hook?
-- **78:00** - 总结核心要点:主动控制优于被动检测,左移安全理念,自动化合规验证
-- **79:30** - 鼓励观众访问GitHub规则库和AWS文档
-- **80:00** - 会议结束,感谢观众参与
-
-## 关键技术要点
-
-- **CloudFormation Hooks**: 在资源创建前执行策略验证的机制
-- **CloudFormation Guard**: AWS的策略即代码语言,用于定义合规规则
-- **Change Sets**: 在实际部署前预览和验证变更
-- **AWS Control Catalog**: 预构建的合规控制库,简化Hook创建
-- **跨工具支持**: Hooks可用于CloudFormation和Terraform
-- **失败模式**: 支持阻止(Fail)和警告(Warn)两种模式
-- **组织级部署**: 通过AWS Organizations实现多账户治理
+### 55:00-59:00 组织级部署和总结
+- 通过Control Tower在组织单元级别部署控制策略
+- 展示多账户环境中的集中化治理管理
+- 介绍防御深度策略：结合主动和被动控制
+- 回答观众问题：异常处理、区域支持、可观测性改进等

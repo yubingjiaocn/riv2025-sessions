@@ -1,0 +1,5642 @@
+1
+00:00:00,120 --> 00:00:00,960
+- [Omar] Good afternoon everyone.
+
+2
+00:00:00,960 --> 00:00:03,090
+Thank you for coming to our Code Talk.
+
+3
+00:00:03,090 --> 00:00:04,650
+Today we're gonna be talking about
+
+4
+00:00:04,650 --> 00:00:06,780
+AI agents for cloud operations,
+
+5
+00:00:06,780 --> 00:00:08,880
+how you could automate
+infrastructure management.
+
+6
+00:00:08,880 --> 00:00:10,890
+One of the key topics we're
+gonna discuss today is
+
+7
+00:00:10,890 --> 00:00:13,950
+also how you could operate
+security operations.
+
+8
+00:00:13,950 --> 00:00:16,050
+And one thing that we're gonna discuss,
+
+9
+00:00:16,050 --> 00:00:19,140
+the way we formatted today's Code Talk is
+
+10
+00:00:19,140 --> 00:00:21,150
+we're gonna start off talking
+about the core components
+
+11
+00:00:21,150 --> 00:00:23,760
+of what an agent is, the
+type of integrations,
+
+12
+00:00:23,760 --> 00:00:26,490
+tools, and some fundamental concepts.
+
+13
+00:00:26,490 --> 00:00:28,590
+From there, we're gonna
+jump into the AWS console
+
+14
+00:00:28,590 --> 00:00:30,420
+and walk through a real demo
+
+15
+00:00:30,420 --> 00:00:33,030
+and talk through the code and
+look at some of the outputs
+
+16
+00:00:33,030 --> 00:00:36,840
+that come outta this agentic
+application that we develop.
+
+17
+00:00:36,840 --> 00:00:38,220
+So my name is Omar Tabbakha.
+
+18
+00:00:38,220 --> 00:00:40,070
+I'm a solution architect here at AWS.
+
+19
+00:00:41,012 --> 00:00:41,845
+- [Shawn] Hi, everybody.
+
+20
+00:00:41,845 --> 00:00:42,678
+My name is Sean Abdi.
+
+21
+00:00:42,678 --> 00:00:44,640
+I'm also solutions architect here at AWS.
+
+22
+00:00:44,640 --> 00:00:45,690
+- [Omar] So before we get started,
+
+23
+00:00:45,690 --> 00:00:47,160
+by a show of hands,
+
+24
+00:00:47,160 --> 00:00:50,070
+how many of you have
+built out an agent before?
+
+25
+00:00:50,070 --> 00:00:52,770
+It could be as simple as a
+weather application agent.
+
+26
+00:00:52,770 --> 00:00:54,780
+We have one hand, two hand, okay.
+
+27
+00:00:54,780 --> 00:00:57,030
+So decent amount of you
+have built out agents
+
+28
+00:00:57,030 --> 00:01:00,330
+within the, my guess is AWS,
+
+29
+00:01:00,330 --> 00:01:01,740
+maybe some other framework that we use,
+
+30
+00:01:01,740 --> 00:01:02,610
+but it looks like some of us have
+
+31
+00:01:02,610 --> 00:01:05,040
+already built out an agent, awesome.
+
+32
+00:01:05,040 --> 00:01:06,420
+So let's go ahead and get started.
+
+33
+00:01:06,420 --> 00:01:08,430
+- [Shawn] With that, let's jump right in.
+
+34
+00:01:08,430 --> 00:01:10,860
+So let's imagine that it's 2:00 AM
+
+35
+00:01:10,860 --> 00:01:12,300
+and you're a security engineer
+
+36
+00:01:12,300 --> 00:01:14,250
+that's just been received a call
+
+37
+00:01:14,250 --> 00:01:16,620
+and now you're thrust into
+a high pressure situation
+
+38
+00:01:16,620 --> 00:01:18,120
+regarding a security incident.
+
+39
+00:01:19,620 --> 00:01:21,360
+You log in and your first task is
+
+40
+00:01:21,360 --> 00:01:23,850
+to go through a mountains of
+mountains in different logs,
+
+41
+00:01:23,850 --> 00:01:25,657
+all in different formats,
+whether that's JSON
+
+42
+00:01:25,657 --> 00:01:27,180
+or plaint text,
+
+43
+00:01:27,180 --> 00:01:30,390
+that could be stuff like VPC
+Flow Logs, firewall logs,
+
+44
+00:01:30,390 --> 00:01:32,490
+API logs, CloudTrail logs,
+
+45
+00:01:32,490 --> 00:01:34,950
+even third-party vendors
+that you might use
+
+46
+00:01:34,950 --> 00:01:36,840
+for your on-premise or cloud environment.
+
+47
+00:01:36,840 --> 00:01:38,403
+Nothing native to AWS.
+
+48
+00:01:40,230 --> 00:01:41,400
+So hours pass by
+
+49
+00:01:41,400 --> 00:01:43,350
+as you try to piece together
+these different fragments,
+
+50
+00:01:43,350 --> 00:01:44,183
+like I mentioned.
+
+51
+00:01:44,183 --> 00:01:46,380
+You might have something
+like GuardDuty alerts,
+
+52
+00:01:46,380 --> 00:01:48,810
+CloudTrail logs, DynamoDB logs,
+
+53
+00:01:48,810 --> 00:01:50,520
+Security Hub findings,
+
+54
+00:01:50,520 --> 00:01:51,900
+and you're still trying to find out
+
+55
+00:01:51,900 --> 00:01:54,450
+how all these different
+resources talk to each other.
+
+56
+00:01:54,450 --> 00:01:55,800
+You know, they're from separate systems
+
+57
+00:01:55,800 --> 00:01:57,240
+speaking a different language
+
+58
+00:01:57,240 --> 00:02:00,040
+and are really not meant to
+communicate with each other.
+
+59
+00:02:02,340 --> 00:02:03,960
+So the clock is ticking.
+
+60
+00:02:03,960 --> 00:02:06,000
+You try to identify a suspicious IP,
+
+61
+00:02:06,000 --> 00:02:07,680
+see if it was really a security incident,
+
+62
+00:02:07,680 --> 00:02:09,990
+or if it we have a false
+positive on our hands
+
+63
+00:02:09,990 --> 00:02:11,730
+and you've just spent hours and hours
+
+64
+00:02:11,730 --> 00:02:14,130
+searching, trying to
+figure out what's going on.
+
+65
+00:02:15,450 --> 00:02:17,640
+At this point, you're
+starting to get exhausted.
+
+66
+00:02:17,640 --> 00:02:19,080
+You've done all the grunt work
+
+67
+00:02:19,080 --> 00:02:21,360
+that something like AI
+might be able to handle.
+
+68
+00:02:21,360 --> 00:02:23,160
+You spent searching
+through these resources
+
+69
+00:02:23,160 --> 00:02:25,140
+with different tools because
+they're in different formats
+
+70
+00:02:25,140 --> 00:02:26,190
+like we mentioned,
+
+71
+00:02:26,190 --> 00:02:27,540
+whether that's JSON, plain text
+
+72
+00:02:27,540 --> 00:02:29,240
+or some other standardized schema.
+
+73
+00:02:30,510 --> 00:02:33,780
+And you're figuring out
+what do I need to do now?
+
+74
+00:02:33,780 --> 00:02:36,000
+So what if we can take this problem
+
+75
+00:02:36,000 --> 00:02:38,430
+and use some sort of
+specialized, intelligent system
+
+76
+00:02:38,430 --> 00:02:41,400
+like some agents that can comb
+through all of these logs,
+
+77
+00:02:41,400 --> 00:02:43,110
+comb through these different tools
+
+78
+00:02:43,110 --> 00:02:45,120
+and be able to provide you some insights
+
+79
+00:02:45,120 --> 00:02:48,660
+that are actionable on your current risk,
+
+80
+00:02:48,660 --> 00:02:51,903
+giving you more precise
+path to tackle this issue.
+
+81
+00:02:53,490 --> 00:02:57,090
+And that gets us to why AI
+for security operations.
+
+82
+00:02:57,090 --> 00:02:58,410
+So the reality today is
+
+83
+00:02:58,410 --> 00:03:01,230
+that everything is
+moving super fast paced.
+
+84
+00:03:01,230 --> 00:03:03,480
+Attacks are becoming automated,
+
+85
+00:03:03,480 --> 00:03:04,950
+people are trying to spend hours
+
+86
+00:03:04,950 --> 00:03:06,930
+identifying what's going on.
+
+87
+00:03:06,930 --> 00:03:09,030
+And we just, traditional approaches
+
+88
+00:03:09,030 --> 00:03:11,520
+with this manual process
+just doesn't seem to work
+
+89
+00:03:11,520 --> 00:03:12,353
+for everybody.
+
+90
+00:03:13,290 --> 00:03:15,120
+So AI has become the game changer
+
+91
+00:03:15,120 --> 00:03:17,160
+in the sense that we can now analyze
+
+92
+00:03:17,160 --> 00:03:20,310
+vast and complex data sets in seconds.
+
+93
+00:03:20,310 --> 00:03:21,900
+You can detect the patterns and anomalies
+
+94
+00:03:21,900 --> 00:03:26,040
+that a human might miss for
+that error-prone manual process.
+
+95
+00:03:26,040 --> 00:03:28,320
+And you can automate the repetitive tasks
+
+96
+00:03:28,320 --> 00:03:31,260
+like triage and log correlation.
+
+97
+00:03:31,260 --> 00:03:34,260
+And then you use these
+surface key insights
+
+98
+00:03:34,260 --> 00:03:37,290
+to have something to focus on real threats
+
+99
+00:03:37,290 --> 00:03:38,850
+and not the grunt work that you might see
+
+100
+00:03:38,850 --> 00:03:40,830
+from a typical security engineer's work
+
+101
+00:03:40,830 --> 00:03:42,273
+on a day-to-day basis.
+
+102
+00:03:44,670 --> 00:03:46,800
+So let's start off with
+what's a typical LLM
+
+103
+00:03:46,800 --> 00:03:49,260
+versus agentic AI?
+
+104
+00:03:49,260 --> 00:03:50,700
+On the left-hand side here, you can see
+
+105
+00:03:50,700 --> 00:03:52,770
+that we have our usual LLM.
+
+106
+00:03:52,770 --> 00:03:55,200
+And what this does is
+it takes the knowledge
+
+107
+00:03:55,200 --> 00:03:56,760
+that it's already been trained on,
+
+108
+00:03:56,760 --> 00:03:59,670
+providing a simple, you
+know, concise answer
+
+109
+00:03:59,670 --> 00:04:01,050
+without doing many iterations
+
+110
+00:04:01,050 --> 00:04:02,880
+or any thought process or reasoning.
+
+111
+00:04:02,880 --> 00:04:05,700
+So for example, you ask it the question,
+
+112
+00:04:05,700 --> 00:04:07,860
+when did the French Revolution take place?
+
+113
+00:04:07,860 --> 00:04:10,050
+And it'll respond back to
+you with the simple answer
+
+114
+00:04:10,050 --> 00:04:11,823
+of 1789.
+
+115
+00:04:12,810 --> 00:04:16,650
+Now on the right-hand
+side we have agentic AI,
+
+116
+00:04:16,650 --> 00:04:19,050
+and this is where things get interesting.
+
+117
+00:04:19,050 --> 00:04:21,720
+The agent is able to think on its own.
+
+118
+00:04:21,720 --> 00:04:24,060
+So let's go ahead and
+check a weather website
+
+119
+00:04:24,060 --> 00:04:25,980
+for the forecast.
+
+120
+00:04:25,980 --> 00:04:27,390
+Let's take a look and dive in
+
+121
+00:04:27,390 --> 00:04:29,790
+and see what the forecast
+looks like for the next week.
+
+122
+00:04:29,790 --> 00:04:31,590
+We've got some rain and it,
+
+123
+00:04:31,590 --> 00:04:34,380
+but it's also sunny and warm next Friday.
+
+124
+00:04:34,380 --> 00:04:36,450
+And then we can evaluate and reiterate
+
+125
+00:04:36,450 --> 00:04:38,580
+until it comes to a proper answer for us
+
+126
+00:04:38,580 --> 00:04:41,160
+with its reasoning capabilities to say
+
+127
+00:04:41,160 --> 00:04:45,210
+next Friday is the ideal
+day for Mount Fuji hiking.
+
+128
+00:04:45,210 --> 00:04:47,520
+And the difference here,
+again, as I mentioned,
+
+129
+00:04:47,520 --> 00:04:50,580
+rather than just having a
+concise answer on knowledge
+
+130
+00:04:50,580 --> 00:04:52,320
+that it's already been trained on,
+
+131
+00:04:52,320 --> 00:04:54,240
+this can think for itself and iterate
+
+132
+00:04:54,240 --> 00:04:56,220
+until it has a valuable response
+
+133
+00:04:56,220 --> 00:05:00,120
+that you can use for your triage
+
+134
+00:05:00,120 --> 00:05:02,610
+or to get further
+information from the agent
+
+135
+00:05:02,610 --> 00:05:04,473
+by asking follow-up prompts.
+
+136
+00:05:08,093 --> 00:05:09,690
+So the key thing that I wanted to mention
+
+137
+00:05:09,690 --> 00:05:12,150
+to start us off is like
+it's very important
+
+138
+00:05:12,150 --> 00:05:14,040
+that your data is the key source
+
+139
+00:05:14,040 --> 00:05:15,720
+for all of this agent building.
+
+140
+00:05:15,720 --> 00:05:18,000
+You wanna make sure that you
+have the right data sources,
+
+141
+00:05:18,000 --> 00:05:19,410
+that you have everything centralized
+
+142
+00:05:19,410 --> 00:05:21,540
+in a location that's easy to read,
+
+143
+00:05:21,540 --> 00:05:25,230
+formatted specifically for
+your security use case.
+
+144
+00:05:25,230 --> 00:05:28,320
+This is where Amazon Security
+Lake comes in to play.
+
+145
+00:05:28,320 --> 00:05:29,880
+For those of you that are not familiar,
+
+146
+00:05:29,880 --> 00:05:31,650
+this is basically a service that we have
+
+147
+00:05:31,650 --> 00:05:33,330
+that allows you to centralize
+
+148
+00:05:33,330 --> 00:05:34,770
+all of those different
+tools that I mentioned,
+
+149
+00:05:34,770 --> 00:05:37,410
+all the different logs,
+whether it's JSON, plain text
+
+150
+00:05:37,410 --> 00:05:41,640
+or something else into a data
+lake in your AWS account.
+
+151
+00:05:41,640 --> 00:05:43,950
+And by doing that,
+you're able to normalize
+
+152
+00:05:43,950 --> 00:05:45,690
+that data from the different schemas
+
+153
+00:05:45,690 --> 00:05:48,330
+in an easy, ready
+available format to read,
+
+154
+00:05:48,330 --> 00:05:50,280
+which is called OCSF,
+
+155
+00:05:50,280 --> 00:05:53,520
+the Open Cybersecurity Schema Framework.
+
+156
+00:05:53,520 --> 00:05:56,130
+And that way, you can use a singular tool
+
+157
+00:05:56,130 --> 00:05:59,490
+or a singular method of approach
+
+158
+00:05:59,490 --> 00:06:01,620
+for your log analysis
+without having to worry
+
+159
+00:06:01,620 --> 00:06:03,930
+about these data silos and how they are
+
+160
+00:06:03,930 --> 00:06:05,613
+disparate to begin with.
+
+161
+00:06:08,610 --> 00:06:10,830
+Now with that,
+
+162
+00:06:10,830 --> 00:06:12,390
+I'm gonna go ahead and hand it off to Omar
+
+163
+00:06:12,390 --> 00:06:14,580
+to do a brief overview of our solution
+
+164
+00:06:14,580 --> 00:06:16,350
+before we dive into the console.
+
+165
+00:06:16,350 --> 00:06:17,820
+- [Omar] Awesome, thank
+you for that Shawn.
+
+166
+00:06:17,820 --> 00:06:19,530
+So let's cover our solution, right?
+
+167
+00:06:19,530 --> 00:06:21,360
+The first thing I wanna talk about today,
+
+168
+00:06:21,360 --> 00:06:23,790
+we're gonna introduce a
+multi-agent application.
+
+169
+00:06:23,790 --> 00:06:24,810
+So this means we're gonna have
+
+170
+00:06:24,810 --> 00:06:27,060
+a team of different, specialized agents.
+
+171
+00:06:27,060 --> 00:06:28,560
+The way I like to introduce this is
+
+172
+00:06:28,560 --> 00:06:30,030
+think of a team that
+you have today, right?
+
+173
+00:06:30,030 --> 00:06:31,290
+Usually you have a data scientist,
+
+174
+00:06:31,290 --> 00:06:33,480
+you have a computer scientist,
+
+175
+00:06:33,480 --> 00:06:35,430
+you might have a sales
+team, marketing team,
+
+176
+00:06:35,430 --> 00:06:36,840
+and each team or person is
+
+177
+00:06:36,840 --> 00:06:39,600
+specialized in a specific skill
+
+178
+00:06:39,600 --> 00:06:41,580
+and they're able to come
+up with skilled outputs
+
+179
+00:06:41,580 --> 00:06:43,080
+based on the knowledge they have.
+
+180
+00:06:43,080 --> 00:06:46,890
+So we take that same exact
+paradigm to the agentic world.
+
+181
+00:06:46,890 --> 00:06:50,520
+For example, in this case
+we have this agent, right?
+
+182
+00:06:50,520 --> 00:06:51,870
+I'm gonna call it subagent
+
+183
+00:06:51,870 --> 00:06:53,010
+because it's one of the agents
+
+184
+00:06:53,010 --> 00:06:54,330
+of many that are gonna work together
+
+185
+00:06:54,330 --> 00:06:56,520
+to help us find the
+different security events
+
+186
+00:06:56,520 --> 00:06:58,350
+and also automate the cloud operations
+
+187
+00:06:58,350 --> 00:06:59,940
+of remediating those problems.
+
+188
+00:06:59,940 --> 00:07:01,590
+So this first subagent is gonna be
+
+189
+00:07:01,590 --> 00:07:02,880
+able to tap into DynamoDB
+
+190
+00:07:02,880 --> 00:07:04,687
+and pull real business context
+
+191
+00:07:04,687 --> 00:07:08,250
+from our environment.
+
+192
+00:07:08,250 --> 00:07:10,440
+Another big one here is gonna be an agent
+
+193
+00:07:10,440 --> 00:07:12,360
+that's able to use a security lake, right?
+
+194
+00:07:12,360 --> 00:07:15,060
+Key component here is if
+you have servers on premise,
+
+195
+00:07:15,060 --> 00:07:16,080
+other cloud providers,
+
+196
+00:07:16,080 --> 00:07:19,050
+maybe you're working with
+different SaaS providers as well,
+
+197
+00:07:19,050 --> 00:07:21,110
+we can centralize, normalize all our data
+
+198
+00:07:21,110 --> 00:07:23,160
+in a central security data lake
+
+199
+00:07:23,160 --> 00:07:25,020
+with one specific schema,
+
+200
+00:07:25,020 --> 00:07:26,730
+and that way our agent can tap in
+
+201
+00:07:26,730 --> 00:07:28,950
+and access these logs and
+provide that information
+
+202
+00:07:28,950 --> 00:07:30,050
+to the overall system.
+
+203
+00:07:31,350 --> 00:07:33,240
+Another big one is cloud operations.
+
+204
+00:07:33,240 --> 00:07:35,190
+Does anyone know here what MCP is?
+
+205
+00:07:35,190 --> 00:07:36,540
+Has anyone heard that term?
+
+206
+00:07:37,440 --> 00:07:40,230
+Great, so that stands for
+Model Context Protocol.
+
+207
+00:07:40,230 --> 00:07:41,640
+So a lot of times in today's talk
+
+208
+00:07:41,640 --> 00:07:43,320
+we're gonna build out custom functions
+
+209
+00:07:43,320 --> 00:07:44,700
+that you could use as tools.
+
+210
+00:07:44,700 --> 00:07:47,340
+Again, tools are essentially
+APIs or data sources
+
+211
+00:07:47,340 --> 00:07:50,310
+that our large language models can use
+
+212
+00:07:50,310 --> 00:07:52,950
+as additional context to provide answers.
+
+213
+00:07:52,950 --> 00:07:54,030
+And with cloud operations,
+
+214
+00:07:54,030 --> 00:07:55,260
+we could do different things, right?
+
+215
+00:07:55,260 --> 00:07:57,330
+We have a cloud control MCP server
+
+216
+00:07:57,330 --> 00:08:00,270
+that lets you do different
+things like, let's say,
+
+217
+00:08:00,270 --> 00:08:02,280
+add block rules to specific IP addresses
+
+218
+00:08:02,280 --> 00:08:03,480
+that might be malicious.
+
+219
+00:08:03,480 --> 00:08:05,760
+Let's say you wanna isolate EC2 instances
+
+220
+00:08:05,760 --> 00:08:08,730
+or you wanna take forensic snapshots
+
+221
+00:08:08,730 --> 00:08:10,290
+of your ABS volumes, right?
+
+222
+00:08:10,290 --> 00:08:12,390
+We could automate our cloud operations.
+
+223
+00:08:12,390 --> 00:08:13,800
+Obviously, one key concern is, hey,
+
+224
+00:08:13,800 --> 00:08:15,330
+do we really want to hand the keys
+
+225
+00:08:15,330 --> 00:08:17,430
+to our production environment to an agent?
+
+226
+00:08:17,430 --> 00:08:19,050
+That's a big question in everyone's mind.
+
+227
+00:08:19,050 --> 00:08:20,640
+And that's where we look
+into like different things
+
+228
+00:08:20,640 --> 00:08:23,340
+like guardrails and also implementing
+
+229
+00:08:23,340 --> 00:08:24,300
+human in the loop, right?
+
+230
+00:08:24,300 --> 00:08:26,070
+We could actually take a
+summary of all the findings
+
+231
+00:08:26,070 --> 00:08:30,110
+and ask the user, hey, is
+this the correct approach?
+
+232
+00:08:30,110 --> 00:08:32,640
+So like even the best agentic
+applications today have
+
+233
+00:08:32,640 --> 00:08:35,220
+around a low 90% success rate.
+
+234
+00:08:35,220 --> 00:08:37,530
+So for key, critical operations,
+
+235
+00:08:37,530 --> 00:08:39,060
+you always wanna have a human in the loop
+
+236
+00:08:39,060 --> 00:08:40,800
+within that process.
+
+237
+00:08:40,800 --> 00:08:43,170
+And of course, incident
+response playbooks, right?
+
+238
+00:08:43,170 --> 00:08:45,000
+Some security events might have
+
+239
+00:08:45,000 --> 00:08:46,470
+nonsensitive data, right?
+
+240
+00:08:46,470 --> 00:08:48,210
+We're gonna approach those a different way
+
+241
+00:08:48,210 --> 00:08:49,650
+than in an account that's gonna have
+
+242
+00:08:49,650 --> 00:08:52,230
+the more highly critical environments.
+
+243
+00:08:52,230 --> 00:08:54,990
+So here we could have
+these agents work together
+
+244
+00:08:54,990 --> 00:08:57,210
+and we could have a
+supervisor agent up front
+
+245
+00:08:57,210 --> 00:09:00,000
+and this supervisor
+agent is going to be able
+
+246
+00:09:00,000 --> 00:09:01,650
+to use his team of subspecialists
+
+247
+00:09:01,650 --> 00:09:03,300
+to actually coordinate different tasks
+
+248
+00:09:03,300 --> 00:09:05,160
+and get different answers
+and synthesize them
+
+249
+00:09:05,160 --> 00:09:06,483
+into a final response.
+
+250
+00:09:09,000 --> 00:09:10,710
+This could work in two different ways.
+
+251
+00:09:10,710 --> 00:09:11,820
+The first one could be
+
+252
+00:09:11,820 --> 00:09:13,520
+approach like an event-driven app,
+
+253
+00:09:14,400 --> 00:09:17,040
+event-driven architecture
+where we could take
+
+254
+00:09:17,040 --> 00:09:17,940
+GuardDuty findings.
+
+255
+00:09:17,940 --> 00:09:21,690
+So GuardDuty is our threat service,
+
+256
+00:09:21,690 --> 00:09:22,740
+our threat detection service.
+
+257
+00:09:22,740 --> 00:09:24,480
+So we could take GuardDuty findings
+
+258
+00:09:24,480 --> 00:09:27,030
+and automatically feed
+that to our agentic system.
+
+259
+00:09:27,030 --> 00:09:29,670
+Let's say, for example,
+that someone opened
+
+260
+00:09:29,670 --> 00:09:32,040
+a public S3 bucket, right?
+
+261
+00:09:32,040 --> 00:09:34,950
+This will trigger some
+sort of GuardDuty finding
+
+262
+00:09:34,950 --> 00:09:36,930
+and send that directly to our agent
+
+263
+00:09:36,930 --> 00:09:38,400
+and our agent's able to look at that,
+
+264
+00:09:38,400 --> 00:09:40,290
+understand, okay, what
+account was this coming from?
+
+265
+00:09:40,290 --> 00:09:41,220
+Lemme look at the logs.
+
+266
+00:09:41,220 --> 00:09:42,090
+Who did this?
+
+267
+00:09:42,090 --> 00:09:44,790
+How, what steps do I need
+to do to remediate this?
+
+268
+00:09:44,790 --> 00:09:46,680
+And it could do different things
+
+269
+00:09:46,680 --> 00:09:49,050
+like either raise alerts
+to the security teams
+
+270
+00:09:49,050 --> 00:09:50,610
+that bucket belongs to
+
+271
+00:09:50,610 --> 00:09:52,410
+based on the business context,
+
+272
+00:09:52,410 --> 00:09:54,450
+or we could interact
+directly with the agent.
+
+273
+00:09:54,450 --> 00:09:56,730
+So if you want to dive
+deeper into the events
+
+274
+00:09:56,730 --> 00:09:58,770
+or do more advanced things,
+
+275
+00:09:58,770 --> 00:10:00,090
+we could interact with the agent.
+
+276
+00:10:00,090 --> 00:10:02,213
+So let's see what that
+actually looks like here.
+
+277
+00:10:04,770 --> 00:10:06,420
+So this is a front-end application
+
+278
+00:10:06,420 --> 00:10:07,590
+that Shawn and I developed.
+
+279
+00:10:07,590 --> 00:10:11,370
+We're using a streamlet to
+come up with this application.
+
+280
+00:10:11,370 --> 00:10:13,440
+And the left-hand side
+we have example queries
+
+281
+00:10:13,440 --> 00:10:16,260
+our security engineers could
+actually look at and use.
+
+282
+00:10:16,260 --> 00:10:20,370
+One example here is going to
+be the threat detection query.
+
+283
+00:10:20,370 --> 00:10:21,540
+So here we're saying find
+
+284
+00:10:21,540 --> 00:10:22,710
+any failed login attempts
+
+285
+00:10:22,710 --> 00:10:24,900
+exceeding 10 tries in the last hour,
+
+286
+00:10:24,900 --> 00:10:28,260
+analyze the source IPs
+and affected accounts,
+
+287
+00:10:28,260 --> 00:10:31,860
+and then block the suspicious
+IPs and create snapshots.
+
+288
+00:10:31,860 --> 00:10:33,450
+So this prompt here is
+gonna take advantage
+
+289
+00:10:33,450 --> 00:10:36,060
+of multiple different agents
+to complete this task, right?
+
+290
+00:10:36,060 --> 00:10:37,380
+If we hit submit, we could actually see
+
+291
+00:10:37,380 --> 00:10:39,420
+that the agent's gonna go like, okay,
+
+292
+00:10:39,420 --> 00:10:41,790
+let me analyze the authentication logs.
+
+293
+00:10:41,790 --> 00:10:43,950
+So it's gonna call those specific tools.
+
+294
+00:10:43,950 --> 00:10:46,620
+So those tools are able to
+look at the different tables
+
+295
+00:10:46,620 --> 00:10:48,630
+we have within our security lake.
+
+296
+00:10:48,630 --> 00:10:51,393
+It finds CloudTrail events
+and Security Hub findings.
+
+297
+00:10:52,260 --> 00:10:54,120
+It's able to then go ahead and query it
+
+298
+00:10:54,120 --> 00:10:55,740
+to find what are the source IPs.
+
+299
+00:10:55,740 --> 00:10:57,750
+Here, it finds three primary source IPs
+
+300
+00:10:57,750 --> 00:10:59,250
+across different regions.
+
+301
+00:10:59,250 --> 00:11:01,260
+And then we can execute
+our cloud operation agent
+
+302
+00:11:01,260 --> 00:11:03,480
+that could actually go ahead and block it.
+
+303
+00:11:03,480 --> 00:11:04,593
+So here you go,
+
+304
+00:11:05,700 --> 00:11:08,460
+it's showing the different
+IPs that are being blocked.
+
+305
+00:11:08,460 --> 00:11:12,090
+And here it shows the
+automated response actions.
+
+306
+00:11:12,090 --> 00:11:13,800
+So again, this is more
+of an automated approach.
+
+307
+00:11:13,800 --> 00:11:15,120
+One thing you could do is it can give you
+
+308
+00:11:15,120 --> 00:11:16,740
+the different summaries of what I found.
+
+309
+00:11:16,740 --> 00:11:18,270
+And then it can ask you,
+do you want me to block
+
+310
+00:11:18,270 --> 00:11:19,500
+these IP addresses?
+
+311
+00:11:19,500 --> 00:11:22,620
+Do you want me to put
+the limited STP controls
+
+312
+00:11:22,620 --> 00:11:23,790
+within our account?
+
+313
+00:11:23,790 --> 00:11:25,590
+So again, those are things
+that you want to think through.
+
+314
+00:11:25,590 --> 00:11:28,260
+Some processes, you want to
+give full autonomy to the agent,
+
+315
+00:11:28,260 --> 00:11:29,760
+but other ones that are more critical,
+
+316
+00:11:29,760 --> 00:11:32,553
+you definitely wanna think
+about human in the loop.
+
+317
+00:11:34,830 --> 00:11:36,360
+And the left-hand side, again,
+
+318
+00:11:36,360 --> 00:11:37,950
+we have different agents
+and we're gonna go
+
+319
+00:11:37,950 --> 00:11:40,650
+through a few core agents
+in the console today
+
+320
+00:11:40,650 --> 00:11:42,650
+and show you how we actually wrote this.
+
+321
+00:11:43,800 --> 00:11:46,503
+So the way we developed this is,
+
+322
+00:11:47,640 --> 00:11:50,460
+let's go to the next slide, okay?
+
+323
+00:11:50,460 --> 00:11:53,310
+The way we developed this
+is using Strands Agents.
+
+324
+00:11:53,310 --> 00:11:55,470
+This is an open source SDK.
+
+325
+00:11:55,470 --> 00:11:58,590
+And this is gonna help
+you build out agents
+
+326
+00:11:58,590 --> 00:12:00,090
+with just a few lines of code, right?
+
+327
+00:12:00,090 --> 00:12:01,920
+It's very intuitive, easy to use.
+
+328
+00:12:01,920 --> 00:12:03,480
+When I first started looking at agents
+
+329
+00:12:03,480 --> 00:12:05,730
+and started building
+'em around a year ago,
+
+330
+00:12:05,730 --> 00:12:07,230
+I didn't have my Python,
+
+331
+00:12:07,230 --> 00:12:08,550
+I haven't done Python since college.
+
+332
+00:12:08,550 --> 00:12:09,840
+So I was a little rusty,
+
+333
+00:12:09,840 --> 00:12:12,810
+but with Strands I was able to
+pick up very quickly, right?
+
+334
+00:12:12,810 --> 00:12:14,760
+You're gonna see later
+today how it abstracts
+
+335
+00:12:14,760 --> 00:12:17,880
+a lot of the complexity
+of building an agent.
+
+336
+00:12:17,880 --> 00:12:20,700
+Another core thing is the native tools.
+
+337
+00:12:20,700 --> 00:12:22,230
+Today we're gonna build the tools,
+
+338
+00:12:22,230 --> 00:12:24,180
+we're gonna define those Python functions
+
+339
+00:12:24,180 --> 00:12:25,890
+and make them tools,
+
+340
+00:12:25,890 --> 00:12:27,210
+but there's also community tools
+
+341
+00:12:27,210 --> 00:12:28,620
+that you could tap into that already exist
+
+342
+00:12:28,620 --> 00:12:30,870
+so you don't actually have to code them.
+
+343
+00:12:30,870 --> 00:12:32,190
+Also easy integrations
+
+344
+00:12:32,190 --> 00:12:33,930
+with different FCP servers.
+
+345
+00:12:33,930 --> 00:12:35,970
+AWS has a bunch of different FCP servers
+
+346
+00:12:35,970 --> 00:12:38,223
+that you could take advantage of today.
+
+347
+00:12:39,353 --> 00:12:41,400
+And other providers as
+well have MCP servers
+
+348
+00:12:41,400 --> 00:12:42,250
+that you can use.
+
+349
+00:12:44,130 --> 00:12:45,810
+You could support any
+model providers, right?
+
+350
+00:12:45,810 --> 00:12:48,180
+You're not stuck with just Amazon models.
+
+351
+00:12:48,180 --> 00:12:51,540
+If you go to Bedrock, we have
+over 10 foundation models
+
+352
+00:12:51,540 --> 00:12:53,880
+that you could use, if you
+wanna use OpenAI, Gemini, right?
+
+353
+00:12:53,880 --> 00:12:55,860
+You're not locked to any sort of provider.
+
+354
+00:12:55,860 --> 00:12:57,210
+And one thing I wanna talk about is
+
+355
+00:12:57,210 --> 00:12:59,580
+for these sub-agents,
+depending on the task,
+
+356
+00:12:59,580 --> 00:13:01,740
+we could play around
+with the different models
+
+357
+00:13:01,740 --> 00:13:03,540
+that's powering that specific agent.
+
+358
+00:13:05,460 --> 00:13:07,530
+So at its core,
+
+359
+00:13:07,530 --> 00:13:08,700
+what Strands is doing is
+
+360
+00:13:08,700 --> 00:13:10,470
+it's implementing this agentic loop.
+
+361
+00:13:10,470 --> 00:13:12,060
+So the way it works is if we look
+
+362
+00:13:12,060 --> 00:13:14,640
+at the weather application example,
+
+363
+00:13:14,640 --> 00:13:17,340
+let's say again we want to
+check the weather for tomorrow.
+
+364
+00:13:17,340 --> 00:13:19,410
+Again, the foundation
+model has no knowledge
+
+365
+00:13:19,410 --> 00:13:21,000
+of what the weather's
+like next week, right?
+
+366
+00:13:21,000 --> 00:13:22,710
+It wasn't trained on that kind of data.
+
+367
+00:13:22,710 --> 00:13:25,380
+So what happens here is the prompt is
+
+368
+00:13:25,380 --> 00:13:27,030
+going to be sent to the agent
+
+369
+00:13:27,030 --> 00:13:30,840
+and the agent has access to
+the model and the tools, right?
+
+370
+00:13:30,840 --> 00:13:34,560
+Here in this case, we're
+using a react orchestration
+
+371
+00:13:34,560 --> 00:13:36,330
+where we're actually going to invoke
+
+372
+00:13:36,330 --> 00:13:37,890
+the model with the user prompt
+
+373
+00:13:37,890 --> 00:13:40,230
+and the model is gonna
+have all the context
+
+374
+00:13:40,230 --> 00:13:42,060
+around the tools it has access to.
+
+375
+00:13:42,060 --> 00:13:43,650
+It's gonna be able to do
+the reasoning like okay,
+
+376
+00:13:43,650 --> 00:13:46,290
+I need to get the weather for tomorrow.
+
+377
+00:13:46,290 --> 00:13:48,120
+Wait, I have these list of different tools
+
+378
+00:13:48,120 --> 00:13:49,290
+like get weather.
+
+379
+00:13:49,290 --> 00:13:51,300
+So it's gonna pass that
+response back to the agent,
+
+380
+00:13:51,300 --> 00:13:52,440
+letting it know, hey,
+
+381
+00:13:52,440 --> 00:13:54,090
+execute the specific tool.
+
+382
+00:13:54,090 --> 00:13:56,100
+In this case it could be a Python function
+
+383
+00:13:56,100 --> 00:13:58,830
+that goes to the weather.com API
+
+384
+00:13:58,830 --> 00:14:00,780
+and grab that weather for tomorrow,
+
+385
+00:14:00,780 --> 00:14:02,370
+it's gonna return that result
+
+386
+00:14:02,370 --> 00:14:03,990
+and then send it back to the model.
+
+387
+00:14:03,990 --> 00:14:06,240
+And this loop is gonna keep on happening
+
+388
+00:14:06,240 --> 00:14:08,270
+until you get your final response, right?
+
+389
+00:14:08,270 --> 00:14:10,110
+It could also prompt the user, right?
+
+390
+00:14:10,110 --> 00:14:12,210
+If some tools require specific inputs
+
+391
+00:14:12,210 --> 00:14:13,800
+and they're not there,
+we could ask the user,
+
+392
+00:14:13,800 --> 00:14:16,050
+hey, you're asking about
+weather for tomorrow,
+
+393
+00:14:16,050 --> 00:14:17,280
+but I need a state, right?
+
+394
+00:14:17,280 --> 00:14:18,300
+I can't just give you weather,
+
+395
+00:14:18,300 --> 00:14:20,220
+weather on what location
+you're talking about.
+
+396
+00:14:20,220 --> 00:14:22,583
+So those are some things
+we'll talk about as well.
+
+397
+00:14:23,730 --> 00:14:25,710
+So just a quick visual on the differences
+
+398
+00:14:25,710 --> 00:14:27,303
+between using some sort of,
+
+399
+00:14:29,610 --> 00:14:33,300
+so whether they're using an
+SDK like Strands or CrewAI.
+
+400
+00:14:33,300 --> 00:14:37,890
+As you could see, you go
+from 350 lines of code to 55
+
+401
+00:14:37,890 --> 00:14:39,660
+for a weather app agent.
+
+402
+00:14:39,660 --> 00:14:41,220
+So for the tool registration,
+
+403
+00:14:41,220 --> 00:14:42,480
+the conversation management,
+
+404
+00:14:42,480 --> 00:14:43,920
+API communication,
+
+405
+00:14:43,920 --> 00:14:45,180
+all that's abstracted away,
+
+406
+00:14:45,180 --> 00:14:46,590
+it's handled automatically.
+
+407
+00:14:46,590 --> 00:14:48,180
+And again, when we talk
+about when you go through
+
+408
+00:14:48,180 --> 00:14:49,013
+the Code Talk,
+
+409
+00:14:49,013 --> 00:14:50,580
+you're gonna see there's
+not that many things
+
+410
+00:14:50,580 --> 00:14:51,413
+you need to define.
+
+411
+00:14:51,413 --> 00:14:54,003
+Again, our goal is to
+simplify creating agents.
+
+412
+00:14:55,530 --> 00:14:56,640
+Same with the agent loop, right?
+
+413
+00:14:56,640 --> 00:14:59,580
+Beforehand, I had to build out
+the iteration logic manually,
+
+414
+00:14:59,580 --> 00:15:01,920
+but now I could literally
+just call in the agent class
+
+415
+00:15:01,920 --> 00:15:03,750
+and have it do it for me.
+
+416
+00:15:03,750 --> 00:15:06,270
+So a process that took four to six hours
+
+417
+00:15:06,270 --> 00:15:11,270
+can now take 15 to 30 minutes, okay?
+
+418
+00:15:11,520 --> 00:15:13,860
+So let's go ahead and jump into
+
+419
+00:15:13,860 --> 00:15:15,160
+the AWS console
+
+420
+00:15:18,000 --> 00:15:19,290
+and look at our first agent.
+
+421
+00:15:19,290 --> 00:15:20,581
+Go ahead, Shawn.
+
+422
+00:15:20,581 --> 00:15:21,414
+- [Shawn] So before we
+jump into the console,
+
+423
+00:15:21,414 --> 00:15:23,278
+I wanted to take a quick
+look at the first agent
+
+424
+00:15:23,278 --> 00:15:24,111
+that we'll be building out
+
+425
+00:15:24,111 --> 00:15:27,240
+and this is our business
+context metadata agent.
+
+426
+00:15:27,240 --> 00:15:28,350
+So as you can see here,
+
+427
+00:15:28,350 --> 00:15:31,080
+the agent is going to
+ask for an account ID
+
+428
+00:15:31,080 --> 00:15:32,490
+based off of your AWS account.
+
+429
+00:15:32,490 --> 00:15:34,320
+That's a 12 digit number that you give it.
+
+430
+00:15:34,320 --> 00:15:37,440
+You say, tell me about so-and-so account,
+
+431
+00:15:37,440 --> 00:15:39,750
+our metadata tool that we're gonna attach
+
+432
+00:15:39,750 --> 00:15:41,850
+to the agent before we instantiate it.
+
+433
+00:15:41,850 --> 00:15:44,280
+We'll be able to look
+through a DynamoDB table
+
+434
+00:15:44,280 --> 00:15:46,500
+or specific API that you might be using
+
+435
+00:15:46,500 --> 00:15:48,510
+that holds all of that information.
+
+436
+00:15:48,510 --> 00:15:49,980
+And the information
+that we're talking about
+
+437
+00:15:49,980 --> 00:15:51,520
+when it comes to business context is
+
+438
+00:15:51,520 --> 00:15:53,760
+gonna be something like
+your business unit,
+
+439
+00:15:53,760 --> 00:15:55,050
+the criticality,
+
+440
+00:15:55,050 --> 00:15:56,580
+a point of contact in case
+
+441
+00:15:56,580 --> 00:15:58,170
+something needs to be reported,
+
+442
+00:15:58,170 --> 00:16:00,300
+the scope of compliance and so forth.
+
+443
+00:16:00,300 --> 00:16:01,710
+And we'll take a look
+at that in the console
+
+444
+00:16:01,710 --> 00:16:04,170
+once we open up the DynamoDB table.
+
+445
+00:16:04,170 --> 00:16:05,730
+But what this allows us to do is
+
+446
+00:16:05,730 --> 00:16:08,790
+take what most people fail to realize is
+
+447
+00:16:08,790 --> 00:16:11,640
+that the context and the business context
+
+448
+00:16:11,640 --> 00:16:13,380
+related to a security incident is
+
+449
+00:16:13,380 --> 00:16:15,750
+just as important as
+the technical details.
+
+450
+00:16:15,750 --> 00:16:17,940
+You'll be able to sift
+through all of these things
+
+451
+00:16:17,940 --> 00:16:19,980
+within seconds to be able to identify
+
+452
+00:16:19,980 --> 00:16:22,470
+if this is something that
+your team should prioritize
+
+453
+00:16:22,470 --> 00:16:24,330
+or if you can just leave
+it alone, it's low risk,
+
+454
+00:16:24,330 --> 00:16:25,260
+and maybe come back to it
+
+455
+00:16:25,260 --> 00:16:28,440
+for a more priority
+adverse security incident
+
+456
+00:16:28,440 --> 00:16:30,630
+that might have already been happening.
+
+457
+00:16:30,630 --> 00:16:31,860
+So with that, let's go ahead
+
+458
+00:16:31,860 --> 00:16:33,570
+and jump into the console
+
+459
+00:16:33,570 --> 00:16:36,510
+and take a look at what
+we've got to build out.
+
+460
+00:16:36,510 --> 00:16:37,590
+- [Omar] Yeah, and real quick,
+
+461
+00:16:37,590 --> 00:16:39,000
+before we jump in the console
+
+462
+00:16:39,000 --> 00:16:40,440
+and get to the fun part that
+we're all excited about,
+
+463
+00:16:40,440 --> 00:16:41,820
+I just wanted to see if
+there's any questions
+
+464
+00:16:41,820 --> 00:16:42,840
+on what we discussed,
+
+465
+00:16:42,840 --> 00:16:44,880
+make sure we handle those questions
+
+466
+00:16:44,880 --> 00:16:46,350
+before we get into the code.
+
+467
+00:16:46,350 --> 00:16:48,090
+So does anyone have any
+questions about what we discussed
+
+468
+00:16:48,090 --> 00:16:49,803
+so far around Strands or agents?
+
+469
+00:16:52,620 --> 00:16:54,210
+Great, okay, awesome.
+
+470
+00:16:54,210 --> 00:16:55,380
+Let's get right to it.
+
+471
+00:16:55,380 --> 00:16:57,420
+- [Shawn] Cool, so here
+you can see we have
+
+472
+00:16:57,420 --> 00:17:01,290
+the AWS console, just your
+standard landing page.
+
+473
+00:17:01,290 --> 00:17:04,590
+And what we want to do is
+go to Amazon SageMaker AI.
+
+474
+00:17:04,590 --> 00:17:07,170
+Now we use Amazon SageMaker AI
+
+475
+00:17:07,170 --> 00:17:10,290
+because there's notebooks
+available for us to use.
+
+476
+00:17:10,290 --> 00:17:12,483
+If you all are familiar with Jupyter,
+
+477
+00:17:13,770 --> 00:17:16,410
+Jupyter Notebook is an interactive IDE
+
+478
+00:17:16,410 --> 00:17:19,500
+that's available for you
+all to build out your code,
+
+479
+00:17:19,500 --> 00:17:21,360
+visualize the outputs,
+
+480
+00:17:21,360 --> 00:17:23,340
+and then experiment in real time.
+
+481
+00:17:23,340 --> 00:17:25,200
+And this is super helpful as we build out
+
+482
+00:17:25,200 --> 00:17:28,290
+this agent together in
+the room step by step.
+
+483
+00:17:28,290 --> 00:17:30,690
+So just a quick little
+refresher for you all.
+
+484
+00:17:30,690 --> 00:17:32,400
+Now, the first thing that we want to do
+
+485
+00:17:32,400 --> 00:17:35,070
+for this agent is install
+all the dependencies.
+
+486
+00:17:35,070 --> 00:17:38,430
+That's things like Bodo 3,
+Pandas and other libraries
+
+487
+00:17:38,430 --> 00:17:39,570
+that you might need.
+
+488
+00:17:39,570 --> 00:17:42,020
+So we'll go ahead and
+install those dependencies.
+
+489
+00:17:44,640 --> 00:17:46,680
+Once the dependencies are installed,
+
+490
+00:17:46,680 --> 00:17:48,330
+we're gonna go ahead and use
+
+491
+00:17:48,330 --> 00:17:52,560
+another import code snippet
+right here to get the JSON.
+
+492
+00:17:52,560 --> 00:17:54,030
+We're gonna import from Strands
+
+493
+00:17:54,030 --> 00:17:55,830
+the agent and tool functions.
+
+494
+00:17:55,830 --> 00:17:58,920
+We're also gonna import
+Strands models, Bedrock models
+
+495
+00:17:58,920 --> 00:18:01,470
+that we'll be using for
+the sake of this Code Talk.
+
+496
+00:18:01,470 --> 00:18:03,180
+So we'll go ahead and run that.
+
+497
+00:18:03,180 --> 00:18:05,310
+And then now we're
+getting to the fun part.
+
+498
+00:18:05,310 --> 00:18:06,690
+So this is where we wanna start off
+
+499
+00:18:06,690 --> 00:18:09,150
+by making a connection to our data source.
+
+500
+00:18:09,150 --> 00:18:11,790
+And in this case, we're using DynamoDB.
+
+501
+00:18:11,790 --> 00:18:13,350
+So we'll create the Bodo 3 session
+
+502
+00:18:13,350 --> 00:18:16,920
+so that we can interact
+with our AWS resources
+
+503
+00:18:16,920 --> 00:18:18,450
+programmatically.
+
+504
+00:18:18,450 --> 00:18:21,360
+And we are using DynamoDB
+as the data source.
+
+505
+00:18:21,360 --> 00:18:23,370
+As you can see, the resource is DynamoDB.
+
+506
+00:18:23,370 --> 00:18:25,230
+We're based outta US East two.
+
+507
+00:18:25,230 --> 00:18:28,230
+Now for this particular code snippet,
+
+508
+00:18:28,230 --> 00:18:30,840
+we defined the region
+that we're working out of.
+
+509
+00:18:30,840 --> 00:18:32,340
+There are ways to auto detect that
+
+510
+00:18:32,340 --> 00:18:34,470
+and you don't have to
+hardcode US East two,
+
+511
+00:18:34,470 --> 00:18:36,450
+you can have it detect whatever
+region you're working out of
+
+512
+00:18:36,450 --> 00:18:37,323
+if you need to.
+
+513
+00:18:38,220 --> 00:18:40,440
+And we wanna create a metadata table
+
+514
+00:18:40,440 --> 00:18:42,900
+and define that for
+the sake of this agent.
+
+515
+00:18:42,900 --> 00:18:44,850
+So we're gonna name
+that meta_metadata_table
+
+516
+00:18:47,070 --> 00:18:49,230
+and we are linking that
+to a DynamoDB table
+
+517
+00:18:49,230 --> 00:18:51,240
+that we've already
+pre-created in our console.
+
+518
+00:18:51,240 --> 00:18:52,073
+Yes.
+
+519
+00:18:53,400 --> 00:18:54,903
+Zoom in a little bit, yeah.
+
+520
+00:18:56,303 --> 00:18:57,136
+Is that better?
+
+521
+00:18:57,136 --> 00:19:00,270
+Awesome, so the database that
+we currently have set up,
+
+522
+00:19:00,270 --> 00:19:02,640
+it's called SOC account metadata.
+
+523
+00:19:02,640 --> 00:19:05,100
+And if we switch back
+over to the console, Omar,
+
+524
+00:19:05,100 --> 00:19:07,950
+and look up, go to DynamoDB,
+
+525
+00:19:07,950 --> 00:19:09,780
+we can see that all the things
+
+526
+00:19:09,780 --> 00:19:10,860
+that I was mentioning earlier,
+
+527
+00:19:10,860 --> 00:19:13,410
+the account ID, the scope of compliance,
+
+528
+00:19:13,410 --> 00:19:16,230
+the criticality and so forth are
+
+529
+00:19:16,230 --> 00:19:17,190
+visible right here.
+
+530
+00:19:17,190 --> 00:19:20,190
+So as you can see, we've
+got the account ID,
+
+531
+00:19:20,190 --> 00:19:23,220
+account name, compliance scope,
+
+532
+00:19:23,220 --> 00:19:25,710
+and then if we scroll over to
+the right a little bit more,
+
+533
+00:19:25,710 --> 00:19:28,530
+you can see that we have the criticality,
+
+534
+00:19:28,530 --> 00:19:30,180
+the environment that we're working out of,
+
+535
+00:19:30,180 --> 00:19:33,390
+determining if it's production,
+development and so forth
+
+536
+00:19:33,390 --> 00:19:37,353
+to help you prioritize
+what you want to act on.
+
+537
+00:19:38,250 --> 00:19:39,630
+So this is just to see
+
+538
+00:19:39,630 --> 00:19:41,040
+the type of data that we'll be pulling
+
+539
+00:19:41,040 --> 00:19:44,460
+when we return the business
+context using the agent.
+
+540
+00:19:44,460 --> 00:19:46,920
+Now if we go back to the code,
+
+541
+00:19:46,920 --> 00:19:47,910
+the first thing we want to do
+
+542
+00:19:47,910 --> 00:19:50,507
+now that we've connected
+to our DynamoDB table is
+
+543
+00:19:50,507 --> 00:19:52,050
+define the tool.
+
+544
+00:19:52,050 --> 00:19:54,630
+So we start off with the @tool decorator.
+
+545
+00:19:54,630 --> 00:19:56,130
+And for those of you that may not be
+
+546
+00:19:56,130 --> 00:19:57,180
+super familiar with tools,
+
+547
+00:19:57,180 --> 00:19:59,430
+these are just specialized capabilities
+
+548
+00:19:59,430 --> 00:20:00,750
+that we give our agent
+
+549
+00:20:00,750 --> 00:20:03,660
+that allows it to act beyond
+its core reasoning abilities.
+
+550
+00:20:03,660 --> 00:20:05,310
+So in this particular case,
+
+551
+00:20:05,310 --> 00:20:07,440
+a tool to retrieve account metadata
+
+552
+00:20:07,440 --> 00:20:09,120
+from an AWS account.
+
+553
+00:20:09,120 --> 00:20:11,613
+So we'll define that as
+get_AWS_account_metadata.
+
+554
+00:20:13,830 --> 00:20:16,140
+We are giving it the
+information instructions
+
+555
+00:20:16,140 --> 00:20:18,960
+to retrieve metadata about an AWS account
+
+556
+00:20:18,960 --> 00:20:21,330
+given an account ID.
+
+557
+00:20:21,330 --> 00:20:23,220
+And the argument that we're giving it is
+
+558
+00:20:23,220 --> 00:20:27,510
+again, this is an AWS account,
+we need metadata for it.
+
+559
+00:20:27,510 --> 00:20:30,300
+The ID will always be 12 digits.
+
+560
+00:20:30,300 --> 00:20:32,280
+It's important to distinguish that here
+
+561
+00:20:32,280 --> 00:20:33,540
+because like I mentioned,
+
+562
+00:20:33,540 --> 00:20:35,010
+in the case of AWS,
+
+563
+00:20:35,010 --> 00:20:37,290
+it's a 12-digit account number.
+
+564
+00:20:37,290 --> 00:20:38,910
+If you put in a number smaller than that,
+
+565
+00:20:38,910 --> 00:20:40,410
+it'll return results saying
+
+566
+00:20:40,410 --> 00:20:41,670
+hey, we can't find this account.
+
+567
+00:20:41,670 --> 00:20:43,830
+So however granular you wanna make that,
+
+568
+00:20:43,830 --> 00:20:45,810
+we'll find that in the argument.
+
+569
+00:20:45,810 --> 00:20:48,120
+And then the agent, the
+tool is gonna return to us
+
+570
+00:20:48,120 --> 00:20:50,730
+a dictionary containing
+that metadata context
+
+571
+00:20:50,730 --> 00:20:52,080
+like we just looked at,
+
+572
+00:20:52,080 --> 00:20:54,660
+the scope of compliance, the account name,
+
+573
+00:20:54,660 --> 00:20:56,370
+what environment belongs to,
+
+574
+00:20:56,370 --> 00:20:59,010
+who we should contact and
+if we should prioritize this
+
+575
+00:20:59,010 --> 00:21:01,500
+or maybe move on to something else.
+
+576
+00:21:01,500 --> 00:21:03,610
+And as you can see here, the response is
+
+577
+00:21:03,610 --> 00:21:05,850
+gonna be based off of
+the account ID string
+
+578
+00:21:05,850 --> 00:21:07,800
+that we saw in the DynamoDB table.
+
+579
+00:21:07,800 --> 00:21:10,260
+And we'll get that list
+in a dictionary format
+
+580
+00:21:10,260 --> 00:21:13,110
+once we've instantiated and run the agent.
+
+581
+00:21:13,110 --> 00:21:15,150
+So let's go ahead and run that code
+
+582
+00:21:15,150 --> 00:21:18,270
+and now we're ready to
+initialize our agent.
+
+583
+00:21:18,270 --> 00:21:22,260
+So an agent, who can tell me
+what an agent consists of?
+
+584
+00:21:22,260 --> 00:21:24,710
+What are the three components
+that make an agent?
+
+585
+00:21:27,930 --> 00:21:28,763
+No worries.
+
+586
+00:21:28,763 --> 00:21:30,720
+So an agent is a model,
+
+587
+00:21:30,720 --> 00:21:33,720
+a system prompt and a tool.
+
+588
+00:21:33,720 --> 00:21:35,460
+So you can, you maybe notice here
+
+589
+00:21:35,460 --> 00:21:38,040
+that there's no model
+defined here in this agent
+
+590
+00:21:38,040 --> 00:21:40,230
+and we'll cover that in just a second,
+
+591
+00:21:40,230 --> 00:21:43,320
+but we'll name the the
+agent metadata agent,
+
+592
+00:21:43,320 --> 00:21:44,797
+we'll give it the system prompt,
+
+593
+00:21:44,797 --> 00:21:46,680
+"You are a helpful agent
+that looks up metadata
+
+594
+00:21:46,680 --> 00:21:49,380
+about an AWS account
+based on the account ID."
+
+595
+00:21:49,380 --> 00:21:51,150
+Like I mentioned, if the account number is
+
+596
+00:21:51,150 --> 00:21:53,100
+not 12 digits or it can't find it,
+
+597
+00:21:53,100 --> 00:21:56,010
+it'll let the user know so
+that they can try that again.
+
+598
+00:21:56,010 --> 00:21:58,050
+And then the tool that
+we're giving the agent is
+
+599
+00:21:58,050 --> 00:22:00,090
+that get_AWS_account_metadata
+
+600
+00:22:00,090 --> 00:22:03,390
+that we just created up above
+in the previous code snippet.
+
+601
+00:22:03,390 --> 00:22:06,240
+So let's go ahead and
+initialize the agent.
+
+602
+00:22:06,240 --> 00:22:07,590
+And this next piece right here,
+
+603
+00:22:07,590 --> 00:22:08,423
+as I was mentioning,
+
+604
+00:22:08,423 --> 00:22:10,830
+we don't have a model defined
+
+605
+00:22:10,830 --> 00:22:12,720
+and that's because I was perfectly fine
+
+606
+00:22:12,720 --> 00:22:15,060
+using the default model
+that Strands provides us,
+
+607
+00:22:15,060 --> 00:22:17,040
+which is Claude Sonnet 4.0.
+
+608
+00:22:17,040 --> 00:22:19,110
+So when we run this model config command,
+
+609
+00:22:19,110 --> 00:22:20,760
+we can verify that.
+
+610
+00:22:20,760 --> 00:22:22,500
+Obviously, if you have a specific need
+
+611
+00:22:22,500 --> 00:22:24,480
+for your use case for a different model,
+
+612
+00:22:24,480 --> 00:22:25,800
+you're more than welcome to change that
+
+613
+00:22:25,800 --> 00:22:27,720
+and put the model that you want to use.
+
+614
+00:22:27,720 --> 00:22:29,400
+Claude Sonnet 4 worked perfectly fine
+
+615
+00:22:29,400 --> 00:22:30,813
+for this example right here.
+
+616
+00:22:31,980 --> 00:22:34,740
+So now that we've got all the
+necessary resources compiled
+
+617
+00:22:34,740 --> 00:22:35,940
+and ready to go,
+
+618
+00:22:35,940 --> 00:22:38,760
+we can go ahead and send
+a message to our agent
+
+619
+00:22:38,760 --> 00:22:40,890
+to get a response with that dictionary.
+
+620
+00:22:40,890 --> 00:22:44,853
+Tell me about account 67981713.
+
+621
+00:22:48,300 --> 00:22:49,710
+Maybe we didn't run everything.
+
+622
+00:22:49,710 --> 00:22:51,933
+- [Omar] Yeah, should we run the blocks?
+
+623
+00:22:59,880 --> 00:23:01,200
+- [Shawn] There we go.
+
+624
+00:23:01,200 --> 00:23:02,640
+So if that ever happens, just make sure
+
+625
+00:23:02,640 --> 00:23:05,430
+you ran all the previous
+code snippets beforehand.
+
+626
+00:23:05,430 --> 00:23:07,680
+And as you can see here,
+we've got the account name,
+
+627
+00:23:07,680 --> 00:23:09,120
+it's Production-Main,
+
+628
+00:23:09,120 --> 00:23:11,490
+the ID that we gave the
+agent in the first place.
+
+629
+00:23:11,490 --> 00:23:14,100
+You can see the business
+unit that it belongs to.
+
+630
+00:23:14,100 --> 00:23:15,420
+You can also see that it is
+
+631
+00:23:15,420 --> 00:23:17,070
+a production environment,
+
+632
+00:23:17,070 --> 00:23:18,690
+critical criticality.
+
+633
+00:23:18,690 --> 00:23:20,880
+And then if we wanna let
+the security contact know,
+
+634
+00:23:20,880 --> 00:23:24,330
+security@company, and
+the incident priority,
+
+635
+00:23:24,330 --> 00:23:26,370
+for example, highest priority.
+
+636
+00:23:26,370 --> 00:23:28,440
+This is the type of context
+that you might spend
+
+637
+00:23:28,440 --> 00:23:30,270
+hours trying to gather
+from the information
+
+638
+00:23:30,270 --> 00:23:33,210
+that you have stored
+from your data sources.
+
+639
+00:23:33,210 --> 00:23:35,700
+The agent was able to pull that
+in just a matter of seconds
+
+640
+00:23:35,700 --> 00:23:36,903
+given an account ID.
+
+641
+00:23:37,800 --> 00:23:40,380
+So with that, I'm gonna
+hand it back off to Omar
+
+642
+00:23:40,380 --> 00:23:43,590
+to show how we use that business context
+
+643
+00:23:43,590 --> 00:23:46,890
+and how we use the data that
+we have for log analysis.
+
+644
+00:23:46,890 --> 00:23:48,660
+- [Omar] Thank you, Shawn.
+
+645
+00:23:48,660 --> 00:23:50,700
+So one key thing that I
+would like to bring up
+
+646
+00:23:50,700 --> 00:23:52,200
+when we're talking about agents is
+
+647
+00:23:52,200 --> 00:23:54,240
+if you're new to building agents,
+
+648
+00:23:54,240 --> 00:23:56,400
+always start off with a
+more simple use case, right?
+
+649
+00:23:56,400 --> 00:23:57,720
+Something that's a little
+more straightforward.
+
+650
+00:23:57,720 --> 00:23:59,190
+So you could actually
+get the hang of defining
+
+651
+00:23:59,190 --> 00:24:00,900
+different tools, understanding what works
+
+652
+00:24:00,900 --> 00:24:02,520
+and what doesn't work.
+
+653
+00:24:02,520 --> 00:24:04,530
+So in this case we start
+off with the DynamoDB,
+
+654
+00:24:04,530 --> 00:24:07,080
+obviously business context agent is,
+
+655
+00:24:07,080 --> 00:24:08,970
+it is simple but it's also a key component
+
+656
+00:24:08,970 --> 00:24:10,503
+of our overall architecture.
+
+657
+00:24:11,910 --> 00:24:14,747
+So let's look at the next agent right here
+
+658
+00:24:14,747 --> 00:24:16,350
+that we're working on to
+build out on the console.
+
+659
+00:24:16,350 --> 00:24:17,700
+And this one is going to be
+
+660
+00:24:17,700 --> 00:24:19,410
+the Security Lake agent.
+
+661
+00:24:19,410 --> 00:24:21,630
+This is definitely a core one here.
+
+662
+00:24:21,630 --> 00:24:24,420
+So the way this agent's gonna work is
+
+663
+00:24:24,420 --> 00:24:26,670
+it's gonna use Amazon Athena.
+
+664
+00:24:26,670 --> 00:24:30,810
+This is going to be a serverless
+interactive query service
+
+665
+00:24:30,810 --> 00:24:32,730
+that actually lets us run SQL Query
+
+666
+00:24:32,730 --> 00:24:34,560
+directly on all the data sources we have
+
+667
+00:24:34,560 --> 00:24:36,360
+in our security lake.
+
+668
+00:24:36,360 --> 00:24:37,860
+So the way this works is
+
+669
+00:24:37,860 --> 00:24:41,070
+the agent's gonna able to
+take a specific prompt,
+
+670
+00:24:41,070 --> 00:24:42,750
+it's able to convert natural language.
+
+671
+00:24:42,750 --> 00:24:44,310
+Like for example here,
+
+672
+00:24:44,310 --> 00:24:45,900
+if you look up at the screen,
+
+673
+00:24:45,900 --> 00:24:47,820
+we're saying show security group changes
+
+674
+00:24:47,820 --> 00:24:50,073
+followed by unusual traffic patterns.
+
+675
+00:24:51,180 --> 00:24:53,160
+So can anyone tell me where do we store
+
+676
+00:24:53,160 --> 00:24:54,150
+security group changes?
+
+677
+00:24:54,150 --> 00:24:56,670
+What sort of logs will that be placed in?
+
+678
+00:24:56,670 --> 00:24:58,440
+Can anyone tell me?
+
+679
+00:24:58,440 --> 00:24:59,850
+CloudTrail, exactly.
+
+680
+00:24:59,850 --> 00:25:02,610
+So we have, that's one of the
+log sources of CloudTrail.
+
+681
+00:25:02,610 --> 00:25:04,413
+How about unusual traffic patterns?
+
+682
+00:25:06,750 --> 00:25:08,700
+VPC Flow Logs, that's right.
+
+683
+00:25:08,700 --> 00:25:11,250
+So just based on this
+natural language query
+
+684
+00:25:11,250 --> 00:25:12,960
+that we have here, it's
+gonna understand, okay,
+
+685
+00:25:12,960 --> 00:25:14,490
+I need to query,
+
+686
+00:25:14,490 --> 00:25:16,260
+I need to query the SQL code
+
+687
+00:25:16,260 --> 00:25:18,300
+to actually query this Security Lake,
+
+688
+00:25:18,300 --> 00:25:21,360
+pull in any sort of security
+group changes that have
+
+689
+00:25:21,360 --> 00:25:23,340
+unusual traffic patterns.
+
+690
+00:25:23,340 --> 00:25:26,730
+So this is an example of the
+power of the agent by itself.
+
+691
+00:25:26,730 --> 00:25:29,460
+Down here is sample queries
+for multi-agents, right?
+
+692
+00:25:29,460 --> 00:25:34,080
+So here if we're saying
+correlate unusual API activity
+
+693
+00:25:34,080 --> 00:25:37,170
+with network anomalies and
+then contain the threats,
+
+694
+00:25:37,170 --> 00:25:40,353
+does anyone know what two
+agents we need to use for this?
+
+695
+00:25:41,490 --> 00:25:44,310
+So the first one is how do you
+correlate the API activity?
+
+696
+00:25:44,310 --> 00:25:46,060
+What agent would you need for that?
+
+697
+00:25:48,420 --> 00:25:50,320
+So hint is we're looking at right now.
+
+698
+00:25:51,720 --> 00:25:53,160
+What was that?
+
+699
+00:25:53,160 --> 00:25:56,340
+Yes, so one agent is gonna
+be the Security Lake agent
+
+700
+00:25:56,340 --> 00:25:58,890
+and then for the containing the threats,
+
+701
+00:25:58,890 --> 00:26:01,380
+if anyone remembers the name of that one.
+
+702
+00:26:01,380 --> 00:26:04,060
+Let's go back.
+- [Audience] Cloud Ops.
+
+703
+00:26:04,060 --> 00:26:05,670
+- [Shawn] Yes, the Cloud
+Ops agent, exactly.
+
+704
+00:26:05,670 --> 00:26:07,890
+So these two are gonna work together
+
+705
+00:26:07,890 --> 00:26:10,200
+to actually handle that
+query and solve that problem
+
+706
+00:26:10,200 --> 00:26:12,693
+that we have, okay?
+
+707
+00:26:13,860 --> 00:26:16,530
+And yeah, let's jump in
+into the actual console
+
+708
+00:26:16,530 --> 00:26:17,980
+and see what this looks like.
+
+709
+00:26:19,819 --> 00:26:20,652
+You need a drive?
+
+710
+00:26:20,652 --> 00:26:21,900
+- [Omar] I got it, appreciate it.
+
+711
+00:26:23,010 --> 00:26:24,333
+So let's go to demo,
+
+712
+00:26:26,430 --> 00:26:27,263
+okay,
+
+713
+00:26:28,140 --> 00:26:31,263
+okay, so let's go into the
+Security Lake Notebook.
+
+714
+00:26:33,270 --> 00:26:35,823
+So like Shawn, I'm gonna
+install the dependencies.
+
+715
+00:26:37,260 --> 00:26:40,290
+We're going to then import
+different things, right?
+
+716
+00:26:40,290 --> 00:26:42,930
+The key two things is
+gonna be the agent class.
+
+717
+00:26:42,930 --> 00:26:44,310
+This is what lets us actually define
+
+718
+00:26:44,310 --> 00:26:45,690
+the agent with the different tools,
+
+719
+00:26:45,690 --> 00:26:47,850
+foundation model, and prompt.
+
+720
+00:26:47,850 --> 00:26:49,530
+We're also importing the tool class
+
+721
+00:26:49,530 --> 00:26:52,430
+so we could actually define
+the Python function as a tool.
+
+722
+00:26:55,530 --> 00:26:59,430
+Sure, zoom in, okay, how's that?
+
+723
+00:26:59,430 --> 00:27:01,800
+Awesome, okay.
+
+724
+00:27:01,800 --> 00:27:03,930
+Here I'm just doing some
+Security Lake configuration.
+
+725
+00:27:03,930 --> 00:27:05,970
+I'm giving agent permission to access
+
+726
+00:27:05,970 --> 00:27:08,460
+my Athena work group that's associated
+
+727
+00:27:08,460 --> 00:27:09,570
+with my Security Lake.
+
+728
+00:27:09,570 --> 00:27:12,600
+Again, my Security Lake has
+the vlogs across the board
+
+729
+00:27:12,600 --> 00:27:15,420
+from VPC Flow Logs, Security Hub findings,
+
+730
+00:27:15,420 --> 00:27:16,923
+and also CloudTrail events.
+
+731
+00:27:19,260 --> 00:27:21,180
+Here I'm initializing
+different AWS clients
+
+732
+00:27:21,180 --> 00:27:23,850
+so I can actually interact
+with Athena, or not me.
+
+733
+00:27:23,850 --> 00:27:25,950
+The agent can actually
+interact with Athena,
+
+734
+00:27:25,950 --> 00:27:28,500
+Bedrock to actually access
+different foundation models.
+
+735
+00:27:28,500 --> 00:27:29,460
+And then also Glue.
+
+736
+00:27:29,460 --> 00:27:32,100
+Glue helps us grab the schema information
+
+737
+00:27:32,100 --> 00:27:33,120
+so we could build that.
+
+738
+00:27:33,120 --> 00:27:35,070
+So we could actually build the queries.
+
+739
+00:27:37,890 --> 00:27:39,570
+Here we're defining a Bedrock model.
+
+740
+00:27:39,570 --> 00:27:41,490
+So I think one of the
+strongest points here is
+
+741
+00:27:41,490 --> 00:27:43,560
+being able to define the
+model that you wanna use
+
+742
+00:27:43,560 --> 00:27:45,540
+for your agent with just one line of code.
+
+743
+00:27:45,540 --> 00:27:48,270
+So Claude Opus 4.5 probably
+came out a week or two ago
+
+744
+00:27:48,270 --> 00:27:50,880
+and I was able just by changing
+one line of code to replace
+
+745
+00:27:50,880 --> 00:27:52,470
+a different foundation model.
+
+746
+00:27:52,470 --> 00:27:54,270
+And again, one thing
+you want to think of is
+
+747
+00:27:54,270 --> 00:27:57,900
+depending on the agent and
+the complexity of its task,
+
+748
+00:27:57,900 --> 00:27:59,880
+you might want to adjust which
+model you want to use, right?
+
+749
+00:27:59,880 --> 00:28:00,870
+You wanna think about latency,
+
+750
+00:28:00,870 --> 00:28:02,130
+you wanna think about cost.
+
+751
+00:28:02,130 --> 00:28:03,990
+So if we think about the metadata agent,
+
+752
+00:28:03,990 --> 00:28:05,700
+it's just gonna create a DynamoDB table.
+
+753
+00:28:05,700 --> 00:28:08,040
+It's a pretty simple task,
+there's not much going on there.
+
+754
+00:28:08,040 --> 00:28:08,970
+So in that case, we could use
+
+755
+00:28:08,970 --> 00:28:10,680
+a lightweight model
+that's faster and cheaper,
+
+756
+00:28:10,680 --> 00:28:12,300
+like Haiku for example.
+
+757
+00:28:12,300 --> 00:28:15,750
+Something like this that needs
+to look up natural language,
+
+758
+00:28:15,750 --> 00:28:18,330
+look up schema, create an actual query,
+
+759
+00:28:18,330 --> 00:28:20,340
+grab the data and then
+create the correlations
+
+760
+00:28:20,340 --> 00:28:21,480
+between activities,
+
+761
+00:28:21,480 --> 00:28:23,130
+we'd wanna use something
+a little more advanced
+
+762
+00:28:23,130 --> 00:28:24,660
+with more capability.
+
+763
+00:28:24,660 --> 00:28:26,960
+In that case, we're gonna
+use Claude Opus 4.5.
+
+764
+00:28:29,790 --> 00:28:33,300
+Okay, so now this is,
+
+765
+00:28:33,300 --> 00:28:35,580
+so now we're gonna actually
+define the tools, right?
+
+766
+00:28:35,580 --> 00:28:37,170
+So now what tools,
+
+767
+00:28:37,170 --> 00:28:38,580
+does anyone know what sort of tools
+
+768
+00:28:38,580 --> 00:28:40,320
+my agent would need access to
+
+769
+00:28:40,320 --> 00:28:41,970
+for the Security Lake agent?
+
+770
+00:28:41,970 --> 00:28:43,220
+There's no wrong answers.
+
+771
+00:28:46,770 --> 00:28:48,453
+There's a hint right here.
+
+772
+00:28:51,450 --> 00:28:52,380
+I'm gonna have to pick someone.
+
+773
+00:28:52,380 --> 00:28:54,450
+- [Shawn] How do we query the data?
+
+774
+00:28:54,450 --> 00:28:56,351
+What's the best way to query that?
+
+775
+00:28:56,351 --> 00:28:57,870
+What was that?
+
+776
+00:28:57,870 --> 00:29:00,900
+Athena, Athena, yes.
+
+777
+00:29:00,900 --> 00:29:01,830
+So that's one tool we need.
+
+778
+00:29:01,830 --> 00:29:03,780
+We need to create a tool for our agents
+
+779
+00:29:03,780 --> 00:29:05,280
+to actually use Amazon Athena.
+
+780
+00:29:05,280 --> 00:29:06,870
+And that's what we're doing here.
+
+781
+00:29:06,870 --> 00:29:08,460
+Here is the context.
+
+782
+00:29:08,460 --> 00:29:10,860
+So we feed, if you notice a lot of these,
+
+783
+00:29:10,860 --> 00:29:12,930
+every tool's gonna have
+this metadata description.
+
+784
+00:29:12,930 --> 00:29:14,490
+And that's because we
+feed this to the model.
+
+785
+00:29:14,490 --> 00:29:17,370
+The model knows I have
+a tool that can query
+
+786
+00:29:17,370 --> 00:29:20,160
+the Security Lake using Athena.
+
+787
+00:29:20,160 --> 00:29:21,750
+And the only argument I need,
+
+788
+00:29:21,750 --> 00:29:23,260
+I need a SQL query to do this
+
+789
+00:29:24,390 --> 00:29:25,590
+and this is the returns, right?
+
+790
+00:29:25,590 --> 00:29:28,290
+I'm gonna return the
+results as a string table
+
+791
+00:29:28,290 --> 00:29:29,910
+or error message if I
+don't get anything back
+
+792
+00:29:29,910 --> 00:29:32,280
+from the Security Lake.
+
+793
+00:29:32,280 --> 00:29:35,580
+So here I'm just
+connecting to Amazon Athena
+
+794
+00:29:35,580 --> 00:29:37,590
+and I already defined
+Athena database up top.
+
+795
+00:29:37,590 --> 00:29:39,390
+So we're connecting to Athena
+
+796
+00:29:39,390 --> 00:29:40,320
+and we're actually gonna grab
+
+797
+00:29:40,320 --> 00:29:42,690
+the unique query execution ID
+
+798
+00:29:42,690 --> 00:29:44,190
+that belongs to Athena.
+
+799
+00:29:44,190 --> 00:29:45,660
+And this is just gonna go through
+
+800
+00:29:45,660 --> 00:29:48,090
+and actually pull in the
+results for Amazon Athena.
+
+801
+00:29:48,090 --> 00:29:49,140
+So that's one tool.
+
+802
+00:29:49,140 --> 00:29:51,333
+One tool is to actually do the querying.
+
+803
+00:29:52,230 --> 00:29:54,420
+Can anyone tell me what
+the other tool's gonna do?
+
+804
+00:29:54,420 --> 00:29:55,870
+There's a hint on the screen.
+
+805
+00:29:59,130 --> 00:30:01,260
+So the second tool is
+going to actually list
+
+806
+00:30:01,260 --> 00:30:02,430
+the tables, right?
+
+807
+00:30:02,430 --> 00:30:03,930
+'Cause the agent is not gonna know
+
+808
+00:30:03,930 --> 00:30:06,090
+what sort of data sources I have, right?
+
+809
+00:30:06,090 --> 00:30:08,067
+So it could be VPC Flow Logs,
+
+810
+00:30:08,067 --> 00:30:09,570
+it could be CloudTrail Security Hub.
+
+811
+00:30:09,570 --> 00:30:11,670
+Or if using other third-party providers,
+
+812
+00:30:11,670 --> 00:30:12,870
+security services,
+
+813
+00:30:12,870 --> 00:30:16,320
+you could have unique
+tables over there as well.
+
+814
+00:30:16,320 --> 00:30:18,330
+And that's what makes
+Security Lake so powerful is
+
+815
+00:30:18,330 --> 00:30:21,060
+you have one normalized,
+standardized data format.
+
+816
+00:30:21,060 --> 00:30:22,290
+So the agent doesn't have to go in
+
+817
+00:30:22,290 --> 00:30:24,750
+and really like change up the queries.
+
+818
+00:30:24,750 --> 00:30:26,823
+It has one unified way of approaching it.
+
+819
+00:30:28,890 --> 00:30:31,110
+And then finally, we
+have get_table_schema.
+
+820
+00:30:31,110 --> 00:30:33,060
+And this retrieves the schema information
+
+821
+00:30:33,060 --> 00:30:35,220
+from the Glue Data Catalog
+
+822
+00:30:35,220 --> 00:30:37,886
+and the agent needs to
+grab the schema, right?
+
+823
+00:30:37,886 --> 00:30:39,030
+It has to look at the column information
+
+824
+00:30:39,030 --> 00:30:40,650
+and how the data is partitioned,
+
+825
+00:30:40,650 --> 00:30:42,510
+and based on that it could actually create
+
+826
+00:30:42,510 --> 00:30:45,060
+queries that can be executed
+against Amazon Athena.
+
+827
+00:30:46,920 --> 00:30:49,500
+So we define the three tools over here,
+
+828
+00:30:49,500 --> 00:30:51,240
+we're gonna run that.
+
+829
+00:30:51,240 --> 00:30:53,040
+And now what we're gonna do is
+
+830
+00:30:53,040 --> 00:30:54,840
+after we define the tool,
+
+831
+00:30:54,840 --> 00:30:57,870
+we're going to go ahead
+and call the agent class
+
+832
+00:30:57,870 --> 00:30:58,703
+that we have.
+
+833
+00:30:58,703 --> 00:31:00,390
+And again, for the agent, like Shawn said,
+
+834
+00:31:00,390 --> 00:31:02,550
+there's three core components.
+
+835
+00:31:02,550 --> 00:31:04,860
+We need the Bedrock
+model that we want to use
+
+836
+00:31:04,860 --> 00:31:05,693
+or any model, right?
+
+837
+00:31:05,693 --> 00:31:06,930
+You're not tied to only Bedrock.
+
+838
+00:31:06,930 --> 00:31:09,390
+If you wanna use OpenAI or
+these other foundation models,
+
+839
+00:31:09,390 --> 00:31:10,920
+feel free to do that.
+
+840
+00:31:10,920 --> 00:31:12,810
+And then we define the different tools
+
+841
+00:31:12,810 --> 00:31:14,403
+that this agent has access to.
+
+842
+00:31:15,780 --> 00:31:19,110
+And I think one very
+important component of agents
+
+843
+00:31:19,110 --> 00:31:23,460
+that a lot of people usually
+sleep on is the system prompt.
+
+844
+00:31:23,460 --> 00:31:25,290
+The system prompt is
+essentially the persona,
+
+845
+00:31:25,290 --> 00:31:26,600
+the personality of the agent.
+
+846
+00:31:26,600 --> 00:31:27,810
+In this case, we're letting it know
+
+847
+00:31:27,810 --> 00:31:29,340
+that you're a cybersecurity analyst
+
+848
+00:31:29,340 --> 00:31:31,980
+with access to an AWS Security Data Lake.
+
+849
+00:31:31,980 --> 00:31:34,470
+And I give it important database context
+
+850
+00:31:34,470 --> 00:31:38,160
+and if you notice here, I
+also give it a workflow.
+
+851
+00:31:38,160 --> 00:31:39,060
+The thing is with agent,
+
+852
+00:31:39,060 --> 00:31:40,470
+it could actually go
+through the agentic loop
+
+853
+00:31:40,470 --> 00:31:41,730
+and figure out the workflow.
+
+854
+00:31:41,730 --> 00:31:46,110
+But in this case, there is one
+good way to actually generate
+
+855
+00:31:46,110 --> 00:31:47,250
+the actual query.
+
+856
+00:31:47,250 --> 00:31:50,640
+And that is list the tables, the schema,
+
+857
+00:31:50,640 --> 00:31:52,620
+and then build queries based on the tape,
+
+858
+00:31:52,620 --> 00:31:54,840
+the actual data and the schema.
+
+859
+00:31:54,840 --> 00:31:57,360
+That's one workflow that I define.
+
+860
+00:31:57,360 --> 00:31:59,280
+And one thing that you wanna
+do when you build agents,
+
+861
+00:31:59,280 --> 00:32:01,170
+you'll notice sometimes
+hey, like it's taking
+
+862
+00:32:01,170 --> 00:32:03,240
+two, three iterations to do something.
+
+863
+00:32:03,240 --> 00:32:05,040
+I could just tell it in the prompt
+
+864
+00:32:05,040 --> 00:32:06,450
+that information and we can get rid of
+
+865
+00:32:06,450 --> 00:32:08,370
+a lot of the latency and extra tokens
+
+866
+00:32:08,370 --> 00:32:10,233
+that it would usually cost.
+
+867
+00:32:12,240 --> 00:32:13,950
+And in terms of outputs,
+
+868
+00:32:13,950 --> 00:32:16,530
+I tell me, gimme specific
+remediation steps.
+
+869
+00:32:16,530 --> 00:32:18,360
+I want data-driven insights
+
+870
+00:32:18,360 --> 00:32:20,430
+and then key findings with the risk,
+
+871
+00:32:20,430 --> 00:32:21,843
+the risk assessments.
+
+872
+00:32:23,400 --> 00:32:24,233
+And that's it.
+
+873
+00:32:24,233 --> 00:32:26,730
+We defined our Security Lake agents
+
+874
+00:32:26,730 --> 00:32:28,470
+with its different tools.
+
+875
+00:32:28,470 --> 00:32:30,750
+And the first prompt that
+I want to test out is
+
+876
+00:32:30,750 --> 00:32:33,423
+what kind of data do I
+have in my Security Lake?
+
+877
+00:32:37,770 --> 00:32:39,840
+So we run that and as you can see,
+
+878
+00:32:39,840 --> 00:32:40,983
+the first thing it does is
+
+879
+00:32:40,983 --> 00:32:43,590
+it's gonna list the Security Lake tables.
+
+880
+00:32:43,590 --> 00:32:46,170
+It realizes we have
+three different tables.
+
+881
+00:32:46,170 --> 00:32:47,430
+So let's get the schema details
+
+882
+00:32:47,430 --> 00:32:49,200
+so you can get the full picture.
+
+883
+00:32:49,200 --> 00:32:52,140
+So it runs as you see
+three different executions,
+
+884
+00:32:52,140 --> 00:32:54,720
+one tool call for every single table,
+
+885
+00:32:54,720 --> 00:32:56,070
+and it grabs that information, right?
+
+886
+00:32:56,070 --> 00:32:58,440
+It tells us, okay, you
+have the CloudTrail events,
+
+887
+00:32:58,440 --> 00:33:01,260
+which has API activity,
+
+888
+00:33:01,260 --> 00:33:04,050
+user role and authentication information,
+
+889
+00:33:04,050 --> 00:33:05,643
+source API calls.
+
+890
+00:33:06,600 --> 00:33:08,100
+Same with Security Hub findings, right?
+
+891
+00:33:08,100 --> 00:33:10,620
+It tells you everything
+that is usually involved
+
+892
+00:33:10,620 --> 00:33:12,540
+with these specific findings, right?
+
+893
+00:33:12,540 --> 00:33:15,843
+Vulnerabilities, remediation
+guidance, compliance status.
+
+894
+00:33:16,950 --> 00:33:18,843
+And the same with VPC Flow Logs.
+
+895
+00:33:22,327 --> 00:33:23,327
+There we go.
+
+896
+00:33:28,980 --> 00:33:30,600
+- [Omar] So now that we built
+that Security Lake agent,
+
+897
+00:33:30,600 --> 00:33:33,540
+let's look at how we
+could actually build out,
+
+898
+00:33:33,540 --> 00:33:35,220
+how we could build out
+that supervisor agent
+
+899
+00:33:35,220 --> 00:33:37,270
+so we could use multiple agents together.
+
+900
+00:33:41,850 --> 00:33:44,070
+So here,
+
+901
+00:33:44,070 --> 00:33:46,530
+the next step is we have
+this log analysis agent
+
+902
+00:33:46,530 --> 00:33:48,600
+that could actually
+generate its own SQL queries
+
+903
+00:33:48,600 --> 00:33:50,580
+based on the different events coming in
+
+904
+00:33:50,580 --> 00:33:52,980
+or interaction with the
+agent and return results.
+
+905
+00:33:52,980 --> 00:33:54,690
+And we also have the metadata, right?
+
+906
+00:33:54,690 --> 00:33:58,050
+So how do we actually set up
+these two to work together
+
+907
+00:33:58,050 --> 00:33:59,550
+in a multi-agent architecture?
+
+908
+00:34:08,490 --> 00:34:12,185
+So when I first started, we
+talked about native tools
+
+909
+00:34:12,185 --> 00:34:13,530
+that are created by the community.
+
+910
+00:34:13,530 --> 00:34:16,310
+So two ones that I wanna use
+for this specific agent is
+
+911
+00:34:16,310 --> 00:34:17,400
+gonna be file writes.
+
+912
+00:34:17,400 --> 00:34:19,080
+This is gonna give our agent the ability
+
+913
+00:34:19,080 --> 00:34:22,350
+to actually write files to our computer.
+
+914
+00:34:22,350 --> 00:34:23,610
+Another one is current time.
+
+915
+00:34:23,610 --> 00:34:25,200
+So if you have specific queries
+
+916
+00:34:25,200 --> 00:34:27,210
+like tell me about events
+that happened yesterday,
+
+917
+00:34:27,210 --> 00:34:28,050
+this is a native tool.
+
+918
+00:34:28,050 --> 00:34:31,140
+Again, you don't have to write
+any sort of logic for it.
+
+919
+00:34:31,140 --> 00:34:33,300
+It's already built in and
+we just need to import it
+
+920
+00:34:33,300 --> 00:34:35,643
+from the Strand tools class.
+
+921
+00:34:37,170 --> 00:34:38,470
+So we'll import those two.
+
+922
+00:34:40,350 --> 00:34:42,870
+So here, this metadata agent
+
+923
+00:34:42,870 --> 00:34:45,000
+that Shawn went through was
+defined in another notebook.
+
+924
+00:34:45,000 --> 00:34:46,140
+So I'm just gonna redefine it.
+
+925
+00:34:46,140 --> 00:34:50,643
+So this specific notebook
+has awareness of the agent.
+
+926
+00:34:53,250 --> 00:34:56,370
+So let's look at how we
+actually define multiple tools.
+
+927
+00:34:56,370 --> 00:34:58,380
+So the way we do this in this example is
+
+928
+00:34:58,380 --> 00:35:00,720
+we define the agents as tools.
+
+929
+00:35:00,720 --> 00:35:01,800
+So the supervisor agent,
+
+930
+00:35:01,800 --> 00:35:03,840
+if we think back to that agentic loop
+
+931
+00:35:03,840 --> 00:35:05,250
+that SDK operates,
+
+932
+00:35:05,250 --> 00:35:07,440
+it now has access to different agents
+
+933
+00:35:07,440 --> 00:35:09,540
+that it can use to complete task.
+
+934
+00:35:09,540 --> 00:35:11,730
+So in this case, all I'm doing is
+
+935
+00:35:11,730 --> 00:35:13,580
+I'm defining that Security Lake agent
+
+936
+00:35:14,850 --> 00:35:16,350
+as one of the tools, right?
+
+937
+00:35:16,350 --> 00:35:17,820
+The logic was already defined above
+
+938
+00:35:17,820 --> 00:35:19,650
+in terms of the different tools
+
+939
+00:35:19,650 --> 00:35:21,690
+it has access to, its persona.
+
+940
+00:35:21,690 --> 00:35:23,970
+So here I just need to provide the context
+
+941
+00:35:23,970 --> 00:35:26,613
+so our supervisor agent
+knows what has access to.
+
+942
+00:35:28,230 --> 00:35:31,154
+Same with the get_ AWS_account_metadata,
+
+943
+00:35:31,154 --> 00:35:33,690
+I'm just gonna define the metadata
+
+944
+00:35:33,690 --> 00:35:35,490
+and then put some error handling
+
+945
+00:35:35,490 --> 00:35:38,073
+in case the ID is incorrect.
+
+946
+00:35:40,170 --> 00:35:41,640
+And then here again,
+
+947
+00:35:41,640 --> 00:35:43,380
+inputting the agent
+class and we're defining
+
+948
+00:35:43,380 --> 00:35:44,420
+the different tools.
+
+949
+00:35:44,420 --> 00:35:47,356
+In this case, we have two native tools
+
+950
+00:35:47,356 --> 00:35:48,300
+that are native to Strands
+
+951
+00:35:48,300 --> 00:35:51,000
+and we also have two different tools
+
+952
+00:35:51,000 --> 00:35:52,473
+which are actual agents.
+
+953
+00:35:53,940 --> 00:35:56,190
+Here again, again, the big
+key is the personality,
+
+954
+00:35:56,190 --> 00:35:58,410
+the persona, which is a system prompt.
+
+955
+00:35:58,410 --> 00:35:59,940
+When you start building out agents,
+
+956
+00:35:59,940 --> 00:36:01,110
+that's one thing I highly recommend is
+
+957
+00:36:01,110 --> 00:36:03,510
+put out the different
+prompts and you're gonna see
+
+958
+00:36:03,510 --> 00:36:04,833
+widely different results.
+
+959
+00:36:05,910 --> 00:36:10,050
+So in this case, I define
+an investigation workflow,
+
+960
+00:36:10,050 --> 00:36:11,820
+get the metadata, right?
+
+961
+00:36:11,820 --> 00:36:15,150
+Use the Security Lake agent
+to find the findings overview,
+
+962
+00:36:15,150 --> 00:36:17,580
+get the CloudTrail, network IP analysis.
+
+963
+00:36:17,580 --> 00:36:19,260
+And then finally, I want
+you to generate a report
+
+964
+00:36:19,260 --> 00:36:21,060
+that gets sent to our security team.
+
+965
+00:36:22,440 --> 00:36:24,310
+I give it a list of available tools
+
+966
+00:36:26,550 --> 00:36:28,140
+and then also the output, right?
+
+967
+00:36:28,140 --> 00:36:30,633
+I want account context, criticality,
+
+968
+00:36:31,590 --> 00:36:32,820
+account summary,
+
+969
+00:36:32,820 --> 00:36:34,770
+the risk assessment
+based on available data
+
+970
+00:36:34,770 --> 00:36:37,200
+and also recommended actions.
+
+971
+00:36:37,200 --> 00:36:39,210
+And if there's any data gaps that require
+
+972
+00:36:39,210 --> 00:36:40,320
+manual investigation, right?
+
+973
+00:36:40,320 --> 00:36:41,820
+Sometimes the agent doesn't have
+
+974
+00:36:41,820 --> 00:36:43,860
+all the necessary context or reasoning
+
+975
+00:36:43,860 --> 00:36:46,980
+to actually give you some
+sort of remediation plan.
+
+976
+00:36:46,980 --> 00:36:48,300
+So it could tell you
+what sort of data gaps
+
+977
+00:36:48,300 --> 00:36:49,950
+you have within your environment.
+
+978
+00:36:53,970 --> 00:36:55,060
+So run that
+
+979
+00:36:57,450 --> 00:37:01,770
+and for when you use different
+native tools like file write,
+
+980
+00:37:01,770 --> 00:37:03,600
+Strand sees it as a sensitive operation
+
+981
+00:37:03,600 --> 00:37:05,130
+to actually write to your computer.
+
+982
+00:37:05,130 --> 00:37:06,660
+Usually you'll ask for consent
+
+983
+00:37:06,660 --> 00:37:08,160
+whether or not you could
+write to the computer
+
+984
+00:37:08,160 --> 00:37:09,630
+in the middle of the invocation.
+
+985
+00:37:09,630 --> 00:37:11,370
+In this case, right,
+agents are autonomous.
+
+986
+00:37:11,370 --> 00:37:13,020
+We don't want it to stop halfway through
+
+987
+00:37:13,020 --> 00:37:16,110
+and let us know that hey, could
+I invoke this specific tool?
+
+988
+00:37:16,110 --> 00:37:18,210
+So I'm just gonna run this and just say
+
+989
+00:37:18,210 --> 00:37:19,770
+bypass any sort of tool consent.
+
+990
+00:37:19,770 --> 00:37:21,210
+You're allowed to use any tool you want
+
+991
+00:37:21,210 --> 00:37:23,060
+without human in the loop permission.
+
+992
+00:37:24,870 --> 00:37:27,690
+So now let's actually use
+the SOC orchestrator agent
+
+993
+00:37:27,690 --> 00:37:28,593
+we just built out.
+
+994
+00:37:30,210 --> 00:37:32,970
+So we have this account
+ID, it's been compromised,
+
+995
+00:37:32,970 --> 00:37:35,970
+what are the affected resources
+actually be concerned about?
+
+996
+00:37:37,920 --> 00:37:39,750
+So if we run this,
+
+997
+00:37:39,750 --> 00:37:43,140
+so me and Shawn have
+actually been populating
+
+998
+00:37:43,140 --> 00:37:44,790
+the Security Lake for the
+last two, three months
+
+999
+00:37:44,790 --> 00:37:46,080
+with almost 60 events a minute.
+
+1000
+00:37:46,080 --> 00:37:47,550
+So we have a lot of logs in there
+
+1001
+00:37:47,550 --> 00:37:49,680
+and it's still performing very well
+
+1002
+00:37:49,680 --> 00:37:52,800
+and it's gonna actually go
+ahead and start querying
+
+1003
+00:37:52,800 --> 00:37:55,350
+the different data sources,
+getting the schema.
+
+1004
+00:37:55,350 --> 00:37:57,090
+This probably takes around
+maybe a minute or two
+
+1005
+00:37:57,090 --> 00:37:58,380
+to complete so I'm gonna show you a report
+
+1006
+00:37:58,380 --> 00:38:00,360
+that I generated last night.
+
+1007
+00:38:00,360 --> 00:38:02,250
+So if I come back to home,
+
+1008
+00:38:02,250 --> 00:38:05,340
+look at all my reports, right here,
+
+1009
+00:38:05,340 --> 00:38:07,080
+these are the different
+reports I generated.
+
+1010
+00:38:07,080 --> 00:38:09,240
+Let's look at the one from
+
+1011
+00:38:09,240 --> 00:38:11,133
+let's do four hours ago.
+
+1012
+00:38:12,450 --> 00:38:14,370
+So this is the report
+that I generated, right?
+
+1013
+00:38:14,370 --> 00:38:16,200
+It's gonna gimme the account ID
+
+1014
+00:38:16,200 --> 00:38:17,463
+and know is based on the business context
+
+1015
+00:38:17,463 --> 00:38:19,170
+that this is a production account.
+
+1016
+00:38:19,170 --> 00:38:21,119
+So it's a highly critical
+environment, right?
+
+1017
+00:38:21,119 --> 00:38:22,980
+It's a P1 priority and it's critical
+
+1018
+00:38:22,980 --> 00:38:24,030
+and it gives you a summary.
+
+1019
+00:38:24,030 --> 00:38:25,830
+It says this account has
+confidential information
+
+1020
+00:38:25,830 --> 00:38:29,430
+with PCI information with
+active compromise, right?
+
+1021
+00:38:29,430 --> 00:38:31,950
+You need immediate containment required.
+
+1022
+00:38:31,950 --> 00:38:33,810
+So it gives you all the context,
+
+1023
+00:38:33,810 --> 00:38:37,023
+the security contact within
+that specific AWS account.
+
+1024
+00:38:38,250 --> 00:38:39,330
+Here's the executive summary.
+
+1025
+00:38:39,330 --> 00:38:40,320
+Me and Shawn are definitely in trouble.
+
+1026
+00:38:40,320 --> 00:38:43,350
+We have over 10,000 security
+findings within AWS account.
+
+1027
+00:38:43,350 --> 00:38:45,810
+So definitely a lot of work to do there.
+
+1028
+00:38:45,810 --> 00:38:47,490
+Again, we've been
+blasting the Security Lake
+
+1029
+00:38:47,490 --> 00:38:49,050
+with a lot of different events
+
+1030
+00:38:49,050 --> 00:38:50,160
+and here it breaks it down, right?
+
+1031
+00:38:50,160 --> 00:38:53,460
+You have 859 critical within S3 buckets.
+
+1032
+00:38:53,460 --> 00:38:55,500
+IAM users, EC2 instances,
+
+1033
+00:38:55,500 --> 00:38:57,930
+security groups that have been modified
+
+1034
+00:38:57,930 --> 00:38:59,340
+and it tells you the risk, right?
+
+1035
+00:38:59,340 --> 00:39:01,440
+Data exposure, IAM user,
+
+1036
+00:39:01,440 --> 00:39:04,140
+there's a credential that's
+been compromised and used.
+
+1037
+00:39:06,420 --> 00:39:08,220
+It shows the attack analysis, right?
+
+1038
+00:39:08,220 --> 00:39:12,060
+The source IP, which user is compromised
+
+1039
+00:39:12,060 --> 00:39:14,673
+and also the VPC traffic.
+
+1040
+00:39:16,710 --> 00:39:17,673
+Here we go,
+
+1041
+00:39:19,290 --> 00:39:21,270
+different API operations
+that are happening.
+
+1042
+00:39:21,270 --> 00:39:22,830
+People are, that user is
+
+1043
+00:39:22,830 --> 00:39:23,850
+creating security groups,
+
+1044
+00:39:23,850 --> 00:39:25,620
+it's deleting security groups
+
+1045
+00:39:25,620 --> 00:39:27,540
+and it's authorizing specific ports
+
+1046
+00:39:27,540 --> 00:39:29,373
+within existing security groups.
+
+1047
+00:39:30,420 --> 00:39:32,970
+And it actually runs down
+through immediate actions
+
+1048
+00:39:32,970 --> 00:39:34,170
+that are required, right?
+
+1049
+00:39:34,170 --> 00:39:36,330
+Rotate all the credentials immediately,
+
+1050
+00:39:36,330 --> 00:39:37,833
+especially the admin IAM,
+
+1051
+00:39:39,570 --> 00:39:41,250
+and it tells you the
+things that are critical
+
+1052
+00:39:41,250 --> 00:39:42,420
+that need immediate action,
+
+1053
+00:39:42,420 --> 00:39:44,250
+the short-term actions,
+
+1054
+00:39:44,250 --> 00:39:45,270
+and then some more information
+
+1055
+00:39:45,270 --> 00:39:47,253
+on the compliance impact assessment.
+
+1056
+00:39:53,790 --> 00:39:56,140
+And then let's see if it
+generated this report.
+
+1057
+00:40:01,830 --> 00:40:05,220
+So it's still working through,
+we can come back here,
+
+1058
+00:40:05,220 --> 00:40:07,530
+but that probably takes
+around another minute.
+
+1059
+00:40:07,530 --> 00:40:11,673
+So yeah, let's go ahead and
+go to the next slide here.
+
+1060
+00:40:14,074 --> 00:40:15,030
+- [Shawn] So now that
+we have our agent code,
+
+1061
+00:40:15,030 --> 00:40:17,100
+we wrote it out, we're
+confident it's working,
+
+1062
+00:40:17,100 --> 00:40:19,290
+we tested it within Jupyter Notebooks
+
+1063
+00:40:19,290 --> 00:40:21,150
+and it's doing what we
+wanted it to achieve,
+
+1064
+00:40:21,150 --> 00:40:22,200
+the next big question is
+
+1065
+00:40:22,200 --> 00:40:24,150
+how do I run this within
+a production environment?
+
+1066
+00:40:24,150 --> 00:40:26,070
+That's one big, key
+thing that we're seeing.
+
+1067
+00:40:26,070 --> 00:40:28,620
+And with that, we have
+the AgentCore Runtime.
+
+1068
+00:40:28,620 --> 00:40:32,190
+This is a managed service
+that came out a few months ago
+
+1069
+00:40:32,190 --> 00:40:33,660
+and it lets you run your agent code,
+
+1070
+00:40:33,660 --> 00:40:34,980
+AI agent code so you don't have to worry
+
+1071
+00:40:34,980 --> 00:40:36,780
+about the underlying infrastructure.
+
+1072
+00:40:38,040 --> 00:40:40,890
+So in this case, again,
+similar to Strands, SDK,
+
+1073
+00:40:40,890 --> 00:40:43,140
+any sort of foundation model you want,
+
+1074
+00:40:43,140 --> 00:40:45,390
+whether it's from OpenAI, Gemini,
+
+1075
+00:40:45,390 --> 00:40:48,180
+or one of the handful
+of models in Bedrock,
+
+1076
+00:40:48,180 --> 00:40:49,080
+same with framework, right?
+
+1077
+00:40:49,080 --> 00:40:51,060
+You don't have to use Strands
+SDK if you're comfortable
+
+1078
+00:40:51,060 --> 00:40:53,670
+with LangGraph, CrewAI,
+you're already using them.
+
+1079
+00:40:53,670 --> 00:40:55,890
+You're open to these as well.
+
+1080
+00:40:55,890 --> 00:40:57,330
+So what happens here is, let's say we have
+
+1081
+00:40:57,330 --> 00:40:58,620
+this Python file that I have,
+
+1082
+00:40:58,620 --> 00:41:00,630
+what you could do is you
+could either containerize it
+
+1083
+00:41:00,630 --> 00:41:02,427
+in a GACAR file or upload the code as is
+
+1084
+00:41:02,427 --> 00:41:04,500
+to AgentCore and they'll do the packaging
+
+1085
+00:41:04,500 --> 00:41:06,150
+and host it for you.
+
+1086
+00:41:06,150 --> 00:41:08,220
+So what's gonna happen here
+is AgentCore Runtime is
+
+1087
+00:41:08,220 --> 00:41:10,170
+gonna create a runtime endpoint.
+
+1088
+00:41:10,170 --> 00:41:11,760
+And this is the endpoint
+that was integrated
+
+1089
+00:41:11,760 --> 00:41:13,260
+in that frontend application that I showed
+
+1090
+00:41:13,260 --> 00:41:14,610
+in the beginning of the talk.
+
+1091
+00:41:14,610 --> 00:41:17,340
+It's sending all those
+prompts to the endpoint
+
+1092
+00:41:17,340 --> 00:41:19,290
+and the endpoint is
+actually able to scale up
+
+1093
+00:41:19,290 --> 00:41:21,960
+the amount of compute resources
+based on demand, right?
+
+1094
+00:41:21,960 --> 00:41:23,160
+So when there's a lot of users coming in
+
+1095
+00:41:23,160 --> 00:41:25,680
+and using it during actual incidents,
+
+1096
+00:41:25,680 --> 00:41:29,580
+it's able to scale up and also
+scale back down by default.
+
+1097
+00:41:29,580 --> 00:41:32,010
+There's also a lot of cool,
+different integrations,
+
+1098
+00:41:32,010 --> 00:41:33,690
+whether that's through identity,
+
+1099
+00:41:33,690 --> 00:41:35,830
+whether you wanna set up observability
+
+1100
+00:41:36,911 --> 00:41:37,744
+and also if you wanna integrate
+
+1101
+00:41:37,744 --> 00:41:38,760
+different MCP servers, right?
+
+1102
+00:41:38,760 --> 00:41:40,710
+We talked about the
+cloud control MCP server
+
+1103
+00:41:40,710 --> 00:41:43,500
+to automate cloud operations.
+
+1104
+00:41:43,500 --> 00:41:45,270
+If you haven't checked those MCP servers,
+
+1105
+00:41:45,270 --> 00:41:46,350
+I strongly recommend you do.
+
+1106
+00:41:46,350 --> 00:41:48,930
+It shows you the different range of things
+
+1107
+00:41:48,930 --> 00:41:50,930
+that you can give access to your agents.
+
+1108
+00:41:53,306 --> 00:41:54,639
+Okay, that's it.
+
+1109
+00:41:56,490 --> 00:41:58,653
+So any questions?
+
+1110
+00:42:00,480 --> 00:42:01,313
+Yes.
+
+1111
+00:42:02,556 --> 00:42:07,530
+- [Audience Member] (indistinct).
+
+1112
+00:42:07,530 --> 00:42:09,270
+- [Omar] Yeah, so your question is
+
+1113
+00:42:09,270 --> 00:42:11,340
+you're already using a lot
+of these services and tools,
+
+1114
+00:42:11,340 --> 00:42:13,593
+what's the value of
+using a security agent?
+
+1115
+00:42:14,490 --> 00:42:15,557
+- [Audience Member]
+Basically (indistinct).
+
+1116
+00:42:22,969 --> 00:42:24,713
+- [Omar] Yeah, is it automated currently?
+
+1117
+00:42:25,860 --> 00:42:26,693
+Okay.
+
+1118
+00:42:26,693 --> 00:42:29,760
+- [Shawn] Yeah, so I guess
+the complexity of setting up
+
+1119
+00:42:29,760 --> 00:42:32,550
+the automation in terms
+of are you automating
+
+1120
+00:42:32,550 --> 00:42:34,354
+remediation security findings?
+
+1121
+00:42:34,354 --> 00:42:38,521
+- [Audience Member] (indistinct).
+
+1122
+00:42:52,672 --> 00:42:53,970
+- [Shawn] Yeah, no, it's
+definitely a good concern.
+
+1123
+00:42:53,970 --> 00:42:55,410
+If you want, let's connect after.
+
+1124
+00:42:55,410 --> 00:42:56,523
+I'm curious to explore
+more about the tools,
+
+1125
+00:42:56,523 --> 00:42:58,080
+what you're doing and
+then how this would fit
+
+1126
+00:42:58,080 --> 00:42:59,010
+in the overall.
+
+1127
+00:42:59,010 --> 00:43:00,840
+There's some questions I wanna ask you.
+
+1128
+00:43:00,840 --> 00:43:02,670
+Yeah, appreciate the question.
+
+1129
+00:43:02,670 --> 00:43:03,720
+Any other questions?
+
+1130
+00:43:03,720 --> 00:43:05,311
+Yes.
+
+1131
+00:43:05,311 --> 00:43:09,478
+- [Audience Member] (indistinct).
+
+1132
+00:43:11,040 --> 00:43:12,480
+- [Shawn] Yeah, for
+registry specification,
+
+1133
+00:43:12,480 --> 00:43:14,220
+is this related to registering tools
+
+1134
+00:43:14,220 --> 00:43:15,543
+or what is this relate to?
+
+1135
+00:43:17,220 --> 00:43:18,833
+- [Omar] Are you currently using that?
+
+1136
+00:43:19,740 --> 00:43:21,840
+Are you currently doing a
+registry for your for setup?
+
+1137
+00:43:21,840 --> 00:43:22,673
+- [Audience Member] It's my headache
+
+1138
+00:43:22,673 --> 00:43:26,393
+because trying to allow
+authentication to the agent,
+
+1139
+00:43:27,494 --> 00:43:29,384
+let's say we might (indistinct).
+
+1140
+00:43:29,384 --> 00:43:30,217
+- [Omar] Yeah.
+
+1141
+00:43:30,217 --> 00:43:31,894
+- [Audience Member] And I
+think we need have a unified
+
+1142
+00:43:31,894 --> 00:43:34,394
+(indistinct).
+
+1143
+00:43:37,170 --> 00:43:38,700
+- [Omar] Yeah, so I know with AgentCore,
+
+1144
+00:43:38,700 --> 00:43:40,320
+it's not in this specific slide,
+
+1145
+00:43:40,320 --> 00:43:41,610
+but there's also a core component,
+
+1146
+00:43:41,610 --> 00:43:43,440
+a future called AgentCore Identity.
+
+1147
+00:43:43,440 --> 00:43:44,970
+And that's one thing where we could unify
+
+1148
+00:43:44,970 --> 00:43:47,130
+the different access and authentication
+
+1149
+00:43:47,130 --> 00:43:49,563
+for our agents within that area.
+
+1150
+00:43:50,580 --> 00:43:52,020
+And if you want, we
+could, I could dive deeper
+
+1151
+00:43:52,020 --> 00:43:55,020
+after the talk about how that
+works at a higher level, yeah.
+
+1152
+00:43:57,450 --> 00:43:58,283
+Yes.
+
+1153
+00:43:59,850 --> 00:44:02,093
+We'll go this way and then
+we'll come back to you.
+
+1154
+00:44:03,780 --> 00:44:06,267
+- [Audience Member] So in
+the cloud (indistinct).
+
+1155
+00:44:07,800 --> 00:44:09,840
+- [Omar] So is it more of,
+
+1156
+00:44:09,840 --> 00:44:11,520
+is ensuring that the agent is up to date
+
+1157
+00:44:11,520 --> 00:44:13,470
+with your infrastructure environment?
+
+1158
+00:44:13,470 --> 00:44:14,470
+Like your Terraform.
+
+1159
+00:44:16,020 --> 00:44:17,160
+- [Audience Member] Like
+just for like, I guess
+
+1160
+00:44:17,160 --> 00:44:19,770
+a naive example like
+let's say a (indistinct)
+
+1161
+00:44:19,770 --> 00:44:22,380
+or some environment sitting
+in a Terraform configuration
+
+1162
+00:44:22,380 --> 00:44:25,140
+somewhere in a natural workflow,
+
+1163
+00:44:25,140 --> 00:44:27,108
+like totally separate thing.
+
+1164
+00:44:27,108 --> 00:44:29,058
+And then there's an event (indistinct).
+
+1165
+00:44:36,045 --> 00:44:36,910
+- [Omar] Oh, I see what you're saying.
+
+1166
+00:44:36,910 --> 00:44:38,520
+- [Audience Member]
+Configuration reflects reality.
+
+1167
+00:44:38,520 --> 00:44:40,890
+How should I think about
+that in this environment
+
+1168
+00:44:40,890 --> 00:44:44,622
+where an agent is potentially
+making 10 changes,
+
+1169
+00:44:44,622 --> 00:44:45,690
+dozens of changes a day?
+
+1170
+00:44:45,690 --> 00:44:48,540
+- [Omar] Yeah, yeah, and
+that's one thing I recommend
+
+1171
+00:44:48,540 --> 00:44:50,550
+for production environment changes
+
+1172
+00:44:50,550 --> 00:44:53,040
+at the current state of
+agents and how they operate.
+
+1173
+00:44:53,040 --> 00:44:55,440
+That's one thing where we
+would look at implementing
+
+1174
+00:44:55,440 --> 00:44:57,600
+the human in the loop where
+look at the different changes,
+
+1175
+00:44:57,600 --> 00:44:59,250
+recommendations and then
+you implementing them
+
+1176
+00:44:59,250 --> 00:45:01,300
+manually yourself within the environment.
+
+1177
+00:45:02,940 --> 00:45:04,830
+- [Shawn] There's still some
+necessity for human in the loop
+
+1178
+00:45:04,830 --> 00:45:05,970
+when it comes to that
+'cause you don't want
+
+1179
+00:45:05,970 --> 00:45:08,730
+automated remediation
+happening behind your back,
+
+1180
+00:45:08,730 --> 00:45:09,563
+you know what I mean?
+
+1181
+00:45:09,563 --> 00:45:12,052
+And then you have to go reconcile that.
+
+1182
+00:45:12,052 --> 00:45:12,885
+- [Omar] Yeah, yeah, we're getting there.
+
+1183
+00:45:12,885 --> 00:45:14,850
+Hopefully the, maybe next
+year you could automate
+
+1184
+00:45:14,850 --> 00:45:15,683
+the whole stack.
+
+1185
+00:45:15,683 --> 00:45:17,820
+But as of now, we take
+those recommendations
+
+1186
+00:45:17,820 --> 00:45:19,920
+of what changes need to be made
+
+1187
+00:45:19,920 --> 00:45:22,560
+and you could actually feed
+the Terraform code to you.
+
+1188
+00:45:22,560 --> 00:45:23,640
+So you could have the Terraform code,
+
+1189
+00:45:23,640 --> 00:45:25,620
+you could review it and then feed it
+
+1190
+00:45:25,620 --> 00:45:27,780
+and upload it to your main code repository
+
+1191
+00:45:27,780 --> 00:45:28,773
+and then sync that.
+
+1192
+00:45:29,718 --> 00:45:30,990
+- [Audience Member] Perfect, all right.
+
+1193
+00:45:30,990 --> 00:45:32,550
+Can you have the agent, you know,
+
+1194
+00:45:32,550 --> 00:45:34,187
+run through the same (indistinct)?
+
+1195
+00:45:36,810 --> 00:45:37,950
+- [Shawn] You could.
+
+1196
+00:45:37,950 --> 00:45:38,910
+- [Audience Member] Then
+you wouldn't have any drift
+
+1197
+00:45:38,910 --> 00:45:40,050
+because the agent would be, you know,
+
+1198
+00:45:40,050 --> 00:45:41,370
+using Terraform in the same way
+
+1199
+00:45:41,370 --> 00:45:42,990
+that you are using Terraform, right?
+
+1200
+00:45:42,990 --> 00:45:43,823
+- [Shawn] Exactly, yeah.
+
+1201
+00:45:43,823 --> 00:45:46,500
+So you could have a, let's say
+part of the overall solution,
+
+1202
+00:45:46,500 --> 00:45:48,000
+you could have an agent
+that specifically is
+
+1203
+00:45:48,000 --> 00:45:49,740
+working to developing and working with
+
+1204
+00:45:49,740 --> 00:45:51,270
+that specific environment.
+
+1205
+00:45:51,270 --> 00:45:53,973
+So that's true, that's
+also another option, yeah.
+
+1206
+00:45:54,870 --> 00:45:56,224
+- [Omar] Had a question over here.
+
+1207
+00:45:56,224 --> 00:46:00,740
+- [Audience Member] Yeah, (indistinct).
+
+1208
+00:46:03,270 --> 00:46:05,550
+- [Shawn] Into Security Lake?
+
+1209
+00:46:05,550 --> 00:46:07,750
+Or with other sources
+besides Security Lake?
+
+1210
+00:46:09,180 --> 00:46:10,590
+I'd have to double check on that.
+
+1211
+00:46:10,590 --> 00:46:12,060
+Let me talk with you afterwards to see
+
+1212
+00:46:12,060 --> 00:46:14,400
+what other sources that
+you might be trying to use.
+
+1213
+00:46:14,400 --> 00:46:17,310
+I know that most of those resources,
+
+1214
+00:46:17,310 --> 00:46:19,200
+people have been centralizing
+them within Security Lake,
+
+1215
+00:46:19,200 --> 00:46:22,560
+but is there a reason why you
+want to keep them separate
+
+1216
+00:46:22,560 --> 00:46:23,830
+from Security Lake?
+
+1217
+00:46:23,830 --> 00:46:25,050
+- [Audience Member] (indistinct).
+
+1218
+00:46:25,050 --> 00:46:26,050
+- [Shawn] I'm sorry?
+
+1219
+00:46:27,060 --> 00:46:31,227
+- [Audience Member] (indistinct).
+
+1220
+00:46:35,490 --> 00:46:37,890
+- [Shawn] Gotcha, I'd have
+to double check on that one
+
+1221
+00:46:37,890 --> 00:46:40,350
+for you and I'll get back to you on it.
+
+1222
+00:46:40,350 --> 00:46:42,570
+Yeah, did you have
+something to say on that?
+
+1223
+00:46:42,570 --> 00:46:45,113
+- [Omar] No, I'll talk to
+him after, I couldn't hear.
+
+1224
+00:46:46,358 --> 00:46:48,113
+- [Audience Member] So just
+to summarize at this time,
+
+1225
+00:46:49,579 --> 00:46:54,579
+should we say that this technically
+monitor for information?
+
+1226
+00:46:55,020 --> 00:46:56,340
+- [Shawn] Yeah, I'd say at this time it's
+
+1227
+00:46:56,340 --> 00:46:58,320
+more of not only monitoring
+
+1228
+00:46:58,320 --> 00:47:00,180
+but also doing the correlation for you.
+
+1229
+00:47:00,180 --> 00:47:01,440
+Like for example, jumping between
+
+1230
+00:47:01,440 --> 00:47:02,400
+the different data sources,
+
+1231
+00:47:02,400 --> 00:47:03,360
+running the SQL queries
+
+1232
+00:47:03,360 --> 00:47:04,890
+and actually looking at the correlations
+
+1233
+00:47:04,890 --> 00:47:07,710
+between this specific
+security group being deleted,
+
+1234
+00:47:07,710 --> 00:47:09,450
+tied to specific IPs.
+
+1235
+00:47:09,450 --> 00:47:11,280
+So a lot of that grunt work of doing
+
+1236
+00:47:11,280 --> 00:47:13,803
+that manual process
+definitely could be automated.
+
+1237
+00:47:16,500 --> 00:47:17,670
+And even the,
+
+1238
+00:47:17,670 --> 00:47:19,920
+in terms of like actually automating
+
+1239
+00:47:19,920 --> 00:47:23,460
+the infrastructure as
+code and deploying things,
+
+1240
+00:47:23,460 --> 00:47:25,410
+that's something that
+the Claude MCP server
+
+1241
+00:47:25,410 --> 00:47:26,490
+actually has access to, right?
+
+1242
+00:47:26,490 --> 00:47:27,630
+It could write Terraform for you
+
+1243
+00:47:27,630 --> 00:47:29,580
+and actually execute it and run it.
+
+1244
+00:47:29,580 --> 00:47:31,350
+But again, back to the
+point of at this time,
+
+1245
+00:47:31,350 --> 00:47:32,820
+like you were saying,
+
+1246
+00:47:32,820 --> 00:47:34,790
+I wouldn't feel confident
+enough with agents
+
+1247
+00:47:34,790 --> 00:47:36,900
+to actually perform production changes
+
+1248
+00:47:36,900 --> 00:47:39,250
+without me actually
+looking at what it's doing.
+
+1249
+00:47:43,770 --> 00:47:46,702
+Awesome, should we, let's
+go ahead and wrap it up.
+
+1250
+00:47:46,702 --> 00:47:47,790
+- [Omar] Let's wrap it up, yeah.
+
+1251
+00:47:47,790 --> 00:47:50,880
+- [Shawn] So hopefully
+some of that was useful,
+
+1252
+00:47:50,880 --> 00:47:53,460
+you know, to the people in the room,
+
+1253
+00:47:53,460 --> 00:47:55,590
+and on the left-hand side we have
+
+1254
+00:47:55,590 --> 00:47:56,700
+our Strands Getting Started.
+
+1255
+00:47:56,700 --> 00:48:00,210
+You know, this is all of the
+documentation and everything
+
+1256
+00:48:00,210 --> 00:48:02,190
+you'll need to build an
+experiment with Strands
+
+1257
+00:48:02,190 --> 00:48:03,690
+if you'd like to test
+something like this out
+
+1258
+00:48:03,690 --> 00:48:05,130
+in your own environment,
+
+1259
+00:48:05,130 --> 00:48:07,590
+highly recommend getting
+hands on and doing so.
+
+1260
+00:48:07,590 --> 00:48:09,510
+And if you're also
+interested in deploying,
+
+1261
+00:48:09,510 --> 00:48:11,700
+you know, Strands Agents
+to the Amazon Bedrock,
+
+1262
+00:48:11,700 --> 00:48:13,170
+AgentCore Runtime,
+
+1263
+00:48:13,170 --> 00:48:16,260
+please scan the QR code
+on the right-hand side.
+
+1264
+00:48:16,260 --> 00:48:18,810
+This gives you the
+operationalized capabilities
+
+1265
+00:48:18,810 --> 00:48:21,240
+to test this in your own AWS environment.
+
+1266
+00:48:21,240 --> 00:48:23,933
+Everything that you need to
+get started is right there.
+
+1267
+00:48:27,330 --> 00:48:29,010
+And then one last thing I
+wanna leave you all with.
+
+1268
+00:48:29,010 --> 00:48:32,250
+If you haven't heard of
+SkillBuilder.AWS yet,
+
+1269
+00:48:32,250 --> 00:48:33,960
+whether you're new to
+the cloud or new to AWS
+
+1270
+00:48:33,960 --> 00:48:35,640
+or just want to get some hands-on,
+
+1271
+00:48:35,640 --> 00:48:39,780
+more hands-on experience
+to enable yourself,
+
+1272
+00:48:39,780 --> 00:48:42,300
+we've got thousands of free,
+different learning resources,
+
+1273
+00:48:42,300 --> 00:48:44,760
+hands-on labs, immersive,
+real-life situations
+
+1274
+00:48:44,760 --> 00:48:47,880
+where you can get that experience
+to build these things out.
+
+1275
+00:48:47,880 --> 00:48:49,800
+If you're pursuing an AWS certification
+
+1276
+00:48:49,800 --> 00:48:51,870
+and need some extra
+tools to study for that,
+
+1277
+00:48:51,870 --> 00:48:54,000
+we also have that available on our site.
+
+1278
+00:48:54,000 --> 00:48:56,160
+And if you need to validate
+some practical skills
+
+1279
+00:48:56,160 --> 00:48:57,240
+for some micro-credentials,
+
+1280
+00:48:57,240 --> 00:48:59,460
+whether that's for
+yourself or for your team,
+
+1281
+00:48:59,460 --> 00:49:01,770
+if you need that, that's also available
+
+1282
+00:49:01,770 --> 00:49:03,153
+on AWS Skill Builder.
+
+1283
+00:49:04,620 --> 00:49:07,350
+So with that, we'd like
+to thank you all so much
+
+1284
+00:49:07,350 --> 00:49:10,470
+for joining us today and
+if you have any questions,
+
+1285
+00:49:10,470 --> 00:49:11,711
+thank you.
+
+1286
+00:49:11,711 --> 00:49:12,544
+(audience applauds)
+
+1287
+00:49:12,544 --> 00:49:13,590
+And great job, Omar.
+
+1288
+00:49:13,590 --> 00:49:15,300
+If you have any questions, we'll be here
+
+1289
+00:49:15,300 --> 00:49:16,590
+for the next 10 minutes.
+
+1290
+00:49:16,590 --> 00:49:17,640
+Please feel free to come by.
+
+1291
+00:49:17,640 --> 00:49:18,870
+We'd love to chat with you.
+
+1292
+00:49:18,870 --> 00:49:20,220
+If we didn't get to one of your questions,
+
+1293
+00:49:20,220 --> 00:49:22,980
+mentioned we wanna talk to
+you, please stick around.
+
+1294
+00:49:22,980 --> 00:49:24,690
+We'd love to chat.
+
+1295
+00:49:24,690 --> 00:49:25,920
+Hope you all enjoy the rest of re:Invent.
+
+1296
+00:49:25,920 --> 00:49:27,323
+Thank you.
+- [Omar] Thank you.
+

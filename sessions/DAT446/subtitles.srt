@@ -1,0 +1,4754 @@
+1
+00:00:00,300 --> 00:00:03,150
+- Thank you very much for
+coming along this afternoon.
+
+2
+00:00:03,150 --> 00:00:05,130
+My name is Ian Robinson
+
+3
+00:00:05,130 --> 00:00:06,450
+and I'm a graph architect
+
+4
+00:00:06,450 --> 00:00:09,090
+with the Amazon Neptune service team.
+
+5
+00:00:09,090 --> 00:00:12,030
+And I'm very pleased to be
+joined today by Evan Erwee.
+
+6
+00:00:12,030 --> 00:00:15,363
+who's an AVP for cyber
+operations at Deloitte.
+
+7
+00:00:16,950 --> 00:00:18,630
+In this session, we're
+gonna be talking about some
+
+8
+00:00:18,630 --> 00:00:21,210
+of the work that the
+Neptune team have been doing
+
+9
+00:00:21,210 --> 00:00:25,530
+to improve generative AI question
+answering solutions using
+
+10
+00:00:25,530 --> 00:00:26,830
+GraphRAG techniques
+
+11
+00:00:27,780 --> 00:00:31,530
+and how Deloitte have used the
+results of some of that work,
+
+12
+00:00:31,530 --> 00:00:34,560
+which is an open source Python
+library called the GraphRAG
+
+13
+00:00:34,560 --> 00:00:38,250
+Toolkit, how Deloitte have
+used the GraphRAG toolkit
+
+14
+00:00:38,250 --> 00:00:40,893
+to build their cybersecurity
+intelligence center.
+
+15
+00:00:43,290 --> 00:00:47,370
+So our assumption here is that
+you are familiar a little bit
+
+16
+00:00:47,370 --> 00:00:50,400
+with graphs and graph databases,
+
+17
+00:00:50,400 --> 00:00:53,430
+with vector similarity search and with RAG
+
+18
+00:00:53,430 --> 00:00:55,830
+or retrieval augmented
+generation techniques.
+
+19
+00:00:55,830 --> 00:00:59,280
+So we're not going to go
+into a lot of explaining
+
+20
+00:00:59,280 --> 00:01:01,260
+of those concepts or tools.
+
+21
+00:01:01,260 --> 00:01:03,990
+Instead, we're gonna be
+looking more at how Deloitte
+
+22
+00:01:03,990 --> 00:01:07,143
+or the cybersecurity intelligence
+center have applied them.
+
+23
+00:01:09,570 --> 00:01:14,010
+But before we get into those
+details, I'm briefly just going
+
+24
+00:01:14,010 --> 00:01:17,340
+to sketch the overall problem
+that Deloitte are trying
+
+25
+00:01:17,340 --> 00:01:20,190
+to solve here with the
+Cybersecurity Intelligence Center.
+
+26
+00:01:22,500 --> 00:01:26,610
+So has anyone here used a
+cloud security platform such
+
+27
+00:01:26,610 --> 00:01:28,773
+as Wiz or CrowdStrike?
+
+28
+00:01:30,000 --> 00:01:31,400
+Okay, we've got a few hands.
+
+29
+00:01:32,340 --> 00:01:34,113
+So if you use such a platform,
+
+30
+00:01:35,400 --> 00:01:39,330
+something very interesting
+happens the first time you switch
+
+31
+00:01:39,330 --> 00:01:42,213
+it on, the first time you
+enable it in your environment.
+
+32
+00:01:44,310 --> 00:01:46,653
+As one of Evan's colleagues likes to say,
+
+33
+00:01:47,520 --> 00:01:49,413
+the whole Christmas tree lights up,
+
+34
+00:01:50,520 --> 00:01:54,870
+suddenly hundreds, possibly
+thousands of alerts
+
+35
+00:01:54,870 --> 00:01:57,063
+or non-compliance notifications.
+
+36
+00:01:58,980 --> 00:02:02,580
+So now having solved one problem that
+
+37
+00:02:02,580 --> 00:02:05,430
+of identifying potential
+security risks in your cloud
+
+38
+00:02:05,430 --> 00:02:09,000
+infrastructure, your SecOps engineers
+
+39
+00:02:09,000 --> 00:02:11,880
+and analysts are faced with another,
+
+40
+00:02:11,880 --> 00:02:14,430
+how can they remediate
+these issues in a safe
+
+41
+00:02:14,430 --> 00:02:17,610
+and timely fashion, okay?
+
+42
+00:02:17,610 --> 00:02:20,760
+And it's not simply a
+matter of automating fixes.
+
+43
+00:02:20,760 --> 00:02:24,240
+I mean, platforms like Wiz
+already allow you to do that.
+
+44
+00:02:24,240 --> 00:02:27,150
+I mean, given the number of issues
+
+45
+00:02:27,150 --> 00:02:31,140
+and the complexity of
+production environments
+
+46
+00:02:31,140 --> 00:02:33,480
+and the possibly punishing timelines
+
+47
+00:02:33,480 --> 00:02:36,090
+for fixing known issues, you know,
+
+48
+00:02:36,090 --> 00:02:39,030
+particularly if you're
+in a regulated industry,
+
+49
+00:02:39,030 --> 00:02:42,330
+then these SecOps engineers
+are going to have to triage
+
+50
+00:02:42,330 --> 00:02:45,870
+and prioritize and they're
+going to have to prioritize
+
+51
+00:02:45,870 --> 00:02:48,033
+on at least two factors.
+
+52
+00:02:49,230 --> 00:02:52,690
+The first is they need
+to understand each issue
+
+53
+00:02:53,730 --> 00:02:55,620
+or the serious or the significance
+
+54
+00:02:55,620 --> 00:02:57,450
+of an issue in the context
+
+55
+00:02:57,450 --> 00:03:00,033
+of your organization's
+cybersecurity policies.
+
+56
+00:03:01,530 --> 00:03:03,450
+And second, they're going to need
+
+57
+00:03:03,450 --> 00:03:06,480
+to understand the likely impact
+
+58
+00:03:06,480 --> 00:03:09,693
+of any remediation on
+existing production systems.
+
+59
+00:03:12,810 --> 00:03:15,690
+And there's no one size
+fits all solution here.
+
+60
+00:03:15,690 --> 00:03:17,490
+You know, your cybersecurity policies
+
+61
+00:03:17,490 --> 00:03:19,200
+and your production systems are particular
+
+62
+00:03:19,200 --> 00:03:21,510
+to your organizations.
+
+63
+00:03:21,510 --> 00:03:22,590
+So you're going to need a lot
+
+64
+00:03:22,590 --> 00:03:26,370
+of organization specific
+knowledge in order to be able
+
+65
+00:03:26,370 --> 00:03:27,810
+to make these informed decisions,
+
+66
+00:03:27,810 --> 00:03:30,603
+to be able to prioritize
+and then remediate.
+
+67
+00:03:33,960 --> 00:03:37,080
+So the SecOps engineers
+are the real experts here,
+
+68
+00:03:37,080 --> 00:03:39,300
+but given the size of the challenge,
+
+69
+00:03:39,300 --> 00:03:42,003
+they'll likely benefit from
+some expert assistance.
+
+70
+00:03:44,190 --> 00:03:47,430
+So on the one hand, it's a simple problem
+
+71
+00:03:47,430 --> 00:03:49,350
+of information overload.
+
+72
+00:03:49,350 --> 00:03:53,790
+So automation can help, you
+can improve the flow of work
+
+73
+00:03:53,790 --> 00:03:55,743
+by automating common tasks,
+
+74
+00:03:57,690 --> 00:04:00,303
+but more importantly,
+it's a context problem.
+
+75
+00:04:01,500 --> 00:04:04,140
+These engineers, before they
+can make an informed decision,
+
+76
+00:04:04,140 --> 00:04:07,260
+they need to understand each
+issue in its organizational
+
+77
+00:04:07,260 --> 00:04:10,710
+context and that context
+can comprise lots and lots
+
+78
+00:04:10,710 --> 00:04:12,990
+of different things,
+lots of formal knowledge,
+
+79
+00:04:12,990 --> 00:04:15,720
+lots of tribal or informal knowledge.
+
+80
+00:04:15,720 --> 00:04:19,470
+So things such as the
+cybersecurity policies, run books,
+
+81
+00:04:19,470 --> 00:04:22,260
+best practices, architectural guidance,
+
+82
+00:04:22,260 --> 00:04:25,010
+and even the current state
+of those production systems.
+
+83
+00:04:27,990 --> 00:04:30,393
+So automation and context,
+
+84
+00:04:31,590 --> 00:04:33,573
+that sounds a lot like generative AI.
+
+85
+00:04:34,860 --> 00:04:36,630
+So given the title of the talk,
+
+86
+00:04:36,630 --> 00:04:39,570
+you probably won't be surprised
+to learn that we think
+
+87
+00:04:39,570 --> 00:04:41,730
+that generative AI and RAG
+
+88
+00:04:41,730 --> 00:04:43,950
+or retrieval augmented
+generation has a large
+
+89
+00:04:43,950 --> 00:04:45,400
+part to play in the solution.
+
+90
+00:04:48,750 --> 00:04:51,930
+So later in the session, Evan
+is going to be discussing AI
+
+91
+00:04:51,930 --> 00:04:56,910
+for triage, which is an
+expert in the middle AI
+
+92
+00:04:56,910 --> 00:05:00,480
+assistance for SecOps engineers.
+
+93
+00:05:00,480 --> 00:05:03,780
+Effectively, it's closing
+the loop between a platform
+
+94
+00:05:03,780 --> 00:05:05,920
+such as Wiz identifying an issue
+
+95
+00:05:06,840 --> 00:05:09,270
+and an engineer being responsible
+
+96
+00:05:09,270 --> 00:05:12,573
+for applying a remediation
+back to production systems.
+
+97
+00:05:16,320 --> 00:05:19,440
+And in building AI for triage,
+
+98
+00:05:19,440 --> 00:05:21,720
+Deloitte have used the GraphRAG toolkit,
+
+99
+00:05:21,720 --> 00:05:23,520
+which is an open source Python library
+
+100
+00:05:23,520 --> 00:05:25,233
+developed by the Neptune team.
+
+101
+00:05:26,220 --> 00:05:28,890
+And AI for triage uses
+the GraphRAG toolkit
+
+102
+00:05:28,890 --> 00:05:32,910
+to maintain this ever evolving
+organizational knowledge
+
+103
+00:05:32,910 --> 00:05:37,910
+base, which comprises things
+such as policy documents,
+
+104
+00:05:38,040 --> 00:05:42,243
+run books, architectural
+guidance, and triage records.
+
+105
+00:05:44,760 --> 00:05:46,110
+So EAL will be talking about AI
+
+106
+00:05:46,110 --> 00:05:47,730
+for triage a little later on.
+
+107
+00:05:47,730 --> 00:05:50,220
+But before we talk about
+that, I'm just going
+
+108
+00:05:50,220 --> 00:05:52,980
+to spend a little time talking
+in a bit more detail about
+
+109
+00:05:52,980 --> 00:05:55,470
+some of the work that we've
+done on the Neptune side
+
+110
+00:05:55,470 --> 00:05:57,423
+to improve GraphRAG techniques.
+
+111
+00:06:01,230 --> 00:06:02,790
+And I wanna start here by returning
+
+112
+00:06:02,790 --> 00:06:04,563
+to this issue of context.
+
+113
+00:06:05,940 --> 00:06:08,313
+RAG is all about context.
+
+114
+00:06:09,150 --> 00:06:11,100
+You know, we populate the context window
+
+115
+00:06:11,100 --> 00:06:12,240
+with relevant content
+
+116
+00:06:12,240 --> 00:06:14,853
+that we've retrieved from
+some backend data sources,
+
+117
+00:06:15,930 --> 00:06:19,817
+and then the language model uses
+
+118
+00:06:19,817 --> 00:06:21,510
+that context in order
+
+119
+00:06:21,510 --> 00:06:24,753
+to generate a good
+response to a user query.
+
+120
+00:06:27,090 --> 00:06:28,890
+But the kind of context that we retrieve
+
+121
+00:06:28,890 --> 00:06:31,500
+and the ways in which we
+retrieve it can make a big
+
+122
+00:06:31,500 --> 00:06:33,780
+difference to the quality of the response
+
+123
+00:06:33,780 --> 00:06:35,943
+and the reliability of the response.
+
+124
+00:06:38,280 --> 00:06:40,830
+So I want to illustrate
+this with a simple example.
+
+125
+00:06:42,540 --> 00:06:45,750
+Imagine we are responsible for
+a large corpus of documents,
+
+126
+00:06:45,750 --> 00:06:48,660
+many thousands of documents,
+things like press releases,
+
+127
+00:06:48,660 --> 00:06:51,810
+news articles, analyst reports,
+
+128
+00:06:51,810 --> 00:06:53,190
+and for this example that are five in
+
+129
+00:06:53,190 --> 00:06:55,710
+particular that were important to us.
+
+130
+00:06:55,710 --> 00:06:59,280
+The first is a news article
+that discusses Example Corp
+
+131
+00:06:59,280 --> 00:07:01,130
+and its wonderful new widget product.
+
+132
+00:07:02,730 --> 00:07:06,480
+The second is an analyst
+report that discusses the fact
+
+133
+00:07:06,480 --> 00:07:08,940
+that there's a potential large demand
+
+134
+00:07:08,940 --> 00:07:11,793
+for widgets in the run up
+to Christmas in the UK.
+
+135
+00:07:13,950 --> 00:07:16,200
+The third is a press release that says
+
+136
+00:07:16,200 --> 00:07:18,300
+that Example Corp have partnered
+
+137
+00:07:18,300 --> 00:07:20,730
+with any company logistics in order
+
+138
+00:07:20,730 --> 00:07:23,070
+to reduce shipping times from Asia
+
+139
+00:07:23,070 --> 00:07:26,613
+where those widgets are
+manufactured to Europe and the UK.
+
+140
+00:07:28,500 --> 00:07:30,150
+And then we've got another
+press release that says
+
+141
+00:07:30,150 --> 00:07:31,950
+that any company logistics are now
+
+142
+00:07:31,950 --> 00:07:33,120
+using the Turquoise Canal.
+
+143
+00:07:33,120 --> 00:07:35,640
+It's a fictitious canal,
+the Turquoise Canal,
+
+144
+00:07:35,640 --> 00:07:38,460
+to further reduce those
+shipping times from
+
+145
+00:07:38,460 --> 00:07:40,113
+weeks down to days.
+
+146
+00:07:42,330 --> 00:07:46,050
+And then finally we have this
+recent news article that says
+
+147
+00:07:46,050 --> 00:07:48,930
+that unfortunately the Turquoise
+Canal is currently shut
+
+148
+00:07:48,930 --> 00:07:52,323
+because of an ongoing large
+scale cybersecurity incident.
+
+149
+00:07:53,580 --> 00:07:54,840
+So we've got five articles,
+
+150
+00:07:54,840 --> 00:07:57,040
+many thousands of other
+documents and so on.
+
+151
+00:07:58,470 --> 00:08:01,230
+Now imagine you are an analyst tasked
+
+152
+00:08:01,230 --> 00:08:05,310
+with investigating the
+fortunes of Example Corp,
+
+153
+00:08:05,310 --> 00:08:07,140
+and you've decided to
+use a RAG application
+
+154
+00:08:07,140 --> 00:08:08,490
+to help with your research.
+
+155
+00:08:09,810 --> 00:08:11,437
+So here's one of the
+questions you might ask.
+
+156
+00:08:11,437 --> 00:08:14,547
+"What are the sales prospects,
+for Example Corp in the UK?"
+
+157
+00:08:16,350 --> 00:08:19,320
+Now, in order to answer this,
+the system is going to have
+
+158
+00:08:19,320 --> 00:08:23,013
+to retrieve some context from
+that corpus of documents.
+
+159
+00:08:24,390 --> 00:08:26,460
+One way of retrieving context is
+
+160
+00:08:26,460 --> 00:08:28,440
+to use vector similarity search.
+
+161
+00:08:28,440 --> 00:08:31,530
+We can use similarity
+search to find content
+
+162
+00:08:31,530 --> 00:08:35,100
+that is semantically similar
+to the question being asked.
+
+163
+00:08:35,100 --> 00:08:36,690
+And in this case it's gonna be content
+
+164
+00:08:36,690 --> 00:08:38,880
+that likely mentions Example Corp,
+
+165
+00:08:38,880 --> 00:08:41,493
+an Example Corp in relation to the UK.
+
+166
+00:08:43,050 --> 00:08:46,473
+So something like this,
+these top three articles.
+
+167
+00:08:48,090 --> 00:08:49,740
+So we retrieve that context
+
+168
+00:08:49,740 --> 00:08:52,657
+and given that evidence,
+the system can then reply,
+
+169
+00:08:52,657 --> 00:08:55,683
+"Hey, sales prospects are
+great, they're really up"
+
+170
+00:08:57,390 --> 00:08:59,970
+and on the surface that looks
+like a good response given
+
+171
+00:08:59,970 --> 00:09:02,320
+that evidence, that looks
+like a good response.
+
+172
+00:09:03,300 --> 00:09:06,750
+But we as omniscient
+observers of that corpus
+
+173
+00:09:06,750 --> 00:09:10,650
+of documents know that it's not
+necessarily the whole story,
+
+174
+00:09:10,650 --> 00:09:13,260
+that there's a more nuanced answer
+
+175
+00:09:13,260 --> 00:09:15,213
+that we could give to that question.
+
+176
+00:09:16,740 --> 00:09:20,520
+But in order to produce a
+more reliable answer, we need
+
+177
+00:09:20,520 --> 00:09:22,860
+to retrieve content that's
+not only semantically similar
+
+178
+00:09:22,860 --> 00:09:24,630
+to the question, but we need
+
+179
+00:09:24,630 --> 00:09:28,260
+to retrieve some additional
+structurally relevant,
+
+180
+00:09:28,260 --> 00:09:29,973
+potentially dissimilar content.
+
+181
+00:09:32,250 --> 00:09:33,690
+And I say structurally relevant
+
+182
+00:09:33,690 --> 00:09:35,890
+because we can perceive
+some structure here.
+
+183
+00:09:36,810 --> 00:09:39,570
+There is a connection between Example Corp
+
+184
+00:09:39,570 --> 00:09:42,987
+and any company logistics and
+between any company logistics
+
+185
+00:09:42,987 --> 00:09:46,110
+and the Turquoise Canal and
+between the Turquoise Canal
+
+186
+00:09:46,110 --> 00:09:48,213
+and this ongoing cybersecurity incident.
+
+187
+00:09:49,350 --> 00:09:53,190
+But if we can retrieve both
+of these kinds of content,
+
+188
+00:09:53,190 --> 00:09:57,037
+then the system can give
+us a more nuanced answer.
+
+189
+00:09:57,037 --> 00:09:59,040
+"Yep, sales are looking good,
+
+190
+00:09:59,040 --> 00:10:01,710
+but they're likely to
+be negatively impacted
+
+191
+00:10:01,710 --> 00:10:04,137
+by an ongoing cybersecurity incident."
+
+192
+00:10:05,280 --> 00:10:09,720
+Okay, so as you can see the
+kind of context we retrieve
+
+193
+00:10:09,720 --> 00:10:12,360
+and the ways in which we
+retrieve it can make a big
+
+194
+00:10:12,360 --> 00:10:14,220
+difference to the quality
+
+195
+00:10:14,220 --> 00:10:16,533
+and the reliability of the response.
+
+196
+00:10:20,640 --> 00:10:23,700
+In RAG terms, this is all
+about improving recall.
+
+197
+00:10:23,700 --> 00:10:26,370
+Recall's the percentage
+of relevant content
+
+198
+00:10:26,370 --> 00:10:29,433
+that a system retrieves in
+response to a user query.
+
+199
+00:10:31,080 --> 00:10:33,420
+So based on that example,
+we might say that in order
+
+200
+00:10:33,420 --> 00:10:36,390
+to improve recall, we need to
+be able to retrieve content
+
+201
+00:10:36,390 --> 00:10:39,780
+that is similar to the
+question being asked
+
+202
+00:10:39,780 --> 00:10:42,540
+and content that is structurally relevant
+
+203
+00:10:42,540 --> 00:10:45,333
+but potentially dissimilar
+to the question being asked.
+
+204
+00:10:48,810 --> 00:10:51,150
+One way of retrieving that content is
+
+205
+00:10:51,150 --> 00:10:54,330
+to employ a hybrid RAG approach.
+
+206
+00:10:54,330 --> 00:10:57,360
+So with hybrid RAG, we
+use vector search to find
+
+207
+00:10:57,360 --> 00:11:00,330
+that semantically similar content
+
+208
+00:11:00,330 --> 00:11:03,600
+and graph search to find
+the structurally relevant
+
+209
+00:11:03,600 --> 00:11:05,643
+but potentially dissimilar content.
+
+210
+00:11:08,400 --> 00:11:11,490
+So hybrid RAG can be pretty effective,
+
+211
+00:11:11,490 --> 00:11:13,350
+but once again, we're in this situation
+
+212
+00:11:13,350 --> 00:11:15,660
+where we solved one problem
+
+213
+00:11:15,660 --> 00:11:17,660
+but have potentially introduced another.
+
+214
+00:11:19,590 --> 00:11:23,310
+And the issue is that the
+quality of a graph search
+
+215
+00:11:23,310 --> 00:11:25,560
+is very much dependent on the quality
+
+216
+00:11:25,560 --> 00:11:27,153
+of the underlying graph.
+
+217
+00:11:28,920 --> 00:11:31,200
+So if the structure of
+the graph isn't aligned
+
+218
+00:11:31,200 --> 00:11:33,240
+with our information goals,
+
+219
+00:11:33,240 --> 00:11:36,180
+we can often end up retrieving misleading
+
+220
+00:11:36,180 --> 00:11:38,310
+or irrelevant content
+
+221
+00:11:38,310 --> 00:11:41,333
+and that's going to generate
+a poor response, okay?
+
+222
+00:11:44,250 --> 00:11:45,810
+So these are the kind of approaches
+
+223
+00:11:45,810 --> 00:11:48,150
+and some of the issues that
+we had in mind when we started
+
+224
+00:11:48,150 --> 00:11:50,013
+designing the GraphRAG toolkit.
+
+225
+00:11:52,320 --> 00:11:54,300
+And from the outset we set ourselves
+
+226
+00:11:54,300 --> 00:11:56,433
+two high level design goals.
+
+227
+00:11:57,990 --> 00:12:00,930
+The first was we wanted to
+make it easy for you to be able
+
+228
+00:12:00,930 --> 00:12:04,530
+to build a graph from
+your own unstructured
+
+229
+00:12:04,530 --> 00:12:07,020
+or semi-structured data sources
+
+230
+00:12:07,020 --> 00:12:09,873
+and with very little information
+architecture overhead.
+
+231
+00:12:11,580 --> 00:12:15,173
+If any of you built a graph
+application in the past,
+
+232
+00:12:15,173 --> 00:12:18,360
+you know, you may know there's
+often a large information
+
+233
+00:12:18,360 --> 00:12:21,450
+architecture component to
+designing a good graph model
+
+234
+00:12:21,450 --> 00:12:24,600
+that is aligned with
+your information goals.
+
+235
+00:12:24,600 --> 00:12:26,100
+So we wanted to try and reduce
+
+236
+00:12:26,100 --> 00:12:29,073
+that information architecture
+effort on your behalf.
+
+237
+00:12:32,160 --> 00:12:35,580
+The second goal was that we
+wanted to help you find all of
+
+238
+00:12:35,580 --> 00:12:39,090
+that relevant but non-obvious or distant
+
+239
+00:12:39,090 --> 00:12:43,020
+or potentially dissimilar
+content to make it easy for you
+
+240
+00:12:43,020 --> 00:12:45,030
+to find all of that
+content without you having
+
+241
+00:12:45,030 --> 00:12:49,323
+to write complex graph queries, okay?
+
+242
+00:12:50,280 --> 00:12:52,780
+So how did we go about
+addressing these two goals?
+
+243
+00:12:54,540 --> 00:12:56,430
+Well, the first was we want
+to make it easy for you
+
+244
+00:12:56,430 --> 00:12:59,130
+to be able to build a graph
+from your own unstructured
+
+245
+00:12:59,130 --> 00:13:00,843
+or semi-structured data sources.
+
+246
+00:13:02,070 --> 00:13:04,530
+And to be clear here, we're
+talking about things like text
+
+247
+00:13:04,530 --> 00:13:08,160
+files, PDFs, mark down files,
+
+248
+00:13:08,160 --> 00:13:10,950
+but also things like CSV
+files or Excel documents
+
+249
+00:13:10,950 --> 00:13:14,313
+or even JSON documents, but
+primarily text-based content.
+
+250
+00:13:17,820 --> 00:13:21,090
+Well the first thing we
+decided to do was to eliminate
+
+251
+00:13:21,090 --> 00:13:24,480
+that information architecture overhead.
+
+252
+00:13:24,480 --> 00:13:26,850
+Instead of you having to build a graph,
+
+253
+00:13:26,850 --> 00:13:28,870
+the toolkit builds a graph for you
+
+254
+00:13:30,090 --> 00:13:32,310
+and it builds a very
+specific type of graph
+
+255
+00:13:32,310 --> 00:13:33,783
+with a very specific model,
+
+256
+00:13:34,740 --> 00:13:38,013
+something we call a
+hierarchical lexical graph.
+
+257
+00:13:39,870 --> 00:13:43,080
+So you can think of this
+lexical graph as a repository
+
+258
+00:13:43,080 --> 00:13:47,760
+of statements and a statement is a short,
+
+259
+00:13:47,760 --> 00:13:50,280
+well-formed standalone proposition
+
+260
+00:13:50,280 --> 00:13:52,430
+that we've extracted
+from your source data.
+
+261
+00:13:53,940 --> 00:13:57,150
+And these statements form
+the primary unit of context
+
+262
+00:13:57,150 --> 00:13:59,220
+that we're going to pass
+to the language model
+
+263
+00:13:59,220 --> 00:14:00,633
+to generate a response.
+
+264
+00:14:02,520 --> 00:14:04,710
+So at retrieval time, our goal is
+
+265
+00:14:04,710 --> 00:14:08,130
+to retrieve highly relevant statements
+
+266
+00:14:08,130 --> 00:14:10,350
+and then we group them
+thematically by topic
+
+267
+00:14:10,350 --> 00:14:12,330
+and we attribute them
+back to their sources.
+
+268
+00:14:12,330 --> 00:14:13,980
+But it's the statements themselves
+
+269
+00:14:13,980 --> 00:14:16,860
+that really comprise the
+primary unit of context
+
+270
+00:14:16,860 --> 00:14:19,590
+and that's what we're passing
+to the language model in order
+
+271
+00:14:19,590 --> 00:14:21,390
+to generate a response.
+
+272
+00:14:21,390 --> 00:14:23,070
+So the statements are really at the heart
+
+273
+00:14:23,070 --> 00:14:24,483
+of this lexical graph model.
+
+274
+00:14:26,640 --> 00:14:31,050
+All of the other parts of
+the model really have a role
+
+275
+00:14:31,050 --> 00:14:34,950
+or responsibility to make it easy
+
+276
+00:14:34,950 --> 00:14:37,860
+to find all of those relevant statements.
+
+277
+00:14:37,860 --> 00:14:41,430
+So every note type here has a job to play
+
+278
+00:14:41,430 --> 00:14:44,490
+at retrieval time in
+making it easy to find all
+
+279
+00:14:44,490 --> 00:14:45,940
+of these relevant statements.
+
+280
+00:14:48,150 --> 00:14:49,770
+So at the top here in blue,
+
+281
+00:14:49,770 --> 00:14:52,350
+we have what we call the lineage tier.
+
+282
+00:14:52,350 --> 00:14:55,413
+So this comprises source
+nodes and chunk nodes.
+
+283
+00:14:56,790 --> 00:14:59,100
+So the source nodes
+represent source documents
+
+284
+00:14:59,100 --> 00:15:00,483
+and they contain metadata.
+
+285
+00:15:01,410 --> 00:15:05,110
+So at retrieval time we can
+apply metadata filtering
+
+286
+00:15:06,180 --> 00:15:09,030
+and we can also use that
+metadata for versioning.
+
+287
+00:15:09,030 --> 00:15:10,443
+If you re-index a document
+
+288
+00:15:10,443 --> 00:15:14,280
+that has changed since the
+last time you indexed it,
+
+289
+00:15:14,280 --> 00:15:16,680
+we can add some metadata so
+
+290
+00:15:16,680 --> 00:15:19,410
+that we can identify
+which version is current
+
+291
+00:15:19,410 --> 00:15:21,930
+and which are the historical versions.
+
+292
+00:15:21,930 --> 00:15:23,310
+And then you can query the graph
+
+293
+00:15:23,310 --> 00:15:26,370
+and say, "I'm interested in
+the current state of the graph"
+
+294
+00:15:26,370 --> 00:15:27,630
+or "I'm interested in the state
+
+295
+00:15:27,630 --> 00:15:30,027
+of the graph at a
+historical point in time."
+
+296
+00:15:31,170 --> 00:15:32,520
+So that's the source nodes.
+
+297
+00:15:33,360 --> 00:15:35,010
+Below them are the chunk nodes
+
+298
+00:15:35,010 --> 00:15:37,920
+and they represent chunked content.
+
+299
+00:15:37,920 --> 00:15:40,260
+And this is exactly the same kind
+
+300
+00:15:40,260 --> 00:15:41,550
+of chunk content you're going to get
+
+301
+00:15:41,550 --> 00:15:44,073
+with a traditional vector RAG application.
+
+302
+00:15:46,020 --> 00:15:47,700
+These chunks are also associated
+
+303
+00:15:47,700 --> 00:15:50,193
+with embeddings in the vector store.
+
+304
+00:15:51,030 --> 00:15:52,890
+So at retrieval time they act
+
+305
+00:15:52,890 --> 00:15:56,550
+as a vector-based entry
+point into the graph.
+
+306
+00:15:56,550 --> 00:15:58,680
+If we do a similarity
+search in the vector store,
+
+307
+00:15:58,680 --> 00:16:01,920
+we can use the results to then
+find the corresponding chunk
+
+308
+00:16:01,920 --> 00:16:03,270
+nodes in the lexical graph.
+
+309
+00:16:03,270 --> 00:16:05,010
+And from there we can begin traversals
+
+310
+00:16:05,010 --> 00:16:06,660
+throughout the rest of the graph.
+
+311
+00:16:09,060 --> 00:16:11,820
+The middle tier here is
+the summarization tier.
+
+312
+00:16:11,820 --> 00:16:14,100
+This comprises those
+statements, those primary units
+
+313
+00:16:14,100 --> 00:16:17,970
+of context, statements
+grouped thematically by topic
+
+314
+00:16:17,970 --> 00:16:20,103
+and supported by discrete facts.
+
+315
+00:16:21,000 --> 00:16:22,560
+And I'll talk about the role of topics
+
+316
+00:16:22,560 --> 00:16:24,610
+and facts in a bit more detail in moment.
+
+317
+00:16:26,520 --> 00:16:28,890
+And then at the bottom we have this entity
+
+318
+00:16:28,890 --> 00:16:30,810
+relationship tier.
+
+319
+00:16:30,810 --> 00:16:32,550
+So this comprises entities
+
+320
+00:16:32,550 --> 00:16:34,320
+and the relations between entities
+
+321
+00:16:34,320 --> 00:16:36,470
+that we've extracted
+from your source data.
+
+322
+00:16:38,100 --> 00:16:41,460
+Now this entity relationship
+tier helps us in further domain
+
+323
+00:16:41,460 --> 00:16:43,770
+semantics of the dataset,
+
+324
+00:16:43,770 --> 00:16:48,000
+but more importantly at retrieval
+time it helps us find all
+
+325
+00:16:48,000 --> 00:16:49,830
+of that structurally relevant
+
+326
+00:16:49,830 --> 00:16:51,993
+but potentially dissimilar information.
+
+327
+00:16:53,130 --> 00:16:54,450
+And I'm going to explain how we do
+
+328
+00:16:54,450 --> 00:16:56,853
+that in a lot more
+detail in a little while.
+
+329
+00:16:59,430 --> 00:17:02,490
+But just briefly back to topics and facts.
+
+330
+00:17:02,490 --> 00:17:06,780
+The topics act a thematically
+group statements that belong
+
+331
+00:17:06,780 --> 00:17:09,150
+to the same source document.
+
+332
+00:17:09,150 --> 00:17:12,810
+So there's a kind of source chunk topic
+
+333
+00:17:12,810 --> 00:17:15,570
+and statement sub graph that represents
+
+334
+00:17:15,570 --> 00:17:17,340
+a single source document
+
+335
+00:17:17,340 --> 00:17:21,090
+and topics act a group statements
+thematically belonging to
+
+336
+00:17:21,090 --> 00:17:22,563
+that single source document.
+
+337
+00:17:24,450 --> 00:17:26,550
+So in this way they provide
+what we call a degree
+
+338
+00:17:26,550 --> 00:17:28,260
+of local connectivity.
+
+339
+00:17:28,260 --> 00:17:29,370
+They allow a graph search
+
+340
+00:17:29,370 --> 00:17:33,180
+or a graph traversal to
+do a deep investigation
+
+341
+00:17:33,180 --> 00:17:35,670
+of thematically linked content belonging
+
+342
+00:17:35,670 --> 00:17:37,083
+to a single source document.
+
+343
+00:17:40,140 --> 00:17:44,880
+Facts on the other hand, can
+connect multiple statements
+
+344
+00:17:44,880 --> 00:17:45,810
+and multiple statements
+
+345
+00:17:45,810 --> 00:17:49,413
+that are potentially drawn from
+different source documents.
+
+346
+00:17:51,723 --> 00:17:54,540
+Okay, so in that respect,
+the facts provide
+
+347
+00:17:54,540 --> 00:17:56,043
+for global connectivity.
+
+348
+00:17:57,210 --> 00:17:58,530
+We can allow a search
+
+349
+00:17:58,530 --> 00:18:01,830
+or a graph traversal to
+conduct a broad investigation
+
+350
+00:18:01,830 --> 00:18:06,183
+of the corpus by way of
+navigating across that fact layer.
+
+351
+00:18:11,340 --> 00:18:14,665
+So this is what the context
+window actually looks
+
+352
+00:18:14,665 --> 00:18:16,470
+like at retrieval time.
+
+353
+00:18:16,470 --> 00:18:19,350
+This is what we're passing to the LLM.
+
+354
+00:18:19,350 --> 00:18:22,980
+As you can see it's sets of
+statements grouped thematically
+
+355
+00:18:22,980 --> 00:18:26,913
+by topic and attributed
+to an individual source.
+
+356
+00:18:33,210 --> 00:18:36,300
+So one of the key takeaways
+here, and this applies whether
+
+357
+00:18:36,300 --> 00:18:38,340
+or not you're using the GraphRAG toolkit,
+
+358
+00:18:38,340 --> 00:18:40,640
+whether or not you're
+actually doing GraphRAG,
+
+359
+00:18:42,180 --> 00:18:44,820
+but this responsibility based approach
+
+360
+00:18:44,820 --> 00:18:48,360
+to graph modeling I think is
+a very powerful complement
+
+361
+00:18:48,360 --> 00:18:50,610
+to the traditional representation
+
+362
+00:18:50,610 --> 00:18:52,260
+based approach that we have.
+
+363
+00:18:52,260 --> 00:18:54,600
+So normally we think of a graph data model
+
+364
+00:18:54,600 --> 00:18:57,000
+as representing the things in our domain
+
+365
+00:18:57,000 --> 00:19:00,420
+that we're interested in,
+but I'd suggest that there's
+
+366
+00:19:00,420 --> 00:19:02,340
+a kind of complementary way
+
+367
+00:19:02,340 --> 00:19:04,800
+of thinking about certain types of node.
+
+368
+00:19:04,800 --> 00:19:07,020
+They're there to help us find
+
+369
+00:19:07,020 --> 00:19:09,360
+the stuff that we're interested in.
+
+370
+00:19:09,360 --> 00:19:11,190
+It's not so matter much a matter of saying
+
+371
+00:19:11,190 --> 00:19:13,410
+to a node, what are you?
+
+372
+00:19:13,410 --> 00:19:16,353
+It's more like what can
+you do for me, alright?
+
+373
+00:19:19,110 --> 00:19:23,220
+So that's the lexical graph,
+a repository of statements,
+
+374
+00:19:23,220 --> 00:19:26,040
+we return statements in the
+context windows to the LLM.
+
+375
+00:19:26,040 --> 00:19:27,870
+Other parts of that graph are there really
+
+376
+00:19:27,870 --> 00:19:31,473
+to help at retrieval time find
+relevant sets of statements.
+
+377
+00:19:34,710 --> 00:19:37,500
+So our second design goal
+was how can we make it easy
+
+378
+00:19:37,500 --> 00:19:41,550
+for you to be able to find all
+of that relevant non-obvious,
+
+379
+00:19:41,550 --> 00:19:43,853
+potentially dissimilar content
+
+380
+00:19:43,853 --> 00:19:46,593
+and all without you having
+to write graph queries.
+
+381
+00:19:50,130 --> 00:19:54,360
+Well, as I said earlier with hybrid RAG,
+
+382
+00:19:54,360 --> 00:19:57,750
+we use vector similarity
+search to find content
+
+383
+00:19:57,750 --> 00:20:00,540
+that is similar to the
+question being asked
+
+384
+00:20:00,540 --> 00:20:02,730
+and graph search defined content
+
+385
+00:20:02,730 --> 00:20:05,853
+that is structurally relevant
+but potentially dissimilar.
+
+386
+00:20:07,410 --> 00:20:09,453
+But I also said that there
+was a problem here in
+
+387
+00:20:09,453 --> 00:20:12,960
+that the quality of a graph
+search is very much dependent on
+
+388
+00:20:12,960 --> 00:20:14,973
+the quality of the underlying graph.
+
+389
+00:20:16,290 --> 00:20:17,990
+So how can we mitigate this issue?
+
+390
+00:20:19,680 --> 00:20:23,400
+Well, one way is to redescribe
+what it is we're trying
+
+391
+00:20:23,400 --> 00:20:25,050
+to achieve at this point in time.
+
+392
+00:20:28,350 --> 00:20:31,560
+So here's an alternative formulation.
+
+393
+00:20:31,560 --> 00:20:34,530
+In order to improve
+recall, we need to be able
+
+394
+00:20:34,530 --> 00:20:38,080
+to find content that is similar
+to the question being asked
+
+395
+00:20:38,970 --> 00:20:41,310
+and content that is similar
+
+396
+00:20:41,310 --> 00:20:44,073
+to something different from
+the question being asked.
+
+397
+00:20:46,410 --> 00:20:48,720
+So that sounds a bit, you know,
+it's like fancy word play,
+
+398
+00:20:48,720 --> 00:20:51,393
+it's a bit clunky, bit abstract.
+
+399
+00:20:54,210 --> 00:20:55,830
+But look what we've done.
+
+400
+00:20:55,830 --> 00:20:58,170
+We've taken what was previously
+
+401
+00:20:58,170 --> 00:21:00,870
+a vector search and a graph search
+
+402
+00:21:00,870 --> 00:21:04,710
+and we've turned it into two
+separate similarity searches.
+
+403
+00:21:04,710 --> 00:21:07,710
+One for content that is similar
+to the question being asked
+
+404
+00:21:07,710 --> 00:21:11,253
+and one for content that is
+similar to something else.
+
+405
+00:21:14,430 --> 00:21:16,500
+So what we need is some kind of proxy
+
+406
+00:21:16,500 --> 00:21:17,730
+or representation
+
+407
+00:21:17,730 --> 00:21:21,303
+for something different from
+the question being asked.
+
+408
+00:21:23,280 --> 00:21:24,690
+And that's exactly where
+
+409
+00:21:24,690 --> 00:21:27,453
+that entity relationship tier can help us.
+
+410
+00:21:29,490 --> 00:21:32,940
+So at retrieval time what
+we do is find a number of
+
+411
+00:21:32,940 --> 00:21:35,853
+what we call entity network context.
+
+412
+00:21:36,870 --> 00:21:39,360
+And an entity network context is a one
+
+413
+00:21:39,360 --> 00:21:43,350
+or two hop network
+surrounding key entities
+
+414
+00:21:43,350 --> 00:21:45,720
+and keywords that we've extracted from the
+
+415
+00:21:45,720 --> 00:21:47,120
+question that's being asked.
+
+416
+00:21:48,780 --> 00:21:51,540
+We then take these
+entity network contexts,
+
+417
+00:21:51,540 --> 00:21:54,630
+we create textual transcriptions of them
+
+418
+00:21:54,630 --> 00:21:56,130
+and we use them throughout the rest
+
+419
+00:21:56,130 --> 00:21:58,200
+of the querying process in order
+
+420
+00:21:58,200 --> 00:22:00,453
+to find those relevant statements.
+
+421
+00:22:02,940 --> 00:22:04,650
+So that's the high level approach.
+
+422
+00:22:04,650 --> 00:22:06,060
+I'm now going to tell you exactly
+
+423
+00:22:06,060 --> 00:22:09,450
+how we go about generating
+those entity network contexts
+
+424
+00:22:09,450 --> 00:22:11,700
+and then how we use
+them throughout the rest
+
+425
+00:22:11,700 --> 00:22:12,963
+of the querying process.
+
+426
+00:22:15,990 --> 00:22:18,273
+So generating entity network contexts,
+
+427
+00:22:19,320 --> 00:22:20,580
+well we've got a user question,
+
+428
+00:22:20,580 --> 00:22:23,463
+what are the sales prospects
+for Example Corp in the UK?
+
+429
+00:22:24,540 --> 00:22:27,810
+The first thing we do is
+look up significant entities
+
+430
+00:22:27,810 --> 00:22:30,390
+and keywords from that question in
+
+431
+00:22:30,390 --> 00:22:32,670
+that entity relationship tier.
+
+432
+00:22:32,670 --> 00:22:35,523
+So we end up with a set
+of candidate entity nodes,
+
+433
+00:22:38,850 --> 00:22:42,213
+we then re-rank those
+nodes against the question.
+
+434
+00:22:43,980 --> 00:22:47,520
+So with that re-rank set of
+nodes, we can now identify
+
+435
+00:22:47,520 --> 00:22:51,060
+what we consider to be
+the most important entity.
+
+436
+00:22:51,060 --> 00:22:53,790
+We're still interested in
+the entire candidate list,
+
+437
+00:22:53,790 --> 00:22:55,230
+but we're also interested in the one
+
+438
+00:22:55,230 --> 00:22:59,430
+that represents the most
+important or significant entity.
+
+439
+00:22:59,430 --> 00:23:01,890
+And at this point we're
+gonna make a note of the
+
+440
+00:23:01,890 --> 00:23:05,580
+degree centrality of that
+most important entity.
+
+441
+00:23:05,580 --> 00:23:06,810
+We make a note of it because we're going
+
+442
+00:23:06,810 --> 00:23:09,483
+to use it in a little while.
+
+443
+00:23:12,240 --> 00:23:15,270
+Now we do some path expansion
+and this is configurable,
+
+444
+00:23:15,270 --> 00:23:18,090
+but typically we expand
+each candidate node,
+
+445
+00:23:18,090 --> 00:23:19,860
+one or two hops, okay?
+
+446
+00:23:19,860 --> 00:23:22,710
+So we're beginning to generate
+those little entity network
+
+447
+00:23:22,710 --> 00:23:26,433
+contexts, one or two hop
+networks surrounding each entity.
+
+448
+00:23:30,240 --> 00:23:34,950
+We then filter each entity
+along each of those paths
+
+449
+00:23:34,950 --> 00:23:36,960
+and we filter based on a threshold
+
+450
+00:23:36,960 --> 00:23:39,720
+that's derived from the
+degree centrality of
+
+451
+00:23:39,720 --> 00:23:41,643
+that most important entity.
+
+452
+00:23:43,260 --> 00:23:44,940
+Effectively what we're
+trying to do at this point is
+
+453
+00:23:44,940 --> 00:23:47,250
+eliminate whales and minnows.
+
+454
+00:23:47,250 --> 00:23:49,500
+We're trying to eliminate nodes
+
+455
+00:23:49,500 --> 00:23:52,080
+that might completely
+dominate the conversation
+
+456
+00:23:52,080 --> 00:23:56,190
+and nodes that are potentially
+completely irrelevant okay?
+
+457
+00:23:57,720 --> 00:23:59,910
+So we filter along each entity path,
+
+458
+00:23:59,910 --> 00:24:01,713
+eliminating the whales and minnows.
+
+459
+00:24:04,590 --> 00:24:07,593
+We then rescore all the
+nodes along each path,
+
+460
+00:24:08,820 --> 00:24:11,043
+calculate the mean score for each path,
+
+461
+00:24:12,240 --> 00:24:14,160
+and then we can reorder the paths based
+
+462
+00:24:14,160 --> 00:24:16,170
+on their mean scores, okay?
+
+463
+00:24:16,170 --> 00:24:18,600
+So now we've got a list of paths ordered
+
+464
+00:24:18,600 --> 00:24:19,773
+by their mean scores.
+
+465
+00:24:21,840 --> 00:24:24,450
+And then finally again, another
+configuration parameter.
+
+466
+00:24:24,450 --> 00:24:25,560
+We live in that list.
+
+467
+00:24:25,560 --> 00:24:27,540
+Perhaps we're we're
+interested in the top five,
+
+468
+00:24:27,540 --> 00:24:30,450
+the top three, okay.
+
+469
+00:24:30,450 --> 00:24:32,070
+So at that point we've got a list
+
+470
+00:24:32,070 --> 00:24:35,637
+of paths derived from these
+entity network contexts
+
+471
+00:24:35,637 --> 00:24:38,590
+and we can create textual
+transcriptions of those paths
+
+472
+00:24:39,480 --> 00:24:41,010
+and then use them throughout the rest
+
+473
+00:24:41,010 --> 00:24:42,453
+of the querying process.
+
+474
+00:24:45,690 --> 00:24:48,160
+So here we've got three paths
+
+475
+00:24:49,380 --> 00:24:53,700
+and what we'll find is that
+as we go down that list,
+
+476
+00:24:53,700 --> 00:24:56,670
+we are introducing notes of dissimilarity.
+
+477
+00:24:56,670 --> 00:25:00,870
+So the first path is the
+path that is most similar
+
+478
+00:25:00,870 --> 00:25:03,210
+to the question being asked,
+
+479
+00:25:03,210 --> 00:25:05,880
+but the paths that come
+below introduce more
+
+480
+00:25:05,880 --> 00:25:08,013
+and more dissimilarity, okay?
+
+481
+00:25:11,130 --> 00:25:13,020
+So we then use these paths,
+
+482
+00:25:13,020 --> 00:25:15,690
+these entity network context
+in three different ways
+
+483
+00:25:15,690 --> 00:25:17,890
+throughout the rest of
+the querying process.
+
+484
+00:25:20,610 --> 00:25:23,520
+The first way is that we
+use them to seed a series
+
+485
+00:25:23,520 --> 00:25:25,920
+of dissimilarity searches.
+
+486
+00:25:25,920 --> 00:25:28,920
+So this is the point at which
+we are looking for content
+
+487
+00:25:28,920 --> 00:25:31,170
+that is similar to
+something different from the
+
+488
+00:25:31,170 --> 00:25:32,580
+question being asked.
+
+489
+00:25:32,580 --> 00:25:35,310
+So we can do a vector
+similarity search for each
+
+490
+00:25:35,310 --> 00:25:38,460
+of those entity network paths
+
+491
+00:25:38,460 --> 00:25:40,560
+and we can use the results
+
+492
+00:25:40,560 --> 00:25:44,193
+to then find corresponding chunk
+nodes in the lexical graph.
+
+493
+00:25:45,180 --> 00:25:47,880
+And from there we can take
+advantage of that local
+
+494
+00:25:47,880 --> 00:25:50,250
+and global connectivity in order to do
+
+495
+00:25:50,250 --> 00:25:53,253
+deep and broad traversals okay?
+
+496
+00:25:56,460 --> 00:25:58,770
+So we're doing a vector similarity search
+
+497
+00:25:58,770 --> 00:26:01,830
+that's then helping us find
+those vector-based entry
+
+498
+00:26:01,830 --> 00:26:04,290
+points into the graph, those chunk nodes.
+
+499
+00:26:04,290 --> 00:26:06,495
+And from there we're
+traversing the graph to try
+
+500
+00:26:06,495 --> 00:26:10,353
+and find the statements along those paths.
+
+501
+00:26:12,030 --> 00:26:14,370
+So again, all we're trying
+to do is accumulate sets
+
+502
+00:26:14,370 --> 00:26:17,370
+of statements that we're going
+to return in the results set.
+
+503
+00:26:21,660 --> 00:26:24,390
+The second way in which we use
+these engine network context
+
+504
+00:26:24,390 --> 00:26:26,400
+is to actually re-rank the results.
+
+505
+00:26:26,400 --> 00:26:28,740
+So remember the results
+comprise sets of statements.
+
+506
+00:26:28,740 --> 00:26:30,723
+So we've got a long list of statements.
+
+507
+00:26:32,250 --> 00:26:36,420
+We re-rank them using weighted
+term frequency analysis.
+
+508
+00:26:36,420 --> 00:26:38,640
+We don't use a re-ranking model,
+
+509
+00:26:38,640 --> 00:26:41,280
+we use weighted term frequency analysis.
+
+510
+00:26:41,280 --> 00:26:44,040
+So we've got a list of candidate
+statements that we found
+
+511
+00:26:44,040 --> 00:26:45,390
+through our graph reversals
+
+512
+00:26:47,160 --> 00:26:49,800
+and we create a set of match items.
+
+513
+00:26:49,800 --> 00:26:53,541
+So the match items comprise
+the original question plus all
+
+514
+00:26:53,541 --> 00:26:57,660
+of those entity network
+context in descending order.
+
+515
+00:26:57,660 --> 00:26:59,130
+And we weight those match items.
+
+516
+00:26:59,130 --> 00:27:02,310
+So the first two, the original question
+
+517
+00:27:02,310 --> 00:27:06,000
+and the first path have
+the strongest weight
+
+518
+00:27:06,000 --> 00:27:08,313
+and then the weighting
+descends from there on.
+
+519
+00:27:10,680 --> 00:27:14,943
+So then we can score each
+statement against each match item,
+
+520
+00:27:16,290 --> 00:27:18,570
+calculate the mean score
+for each statement,
+
+521
+00:27:18,570 --> 00:27:21,843
+and then reorder the statements
+based on their mean score.
+
+522
+00:27:23,790 --> 00:27:25,830
+And what you'll see in this example is
+
+523
+00:27:25,830 --> 00:27:28,920
+that we've got statements that
+mention any company logistics
+
+524
+00:27:28,920 --> 00:27:30,660
+and the Turquoise Canal
+
+525
+00:27:30,660 --> 00:27:33,750
+and they've been promoted
+to close to the top
+
+526
+00:27:33,750 --> 00:27:38,040
+of the result set and they've
+been promoted even though they
+
+527
+00:27:38,040 --> 00:27:42,623
+score very, very low for
+the original question, okay?
+
+528
+00:27:43,500 --> 00:27:45,450
+But the reason they've been promoted is
+
+529
+00:27:45,450 --> 00:27:47,760
+because they score relatively highly
+
+530
+00:27:47,760 --> 00:27:49,980
+for those last two
+entity network contexts,
+
+531
+00:27:49,980 --> 00:27:52,980
+the ones that mention
+any company logistics
+
+532
+00:27:52,980 --> 00:27:54,303
+and the Turquoise Canal.
+
+533
+00:28:00,570 --> 00:28:03,300
+And then finally the third
+way in which we use these
+
+534
+00:28:03,300 --> 00:28:08,010
+internet network context is to
+enrich the prompt that we use
+
+535
+00:28:08,010 --> 00:28:09,393
+to generate a response.
+
+536
+00:28:10,830 --> 00:28:13,710
+So besides supplying the user question
+
+537
+00:28:13,710 --> 00:28:15,450
+and the search results,
+
+538
+00:28:15,450 --> 00:28:19,650
+we also add in this additional
+context which comprises those
+
+539
+00:28:19,650 --> 00:28:21,720
+entity network contexts.
+
+540
+00:28:21,720 --> 00:28:24,457
+So we're effectively telling the LLM,
+
+541
+00:28:24,457 --> 00:28:28,170
+"Hey look, take advantage
+of all these search results
+
+542
+00:28:28,170 --> 00:28:32,400
+but pay attention to these
+bits of additional context."
+
+543
+00:28:32,400 --> 00:28:34,320
+We're effectively guiding the LLM
+
+544
+00:28:34,320 --> 00:28:38,160
+or instructing it to pay
+attention to statements
+
+545
+00:28:38,160 --> 00:28:41,013
+that it might otherwise
+skip over or ignore.
+
+546
+00:28:46,200 --> 00:28:49,563
+So it does all this work? Yes.
+
+547
+00:28:51,570 --> 00:28:55,230
+So if we use traditional
+vector similarity search,
+
+548
+00:28:55,230 --> 00:28:57,420
+the kind of responses that we get
+
+549
+00:28:57,420 --> 00:28:59,610
+and remember we're also
+getting chunk based context
+
+550
+00:28:59,610 --> 00:29:01,830
+that's being supplied to the LLM,
+
+551
+00:29:01,830 --> 00:29:03,060
+but the kind of response that we get,
+
+552
+00:29:03,060 --> 00:29:04,440
+lots and lots of detail.
+
+553
+00:29:04,440 --> 00:29:07,860
+But finally it's that
+overly optimistic response.
+
+554
+00:29:07,860 --> 00:29:10,743
+Sales prospects appear
+exceptionally strong.
+
+555
+00:29:12,840 --> 00:29:14,610
+But if we run the exact same question
+
+556
+00:29:14,610 --> 00:29:19,080
+with the GraphRAG toolkit,
+we get all of that detail,
+
+557
+00:29:19,080 --> 00:29:22,290
+but then we get a more nuanced conclusion.
+
+558
+00:29:22,290 --> 00:29:24,603
+Potential supply chain challenges,
+
+559
+00:29:25,440 --> 00:29:28,680
+global distribution may face disruption or
+
+560
+00:29:28,680 --> 00:29:30,693
+because of a large scale cyber attack.
+
+561
+00:29:31,770 --> 00:29:33,930
+So this could create product shortages
+
+562
+00:29:33,930 --> 00:29:36,123
+and affect delivery times okay?
+
+563
+00:29:41,880 --> 00:29:46,080
+So another key takeaway
+here is that graph search
+
+564
+00:29:46,080 --> 00:29:49,770
+and vector search are mutually
+beneficial for our kind
+
+565
+00:29:49,770 --> 00:29:52,500
+of operation or our kind of use case.
+
+566
+00:29:52,500 --> 00:29:55,440
+Graph search is great at finding all of
+
+567
+00:29:55,440 --> 00:29:58,050
+that structurally relevant content,
+
+568
+00:29:58,050 --> 00:30:01,212
+but vector search is really
+good at mitigating quality
+
+569
+00:30:01,212 --> 00:30:03,990
+issues in the original question
+
+570
+00:30:03,990 --> 00:30:06,183
+and in the underlying content.
+
+571
+00:30:07,170 --> 00:30:09,510
+So the two kind of work in concert
+
+572
+00:30:09,510 --> 00:30:11,790
+during the retrieval process in order
+
+573
+00:30:11,790 --> 00:30:14,343
+to smooth out any quality issues.
+
+574
+00:30:19,080 --> 00:30:20,310
+So that's the GraphRAG toolkit.
+
+575
+00:30:20,310 --> 00:30:22,470
+So a couple of resources here,
+
+576
+00:30:22,470 --> 00:30:25,290
+the toolkit itself is
+an open source library.
+
+577
+00:30:25,290 --> 00:30:28,623
+There's a link here, a QR
+code to the GitHub repository.
+
+578
+00:30:29,790 --> 00:30:32,130
+There's also a link here and a QR code
+
+579
+00:30:32,130 --> 00:30:35,550
+to a paper describing the
+hierarchical lexical graph
+
+580
+00:30:35,550 --> 00:30:37,260
+in a lot more detail.
+
+581
+00:30:37,260 --> 00:30:38,820
+And that includes some of the results
+
+582
+00:30:38,820 --> 00:30:40,440
+that we generated towards the end
+
+583
+00:30:40,440 --> 00:30:42,990
+of last year when we started
+some of this research.
+
+584
+00:30:44,803 --> 00:30:46,380
+The GraphRAG toolkit, you know,
+
+585
+00:30:46,380 --> 00:30:48,243
+employs a hybrid RAG approach,
+
+586
+00:30:49,620 --> 00:30:53,040
+but importantly it supports
+multiple different backends.
+
+587
+00:30:53,040 --> 00:30:56,490
+So today on the graph side
+we support Amazon Neptune,
+
+588
+00:30:56,490 --> 00:30:59,550
+Neptune Analytics, and Neo4j.
+
+589
+00:30:59,550 --> 00:31:03,360
+On the vector store side we
+support Neptune Analytics again,
+
+590
+00:31:03,360 --> 00:31:05,130
+Amazon OpenSearch Serverless
+
+591
+00:31:05,130 --> 00:31:08,103
+and Postgres with the PG vector extension.
+
+592
+00:31:10,860 --> 00:31:12,783
+Key point is it's a library,
+
+593
+00:31:13,650 --> 00:31:15,420
+it's not a full-blown application.
+
+594
+00:31:15,420 --> 00:31:17,850
+It's intended that you
+combine it with other tools,
+
+595
+00:31:17,850 --> 00:31:19,290
+other libraries in order
+
+596
+00:31:19,290 --> 00:31:23,610
+to build out more fully
+featured applications.
+
+597
+00:31:23,610 --> 00:31:25,953
+And that's exactly what Deloitte
+had done in employing it in
+
+598
+00:31:25,953 --> 00:31:28,143
+this cybersecurity intelligence center.
+
+599
+00:31:29,160 --> 00:31:32,640
+So at this point I'm going to
+hand over to Evan who's going
+
+600
+00:31:32,640 --> 00:31:35,010
+to describe in more detail the
+
+601
+00:31:35,010 --> 00:31:36,710
+Cybersecurity Intelligence Center.
+
+602
+00:31:42,960 --> 00:31:43,793
+- Thank you very much.
+
+603
+00:31:43,793 --> 00:31:46,200
+Now what I'm gonna try, I'm
+not gonna talk about Deloitte,
+
+604
+00:31:46,200 --> 00:31:48,540
+I'm pretty sure you not
+here about a partner.
+
+605
+00:31:48,540 --> 00:31:53,073
+I want each of you to ground
+in a couple of concepts.
+
+606
+00:31:54,420 --> 00:31:57,870
+The best way to do that is
+to talk about us as a human
+
+607
+00:31:57,870 --> 00:32:00,930
+because we all understand how we work.
+
+608
+00:32:00,930 --> 00:32:03,930
+You've had the GraphRAG toolkit.
+
+609
+00:32:03,930 --> 00:32:06,120
+For a moment in time,
+
+610
+00:32:06,120 --> 00:32:09,370
+imagine that is your long-term memory
+
+611
+00:32:10,800 --> 00:32:14,370
+and I'm gonna focus on your working memory
+
+612
+00:32:14,370 --> 00:32:16,923
+and your short-term memory.
+
+613
+00:32:18,454 --> 00:32:21,690
+When we live and go through
+about our daily lives,
+
+614
+00:32:21,690 --> 00:32:25,410
+there is no segregation between
+those other than on paper.
+
+615
+00:32:25,410 --> 00:32:28,443
+We keep on building our long-term memory.
+
+616
+00:32:30,150 --> 00:32:33,810
+What I will demonstrate is a
+problem we see often is that
+
+617
+00:32:33,810 --> 00:32:36,270
+to react, especially in cyber,
+
+618
+00:32:36,270 --> 00:32:40,690
+but with many other tools
+only out of short-term memory
+
+619
+00:32:41,610 --> 00:32:43,110
+the here in and now.
+
+620
+00:32:43,110 --> 00:32:45,270
+And that becomes problematic
+
+621
+00:32:45,270 --> 00:32:48,932
+because what we cannot
+establish is the true nature
+
+622
+00:32:48,932 --> 00:32:52,653
+of the problem across
+your entire organization.
+
+623
+00:32:54,660 --> 00:32:59,610
+What we have in many
+organizations is this dilemma,
+
+624
+00:32:59,610 --> 00:33:03,870
+what we call the zero disconnect dilemma.
+
+625
+00:33:03,870 --> 00:33:07,770
+It's a dichotomy, in one end,
+you've got an organization
+
+626
+00:33:07,770 --> 00:33:09,090
+that wants to proverbially
+
+627
+00:33:09,090 --> 00:33:12,570
+and physically keep
+things connected networks
+
+628
+00:33:12,570 --> 00:33:15,540
+or they wanna be in the know as far as
+
+629
+00:33:15,540 --> 00:33:19,140
+what they know about cyber threats.
+
+630
+00:33:19,140 --> 00:33:20,700
+But at the exact same time,
+
+631
+00:33:20,700 --> 00:33:23,550
+you've got perpetrators
+who's doing the exact
+
+632
+00:33:23,550 --> 00:33:24,873
+same but opposite.
+
+633
+00:33:26,070 --> 00:33:29,520
+Imagine for a second you've
+all been in these rooms
+
+634
+00:33:29,520 --> 00:33:31,920
+that instead of everybody
+who works very, very hard
+
+635
+00:33:31,920 --> 00:33:34,560
+to get your microphones to
+work, get them clean up,
+
+636
+00:33:34,560 --> 00:33:36,540
+get everything to be perfect.
+
+637
+00:33:36,540 --> 00:33:39,780
+Imagine some of us are rogue agents,
+
+638
+00:33:39,780 --> 00:33:43,380
+we seek out the best
+possible way to disrupt,
+
+639
+00:33:43,380 --> 00:33:47,250
+we wear the same clothes,
+we wear the same badges,
+
+640
+00:33:47,250 --> 00:33:49,083
+we don't know who we are.
+
+641
+00:33:50,460 --> 00:33:52,260
+Keep that idea in your mind.
+
+642
+00:33:52,260 --> 00:33:55,533
+That's the world of cybersecurity.
+There's no friend or foe.
+
+643
+00:33:56,520 --> 00:33:58,800
+What we are dealing with is a continual
+
+644
+00:33:58,800 --> 00:34:00,390
+dichotomy of zero disconnect.
+
+645
+00:34:00,390 --> 00:34:04,200
+And that is how we in
+Deloitte end up talking
+
+646
+00:34:04,200 --> 00:34:05,460
+to the AWS teams.
+
+647
+00:34:05,460 --> 00:34:07,170
+But our relationship,
+
+648
+00:34:07,170 --> 00:34:11,160
+we realize graph can help us on a journey
+
+649
+00:34:11,160 --> 00:34:12,753
+of zero disconnect.
+
+650
+00:34:14,340 --> 00:34:17,100
+Now what we've seen in many instances
+
+651
+00:34:17,100 --> 00:34:19,140
+for many organizations is this problem
+
+652
+00:34:19,140 --> 00:34:22,360
+where organizations are
+somewhat disconnected
+
+653
+00:34:23,250 --> 00:34:25,770
+and they have defenses
+in order to help them
+
+654
+00:34:25,770 --> 00:34:27,840
+to justify that.
+
+655
+00:34:27,840 --> 00:34:30,540
+They have this idea of well maybe
+
+656
+00:34:30,540 --> 00:34:32,370
+I've got a checkbox compliance.
+
+657
+00:34:32,370 --> 00:34:36,450
+I mean that, that's great,
+isn't it? I've done my best.
+
+658
+00:34:36,450 --> 00:34:38,610
+Maybe it's optics driven, it looks good,
+
+659
+00:34:38,610 --> 00:34:41,850
+I've got the best tools,
+I bought lots of them
+
+660
+00:34:41,850 --> 00:34:44,310
+and that tells me what's going on.
+
+661
+00:34:44,310 --> 00:34:46,230
+For us at the end of
+the day, it comes back
+
+662
+00:34:46,230 --> 00:34:48,600
+to something which nobody
+wants to talk about
+
+663
+00:34:48,600 --> 00:34:50,880
+and that's plausible deniability.
+
+664
+00:34:50,880 --> 00:34:53,700
+Surely if I've done enough
+then nobody can tell me that
+
+665
+00:34:53,700 --> 00:34:55,443
+what I've done isn't good enough.
+
+666
+00:34:56,610 --> 00:34:58,290
+For us as an organization
+
+667
+00:34:58,290 --> 00:35:02,190
+and for all of you here, I'm a developer.
+
+668
+00:35:02,190 --> 00:35:06,120
+I know when I go to my
+boss and say A and it's B,
+
+669
+00:35:06,120 --> 00:35:08,733
+I know that, I've been a
+developer for many years.
+
+670
+00:35:10,020 --> 00:35:12,630
+The problem we had up till
+now in our organization
+
+671
+00:35:12,630 --> 00:35:15,850
+and many of our clients was
+we have got these SOC analysts
+
+672
+00:35:16,830 --> 00:35:19,320
+and they triage things.
+
+673
+00:35:19,320 --> 00:35:22,230
+No problem, you guys all do that.
+
+674
+00:35:22,230 --> 00:35:24,240
+And then they throw it
+over the proverbial thanks
+
+675
+00:35:24,240 --> 00:35:26,730
+to the business who's merely an observer
+
+676
+00:35:26,730 --> 00:35:29,220
+and they make their own notes.
+
+677
+00:35:29,220 --> 00:35:31,410
+Now honestly, if these
+notes are the same thing,
+
+678
+00:35:31,410 --> 00:35:34,263
+that's gonna be a miracle from
+above because they're not.
+
+679
+00:35:36,180 --> 00:35:39,840
+What we wanted was a world, first,
+
+680
+00:35:39,840 --> 00:35:43,800
+our first step using the GraphRag toolkit,
+
+681
+00:35:43,800 --> 00:35:46,300
+building long-term memory
+
+682
+00:35:47,670 --> 00:35:51,360
+where we can take our lessons learned
+
+683
+00:35:51,360 --> 00:35:52,830
+in a triage record.
+
+684
+00:35:52,830 --> 00:35:54,030
+That's our experience.
+
+685
+00:35:54,030 --> 00:35:57,570
+It's not what the tools are
+telling us but our experiences
+
+686
+00:35:57,570 --> 00:36:02,400
+and fit that back into
+some form of factory to
+
+687
+00:36:02,400 --> 00:36:06,960
+where that becomes a central
+repository for what's happening
+
+688
+00:36:06,960 --> 00:36:10,020
+as far as cybersecurity
+in our organization
+
+689
+00:36:10,020 --> 00:36:11,703
+or in our clients' organization.
+
+690
+00:36:12,780 --> 00:36:15,960
+We realize the GraphRAG
+tool, he can do exactly that.
+
+691
+00:36:15,960 --> 00:36:17,613
+It's really brilliant.
+
+692
+00:36:19,470 --> 00:36:22,770
+We've also realized that we have to keep
+
+693
+00:36:22,770 --> 00:36:27,770
+our triage record generated
+by AI, separate, immutable.
+
+694
+00:36:29,100 --> 00:36:31,140
+Human arbitration are very important.
+
+695
+00:36:31,140 --> 00:36:34,680
+We have to be able to
+state what was AI generated
+
+696
+00:36:34,680 --> 00:36:36,990
+and what was human generated.
+
+697
+00:36:36,990 --> 00:36:39,390
+It can never, never break that rule
+
+698
+00:36:39,390 --> 00:36:42,420
+because if we break that
+rule, we make a decision.
+
+699
+00:36:42,420 --> 00:36:44,733
+It's not defensible afterwards.
+
+700
+00:36:46,140 --> 00:36:48,930
+We also realize that we've
+got these folks that wants
+
+701
+00:36:48,930 --> 00:36:53,280
+to reason and reflex using
+these triage records,
+
+702
+00:36:53,280 --> 00:36:56,460
+but we also realized that if
+we can do this properly using
+
+703
+00:36:56,460 --> 00:36:59,760
+the toolkit, we can get
+closer to our vision
+
+704
+00:36:59,760 --> 00:37:03,480
+of zero disconnect by
+creating collaboration
+
+705
+00:37:03,480 --> 00:37:05,400
+between our analyst and
+our business wherever
+
+706
+00:37:05,400 --> 00:37:06,570
+that business might be.
+
+707
+00:37:06,570 --> 00:37:10,110
+That was our vision. Can we do that?
+
+708
+00:37:10,110 --> 00:37:11,760
+The one thing we've learned
+is that we are missing
+
+709
+00:37:11,760 --> 00:37:12,783
+short-term memory.
+
+710
+00:37:14,100 --> 00:37:17,850
+When we get these signals
+and feeds from our systems
+
+711
+00:37:17,850 --> 00:37:21,030
+as far as our tooling,
+
+712
+00:37:21,030 --> 00:37:22,580
+those are not long-term memory.
+
+713
+00:37:23,610 --> 00:37:26,430
+Converted into a triage record
+that is long-term memory,
+
+714
+00:37:26,430 --> 00:37:28,290
+but at the moment in time
+those are just noise.
+
+715
+00:37:28,290 --> 00:37:29,760
+Those are the signals.
+
+716
+00:37:29,760 --> 00:37:31,803
+So we needed a document graph.
+
+717
+00:37:33,630 --> 00:37:34,890
+We built a document graph,
+
+718
+00:37:34,890 --> 00:37:38,280
+we add that to the GraphRag toolkit.
+
+719
+00:37:38,280 --> 00:37:40,680
+We built in such a way we
+can build document graphs
+
+720
+00:37:40,680 --> 00:37:42,750
+into logical domains.
+
+721
+00:37:42,750 --> 00:37:45,960
+And that allows us to group
+document centric information
+
+722
+00:37:45,960 --> 00:37:47,220
+from, for example, tools.
+
+723
+00:37:47,220 --> 00:37:50,013
+We gonna talk about Wiz
+briefly in a second.
+
+724
+00:37:51,000 --> 00:37:54,480
+Wiz has got their own sort
+of derived vocabulary.
+
+725
+00:37:54,480 --> 00:37:56,610
+So within that domain we
+can have a shorten term
+
+726
+00:37:56,610 --> 00:37:58,800
+derived vocabulary.
+
+727
+00:37:58,800 --> 00:38:01,530
+We can have what we call
+moderate entity resolution
+
+728
+00:38:01,530 --> 00:38:03,930
+because within the space,
+for example the Wiz tool
+
+729
+00:38:03,930 --> 00:38:07,440
+or a Prisma, there's some form
+of relationships inherently
+
+730
+00:38:07,440 --> 00:38:12,440
+that exist and it wouldn't be
+taken too much energy to do.
+
+731
+00:38:13,140 --> 00:38:17,520
+Now again, I reiterate that
+what we are aiming for is
+
+732
+00:38:17,520 --> 00:38:20,100
+to build a triage record,
+
+733
+00:38:20,100 --> 00:38:22,740
+which is the conversion
+from our short-term memory
+
+734
+00:38:22,740 --> 00:38:24,840
+into our long-term memory.
+
+735
+00:38:24,840 --> 00:38:28,110
+It's a common mistake we see,
+people think AI is all about
+
+736
+00:38:28,110 --> 00:38:30,840
+taking all my short-term
+memory and react on that.
+
+737
+00:38:30,840 --> 00:38:33,690
+No, because it's going to miss the nuance
+
+738
+00:38:33,690 --> 00:38:35,313
+of your common experience.
+
+739
+00:38:36,300 --> 00:38:39,930
+So again, what did we
+build? What did we see?
+
+740
+00:38:39,930 --> 00:38:43,055
+I think that I want all
+of you to take away,
+
+741
+00:38:43,055 --> 00:38:46,833
+GraphRag is your knowledge corpus.
+
+742
+00:38:47,850 --> 00:38:50,940
+It is your experience just like
+all of you, as you get older
+
+743
+00:38:50,940 --> 00:38:54,450
+of more and more experiences,
+you want to capture
+
+744
+00:38:54,450 --> 00:38:59,250
+that experience in your
+organization, you wanna retrieve it,
+
+745
+00:38:59,250 --> 00:39:01,710
+you wanna make sure
+that's good experiences,
+
+746
+00:39:01,710 --> 00:39:04,350
+but at the same time you wanna curate
+
+747
+00:39:04,350 --> 00:39:08,100
+your short-term experiences,
+your short-term memory
+
+748
+00:39:08,100 --> 00:39:10,920
+curated in a land which is understandable.
+
+749
+00:39:10,920 --> 00:39:13,290
+Otherwise you're going
+to get lots and lots
+
+750
+00:39:13,290 --> 00:39:15,780
+and lots of information
+in your long-term memory.
+
+751
+00:39:15,780 --> 00:39:17,910
+That's completely meaningless.
+
+752
+00:39:17,910 --> 00:39:21,870
+So what we done, we've
+written a document graph,
+
+753
+00:39:21,870 --> 00:39:23,970
+which is our hard data.
+
+754
+00:39:23,970 --> 00:39:27,090
+We bring that hard data
+to our analyst in a form
+
+755
+00:39:27,090 --> 00:39:30,540
+of a AI generated triage record.
+
+756
+00:39:30,540 --> 00:39:33,807
+We fade that back into the document graph
+
+757
+00:39:33,807 --> 00:39:37,780
+and we use that for
+overarching contextual analysis
+
+758
+00:39:39,000 --> 00:39:42,360
+and that allows us to get a
+picture of the organization,
+
+759
+00:39:42,360 --> 00:39:44,283
+not a picture of a lot of tools.
+
+760
+00:39:45,210 --> 00:39:48,090
+We do that with a man in the
+middle, human in the loop,
+
+761
+00:39:48,090 --> 00:39:49,470
+whatever term you want to use
+
+762
+00:39:49,470 --> 00:39:52,150
+because we wanna make sure
+that we are accountable
+
+763
+00:39:53,310 --> 00:39:55,740
+and the decision we make is
+
+764
+00:39:55,740 --> 00:39:57,930
+what we call human augmented decision
+
+765
+00:39:57,930 --> 00:40:01,863
+which means we basically put
+an Iron Man suit on our people.
+
+766
+00:40:02,760 --> 00:40:05,190
+We don't book robots and
+get rid of our people
+
+767
+00:40:05,190 --> 00:40:07,260
+because that wouldn't work.
+
+768
+00:40:07,260 --> 00:40:09,780
+There's a couple of things
+we learned that we had to do.
+
+769
+00:40:09,780 --> 00:40:12,870
+We had to make sure with a
+GraphRag tool we worked very
+
+770
+00:40:12,870 --> 00:40:15,960
+closely with AWS that we
+can read from more sources
+
+771
+00:40:15,960 --> 00:40:18,660
+and we've added those more sources.
+
+772
+00:40:18,660 --> 00:40:21,060
+Jason was great but we
+needed some other sources.
+
+773
+00:40:21,060 --> 00:40:24,120
+Well the short-term memory,
+long-term, short-term,
+
+774
+00:40:24,120 --> 00:40:26,280
+we needed videos, audio and all of that.
+
+775
+00:40:26,280 --> 00:40:27,870
+We need multimodal embedding
+
+776
+00:40:27,870 --> 00:40:29,200
+so we worked a bit on that
+
+777
+00:40:30,240 --> 00:40:34,260
+and then we realized that
+the biggest struggle is
+
+778
+00:40:34,260 --> 00:40:37,560
+how do we get this lots and lots of data
+
+779
+00:40:37,560 --> 00:40:42,030
+from these various tools
+very quickly in a graph.
+
+780
+00:40:42,030 --> 00:40:45,210
+And as all of you wanna
+become a graph expert,
+
+781
+00:40:45,210 --> 00:40:46,708
+none of our people want to do that.
+
+782
+00:40:46,708 --> 00:40:50,400
+So we've written a very,
+very sophisticated pipeline
+
+783
+00:40:50,400 --> 00:40:52,500
+and the pipeline allowed us
+
+784
+00:40:52,500 --> 00:40:54,300
+and in the pipeline is embedded with AI
+
+785
+00:40:54,300 --> 00:40:57,510
+and Bedrock to build a mechanism
+
+786
+00:40:57,510 --> 00:41:02,510
+of turning any signal, log, chain apps,
+
+787
+00:41:02,700 --> 00:41:05,910
+whatever data we get into a JSON now
+
+788
+00:41:05,910 --> 00:41:09,750
+and then turn that rapidly
+into our short-term memory.
+
+789
+00:41:09,750 --> 00:41:12,240
+Why? Lemme give you one example.
+
+790
+00:41:12,240 --> 00:41:16,110
+Let's say that we are interested
+in a short-term experience
+
+791
+00:41:16,110 --> 00:41:17,733
+about a place we visit.
+
+792
+00:41:19,170 --> 00:41:21,240
+Now let's make it practical.
+
+793
+00:41:21,240 --> 00:41:24,570
+We get information in about an IP address.
+
+794
+00:41:24,570 --> 00:41:27,510
+An IP address is not a place
+that we visited directly,
+
+795
+00:41:27,510 --> 00:41:29,010
+it's indirectly.
+
+796
+00:41:29,010 --> 00:41:31,710
+So for example, this pipeline
+will take an IP address
+
+797
+00:41:31,710 --> 00:41:33,700
+and automatically convert into the ASA
+
+798
+00:41:33,700 --> 00:41:35,313
+in an actual location.
+
+799
+00:41:36,240 --> 00:41:39,360
+Because that's what I'm interested
+in my short-term memory,
+
+800
+00:41:39,360 --> 00:41:40,800
+that's what I want to know.
+
+801
+00:41:40,800 --> 00:41:42,417
+So we wrote this pipeline
+
+802
+00:41:42,417 --> 00:41:46,380
+but we wrote in such a way
+that the engine that reads
+
+803
+00:41:46,380 --> 00:41:49,293
+and an engine that writes
+is two separate engines.
+
+804
+00:41:50,160 --> 00:41:53,460
+Why, because there's
+a new concept beathing
+
+805
+00:41:53,460 --> 00:41:54,780
+inside of document graph.
+
+806
+00:41:54,780 --> 00:41:58,230
+There's very recent writings
+which is called graph
+
+807
+00:41:58,230 --> 00:42:01,500
+pollution and that is an injection
+
+808
+00:42:01,500 --> 00:42:05,490
+of phantom data into a
+graph in order to derail.
+
+809
+00:42:05,490 --> 00:42:06,810
+All of that, we build in here
+
+810
+00:42:06,810 --> 00:42:09,813
+to make sure we don't pollute
+our short-term memory.
+
+811
+00:42:11,430 --> 00:42:14,280
+We also made a decision from the ground up
+
+812
+00:42:14,280 --> 00:42:18,000
+that we cannot expose the experience
+
+813
+00:42:18,000 --> 00:42:23,000
+of talking directly to these
+AI world into applications.
+
+814
+00:42:24,690 --> 00:42:29,190
+It evolves too quickly.
+There's too many moving parts.
+
+815
+00:42:29,190 --> 00:42:33,150
+So we created something called
+a cognitive substrate to
+
+816
+00:42:33,150 --> 00:42:36,090
+where we have effectively
+we call that a factory
+
+817
+00:42:36,090 --> 00:42:38,250
+or an AI enabled factory.
+
+818
+00:42:38,250 --> 00:42:40,140
+It's not an AI factory to
+
+819
+00:42:40,140 --> 00:42:42,840
+where the factory is your interface.
+
+820
+00:42:42,840 --> 00:42:46,920
+Behind it, encapsulated
+shielded is the process to
+
+821
+00:42:46,920 --> 00:42:51,090
+where we have the triage
+protocol, that's agentic AI,
+
+822
+00:42:51,090 --> 00:42:55,680
+the prompt set that we can
+curate for that specific mining
+
+823
+00:42:55,680 --> 00:42:57,303
+of your short-term memory.
+
+824
+00:42:58,140 --> 00:43:01,097
+The document graph
+which effectively built,
+
+825
+00:43:01,097 --> 00:43:04,740
+which captures your experience
+from the particular tools,
+
+826
+00:43:04,740 --> 00:43:07,560
+maybe the signal or the
+lock file coming in.
+
+827
+00:43:07,560 --> 00:43:10,170
+But we also always bring
+back the lexical graph
+
+828
+00:43:10,170 --> 00:43:12,570
+because we always have to
+bring back our long-term
+
+829
+00:43:12,570 --> 00:43:15,180
+experience 'cause it's an infinite loop.
+
+830
+00:43:15,180 --> 00:43:16,647
+We then take all of that
+
+831
+00:43:16,647 --> 00:43:21,060
+and we let our experts deal
+directly with our factory.
+
+832
+00:43:21,060 --> 00:43:23,550
+That means we built a
+factory in our organization
+
+833
+00:43:23,550 --> 00:43:28,530
+that is about the
+organizational cyber experience
+
+834
+00:43:28,530 --> 00:43:33,513
+and encounters as opposed
+to what a tool said.
+
+835
+00:43:35,730 --> 00:43:37,023
+Now how do we build this?
+
+836
+00:43:38,490 --> 00:43:40,610
+It was very important
+for us first to build
+
+837
+00:43:40,610 --> 00:43:43,920
+or find a platform which
+we deem is reliable.
+
+838
+00:43:43,920 --> 00:43:48,210
+We chose Amazon EKS,
+it's a reliable platform
+
+839
+00:43:48,210 --> 00:43:52,260
+and we currently have 99.999949 uptime
+
+840
+00:43:52,260 --> 00:43:53,510
+and that's pretty stable.
+
+841
+00:43:55,110 --> 00:43:58,620
+We decided that we wanna make it narrow.
+
+842
+00:43:58,620 --> 00:44:00,420
+So we use Neptune in OpenSearch,
+
+843
+00:44:00,420 --> 00:44:02,820
+although the GraphRag tool
+could do support other
+
+844
+00:44:02,820 --> 00:44:04,980
+databases, we opt for those.
+
+845
+00:44:04,980 --> 00:44:07,233
+It just makes it easier for us.
+
+846
+00:44:08,400 --> 00:44:11,520
+We standardize the Amazon
+NOVA from the get go.
+
+847
+00:44:11,520 --> 00:44:15,423
+Just so in a POC, our
+world is not too broad.
+
+848
+00:44:16,350 --> 00:44:18,480
+We've also bring in
+SageMaker into the mix,
+
+849
+00:44:18,480 --> 00:44:21,930
+although we are not developing models yet.
+
+850
+00:44:21,930 --> 00:44:25,500
+But think about your long-term
+memory becoming a model
+
+851
+00:44:25,500 --> 00:44:29,310
+one day because it's curated data,
+
+852
+00:44:29,310 --> 00:44:30,700
+it's not a tool data
+
+853
+00:44:31,830 --> 00:44:36,060
+and then our factory is
+running on DynamoDB in S3.
+
+854
+00:44:36,060 --> 00:44:38,400
+S3 is to where I've got journaling.
+
+855
+00:44:38,400 --> 00:44:42,600
+So we can always play the
+factory back if anything happens.
+
+856
+00:44:42,600 --> 00:44:45,930
+And then for any upload or
+download into our environment,
+
+857
+00:44:45,930 --> 00:44:47,964
+we've used a AWS Lambda
+
+858
+00:44:47,964 --> 00:44:50,580
+and API Gateway,
+CloudFront as well in order
+
+859
+00:44:50,580 --> 00:44:51,750
+to bring in documents.
+
+860
+00:44:51,750 --> 00:44:54,060
+There's a lot of other
+sort of elements here
+
+861
+00:44:54,060 --> 00:44:56,370
+that I haven't spoke about,
+but those are not relevant.
+
+862
+00:44:56,370 --> 00:44:59,100
+Those are the high level that we've used.
+
+863
+00:44:59,100 --> 00:45:01,890
+So let's look at it in
+action very quickly.
+
+864
+00:45:01,890 --> 00:45:03,600
+We already spoke about the top,
+
+865
+00:45:03,600 --> 00:45:06,330
+our long-term memory and that stays there.
+
+866
+00:45:06,330 --> 00:45:07,350
+That's what be referenced.
+
+867
+00:45:07,350 --> 00:45:09,030
+In this case we have
+worse and we're gonna go
+
+868
+00:45:09,030 --> 00:45:10,740
+through it very quickly with issues.
+
+869
+00:45:10,740 --> 00:45:14,730
+We switch on the sort of
+Christmas tree phenomenon.
+
+870
+00:45:14,730 --> 00:45:19,260
+That's our facts. The query
+gets pumped into the factory.
+
+871
+00:45:19,260 --> 00:45:23,430
+The factory makes a decision.
+Have I seen this before?
+
+872
+00:45:23,430 --> 00:45:26,010
+I mean it's the common class of an issue,
+
+873
+00:45:26,010 --> 00:45:28,440
+encryption for example of an EBS volume.
+
+874
+00:45:28,440 --> 00:45:30,210
+I mean we might get dozens of issues.
+
+875
+00:45:30,210 --> 00:45:31,200
+Yeah, I've seen this before.
+
+876
+00:45:31,200 --> 00:45:34,710
+I'm gonna link it to an
+existing triage record.
+
+877
+00:45:34,710 --> 00:45:36,300
+It's like when you go to a restaurant
+
+878
+00:45:36,300 --> 00:45:38,400
+and you ate something
+you already had before,
+
+879
+00:45:38,400 --> 00:45:40,830
+there's nothing new, been there, done that
+
+880
+00:45:40,830 --> 00:45:43,200
+or now it's new experience,
+
+881
+00:45:43,200 --> 00:45:45,690
+something new I'm gonna generate.
+
+882
+00:45:45,690 --> 00:45:47,130
+It takes a record
+
+883
+00:45:47,130 --> 00:45:49,890
+and pumps it back into
+our contextual artifacts.
+
+884
+00:45:49,890 --> 00:45:53,910
+It bolts our long-term memory all the time
+
+885
+00:45:53,910 --> 00:45:56,940
+because that is our price possession.
+
+886
+00:45:56,940 --> 00:46:00,150
+That's what makes our teams powerful.
+
+887
+00:46:00,150 --> 00:46:01,560
+So lemme give you a real issue
+
+888
+00:46:01,560 --> 00:46:05,670
+of taking an account, seven AWS domains.
+
+889
+00:46:05,670 --> 00:46:09,930
+We switch it on and within
+just over a couple of weeks,
+
+890
+00:46:09,930 --> 00:46:14,930
+four weeks, 50,000 issues,
+we run our pipeline.
+
+891
+00:46:15,330 --> 00:46:19,440
+We distilled 50,000
+issues to just over 1,300
+
+892
+00:46:19,440 --> 00:46:22,830
+that's usable that we want
+to investigate further.
+
+893
+00:46:22,830 --> 00:46:24,660
+Rapidly convert that into just over
+
+894
+00:46:24,660 --> 00:46:26,370
+six and a half thousand nodes
+
+895
+00:46:26,370 --> 00:46:31,370
+or automate it in just over 19,000
+
+896
+00:46:31,530 --> 00:46:32,973
+actual relationships.
+
+897
+00:46:34,350 --> 00:46:35,793
+We pump all of that data.
+
+898
+00:46:36,630 --> 00:46:39,030
+We call it the Wiz playbook,
+which is an instance
+
+899
+00:46:39,030 --> 00:46:42,270
+of a triage record inside our factory
+
+900
+00:46:42,270 --> 00:46:45,783
+and it generates for us evidence
+remediation and so forth.
+
+901
+00:46:46,920 --> 00:46:48,450
+In a JSON format
+
+902
+00:46:48,450 --> 00:46:51,660
+because ultimately we're gonna
+pump the JSON format back.
+
+903
+00:46:51,660 --> 00:46:54,780
+We've taken that information, run it
+
+904
+00:46:54,780 --> 00:46:57,570
+through a report service so it can report,
+
+905
+00:46:57,570 --> 00:47:00,900
+our analyst can look at
+it, they can annotate it,
+
+906
+00:47:00,900 --> 00:47:02,640
+they can reject it.
+
+907
+00:47:02,640 --> 00:47:04,530
+And based on the evidence we found,
+
+908
+00:47:04,530 --> 00:47:08,087
+we also create automation from that.
+
+909
+00:47:08,087 --> 00:47:10,050
+I'll talk about automation in a second.
+
+910
+00:47:10,050 --> 00:47:13,773
+Now, very important for automation.
+
+911
+00:47:14,610 --> 00:47:18,180
+What we've learned, and this
+is a bit of a takeaway for all,
+
+912
+00:47:18,180 --> 00:47:22,050
+don't create automation
+on code, libraries change,
+
+913
+00:47:22,050 --> 00:47:24,480
+there's vulnerabilities,
+all that kind of things.
+
+914
+00:47:24,480 --> 00:47:27,150
+Create recipes for automation.
+
+915
+00:47:27,150 --> 00:47:31,260
+They are a lot more during
+and durable than code.
+
+916
+00:47:31,260 --> 00:47:34,860
+Also very important,
+any short-term memory,
+
+917
+00:47:34,860 --> 00:47:37,290
+whether you like it or not is historical.
+
+918
+00:47:37,290 --> 00:47:41,100
+So make sure you have this
+idea of called check, do check.
+
+919
+00:47:41,100 --> 00:47:43,320
+So even if we find
+something, we are gonna go
+
+920
+00:47:43,320 --> 00:47:46,290
+and check it again because
+maybe what happened now
+
+921
+00:47:46,290 --> 00:47:48,903
+or we think happened
+is no longer happening.
+
+922
+00:47:50,190 --> 00:47:52,710
+Okay? We built that into the recipe.
+
+923
+00:47:52,710 --> 00:47:54,690
+So we got an interpreter.
+
+924
+00:47:54,690 --> 00:47:58,320
+The interpreter for the
+recipe is written by a human.
+
+925
+00:47:58,320 --> 00:48:02,670
+The recipe is written by
+AI. Very important, okay?
+
+926
+00:48:02,670 --> 00:48:06,450
+We trust AI with a recipe not
+so much for code when it comes
+
+927
+00:48:06,450 --> 00:48:08,283
+to large scale remediation.
+
+928
+00:48:10,050 --> 00:48:12,870
+At the end of the day, what
+we have is a fully fledged
+
+929
+00:48:12,870 --> 00:48:16,710
+recipe that we can store
+in a central repository
+
+930
+00:48:16,710 --> 00:48:18,750
+that is human reasonable.
+
+931
+00:48:18,750 --> 00:48:22,260
+And a great part is this goes
+back into a long-term memory
+
+932
+00:48:22,260 --> 00:48:26,070
+'cause back into lexical graph,
+which means over a period
+
+933
+00:48:26,070 --> 00:48:29,520
+of time we can make claims such as
+
+934
+00:48:29,520 --> 00:48:32,343
+what exactly is happening
+in our organization?
+
+935
+00:48:33,510 --> 00:48:36,210
+What evidence have we
+collected? What is the trend?
+
+936
+00:48:36,210 --> 00:48:38,100
+So why is that so important?
+
+937
+00:48:38,100 --> 00:48:41,250
+It is a first step to go
+from operational reality
+
+938
+00:48:41,250 --> 00:48:43,230
+into policy intent.
+
+939
+00:48:43,230 --> 00:48:46,298
+Instead of writing policies
+that has nothing to do
+
+940
+00:48:46,298 --> 00:48:48,600
+with your operational reality,
+
+941
+00:48:48,600 --> 00:48:51,030
+now we have a reality and
+we can actually augment
+
+942
+00:48:51,030 --> 00:48:54,090
+our policies based on
+what's really happening.
+
+943
+00:48:54,090 --> 00:48:57,870
+And these reports effectively
+are installed centrally
+
+944
+00:48:57,870 --> 00:49:00,300
+and they can contain compliance.
+
+945
+00:49:00,300 --> 00:49:02,250
+They are class of report,
+
+946
+00:49:02,250 --> 00:49:05,520
+but they also, every individual issues are
+
+947
+00:49:05,520 --> 00:49:06,720
+linked to a report.
+
+948
+00:49:06,720 --> 00:49:10,440
+So think about a report or
+as a class of experience
+
+949
+00:49:10,440 --> 00:49:13,530
+and every individual
+issue as an instantiation
+
+950
+00:49:13,530 --> 00:49:15,000
+of that class.
+
+951
+00:49:15,000 --> 00:49:18,480
+So we can either transverse
+in our memory on a particular
+
+952
+00:49:18,480 --> 00:49:22,470
+incident or an all incident
+of a particular class in order
+
+953
+00:49:22,470 --> 00:49:24,663
+to understand what is happening.
+
+954
+00:49:27,390 --> 00:49:29,580
+Let's wait for a second. There we go.
+
+955
+00:49:29,580 --> 00:49:31,920
+So what does this mean?
+
+956
+00:49:31,920 --> 00:49:36,390
+It means for us that
+we now have an ability
+
+957
+00:49:36,390 --> 00:49:39,630
+to do truth and traceability short-term,
+
+958
+00:49:39,630 --> 00:49:41,403
+fit that into a lexical,
+
+959
+00:49:42,450 --> 00:49:46,380
+take that, that becomes a
+meaning of our understanding
+
+960
+00:49:46,380 --> 00:49:48,693
+for both our analyst and our business.
+
+961
+00:49:49,650 --> 00:49:51,180
+At any point in time,
+
+962
+00:49:51,180 --> 00:49:53,820
+we have an understanding
+in our organization.
+
+963
+00:49:53,820 --> 00:49:56,910
+We no longer deal with
+just a Christmas tree.
+
+964
+00:49:56,910 --> 00:50:00,120
+We no longer deal with an
+application in each point
+
+965
+00:50:00,120 --> 00:50:02,793
+of view, we have our point of view.
+
+966
+00:50:03,870 --> 00:50:07,110
+Based on the GraphRag toolkit that corpus
+
+967
+00:50:07,110 --> 00:50:10,830
+of knowledge gets expanded, gets built.
+
+968
+00:50:10,830 --> 00:50:14,400
+And that is our, again, prized possession.
+
+969
+00:50:14,400 --> 00:50:18,480
+So can I hand back to
+Ian to conclude for us?
+
+970
+00:50:18,480 --> 00:50:19,820
+Yeah, thank you.
+
+971
+00:50:24,190 --> 00:50:27,360
+- Okay, so we've learned quite a bit
+
+972
+00:50:27,360 --> 00:50:29,340
+about the AI for triage.
+
+973
+00:50:29,340 --> 00:50:32,760
+What I really like about
+this use case is that we are
+
+974
+00:50:32,760 --> 00:50:34,800
+augmenting human expertise.
+
+975
+00:50:34,800 --> 00:50:36,810
+We're not trying to replace it
+
+976
+00:50:36,810 --> 00:50:39,660
+and we're augmenting it
+with, as Evan describes it,
+
+977
+00:50:39,660 --> 00:50:42,593
+this long-lived evolving memory, okay?
+
+978
+00:50:44,040 --> 00:50:48,090
+And in order to provide those
+experts with that memory,
+
+979
+00:50:48,090 --> 00:50:51,720
+we need to have improved
+recall within the systems
+
+980
+00:50:51,720 --> 00:50:54,003
+that we're using to serve up that memory.
+
+981
+00:50:54,872 --> 00:50:56,310
+And that's really where that GraphRAG
+
+982
+00:50:56,310 --> 00:50:58,323
+toolkit comes into play.
+
+983
+00:50:59,220 --> 00:51:01,050
+And I've tried to describe
+some of the techniques
+
+984
+00:51:01,050 --> 00:51:03,720
+that we've applied on
+the Neptune side in order
+
+985
+00:51:03,720 --> 00:51:06,060
+to provide those capabilities.
+
+986
+00:51:06,060 --> 00:51:08,790
+The graph model itself,
+which is structured all
+
+987
+00:51:08,790 --> 00:51:11,550
+around the statements,
+returning relevant statements,
+
+988
+00:51:11,550 --> 00:51:14,580
+which would effectively
+comprise my particular memory
+
+989
+00:51:14,580 --> 00:51:15,783
+at this moment in time.
+
+990
+00:51:17,040 --> 00:51:20,400
+And the query techniques that
+we've introduced, particularly
+
+991
+00:51:20,400 --> 00:51:23,830
+around entity network
+contexts that can help us
+
+992
+00:51:25,050 --> 00:51:27,990
+find all of that structurally relevant
+
+993
+00:51:27,990 --> 00:51:30,180
+but potentially dissimilar information
+
+994
+00:51:30,180 --> 00:51:32,490
+that is super important when you're trying
+
+995
+00:51:32,490 --> 00:51:35,763
+to reconstruct a deep
+understanding of an issue.
+
+996
+00:51:37,650 --> 00:51:39,960
+So there's a lot that we
+haven't talked about here in
+
+997
+00:51:39,960 --> 00:51:41,430
+terms of the GraphRAG toolkit.
+
+998
+00:51:41,430 --> 00:51:44,160
+A lot of additional
+features I mentioned earlier
+
+999
+00:51:44,160 --> 00:51:47,160
+that it supports multiple
+different backends.
+
+1000
+00:51:47,160 --> 00:51:48,540
+It supports multi-tenancy.
+
+1001
+00:51:48,540 --> 00:51:50,880
+So this is the idea that
+you can have discreet
+
+1002
+00:51:50,880 --> 00:51:53,040
+or separate lexical graphs
+
+1003
+00:51:53,040 --> 00:51:55,980
+and the associated indexes in the same
+
+1004
+00:51:55,980 --> 00:51:57,270
+underlying infrastructure.
+
+1005
+00:51:57,270 --> 00:52:00,030
+I can have multiple different
+lexical graphs in the
+
+1006
+00:52:00,030 --> 00:52:01,893
+same graph database.
+
+1007
+00:52:02,940 --> 00:52:04,740
+It supports document versioning.
+
+1008
+00:52:04,740 --> 00:52:07,530
+So I can re-index
+documents that have changed
+
+1009
+00:52:07,530 --> 00:52:10,470
+and then I can query the graph
+either for the current state,
+
+1010
+00:52:10,470 --> 00:52:13,710
+the current documents or
+the state of the graph
+
+1011
+00:52:13,710 --> 00:52:16,923
+and state of specific
+documents at a point in time.
+
+1012
+00:52:19,470 --> 00:52:21,720
+We also provide the ability
+
+1013
+00:52:21,720 --> 00:52:25,150
+to surface domain specific agentic tools
+
+1014
+00:52:26,190 --> 00:52:29,280
+to an MCP server for example.
+
+1015
+00:52:29,280 --> 00:52:32,520
+So we can take all of those
+discreet lexical graphs,
+
+1016
+00:52:32,520 --> 00:52:35,610
+we can automatically
+infer the domain semantics
+
+1017
+00:52:35,610 --> 00:52:36,870
+for each graph.
+
+1018
+00:52:36,870 --> 00:52:39,780
+We can use that to produce
+a tool description,
+
+1019
+00:52:39,780 --> 00:52:42,630
+which we can then
+advertise to an MCP server.
+
+1020
+00:52:42,630 --> 00:52:45,741
+So now we've created a
+capability for an agent
+
+1021
+00:52:45,741 --> 00:52:48,240
+to query across different domains
+
+1022
+00:52:48,240 --> 00:52:50,733
+and answer very, very complex questions.
+
+1023
+00:52:52,830 --> 00:52:56,310
+And then finally we have a
+separate module within the
+
+1024
+00:52:56,310 --> 00:52:59,070
+repository called BYOKG.
+
+1025
+00:52:59,070 --> 00:53:01,650
+Bring your own knowledge graph.
+
+1026
+00:53:01,650 --> 00:53:03,240
+So what I've described
+today is the ability
+
+1027
+00:53:03,240 --> 00:53:06,360
+to create a graph from
+unstructured data and to query it.
+
+1028
+00:53:06,360 --> 00:53:10,530
+BYKOG allows you to bring
+an existing graph in Neptune
+
+1029
+00:53:10,530 --> 00:53:12,090
+or Neptune Analytics
+
+1030
+00:53:12,090 --> 00:53:14,390
+and again, perform
+question answering over it.
+
+1031
+00:53:16,620 --> 00:53:18,840
+Things that we've got coming up next.
+
+1032
+00:53:18,840 --> 00:53:20,340
+Well, we've always welcomed
+
+1033
+00:53:20,340 --> 00:53:21,840
+contributions from the community.
+
+1034
+00:53:21,840 --> 00:53:24,390
+Deloitte have contributed
+already quite a bit
+
+1035
+00:53:24,390 --> 00:53:26,130
+into the repository.
+
+1036
+00:53:26,130 --> 00:53:28,560
+Over the next few months we
+plan to move more of some
+
+1037
+00:53:28,560 --> 00:53:30,900
+of the stuff that Evan has described.
+
+1038
+00:53:30,900 --> 00:53:33,690
+Things in particular that
+like the document graph,
+
+1039
+00:53:33,690 --> 00:53:35,523
+bringing that into the repository.
+
+1040
+00:53:36,600 --> 00:53:38,670
+We're always taking
+requests from customers that
+
+1041
+00:53:38,670 --> 00:53:41,340
+they discover new features or new needs.
+
+1042
+00:53:41,340 --> 00:53:43,743
+We try and add those into the thing.
+
+1043
+00:53:44,610 --> 00:53:47,070
+At the moment we're working on
+several different additional
+
+1044
+00:53:47,070 --> 00:53:50,280
+vector store backends that
+we'll support in the GraphRAG
+
+1045
+00:53:50,280 --> 00:53:52,293
+toolkit over the next couple of months.
+
+1046
+00:53:55,110 --> 00:53:59,070
+Okay, over the next couple of days,
+
+1047
+00:53:59,070 --> 00:54:01,260
+a couple of other graph talks.
+
+1048
+00:54:01,260 --> 00:54:06,260
+Tomorrow we have the last
+of three builders workshops,
+
+1049
+00:54:06,540 --> 00:54:09,030
+which are all about
+building an application,
+
+1050
+00:54:09,030 --> 00:54:12,270
+a GraphRAG application
+using the GraphRAG toolkit.
+
+1051
+00:54:12,270 --> 00:54:15,390
+We ran one at the beginning
+of the week, one this morning.
+
+1052
+00:54:15,390 --> 00:54:16,860
+We've got our last hour long one
+
+1053
+00:54:16,860 --> 00:54:18,543
+tomorrow in the Mandalay Bay.
+
+1054
+00:54:19,650 --> 00:54:22,980
+And then on Friday a very
+distinguished colleague,
+
+1055
+00:54:22,980 --> 00:54:27,720
+Ora Lassila is talking about
+symbolic AI in the age of LLMs
+
+1056
+00:54:27,720 --> 00:54:29,520
+and he'll be here in Caesar's forum.
+
+1057
+00:54:30,870 --> 00:54:33,720
+Okay, well thank you very
+much for coming along today.
+
+1058
+00:54:33,720 --> 00:54:34,830
+Thank you for listening and I
+
+1059
+00:54:34,830 --> 00:54:36,090
+hope you have a great re:Invent.
+
+1060
+00:54:36,090 --> 00:54:39,003
+Thank you.
+(crowd applauds)
+

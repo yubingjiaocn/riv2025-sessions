@@ -58,6 +58,16 @@ def translate_text(text):
 
 def search_session(title):
     """Search AWS Events catalog for session details"""
+    import re
+
+    # Extract session code from title (e.g., "CNS205", "AIM107-S" from "...title (CNS205)")
+    # Handles: standard format (CNS205), with suffix (AIM107-S), formatting variations
+    # Returns None for sessions without codes (like keynotes)
+    session_code_match = re.search(r'\(([A-Z]{3}\d{3,4}(?:-[A-Z]+)?)\)|[- ]([A-Z]{3}\d{3,4}(?:-[A-Z]+)?)(?:\s|$)', title)
+    expected_code = None
+    if session_code_match:
+        expected_code = session_code_match.group(1) or session_code_match.group(2)
+
     payload = f"search={urllib.parse.quote(title)}&type=session&browserTimezone=Asia%2FShanghai&catalogDisplay=list"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -71,20 +81,49 @@ def search_session(title):
 
     if data.get("responseCode") == "0" and data.get("sections"):
         items = data["sectionList"][0].get("items", [])
+
+        # If we extracted a session code from the title, try to find exact match
+        if expected_code and items:
+            for item in items:
+                if item.get("code") == expected_code:
+                    logger.info(f"  ✓ Matched session code: {expected_code}")
+                    return item
+            logger.warning(f"  ⚠ Session code {expected_code} not found in results, using first result")
+
         return items[0] if items else None
     return None
 
-def get_subtitles(video_url):
-    """Fetch subtitles from YouTube video"""
+def get_video_info(video_url):
+    """Fetch video info including duration"""
+    ydl_opts = {
+        'skip_download': True,
+        'quiet': True,
+        'cookiefile': 'cookies.txt'
+    }
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+            return {
+                'duration': info.get('duration', 0),
+                'duration_minutes': info.get('duration', 0) / 60
+            }
+    except Exception as e:
+        logger.error(f"    Error fetching video info: {e}")
+        return None
+
+def get_subtitles(video_url, output_path=None):
+    """Fetch subtitles from YouTube video and optionally save to file"""
     import tempfile
     import glob
+    import shutil
 
     with tempfile.TemporaryDirectory() as tmpdir:
         ydl_opts = {
             'skip_download': True,
             'writesubtitles': True,
             'writeautomaticsub': False,
-            'subtitleslangs': ['en'],
+            'subtitleslangs': ['en.*'],
             'subtitlesformat': 'srt',
             'quiet': True,
             'noprogress': True,
@@ -97,27 +136,34 @@ def get_subtitles(video_url):
                 ydl.download([video_url])
 
             # Find the downloaded subtitle file
-            vtt_files = glob.glob(f'{tmpdir}/*.srt')
-            if vtt_files:
-                with open(vtt_files[0], 'r', encoding='utf-8') as f:
-                    return f.read()
+            srt_files = glob.glob(f'{tmpdir}/*.srt')
+            if srt_files:
+                with open(srt_files[0], 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # Save to output path if provided
+                if output_path:
+                    with open(output_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+
+                return content
 
         except Exception as e:
             logger.error(f"    Error fetching subtitles: {e}")
 
     return None
 
-def generate_summary(subtitles):
+def generate_summary(subtitles, duration_minutes=None):
     """Generate summary using Kiro CLI"""
-    # Clean VTT format - remove timestamps and metadata, keep only text
+    # Clean srt format - remove timestamps and metadata, keep only text
     import re
     lines = subtitles.split('\n')
     text_lines = []
     for line in lines:
         line = line.strip()
-        # Skip VTT headers, timestamps, and empty lines
-        if line and not line.startswith('WEBVTT') and not '-->' in line and not line.isdigit():
-            # Remove VTT tags like <c>
+        # Skip srt headers, timestamps, and empty lines
+        if line and not line.startswith('WEBsrt') and not '-->' in line and not line.isdigit():
+            # Remove srt tags like <c>
             line = re.sub(r'<[^>]+>', '', line)
             text_lines.append(line)
 
@@ -127,7 +173,12 @@ def generate_summary(subtitles):
     if len(clean_text) > 100000:
         clean_text = clean_text[:100000] + '...'
 
-    prompt = f"Please summarize this AWS session based on the following subtitles:\n\n{clean_text}"
+    # Build prompt with duration info if available
+    duration_info = ""
+    if duration_minutes:
+        duration_info = f"\n\nVideo Duration: {duration_minutes:.1f} minutes (ensure timeline does not exceed this duration)"
+
+    prompt = f"Please summarize this AWS session based on the following subtitles:{duration_info}\n\n{clean_text}"
     result = subprocess.run(
         ["kiro-cli", "chat", "--no-interactive", "--agent=summarizer"],
         input=prompt,
@@ -225,6 +276,11 @@ def main():
                 elif attr_id == "AreaofInterest":
                     area_of_interest.append(value)
 
+            # Get video info (duration)
+            logger.info(f"  Fetching video info...")
+            video_info = get_video_info(video_url)
+            duration_minutes = video_info['duration_minutes'] if video_info else None
+
             # Create metadata
             metadata = {
                 "title": title,
@@ -239,7 +295,9 @@ def main():
                     "type": session_data.get("type", "")
                 },
                 "video_url": video_url,
-                "session_code": session_code
+                "session_code": session_code,
+                "duration_seconds": video_info['duration'] if video_info else None,
+                "duration_minutes": round(duration_minutes, 1) if duration_minutes else None
             }
 
             with open(os.path.join(session_dir, "metadata.json"), "w", encoding="utf-8") as f:
@@ -247,11 +305,12 @@ def main():
 
             # Get subtitles and generate summary
             logger.info(f"  Fetching subtitles...")
-            subtitles = get_subtitles(video_url)
+            subtitle_path = os.path.join(session_dir, "subtitles.srt")
+            subtitles = get_subtitles(video_url, output_path=subtitle_path)
 
             if subtitles:
-                logger.info(f"  Generating summary...")
-                summary = generate_summary(subtitles)
+                logger.info(f"  Generating summary (duration: {duration_minutes:.1f} min)...")
+                summary = generate_summary(subtitles, duration_minutes=duration_minutes)
 
                 with open(os.path.join(session_dir, "summary.md"), "w", encoding="utf-8") as f:
                     f.write(summary)

@@ -1,0 +1,6364 @@
+1
+00:00:00,270 --> 00:00:01,710
+- Okay, good afternoon.
+
+2
+00:00:01,710 --> 00:00:03,090
+Welcome to re:Invent
+
+3
+00:00:03,090 --> 00:00:06,630
+and welcome to the Future of Kubernetes,
+
+4
+00:00:06,630 --> 00:00:09,300
+which I admit is a bit of a
+mysterious sounding title,
+
+5
+00:00:09,300 --> 00:00:11,910
+but I assure you we're gonna
+cover a real concrete overview
+
+6
+00:00:11,910 --> 00:00:15,390
+of recent enhancements to EKS,
+as well as a sneak preview
+
+7
+00:00:15,390 --> 00:00:18,630
+of what's coming in the
+next couple of years.
+
+8
+00:00:18,630 --> 00:00:20,820
+It was probably six to nine months ago
+
+9
+00:00:20,820 --> 00:00:24,480
+and Netflix came to us with a vision
+
+10
+00:00:24,480 --> 00:00:26,460
+that I imagine some of you
+in the audience have had
+
+11
+00:00:26,460 --> 00:00:28,770
+where they said, "We
+want to use Kubernetes,
+
+12
+00:00:28,770 --> 00:00:30,810
+but we want to make scale and operations
+
+13
+00:00:30,810 --> 00:00:32,700
+somebody else's problem."
+
+14
+00:00:32,700 --> 00:00:34,500
+And I'm lucky enough today to be joined
+
+15
+00:00:34,500 --> 00:00:36,990
+by Niall Mullen, who's the senior director
+
+16
+00:00:36,990 --> 00:00:38,310
+of cloud infrastructure at Netflix,
+
+17
+00:00:38,310 --> 00:00:41,600
+and he's gonna talk about
+how Netflix migrated to EKS
+
+18
+00:00:41,600 --> 00:00:44,250
+in a matter of months, not years.
+
+19
+00:00:44,250 --> 00:00:46,440
+And then, I'm gonna cover how
+we're making that philosophy
+
+20
+00:00:46,440 --> 00:00:49,170
+available to all customers,
+no matter their size.
+
+21
+00:00:49,170 --> 00:00:51,150
+And we're also joined by Eswar Bala,
+
+22
+00:00:51,150 --> 00:00:53,850
+who's the director director
+of Engineering and Containers,
+
+23
+00:00:53,850 --> 00:00:55,920
+and he's gonna talk about
+some of the scaling innovation
+
+24
+00:00:55,920 --> 00:00:57,960
+we've done over the last year to make sure
+
+25
+00:00:57,960 --> 00:01:01,143
+that we support the very large
+scale that Netflix runs at.
+
+26
+00:01:04,090 --> 00:01:07,980
+Okay, Kubernetes, I assume
+everybody in this room
+
+27
+00:01:07,980 --> 00:01:09,930
+is familiar with the word.
+
+28
+00:01:09,930 --> 00:01:14,010
+This is the data from the
+latest CNCF survey in 2024,
+
+29
+00:01:14,010 --> 00:01:16,050
+which says that now 80% of enterprises
+
+30
+00:01:16,050 --> 00:01:17,580
+are using Kubernetes in production.
+
+31
+00:01:17,580 --> 00:01:21,690
+I think that's up from 66%
+when it was done in 2023.
+
+32
+00:01:21,690 --> 00:01:25,440
+So, over 90% of companies out
+there are at least evaluating,
+
+33
+00:01:25,440 --> 00:01:27,690
+if not using, Kubernetes at this point.
+
+34
+00:01:27,690 --> 00:01:29,760
+And, you know, why is that the case?
+
+35
+00:01:29,760 --> 00:01:31,623
+Why has Kubernetes become so popular?
+
+36
+00:01:33,510 --> 00:01:37,500
+Simplicity, in our view,
+is the biggest reason
+
+37
+00:01:37,500 --> 00:01:40,050
+why it's become that way.
+
+38
+00:01:40,050 --> 00:01:43,237
+I think there was a recent
+tweet that said something like,
+
+39
+00:01:43,237 --> 00:01:44,857
+"Kubernetes is the wrapper of,
+
+40
+00:01:44,857 --> 00:01:49,560
+you know, 15 years of bash
+scripts, runbooks, cookbooks
+
+41
+00:01:49,560 --> 00:01:52,350
+that SREs have made, all wrapped up behind
+
+42
+00:01:52,350 --> 00:01:55,830
+a simple to use, declarative,
+reconciling set of APIs."
+
+43
+00:01:55,830 --> 00:01:57,120
+And that really resonated with me
+
+44
+00:01:57,120 --> 00:01:59,460
+and what I've heard
+from customers as well.
+
+45
+00:01:59,460 --> 00:02:01,410
+Kubernetes is a very simple way
+
+46
+00:02:01,410 --> 00:02:03,210
+to manage your cloud infrastructure.
+
+47
+00:02:04,890 --> 00:02:07,050
+The other two that come up are consistency
+
+48
+00:02:07,050 --> 00:02:08,163
+and extensibility.
+
+49
+00:02:09,180 --> 00:02:11,820
+With simplicity, first, you're
+never starting from scratch
+
+50
+00:02:11,820 --> 00:02:12,930
+when you're using Kubernetes.
+
+51
+00:02:12,930 --> 00:02:15,540
+If you need to run a Spark job,
+
+52
+00:02:15,540 --> 00:02:16,890
+you go use the Spark operator.
+
+53
+00:02:16,890 --> 00:02:19,140
+You need to run an ML training job,
+
+54
+00:02:19,140 --> 00:02:20,790
+you go to a project like Kubeflow.
+
+55
+00:02:20,790 --> 00:02:22,620
+Very rarely are you starting from scratch.
+
+56
+00:02:22,620 --> 00:02:24,330
+And that's simple, you
+don't have to write a lot
+
+57
+00:02:24,330 --> 00:02:26,280
+of custom stuff.
+
+58
+00:02:26,280 --> 00:02:27,540
+Consistency is the other one
+
+59
+00:02:27,540 --> 00:02:29,040
+that we hear a lot from customers.
+
+60
+00:02:29,040 --> 00:02:31,770
+You can run Kubernetes on AWS, on-prem,
+
+61
+00:02:31,770 --> 00:02:35,070
+and other clouds, on the
+Edge, on fighter jets,
+
+62
+00:02:35,070 --> 00:02:36,480
+which we've seen with EKS.
+
+63
+00:02:36,480 --> 00:02:37,890
+You can run it anywhere.
+
+64
+00:02:37,890 --> 00:02:41,010
+And then extensibility,
+while Kubernetes is simple,
+
+65
+00:02:41,010 --> 00:02:44,310
+it doesn't cover every single
+use case you might need.
+
+66
+00:02:44,310 --> 00:02:46,080
+And while Kubernetes, by default,
+
+67
+00:02:46,080 --> 00:02:48,930
+is a container orchestrator,
+really with the CRD model
+
+68
+00:02:48,930 --> 00:02:50,760
+and its extensibility,
+you can customize it
+
+69
+00:02:50,760 --> 00:02:51,660
+to do anything you want.
+
+70
+00:02:51,660 --> 00:02:54,150
+And we see more and more customers today
+
+71
+00:02:54,150 --> 00:02:55,890
+starting to use EKS and Kubernetes
+
+72
+00:02:55,890 --> 00:02:57,300
+to operate their entire business,
+
+73
+00:02:57,300 --> 00:02:59,103
+not just orchestrating containers.
+
+74
+00:03:02,430 --> 00:03:07,350
+So we announced EKS back
+in 2017 at re:Invent,
+
+75
+00:03:07,350 --> 00:03:08,850
+or the, I believe, a preview of it.
+
+76
+00:03:08,850 --> 00:03:12,750
+So, it's now been eight
+years since we launched EKS.
+
+77
+00:03:12,750 --> 00:03:17,040
+And we've advanced from,
+you know, the early days
+
+78
+00:03:17,040 --> 00:03:19,500
+where it was just to manage
+Kubernetes control plane.
+
+79
+00:03:19,500 --> 00:03:21,090
+We've launched open source projects
+
+80
+00:03:21,090 --> 00:03:22,350
+that have become the new standard
+
+81
+00:03:22,350 --> 00:03:23,760
+in the Kubernetes ecosystem.
+
+82
+00:03:23,760 --> 00:03:26,160
+We've expanded beyond the control plane
+
+83
+00:03:26,160 --> 00:03:28,680
+to do add-ons, data plane,
+
+84
+00:03:28,680 --> 00:03:31,020
+and today we'll cover what
+our latest expansion is,
+
+85
+00:03:31,020 --> 00:03:34,263
+EKS capabilities that we
+announced just last night.
+
+86
+00:03:37,170 --> 00:03:39,240
+So, Kubernetes in context.
+
+87
+00:03:39,240 --> 00:03:41,460
+You know, your goal is to
+deliver business value,
+
+88
+00:03:41,460 --> 00:03:43,410
+not necessarily operate infrastructure.
+
+89
+00:03:43,410 --> 00:03:45,510
+And our goal is to deliver
+the fundamental components
+
+90
+00:03:45,510 --> 00:03:46,710
+that you need to build
+
+91
+00:03:46,710 --> 00:03:48,810
+a production-ready Kubernetes environment.
+
+92
+00:03:50,280 --> 00:03:51,120
+And what does that mean?
+
+93
+00:03:51,120 --> 00:03:52,650
+At the infrastructure layer,
+
+94
+00:03:52,650 --> 00:03:54,330
+compute, networking, storage,
+
+95
+00:03:54,330 --> 00:03:55,890
+none of that's ever gonna change.
+
+96
+00:03:55,890 --> 00:03:57,300
+And one of our jobs on the EKS team
+
+97
+00:03:57,300 --> 00:04:00,270
+is to make sure you get those
+fundamental building blocks
+
+98
+00:04:00,270 --> 00:04:02,850
+that AWS gives in a Kubernetes native way.
+
+99
+00:04:02,850 --> 00:04:05,670
+Things like our CNI that
+integrates with the VPC,
+
+100
+00:04:05,670 --> 00:04:07,560
+or Karpenter with integrates with EC2,
+
+101
+00:04:07,560 --> 00:04:08,760
+or our storage drivers
+
+102
+00:04:08,760 --> 00:04:11,100
+within integrating with storage services.
+
+103
+00:04:11,100 --> 00:04:12,540
+That foundation is super important.
+
+104
+00:04:12,540 --> 00:04:13,990
+We're always investing there.
+
+105
+00:04:15,120 --> 00:04:16,410
+Then the control plane, right?
+
+106
+00:04:16,410 --> 00:04:18,660
+That's the hardest part
+of doing Kubernetes,
+
+107
+00:04:18,660 --> 00:04:20,430
+not for the faint of heart.
+
+108
+00:04:20,430 --> 00:04:24,000
+Nearly everybody who's running
+Kubernetes on AWS these days,
+
+109
+00:04:24,000 --> 00:04:25,890
+including Netflix now, is using EKS.
+
+110
+00:04:25,890 --> 00:04:27,900
+They're not doing it themselves.
+
+111
+00:04:27,900 --> 00:04:32,220
+Management, tooling, governance,
+compliance, security,
+
+112
+00:04:32,220 --> 00:04:33,690
+that's the next layer you have on top.
+
+113
+00:04:33,690 --> 00:04:36,240
+We've expanded to start to help you there.
+
+114
+00:04:36,240 --> 00:04:37,640
+And then, developer tooling.
+
+115
+00:04:39,000 --> 00:04:41,280
+I said in that earlier slide
+
+116
+00:04:41,280 --> 00:04:45,060
+that I think 80% of customers
+are evaluating Kubernetes now.
+
+117
+00:04:45,060 --> 00:04:46,560
+Some recent data has actually shown
+
+118
+00:04:46,560 --> 00:04:50,640
+that developer familiarity
+with Kubernetes is decreasing.
+
+119
+00:04:50,640 --> 00:04:51,473
+And while you might say,
+
+120
+00:04:51,473 --> 00:04:53,130
+"Oh, is that a, you know,
+
+121
+00:04:53,130 --> 00:04:55,320
+Harbinger Kubernetes
+is losing popularity,"
+
+122
+00:04:55,320 --> 00:04:57,120
+we actually see it's the opposite.
+
+123
+00:04:57,120 --> 00:05:00,090
+And that Kubernetes is just
+becoming a layer in the stack,
+
+124
+00:05:00,090 --> 00:05:02,760
+like say Linux has
+become, where developers
+
+125
+00:05:02,760 --> 00:05:05,490
+don't really have to have to
+think about Kubernetes anymore.
+
+126
+00:05:05,490 --> 00:05:08,250
+They just use their familiar
+tooling, deployments,
+
+127
+00:05:08,250 --> 00:05:10,320
+IDPs, Jobs, ML workflows,
+
+128
+00:05:10,320 --> 00:05:12,330
+and that runs on Kubernetes underneath,
+
+129
+00:05:12,330 --> 00:05:13,163
+but it's not something
+
+130
+00:05:13,163 --> 00:05:15,090
+they have to be terribly familiar with.
+
+131
+00:05:18,480 --> 00:05:21,720
+I wanna talk briefly about
+container registry in ECR.
+
+132
+00:05:21,720 --> 00:05:26,190
+I think it's the unsung hero
+of the AWS container world
+
+133
+00:05:26,190 --> 00:05:27,930
+and it's something
+myself and Eswar focus on
+
+134
+00:05:27,930 --> 00:05:28,980
+in addition to Kubernetes.
+
+135
+00:05:28,980 --> 00:05:30,510
+So, I'll go through quickly
+
+136
+00:05:30,510 --> 00:05:32,370
+some of the advancements we've made
+
+137
+00:05:32,370 --> 00:05:34,053
+in the container registry space.
+
+138
+00:05:35,520 --> 00:05:38,160
+ECR does over 2 billion image pulls a day.
+
+139
+00:05:38,160 --> 00:05:39,270
+I think we like to think of
+
+140
+00:05:39,270 --> 00:05:43,140
+as the unsung hero of
+AWS container services.
+
+141
+00:05:43,140 --> 00:05:44,240
+Every application, you're running
+
+142
+00:05:44,240 --> 00:05:47,010
+in a container orchestrator,
+if you're using ECR,
+
+143
+00:05:47,010 --> 00:05:49,830
+it's starting with an
+image pulled from there.
+
+144
+00:05:49,830 --> 00:05:51,750
+Some recent enhancements we've made.
+
+145
+00:05:51,750 --> 00:05:54,420
+Enhanced scanning, we did an
+integration with Inspector,
+
+146
+00:05:54,420 --> 00:05:58,020
+where we provide advanced
+scanning for images.
+
+147
+00:05:58,020 --> 00:06:00,930
+And one of the features that
+we're most excited about,
+
+148
+00:06:00,930 --> 00:06:03,360
+and I think myself and Eswar
+especially talk a lot about
+
+149
+00:06:03,360 --> 00:06:05,790
+how can we do better together
+across container services,
+
+150
+00:06:05,790 --> 00:06:09,360
+how can EKS, ECS, ECR work better.
+
+151
+00:06:09,360 --> 00:06:10,987
+And this is one of those
+examples where we said,
+
+152
+00:06:10,987 --> 00:06:15,987
+"How can we make, you know,
+security folks lives easier?"
+
+153
+00:06:16,140 --> 00:06:19,530
+We run a scan. You get a
+report of a vulnerable image.
+
+154
+00:06:19,530 --> 00:06:20,970
+Well now, where is that running?
+
+155
+00:06:20,970 --> 00:06:23,730
+You might have dozens,
+hundreds, thousands of clusters
+
+156
+00:06:23,730 --> 00:06:26,250
+depending on the environment
+you're running back.
+
+157
+00:06:26,250 --> 00:06:27,780
+So, this feature we
+launched a few months ago
+
+158
+00:06:27,780 --> 00:06:30,960
+makes it easier to see a live
+inventory of vulnerable images
+
+159
+00:06:30,960 --> 00:06:31,810
+that are running.
+
+160
+00:06:33,420 --> 00:06:35,340
+Another one is authenticated
+pull through cache.
+
+161
+00:06:35,340 --> 00:06:36,660
+And one of the enhancements we made
+
+162
+00:06:36,660 --> 00:06:38,850
+was ECR to ECR pull through cache.
+
+163
+00:06:38,850 --> 00:06:41,520
+With ECR, we let you pull
+images from upstream registries,
+
+164
+00:06:41,520 --> 00:06:43,830
+like Docker Hub, but
+you can, in ECR public,
+
+165
+00:06:43,830 --> 00:06:46,770
+but you can now also pull within
+your own ECR repositories.
+
+166
+00:06:46,770 --> 00:06:49,050
+So that's across regions, across accounts,
+
+167
+00:06:49,050 --> 00:06:51,400
+and that's a feature we
+made earlier this year.
+
+168
+00:06:53,430 --> 00:06:55,380
+Some other notable 2025 launches.
+
+169
+00:06:55,380 --> 00:06:58,230
+And the one I wanna
+highlight, I think this was,
+
+170
+00:06:58,230 --> 00:07:00,450
+I'll talk about the containers
+roadmap in a little bit.
+
+171
+00:07:00,450 --> 00:07:02,100
+I believe the highest upvoted issue
+
+172
+00:07:02,100 --> 00:07:03,600
+on the entire containers roadmap
+
+173
+00:07:03,600 --> 00:07:05,520
+was this tag immutability one,
+
+174
+00:07:05,520 --> 00:07:07,440
+where certain images you wanna upload
+
+175
+00:07:07,440 --> 00:07:08,460
+and they can never change.
+
+176
+00:07:08,460 --> 00:07:10,200
+There's security and compliance reasons.
+
+177
+00:07:10,200 --> 00:07:11,910
+But the latest tag specifically,
+
+178
+00:07:11,910 --> 00:07:14,100
+often in development
+workflows, you are okay,
+
+179
+00:07:14,100 --> 00:07:15,060
+you do wanna change that.
+
+180
+00:07:15,060 --> 00:07:17,190
+And within a repo, we now
+give you that flexibility
+
+181
+00:07:17,190 --> 00:07:19,924
+where you can set certain
+tags, for example, latest
+
+182
+00:07:19,924 --> 00:07:21,723
+to have image immutability.
+
+183
+00:07:23,220 --> 00:07:24,900
+And then, our two new
+launches for re:Invent.
+
+184
+00:07:24,900 --> 00:07:26,220
+One, archival.
+
+185
+00:07:26,220 --> 00:07:29,070
+We talked to a lot of ECR customers
+
+186
+00:07:29,070 --> 00:07:32,310
+that when you get to a certain
+scale for compliance reasons,
+
+187
+00:07:32,310 --> 00:07:34,380
+they still need to keep images around.
+
+188
+00:07:34,380 --> 00:07:36,960
+However, you know, you can be running up
+
+189
+00:07:36,960 --> 00:07:39,690
+terabytes of storage that
+you don't necessarily need.
+
+190
+00:07:39,690 --> 00:07:42,330
+You may need someday because
+an auditor compliance
+
+191
+00:07:42,330 --> 00:07:43,740
+come back and says you need it.
+
+192
+00:07:43,740 --> 00:07:46,440
+But you don't need that
+in your primary registry
+
+193
+00:07:46,440 --> 00:07:48,627
+to be pulled down for actual usage.
+
+194
+00:07:48,627 --> 00:07:51,780
+And so with ECR archival,
+we now give you an easy way,
+
+195
+00:07:51,780 --> 00:07:53,388
+meaning we can, you can look at the time
+
+196
+00:07:53,388 --> 00:07:55,710
+an image was last pulled to decide
+
+197
+00:07:55,710 --> 00:07:57,270
+if you wanna archive an image
+
+198
+00:07:57,270 --> 00:07:59,070
+and put that into a separate storage class
+
+199
+00:07:59,070 --> 00:08:00,600
+that comes at a lower price.
+
+200
+00:08:00,600 --> 00:08:03,120
+If you do for whatever
+reason need that image back
+
+201
+00:08:03,120 --> 00:08:04,350
+eventually to run in workloads,
+
+202
+00:08:04,350 --> 00:08:07,710
+you can bring it back from
+the archive storage class.
+
+203
+00:08:07,710 --> 00:08:09,390
+Very similar to services like S3,
+
+204
+00:08:09,390 --> 00:08:11,820
+which have different
+tiers of storage classes.
+
+205
+00:08:11,820 --> 00:08:13,143
+We now have that in ECR.
+
+206
+00:08:15,540 --> 00:08:18,030
+And then, the last one in
+ECR managed in image signing,
+
+207
+00:08:18,030 --> 00:08:21,390
+you're always gonna hear
+about security in an AWS talk.
+
+208
+00:08:21,390 --> 00:08:23,760
+It's always one of the
+top things we think about.
+
+209
+00:08:23,760 --> 00:08:27,120
+We now provide managed signing in ECR,
+
+210
+00:08:27,120 --> 00:08:30,420
+and so, you don't have to
+run separate infrastructure.
+
+211
+00:08:30,420 --> 00:08:33,780
+It's fully automated and it's
+integrated with AWS Signer.
+
+212
+00:08:33,780 --> 00:08:35,880
+It's integrated with all
+of your, you know, tools,
+
+213
+00:08:35,880 --> 00:08:38,400
+you know, in AWS like CloudTrail.
+
+214
+00:08:38,400 --> 00:08:41,910
+Now with a simple API
+call, you can sign an image
+
+215
+00:08:41,910 --> 00:08:44,313
+and have that automatically done in ECR.
+
+216
+00:08:45,750 --> 00:08:49,492
+Okay, onto on or back to Kubernetes.
+
+217
+00:08:49,492 --> 00:08:51,510
+So EKS.
+
+218
+00:08:51,510 --> 00:08:55,260
+We run lots of clusters,
+tens of millions of clusters.
+
+219
+00:08:55,260 --> 00:08:57,660
+This is tracking the
+number of create calls
+
+220
+00:08:57,660 --> 00:09:01,260
+we see to our API over
+the course of the year.
+
+221
+00:09:01,260 --> 00:09:04,680
+And I think we all agree
+Kubernetes is awesome,
+
+222
+00:09:04,680 --> 00:09:06,183
+but Kubernetes is hard to run.
+
+223
+00:09:08,940 --> 00:09:10,830
+We make it a point in EKS
+
+224
+00:09:10,830 --> 00:09:13,050
+that we are always gonna run vanilla,
+
+225
+00:09:13,050 --> 00:09:14,250
+upstream Kubernetes.
+
+226
+00:09:14,250 --> 00:09:16,530
+Conformance is super important to us.
+
+227
+00:09:16,530 --> 00:09:18,240
+We're never gonna run
+a version of Kubernetes
+
+228
+00:09:18,240 --> 00:09:20,280
+that differs from what
+you get in upstream.
+
+229
+00:09:20,280 --> 00:09:22,620
+If your workload runs in
+Kubernetes somewhere else,
+
+230
+00:09:22,620 --> 00:09:24,090
+it's gonna work in EKS
+
+231
+00:09:24,090 --> 00:09:26,190
+and that's a super important tenet for us.
+
+232
+00:09:28,020 --> 00:09:31,290
+Okay, I'm gonna now cover quickly
+
+233
+00:09:31,290 --> 00:09:33,630
+a lot of the enhancements we've made
+
+234
+00:09:33,630 --> 00:09:37,743
+over the course of the
+year for EKS upgrades.
+
+235
+00:09:38,790 --> 00:09:40,560
+It's a word that probably
+makes a lot of you
+
+236
+00:09:40,560 --> 00:09:43,527
+in this audience shudder when
+you hear about Kubernetes
+
+237
+00:09:43,527 --> 00:09:45,000
+and EKS.
+
+238
+00:09:45,000 --> 00:09:47,550
+I think, you know, death
+taxes, Kubernetes upgrades.
+
+239
+00:09:47,550 --> 00:09:49,680
+When you make the choice
+to adopt Kubernetes,
+
+240
+00:09:49,680 --> 00:09:52,560
+upgrades are just something
+you have to stay up with.
+
+241
+00:09:52,560 --> 00:09:55,590
+We recognize that we know it's painful,
+
+242
+00:09:55,590 --> 00:09:58,920
+but when you're any
+managed open source service
+
+243
+00:09:58,920 --> 00:10:01,650
+that you're adopting AWS
+generally has upgrades.
+
+244
+00:10:01,650 --> 00:10:03,900
+So, a few things we've done this year.
+
+245
+00:10:03,900 --> 00:10:05,790
+Cluster insights, we scan your clusters.
+
+246
+00:10:05,790 --> 00:10:08,280
+We look for certain things
+that may impact your ability
+
+247
+00:10:08,280 --> 00:10:10,920
+to upgrade to the next
+version of Kubernetes.
+
+248
+00:10:10,920 --> 00:10:14,310
+Are you using deprecated APIs?
+
+249
+00:10:14,310 --> 00:10:16,110
+Are you running a (indistinct) version
+
+250
+00:10:16,110 --> 00:10:17,580
+that's more than two versions behind?
+
+251
+00:10:17,580 --> 00:10:19,620
+There's a whole host of things we look for
+
+252
+00:10:19,620 --> 00:10:21,330
+and we surface that to you for upgrade
+
+253
+00:10:21,330 --> 00:10:22,650
+in through upgrade insights.
+
+254
+00:10:22,650 --> 00:10:24,300
+You can now refresh that on demand.
+
+255
+00:10:24,300 --> 00:10:26,940
+One of the pieces of feedback
+we had heard was great.
+
+256
+00:10:26,940 --> 00:10:28,260
+You surface to that once a day.
+
+257
+00:10:28,260 --> 00:10:30,330
+If I go fix that, it takes too long for me
+
+258
+00:10:30,330 --> 00:10:32,493
+to figure out if it was addressed or not.
+
+259
+00:10:33,690 --> 00:10:34,830
+And then, the other one I'll mention
+
+260
+00:10:34,830 --> 00:10:37,800
+is Kubernetes version
+support acceleration.
+
+261
+00:10:37,800 --> 00:10:40,800
+We've put a lot of effort in
+over the last couple years
+
+262
+00:10:40,800 --> 00:10:43,980
+to make sure we stay up to
+date on Kubernetes versions.
+
+263
+00:10:43,980 --> 00:10:45,960
+They come out every four months now.
+
+264
+00:10:45,960 --> 00:10:47,850
+If you look over the last two years,
+
+265
+00:10:47,850 --> 00:10:50,460
+I believe every single
+release of a version in EKS
+
+266
+00:10:50,460 --> 00:10:51,960
+has been within 45 days.
+
+267
+00:10:51,960 --> 00:10:54,270
+If you had talked to
+us a couple years ago,
+
+268
+00:10:54,270 --> 00:10:55,350
+we were not there.
+
+269
+00:10:55,350 --> 00:10:56,340
+We've put in a lot of work
+
+270
+00:10:56,340 --> 00:10:57,870
+to make sure that's the place.
+
+271
+00:10:57,870 --> 00:11:00,090
+And you can be assured that moving forward
+
+272
+00:11:00,090 --> 00:11:01,680
+within that 45 day window,
+
+273
+00:11:01,680 --> 00:11:03,663
+new versions will be available in EKS.
+
+274
+00:11:05,400 --> 00:11:07,110
+Here's just a screenshot upgrade insights.
+
+275
+00:11:07,110 --> 00:11:09,900
+I feel like it's a hidden feature.
+
+276
+00:11:09,900 --> 00:11:10,957
+I talk to customers and they're like,
+
+277
+00:11:10,957 --> 00:11:12,510
+"Oh, we didn't even
+know you surfaced that."
+
+278
+00:11:12,510 --> 00:11:13,920
+So, it's available in the console.
+
+279
+00:11:13,920 --> 00:11:16,410
+If you go to the monitor
+cluster dashboard,
+
+280
+00:11:16,410 --> 00:11:18,330
+these we run every day by default.
+
+281
+00:11:18,330 --> 00:11:20,340
+You can now upgrade them yourselves.
+
+282
+00:11:20,340 --> 00:11:22,350
+But this is every time
+we release a new version,
+
+283
+00:11:22,350 --> 00:11:24,000
+we're going and checking
+is there something new
+
+284
+00:11:24,000 --> 00:11:24,833
+we should look for.
+
+285
+00:11:24,833 --> 00:11:27,450
+I think in 1.33, we started checking,
+
+286
+00:11:27,450 --> 00:11:28,920
+are you using Amazon Linux 2,
+
+287
+00:11:28,920 --> 00:11:31,470
+because that's no longer
+supported in 1.33.
+
+288
+00:11:31,470 --> 00:11:34,140
+So this is something we're
+always improving over time,
+
+289
+00:11:34,140 --> 00:11:37,863
+adding new things to look
+for as new versions come up.
+
+290
+00:11:39,780 --> 00:11:43,120
+One of the pieces of feedback
+
+291
+00:11:44,430 --> 00:11:45,637
+that I got from customers is,
+
+292
+00:11:45,637 --> 00:11:46,980
+"Great, we need to upgrade.
+
+293
+00:11:46,980 --> 00:11:49,020
+I don't even know which
+clusters I need to go upgrade."
+
+294
+00:11:49,020 --> 00:11:52,710
+I have clusters across dozens of accounts,
+
+295
+00:11:52,710 --> 00:11:55,260
+dozens of regions, account managers
+
+296
+00:11:55,260 --> 00:11:56,093
+reaching out to me saying,
+
+297
+00:11:56,093 --> 00:11:57,090
+"Hey, can you go figure out
+
+298
+00:11:57,090 --> 00:11:58,350
+where all my customer's clusters are?"
+
+299
+00:11:58,350 --> 00:11:59,790
+Because they know they need to upgrade,
+
+300
+00:11:59,790 --> 00:12:01,170
+they just can't find them.
+
+301
+00:12:01,170 --> 00:12:03,390
+And as customers run more clusters
+
+302
+00:12:03,390 --> 00:12:05,190
+across these various boundaries,
+
+303
+00:12:05,190 --> 00:12:10,110
+we knew we needed an easy
+way to make it viewable
+
+304
+00:12:10,110 --> 00:12:11,220
+where those clusters are.
+
+305
+00:12:11,220 --> 00:12:12,420
+So, we did a lot of research.
+
+306
+00:12:12,420 --> 00:12:14,940
+There's various services in AWS
+
+307
+00:12:14,940 --> 00:12:18,210
+that had regional multi-region dashboards.
+
+308
+00:12:18,210 --> 00:12:21,870
+Others that had like EC2, I
+believe, has a global console.
+
+309
+00:12:21,870 --> 00:12:24,750
+Other services had
+cross-account dashboards backup.
+
+310
+00:12:24,750 --> 00:12:26,340
+Nobody as far as we knew had yet done
+
+311
+00:12:26,340 --> 00:12:30,300
+a true global cross-account,
+cross-region dashboard.
+
+312
+00:12:30,300 --> 00:12:31,560
+And we knew if we had to solve
+
+313
+00:12:31,560 --> 00:12:32,820
+this problem of figuring out
+
+314
+00:12:32,820 --> 00:12:34,950
+what's going on across my clusters,
+
+315
+00:12:34,950 --> 00:12:36,870
+that we had to solve both of those things.
+
+316
+00:12:36,870 --> 00:12:40,200
+So earlier this year, we launched
+this EKS global dashboard,
+
+317
+00:12:40,200 --> 00:12:43,050
+which gives you a centralized inventory
+
+318
+00:12:43,050 --> 00:12:44,550
+of all of your clusters.
+
+319
+00:12:44,550 --> 00:12:45,900
+It's not necessarily meant
+
+320
+00:12:45,900 --> 00:12:48,960
+as a high severity troubleshooting.
+
+321
+00:12:48,960 --> 00:12:51,240
+It's more of an executive level dashboard.
+
+322
+00:12:51,240 --> 00:12:53,910
+You log in Monday morning,
+your cup of coffee.
+
+323
+00:12:53,910 --> 00:12:55,860
+Let's see what versions clusters are on,
+
+324
+00:12:55,860 --> 00:12:57,630
+who do I have to go chase for upgrades.
+
+325
+00:12:57,630 --> 00:12:59,100
+It's that type of workflow
+
+326
+00:12:59,100 --> 00:13:01,170
+where you just need to
+understand what is the state
+
+327
+00:13:01,170 --> 00:13:03,170
+of all my Kubernetes clusters look like.
+
+328
+00:13:05,280 --> 00:13:07,680
+We've continued to work on observability,
+
+329
+00:13:07,680 --> 00:13:09,960
+making it easier to
+understand what's going on
+
+330
+00:13:09,960 --> 00:13:12,761
+in your cluster, troubleshoot issues.
+
+331
+00:13:12,761 --> 00:13:14,640
+This monitor cluster button
+
+332
+00:13:14,640 --> 00:13:17,070
+that's now there in the EKS console,
+
+333
+00:13:17,070 --> 00:13:19,200
+there's a whole bunch
+of sections of it now.
+
+334
+00:13:19,200 --> 00:13:21,690
+You can see Node Health.
+
+335
+00:13:21,690 --> 00:13:24,000
+One of the ones that I
+think is also kind of hidden
+
+336
+00:13:24,000 --> 00:13:26,940
+that is super helpful is we surface
+
+337
+00:13:26,940 --> 00:13:28,680
+through CloudWatch Log Query Insights,
+
+338
+00:13:28,680 --> 00:13:31,200
+you can see who are the top
+talkers to the API server.
+
+339
+00:13:31,200 --> 00:13:33,600
+We see a lot of cases, tickets opened,
+
+340
+00:13:33,600 --> 00:13:35,490
+and it turns out, you
+know, some new deployment,
+
+341
+00:13:35,490 --> 00:13:37,410
+a policy agent got released in the cluster
+
+342
+00:13:37,410 --> 00:13:39,930
+and it started making
+thousands of list calls
+
+343
+00:13:39,930 --> 00:13:41,640
+and it took down the API server.
+
+344
+00:13:41,640 --> 00:13:42,473
+You run this query.
+
+345
+00:13:42,473 --> 00:13:43,770
+It makes it immediately obvious
+
+346
+00:13:43,770 --> 00:13:46,023
+that it was some deployment that did that.
+
+347
+00:13:48,870 --> 00:13:49,703
+Networking,
+
+348
+00:13:49,703 --> 00:13:53,586
+I'm sure Eswar and his
+team will agree with me.
+
+349
+00:13:53,586 --> 00:13:56,523
+You know, we've seen every possible way
+
+350
+00:13:56,523 --> 00:13:58,830
+that Kubernetes can fail
+over the seven years
+
+351
+00:13:58,830 --> 00:14:00,480
+we've been doing EKS.
+
+352
+00:14:00,480 --> 00:14:03,420
+A lot of the time, most of
+the time, it's networking.
+
+353
+00:14:03,420 --> 00:14:05,977
+And feedback we got from customers was,
+
+354
+00:14:05,977 --> 00:14:08,550
+"Look, we'd rather not have
+to open support tickets.
+
+355
+00:14:08,550 --> 00:14:10,890
+We'd much better off if you
+can give us the visibility.
+
+356
+00:14:10,890 --> 00:14:12,450
+We can troubleshoot ourselves.
+
+357
+00:14:12,450 --> 00:14:14,940
+It's often, you know, something
+going on in environment.
+
+358
+00:14:14,940 --> 00:14:16,800
+We need more visibility
+into what's going on."
+
+359
+00:14:16,800 --> 00:14:19,620
+And so, we spent a lot of time
+understanding those needs.
+
+360
+00:14:19,620 --> 00:14:21,570
+And last week, we launched
+
+361
+00:14:21,570 --> 00:14:23,730
+enhanced container network observability.
+
+362
+00:14:23,730 --> 00:14:27,570
+So this is, it's a single
+agent you run in your cluster
+
+363
+00:14:27,570 --> 00:14:31,620
+that exposes metrics, ships
+them to CloudWatch as well.
+
+364
+00:14:31,620 --> 00:14:35,010
+It's useful for proactive
+network monitoring.
+
+365
+00:14:35,010 --> 00:14:37,160
+So understanding, you
+know, are you nearing
+
+366
+00:14:38,430 --> 00:14:42,570
+DNS packet limits, are you
+like retransmission timeouts.
+
+367
+00:14:42,570 --> 00:14:45,270
+All of these ways that
+like Kubernetes networking
+
+368
+00:14:45,270 --> 00:14:46,410
+I think got a lot of things right.
+
+369
+00:14:46,410 --> 00:14:48,420
+It's a single flat networking namespace.
+
+370
+00:14:48,420 --> 00:14:51,030
+It's a pod, an IP per pod.
+
+371
+00:14:51,030 --> 00:14:51,900
+When it works, it's great.
+
+372
+00:14:51,900 --> 00:14:53,940
+When it doesn't, it can
+be hard to troubleshoot.
+
+373
+00:14:53,940 --> 00:14:55,800
+And so, we're really
+excited about this one.
+
+374
+00:14:55,800 --> 00:14:58,260
+It's an easy way to turn it on.
+
+375
+00:14:58,260 --> 00:15:01,380
+You get out of the box visualizations,
+
+376
+00:15:01,380 --> 00:15:03,210
+which I believe I have here.
+
+377
+00:15:03,210 --> 00:15:05,160
+So for many years,
+
+378
+00:15:05,160 --> 00:15:08,340
+I've wanted this one to show
+the pod networking flow.
+
+379
+00:15:08,340 --> 00:15:12,270
+So once you turn this on,
+you get a native service map
+
+380
+00:15:12,270 --> 00:15:14,460
+so you can understand
+what are the, you know,
+
+381
+00:15:14,460 --> 00:15:16,080
+which pods are even talking to each other.
+
+382
+00:15:16,080 --> 00:15:18,030
+Oftentimes, that's the first point
+
+383
+00:15:18,030 --> 00:15:19,140
+when it comes to figuring out
+
+384
+00:15:19,140 --> 00:15:21,240
+what's a networking issue going on.
+
+385
+00:15:21,240 --> 00:15:23,970
+And then two, the flow view,
+
+386
+00:15:23,970 --> 00:15:27,900
+you can see within the
+cluster who's talking to who.
+
+387
+00:15:27,900 --> 00:15:29,733
+And you can see both cross AZ,
+
+388
+00:15:30,930 --> 00:15:33,420
+you can see pod to service.
+
+389
+00:15:33,420 --> 00:15:35,240
+So today, we support S3 and Dynamo.
+
+390
+00:15:35,240 --> 00:15:38,760
+In a lot of cases, ML training
+does a lot of chatting to S3.
+
+391
+00:15:38,760 --> 00:15:40,770
+We make that easy to understand.
+
+392
+00:15:40,770 --> 00:15:45,360
+And then also pod to traffic
+external to the cluster.
+
+393
+00:15:45,360 --> 00:15:46,200
+So check this one out.
+
+394
+00:15:46,200 --> 00:15:47,940
+It really help with
+understanding what's going on
+
+395
+00:15:47,940 --> 00:15:50,763
+in the networking observability space.
+
+396
+00:15:52,170 --> 00:15:55,335
+Another recent launch, and
+this again comes a lot down
+
+397
+00:15:55,335 --> 00:15:59,880
+to troubleshooting, is
+troubleshooting is hard,
+
+398
+00:15:59,880 --> 00:16:02,250
+but it's easier if you
+have the right context.
+
+399
+00:16:02,250 --> 00:16:06,360
+We launched a MCP server
+earlier this year in preview
+
+400
+00:16:06,360 --> 00:16:07,327
+and a lot of the feedback was,
+
+401
+00:16:07,327 --> 00:16:09,420
+"This is good, but until
+you manage it for us,
+
+402
+00:16:09,420 --> 00:16:11,580
+we're not actually gonna
+use it in production."
+
+403
+00:16:11,580 --> 00:16:15,120
+And so, we launched last
+week a hosted version
+
+404
+00:16:15,120 --> 00:16:16,530
+of the EKS MCP server.
+
+405
+00:16:16,530 --> 00:16:18,303
+It's available in a public preview.
+
+406
+00:16:19,680 --> 00:16:21,060
+Troubleshooting and getting started
+
+407
+00:16:21,060 --> 00:16:23,970
+are the really two first
+big use cases we have.
+
+408
+00:16:23,970 --> 00:16:26,700
+Troubleshooting, especially, we have,
+
+409
+00:16:26,700 --> 00:16:28,620
+again, seven years of EKS,
+
+410
+00:16:28,620 --> 00:16:30,660
+we've seen all the way Kubernetes can fail
+
+411
+00:16:30,660 --> 00:16:32,880
+and we have run books
+and troubleshooting books
+
+412
+00:16:32,880 --> 00:16:35,160
+that are built into the MCP server.
+
+413
+00:16:35,160 --> 00:16:36,660
+So if you ask it
+something that's going on,
+
+414
+00:16:36,660 --> 00:16:39,390
+we can go use that to go
+look up the same knowledge
+
+415
+00:16:39,390 --> 00:16:41,490
+that a support team might
+look up when you open a case.
+
+416
+00:16:41,490 --> 00:16:44,010
+You can now do that yourself
+through this MCP server.
+
+417
+00:16:44,010 --> 00:16:47,250
+And it's integrated with all
+of the tools you're used to,
+
+418
+00:16:47,250 --> 00:16:50,940
+Q console, and security,
+of course, CloudTrail,
+
+419
+00:16:50,940 --> 00:16:52,230
+the hosted version.
+
+420
+00:16:52,230 --> 00:16:54,630
+All of those enterprise
+grade features that you need
+
+421
+00:16:54,630 --> 00:16:57,023
+to actually use it in
+production, you can now do.
+
+422
+00:17:00,960 --> 00:17:02,310
+It's integrated into Q.
+
+423
+00:17:02,310 --> 00:17:04,800
+So if you go into the EKS
+console now, as of last week,
+
+424
+00:17:04,800 --> 00:17:06,300
+and you see something that's failed,
+
+425
+00:17:06,300 --> 00:17:09,930
+whether it's a, you know, a pod
+that's crashed loop back off
+
+426
+00:17:09,930 --> 00:17:12,480
+or I don't know, some networking issue
+
+427
+00:17:12,480 --> 00:17:15,600
+with the new feature I just
+talked about, you can now click.
+
+428
+00:17:15,600 --> 00:17:17,490
+Hey Q, tell me what's going on.
+
+429
+00:17:17,490 --> 00:17:18,570
+It automatically integrates
+
+430
+00:17:18,570 --> 00:17:20,190
+with the MCP server behind the scenes.
+
+431
+00:17:20,190 --> 00:17:21,990
+You don't have to do that yourself.
+
+432
+00:17:21,990 --> 00:17:25,410
+And this can be helpful
+to understand more quickly
+
+433
+00:17:25,410 --> 00:17:27,210
+what's going on in your environment.
+
+434
+00:17:29,610 --> 00:17:32,666
+For an even deeper level of observability,
+
+435
+00:17:32,666 --> 00:17:34,534
+CloudWatch container insights,
+
+436
+00:17:34,534 --> 00:17:37,840
+this product has come a long
+way in the last two years
+
+437
+00:17:37,840 --> 00:17:41,430
+and we recently launched EBS metrics,
+
+438
+00:17:41,430 --> 00:17:44,553
+more detailed GPU metrics,
+application signals support.
+
+439
+00:17:45,390 --> 00:17:48,540
+Look, there's lots of
+observability tools out there
+
+440
+00:17:48,540 --> 00:17:50,040
+that you might be using.
+
+441
+00:17:50,040 --> 00:17:53,580
+CloudWatch Container Insights
+is our native version.
+
+442
+00:17:53,580 --> 00:17:54,720
+That's the easy button.
+
+443
+00:17:54,720 --> 00:17:55,680
+If you don't wanna have to think
+
+444
+00:17:55,680 --> 00:17:58,710
+about which metrics do I scrape,
+which alarms do I set up,
+
+445
+00:17:58,710 --> 00:18:00,240
+just give me the opinionated version
+
+446
+00:18:00,240 --> 00:18:02,490
+of a Kubernetes monitoring stack.
+
+447
+00:18:02,490 --> 00:18:03,940
+This is gonna be your answer.
+
+448
+00:18:09,270 --> 00:18:11,010
+When you move to Kubernetes,
+
+449
+00:18:11,010 --> 00:18:13,140
+you get a lot of
+efficiency benefits, right?
+
+450
+00:18:13,140 --> 00:18:15,600
+You're not running a single app per VM,
+
+451
+00:18:15,600 --> 00:18:16,740
+you're getting that bin packing
+
+452
+00:18:16,740 --> 00:18:18,210
+where you can have multiple applications
+
+453
+00:18:18,210 --> 00:18:19,560
+running on the same instance.
+
+454
+00:18:19,560 --> 00:18:20,580
+And that has a lot of benefits,
+
+455
+00:18:20,580 --> 00:18:23,340
+but it comes at the
+expense of cost visibility.
+
+456
+00:18:23,340 --> 00:18:25,350
+It's hard to figure out
+with multiple applications
+
+457
+00:18:25,350 --> 00:18:26,790
+running on the same instance
+
+458
+00:18:26,790 --> 00:18:29,730
+who's actually contributing
+most to the cost.
+
+459
+00:18:29,730 --> 00:18:30,900
+So, we have several options there.
+
+460
+00:18:30,900 --> 00:18:32,550
+We have a partnership with Cube Cost,
+
+461
+00:18:32,550 --> 00:18:33,930
+which is an open source tool.
+
+462
+00:18:33,930 --> 00:18:35,970
+We have an EKS version. You can run that.
+
+463
+00:18:35,970 --> 00:18:38,370
+That's still an agent you
+have to run in your cluster.
+
+464
+00:18:38,370 --> 00:18:40,680
+For the fully managed version
+that you can check a box,
+
+465
+00:18:40,680 --> 00:18:42,030
+there's no additional cost.
+
+466
+00:18:42,030 --> 00:18:44,370
+We now integrate with
+split cost allocation
+
+467
+00:18:44,370 --> 00:18:46,080
+and we announced this last year,
+
+468
+00:18:46,080 --> 00:18:48,900
+but two of the biggest feature requests
+
+469
+00:18:48,900 --> 00:18:50,520
+that we heard following that were support
+
+470
+00:18:50,520 --> 00:18:51,900
+for Kubernetes labels.
+
+471
+00:18:51,900 --> 00:18:53,910
+So not just understanding
+at a namespace level
+
+472
+00:18:53,910 --> 00:18:56,490
+what's the cost, but at
+an individual label level
+
+473
+00:18:56,490 --> 00:18:59,070
+on deployments, as well
+as support for GPUs.
+
+474
+00:18:59,070 --> 00:19:00,750
+So, these were two of
+the big feature requests
+
+475
+00:19:00,750 --> 00:19:03,933
+that are, as of several weeks
+ago, now supported in EKS.
+
+476
+00:19:06,390 --> 00:19:10,110
+Okay, a couple more
+cross-account Pod Identity.
+
+477
+00:19:10,110 --> 00:19:12,660
+We launched Pod Identity last year
+
+478
+00:19:12,660 --> 00:19:14,768
+to make it easier to connect
+
+479
+00:19:14,768 --> 00:19:19,080
+or authenticate from
+your pods and deployments
+
+480
+00:19:19,080 --> 00:19:24,080
+to AWS services like
+RDS, or S3, or Dynamo.
+
+481
+00:19:24,090 --> 00:19:27,090
+And I think this was honestly
+a lesson learned for us.
+
+482
+00:19:27,090 --> 00:19:29,070
+Almost all of you are
+running multiple accounts.
+
+483
+00:19:29,070 --> 00:19:31,380
+When you're running real
+world production workloads,
+
+484
+00:19:31,380 --> 00:19:34,710
+you might have, you
+know, your applications
+
+485
+00:19:34,710 --> 00:19:36,930
+in a separate account and
+your compute in another.
+
+486
+00:19:36,930 --> 00:19:39,120
+And so, making PO identity
+work for cross-account
+
+487
+00:19:39,120 --> 00:19:41,760
+was a big request.
+
+488
+00:19:41,760 --> 00:19:44,550
+Once we launched that feature,
+we made that work this year.
+
+489
+00:19:44,550 --> 00:19:48,210
+There's enhancements, like
+session token support.
+
+490
+00:19:48,210 --> 00:19:50,670
+So you can do say things
+with Pod Identity,
+
+491
+00:19:50,670 --> 00:19:55,410
+like pod in this namespace
+can only read from S3 bucket
+
+492
+00:19:55,410 --> 00:19:58,020
+if it has the prefix that's
+the same as the namespace
+
+493
+00:19:58,020 --> 00:20:00,240
+and you don't need to have 10
+different policies to do that.
+
+494
+00:20:00,240 --> 00:20:03,243
+You can do that with a single
+policy using session tags.
+
+495
+00:20:05,550 --> 00:20:06,960
+Cluster deletion production.
+
+496
+00:20:06,960 --> 00:20:10,890
+There are a lot of mission
+critical workloads running on EKS
+
+497
+00:20:10,890 --> 00:20:14,400
+and you know, a simple
+thing like an infrastructure
+
+498
+00:20:14,400 --> 00:20:18,450
+is code tool bug that you clicked
+plan and you clicked apply
+
+499
+00:20:18,450 --> 00:20:20,160
+and it did something
+you didn't want to do.
+
+500
+00:20:20,160 --> 00:20:22,710
+We heard that as a real risk
+from a lot of customers,
+
+501
+00:20:22,710 --> 00:20:24,870
+like, "hey, we have really,
+really critical workloads
+
+502
+00:20:24,870 --> 00:20:26,100
+running in EKS."
+
+503
+00:20:26,100 --> 00:20:27,000
+Simple feature.
+
+504
+00:20:27,000 --> 00:20:28,950
+We added cluster deletion from production
+
+505
+00:20:28,950 --> 00:20:31,100
+that's similar to what
+other services have.
+
+506
+00:20:33,990 --> 00:20:35,580
+EKS add-ons.
+
+507
+00:20:35,580 --> 00:20:37,230
+We launched this a while back now,
+
+508
+00:20:37,230 --> 00:20:38,670
+but we've continued to expand this.
+
+509
+00:20:38,670 --> 00:20:41,640
+This isn't that theme of, you
+know, I wanna run Kubernetes,
+
+510
+00:20:41,640 --> 00:20:44,730
+but I just want AWS to take
+on more of the heavy lifting.
+
+511
+00:20:44,730 --> 00:20:46,230
+We launched community add-ons this year.
+
+512
+00:20:46,230 --> 00:20:47,700
+So some of the most add-ons
+
+513
+00:20:47,700 --> 00:20:49,800
+we see people running in their clusters,
+
+514
+00:20:49,800 --> 00:20:52,140
+metrics server, external
+DNS, those are now available
+
+515
+00:20:52,140 --> 00:20:52,973
+for you as well.
+
+516
+00:20:55,110 --> 00:20:57,720
+And then, another feature
+that we just launched
+
+517
+00:20:57,720 --> 00:20:59,520
+is Backups support for EKS.
+
+518
+00:20:59,520 --> 00:21:02,763
+Similar mission critical
+workloads, stateful workloads.
+
+519
+00:21:04,650 --> 00:21:06,570
+We wanted to make it easier for customers
+
+520
+00:21:06,570 --> 00:21:10,860
+to both backup and show
+compliance to their auditors.
+
+521
+00:21:10,860 --> 00:21:12,390
+AWS Backup support for recast launched
+
+522
+00:21:12,390 --> 00:21:14,550
+I believe a couple weeks ago at CubeCon.
+
+523
+00:21:14,550 --> 00:21:17,250
+It's agentless. It's fully managed.
+
+524
+00:21:17,250 --> 00:21:19,590
+It works across all of
+your other AWS services
+
+525
+00:21:19,590 --> 00:21:21,630
+that are all integrated with backup.
+
+526
+00:21:21,630 --> 00:21:23,580
+It works cross-account, cross-region.
+
+527
+00:21:23,580 --> 00:21:24,900
+So this one outta the box we believe
+
+528
+00:21:24,900 --> 00:21:27,330
+will cover most of the use
+cases you need to back up.
+
+529
+00:21:27,330 --> 00:21:28,770
+And then, restoring.
+
+530
+00:21:28,770 --> 00:21:30,600
+You can restore just specific name spaces.
+
+531
+00:21:30,600 --> 00:21:33,360
+You can restore to existing
+clusters or to new clusters.
+
+532
+00:21:33,360 --> 00:21:34,983
+It's a pretty flexible approach.
+
+533
+00:21:36,900 --> 00:21:39,540
+EBS definitely one of the
+jobs of the product team
+
+534
+00:21:39,540 --> 00:21:42,327
+is to make sure that the rest of AWS
+
+535
+00:21:42,327 --> 00:21:45,630
+are building Kubernetes native
+integrations that work well.
+
+536
+00:21:45,630 --> 00:21:47,670
+And EBS is a good example of a team
+
+537
+00:21:47,670 --> 00:21:49,440
+that we've worked really closely with.
+
+538
+00:21:49,440 --> 00:21:51,000
+And so, they've launched recent features
+
+539
+00:21:51,000 --> 00:21:53,760
+like, you know, enhanced data protection,
+
+540
+00:21:53,760 --> 00:21:56,610
+faster initialization, volume cloning,
+
+541
+00:21:56,610 --> 00:21:59,610
+all of these as the day
+they launched an EBS,
+
+542
+00:21:59,610 --> 00:22:01,890
+they were available in
+the EBS CSI drivers.
+
+543
+00:22:01,890 --> 00:22:04,500
+I think EBS is a good example of a case
+
+544
+00:22:04,500 --> 00:22:06,120
+where we work closely
+with another service team
+
+545
+00:22:06,120 --> 00:22:08,760
+to make sure that their
+innovations and their features
+
+546
+00:22:08,760 --> 00:22:10,960
+can come to EKS as soon
+as they're launched.
+
+547
+00:22:13,920 --> 00:22:16,350
+Okay, I am gonna go quickly through these.
+
+548
+00:22:16,350 --> 00:22:18,120
+EKS runs everywhere you need to be.
+
+549
+00:22:18,120 --> 00:22:19,590
+We're a launch blocking service.
+
+550
+00:22:19,590 --> 00:22:22,590
+We are in every region. We are
+in every availability zone.
+
+551
+00:22:22,590 --> 00:22:24,690
+That'll continue to be the case
+
+552
+00:22:24,690 --> 00:22:26,610
+We've run anywhere you need to be,
+
+553
+00:22:26,610 --> 00:22:29,220
+whether that's fully in
+the cloud or on-premises
+
+554
+00:22:29,220 --> 00:22:31,980
+and we have a whole spectrum
+of offerings available
+
+555
+00:22:31,980 --> 00:22:32,880
+to help you there.
+
+556
+00:22:34,260 --> 00:22:37,020
+Last year at re:Invent,
+we announced Hybrid Nodes.
+
+557
+00:22:37,020 --> 00:22:38,340
+This is our newest approach
+
+558
+00:22:38,340 --> 00:22:40,080
+to supporting on-premises infrastructure.
+
+559
+00:22:40,080 --> 00:22:42,240
+So you can have the
+control plane in the cloud,
+
+560
+00:22:42,240 --> 00:22:43,860
+worker nodes on-premises,
+
+561
+00:22:43,860 --> 00:22:46,320
+which is a better way
+of doing in our case,
+
+562
+00:22:46,320 --> 00:22:49,110
+as long as you can have
+connectivity to the cloud
+
+563
+00:22:49,110 --> 00:22:52,110
+versus EKS anywhere, which we
+launched several years back,
+
+564
+00:22:52,110 --> 00:22:55,950
+which is a fully on-premises
+
+565
+00:22:55,950 --> 00:22:58,260
+air gap approach to running clusters.
+
+566
+00:22:58,260 --> 00:23:00,390
+But Hybrid Nodes is an easier approach
+
+567
+00:23:00,390 --> 00:23:01,440
+to running on-premises
+
+568
+00:23:01,440 --> 00:23:03,890
+if you have that connectivity
+back to the region.
+
+569
+00:23:04,770 --> 00:23:06,180
+Some of the features
+we launched this year,
+
+570
+00:23:06,180 --> 00:23:09,630
+Bottlerocket support,
+expanded support for Cilium.
+
+571
+00:23:09,630 --> 00:23:12,450
+And then, configuring
+networking on-premises
+
+572
+00:23:12,450 --> 00:23:13,283
+can be difficult.
+
+573
+00:23:13,283 --> 00:23:17,730
+So, we surface a lot of
+insights as that setup goes.
+
+574
+00:23:17,730 --> 00:23:21,150
+Auto Mode was our other big
+launch of re:Invent last year.
+
+575
+00:23:21,150 --> 00:23:26,040
+Auto Mode is our fully managed data plane
+
+576
+00:23:26,040 --> 00:23:29,400
+and we've launched various
+features over the years,
+
+577
+00:23:29,400 --> 00:23:30,900
+managed node groups, carpenter.
+
+578
+00:23:30,900 --> 00:23:32,130
+We've EKS, Fargate.
+
+579
+00:23:32,130 --> 00:23:33,420
+We've learned a lot of things.
+
+580
+00:23:33,420 --> 00:23:34,260
+And Auto Mode, we think
+
+581
+00:23:34,260 --> 00:23:37,770
+is the most Kubernetes native conformant,
+
+582
+00:23:37,770 --> 00:23:39,270
+but fully managed data plane
+
+583
+00:23:39,270 --> 00:23:41,603
+that takes away the heavy
+lifting you need to do.
+
+584
+00:23:43,380 --> 00:23:47,070
+And the way we did this
+is we worked with EC2.
+
+585
+00:23:47,070 --> 00:23:49,050
+So previously without Auto Mode.
+
+586
+00:23:49,050 --> 00:23:51,060
+you're running the EC2 instances,
+
+587
+00:23:51,060 --> 00:23:53,550
+you're running all the
+controllers in your cluster.
+
+588
+00:23:53,550 --> 00:23:55,920
+With Auto Mode, we take on responsibility
+
+589
+00:23:55,920 --> 00:23:56,970
+for running the controllers.
+
+590
+00:23:56,970 --> 00:23:59,070
+So things like the EBS driver, Karpenter,
+
+591
+00:23:59,070 --> 00:24:01,860
+the low balancer controller,
+we run those on our side.
+
+592
+00:24:01,860 --> 00:24:06,300
+EC2 manage instances run in
+your account, but managed by us.
+
+593
+00:24:06,300 --> 00:24:08,070
+And that was an innovation
+we worked with EC2
+
+594
+00:24:08,070 --> 00:24:08,903
+to make happen.
+
+595
+00:24:12,810 --> 00:24:16,440
+We've continued to to iterate
+on Auto Mode this year.
+
+596
+00:24:16,440 --> 00:24:18,900
+Static capacity advanced
+networking options
+
+597
+00:24:18,900 --> 00:24:21,300
+was a big ask to support running pods
+
+598
+00:24:21,300 --> 00:24:23,340
+in separate subnets.
+
+599
+00:24:23,340 --> 00:24:25,770
+Region expansion, faster image pull.
+
+600
+00:24:25,770 --> 00:24:27,780
+We'll continue to iterate on Auto Mode
+
+601
+00:24:27,780 --> 00:24:30,510
+and there's a link
+there to the change log.
+
+602
+00:24:30,510 --> 00:24:33,840
+Almost every week, we're launching
+new features based there.
+
+603
+00:24:33,840 --> 00:24:36,300
+Okay, and my last one, before
+I hand it off to Eswar.
+
+604
+00:24:36,300 --> 00:24:40,230
+Probably our biggest update to EKS really
+
+605
+00:24:40,230 --> 00:24:42,090
+since we launched seven years ago.
+
+606
+00:24:42,090 --> 00:24:45,960
+You get a cluster and
+it's production ready,
+
+607
+00:24:45,960 --> 00:24:48,960
+but that's not enough to
+actually run your applications.
+
+608
+00:24:48,960 --> 00:24:51,570
+How do you deploy applications
+to those clusters?
+
+609
+00:24:51,570 --> 00:24:55,380
+Those applications generally
+need other AWS services.
+
+610
+00:24:55,380 --> 00:24:57,930
+Maybe you need an S3 bucket,
+you need an ElastiCache.
+
+611
+00:24:57,930 --> 00:24:58,950
+How do you provision those
+
+612
+00:24:58,950 --> 00:25:01,050
+and make it easy to
+connect to the workloads?
+
+613
+00:25:01,050 --> 00:25:04,350
+So, we announced the EKS
+capabilities last night.
+
+614
+00:25:04,350 --> 00:25:08,370
+And this is our take of
+expanding beyond the cluster
+
+615
+00:25:08,370 --> 00:25:10,440
+to managing that heavy
+lifting of the platform
+
+616
+00:25:10,440 --> 00:25:12,690
+that everybody's building
+around Kubernetes.
+
+617
+00:25:12,690 --> 00:25:15,120
+And we started with both deployments.
+
+618
+00:25:15,120 --> 00:25:19,110
+So, we now have a managed
+version of Argo CD.
+
+619
+00:25:19,110 --> 00:25:21,630
+Generally, our take with capabilities
+
+620
+00:25:21,630 --> 00:25:25,590
+is when there's an
+existing community standard
+
+621
+00:25:25,590 --> 00:25:27,720
+that the majority of
+our customers are using,
+
+622
+00:25:27,720 --> 00:25:29,580
+we're just gonna take that
+and manage it for you.
+
+623
+00:25:29,580 --> 00:25:31,440
+And so, that's what we did with Argo.
+
+624
+00:25:31,440 --> 00:25:32,970
+It's very loosely opinionated.
+
+625
+00:25:32,970 --> 00:25:34,950
+If it works in Argo,
+it's gonna work in this,
+
+626
+00:25:34,950 --> 00:25:38,250
+but also where possible, we're
+gonna make AWS integrations
+
+627
+00:25:38,250 --> 00:25:39,240
+that make sense and make better.
+
+628
+00:25:39,240 --> 00:25:41,970
+So, Secrets is a pain point with GitOps.
+
+629
+00:25:41,970 --> 00:25:44,130
+We added a native integration
+with Secrets manager
+
+630
+00:25:44,130 --> 00:25:45,210
+to make that easier.
+
+631
+00:25:45,210 --> 00:25:47,520
+Setting up credentials to
+get can be challenging.
+
+632
+00:25:47,520 --> 00:25:51,210
+So we have a integration with CodeCommit.
+
+633
+00:25:51,210 --> 00:25:54,420
+And I think one of the
+most underrated innovations
+
+634
+00:25:54,420 --> 00:25:56,430
+that we have with our
+version of managed Argo
+
+635
+00:25:56,430 --> 00:25:58,380
+that you can't do when
+you manage it yourself
+
+636
+00:25:58,380 --> 00:26:01,260
+is we manage the networking
+sync traffic behind the scenes.
+
+637
+00:26:01,260 --> 00:26:02,550
+So this works cross-account.
+
+638
+00:26:02,550 --> 00:26:03,840
+It works cross-region.
+
+639
+00:26:03,840 --> 00:26:06,000
+You don't have to worry
+about network connectivity
+
+640
+00:26:06,000 --> 00:26:06,990
+across those boundaries.
+
+641
+00:26:06,990 --> 00:26:08,193
+That's handled by us.
+
+642
+00:26:09,120 --> 00:26:11,400
+And then, the other one we
+launched is managed capabilities
+
+643
+00:26:11,400 --> 00:26:13,890
+for ACK and KRO.
+
+644
+00:26:13,890 --> 00:26:16,487
+These are two open source projects.
+
+645
+00:26:16,487 --> 00:26:18,030
+ACK, we launched several years back.
+
+646
+00:26:18,030 --> 00:26:21,360
+This is a Kubernetes native
+way to manage AWS resources.
+
+647
+00:26:21,360 --> 00:26:23,490
+And then, KRO is a way
+to build abstractions
+
+648
+00:26:23,490 --> 00:26:26,400
+around those resources
+and publish those as APIs.
+
+649
+00:26:26,400 --> 00:26:27,870
+And we see this is really useful
+
+650
+00:26:27,870 --> 00:26:30,510
+for a common pattern we see now
+
+651
+00:26:30,510 --> 00:26:32,550
+is rather than using
+traditional infrastructure,
+
+652
+00:26:32,550 --> 00:26:34,470
+cloud formation, or Terraform,
+
+653
+00:26:34,470 --> 00:26:36,270
+where a developer needs an S3 bucket.
+
+654
+00:26:36,270 --> 00:26:37,890
+They go to a team. They open a ticket.
+
+655
+00:26:37,890 --> 00:26:39,420
+They get their bucket. They come back.
+
+656
+00:26:39,420 --> 00:26:40,320
+They hook it up.
+
+657
+00:26:40,320 --> 00:26:42,120
+Now, they define their infrastructure
+
+658
+00:26:42,120 --> 00:26:44,700
+alongside their Kubernetes applications
+
+659
+00:26:44,700 --> 00:26:46,413
+all in a Kubernetes native way.
+
+660
+00:26:48,480 --> 00:26:50,280
+And yeah, the customer experience.
+
+661
+00:26:50,280 --> 00:26:52,200
+So as an EKS administrator,
+
+662
+00:26:52,200 --> 00:26:54,240
+you're creating the
+capability as a developer.
+
+663
+00:26:54,240 --> 00:26:56,340
+They're using the familiar
+tools they're with,
+
+664
+00:26:56,340 --> 00:26:58,890
+just as if they were using 'em
+in them in the open source.
+
+665
+00:26:58,890 --> 00:27:00,960
+And so putting it all together
+as self-managed platform
+
+666
+00:27:00,960 --> 00:27:02,700
+with EKS looks like this.
+
+667
+00:27:02,700 --> 00:27:05,010
+When you combine it with
+capabilities in Auto Mode,
+
+668
+00:27:05,010 --> 00:27:07,410
+we're managing a lot more
+of the pieces for you.
+
+669
+00:27:09,450 --> 00:27:11,310
+Okay, with that, I'm gonna
+hand it over to Eswar,
+
+670
+00:27:11,310 --> 00:27:15,540
+who's gonna talk about some
+of the large scale innovations
+
+671
+00:27:15,540 --> 00:27:17,610
+we've made this year to support running
+
+672
+00:27:17,610 --> 00:27:19,623
+really, really large workloads on EKS.
+
+673
+00:27:21,390 --> 00:27:22,223
+Thanks.
+
+674
+00:27:23,790 --> 00:27:24,690
+- Thank you, Mike.
+
+675
+00:27:26,100 --> 00:27:30,360
+As Mike highlighted, Kubernetes
+simplicity and extensibility
+
+676
+00:27:30,360 --> 00:27:33,510
+made it the go-to platform
+for containerized workloads.
+
+677
+00:27:33,510 --> 00:27:36,510
+Now, what I wanna share
+is how we are taking EKS
+
+678
+00:27:36,510 --> 00:27:40,137
+to unprecedented scales
+to meet the demands of AI
+
+679
+00:27:40,137 --> 00:27:41,433
+and ML workloads.
+
+680
+00:27:42,360 --> 00:27:45,900
+The innovations I'm about
+to show enable capabilities
+
+681
+00:27:45,900 --> 00:27:50,460
+that seemed outta reach
+just few years back.
+
+682
+00:27:50,460 --> 00:27:51,293
+Let's dive in.
+
+683
+00:27:52,920 --> 00:27:55,440
+Now, we observed three key developments
+
+684
+00:27:55,440 --> 00:27:58,023
+that are shaping the
+Kubernetes and AI landscape.
+
+685
+00:27:59,280 --> 00:28:02,850
+First, Kubernetes has
+become absolutely central
+
+686
+00:28:02,850 --> 00:28:05,490
+to AI and ML operations.
+
+687
+00:28:05,490 --> 00:28:07,500
+This is not by accident.
+
+688
+00:28:07,500 --> 00:28:10,140
+You know, it's declarative
+and extensive model.
+
+689
+00:28:10,140 --> 00:28:12,450
+The robust orchestration capabilities
+
+690
+00:28:12,450 --> 00:28:14,170
+and the rich community tooling
+
+691
+00:28:15,030 --> 00:28:18,960
+is exactly what makes
+complex AI workloads easier.
+
+692
+00:28:18,960 --> 00:28:21,150
+The second development
+is about the scaling loss
+
+693
+00:28:21,150 --> 00:28:22,450
+that we observe right now.
+
+694
+00:28:23,370 --> 00:28:26,010
+Increasing models sizes correlate
+
+695
+00:28:26,010 --> 00:28:27,543
+with the model capabilities.
+
+696
+00:28:28,770 --> 00:28:31,555
+And we have moved from models
+with millions of parameters
+
+697
+00:28:31,555 --> 00:28:36,180
+to hundreds of billions and
+even trillions these days.
+
+698
+00:28:36,180 --> 00:28:41,180
+And every step in that
+evolution in the model size
+
+699
+00:28:41,400 --> 00:28:43,550
+demands a lot more from
+the infrastructure,
+
+700
+00:28:44,400 --> 00:28:47,070
+which brings us to the third point.
+
+701
+00:28:47,070 --> 00:28:49,590
+Scale requirements have exploded.
+
+702
+00:28:49,590 --> 00:28:53,160
+Modern AI training is not
+just about managing GPUs.
+
+703
+00:28:53,160 --> 00:28:54,900
+It's also about making sure that you get
+
+704
+00:28:54,900 --> 00:28:56,760
+the best out of all the
+other infrastructures,
+
+705
+00:28:56,760 --> 00:28:58,770
+like compute and storage.
+
+706
+00:28:58,770 --> 00:29:02,270
+And what we also observe
+is customers never just run
+
+707
+00:29:02,270 --> 00:29:05,310
+a training inside the single
+cluster that they have.
+
+708
+00:29:05,310 --> 00:29:09,144
+They run a variety of diverse
+workloads in the same cluster
+
+709
+00:29:09,144 --> 00:29:12,120
+to actually share the capacity.
+
+710
+00:29:12,120 --> 00:29:13,923
+They run their inference workloads.
+
+711
+00:29:14,910 --> 00:29:16,620
+And we also observe startups
+
+712
+00:29:16,620 --> 00:29:20,340
+running domain specific trained models
+
+713
+00:29:20,340 --> 00:29:22,240
+to high throughput inference services.
+
+714
+00:29:24,360 --> 00:29:26,310
+You know, this projection from Gartner
+
+715
+00:29:26,310 --> 00:29:28,440
+is absolutely stunning.
+
+716
+00:29:28,440 --> 00:29:31,300
+95% of new AI workloads
+
+717
+00:29:33,120 --> 00:29:35,220
+is gonna run on Kubernetes,
+
+718
+00:29:35,220 --> 00:29:37,140
+dramatically from 30 increase,
+
+719
+00:29:37,140 --> 00:29:40,260
+dramatic increase from
+30% from what's today.
+
+720
+00:29:40,260 --> 00:29:43,380
+And what this is Kubernetes
+is evolving beyond
+
+721
+00:29:43,380 --> 00:29:45,450
+the general purpose container orchestrator
+
+722
+00:29:46,350 --> 00:29:50,523
+to become the defacto substrate
+for the AI/ML workloads.
+
+723
+00:29:55,650 --> 00:29:58,500
+We launched EKS Ultra Clusters in July
+
+724
+00:29:58,500 --> 00:30:00,900
+and we worked really
+closely with anthropic,
+
+725
+00:30:00,900 --> 00:30:03,630
+one of our customers, to
+address the challenges
+
+726
+00:30:03,630 --> 00:30:07,233
+that they were facing in their
+critical AI/ML workloads.
+
+727
+00:30:08,940 --> 00:30:11,100
+While we initially
+developed this capability
+
+728
+00:30:11,100 --> 00:30:13,410
+with AI in mind, what we are observing
+
+729
+00:30:13,410 --> 00:30:16,620
+is customers like to use
+this Ultra Cluster setup
+
+730
+00:30:16,620 --> 00:30:18,123
+for other workloads.
+
+731
+00:30:20,370 --> 00:30:22,800
+These clusters can scale beyond
+
+732
+00:30:22,800 --> 00:30:24,780
+like close to a hundred thousand nodes
+
+733
+00:30:24,780 --> 00:30:29,190
+and they can harness up to
+800,000 GPUs in a single cluster
+
+734
+00:30:29,190 --> 00:30:31,743
+or 1.6 million trainee max accelerators.
+
+735
+00:30:32,880 --> 00:30:36,330
+And we are proud that we
+have achieved the scale,
+
+736
+00:30:36,330 --> 00:30:39,540
+while maintaining full
+Kubernetes conformance.
+
+737
+00:30:39,540 --> 00:30:41,970
+This means you can use
+your existing tools,
+
+738
+00:30:41,970 --> 00:30:45,670
+infrastructure, workflows,
+without any modification
+
+739
+00:30:47,220 --> 00:30:48,423
+just at a larger scale.
+
+740
+00:30:50,940 --> 00:30:53,070
+And this graph here illustrates
+
+741
+00:30:53,070 --> 00:30:56,430
+what running AI workloads
+in practice means.
+
+742
+00:30:56,430 --> 00:30:58,140
+We observe our customers,
+like I mentioned,
+
+743
+00:30:58,140 --> 00:30:59,940
+running multiple distinct workloads.
+
+744
+00:31:01,260 --> 00:31:02,880
+In our testing, we orchestrated
+
+745
+00:31:02,880 --> 00:31:06,120
+three distinct workload
+types simultaneously.
+
+746
+00:31:06,120 --> 00:31:09,090
+You see here we have
+training stateful sets.
+
+747
+00:31:09,090 --> 00:31:14,090
+We also have fine tuning jobs
+and inference worker sets.
+
+748
+00:31:16,740 --> 00:31:19,350
+As you can see, we have pushed the system
+
+749
+00:31:19,350 --> 00:31:21,750
+to handle up to a hundred
+thousand concurrent pods scale
+
+750
+00:31:21,750 --> 00:31:23,130
+up to a hundred thousand concurrent pods
+
+751
+00:31:23,130 --> 00:31:24,693
+in a really short duration.
+
+752
+00:31:25,950 --> 00:31:29,070
+You see the climb up in
+few minutes actually.
+
+753
+00:31:29,070 --> 00:31:30,720
+And you can see rapid scaling events,
+
+754
+00:31:30,720 --> 00:31:33,900
+where thousands of resources
+of provision at rapid time,
+
+755
+00:31:33,900 --> 00:31:37,503
+like across all these three
+different workload types.
+
+756
+00:31:38,460 --> 00:31:42,030
+And the key point here is
+managing the scale reliably
+
+757
+00:31:42,030 --> 00:31:44,460
+is about maintaining
+consistent performance
+
+758
+00:31:44,460 --> 00:31:48,120
+at any duration in this
+lifecycle of the workloads.
+
+759
+00:31:48,120 --> 00:31:52,320
+And this is exactly what we
+have, how we've reimagined
+
+760
+00:31:52,320 --> 00:31:54,813
+our control plane architecture to achieve.
+
+761
+00:31:57,750 --> 00:32:00,120
+Let's look at the EKS
+control plane here, right.
+
+762
+00:32:00,120 --> 00:32:04,170
+Today, the control plane stores
+and manages clusters state
+
+763
+00:32:06,494 --> 00:32:08,116
+in etcd.
+
+764
+00:32:08,116 --> 00:32:11,070
+And at the heart of the cluster is etcd,
+
+765
+00:32:11,070 --> 00:32:13,710
+managing both your cluster configuration.
+
+766
+00:32:13,710 --> 00:32:16,563
+And we actually run three etcd
+nodes in a single cluster.
+
+767
+00:32:17,760 --> 00:32:20,760
+And it serves as the backbone
+for the entire cluster,
+
+768
+00:32:20,760 --> 00:32:23,580
+storing all configuration data
+
+769
+00:32:23,580 --> 00:32:25,630
+and the state of your Kubernetes objects.
+
+770
+00:32:26,550 --> 00:32:29,760
+It uses the raft consensus protocol
+
+771
+00:32:29,760 --> 00:32:33,390
+to ensure the data
+consistency across all nodes.
+
+772
+00:32:33,390 --> 00:32:35,100
+And there's also an NVCC layer,
+
+773
+00:32:35,100 --> 00:32:37,800
+which is multi-version concurrency control
+
+774
+00:32:37,800 --> 00:32:40,590
+that manages concurrent to the data
+
+775
+00:32:40,590 --> 00:32:43,680
+and provides the key isolation property
+
+776
+00:32:43,680 --> 00:32:46,860
+if you're actually having
+multiple data write or reads
+
+777
+00:32:46,860 --> 00:32:47,710
+at the same time.
+
+778
+00:32:48,810 --> 00:32:51,150
+And the system here is anchored by BoltDB,
+
+779
+00:32:51,150 --> 00:32:54,090
+which is an in-memory key value store.
+
+780
+00:32:54,090 --> 00:32:55,953
+It's backed by a storage as well.
+
+781
+00:32:57,300 --> 00:32:59,580
+And we also see write ahead log,
+
+782
+00:32:59,580 --> 00:33:02,280
+which guarantees the durability
+of your cluster state.
+
+783
+00:33:03,420 --> 00:33:06,540
+And we've ca carefully engineered
+this setup to right size
+
+784
+00:33:06,540 --> 00:33:11,010
+as the demand requires,
+but also making sure
+
+785
+00:33:11,010 --> 00:33:14,370
+that we have really regular rapid backups
+
+786
+00:33:14,370 --> 00:33:16,140
+to restore the cluster state
+
+787
+00:33:16,140 --> 00:33:19,980
+if in an unlikely event
+of the cluster going down.
+
+788
+00:33:19,980 --> 00:33:22,650
+And this architecture
+has served this well.
+
+789
+00:33:22,650 --> 00:33:25,230
+But as you'll see in the next slide,
+
+790
+00:33:25,230 --> 00:33:28,530
+we've made some
+foundational changes to etcd
+
+791
+00:33:28,530 --> 00:33:30,430
+to support the Ultra Scale operations.
+
+792
+00:33:33,930 --> 00:33:35,010
+There are three innovations
+
+793
+00:33:35,010 --> 00:33:36,210
+that I wanna highlight here, right?
+
+794
+00:33:36,210 --> 00:33:38,250
+Like I'll start with in-memory database,
+
+795
+00:33:38,250 --> 00:33:40,800
+which is the BoltDB that I was mentioning.
+
+796
+00:33:40,800 --> 00:33:43,740
+We moved it from a
+network attached storage
+
+797
+00:33:43,740 --> 00:33:47,313
+to an in-memory tempus based solution.
+
+798
+00:33:49,255 --> 00:33:52,560
+And this shift delivers order of magnitude
+
+799
+00:33:52,560 --> 00:33:53,940
+in performance improvements
+
+800
+00:33:53,940 --> 00:33:56,700
+in both read and write operations.
+
+801
+00:33:56,700 --> 00:33:59,580
+Second, we have partition the key spaces
+
+802
+00:33:59,580 --> 00:34:02,100
+that is stored inside the cluster
+
+803
+00:34:02,100 --> 00:34:04,320
+and that allows hot resource types
+
+804
+00:34:04,320 --> 00:34:07,530
+to be split into separate etcd clusters.
+
+805
+00:34:07,530 --> 00:34:08,910
+And our testing shows this,
+
+806
+00:34:08,910 --> 00:34:12,450
+the delivers up to five
+times the right throughput,
+
+807
+00:34:12,450 --> 00:34:16,533
+while preserving the durability
+and the rich AP somatics.
+
+808
+00:34:17,400 --> 00:34:20,640
+But the most critical
+advancement we've actually done
+
+809
+00:34:20,640 --> 00:34:23,610
+is how we've offloaded
+the consensus management.
+
+810
+00:34:23,610 --> 00:34:26,400
+We've moved from traditional
+Raft-based consensus
+
+811
+00:34:26,400 --> 00:34:29,073
+to leveraging AWS' journal system.
+
+812
+00:34:30,210 --> 00:34:34,470
+Technology we've been perfecting
+for over a decade now.
+
+813
+00:34:34,470 --> 00:34:36,300
+And it actually serves, its underpins
+
+814
+00:34:36,300 --> 00:34:37,920
+all of your favorite
+services that you can,
+
+815
+00:34:37,920 --> 00:34:40,530
+many of your favorite services
+that you can think of.
+
+816
+00:34:40,530 --> 00:34:43,530
+And this allows us to
+scale etcd, etcd replicas
+
+817
+00:34:43,530 --> 00:34:46,200
+without being bounded by
+core and requirements.
+
+818
+00:34:46,200 --> 00:34:49,200
+There's no need for etcd
+peer-to-peer communication anymore.
+
+819
+00:34:50,070 --> 00:34:52,170
+And while this also delivers
+
+820
+00:34:52,170 --> 00:34:57,170
+ultrafast ordered data replication
+with multi-AZ durability.
+
+821
+00:34:57,480 --> 00:35:01,050
+And together these three
+innovations forms the foundation
+
+822
+00:35:01,050 --> 00:35:03,363
+that enables EK to support Ultra Clusters.
+
+823
+00:35:04,575 --> 00:35:09,270
+And here you see the new architecture
+
+824
+00:35:09,270 --> 00:35:10,230
+in EKS.
+
+825
+00:35:10,230 --> 00:35:12,030
+The key transformation, as I mentioned,
+
+826
+00:35:12,030 --> 00:35:13,593
+is how we handle consensus.
+
+827
+00:35:14,760 --> 00:35:16,770
+You see that on the left
+is the storage layer,
+
+828
+00:35:16,770 --> 00:35:19,320
+the MVCC backed by BoltDB.
+
+829
+00:35:19,320 --> 00:35:21,120
+And on the right is the replication layer,
+
+830
+00:35:21,120 --> 00:35:23,520
+which is actually the consensus layer.
+
+831
+00:35:23,520 --> 00:35:24,660
+And we've integrated that
+
+832
+00:35:24,660 --> 00:35:28,203
+with AWS' battle tested
+multi-AZ transaction journal.
+
+833
+00:35:29,310 --> 00:35:30,660
+And while we did that,
+
+834
+00:35:30,660 --> 00:35:34,800
+we've actually maintained
+the familiar GRPC interface,
+
+835
+00:35:34,800 --> 00:35:38,310
+which meant that we
+kept the same interface
+
+836
+00:35:38,310 --> 00:35:41,340
+between the current etcd
+using Raft-based journal
+
+837
+00:35:41,340 --> 00:35:43,800
+and the new, sorry, Raft-based consensus
+
+838
+00:35:43,800 --> 00:35:46,950
+and the new journal based consensus.
+
+839
+00:35:46,950 --> 00:35:48,600
+And this like what this means
+
+840
+00:35:48,600 --> 00:35:49,770
+is you get massive improvements
+
+841
+00:35:49,770 --> 00:35:52,263
+without sacrificing
+compatibility or durability.
+
+842
+00:35:56,130 --> 00:35:59,280
+So while we've enhanced
+the cluster control plane,
+
+843
+00:35:59,280 --> 00:36:01,200
+we've also made significant improvements
+
+844
+00:36:01,200 --> 00:36:04,920
+to boost your application's
+performance and reliability
+
+845
+00:36:04,920 --> 00:36:06,240
+with four key advancements.
+
+846
+00:36:06,240 --> 00:36:10,320
+First, we've introduced
+multi-network interface support
+
+847
+00:36:10,320 --> 00:36:12,690
+for pods, enabling network bandwidth
+
+848
+00:36:12,690 --> 00:36:14,540
+up to a hundred gigabytes per second.
+
+849
+00:36:17,370 --> 00:36:20,733
+It's critical for AI workloads
+moving massive data sets.
+
+850
+00:36:21,930 --> 00:36:25,390
+Second, we've also implemented
+concurrent download
+
+851
+00:36:26,282 --> 00:36:27,780
+and unpacking of images
+
+852
+00:36:27,780 --> 00:36:30,030
+using in our new container runtime,
+
+853
+00:36:30,030 --> 00:36:32,400
+based on our SOCI image pool.
+
+854
+00:36:32,400 --> 00:36:34,560
+And what that allows us to do
+
+855
+00:36:34,560 --> 00:36:38,160
+is cut the container image
+poles in half the time
+
+856
+00:36:38,160 --> 00:36:39,273
+that it takes today.
+
+857
+00:36:40,350 --> 00:36:41,610
+And for network efficiency,
+
+858
+00:36:41,610 --> 00:36:45,750
+we've moved from individual
+IP assignments to your pods
+
+859
+00:36:45,750 --> 00:36:47,790
+to prefix delegation that assigns
+
+860
+00:36:47,790 --> 00:36:51,780
+a CIDR range for an instance at chart.
+
+861
+00:36:51,780 --> 00:36:54,540
+And this dramatically
+improves node launch rates
+
+862
+00:36:54,540 --> 00:36:58,563
+up to threefold while optimizing
+your VPC address range.
+
+863
+00:36:59,670 --> 00:37:03,090
+And finally, we've also launched
+auto repair capabilities
+
+864
+00:37:03,090 --> 00:37:06,270
+for all of your compute,
+including the accelerated compute.
+
+865
+00:37:06,270 --> 00:37:09,330
+We automatically detect and
+replace your unhealthy nodes
+
+866
+00:37:09,330 --> 00:37:11,080
+to maintain consistent performance.
+
+867
+00:37:12,330 --> 00:37:14,490
+And let's talk about the real
+world impact here, right?
+
+868
+00:37:14,490 --> 00:37:18,060
+The adoption of GPU workloads
+in EKS has been remarkable.
+
+869
+00:37:18,060 --> 00:37:21,390
+Since 2024, we've seen GPU
+instance usage with EKS
+
+870
+00:37:21,390 --> 00:37:22,473
+more than double.
+
+871
+00:37:23,400 --> 00:37:25,800
+And while AI and ML remains
+significant drivers,
+
+872
+00:37:25,800 --> 00:37:29,190
+of course, we are seeing GP
+adoption across various domains.
+
+873
+00:37:29,190 --> 00:37:30,570
+We see scientific simulations.
+
+874
+00:37:30,570 --> 00:37:33,660
+We see video processing at
+scale, real-time rendering,
+
+875
+00:37:33,660 --> 00:37:35,210
+and high performance computing.
+
+876
+00:37:37,320 --> 00:37:39,660
+And know, while these are
+groundbreaking capabilities
+
+877
+00:37:39,660 --> 00:37:41,430
+for massive workloads, we asked ourselves
+
+878
+00:37:41,430 --> 00:37:43,770
+a fundamental question, how can we bring
+
+879
+00:37:43,770 --> 00:37:47,550
+this performance improvements
+to all of our customers?
+
+880
+00:37:47,550 --> 00:37:48,840
+I'm sure not everyone needs
+
+881
+00:37:48,840 --> 00:37:51,060
+a hundred thousand nodes cluster,
+
+882
+00:37:51,060 --> 00:37:52,440
+but I think every customer deserves
+
+883
+00:37:52,440 --> 00:37:55,530
+predictable high performance
+control plane operations,
+
+884
+00:37:55,530 --> 00:37:58,380
+like whether you're running
+your microservices platform
+
+885
+00:37:58,380 --> 00:38:01,170
+or managing enterprise
+critical applications.
+
+886
+00:38:01,170 --> 00:38:03,330
+And we are bringing the
+performance benefits
+
+887
+00:38:03,330 --> 00:38:06,153
+of our ultra scale
+architecture for all clusters.
+
+888
+00:38:07,650 --> 00:38:09,150
+And I'm really excited
+
+889
+00:38:09,150 --> 00:38:12,385
+to introduce the Provision Control Plane.
+
+890
+00:38:12,385 --> 00:38:14,460
+It's a first of kind offering
+
+891
+00:38:14,460 --> 00:38:16,020
+that brings the performance benefits
+
+892
+00:38:16,020 --> 00:38:20,220
+of our ultra scale architecture
+to all EKS clusters.
+
+893
+00:38:20,220 --> 00:38:22,560
+At its core, the Provision Control Plane
+
+894
+00:38:22,560 --> 00:38:23,790
+gives you the ability to select
+
+895
+00:38:23,790 --> 00:38:27,210
+high performance control
+plane scaling tiers
+
+896
+00:38:27,210 --> 00:38:28,893
+with pre-allocated capacity.
+
+897
+00:38:29,760 --> 00:38:34,760
+Think of it as shifting
+from on demand capacity
+
+898
+00:38:35,040 --> 00:38:36,300
+with auto scaling behind
+
+899
+00:38:36,300 --> 00:38:38,700
+to a provision reserve capacity model
+
+900
+00:38:38,700 --> 00:38:40,170
+for your control plane.
+
+901
+00:38:40,170 --> 00:38:42,930
+And it's particularly
+valuable for any workload
+
+902
+00:38:42,930 --> 00:38:45,540
+that demands predictable performance.
+
+903
+00:38:45,540 --> 00:38:47,730
+Whether you're running AI/ML training
+
+904
+00:38:47,730 --> 00:38:49,560
+or you need consistent parts scaling rates
+
+905
+00:38:49,560 --> 00:38:51,630
+or operating multi-tenant platform,
+
+906
+00:38:51,630 --> 00:38:53,700
+you all expect the control plane
+
+907
+00:38:53,700 --> 00:38:57,903
+to have a better performance
+as your workload scales.
+
+908
+00:38:59,190 --> 00:39:02,670
+And there are three key benefits
+in Provision Control Plane.
+
+909
+00:39:02,670 --> 00:39:05,940
+First, you can provision
+your control plane capacity,
+
+910
+00:39:05,940 --> 00:39:08,940
+eliminating the uncertainty
+of dynamic scaling,
+
+911
+00:39:08,940 --> 00:39:10,950
+which is what happens today.
+
+912
+00:39:10,950 --> 00:39:13,290
+The cluster control
+plane scales up and down
+
+913
+00:39:13,290 --> 00:39:18,180
+based on the workloads that you
+are putting on the workload,
+
+914
+00:39:18,180 --> 00:39:19,920
+load you're putting on the cluster.
+
+915
+00:39:19,920 --> 00:39:21,000
+And this means you'll have
+
+916
+00:39:21,000 --> 00:39:22,980
+consistent predictable performance
+
+917
+00:39:22,980 --> 00:39:24,600
+for your critical workloads.
+
+918
+00:39:24,600 --> 00:39:27,570
+No more worrying about
+control plane scaling delays
+
+919
+00:39:27,570 --> 00:39:29,310
+during critical operations.
+
+920
+00:39:29,310 --> 00:39:32,940
+Second, you gain access to
+increased compute capacity.
+
+921
+00:39:32,940 --> 00:39:34,200
+We are talking about multiples
+
+922
+00:39:34,200 --> 00:39:35,770
+of standard performance levels
+
+923
+00:39:36,693 --> 00:39:39,540
+and you have, you get
+capabilities of like processing
+
+924
+00:39:39,540 --> 00:39:43,713
+up to 6,800 concurrent API
+requests in our highest tier.
+
+925
+00:39:44,700 --> 00:39:47,130
+And third, you can set up
+the control plane tiers
+
+926
+00:39:47,130 --> 00:39:49,230
+to handle unexpected demand spikes.
+
+927
+00:39:49,230 --> 00:39:51,570
+And this is particularly valuable
+
+928
+00:39:51,570 --> 00:39:53,820
+when you're planning
+for high traffic events.
+
+929
+00:39:55,800 --> 00:39:59,130
+And we have designed these
+options with flexibility in mind.
+
+930
+00:39:59,130 --> 00:40:00,780
+As you can see, EKS now offers
+
+931
+00:40:00,780 --> 00:40:03,060
+two distinct control plane modes.
+
+932
+00:40:03,060 --> 00:40:04,710
+On the left, we call standard
+
+933
+00:40:04,710 --> 00:40:06,480
+and on the right is provisioned,
+
+934
+00:40:06,480 --> 00:40:09,540
+and you can switch between
+them based on your needs.
+
+935
+00:40:09,540 --> 00:40:13,350
+And the standard mode, which
+remains our default option.
+
+936
+00:40:13,350 --> 00:40:15,060
+Like I said, the control
+plane scales up and down
+
+937
+00:40:15,060 --> 00:40:16,740
+as you put the load on it.
+
+938
+00:40:16,740 --> 00:40:18,540
+Obviously, there's some
+delay in between scaling
+
+939
+00:40:18,540 --> 00:40:21,630
+between the run levels that we have today.
+
+940
+00:40:21,630 --> 00:40:24,120
+And this is perfect for
+general purpose workloads,
+
+941
+00:40:24,120 --> 00:40:26,250
+as we, as you do today.
+
+942
+00:40:26,250 --> 00:40:27,900
+With provision mode, you're pre-allocating
+
+943
+00:40:27,900 --> 00:40:30,630
+the specific tiers for
+guaranteed capacity.
+
+944
+00:40:30,630 --> 00:40:32,280
+And as your workload requirements evolve,
+
+945
+00:40:32,280 --> 00:40:35,280
+you can adjust your control
+plane configuration accordingly.
+
+946
+00:40:37,050 --> 00:40:39,840
+And it's super easy to
+either create a new cluster
+
+947
+00:40:39,840 --> 00:40:42,420
+or update an existing
+cluster to provision mode.
+
+948
+00:40:42,420 --> 00:40:46,260
+You pick that capacity tier
+and during the create or
+
+949
+00:40:46,260 --> 00:40:48,603
+you can actually do it during the update.
+
+950
+00:40:50,670 --> 00:40:51,503
+And I wanna dive
+
+951
+00:40:51,503 --> 00:40:54,540
+into the specific capabilities each year
+
+952
+00:40:54,540 --> 00:40:56,310
+offers for clusters.
+
+953
+00:40:56,310 --> 00:40:57,390
+Each year is engineered
+
+954
+00:40:57,390 --> 00:41:00,840
+around three critical
+aspects that directly impact
+
+955
+00:41:00,840 --> 00:41:03,660
+your workload's
+responsiveness and stability.
+
+956
+00:41:03,660 --> 00:41:06,030
+First, API request concurrency.
+
+957
+00:41:06,030 --> 00:41:07,950
+This determines how many operations
+
+958
+00:41:07,950 --> 00:41:09,963
+your cluster can handle simultaneously.
+
+959
+00:41:10,800 --> 00:41:12,540
+Think of this as your ability
+
+960
+00:41:12,540 --> 00:41:15,150
+or your cluster's ability to multitask,
+
+961
+00:41:15,150 --> 00:41:16,680
+whether you're rolling out deployments
+
+962
+00:41:16,680 --> 00:41:18,090
+or you're scaling applications,
+
+963
+00:41:18,090 --> 00:41:19,590
+you're handling health checks.
+
+964
+00:41:20,430 --> 00:41:22,440
+And higher concurrency means faster,
+
+965
+00:41:22,440 --> 00:41:24,003
+more responsive operations.
+
+966
+00:41:24,900 --> 00:41:27,810
+Pod scheduling rate is crucial
+for your workload agility.
+
+967
+00:41:27,810 --> 00:41:29,460
+Like it's about how quickly your cluster
+
+968
+00:41:29,460 --> 00:41:33,990
+can respond to scaling events
+or recover from disruptions.
+
+969
+00:41:33,990 --> 00:41:37,080
+And this becomes particularly
+vital in any AI/ML workflows
+
+970
+00:41:37,080 --> 00:41:39,030
+where you need to rapidly
+orchestrate training jobs
+
+971
+00:41:39,030 --> 00:41:41,133
+or scale inference services.
+
+972
+00:41:42,480 --> 00:41:46,320
+The cluster database size
+is the third dimension here.
+
+973
+00:41:46,320 --> 00:41:48,090
+It ensures you have sufficient headroom
+
+974
+00:41:48,090 --> 00:41:49,500
+for your application metadata,
+
+975
+00:41:49,500 --> 00:41:51,750
+which stored, which is
+stored on the CD side.
+
+976
+00:41:52,860 --> 00:41:54,990
+It's usually your config
+map, your Secrets,
+
+977
+00:41:54,990 --> 00:41:58,803
+your resource like pods and
+namespace and all of that stuff.
+
+978
+00:42:00,660 --> 00:42:04,590
+And each tier maintains
+a 16 GB cluster size
+
+979
+00:42:04,590 --> 00:42:07,320
+and which we have found optimum
+for most workload patterns.
+
+980
+00:42:07,320 --> 00:42:08,940
+And these tiers represent
+
+981
+00:42:08,940 --> 00:42:11,100
+carefully engineered performance levels
+
+982
+00:42:11,100 --> 00:42:13,100
+that match real world operational needs.
+
+983
+00:42:15,480 --> 00:42:19,643
+You know, we made it really, really easy
+
+984
+00:42:19,643 --> 00:42:21,630
+to consume these capabilities.
+
+985
+00:42:21,630 --> 00:42:23,580
+Like with just a simple CLIR command
+
+986
+00:42:23,580 --> 00:42:25,560
+or click in the console,
+
+987
+00:42:25,560 --> 00:42:28,560
+you can configure your desired
+control plane capacity.
+
+988
+00:42:28,560 --> 00:42:32,550
+I encourage you all to try
+it out on your new cluster
+
+989
+00:42:32,550 --> 00:42:33,700
+or an existing cluster.
+
+990
+00:42:34,560 --> 00:42:37,590
+So now that I've shared how we are pushing
+
+991
+00:42:37,590 --> 00:42:41,280
+the boundaries of the scale
+and performance with EKS,
+
+992
+00:42:41,280 --> 00:42:43,920
+I'm excited to introduce
+Niall Mullen here,
+
+993
+00:42:43,920 --> 00:42:46,560
+senior director of cloud
+infrastructure at Netflix.
+
+994
+00:42:46,560 --> 00:42:47,430
+And Netflix operates
+
+995
+00:42:47,430 --> 00:42:50,340
+some of the world's largest
+container platforms,
+
+996
+00:42:50,340 --> 00:42:53,400
+serving hundreds of millions
+of customers globally.
+
+997
+00:42:53,400 --> 00:42:56,400
+And they've been at the forefront
+of cloud native innovation
+
+998
+00:42:56,400 --> 00:42:59,943
+and their journey to EKS is a
+story of evolution and scale.
+
+999
+00:43:00,780 --> 00:43:02,073
+Niall, over to you.
+
+1000
+00:43:04,830 --> 00:43:05,730
+- Thank you.
+
+1001
+00:43:05,730 --> 00:43:07,800
+Hi, everyone. My name's Niall Mullen.
+
+1002
+00:43:07,800 --> 00:43:10,890
+I lead what we call cloud
+infrastructure engineering
+
+1003
+00:43:10,890 --> 00:43:12,093
+at Netflix.
+
+1004
+00:43:13,145 --> 00:43:14,460
+Am I in the right place? Yep.
+
+1005
+00:43:14,460 --> 00:43:18,780
+So, this is a story more about how moving
+
+1006
+00:43:18,780 --> 00:43:22,470
+existing large stuff to manage services
+
+1007
+00:43:22,470 --> 00:43:25,110
+or to have someone else do
+some of the heavy lifting
+
+1008
+00:43:25,110 --> 00:43:26,280
+can be done.
+
+1009
+00:43:26,280 --> 00:43:28,260
+I'm gonna talk a bit about
+our background in Netflix,
+
+1010
+00:43:28,260 --> 00:43:31,560
+what makes us unique, different,
+and hard to do this with
+
+1011
+00:43:31,560 --> 00:43:34,650
+on our journey to EKS
+over the past two years.
+
+1012
+00:43:34,650 --> 00:43:37,410
+So, compute at Netflix.
+
+1013
+00:43:37,410 --> 00:43:38,760
+We have a lot of compute.
+
+1014
+00:43:38,760 --> 00:43:42,270
+We're super dense compared
+to most AWS customers.
+
+1015
+00:43:42,270 --> 00:43:44,850
+Not alone do we have 300
+million paying customers
+
+1016
+00:43:44,850 --> 00:43:46,260
+that we have to run a website at,
+
+1017
+00:43:46,260 --> 00:43:49,710
+which is more like a billion
+user profiles or users
+
+1018
+00:43:49,710 --> 00:43:51,310
+and that takes a lot of compute.
+
+1019
+00:43:52,740 --> 00:43:55,140
+We have large scale personalization
+
+1020
+00:43:55,140 --> 00:43:57,480
+to make all of those predictions appear
+
+1021
+00:43:57,480 --> 00:43:58,740
+for what you want to watch
+
+1022
+00:43:58,740 --> 00:44:00,810
+before you even know
+what you want to watch.
+
+1023
+00:44:00,810 --> 00:44:02,700
+And that takes a lot of compute.
+
+1024
+00:44:02,700 --> 00:44:05,970
+But even that is dwarfed by
+the thousands of hours of video
+
+1025
+00:44:05,970 --> 00:44:07,950
+we're shooting every week in AK
+
+1026
+00:44:07,950 --> 00:44:09,810
+that we're converting to run
+
+1027
+00:44:09,810 --> 00:44:12,540
+from everything from your
+10-year-old Roku device
+
+1028
+00:44:12,540 --> 00:44:14,097
+to the latest AK TVs.
+
+1029
+00:44:14,097 --> 00:44:16,950
+And not alone is it
+just this week's video.
+
+1030
+00:44:16,950 --> 00:44:18,270
+We're constantly re-encoding
+
+1031
+00:44:18,270 --> 00:44:21,900
+the entire back catalog of
+Netflix to use the latest codex
+
+1032
+00:44:21,900 --> 00:44:24,540
+and to be rendered in
+all those resolutions.
+
+1033
+00:44:24,540 --> 00:44:27,910
+In addition to that, we have
+a rapidly growing ads business
+
+1034
+00:44:28,800 --> 00:44:31,350
+and a burgeoning gaming business,
+
+1035
+00:44:31,350 --> 00:44:33,540
+each of which are large
+sources of compute.
+
+1036
+00:44:33,540 --> 00:44:35,760
+So, we have a lot of compute at Netflix.
+
+1037
+00:44:35,760 --> 00:44:37,380
+And from talking to pure customers
+
+1038
+00:44:37,380 --> 00:44:39,390
+or other large customers at AWS,
+
+1039
+00:44:39,390 --> 00:44:42,600
+the proportion of our
+spend that is compute based
+
+1040
+00:44:42,600 --> 00:44:46,233
+is 50 to 100% higher than
+many other large customers.
+
+1041
+00:44:47,100 --> 00:44:49,470
+So let's talk about the setup at Netflix.
+
+1042
+00:44:49,470 --> 00:44:51,450
+We came to the cloud 15 years ago.
+
+1043
+00:44:51,450 --> 00:44:53,700
+So actually a majority
+of compute at Netflix
+
+1044
+00:44:53,700 --> 00:44:58,700
+still runs on a very mature,
+very well-run EC2 workflow
+
+1045
+00:44:58,980 --> 00:45:00,570
+that enables developers
+
+1046
+00:45:00,570 --> 00:45:02,880
+build Java and node services primarily
+
+1047
+00:45:02,880 --> 00:45:04,413
+and runs some direct on EC2.
+
+1048
+00:45:05,340 --> 00:45:08,970
+A large minority of compute
+though runs on a system
+
+1049
+00:45:08,970 --> 00:45:12,630
+called Titus that we delivered
+eight or so years ago.
+
+1050
+00:45:12,630 --> 00:45:15,240
+It's a majority of actual
+service counted at Netflix.
+
+1051
+00:45:15,240 --> 00:45:18,720
+So most new code at Netflix
+gets written by default on this.
+
+1052
+00:45:18,720 --> 00:45:21,810
+And it's a large scale
+multi-tenant container platform,
+
+1053
+00:45:21,810 --> 00:45:23,730
+which effectively does
+container as a service.
+
+1054
+00:45:23,730 --> 00:45:25,200
+We originally built it on Mesos.
+
+1055
+00:45:25,200 --> 00:45:27,540
+We shifted it to Kubernetes
+seamlessly under the hood
+
+1056
+00:45:27,540 --> 00:45:28,860
+about five years ago.
+
+1057
+00:45:28,860 --> 00:45:31,230
+And that's the scope of what
+we're gonna talk about today
+
+1058
+00:45:31,230 --> 00:45:35,040
+in terms of what we took EKS to work with.
+
+1059
+00:45:35,040 --> 00:45:37,275
+However, there's a lot of key differences
+
+1060
+00:45:37,275 --> 00:45:39,930
+as to why we're even
+more awkward than that.
+
+1061
+00:45:39,930 --> 00:45:42,720
+We run four core streaming regions,
+
+1062
+00:45:42,720 --> 00:45:44,100
+a couple of additional twin regions
+
+1063
+00:45:44,100 --> 00:45:46,560
+for some of our encoding gaming use cases.
+
+1064
+00:45:46,560 --> 00:45:48,600
+We run a regional availability model.
+
+1065
+00:45:48,600 --> 00:45:51,120
+That means when we have problems
+we flip an entire region
+
+1066
+00:45:51,120 --> 00:45:52,800
+in about five minutes.
+
+1067
+00:45:52,800 --> 00:45:55,530
+In the middle of October,
+AWS had a bad day,
+
+1068
+00:45:55,530 --> 00:45:57,480
+happens about once a decade or so.
+
+1069
+00:45:57,480 --> 00:46:01,050
+We had a bad 15 minutes and
+we were out of US-East-1.
+
+1070
+00:46:01,050 --> 00:46:03,480
+Secondly, we have the
+concept of the trough.
+
+1071
+00:46:03,480 --> 00:46:06,780
+There's a diurnal cycle in
+almost everybody's services,
+
+1072
+00:46:06,780 --> 00:46:10,710
+which can be as much runs to
+about 45% delta from the peak
+
+1073
+00:46:10,710 --> 00:46:13,260
+to the trough we find in many services.
+
+1074
+00:46:13,260 --> 00:46:16,110
+And that's basically
+hundreds of thousands of CPUs
+
+1075
+00:46:16,110 --> 00:46:18,360
+that are sitting idle at
+different points of the day.
+
+1076
+00:46:18,360 --> 00:46:19,560
+And you have two choices.
+
+1077
+00:46:19,560 --> 00:46:22,290
+You can either judge what's the sweet spot
+
+1078
+00:46:22,290 --> 00:46:23,880
+to how much you purchase on demand
+
+1079
+00:46:23,880 --> 00:46:26,430
+or how much you purchase
+reserved instances
+
+1080
+00:46:26,430 --> 00:46:28,950
+or you buy the whole lot
+in reserved instances
+
+1081
+00:46:28,950 --> 00:46:30,570
+and you pack every cycle of that
+
+1082
+00:46:30,570 --> 00:46:33,660
+with all of that time insensitive
+work I described earlier.
+
+1083
+00:46:33,660 --> 00:46:36,810
+We run about 97% of our reserved instances
+
+1084
+00:46:36,810 --> 00:46:38,370
+as utilized doing something.
+
+1085
+00:46:38,370 --> 00:46:39,990
+I'm not saying we run them all well,
+
+1086
+00:46:39,990 --> 00:46:42,603
+that's a different argument, but we do.
+
+1087
+00:46:43,980 --> 00:46:46,980
+The main point is we are
+moving a lot of compute around,
+
+1088
+00:46:46,980 --> 00:46:49,923
+a lot of the time, more so
+than perhaps anybody else.
+
+1089
+00:46:51,990 --> 00:46:52,883
+Let's talk about some of our scale.
+
+1090
+00:46:52,883 --> 00:46:54,690
+We have four primary regions,
+
+1091
+00:46:54,690 --> 00:46:56,400
+hundreds of thousands of containers
+
+1092
+00:46:56,400 --> 00:46:57,843
+in each of those regions.
+
+1093
+00:46:59,250 --> 00:47:02,010
+But when we talk about
+what we have to plan for
+
+1094
+00:47:02,010 --> 00:47:03,570
+in adopting a service like EKS,
+
+1095
+00:47:03,570 --> 00:47:05,580
+it's not just a steady state launch rate
+
+1096
+00:47:05,580 --> 00:47:07,920
+and it's not just even the
+region evacuation launch rate
+
+1097
+00:47:07,920 --> 00:47:10,200
+when we're getting outta US-East-1.
+
+1098
+00:47:10,200 --> 00:47:11,970
+It's when a hundred million people
+
+1099
+00:47:11,970 --> 00:47:14,070
+are watching Mike Tyson
+get his lights punched out
+
+1100
+00:47:14,070 --> 00:47:16,050
+and we have to get out of US-East-1
+
+1101
+00:47:16,050 --> 00:47:17,670
+and that's what we have to plan for.
+
+1102
+00:47:17,670 --> 00:47:22,071
+So when we first talked to
+EKS about this four years ago,
+
+1103
+00:47:22,071 --> 00:47:23,640
+three years ago, three years ago,
+
+1104
+00:47:23,640 --> 00:47:25,140
+I think it was three years ago here,
+
+1105
+00:47:25,140 --> 00:47:26,160
+the answer was hell no
+
+1106
+00:47:26,160 --> 00:47:28,530
+when we sketch the kind
+of launch rates we need.
+
+1107
+00:47:28,530 --> 00:47:30,570
+And I have to give kudos to Pinterest,
+
+1108
+00:47:30,570 --> 00:47:33,270
+who brought EKS on a journey through 2023,
+
+1109
+00:47:33,270 --> 00:47:35,010
+that brought us to the
+point that two years ago,
+
+1110
+00:47:35,010 --> 00:47:36,690
+it was, well, we don't even need to double
+
+1111
+00:47:36,690 --> 00:47:37,650
+what you guys can do.
+
+1112
+00:47:37,650 --> 00:47:39,693
+And so, we started on our journey.
+
+1113
+00:47:42,840 --> 00:47:44,940
+We don't do cluster as a service.
+
+1114
+00:47:44,940 --> 00:47:47,520
+We're different on that front as well.
+
+1115
+00:47:47,520 --> 00:47:51,450
+We run less than 20 production
+clusters in our four regions
+
+1116
+00:47:51,450 --> 00:47:53,130
+and we believe that the
+high percentile scale
+
+1117
+00:47:53,130 --> 00:47:56,220
+and availability story of
+running very large clusters,
+
+1118
+00:47:56,220 --> 00:47:59,160
+multi-tenant on very
+large boxes works better.
+
+1119
+00:47:59,160 --> 00:48:00,600
+But that makes us weird and different
+
+1120
+00:48:00,600 --> 00:48:03,000
+for a service like EKS, who has to cater
+
+1121
+00:48:03,000 --> 00:48:05,250
+to hundreds of thousands
+of different customers
+
+1122
+00:48:05,250 --> 00:48:07,290
+and all of their oddities.
+
+1123
+00:48:07,290 --> 00:48:09,030
+So we've up to 10,000 machines,
+
+1124
+00:48:09,030 --> 00:48:12,570
+big ones, 24 and 48 excels per region.
+
+1125
+00:48:12,570 --> 00:48:15,060
+We've about 80,000 containers or pods.
+
+1126
+00:48:15,060 --> 00:48:16,470
+We use those pretty interchangeably
+
+1127
+00:48:16,470 --> 00:48:19,650
+for how this is configured
+in each of those clusters.
+
+1128
+00:48:19,650 --> 00:48:22,140
+etcd is still running
+north of five gigabyte,
+
+1129
+00:48:22,140 --> 00:48:23,820
+though it was more than
+twice that at one point.
+
+1130
+00:48:23,820 --> 00:48:25,920
+We've had to do a lot of
+work to bring that down.
+
+1131
+00:48:25,920 --> 00:48:28,370
+That is one of the sets
+of changes we have to do.
+
+1132
+00:48:29,205 --> 00:48:32,420
+And we run launch rates
+of 70,000 instances
+
+1133
+00:48:32,420 --> 00:48:33,810
+in a five minute period
+
+1134
+00:48:33,810 --> 00:48:35,610
+or sorry, containers
+in a five minute period
+
+1135
+00:48:35,610 --> 00:48:36,903
+when we flip regions.
+
+1136
+00:48:38,610 --> 00:48:41,940
+So, why EKS if we have all this already?
+
+1137
+00:48:41,940 --> 00:48:43,980
+One of our core engineering
+principles of Netflix
+
+1138
+00:48:43,980 --> 00:48:45,750
+is built only when necessary.
+
+1139
+00:48:45,750 --> 00:48:46,890
+And we built all of this stuff
+
+1140
+00:48:46,890 --> 00:48:48,780
+that I've described
+over the last 15 years,
+
+1141
+00:48:48,780 --> 00:48:49,980
+because it was necessary,
+
+1142
+00:48:49,980 --> 00:48:51,690
+because there was nothing
+there to do things
+
+1143
+00:48:51,690 --> 00:48:53,400
+at the scale we wanted to do it.
+
+1144
+00:48:53,400 --> 00:48:55,830
+And we still want to build
+lots of things today,
+
+1145
+00:48:55,830 --> 00:48:59,310
+but we don't need to build
+what others can provide.
+
+1146
+00:48:59,310 --> 00:49:03,240
+So we want to offload
+the undifferentiated work
+
+1147
+00:49:03,240 --> 00:49:07,020
+and make scale somebody else's,
+in this case AWS's problem.
+
+1148
+00:49:07,020 --> 00:49:09,360
+Let's have a quick look at
+what we did have to build.
+
+1149
+00:49:09,360 --> 00:49:11,220
+I'm not gonna go into the
+details of this slide,
+
+1150
+00:49:11,220 --> 00:49:13,440
+I'll talk through what we had to do.
+
+1151
+00:49:13,440 --> 00:49:15,630
+But the green pieces were
+the integrations we had to do
+
+1152
+00:49:15,630 --> 00:49:16,920
+with EKS.
+
+1153
+00:49:16,920 --> 00:49:18,840
+The red pieces were all of the services
+
+1154
+00:49:18,840 --> 00:49:21,090
+and the existing code of
+ours that we got to delete
+
+1155
+00:49:21,090 --> 00:49:23,163
+as we moved the control plane to EKS.
+
+1156
+00:49:24,000 --> 00:49:26,160
+So, here's the one text heavy slide
+
+1157
+00:49:26,160 --> 00:49:27,330
+that we have to read through.
+
+1158
+00:49:27,330 --> 00:49:30,000
+This is the list of what
+we spent our time doing.
+
+1159
+00:49:30,000 --> 00:49:32,940
+We worked for about a
+nine month period with EKS
+
+1160
+00:49:32,940 --> 00:49:35,760
+to work through getting their
+scale to where we needed to
+
+1161
+00:49:35,760 --> 00:49:37,503
+and doing these integrations.
+
+1162
+00:49:38,911 --> 00:49:40,410
+We had to use EKS itself.
+
+1163
+00:49:40,410 --> 00:49:41,730
+We had a lot of changes to make
+
+1164
+00:49:41,730 --> 00:49:44,340
+around our regional control planes,
+
+1165
+00:49:44,340 --> 00:49:46,530
+which are consolidated
+in account to give EKS
+
+1166
+00:49:46,530 --> 00:49:48,810
+its own space, and its own control plane,
+
+1167
+00:49:48,810 --> 00:49:51,063
+and its own VPC so we could isolate it.
+
+1168
+00:49:52,380 --> 00:49:55,050
+We have changes to our identity model.
+
+1169
+00:49:55,050 --> 00:49:56,550
+We have our own identity
+model, which works
+
+1170
+00:49:56,550 --> 00:49:58,620
+in both inside and outside AWS.
+
+1171
+00:49:58,620 --> 00:49:59,910
+We have to integrate with IAM
+
+1172
+00:49:59,910 --> 00:50:02,340
+for the EKS control plane integrations.
+
+1173
+00:50:02,340 --> 00:50:04,530
+And we had some integrations
+with CloudWatch to do
+
+1174
+00:50:04,530 --> 00:50:07,170
+as the Kubernetes logs go into CloudWatch
+
+1175
+00:50:07,170 --> 00:50:09,810
+and some prometheus
+integrations to support that.
+
+1176
+00:50:09,810 --> 00:50:12,480
+But all in all, we were
+able to work through this
+
+1177
+00:50:12,480 --> 00:50:14,730
+with a fairly small engineering team
+
+1178
+00:50:14,730 --> 00:50:16,280
+and we took the aggressive goal
+
+1179
+00:50:17,280 --> 00:50:19,293
+that we were going to, sorry.
+
+1180
+00:50:20,310 --> 00:50:21,390
+So we ended with a system
+
+1181
+00:50:21,390 --> 00:50:23,940
+that as you create a container
+create on the new one.
+
+1182
+00:50:23,940 --> 00:50:27,180
+We decided to migrate the
+entire fleet in one quarter.
+
+1183
+00:50:27,180 --> 00:50:29,130
+Getting long-term metrics of Netflix
+
+1184
+00:50:29,130 --> 00:50:31,470
+is another bug bearer of
+mine, but it's a pain.
+
+1185
+00:50:31,470 --> 00:50:33,540
+But this is the tail
+end of that migration.
+
+1186
+00:50:33,540 --> 00:50:35,640
+And within, we ran a
+little over a quarter,
+
+1187
+00:50:35,640 --> 00:50:37,950
+about 11 days over and we've migrated
+
+1188
+00:50:37,950 --> 00:50:40,530
+every last container
+from our existing system
+
+1189
+00:50:40,530 --> 00:50:42,870
+to launching on the new EKS control plane.
+
+1190
+00:50:42,870 --> 00:50:45,090
+And there's not a lot
+of pain in this story.
+
+1191
+00:50:45,090 --> 00:50:46,890
+Nothing ever goes smoothly.
+
+1192
+00:50:46,890 --> 00:50:48,240
+And we did find the limits.
+
+1193
+00:50:48,240 --> 00:50:52,050
+EKS doesn't like 120,000
+pods inside a single cluster.
+
+1194
+00:50:52,050 --> 00:50:53,610
+At least, it didn't back in March.
+
+1195
+00:50:53,610 --> 00:50:55,590
+I'm excited to see the
+hyperscale announcements
+
+1196
+00:50:55,590 --> 00:50:57,420
+that Eswar has been talking about today.
+
+1197
+00:50:57,420 --> 00:50:59,370
+I'm gonna go and test
+out some of those limits.
+
+1198
+00:50:59,370 --> 00:51:01,200
+And what we find at our mutation rates
+
+1199
+00:51:01,200 --> 00:51:03,570
+is that the numbers that
+EKS say they support,
+
+1200
+00:51:03,570 --> 00:51:05,880
+they support a little less
+when we're spinning the pods
+
+1201
+00:51:05,880 --> 00:51:06,830
+at the rate we are.
+
+1202
+00:51:08,040 --> 00:51:09,750
+And it was so successful.
+
+1203
+00:51:09,750 --> 00:51:12,540
+We also run a federation
+layer above those clusters
+
+1204
+00:51:12,540 --> 00:51:15,960
+where we choose which pods
+go into which cluster.
+
+1205
+00:51:15,960 --> 00:51:17,340
+Some of them need to
+be in the same cluster.
+
+1206
+00:51:17,340 --> 00:51:18,660
+Some want to be in different clusters
+
+1207
+00:51:18,660 --> 00:51:19,920
+for availability regions.
+
+1208
+00:51:19,920 --> 00:51:22,530
+We've also moved that
+federation layer to CD
+
+1209
+00:51:22,530 --> 00:51:26,580
+ahead of schedule because of
+how smooth this experience was.
+
+1210
+00:51:26,580 --> 00:51:28,410
+So, what's next?
+
+1211
+00:51:28,410 --> 00:51:31,140
+We spent this year evolving
+the tightest data plane
+
+1212
+00:51:31,140 --> 00:51:32,430
+to be less weird.
+
+1213
+00:51:32,430 --> 00:51:33,610
+It consisted of a Virtual Kubelet
+
+1214
+00:51:33,610 --> 00:51:35,940
+of like 60,000 lines of custom code
+
+1215
+00:51:35,940 --> 00:51:37,549
+and that was a bit a
+bridge too far to bring
+
+1216
+00:51:37,549 --> 00:51:40,920
+to AWS or to EKS.
+
+1217
+00:51:40,920 --> 00:51:42,960
+So now, it's running on the stock Kubelet
+
+1218
+00:51:42,960 --> 00:51:43,890
+and we're going through another one
+
+1219
+00:51:43,890 --> 00:51:45,210
+of those crazy migrations,
+
+1220
+00:51:45,210 --> 00:51:47,520
+which we're racing towards
+year end to try and be done.
+
+1221
+00:51:47,520 --> 00:51:49,860
+We'll probably be about
+11 days over again.
+
+1222
+00:51:49,860 --> 00:51:53,040
+But that opens the door to
+an EKS data plane migration
+
+1223
+00:51:53,040 --> 00:51:53,873
+in the future.
+
+1224
+00:51:55,620 --> 00:52:00,030
+EKS Hybrid Nodes open the
+door for use cases we have,
+
+1225
+00:52:00,030 --> 00:52:02,100
+where we're seeing more
+and more edge use cases
+
+1226
+00:52:02,100 --> 00:52:04,860
+for our gaming and increasingly
+heterogeneous encoding
+
+1227
+00:52:04,860 --> 00:52:06,210
+use cases
+
+1228
+00:52:06,210 --> 00:52:09,030
+EKS Auto Mode allows us
+potentially getting rid
+
+1229
+00:52:09,030 --> 00:52:12,270
+of having to look after the OS
+for many of these use cases.
+
+1230
+00:52:12,270 --> 00:52:13,103
+So, there are all the things
+
+1231
+00:52:13,103 --> 00:52:15,030
+we're looking at in this coming year.
+
+1232
+00:52:15,030 --> 00:52:16,980
+We're also experimenting
+with thinner containers,
+
+1233
+00:52:16,980 --> 00:52:18,060
+If any of you can do the math
+
+1234
+00:52:18,060 --> 00:52:19,290
+in some of those earlier slides,
+
+1235
+00:52:19,290 --> 00:52:21,120
+you'll figure that our containers are big,
+
+1236
+00:52:21,120 --> 00:52:23,280
+spanning many CPUs in many cases,
+
+1237
+00:52:23,280 --> 00:52:25,770
+but we're seeing more and
+more thin container use cases.
+
+1238
+00:52:25,770 --> 00:52:28,380
+So, this is what we're
+gonna work on in 2026
+
+1239
+00:52:28,380 --> 00:52:30,120
+and hopefully, we'll come
+back and tell a story
+
+1240
+00:52:30,120 --> 00:52:34,140
+about how we migrated the data
+plane to EKS in future years.
+
+1241
+00:52:34,140 --> 00:52:36,940
+So, thank you for time and
+the opportunity to talk here.
+
+1242
+00:52:38,130 --> 00:52:39,295
+Sorry, handover
+
+1243
+00:52:39,295 --> 00:52:42,675
+(audience clapping)
+
+1244
+00:52:42,675 --> 00:52:43,508
+- The handover.
+
+1245
+00:52:43,508 --> 00:52:45,933
+All right, thank you Niall.
+
+1246
+00:52:46,920 --> 00:52:50,220
+Looking forward to you continue
+to pushing the boundaries
+
+1247
+00:52:50,220 --> 00:52:52,680
+of what we can support at scale.
+
+1248
+00:52:52,680 --> 00:52:56,160
+Okay, so finally, the title
+with seven minutes to go
+
+1249
+00:52:56,160 --> 00:52:58,350
+of actually what's coming next.
+
+1250
+00:52:58,350 --> 00:53:00,510
+We've done a lot of work this year,
+
+1251
+00:53:00,510 --> 00:53:02,580
+but we love unsatisfied customers
+
+1252
+00:53:02,580 --> 00:53:04,263
+and we know we have more to do.
+
+1253
+00:53:06,660 --> 00:53:08,100
+This isn't an exact quote,
+
+1254
+00:53:08,100 --> 00:53:10,110
+but it's one that I've put together
+
+1255
+00:53:10,110 --> 00:53:13,080
+from an aggregation of talking
+to hundreds of customers
+
+1256
+00:53:13,080 --> 00:53:15,540
+over the last year or two,
+
+1257
+00:53:15,540 --> 00:53:17,640
+whether it's newer Kubernetes adopters.
+
+1258
+00:53:17,640 --> 00:53:21,510
+Even existing customers who are
+early adopters of Kubernetes
+
+1259
+00:53:21,510 --> 00:53:25,200
+are realizing that it's not
+really useful to my business
+
+1260
+00:53:25,200 --> 00:53:28,890
+to tweak every last
+add-on every last setting,
+
+1261
+00:53:28,890 --> 00:53:30,330
+own every last thing.
+
+1262
+00:53:30,330 --> 00:53:32,760
+It's the same refrain of
+I want to use Kubernetes.
+
+1263
+00:53:32,760 --> 00:53:35,400
+It's become the standard.
+I want to use the tooling.
+
+1264
+00:53:35,400 --> 00:53:37,350
+I don't wanna think
+about clusters, upgrades,
+
+1265
+00:53:37,350 --> 00:53:38,703
+any of the hard parts.
+
+1266
+00:53:41,070 --> 00:53:42,273
+So there's often,
+
+1267
+00:53:43,530 --> 00:53:45,390
+you know, there's pure
+technology companies
+
+1268
+00:53:45,390 --> 00:53:47,070
+out there, right, whose goal
+
+1269
+00:53:47,070 --> 00:53:50,760
+is to solve these hard problems at scale.
+
+1270
+00:53:50,760 --> 00:53:52,380
+And we have customers
+who also need to solve
+
+1271
+00:53:52,380 --> 00:53:54,330
+these hard problems, but
+they have different focuses.
+
+1272
+00:53:54,330 --> 00:53:57,600
+You might be in healthcare, gaming,
+
+1273
+00:53:57,600 --> 00:53:59,100
+pharmaceutical, airlines,
+
+1274
+00:53:59,100 --> 00:54:01,260
+There's all kinds of different
+industries out there.
+
+1275
+00:54:01,260 --> 00:54:04,800
+You don't necessarily have
+the time to focus on running
+
+1276
+00:54:04,800 --> 00:54:08,553
+and managing large open
+source projects yourself.
+
+1277
+00:54:10,920 --> 00:54:14,040
+And so, you know, how
+do you use technology
+
+1278
+00:54:14,040 --> 00:54:15,960
+without becoming a pure
+technology company?
+
+1279
+00:54:15,960 --> 00:54:17,670
+I think every company
+these days wants to say
+
+1280
+00:54:17,670 --> 00:54:20,130
+they're a tech company,
+but that's not really
+
+1281
+00:54:20,130 --> 00:54:22,290
+what the end core business focus is
+
+1282
+00:54:22,290 --> 00:54:23,970
+of a lot of these companies out there.
+
+1283
+00:54:23,970 --> 00:54:25,530
+And you come to a conference like this,
+
+1284
+00:54:25,530 --> 00:54:28,230
+you're seeing a lot of
+projects, innovations,
+
+1285
+00:54:28,230 --> 00:54:31,440
+and how do you go back and
+make use of that yourselves.
+
+1286
+00:54:31,440 --> 00:54:33,720
+Open source software,
+you know, contributing
+
+1287
+00:54:33,720 --> 00:54:35,820
+to several small projects,
+
+1288
+00:54:35,820 --> 00:54:37,710
+running it small scale with open source,
+
+1289
+00:54:37,710 --> 00:54:39,750
+doing it yourself, that's doable.
+
+1290
+00:54:39,750 --> 00:54:43,050
+As soon as you start getting
+to 20 open source projects,
+
+1291
+00:54:43,050 --> 00:54:45,330
+putting that together, running at scale,
+
+1292
+00:54:45,330 --> 00:54:47,733
+you need a lot of time and expertise.
+
+1293
+00:54:49,050 --> 00:54:51,450
+And so really, what we think about at EKS
+
+1294
+00:54:51,450 --> 00:54:56,400
+is taking open standards,
+combining that with AWS,
+
+1295
+00:54:56,400 --> 00:54:58,410
+and accelerating your time to value.
+
+1296
+00:54:58,410 --> 00:54:59,980
+It's using all of EKS
+
+1297
+00:55:02,380 --> 00:55:04,830
+without having to manage
+
+1298
+00:55:04,830 --> 00:55:06,540
+these open source projects yourselves.
+
+1299
+00:55:06,540 --> 00:55:10,533
+So, it's lowering the cost of
+entry to run these projects.
+
+1300
+00:55:11,910 --> 00:55:15,300
+Every type of workload
+runs on EKS these days.
+
+1301
+00:55:15,300 --> 00:55:17,400
+We just talked a lot about AI/ML.
+
+1302
+00:55:17,400 --> 00:55:19,260
+You heard Niall talk about streaming
+
+1303
+00:55:19,260 --> 00:55:23,010
+and encoding, gaming, web
+applications, data processing.
+
+1304
+00:55:23,010 --> 00:55:25,560
+You name the workload,
+it's running on EKS,
+
+1305
+00:55:25,560 --> 00:55:30,090
+and so we have a very broad
+diverse customer base,
+
+1306
+00:55:30,090 --> 00:55:31,140
+types of workloads.
+
+1307
+00:55:31,140 --> 00:55:33,360
+We're gonna make sure our
+service works for all of those.
+
+1308
+00:55:33,360 --> 00:55:36,540
+Of course, AI/ML is the
+hot topic these days,
+
+1309
+00:55:36,540 --> 00:55:37,920
+but there's lots of other workloads,
+
+1310
+00:55:37,920 --> 00:55:41,790
+Stateful workloads, in
+particular, Spark, Flink,
+
+1311
+00:55:41,790 --> 00:55:42,960
+we wanna make those easier.
+
+1312
+00:55:42,960 --> 00:55:44,860
+How do you upgrade stateful workloads?
+
+1313
+00:55:47,790 --> 00:55:51,150
+EKS, I think, we've showed
+this slide in a few years.
+
+1314
+00:55:51,150 --> 00:55:53,490
+We started with just the
+managed control plane.
+
+1315
+00:55:53,490 --> 00:55:56,070
+That's the really hard part of Kubernetes.
+
+1316
+00:55:56,070 --> 00:55:59,100
+Running etcd, scaling,
+patching API servers,
+
+1317
+00:55:59,100 --> 00:56:00,780
+it's not easy to do.
+
+1318
+00:56:00,780 --> 00:56:02,943
+And that's where we started back in 2018.
+
+1319
+00:56:04,560 --> 00:56:08,760
+Over the time, you know, we've
+moved beyond just clusters
+
+1320
+00:56:08,760 --> 00:56:11,343
+into hybrid running
+compute outside of AWS.
+
+1321
+00:56:12,240 --> 00:56:14,070
+Managing more of the platform components.
+
+1322
+00:56:14,070 --> 00:56:17,190
+So EKS capabilities, which
+I talked about this year,
+
+1323
+00:56:17,190 --> 00:56:19,800
+are launched this year,
+will continue to take on
+
+1324
+00:56:19,800 --> 00:56:21,630
+heavy lifting of some of those components
+
+1325
+00:56:21,630 --> 00:56:23,490
+that you're running in
+addition to the cluster,
+
+1326
+00:56:23,490 --> 00:56:25,350
+and then the developer experience.
+
+1327
+00:56:25,350 --> 00:56:26,280
+What if there was a world
+
+1328
+00:56:26,280 --> 00:56:29,610
+where you could just give EKS
+your application manifest?
+
+1329
+00:56:29,610 --> 00:56:32,100
+You didn't even have to create
+a cluster in the first place.
+
+1330
+00:56:32,100 --> 00:56:34,380
+You just gave us the
+application you wanna run,
+
+1331
+00:56:34,380 --> 00:56:35,640
+let us do the heavy lifting,
+
+1332
+00:56:35,640 --> 00:56:38,400
+like Niall just talked
+about a federated layer
+
+1333
+00:56:38,400 --> 00:56:39,750
+above all of their clusters
+
+1334
+00:56:39,750 --> 00:56:42,120
+that they've built to
+figure out where pods go.
+
+1335
+00:56:42,120 --> 00:56:43,530
+We'd love to do something like that,
+
+1336
+00:56:43,530 --> 00:56:44,760
+so you can get Kubernetes
+
+1337
+00:56:44,760 --> 00:56:46,960
+without even having to
+think about clusters.
+
+1338
+00:56:49,500 --> 00:56:52,413
+So, what are our priorities
+for the next three years?
+
+1339
+00:56:53,310 --> 00:56:55,680
+One, critical workload
+patterns at any scale.
+
+1340
+00:56:55,680 --> 00:56:57,180
+That's really what we've
+talked about today.
+
+1341
+00:56:57,180 --> 00:56:59,820
+We just talked about all the
+different workload patterns,
+
+1342
+00:56:59,820 --> 00:57:03,021
+the scale requirements,
+just keep getting larger.
+
+1343
+00:57:03,021 --> 00:57:04,440
+We're, you know, we're gonna have to look
+
+1344
+00:57:04,440 --> 00:57:06,390
+at splitting out across multiple clusters,
+
+1345
+00:57:06,390 --> 00:57:09,270
+because at a certain
+scale, you just run into,
+
+1346
+00:57:09,270 --> 00:57:11,490
+this is as large as a
+single cluster can get.
+
+1347
+00:57:11,490 --> 00:57:13,620
+How can we make running workloads
+
+1348
+00:57:13,620 --> 00:57:15,303
+across multiple clusters easier?
+
+1349
+00:57:17,427 --> 00:57:20,607
+AWS integrations, this
+is a large part of me
+
+1350
+00:57:20,607 --> 00:57:23,460
+and Eswar's job is going and working
+
+1351
+00:57:23,460 --> 00:57:25,530
+with the other teams within AWS,
+
+1352
+00:57:25,530 --> 00:57:28,110
+making sure that they're
+building the right things.
+
+1353
+00:57:28,110 --> 00:57:31,530
+Kubernetes is really the
+front door to the cloud
+
+1354
+00:57:31,530 --> 00:57:34,050
+for a lot of customers we talk to.
+
+1355
+00:57:34,050 --> 00:57:37,770
+They're not going necessarily
+through 50 AWS services.
+
+1356
+00:57:37,770 --> 00:57:39,060
+They're going through Kubernetes
+
+1357
+00:57:39,060 --> 00:57:41,610
+and the EBS driver provisions EBS,
+
+1358
+00:57:41,610 --> 00:57:44,700
+the S3 driver provisions S3.
+
+1359
+00:57:44,700 --> 00:57:46,740
+They're using AWS through Kubernetes,
+
+1360
+00:57:46,740 --> 00:57:49,140
+and it's really important
+for us to make sure
+
+1361
+00:57:49,140 --> 00:57:51,450
+that these other services across AWS
+
+1362
+00:57:51,450 --> 00:57:53,727
+work well for Kubernetes native customers.
+
+1363
+00:57:53,727 --> 00:57:56,100
+And so, that's a big part of it.
+
+1364
+00:57:56,100 --> 00:57:57,690
+You'll see us working with other teams,
+
+1365
+00:57:57,690 --> 00:57:58,940
+more integrations coming.
+
+1366
+00:58:01,470 --> 00:58:03,480
+Meeting your workloads where they are.
+
+1367
+00:58:03,480 --> 00:58:04,800
+That slide I showed earlier,
+
+1368
+00:58:04,800 --> 00:58:06,330
+everything from EKS Distro,
+
+1369
+00:58:06,330 --> 00:58:08,400
+which is take it, run it yourself
+
+1370
+00:58:08,400 --> 00:58:11,160
+anywhere possible on a
+jet, on a cruise ship,
+
+1371
+00:58:11,160 --> 00:58:13,770
+EKS in the cloud, and anywhere in between.
+
+1372
+00:58:13,770 --> 00:58:16,710
+We're working on improving our story
+
+1373
+00:58:16,710 --> 00:58:18,360
+of managing clusters on outposts,
+
+1374
+00:58:18,360 --> 00:58:21,900
+so supporting the new skew
+and server types of outposts
+
+1375
+00:58:21,900 --> 00:58:22,733
+that are coming.
+
+1376
+00:58:22,733 --> 00:58:24,990
+We will continue to make
+sure we meet your workloads
+
+1377
+00:58:24,990 --> 00:58:25,823
+where they are.
+
+1378
+00:58:28,530 --> 00:58:31,140
+I wrote simplify platform building here.
+
+1379
+00:58:31,140 --> 00:58:32,400
+It may be a little controversial
+
+1380
+00:58:32,400 --> 00:58:34,860
+to say eliminate platform building.
+
+1381
+00:58:34,860 --> 00:58:38,130
+We wanna just launch more and
+more managed capabilities,
+
+1382
+00:58:38,130 --> 00:58:41,790
+so you don't have to run
+or need huge platform teams
+
+1383
+00:58:41,790 --> 00:58:42,930
+in order to use EKS.
+
+1384
+00:58:42,930 --> 00:58:45,810
+We really don't think you
+should need massive teams
+
+1385
+00:58:45,810 --> 00:58:46,830
+to run Kubernetes.
+
+1386
+00:58:46,830 --> 00:58:50,673
+Again, use Kubernetes
+without having to operate it.
+
+1387
+00:58:52,410 --> 00:58:55,470
+And then, lastly is just,
+you know, accelerating
+
+1388
+00:58:55,470 --> 00:58:56,640
+the flywheel of innovation.
+
+1389
+00:58:56,640 --> 00:59:00,000
+We continue to work in the
+community, open source projects.
+
+1390
+00:59:00,000 --> 00:59:01,620
+Generally, I'd say our philosophy
+
+1391
+00:59:01,620 --> 00:59:03,630
+is if there's an existing standard
+
+1392
+00:59:03,630 --> 00:59:05,067
+in the open source
+community, we will take it
+
+1393
+00:59:05,067 --> 00:59:06,660
+and we we'll run with it.
+
+1394
+00:59:06,660 --> 00:59:08,370
+We did that with the
+launch of managed Argo
+
+1395
+00:59:08,370 --> 00:59:09,520
+that you saw this year.
+
+1396
+00:59:10,710 --> 00:59:12,150
+Something like Karpenter
+
+1397
+00:59:12,150 --> 00:59:14,220
+was one where we went
+out into the community,
+
+1398
+00:59:14,220 --> 00:59:17,163
+there was an existing
+standard cluster auto scaler.
+
+1399
+00:59:18,000 --> 00:59:19,230
+We thought we could do better.
+
+1400
+00:59:19,230 --> 00:59:21,907
+And that's a, it's a big decision to say,
+
+1401
+00:59:21,907 --> 00:59:23,340
+"There's an existing standard.
+
+1402
+00:59:23,340 --> 00:59:25,830
+You know, we're gonna build
+an entirely new project."
+
+1403
+00:59:25,830 --> 00:59:28,140
+There's, I don't know, I
+think a meme at 16 standards,
+
+1404
+00:59:28,140 --> 00:59:30,630
+we're gonna go do the new
+one, now there's 17 standards.
+
+1405
+00:59:30,630 --> 00:59:33,692
+But in this case, we actually
+built the new standards.
+
+1406
+00:59:33,692 --> 00:59:36,780
+Nearly every cloud provider
+supports a Karpenter.
+
+1407
+00:59:36,780 --> 00:59:39,480
+And then there's other cases
+like ACK AWS controllers
+
+1408
+00:59:39,480 --> 00:59:40,590
+for Kubernetes.
+
+1409
+00:59:40,590 --> 00:59:43,620
+More of a just open
+source AWS only project,
+
+1410
+00:59:43,620 --> 00:59:45,660
+but there's reasons to open source that.
+
+1411
+00:59:45,660 --> 00:59:48,690
+So, we'll continue to
+work in the community.
+
+1412
+00:59:48,690 --> 00:59:50,190
+Our public roadmap.
+
+1413
+00:59:50,190 --> 00:59:51,630
+I get emails every time
+
+1414
+00:59:51,630 --> 00:59:54,060
+there's something somebody
+makes a comment on here.
+
+1415
+00:59:54,060 --> 00:59:55,710
+So, I check this every day.
+
+1416
+00:59:55,710 --> 00:59:58,410
+It's a way to get feedback to us.
+
+1417
+00:59:58,410 --> 00:59:59,730
+There's more sessions coming.
+
+1418
+00:59:59,730 --> 01:00:03,107
+So if you want to learn
+more about EKS capabilities,
+
+1419
+01:00:03,107 --> 01:00:04,180
+if you want to learn more
+
+1420
+01:00:04,180 --> 01:00:06,237
+about the container network observability,
+
+1421
+01:00:06,237 --> 01:00:08,280
+and if you want to go even deeper
+
+1422
+01:00:08,280 --> 01:00:09,720
+than what Eswar talked about today
+
+1423
+01:00:09,720 --> 01:00:13,050
+on the high scale ultra scale performance,
+
+1424
+01:00:13,050 --> 01:00:15,570
+I believe that one's a 500 level,
+
+1425
+01:00:15,570 --> 01:00:17,550
+which is one of the few 500 levels.
+
+1426
+01:00:17,550 --> 01:00:18,960
+So if you want to get really deep
+
+1427
+01:00:18,960 --> 01:00:22,710
+on some of the architecture
+changes, go check out that one.
+
+1428
+01:00:22,710 --> 01:00:27,510
+And yeah, some resources, best
+practices, guide blueprints.
+
+1429
+01:00:27,510 --> 01:00:29,760
+And that's it. Thank you very much.
+
+1430
+01:00:29,760 --> 01:00:31,942
+(audience clapping)
+

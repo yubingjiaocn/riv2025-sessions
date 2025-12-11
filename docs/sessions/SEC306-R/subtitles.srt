@@ -1,0 +1,5951 @@
+1
+00:00:00,000 --> 00:00:00,990
+- [Toby] Thank you for making the trip
+
+2
+00:00:00,990 --> 00:00:02,190
+all the way out to Mandalay Bay.
+
+3
+00:00:02,190 --> 00:00:04,950
+I know this is one of the harder venues
+
+4
+00:00:04,950 --> 00:00:06,000
+to kind of get people into.
+
+5
+00:00:06,000 --> 00:00:07,800
+So I appreciate you making the trip.
+
+6
+00:00:09,300 --> 00:00:13,170
+Today we're gonna talk about
+what's on the screen here,
+
+7
+00:00:13,170 --> 00:00:15,000
+maximizing EC2 performance.
+
+8
+00:00:15,000 --> 00:00:18,270
+So this is a code talk
+
+9
+00:00:18,270 --> 00:00:20,100
+and this is a little bit
+of a different format
+
+10
+00:00:20,100 --> 00:00:20,933
+than what I,
+
+11
+00:00:20,933 --> 00:00:22,200
+I've only given one other code talk
+
+12
+00:00:22,200 --> 00:00:24,120
+and I was at a Toronto summit,
+
+13
+00:00:24,120 --> 00:00:25,290
+and I was on ground level,
+
+14
+00:00:25,290 --> 00:00:27,590
+so I'm not used to being
+up here on the stage.
+
+15
+00:00:28,500 --> 00:00:31,290
+And I was hoping to make
+this a little more dynamic,
+
+16
+00:00:31,290 --> 00:00:32,670
+but now given that we're up here
+
+17
+00:00:32,670 --> 00:00:33,900
+and not able to kind of mingle it,
+
+18
+00:00:33,900 --> 00:00:35,070
+maybe it's gonna be a little bit weird,
+
+19
+00:00:35,070 --> 00:00:36,270
+but I have stickers.
+
+20
+00:00:36,270 --> 00:00:39,840
+So if I was, you're gonna be,
+
+21
+00:00:39,840 --> 00:00:41,250
+if you were answering questions
+
+22
+00:00:41,250 --> 00:00:42,660
+or we were getting some engagement,
+
+23
+00:00:42,660 --> 00:00:43,980
+I was gonna give out stickers.
+
+24
+00:00:43,980 --> 00:00:45,180
+I can't really hold 'em a hostage.
+
+25
+00:00:45,180 --> 00:00:47,400
+So if you do want a sticker,
+
+26
+00:00:47,400 --> 00:00:48,960
+please afterwards come and get,
+
+27
+00:00:48,960 --> 00:00:51,210
+talk to me and I'll be
+happy to give you one.
+
+28
+00:00:52,290 --> 00:00:53,640
+But yeah, my name's Toby Buckley.
+
+29
+00:00:53,640 --> 00:00:57,450
+I am a specialist solutions
+architect on EC2 team.
+
+30
+00:00:57,450 --> 00:00:59,730
+I focus on EC2 performance
+
+31
+00:00:59,730 --> 00:01:02,310
+and helping customers
+get the most out of EC2.
+
+32
+00:01:02,310 --> 00:01:03,570
+I'm joined by Geoff.
+
+33
+00:01:03,570 --> 00:01:04,740
+- [Geoff] Hi, I'm Geoff,
+
+34
+00:01:04,740 --> 00:01:07,530
+Geoff Blake, I'm principal
+engineer for Annapurna Labs
+
+35
+00:01:07,530 --> 00:01:10,560
+at AWS, where I work on
+optimizing performance
+
+36
+00:01:10,560 --> 00:01:11,970
+for Graviton instances
+
+37
+00:01:11,970 --> 00:01:13,950
+all the way from user software,
+
+38
+00:01:13,950 --> 00:01:14,910
+which we'll talk about today,
+
+39
+00:01:14,910 --> 00:01:16,140
+all the way down into the hardware,
+
+40
+00:01:16,140 --> 00:01:18,420
+which we'll also touch on.
+
+41
+00:01:18,420 --> 00:01:20,400
+- [Toby] Geoff's super smart guy.
+
+42
+00:01:20,400 --> 00:01:22,920
+So yeah, I think we
+should have an interesting
+
+43
+00:01:22,920 --> 00:01:25,260
+jam-packed session for you today.
+
+44
+00:01:25,260 --> 00:01:27,010
+This is what we're gonna talk about
+
+45
+00:01:28,890 --> 00:01:31,470
+really just kind of talking
+about performance engineering
+
+46
+00:01:31,470 --> 00:01:33,510
+from a high level perspective.
+
+47
+00:01:33,510 --> 00:01:34,590
+So not necessarily getting,
+
+48
+00:01:34,590 --> 00:01:37,230
+I know we got one HFT
+person in the audience.
+
+49
+00:01:37,230 --> 00:01:38,280
+I'm not gonna necessarily get into
+
+50
+00:01:38,280 --> 00:01:39,330
+the high frequency trading,
+
+51
+00:01:39,330 --> 00:01:42,360
+like low level performance stuff.
+
+52
+00:01:42,360 --> 00:01:43,470
+This is more of a high level stuff,
+
+53
+00:01:43,470 --> 00:01:45,499
+although some of the tools
+we have may bring to bear
+
+54
+00:01:45,499 --> 00:01:46,860
+some good signals for you
+
+55
+00:01:46,860 --> 00:01:49,140
+to kind of, APerf being that tool.
+
+56
+00:01:49,140 --> 00:01:50,580
+So we'll introduce Aperf.
+
+57
+00:01:50,580 --> 00:01:52,470
+If you're not familiar with that,
+
+58
+00:01:52,470 --> 00:01:53,310
+it's a great tool
+
+59
+00:01:53,310 --> 00:01:55,620
+for understanding the
+performance of your system.
+
+60
+00:01:55,620 --> 00:01:57,990
+And then we've got a couple of examples.
+
+61
+00:01:57,990 --> 00:01:59,700
+We've got a Groovy demo.
+
+62
+00:01:59,700 --> 00:02:01,860
+Anybody, any Groovy users out here,
+
+63
+00:02:01,860 --> 00:02:02,970
+any Java Groovy users.
+
+64
+00:02:02,970 --> 00:02:04,290
+Okay, so one, it's great,
+
+65
+00:02:04,290 --> 00:02:06,870
+but I'm not a Groovy expert either,
+
+66
+00:02:06,870 --> 00:02:09,490
+but kind of put this demo together
+
+67
+00:02:10,380 --> 00:02:14,430
+really to try to be not so contrived
+
+68
+00:02:14,430 --> 00:02:17,130
+that it seems silly for those
+that are in the audience,
+
+69
+00:02:17,130 --> 00:02:22,130
+but one that is more mimics
+maybe a natural organic growth
+
+70
+00:02:22,410 --> 00:02:24,540
+of an application at a company.
+
+71
+00:02:24,540 --> 00:02:27,360
+It starts off pretty innocent
+and then it starts getting big
+
+72
+00:02:27,360 --> 00:02:28,320
+and then it gets slow
+
+73
+00:02:28,320 --> 00:02:29,970
+and now you need to understand why, right?
+
+74
+00:02:29,970 --> 00:02:31,770
+So something more like that.
+
+75
+00:02:31,770 --> 00:02:34,290
+We also have one on MongoDB,
+
+76
+00:02:34,290 --> 00:02:36,390
+and how you can get more
+performance outta MongoDB,
+
+77
+00:02:36,390 --> 00:02:39,390
+and how the tools can surface the signals
+
+78
+00:02:39,390 --> 00:02:41,820
+so that you can understand why.
+
+79
+00:02:41,820 --> 00:02:43,080
+And then like any good talk
+
+80
+00:02:43,080 --> 00:02:45,143
+we're gonna send you off
+with a call to action.
+
+81
+00:02:47,250 --> 00:02:48,083
+I think that's it.
+
+82
+00:02:48,083 --> 00:02:48,930
+I'm gonna turn it over to Geoff,
+
+83
+00:02:48,930 --> 00:02:50,280
+what just level setting here.
+
+84
+00:02:50,280 --> 00:02:51,510
+I'm gonna run some of the slides.
+
+85
+00:02:51,510 --> 00:02:53,253
+He's gonna do the coding,
+
+86
+00:02:55,140 --> 00:02:56,580
+as I said before,
+
+87
+00:02:56,580 --> 00:02:57,930
+we don't have a whole lot of code
+
+88
+00:02:57,930 --> 00:02:59,400
+for you to follow through with.
+
+89
+00:02:59,400 --> 00:03:02,100
+So there's none of this stuff
+is in a repo necessarily,
+
+90
+00:03:02,100 --> 00:03:04,440
+but I'd be happy to
+connect with you offline
+
+91
+00:03:04,440 --> 00:03:08,340
+and we could maybe offer
+up whatever we can.
+
+92
+00:03:08,340 --> 00:03:10,260
+We could potentially get
+some of this in a repo
+
+93
+00:03:10,260 --> 00:03:11,250
+if that's of interest to people.
+
+94
+00:03:11,250 --> 00:03:13,980
+But again, hit me up afterwards,
+
+95
+00:03:13,980 --> 00:03:15,900
+outside or after the talk
+
+96
+00:03:15,900 --> 00:03:17,700
+and we'll talk about
+what logistics look like
+
+97
+00:03:17,700 --> 00:03:18,533
+moving forward.
+
+98
+00:03:18,533 --> 00:03:19,741
+So with that, I'll hand it off to Geoff.
+
+99
+00:03:19,741 --> 00:03:22,290
+- [Geoff] Okay, so we're gonna introduce
+
+100
+00:03:22,290 --> 00:03:23,160
+performance engineering
+
+101
+00:03:23,160 --> 00:03:26,460
+for those that may not do
+this day in and day out
+
+102
+00:03:26,460 --> 00:03:29,010
+like myself and some of my team,
+
+103
+00:03:29,010 --> 00:03:30,150
+but I guess a show of hands,
+
+104
+00:03:30,150 --> 00:03:33,843
+who does performance engineering
+as their primary role?
+
+105
+00:03:35,040 --> 00:03:38,490
+Okay, one, so you might
+know some of this already,
+
+106
+00:03:38,490 --> 00:03:39,360
+but for the rest of you
+
+107
+00:03:39,360 --> 00:03:40,770
+we're gonna give a quick primer
+
+108
+00:03:40,770 --> 00:03:41,820
+on performance engineering.
+
+109
+00:03:41,820 --> 00:03:43,440
+So when we go down to the code
+
+110
+00:03:43,440 --> 00:03:45,330
+and try to figure out what we're gonna try
+
+111
+00:03:45,330 --> 00:03:47,430
+to take advantage of to
+make things go faster,
+
+112
+00:03:47,430 --> 00:03:51,270
+you have a little bit
+of a base to rely on.
+
+113
+00:03:51,270 --> 00:03:52,980
+So performance engineering very simply
+
+114
+00:03:52,980 --> 00:03:55,696
+is just finding
+opportunity in your system,
+
+115
+00:03:55,696 --> 00:03:59,190
+whether that's for efficiency
+gains, price efficiency
+
+116
+00:03:59,190 --> 00:04:01,020
+or performance efficiency,
+
+117
+00:04:01,020 --> 00:04:02,610
+which I like the most.
+
+118
+00:04:02,610 --> 00:04:04,050
+But price performance engineering
+
+119
+00:04:04,050 --> 00:04:06,550
+is also something we wanna
+find opportunities for.
+
+120
+00:04:07,440 --> 00:04:09,180
+And while that sounds simple,
+
+121
+00:04:09,180 --> 00:04:10,661
+it has some big challenges.
+
+122
+00:04:10,661 --> 00:04:13,710
+One of them is abstractions
+that you rely on
+
+123
+00:04:13,710 --> 00:04:14,850
+to build your software.
+
+124
+00:04:14,850 --> 00:04:16,740
+Everyone uses things like sockets
+
+125
+00:04:16,740 --> 00:04:18,480
+and web frameworks to
+build their software.
+
+126
+00:04:18,480 --> 00:04:20,700
+So they just concentrate
+on their business logic.
+
+127
+00:04:20,700 --> 00:04:22,410
+When looking for
+opportunities for performance,
+
+128
+00:04:22,410 --> 00:04:25,290
+those things can leak where
+you have to start looking
+
+129
+00:04:25,290 --> 00:04:28,140
+underneath your abstractions
+that you rely on
+
+130
+00:04:28,140 --> 00:04:29,190
+to build your logic,
+
+131
+00:04:29,190 --> 00:04:31,020
+but now they're not
+performing the way you want.
+
+132
+00:04:31,020 --> 00:04:32,550
+You have to go and look
+underneath the covers.
+
+133
+00:04:32,550 --> 00:04:37,550
+So case in point, we were
+helping a customer optimize
+
+134
+00:04:38,160 --> 00:04:41,400
+some code that they were trying to get
+
+135
+00:04:41,400 --> 00:04:43,710
+performant on Graviton,
+I'm a Graviton engineer
+
+136
+00:04:43,710 --> 00:04:45,300
+so I'm gonna talk a lot about Graviton,
+
+137
+00:04:45,300 --> 00:04:48,390
+is they had this abstraction
+they built their software on
+
+138
+00:04:48,390 --> 00:04:50,280
+and we had to actually
+go into the abstraction
+
+139
+00:04:50,280 --> 00:04:52,320
+they had no knowledge of
+and actually show them
+
+140
+00:04:52,320 --> 00:04:54,270
+that their optimization
+wasn't in their code.
+
+141
+00:04:54,270 --> 00:04:56,070
+It was in this abstraction
+that we had to go
+
+142
+00:04:56,070 --> 00:04:59,340
+and do some away team
+programming to make faster.
+
+143
+00:04:59,340 --> 00:05:03,210
+And again, abstractions
+leak, everything has a cost.
+
+144
+00:05:03,210 --> 00:05:06,000
+Now you have to start thinking
+about what you've built,
+
+145
+00:05:06,000 --> 00:05:07,410
+what you're building on
+
+146
+00:05:07,410 --> 00:05:09,630
+and what those costs
+are to try to understand
+
+147
+00:05:09,630 --> 00:05:11,400
+how you can find more opportunities
+
+148
+00:05:11,400 --> 00:05:14,970
+such as you don't just have
+a VM that's all by itself.
+
+149
+00:05:14,970 --> 00:05:16,380
+It may have different storage,
+
+150
+00:05:16,380 --> 00:05:17,640
+different networking characteristics
+
+151
+00:05:17,640 --> 00:05:19,050
+and you have to know what those costs are,
+
+152
+00:05:19,050 --> 00:05:20,100
+not just in price
+
+153
+00:05:20,100 --> 00:05:22,680
+but also what performance it can get
+
+154
+00:05:22,680 --> 00:05:25,350
+or what performance you're
+not getting from that.
+
+155
+00:05:25,350 --> 00:05:27,030
+Another part with performance engineering
+
+156
+00:05:27,030 --> 00:05:28,710
+is bottlenecks may hide others.
+
+157
+00:05:28,710 --> 00:05:31,620
+You can have a bottleneck
+that you're trying to remove
+
+158
+00:05:31,620 --> 00:05:32,580
+to get your performance up
+
+159
+00:05:32,580 --> 00:05:34,230
+and then when you finally fix it,
+
+160
+00:05:34,230 --> 00:05:36,210
+you find you've uncovered a worse problem
+
+161
+00:05:36,210 --> 00:05:38,100
+that was just hiding behind it.
+
+162
+00:05:38,100 --> 00:05:40,140
+We had something like this where we fixed
+
+163
+00:05:40,140 --> 00:05:41,700
+the performance of a network application
+
+164
+00:05:41,700 --> 00:05:43,830
+and we uncovered a synchronization problem
+
+165
+00:05:43,830 --> 00:05:46,770
+that actually made the
+performance worse by 15x.
+
+166
+00:05:46,770 --> 00:05:48,480
+And we had to go underneath again.
+
+167
+00:05:48,480 --> 00:05:49,800
+We had to dig into the abstractions
+
+168
+00:05:49,800 --> 00:05:50,633
+we were relying on
+
+169
+00:05:50,633 --> 00:05:52,320
+to find that second bottleneck
+
+170
+00:05:52,320 --> 00:05:54,630
+before we actually got the
+performance we expected.
+
+171
+00:05:54,630 --> 00:05:58,110
+So these are things that
+can finally lead to just,
+
+172
+00:05:58,110 --> 00:06:00,030
+I've already talked about a
+lot of things that can happen.
+
+173
+00:06:00,030 --> 00:06:01,740
+This is a search space explosion.
+
+174
+00:06:01,740 --> 00:06:04,860
+So lots of things to think about.
+
+175
+00:06:04,860 --> 00:06:08,520
+It's a very rich environment
+to go and learn things.
+
+176
+00:06:08,520 --> 00:06:10,380
+Be curious about what
+it is you're building
+
+177
+00:06:10,380 --> 00:06:12,330
+and what you can do to make things faster.
+
+178
+00:06:12,330 --> 00:06:14,280
+'Cause you start understanding
+the different layers
+
+179
+00:06:14,280 --> 00:06:17,340
+and the different costs of
+everything you're working with.
+
+180
+00:06:17,340 --> 00:06:19,320
+But let's talk about how we're going
+
+181
+00:06:19,320 --> 00:06:22,156
+to actually just do
+performance engineering.
+
+182
+00:06:22,156 --> 00:06:24,450
+Ideally the model is you define
+
+183
+00:06:24,450 --> 00:06:26,790
+what you're going to measure,
+you're gonna measure it,
+
+184
+00:06:26,790 --> 00:06:28,470
+we're gonna understand
+it, we're gonna tune it,
+
+185
+00:06:28,470 --> 00:06:29,670
+we're gonna get some performance,
+
+186
+00:06:29,670 --> 00:06:33,090
+we're gonna get some more efficiency
+
+187
+00:06:33,090 --> 00:06:34,980
+and we're gonna go around
+this loop a few times
+
+188
+00:06:34,980 --> 00:06:36,810
+and finally come out the other side
+
+189
+00:06:36,810 --> 00:06:37,881
+and say, yay, we're done.
+
+190
+00:06:37,881 --> 00:06:39,210
+And performance engineering,
+
+191
+00:06:39,210 --> 00:06:41,520
+for those who are
+wondering, it's never done.
+
+192
+00:06:41,520 --> 00:06:42,720
+It's just something you stop.
+
+193
+00:06:42,720 --> 00:06:45,030
+You say my return on
+investment's good enough,
+
+194
+00:06:45,030 --> 00:06:45,863
+I'm gonna stop.
+
+195
+00:06:45,863 --> 00:06:47,580
+I'm not gonna look for
+that extra half percent
+
+196
+00:06:47,580 --> 00:06:49,470
+or extra 10th of a percent.
+
+197
+00:06:49,470 --> 00:06:50,370
+It's not worth it.
+
+198
+00:06:51,540 --> 00:06:54,780
+But you may find that again,
+
+199
+00:06:54,780 --> 00:06:57,180
+the reality is gonna
+be a little different.
+
+200
+00:06:57,180 --> 00:06:58,110
+With performance engineering,
+
+201
+00:06:58,110 --> 00:06:59,370
+there's lots of tools out there.
+
+202
+00:06:59,370 --> 00:07:00,870
+So these are just a handful.
+
+203
+00:07:00,870 --> 00:07:03,990
+You can use things like
+strace, iostat, eBPF, asprof.
+
+204
+00:07:03,990 --> 00:07:06,540
+These are all tools that
+can help you go very deep
+
+205
+00:07:06,540 --> 00:07:09,090
+into parts of your program.
+
+206
+00:07:09,090 --> 00:07:10,950
+And this becomes a problem
+
+207
+00:07:10,950 --> 00:07:12,420
+'cause now you're taking meandering paths.
+
+208
+00:07:12,420 --> 00:07:16,320
+It's no longer this nice concise
+loop, straight line path.
+
+209
+00:07:16,320 --> 00:07:20,280
+You may have to look really
+deep, take a couple false turns,
+
+210
+00:07:20,280 --> 00:07:21,180
+take a couple dead ends
+
+211
+00:07:21,180 --> 00:07:23,051
+before you find your tuning opportunities
+
+212
+00:07:23,051 --> 00:07:26,370
+and then come back to remeasure
+
+213
+00:07:26,370 --> 00:07:28,336
+what you've done, see if it's helped.
+
+214
+00:07:28,336 --> 00:07:31,230
+This has turns out been
+somewhat of a problem
+
+215
+00:07:31,230 --> 00:07:32,400
+even on my team
+
+216
+00:07:32,400 --> 00:07:34,590
+where we try to use things like intuition
+
+217
+00:07:34,590 --> 00:07:35,840
+to know what tools to use
+
+218
+00:07:36,690 --> 00:07:39,810
+and we said let's take a
+step back and figure out,
+
+219
+00:07:39,810 --> 00:07:42,570
+and this is the things we
+wanna share with you from AWS.
+
+220
+00:07:42,570 --> 00:07:43,680
+We said, let's take a step back
+
+221
+00:07:43,680 --> 00:07:45,600
+'cause we're doing these
+performance engineering problems
+
+222
+00:07:45,600 --> 00:07:49,560
+and we're not getting as
+far and as fast as we want.
+
+223
+00:07:49,560 --> 00:07:50,970
+And we found our intuition
+
+224
+00:07:50,970 --> 00:07:53,010
+is actually something
+that gets in our way.
+
+225
+00:07:53,010 --> 00:07:54,600
+Intuition can be misleading.
+
+226
+00:07:54,600 --> 00:07:57,300
+Doing these deaf first searches
+can be very inefficient,
+
+227
+00:07:57,300 --> 00:07:59,430
+especially if you pick
+the wrong path first
+
+228
+00:07:59,430 --> 00:08:00,540
+before you come back out
+
+229
+00:08:00,540 --> 00:08:02,100
+and say, oops, that didn't do anything,
+
+230
+00:08:02,100 --> 00:08:03,690
+let's go somewhere else.
+
+231
+00:08:03,690 --> 00:08:05,820
+And it's simply if we said
+
+232
+00:08:05,820 --> 00:08:07,467
+let's try going wide before we go deep.
+
+233
+00:08:07,467 --> 00:08:08,880
+And that's just what it sounds like.
+
+234
+00:08:08,880 --> 00:08:11,370
+Breadth first search,
+prioritize our opportunities
+
+235
+00:08:11,370 --> 00:08:13,650
+by looking at the full system first.
+
+236
+00:08:13,650 --> 00:08:15,060
+And when I say full system,
+
+237
+00:08:15,060 --> 00:08:18,240
+things that me may not even think about
+
+238
+00:08:18,240 --> 00:08:19,740
+when it first comes to
+finding performance,
+
+239
+00:08:19,740 --> 00:08:22,320
+some people will say, well it's my code,
+
+240
+00:08:22,320 --> 00:08:24,810
+I should know what to go fix in my code,
+
+241
+00:08:24,810 --> 00:08:27,090
+but maybe you need to look
+at something more system wide
+
+242
+00:08:27,090 --> 00:08:28,980
+that's not even related to your code.
+
+243
+00:08:28,980 --> 00:08:30,060
+And that's where we found
+
+244
+00:08:30,060 --> 00:08:32,310
+that sometimes big gains
+hide in plain sight.
+
+245
+00:08:33,420 --> 00:08:35,700
+We had another customer that said
+
+246
+00:08:35,700 --> 00:08:37,620
+we need to optimize the
+compression library.
+
+247
+00:08:37,620 --> 00:08:39,450
+It's absolutely the compression library.
+
+248
+00:08:39,450 --> 00:08:42,300
+And that's where intuition
+was telling us to go.
+
+249
+00:08:42,300 --> 00:08:43,680
+And we took the step back and said,
+
+250
+00:08:43,680 --> 00:08:45,000
+let's look at the whole system first.
+
+251
+00:08:45,000 --> 00:08:47,010
+And it turned out compression
+wasn't even the bottleneck,
+
+252
+00:08:47,010 --> 00:08:49,380
+it was just the machine
+was running out of memory
+
+253
+00:08:49,380 --> 00:08:51,090
+and then swapping to disk.
+
+254
+00:08:51,090 --> 00:08:53,040
+We fixed that opportunity
+
+255
+00:08:53,040 --> 00:08:56,583
+and then the performance lifted
+up by 50% and we were done.
+
+256
+00:08:58,410 --> 00:08:59,970
+So putting that into graph form,
+
+257
+00:08:59,970 --> 00:09:02,391
+we say, let's define our measurement,
+
+258
+00:09:02,391 --> 00:09:04,290
+look at all of our signals,
+
+259
+00:09:04,290 --> 00:09:05,729
+get the system wide understanding,
+
+260
+00:09:05,729 --> 00:09:06,990
+get our tuning candidates
+
+261
+00:09:06,990 --> 00:09:08,220
+and then we'd finally go deep
+
+262
+00:09:08,220 --> 00:09:10,290
+after we pick the ones that
+seem the most profitable
+
+263
+00:09:10,290 --> 00:09:11,123
+to go look at.
+
+264
+00:09:12,210 --> 00:09:13,950
+And it's all well and
+good to talk about it,
+
+265
+00:09:13,950 --> 00:09:15,449
+but we decided,
+
+266
+00:09:15,449 --> 00:09:18,240
+or we should say, we wanna
+share with you a tool
+
+267
+00:09:18,240 --> 00:09:20,970
+that we've developed
+that helps take away the,
+
+268
+00:09:20,970 --> 00:09:23,970
+I have to remember 15
+different tools to go use
+
+269
+00:09:23,970 --> 00:09:26,190
+to get my wide view before I go deep.
+
+270
+00:09:26,190 --> 00:09:28,830
+And we started developing this
+tool and now it's on GitHub
+
+271
+00:09:28,830 --> 00:09:32,340
+in version 1.0 as of
+last week, called APerf.
+
+272
+00:09:32,340 --> 00:09:35,400
+And it's a wide and deep focus tool,
+
+273
+00:09:35,400 --> 00:09:38,940
+it's not meant to go deep in
+just code performance tuning.
+
+274
+00:09:38,940 --> 00:09:41,370
+It's meant to look at
+everything very, very wide
+
+275
+00:09:41,370 --> 00:09:42,450
+before we go deep.
+
+276
+00:09:42,450 --> 00:09:44,340
+And Toby can share a couple anecdotes
+
+277
+00:09:44,340 --> 00:09:46,410
+as how he's used it in his role.
+
+278
+00:09:46,410 --> 00:09:48,660
+- [Toby] Yeah, so as I say,
+
+279
+00:09:48,660 --> 00:09:50,063
+I don't know if mine's still on.
+
+280
+00:09:52,470 --> 00:09:55,747
+As I say, you know,
+oftentimes customers call us,
+
+281
+00:09:55,747 --> 00:09:56,827
+"We're in an account,
+
+282
+00:09:56,827 --> 00:09:59,119
+"we have some problem
+we have to deal with."
+
+283
+00:09:59,119 --> 00:10:01,230
+The beautiful thing about Aperf,
+
+284
+00:10:01,230 --> 00:10:03,843
+how many people have heard
+of APerf before today?
+
+285
+00:10:04,680 --> 00:10:05,513
+No.
+
+286
+00:10:05,513 --> 00:10:06,346
+Okay, one.
+
+287
+00:10:06,346 --> 00:10:07,929
+Okay, the performance engineer has.
+
+288
+00:10:07,929 --> 00:10:09,180
+Great.
+
+289
+00:10:09,180 --> 00:10:10,481
+So that's good.
+
+290
+00:10:10,481 --> 00:10:13,290
+But the beautiful thing
+about it is that it lets us,
+
+291
+00:10:13,290 --> 00:10:15,900
+you know, oftentimes if I have
+a problem that I can't solve
+
+292
+00:10:15,900 --> 00:10:17,700
+and I need to bring it
+to Geoff and his team,
+
+293
+00:10:17,700 --> 00:10:19,470
+we need some kind of
+common set of language,
+
+294
+00:10:19,470 --> 00:10:21,210
+some kind of common
+data to do that, right?
+
+295
+00:10:21,210 --> 00:10:22,410
+APerf is that tool.
+
+296
+00:10:22,410 --> 00:10:23,580
+It lets us,
+
+297
+00:10:23,580 --> 00:10:26,640
+we ask a customer if they're
+having a particular problem,
+
+298
+00:10:26,640 --> 00:10:29,310
+go deploy it, record
+some sample of some run,
+
+299
+00:10:29,310 --> 00:10:31,440
+let us know what's
+happening, send it to us.
+
+300
+00:10:31,440 --> 00:10:34,530
+It packages up a nice tar ball
+with all the reports in it
+
+301
+00:10:34,530 --> 00:10:35,820
+and we could then visualize it,
+
+302
+00:10:35,820 --> 00:10:38,040
+we could send it downstream
+if we're stumped.
+
+303
+00:10:38,040 --> 00:10:42,630
+So it's a nice thing for
+just making a shared reality
+
+304
+00:10:42,630 --> 00:10:43,983
+for all parties.
+
+305
+00:10:45,000 --> 00:10:45,833
+- [Geoff] Okay.
+
+306
+00:10:45,833 --> 00:10:47,280
+So before we go any further,
+
+307
+00:10:47,280 --> 00:10:49,260
+I wanna say it's not the only tool,
+
+308
+00:10:49,260 --> 00:10:50,490
+it's a tool for your toolbox.
+
+309
+00:10:50,490 --> 00:10:52,170
+It's a good wide and deep tool.
+
+310
+00:10:52,170 --> 00:10:53,940
+As I said, there's plenty
+of other tools out there
+
+311
+00:10:53,940 --> 00:10:55,800
+that go much deeper.
+
+312
+00:10:55,800 --> 00:10:58,050
+I could talk forever about
+some of those deeper tools
+
+313
+00:10:58,050 --> 00:10:59,430
+if you catch me after.
+
+314
+00:10:59,430 --> 00:11:01,980
+But APerf, as I said, we
+wanna measure hundreds
+
+315
+00:11:01,980 --> 00:11:03,851
+of system wide statistics,
+
+316
+00:11:03,851 --> 00:11:07,560
+just things from very high
+level CPU utilization,
+
+317
+00:11:07,560 --> 00:11:08,393
+memory utilization,
+
+318
+00:11:08,393 --> 00:11:11,010
+all the way down to the
+deep low level metrics
+
+319
+00:11:11,010 --> 00:11:13,350
+that tell you how the
+CPU itself is performing.
+
+320
+00:11:13,350 --> 00:11:15,630
+And all of these signals
+can be taken together
+
+321
+00:11:15,630 --> 00:11:18,240
+to try and find those opportunities.
+
+322
+00:11:18,240 --> 00:11:19,590
+It's meant to be simple to use.
+
+323
+00:11:19,590 --> 00:11:20,970
+It's a self-contained binary.
+
+324
+00:11:20,970 --> 00:11:23,430
+You put it on the system
+under test, it's a point tool.
+
+325
+00:11:23,430 --> 00:11:26,070
+You don't have to onboard a huge service
+
+326
+00:11:26,070 --> 00:11:28,440
+or infrastructure to get it going.
+
+327
+00:11:28,440 --> 00:11:32,430
+You can use a test box, put
+it on there, take a recording,
+
+328
+00:11:32,430 --> 00:11:33,480
+pull the recording off,
+
+329
+00:11:33,480 --> 00:11:35,310
+and then it generates a
+static set of webpages,
+
+330
+00:11:35,310 --> 00:11:37,470
+which will show as we
+get into the code portion
+
+331
+00:11:37,470 --> 00:11:38,610
+of this talk.
+
+332
+00:11:38,610 --> 00:11:40,170
+And it's very low overhead.
+
+333
+00:11:40,170 --> 00:11:43,290
+We've measured it, it has
+less than 5% of one CPU
+
+334
+00:11:43,290 --> 00:11:44,730
+when everything is turned on,
+
+335
+00:11:44,730 --> 00:11:47,160
+which we find to be an
+acceptable trade off
+
+336
+00:11:47,160 --> 00:11:50,880
+to get the hundreds of
+statistics we want to measure.
+
+337
+00:11:50,880 --> 00:11:53,130
+- [Toby] And how about deployment?
+
+338
+00:11:53,130 --> 00:11:54,780
+- [Geoff] Deployment can be,
+
+339
+00:11:54,780 --> 00:11:56,940
+you can just SCP it onto your VM,
+
+340
+00:11:56,940 --> 00:11:59,700
+onto your bare metal lab
+machine or it has the ability
+
+341
+00:11:59,700 --> 00:12:01,380
+to be packaged up in a container,
+
+342
+00:12:01,380 --> 00:12:04,470
+and we can put it into
+something like a Kubernetes pod
+
+343
+00:12:04,470 --> 00:12:09,240
+to measure a Kubernetes node
+in a privileged container,
+
+344
+00:12:09,240 --> 00:12:11,820
+which we know is a fairly common use case
+
+345
+00:12:11,820 --> 00:12:13,080
+for deploying web services.
+
+346
+00:12:13,080 --> 00:12:15,230
+And that's a new capability
+we've been working on
+
+347
+00:12:15,230 --> 00:12:16,587
+in the last month or so,
+
+348
+00:12:16,587 --> 00:12:18,537
+and we'll show that here today as well.
+
+349
+00:12:19,740 --> 00:12:21,180
+Okay, I'm gonna hand it back to Toby,
+
+350
+00:12:21,180 --> 00:12:23,550
+get on my laptop to get
+things set for the demos
+
+351
+00:12:23,550 --> 00:12:26,070
+and he'll explain what we're
+gonna talk about first.
+
+352
+00:12:26,070 --> 00:12:27,360
+- [Toby] Cool, thank you.
+
+353
+00:12:27,360 --> 00:12:30,780
+So as we mentioned, Groovy
+is gonna be the first demo,
+
+354
+00:12:30,780 --> 00:12:32,520
+not because we love
+Groovy or anything else,
+
+355
+00:12:32,520 --> 00:12:34,680
+but because it has some of
+the stuff we're talking about.
+
+356
+00:12:34,680 --> 00:12:36,930
+Anybody heard of aspect
+oriented programming?
+
+357
+00:12:37,812 --> 00:12:39,420
+Okay, AOP, it's been around forever.
+
+358
+00:12:39,420 --> 00:12:41,393
+It's basically the idea that you've got
+
+359
+00:12:41,393 --> 00:12:43,320
+some cross-cutting concern,
+
+360
+00:12:43,320 --> 00:12:45,180
+you wanna apply it to a
+bunch of different methods.
+
+361
+00:12:45,180 --> 00:12:46,500
+Maybe we want to do logging
+
+362
+00:12:46,500 --> 00:12:49,020
+or we want to do whatever the case may be.
+
+363
+00:12:49,020 --> 00:12:51,000
+You could define that as an aspect
+
+364
+00:12:51,000 --> 00:12:53,160
+and you could apply that
+aspect in multiple places.
+
+365
+00:12:53,160 --> 00:12:55,650
+Beautiful for maintainability, right?
+
+366
+00:12:55,650 --> 00:12:58,350
+For testability, for
+readability, all of those things.
+
+367
+00:12:59,400 --> 00:13:00,233
+Not without costs.
+
+368
+00:13:00,233 --> 00:13:01,473
+Just like everything in engineering,
+
+369
+00:13:01,473 --> 00:13:02,880
+there is always a trade off.
+
+370
+00:13:02,880 --> 00:13:05,520
+And so really the goal, one
+of the goals of this talk
+
+371
+00:13:05,520 --> 00:13:07,350
+is to help you understand
+what those costs are
+
+372
+00:13:07,350 --> 00:13:09,500
+so you know where to
+make those trade offs.
+
+373
+00:13:10,740 --> 00:13:13,030
+Yeah, so again, the example
+
+374
+00:13:14,490 --> 00:13:15,750
+is not terribly contrived.
+
+375
+00:13:15,750 --> 00:13:18,780
+It's fairly full featured, we think.
+
+376
+00:13:18,780 --> 00:13:21,510
+Here's the setup, the topology
+of it's a simple cluster.
+
+377
+00:13:21,510 --> 00:13:23,673
+We've got three node groups,
+
+378
+00:13:23,673 --> 00:13:26,730
+one dedicated to our load generator,
+
+379
+00:13:26,730 --> 00:13:28,110
+and we're using wrk2,
+
+380
+00:13:28,110 --> 00:13:30,570
+which is just a nice load generator,
+
+381
+00:13:30,570 --> 00:13:32,460
+gives you nice tail latency numbers,
+
+382
+00:13:32,460 --> 00:13:35,583
+and tells you request per
+second, and all that stuff.
+
+383
+00:13:36,420 --> 00:13:40,590
+An M7g is using a few different flavors,
+
+384
+00:13:40,590 --> 00:13:42,720
+one for an unoptimized version
+
+385
+00:13:42,720 --> 00:13:44,550
+and then another one
+will just restart the pod
+
+386
+00:13:44,550 --> 00:13:47,910
+with some optimizations, and
+see what effects we have.
+
+387
+00:13:47,910 --> 00:13:49,830
+And then we have an M8g
+
+388
+00:13:49,830 --> 00:13:52,800
+which is also a potential option for you
+
+389
+00:13:52,800 --> 00:13:54,780
+if you're trying to get
+performance outta the system.
+
+390
+00:13:54,780 --> 00:13:56,010
+You'd always make the
+hardware bigger, right?
+
+391
+00:13:56,010 --> 00:13:57,330
+You could always make it faster
+
+392
+00:13:57,330 --> 00:13:59,070
+by potentially throwing
+more hardware at it.
+
+393
+00:13:59,070 --> 00:14:01,620
+So we walk through all those scenarios
+
+394
+00:14:01,620 --> 00:14:04,500
+and kind of do a price
+performance analysis.
+
+395
+00:14:04,500 --> 00:14:06,090
+We kind of verbally give that to you,
+
+396
+00:14:06,090 --> 00:14:09,630
+but we have some numbers we can
+give you at the end of that.
+
+397
+00:14:09,630 --> 00:14:13,350
+And with that I'll let Geoff switch over
+
+398
+00:14:13,350 --> 00:14:14,943
+and we'll get to the demo.
+
+399
+00:14:17,370 --> 00:14:19,590
+- [Geoff] Okay, so I'm
+gonna be showing everything
+
+400
+00:14:19,590 --> 00:14:20,640
+in my VS Code window.
+
+401
+00:14:20,640 --> 00:14:23,340
+So can everyone read this
+better in the back row?
+
+402
+00:14:23,340 --> 00:14:25,020
+Do I need to go a little bigger?
+
+403
+00:14:25,020 --> 00:14:27,120
+- [Toby] Back row guys, everybody's good?
+
+404
+00:14:27,120 --> 00:14:28,110
+Okay.
+
+405
+00:14:28,110 --> 00:14:29,078
+- [Geoff] So-so.
+
+406
+00:14:29,078 --> 00:14:31,530
+Let me know if I need
+to go one option bigger.
+
+407
+00:14:31,530 --> 00:14:33,870
+It's already a little cramped but,
+
+408
+00:14:33,870 --> 00:14:35,250
+so I'm just gonna show really quick.
+
+409
+00:14:35,250 --> 00:14:37,920
+This is the container we're
+building our Groovy app into.
+
+410
+00:14:37,920 --> 00:14:41,430
+It's based on Amazon Linux 2023.
+
+411
+00:14:41,430 --> 00:14:45,180
+We put Corretto 21 on
+there for our Java engine
+
+412
+00:14:45,180 --> 00:14:47,850
+and then we installed our Groovy app
+
+413
+00:14:47,850 --> 00:14:49,470
+by building it with Gradle,
+
+414
+00:14:49,470 --> 00:14:52,708
+and then we transfer it onto a server
+
+415
+00:14:52,708 --> 00:14:57,390
+or a container that's using
+Tomcat for our web server.
+
+416
+00:14:57,390 --> 00:14:59,460
+And we just throw this on here
+
+417
+00:14:59,460 --> 00:15:03,210
+and we use some very,
+very basic CatalinAOPtions
+
+418
+00:15:03,210 --> 00:15:08,210
+for the JVM, some 8gigabytes of Heap,
+
+419
+00:15:08,297 --> 00:15:11,880
+G1GC, very basic stuff.
+
+420
+00:15:11,880 --> 00:15:13,770
+And now we're gonna go take a look
+
+421
+00:15:13,770 --> 00:15:15,930
+at the Groovy code itself.
+
+422
+00:15:15,930 --> 00:15:18,660
+So what we did here is we
+just started building up
+
+423
+00:15:18,660 --> 00:15:22,290
+a very simple web application.
+
+424
+00:15:22,290 --> 00:15:24,840
+As Toby said, it's not
+completely contrived
+
+425
+00:15:24,840 --> 00:15:26,670
+but it's meant to show examples,
+
+426
+00:15:26,670 --> 00:15:29,940
+not so much be a full
+fledged enterprise service,
+
+427
+00:15:29,940 --> 00:15:32,760
+but we've seen this help
+with other customers
+
+428
+00:15:32,760 --> 00:15:34,020
+running full fledged services.
+
+429
+00:15:34,020 --> 00:15:36,630
+So it's a relatively good example.
+
+430
+00:15:36,630 --> 00:15:41,010
+And what you might do in a
+JVM type language like Groovy
+
+431
+00:15:41,010 --> 00:15:43,050
+is you're gonna start defining endpoints
+
+432
+00:15:43,050 --> 00:15:44,940
+like the hello endpoint,
+
+433
+00:15:44,940 --> 00:15:48,330
+the process endpoint
+with some argument to it.
+
+434
+00:15:48,330 --> 00:15:49,893
+And as we go along,
+
+435
+00:15:51,090 --> 00:15:53,910
+we're gonna say we want to do
+some things in our endpoints,
+
+436
+00:15:53,910 --> 00:15:56,700
+but we primarily want to curve
+a separation of concerns.
+
+437
+00:15:56,700 --> 00:16:00,570
+We want our business service
+logic and its own package.
+
+438
+00:16:00,570 --> 00:16:02,190
+We want to call that from our endpoint
+
+439
+00:16:02,190 --> 00:16:05,880
+or endpoint just handles
+HTTP request incoming
+
+440
+00:16:05,880 --> 00:16:07,620
+and responding to them.
+
+441
+00:16:07,620 --> 00:16:09,930
+But as you might build up an application,
+
+442
+00:16:09,930 --> 00:16:10,860
+and if we go through here,
+
+443
+00:16:10,860 --> 00:16:13,500
+we can see we have other
+endpoints like a message endpoint,
+
+444
+00:16:13,500 --> 00:16:15,570
+a setup endpoint for authorizing users,
+
+445
+00:16:15,570 --> 00:16:18,330
+a health check endpoint
+'cause we're in Kubernetes.
+
+446
+00:16:18,330 --> 00:16:21,120
+And also, you know, we wanna
+be able to pull metrics,
+
+447
+00:16:21,120 --> 00:16:22,293
+say our,
+
+448
+00:16:23,670 --> 00:16:25,530
+another health check in
+the Kubernetes cluster
+
+449
+00:16:25,530 --> 00:16:28,200
+wants to pull some metrics to keep an eye
+
+450
+00:16:28,200 --> 00:16:31,083
+on the health of the deployment.
+
+451
+00:16:31,920 --> 00:16:34,260
+But as we go, we might say,
+
+452
+00:16:34,260 --> 00:16:35,820
+well we really want to take a look
+
+453
+00:16:35,820 --> 00:16:38,610
+at all the people accessing our systems.
+
+454
+00:16:38,610 --> 00:16:42,780
+We wanna log every client IP
+to get security auditing going.
+
+455
+00:16:42,780 --> 00:16:45,420
+We want to check that we have
+everything is authorized,
+
+456
+00:16:45,420 --> 00:16:47,790
+and the way we're applying these aspects
+
+457
+00:16:47,790 --> 00:16:49,650
+that we can look in here,
+
+458
+00:16:49,650 --> 00:16:51,783
+aspects are in the aspects directory,
+
+459
+00:16:53,580 --> 00:16:56,010
+and all the code for doing authorization
+
+460
+00:16:56,010 --> 00:16:57,900
+and stuff is in here.
+
+461
+00:16:57,900 --> 00:17:00,270
+And we can do that either as annotations
+
+462
+00:17:00,270 --> 00:17:03,060
+or if we say we want metrics
+to apply to everything,
+
+463
+00:17:03,060 --> 00:17:05,430
+we can do that with spring
+boot that we built upon,
+
+464
+00:17:05,430 --> 00:17:07,140
+with cut point filters.
+
+465
+00:17:07,140 --> 00:17:08,370
+So we're really taking
+
+466
+00:17:08,370 --> 00:17:11,130
+and leveraging the
+aspect-oriented programming
+
+467
+00:17:11,130 --> 00:17:13,665
+to have everything, all
+our concerns separated,
+
+468
+00:17:13,665 --> 00:17:17,010
+crosscutting code can be applied
+
+469
+00:17:17,010 --> 00:17:18,510
+to all the endpoints we want,
+
+470
+00:17:18,510 --> 00:17:20,940
+whether it's explicitly with annotations
+
+471
+00:17:20,940 --> 00:17:25,710
+or using the cut point filters
+to apply it more broadly.
+
+472
+00:17:25,710 --> 00:17:28,590
+And this builds up a nice web application
+
+473
+00:17:28,590 --> 00:17:30,330
+that's very clean code.
+
+474
+00:17:30,330 --> 00:17:32,760
+And the thing that we will start noticing
+
+475
+00:17:32,760 --> 00:17:36,960
+is that we want to keep the
+performance at a breaking SLA,
+
+476
+00:17:36,960 --> 00:17:39,600
+or breaking SLO, service level objective.
+
+477
+00:17:39,600 --> 00:17:41,790
+- [Toby] Everybody familiar with SLOs?
+
+478
+00:17:41,790 --> 00:17:43,830
+With service level objectives?
+
+479
+00:17:43,830 --> 00:17:45,044
+This is something I hear customers,
+
+480
+00:17:45,044 --> 00:17:49,380
+that we don't really do
+either a good job of conveying
+
+481
+00:17:49,380 --> 00:17:51,900
+or it's just not out in
+the wild for consumption.
+
+482
+00:17:51,900 --> 00:17:55,380
+SLO, think of it as what you need
+
+483
+00:17:55,380 --> 00:17:56,610
+for your business to operate, right?
+
+484
+00:17:56,610 --> 00:17:57,443
+What is it,
+
+485
+00:17:57,443 --> 00:17:59,790
+it's kinda like an SLA but
+it's also, it's more about,
+
+486
+00:17:59,790 --> 00:18:01,410
+it's from the business perspective
+
+487
+00:18:01,410 --> 00:18:03,060
+versus the end user perspective.
+
+488
+00:18:03,060 --> 00:18:04,740
+So what do you want to run, you know,
+
+489
+00:18:04,740 --> 00:18:06,510
+from your business perspective?
+
+490
+00:18:06,510 --> 00:18:08,100
+How quickly do you want to run it?
+
+491
+00:18:08,100 --> 00:18:12,450
+Maybe a P99 of 100 milliseconds
+with throughput of 5K
+
+492
+00:18:12,450 --> 00:18:13,650
+or something like that, right?
+
+493
+00:18:13,650 --> 00:18:14,730
+You pick that
+
+494
+00:18:14,730 --> 00:18:16,530
+and then that's what really is kind of,
+
+495
+00:18:16,530 --> 00:18:18,990
+sets the anchor for your performance.
+
+496
+00:18:18,990 --> 00:18:20,220
+When you're making changes,
+
+497
+00:18:20,220 --> 00:18:22,410
+you know if you're going
+up or down from that SLO
+
+498
+00:18:22,410 --> 00:18:23,280
+or staying within it.
+
+499
+00:18:23,280 --> 00:18:24,690
+If you're outside your SLO,
+
+500
+00:18:24,690 --> 00:18:26,340
+you're breaching your own
+kind of contract, right?
+
+501
+00:18:26,340 --> 00:18:28,890
+So that's really the
+kind of what underpins
+
+502
+00:18:28,890 --> 00:18:31,740
+a lot of the work that we're doing here.
+
+503
+00:18:31,740 --> 00:18:33,503
+- [Geoff] Yeah, and the SLO should be
+
+504
+00:18:33,503 --> 00:18:35,460
+ideally something you
+set at business time,
+
+505
+00:18:35,460 --> 00:18:37,080
+not necessarily a comparison
+
+506
+00:18:37,080 --> 00:18:38,876
+to something you've done
+before, but in this case,
+
+507
+00:18:38,876 --> 00:18:43,876
+our SLO is, we wanna stay
+under P99 of 100 milliseconds.
+
+508
+00:18:44,130 --> 00:18:46,080
+And we found the braking latency,
+
+509
+00:18:46,080 --> 00:18:48,570
+if we went past 4,000 requests per second,
+
+510
+00:18:48,570 --> 00:18:51,840
+which is what our work load
+generator was giving us,
+
+511
+00:18:51,840 --> 00:18:54,690
+is we got to about 50 milliseconds,
+
+512
+00:18:54,690 --> 00:18:55,740
+but then if we went any further,
+
+513
+00:18:55,740 --> 00:18:58,050
+we went well past 100 milliseconds,
+
+514
+00:18:58,050 --> 00:18:59,700
+past 4,000 RPS.
+
+515
+00:18:59,700 --> 00:19:01,440
+- [Toby] And you've probably
+seen that curve before, right?
+
+516
+00:19:01,440 --> 00:19:04,806
+The breaking latency curve,
+it's going up, I'm at 2000,
+
+517
+00:19:04,806 --> 00:19:06,660
+I'm at 3000, I'm at 4,000, I'm at 5,000.
+
+518
+00:19:06,660 --> 00:19:08,550
+It starts to plateau and then diminishes.
+
+519
+00:19:08,550 --> 00:19:11,850
+That knee of the curve
+is the breaking latency.
+
+520
+00:19:11,850 --> 00:19:14,130
+We're staying right at that latency.
+
+521
+00:19:14,130 --> 00:19:16,800
+- [Geoff] So we're gonna say
+for the sake of this code talk,
+
+522
+00:19:16,800 --> 00:19:18,300
+we're gonna say this isn't fast enough.
+
+523
+00:19:18,300 --> 00:19:21,240
+We want to go faster, we
+want to get above 5,000,
+
+524
+00:19:21,240 --> 00:19:23,580
+we want to get maybe up to 10,000,
+
+525
+00:19:23,580 --> 00:19:25,350
+more than double the performance.
+
+526
+00:19:25,350 --> 00:19:27,570
+And how are we go about doing that?
+
+527
+00:19:27,570 --> 00:19:29,310
+So the first thing you might say is,
+
+528
+00:19:29,310 --> 00:19:31,020
+well we can maybe optimize the code,
+
+529
+00:19:31,020 --> 00:19:33,180
+but there's, if you
+look through, you know,
+
+530
+00:19:33,180 --> 00:19:35,190
+because this is an
+example for a code talk,
+
+531
+00:19:35,190 --> 00:19:38,370
+there's not a whole lot here,
+there's not a lot of logic,
+
+532
+00:19:38,370 --> 00:19:40,650
+you know, metrics aspects
+is inserting something
+
+533
+00:19:40,650 --> 00:19:42,690
+into a concurrent hash map.
+
+534
+00:19:42,690 --> 00:19:45,240
+Our business logic isn't
+terribly complex right now,
+
+535
+00:19:45,240 --> 00:19:47,700
+but we're still not able to
+push all that much throughput
+
+536
+00:19:47,700 --> 00:19:50,220
+for 100 milliseconds at P99.
+
+537
+00:19:50,220 --> 00:19:52,860
+So we're gonna, we've already
+gathered an APerf report
+
+538
+00:19:52,860 --> 00:19:54,581
+that we'll go into next.
+
+539
+00:19:54,581 --> 00:19:57,420
+As we're looking at that APerf report,
+
+540
+00:19:57,420 --> 00:20:00,630
+I'm going to kick off an optimized run
+
+541
+00:20:00,630 --> 00:20:03,690
+that we will come back to in
+about three or four minutes.
+
+542
+00:20:03,690 --> 00:20:06,390
+And if you notice here,
+we're gonna patch our pod
+
+543
+00:20:06,390 --> 00:20:07,223
+and I'm gonna put
+
+544
+00:20:07,223 --> 00:20:10,050
+in a bunch of different JavAOPtimizations,
+
+545
+00:20:10,050 --> 00:20:12,330
+and these optimizations,
+we'll talk about in turn
+
+546
+00:20:12,330 --> 00:20:14,430
+as to why we're doing that,
+
+547
+00:20:14,430 --> 00:20:15,630
+and why we would do something
+
+548
+00:20:15,630 --> 00:20:17,760
+using the signals we got from APerf.
+
+549
+00:20:17,760 --> 00:20:19,170
+- [Toby] And I'll just add.
+
+550
+00:20:19,170 --> 00:20:21,420
+So we're doing a lot of
+this through a script.
+
+551
+00:20:21,420 --> 00:20:24,450
+So we've done it just to
+make our lives easier.
+
+552
+00:20:24,450 --> 00:20:26,610
+If anybody's interested in
+what that script's doing
+
+553
+00:20:26,610 --> 00:20:28,380
+come up afterwards,
+we're happy to show you.
+
+554
+00:20:28,380 --> 00:20:31,236
+It's basically just deploying
+the pod, starting the run,
+
+555
+00:20:31,236 --> 00:20:32,940
+recording, and stopping,
+
+556
+00:20:32,940 --> 00:20:35,310
+making sure that everything's
+kind of got good timing
+
+557
+00:20:35,310 --> 00:20:36,690
+and everything.
+
+558
+00:20:36,690 --> 00:20:39,510
+- [Geoff] Okay, so we already
+gathered the APerf report
+
+559
+00:20:39,510 --> 00:20:41,250
+for the base program
+
+560
+00:20:41,250 --> 00:20:46,080
+and this is on an
+M7g.xlarge with four CPUs.
+
+561
+00:20:46,080 --> 00:20:50,190
+And when you open up an APerf
+report from the index.HTML,
+
+562
+00:20:50,190 --> 00:20:52,920
+it's this type of webpage.
+
+563
+00:20:52,920 --> 00:20:54,900
+- [Toby] Before we continue,
+sorry to interrupt you Geoff.
+
+564
+00:20:54,900 --> 00:20:56,850
+This is an unplanned interruption.
+
+565
+00:20:56,850 --> 00:20:59,283
+How many have heard of
+or are using Graviton?
+
+566
+00:21:02,596 --> 00:21:05,670
+So like a show of hands
+of who's heard of it
+
+567
+00:21:05,670 --> 00:21:06,783
+and knows what it is.
+
+568
+00:21:08,010 --> 00:21:10,770
+Okay, so probably about
+six, 70% of the room.
+
+569
+00:21:10,770 --> 00:21:11,973
+How many are using it?
+
+570
+00:21:12,870 --> 00:21:14,220
+Okay, great.
+
+571
+00:21:14,220 --> 00:21:15,420
+For those who aren't, come to,
+
+572
+00:21:15,420 --> 00:21:17,693
+I want to talk to you
+afterwards and find out why.
+
+573
+00:21:18,540 --> 00:21:19,920
+But okay, you can continue.
+
+574
+00:21:19,920 --> 00:21:21,540
+- [Geoff] Okay, and another disclaimer
+
+575
+00:21:21,540 --> 00:21:23,100
+is that everything we talk here,
+
+576
+00:21:23,100 --> 00:21:26,790
+most of it will apply to
+X86-based instances as well.
+
+577
+00:21:26,790 --> 00:21:29,100
+A lot of things that we
+talk about for Graviton
+
+578
+00:21:29,100 --> 00:21:31,470
+aren't just special to Graviton,
+
+579
+00:21:31,470 --> 00:21:33,570
+but we're using Graviton because you know,
+
+580
+00:21:35,070 --> 00:21:37,050
+I know a lot about how
+to make it run faster
+
+581
+00:21:37,050 --> 00:21:38,446
+so it seemed a logical choice.
+
+582
+00:21:38,446 --> 00:21:42,660
+So APerf, as you can see
+here, has a homepage.
+
+583
+00:21:42,660 --> 00:21:45,360
+It just tells you some
+very basic statistics
+
+584
+00:21:45,360 --> 00:21:47,970
+about the recording that you did.
+
+585
+00:21:47,970 --> 00:21:49,590
+Things like check that your AMI ID
+
+586
+00:21:49,590 --> 00:21:51,000
+is what you thought it was,
+
+587
+00:21:51,000 --> 00:21:53,297
+check your instance type
+is what you thought it was,
+
+588
+00:21:53,297 --> 00:21:55,770
+check the kernel version is at the version
+
+589
+00:21:55,770 --> 00:21:57,090
+that you expected to measure.
+
+590
+00:21:57,090 --> 00:21:59,640
+These are all things that are
+very wide, seem very simple,
+
+591
+00:21:59,640 --> 00:22:01,980
+but I've personally run into cases
+
+592
+00:22:01,980 --> 00:22:03,727
+where we've had people tell us like,
+
+593
+00:22:03,727 --> 00:22:08,310
+"Well we ran the comparison
+on a 24xlarge system
+
+594
+00:22:08,310 --> 00:22:10,006
+and we're comparing against an 8xlarge,
+
+595
+00:22:10,006 --> 00:22:11,070
+and the 8xlarge is slower.
+
+596
+00:22:11,070 --> 00:22:15,720
+And I'm like, well okay
+that seems expected
+
+597
+00:22:15,720 --> 00:22:17,400
+but you know let's,
+
+598
+00:22:17,400 --> 00:22:18,840
+these types of things pop up
+
+599
+00:22:18,840 --> 00:22:21,300
+and sometimes it's good to
+have that right in your face
+
+600
+00:22:21,300 --> 00:22:22,250
+as the first thing.
+
+601
+00:22:23,850 --> 00:22:24,990
+And then along the left hand side
+
+602
+00:22:24,990 --> 00:22:26,790
+we have a bunch of different statistics.
+
+603
+00:22:26,790 --> 00:22:28,860
+As I said we collect hundreds
+of different statistics
+
+604
+00:22:28,860 --> 00:22:31,650
+and we've grouped them into logical units
+
+605
+00:22:31,650 --> 00:22:32,820
+like CPU utilization,
+
+606
+00:22:32,820 --> 00:22:36,240
+all the different CPU utilizations
+and we can click on that,
+
+607
+00:22:36,240 --> 00:22:39,360
+and we get aggregate CPU utilization
+
+608
+00:22:39,360 --> 00:22:42,090
+with time series along the X axis
+
+609
+00:22:42,090 --> 00:22:43,800
+and utilization along the Y.
+
+610
+00:22:43,800 --> 00:22:48,510
+And we can see we're pushing
+around 60, 75% CPU utilization
+
+611
+00:22:48,510 --> 00:22:49,343
+for this application.
+
+612
+00:22:49,343 --> 00:22:51,720
+We're really riding along the top edge
+
+613
+00:22:51,720 --> 00:22:53,850
+of how much we can get out of this pod
+
+614
+00:22:53,850 --> 00:22:55,980
+because we told it, you
+only get to use three CPUs
+
+615
+00:22:55,980 --> 00:22:57,273
+and it's a four CPU node.
+
+616
+00:22:58,500 --> 00:23:00,240
+Nothing here looks out of the ordinary.
+
+617
+00:23:00,240 --> 00:23:02,490
+And this is where the wide part comes in,
+
+618
+00:23:02,490 --> 00:23:04,800
+and we wanna start looking
+at different things.
+
+619
+00:23:04,800 --> 00:23:07,140
+You know, maybe we check
+our memory utilization,
+
+620
+00:23:07,140 --> 00:23:08,400
+is it going up and down?
+
+621
+00:23:08,400 --> 00:23:09,450
+Is it doing something odd?
+
+622
+00:23:09,450 --> 00:23:11,970
+And we see, no, we're
+staying pretty constant.
+
+623
+00:23:11,970 --> 00:23:14,460
+Our heap is doing what we expect.
+
+624
+00:23:14,460 --> 00:23:15,870
+There's a lot of other things in here.
+
+625
+00:23:15,870 --> 00:23:16,980
+I encourage everyone to go out
+
+626
+00:23:16,980 --> 00:23:18,660
+and take APerf for a quick spin
+
+627
+00:23:18,660 --> 00:23:20,340
+and see if it's measuring things
+
+628
+00:23:20,340 --> 00:23:21,900
+that you might not already be measuring
+
+629
+00:23:21,900 --> 00:23:23,430
+or not already thinking about.
+
+630
+00:23:23,430 --> 00:23:26,280
+So we get things like more
+detailed virtual memory stats,
+
+631
+00:23:26,280 --> 00:23:28,888
+interrupts, disk stats, kernel configs,
+
+632
+00:23:28,888 --> 00:23:30,930
+Sysctl kernel config,
+where you can go and tune,
+
+633
+00:23:30,930 --> 00:23:33,180
+to fine tune things like
+the TCP networking stack
+
+634
+00:23:33,180 --> 00:23:36,750
+or your scheduler, if it's
+not behaving like you expect.
+
+635
+00:23:36,750 --> 00:23:40,200
+And then we also get code
+profiles like flame graphs,
+
+636
+00:23:40,200 --> 00:23:42,210
+standard system flame graphs from Perf.
+
+637
+00:23:42,210 --> 00:23:43,680
+We're running a Java application
+
+638
+00:23:43,680 --> 00:23:45,158
+so it doesn't look like much here
+
+639
+00:23:45,158 --> 00:23:47,490
+but we also have the ability to interface
+
+640
+00:23:47,490 --> 00:23:49,050
+with async-profiler
+
+641
+00:23:49,050 --> 00:23:52,650
+and we're able to do CPU
+utilization profiling.
+
+642
+00:23:52,650 --> 00:23:54,900
+- [Toby] Have folks seen
+flame graphs before?
+
+643
+00:23:55,770 --> 00:23:57,420
+Okay, so for those who don't know,
+
+644
+00:23:57,420 --> 00:24:01,470
+flame graph, it really is
+showing you a population
+
+645
+00:24:01,470 --> 00:24:04,050
+of function calls along the X axis
+
+646
+00:24:04,050 --> 00:24:05,790
+and stacked depth along the Y.
+
+647
+00:24:05,790 --> 00:24:08,640
+So if you see a wider bar,
+
+648
+00:24:08,640 --> 00:24:10,650
+that's not necessarily
+how much time was spent
+
+649
+00:24:10,650 --> 00:24:11,483
+in that function,
+
+650
+00:24:11,483 --> 00:24:13,500
+it's how many times that
+function was called.
+
+651
+00:24:13,500 --> 00:24:16,814
+So it's just a pure, pure
+alphabetic, numerical,
+
+652
+00:24:16,814 --> 00:24:18,840
+or sorry, alphabetic number.
+
+653
+00:24:18,840 --> 00:24:22,350
+So a population of function
+calls would determine width
+
+654
+00:24:22,350 --> 00:24:23,970
+along with stack depth.
+
+655
+00:24:23,970 --> 00:24:24,803
+- [Geoff] Yep.
+
+656
+00:24:24,803 --> 00:24:26,730
+So it gives you a
+proportion of how much time
+
+657
+00:24:26,730 --> 00:24:28,530
+each function is run.
+
+658
+00:24:28,530 --> 00:24:30,450
+Not necessarily telling you the, you know,
+
+659
+00:24:30,450 --> 00:24:32,910
+like the order is only applicable
+
+660
+00:24:32,910 --> 00:24:34,770
+when you're going up and
+down the stack depth.
+
+661
+00:24:34,770 --> 00:24:38,010
+And if you're going from left to right,
+
+662
+00:24:38,010 --> 00:24:39,030
+there's no information there.
+
+663
+00:24:39,030 --> 00:24:41,970
+You only have to look at
+the widths of the bars.
+
+664
+00:24:41,970 --> 00:24:46,970
+And async-profiler is used
+here to gather these plots.
+
+665
+00:24:47,070 --> 00:24:49,680
+There's a little legend here,
+for those that are curious,
+
+666
+00:24:49,680 --> 00:24:52,290
+you know, bright green is JIT compiled,
+
+667
+00:24:52,290 --> 00:24:54,330
+so that means the Java JIT
+has actually compiled it
+
+668
+00:24:54,330 --> 00:24:55,977
+into native code.
+
+669
+00:24:55,977 --> 00:24:59,370
+Light cyan is inlined,
+
+670
+00:24:59,370 --> 00:25:02,010
+and dark blue is things that
+you're matching against.
+
+671
+00:25:02,010 --> 00:25:04,860
+But the first thing we
+wanna notice here is
+
+672
+00:25:04,860 --> 00:25:06,300
+in this flame graph, if I was gonna say
+
+673
+00:25:06,300 --> 00:25:09,510
+I wanna optimize my AOP code,
+I wanna make the code faster
+
+674
+00:25:09,510 --> 00:25:13,290
+is that this stack trace
+has lots of functions
+
+675
+00:25:13,290 --> 00:25:15,480
+that I personally don't
+ever remember writing.
+
+676
+00:25:15,480 --> 00:25:18,060
+I don't remember writing
+an internal do filter
+
+677
+00:25:18,060 --> 00:25:22,123
+or invoke exact_MT@20.
+
+678
+00:25:23,460 --> 00:25:26,100
+And these are all of the things
+
+679
+00:25:26,100 --> 00:25:29,040
+that implements the aspects
+
+680
+00:25:29,040 --> 00:25:32,220
+in the object oriented
+programming in this JVM language
+
+681
+00:25:32,220 --> 00:25:33,360
+that we wrote this in.
+
+682
+00:25:33,360 --> 00:25:36,120
+And it goes on for
+almost seemingly forever.
+
+683
+00:25:36,120 --> 00:25:38,670
+It's over 100 stack frames deep.
+
+684
+00:25:38,670 --> 00:25:40,830
+And if I tried to look for code
+
+685
+00:25:40,830 --> 00:25:45,273
+with this little magnifying
+glass AOP heavy code,
+
+686
+00:25:46,350 --> 00:25:48,330
+it's found some, but we have to go
+
+687
+00:25:48,330 --> 00:25:50,650
+and we find a handful of things
+
+688
+00:25:51,780 --> 00:25:52,920
+that are things that we wrote.
+
+689
+00:25:52,920 --> 00:25:56,130
+So there's really not much we
+can do to optimize this code,
+
+690
+00:25:56,130 --> 00:25:58,740
+if we just wanted to go
+in and hack on our code.
+
+691
+00:25:58,740 --> 00:26:00,360
+We probably need to go
+look at another signal,
+
+692
+00:26:00,360 --> 00:26:01,383
+another opportunity.
+
+693
+00:26:02,490 --> 00:26:04,410
+And one of those opportunities might be,
+
+694
+00:26:04,410 --> 00:26:08,040
+let's go look at why the
+CPU is not performing
+
+695
+00:26:08,040 --> 00:26:10,320
+as fast as we think it should be.
+
+696
+00:26:10,320 --> 00:26:13,650
+And before I go deeper into
+the PMU view of things,
+
+697
+00:26:13,650 --> 00:26:15,360
+let's just give,
+
+698
+00:26:15,360 --> 00:26:16,950
+how many people here are micro architects
+
+699
+00:26:16,950 --> 00:26:19,413
+that have looked at how a CPU works?
+
+700
+00:26:20,760 --> 00:26:21,660
+Any, it's Intel?
+
+701
+00:26:21,660 --> 00:26:22,493
+One person, okay,
+
+702
+00:26:22,493 --> 00:26:24,263
+I'm gonna have to talk to you after this.
+
+703
+00:26:25,110 --> 00:26:25,943
+- [Julio] I work in our,
+
+704
+00:26:25,943 --> 00:26:27,060
+we used to be on the
+same team many years ago.
+
+705
+00:26:27,060 --> 00:26:28,170
+- [Geoff] Oh Julio.
+
+706
+00:26:28,170 --> 00:26:30,840
+Okay, now I recognize
+the voice. (chuckling)
+
+707
+00:26:30,840 --> 00:26:31,791
+Definitely talk to you.
+- [Julio] Yeah, I look
+
+708
+00:26:31,791 --> 00:26:33,000
+very different now, I think.
+
+709
+00:26:33,000 --> 00:26:35,100
+- [Geoff] No, it's the
+lights in my eyes, man.
+
+710
+00:26:35,100 --> 00:26:35,933
+Okay.
+
+711
+00:26:37,800 --> 00:26:39,480
+All right, let's talk
+about how a CPU works
+
+712
+00:26:39,480 --> 00:26:42,060
+because I'm gonna go
+into lots of CPU metrics,
+
+713
+00:26:42,060 --> 00:26:44,250
+well, not lots but quite a few.
+
+714
+00:26:44,250 --> 00:26:45,193
+So for those that don't know,
+
+715
+00:26:45,193 --> 00:26:48,540
+a CPU is literally the
+simplest loop state machine
+
+716
+00:26:48,540 --> 00:26:49,500
+you've ever heard of.
+
+717
+00:26:49,500 --> 00:26:52,710
+It gets instructions, we do
+some math, we go back to one.
+
+718
+00:26:52,710 --> 00:26:56,397
+And this is the abstraction
+that we all kind of depend on
+
+719
+00:26:56,397 --> 00:26:58,740
+and it goes around this loop
+billions of times a second
+
+720
+00:26:58,740 --> 00:27:00,030
+for any modern CPU.
+
+721
+00:27:00,030 --> 00:27:02,310
+A Graviton CPU is almost three gigahertz,
+
+722
+00:27:02,310 --> 00:27:03,810
+3 billion instructions per second.
+
+723
+00:27:03,810 --> 00:27:05,970
+Some of the high end desktops
+
+724
+00:27:05,970 --> 00:27:08,040
+can get almost to 6 billion instructions,
+
+725
+00:27:08,040 --> 00:27:09,810
+6 billion cycles a second.
+
+726
+00:27:09,810 --> 00:27:11,700
+But it's really just getting instructions
+
+727
+00:27:11,700 --> 00:27:12,533
+and executing them,
+
+728
+00:27:12,533 --> 00:27:13,890
+it's just doing some math.
+
+729
+00:27:13,890 --> 00:27:15,510
+But to go a little bit further
+
+730
+00:27:15,510 --> 00:27:17,430
+to look at what APerf can tell you
+
+731
+00:27:17,430 --> 00:27:20,340
+is we want to look at a
+little bit more detail.
+
+732
+00:27:20,340 --> 00:27:23,130
+A modern CPU because it's trying
+to get as much performance
+
+733
+00:27:23,130 --> 00:27:24,810
+as possible as two halves.
+
+734
+00:27:24,810 --> 00:27:27,060
+We'll talk about a front
+half and a back half.
+
+735
+00:27:27,060 --> 00:27:29,850
+The front half gets
+instructions from memory
+
+736
+00:27:29,850 --> 00:27:32,586
+and feeds it into a queue
+that the back half executes.
+
+737
+00:27:32,586 --> 00:27:34,500
+This is almost like a microservice
+
+738
+00:27:34,500 --> 00:27:37,110
+where you have separations
+of concerns again,
+
+739
+00:27:37,110 --> 00:27:39,810
+where one half is doing some
+work pushing it to a queue
+
+740
+00:27:39,810 --> 00:27:41,838
+and the back half is doing some more.
+
+741
+00:27:41,838 --> 00:27:45,240
+But the front half can't
+wait for the back half
+
+742
+00:27:45,240 --> 00:27:47,700
+to tell it if it's going down
+the right path in your loops
+
+743
+00:27:47,700 --> 00:27:48,840
+or in your If conditionals.
+
+744
+00:27:48,840 --> 00:27:50,640
+So it's constantly predicting
+
+745
+00:27:50,640 --> 00:27:52,860
+where to go next from
+the previous history.
+
+746
+00:27:52,860 --> 00:27:56,223
+So if your loop is doing 1,000 iterations,
+
+747
+00:27:57,210 --> 00:27:59,130
+this front half will try to predict like,
+
+748
+00:27:59,130 --> 00:28:00,510
+I saw this loop previously,
+
+749
+00:28:00,510 --> 00:28:02,160
+I'm gonna do 1,000 iterations of this loop
+
+750
+00:28:02,160 --> 00:28:03,330
+and feed it to the back end,
+
+751
+00:28:03,330 --> 00:28:05,100
+and hopefully that's correct.
+
+752
+00:28:05,100 --> 00:28:06,570
+And the back end will then tell it
+
+753
+00:28:06,570 --> 00:28:07,770
+whether or not those were correct.
+
+754
+00:28:07,770 --> 00:28:09,390
+And every time you're wrong
+
+755
+00:28:09,390 --> 00:28:11,400
+or the front-end got
+the wrong instructions,
+
+756
+00:28:11,400 --> 00:28:14,070
+you basically have to flush the
+entire thing and start over.
+
+757
+00:28:14,070 --> 00:28:16,110
+And that's a very painful, painful thing
+
+758
+00:28:16,110 --> 00:28:17,760
+to have in your code.
+
+759
+00:28:17,760 --> 00:28:19,140
+You want these two halves
+
+760
+00:28:19,140 --> 00:28:21,210
+to operate at full speed at all times
+
+761
+00:28:21,210 --> 00:28:24,060
+and then you'll get the
+maximum performance.
+
+762
+00:28:24,060 --> 00:28:27,153
+And so let's go back to the demo.
+
+763
+00:28:28,050 --> 00:28:31,740
+Alright, so the very first thing
+we're gonna look at is just
+
+764
+00:28:31,740 --> 00:28:33,777
+what's the throughput of our CPU?
+
+765
+00:28:33,777 --> 00:28:35,610
+And this is this IPC metric,
+
+766
+00:28:35,610 --> 00:28:39,150
+which is, APerf now has some annotations,
+
+767
+00:28:39,150 --> 00:28:40,680
+you can click on things to get some help.
+
+768
+00:28:40,680 --> 00:28:42,690
+This is instructions per cycle.
+
+769
+00:28:42,690 --> 00:28:44,040
+Instructions per cycle is just
+
+770
+00:28:44,040 --> 00:28:46,530
+how fast the CPU is processing
+
+771
+00:28:46,530 --> 00:28:48,870
+and you really want to have
+something greater than one.
+
+772
+00:28:48,870 --> 00:28:52,200
+And if we look at the average
+here, it's actually under one.
+
+773
+00:28:52,200 --> 00:28:55,770
+So we're spending a lot of
+time doing not a lot of work.
+
+774
+00:28:55,770 --> 00:28:57,870
+We want to drive this as
+high as possible actually,
+
+775
+00:28:57,870 --> 00:28:59,100
+for most of our code.
+
+776
+00:28:59,100 --> 00:29:01,710
+Modern CPUs can get
+anywhere upwards of eight
+
+777
+00:29:01,710 --> 00:29:04,320
+to 12 instructions per
+cycle through their pipeline
+
+778
+00:29:04,320 --> 00:29:06,120
+if you get everything aligned.
+
+779
+00:29:06,120 --> 00:29:07,320
+It's very hard to do this,
+
+780
+00:29:07,320 --> 00:29:09,856
+but I'm just saying that
+CPUs have this capability,
+
+781
+00:29:09,856 --> 00:29:11,433
+they're really fast.
+
+782
+00:29:13,830 --> 00:29:14,940
+So we want to go a little bit further.
+
+783
+00:29:14,940 --> 00:29:19,050
+And APerf puts our PMU stats
+in ways that we can understand
+
+784
+00:29:19,050 --> 00:29:20,070
+just like we had in that slide.
+
+785
+00:29:20,070 --> 00:29:21,930
+So we can look at front-end stuff first
+
+786
+00:29:21,930 --> 00:29:25,320
+and we can see that front-ends is in
+
+787
+00:29:25,320 --> 00:29:27,240
+stalls per 1,000 instruction,
+
+788
+00:29:27,240 --> 00:29:28,593
+or a 1,000 cycles.
+
+789
+00:29:29,910 --> 00:29:33,180
+So anything above zero here
+means that things are stalling
+
+790
+00:29:33,180 --> 00:29:34,860
+and not doing any work,
+
+791
+00:29:34,860 --> 00:29:37,290
+and we're at almost 60% of the timer,
+
+792
+00:29:37,290 --> 00:29:39,210
+600 cycles out of 1,000.
+
+793
+00:29:39,210 --> 00:29:42,390
+The front-end can't actually
+feed anything into the backend.
+
+794
+00:29:42,390 --> 00:29:44,970
+So we really should
+probably look at here first,
+
+795
+00:29:44,970 --> 00:29:47,190
+but since we said let's go wide than deep,
+
+796
+00:29:47,190 --> 00:29:49,740
+let's see if our backend
+is actually worse.
+
+797
+00:29:49,740 --> 00:29:50,689
+It's not.
+
+798
+00:29:50,689 --> 00:29:53,220
+The backend's actually
+processing things pretty fast.
+
+799
+00:29:53,220 --> 00:29:56,850
+It's at two, it's only stalling
+200 times out of 1,000.
+
+800
+00:29:56,850 --> 00:29:58,140
+So we can put that to the side
+
+801
+00:29:58,140 --> 00:30:00,120
+and say our opportunity's
+really on the front-end.
+
+802
+00:30:00,120 --> 00:30:03,780
+So what are things that
+we can can look at there?
+
+803
+00:30:03,780 --> 00:30:06,420
+Some things are branch misses.
+
+804
+00:30:06,420 --> 00:30:08,280
+How many times we're wrong in predicting
+
+805
+00:30:08,280 --> 00:30:10,800
+the previous behavior as future behavior?
+
+806
+00:30:10,800 --> 00:30:12,330
+And this is another thing we want to go
+
+807
+00:30:12,330 --> 00:30:14,760
+and make as close to zero as possible.
+
+808
+00:30:14,760 --> 00:30:17,700
+Something like 10 per 1,000
+is actually not great.
+
+809
+00:30:17,700 --> 00:30:19,620
+It's meaning the CPU is stalling
+
+810
+00:30:19,620 --> 00:30:21,270
+and flushing things pretty often.
+
+811
+00:30:23,010 --> 00:30:25,950
+The same thing is the instruction memory
+
+812
+00:30:25,950 --> 00:30:28,050
+we're fetching from being well utilized.
+
+813
+00:30:28,050 --> 00:30:31,200
+Well, there's caches along
+the CPU micro architecture
+
+814
+00:30:31,200 --> 00:30:32,940
+before you get to main memory
+
+815
+00:30:32,940 --> 00:30:34,680
+and you wanna be able to
+put all your instructions
+
+816
+00:30:34,680 --> 00:30:36,150
+in the closest memory is possible.
+
+817
+00:30:36,150 --> 00:30:38,370
+So it's really fast and easy to fetch.
+
+818
+00:30:38,370 --> 00:30:42,150
+And in this case we're also
+not doing a very good job here.
+
+819
+00:30:42,150 --> 00:30:43,770
+We're missing outta that cash a lot,
+
+820
+00:30:43,770 --> 00:30:46,923
+60 times out of every 1,000 instructions.
+
+821
+00:30:49,590 --> 00:30:51,570
+And we can see the same thing
+
+822
+00:30:51,570 --> 00:30:53,070
+of translating virtual addresses,
+
+823
+00:30:53,070 --> 00:30:56,220
+physical addresses is
+also fairly high at four.
+
+824
+00:30:56,220 --> 00:30:57,660
+So all of these stats I'm going through,
+
+825
+00:30:57,660 --> 00:30:59,520
+you wanna drive as close
+to zero as possible.
+
+826
+00:30:59,520 --> 00:31:03,810
+So I want to go back
+to those JVM ops that,
+
+827
+00:31:03,810 --> 00:31:06,508
+options that we put in,
+
+828
+00:31:06,508 --> 00:31:10,290
+and we'll talk about the actual
+results from that script.
+
+829
+00:31:10,290 --> 00:31:12,990
+But the things that we did were,
+
+830
+00:31:12,990 --> 00:31:16,050
+we said everything in the
+front-end we want to...
+
+831
+00:31:16,050 --> 00:31:16,980
+So things you wanna do
+
+832
+00:31:16,980 --> 00:31:19,410
+to make things front-end-bound happier
+
+833
+00:31:19,410 --> 00:31:22,380
+is you want to put things close together,
+
+834
+00:31:22,380 --> 00:31:25,380
+squeeze the instructions as
+close together as possible
+
+835
+00:31:25,380 --> 00:31:27,840
+and you want to,
+
+836
+00:31:27,840 --> 00:31:30,660
+and those things help you put
+things in closer memories.
+
+837
+00:31:30,660 --> 00:31:32,880
+It helps the branch predictor
+track all the history
+
+838
+00:31:32,880 --> 00:31:34,500
+because it is also a cache.
+
+839
+00:31:34,500 --> 00:31:37,500
+And if things are spread out
+too far, it'll start missing.
+
+840
+00:31:37,500 --> 00:31:39,598
+And we also want to put things
+
+841
+00:31:39,598 --> 00:31:42,750
+in contiguous parts and memory as well.
+
+842
+00:31:42,750 --> 00:31:44,490
+So we put take pressure off the things
+
+843
+00:31:44,490 --> 00:31:45,420
+that do the translation.
+
+844
+00:31:45,420 --> 00:31:46,650
+And these are all options
+
+845
+00:31:46,650 --> 00:31:50,160
+that we actually put into
+our Java application.
+
+846
+00:31:50,160 --> 00:31:52,980
+We said, I wanna turn
+off tiered compilation,
+
+847
+00:31:52,980 --> 00:31:55,350
+which mean, tiered compilation
+is a way for the JVM
+
+848
+00:31:55,350 --> 00:31:56,880
+to get faster startup times.
+
+849
+00:31:56,880 --> 00:31:58,860
+It compiles methods twice.
+
+850
+00:31:58,860 --> 00:32:03,270
+Once in a very simple assembly code
+
+851
+00:32:03,270 --> 00:32:04,557
+and then after it sees
+it, run a couple times,
+
+852
+00:32:04,557 --> 00:32:06,570
+and it actually does a full optimization.
+
+853
+00:32:06,570 --> 00:32:08,130
+So it actually keeps two copies around
+
+854
+00:32:08,130 --> 00:32:11,130
+and that takes up space
+and pollutes your caches.
+
+855
+00:32:11,130 --> 00:32:12,000
+But we can turn that off
+
+856
+00:32:12,000 --> 00:32:13,320
+if we're not worried about startup time.
+
+857
+00:32:13,320 --> 00:32:15,927
+Some people might be, so
+maybe you wanna keep this on,
+
+858
+00:32:15,927 --> 00:32:18,780
+it's a thing to experiment with.
+
+859
+00:32:18,780 --> 00:32:21,780
+Same thing with reserved code cache size
+
+860
+00:32:21,780 --> 00:32:23,640
+and initial code cache size.
+
+861
+00:32:23,640 --> 00:32:25,530
+The default is 256 megabytes
+
+862
+00:32:25,530 --> 00:32:28,410
+and the JVM, in this
+case, is not very smart
+
+863
+00:32:28,410 --> 00:32:29,460
+about where it places methods.
+
+864
+00:32:29,460 --> 00:32:32,730
+It'll just find a gap and
+put the methods there.
+
+865
+00:32:32,730 --> 00:32:35,070
+But if you constrict
+the space it can be in,
+
+866
+00:32:35,070 --> 00:32:38,010
+it'll actually start packing
+methods better for you.
+
+867
+00:32:38,010 --> 00:32:41,610
+And then finally, we
+UseTransparentHugePages,
+
+868
+00:32:41,610 --> 00:32:43,620
+and this is a way to force the machine
+
+869
+00:32:43,620 --> 00:32:44,820
+or force the JVM
+
+870
+00:32:44,820 --> 00:32:46,410
+to put things in contiguous
+memory addresses.
+
+871
+00:32:46,410 --> 00:32:48,120
+So you have to use less entries
+
+872
+00:32:48,120 --> 00:32:50,610
+to translate virtual, physical memory.
+
+873
+00:32:50,610 --> 00:32:54,570
+And all these options were just
+options on the command line.
+
+874
+00:32:54,570 --> 00:32:55,860
+We didn't have to change code,
+
+875
+00:32:55,860 --> 00:32:58,860
+we only had to redeploy our pod.
+
+876
+00:32:58,860 --> 00:33:03,360
+And the final results of that is we got,
+
+877
+00:33:03,360 --> 00:33:05,580
+now we got almost 20% more throughput
+
+878
+00:33:05,580 --> 00:33:09,090
+at 4,750 requests per second.
+
+879
+00:33:09,090 --> 00:33:12,990
+And our P99 is still under
+that 100 milliseconds.
+
+880
+00:33:12,990 --> 00:33:14,400
+So that's actually pretty good.
+
+881
+00:33:14,400 --> 00:33:17,880
+Pretty cheap tunings for a 20%,
+
+882
+00:33:17,880 --> 00:33:21,570
+almost 20% return on that.
+
+883
+00:33:21,570 --> 00:33:23,700
+And we can take a look at the report.
+
+884
+00:33:23,700 --> 00:33:25,440
+Did any of the things I just talked about
+
+885
+00:33:25,440 --> 00:33:27,619
+making the front-end better actually work?
+
+886
+00:33:27,619 --> 00:33:31,080
+- [Toby] And real quick, I'll
+just point out, you know,
+
+887
+00:33:31,080 --> 00:33:33,690
+we're talking a lot about
+Java and Groovy right now
+
+888
+00:33:33,690 --> 00:33:36,240
+and the tunings that
+you could do in the JVM.
+
+889
+00:33:36,240 --> 00:33:38,130
+There's corollary tunings
+
+890
+00:33:38,130 --> 00:33:41,310
+for basically all languages
+and all platforms, right?
+
+891
+00:33:41,310 --> 00:33:44,280
+So we do have some of
+this stuff documented.
+
+892
+00:33:44,280 --> 00:33:45,390
+We'll touch on that in a second,
+
+893
+00:33:45,390 --> 00:33:47,880
+but just pointing out, not to,
+
+894
+00:33:47,880 --> 00:33:49,860
+I don't want to go too
+far down the Groovy thing
+
+895
+00:33:49,860 --> 00:33:51,420
+and lose people,
+
+896
+00:33:51,420 --> 00:33:55,950
+but letting you know that
+APerf is gonna be the thing
+
+897
+00:33:55,950 --> 00:33:57,840
+that surfaces those signals.
+
+898
+00:33:57,840 --> 00:34:00,120
+And if you do get those signals,
+how do you fix 'em, right?
+
+899
+00:34:00,120 --> 00:34:01,620
+Like that's what we're really
+trying to teach you here.
+
+900
+00:34:01,620 --> 00:34:02,940
+- [Geoff] Yeah.
+
+901
+00:34:02,940 --> 00:34:06,240
+Yeah, we're trying to
+focus on, use the data,
+
+902
+00:34:06,240 --> 00:34:09,030
+use all the data to try to
+guide where your, you know,
+
+903
+00:34:09,030 --> 00:34:12,240
+best return on investment
+and optimization can be.
+
+904
+00:34:12,240 --> 00:34:14,280
+And so here's a comparison report.
+
+905
+00:34:14,280 --> 00:34:17,850
+So this is another feature that APerf has
+
+906
+00:34:17,850 --> 00:34:18,750
+that we find very useful,
+
+907
+00:34:18,750 --> 00:34:21,360
+is you can put two reports side by side.
+
+908
+00:34:21,360 --> 00:34:23,760
+So now we can go and do
+a compare and contrast,
+
+909
+00:34:23,760 --> 00:34:25,530
+an A/B comparison.
+
+910
+00:34:25,530 --> 00:34:26,580
+- [Toby] So this is super interesting,
+
+911
+00:34:26,580 --> 00:34:28,110
+but what happens if we have two different
+
+912
+00:34:28,110 --> 00:34:30,450
+micro architectures in our APerf.
+
+913
+00:34:30,450 --> 00:34:32,490
+So if we've got say an M7g on the left
+
+914
+00:34:32,490 --> 00:34:34,890
+and M6i on the right?
+
+915
+00:34:34,890 --> 00:34:36,510
+- [Geoff] So the report
+does the exact same thing
+
+916
+00:34:36,510 --> 00:34:37,800
+and we'll put 'em side by side.
+
+917
+00:34:37,800 --> 00:34:39,630
+And as much as possible,
+
+918
+00:34:39,630 --> 00:34:42,510
+the metrics that we collect
+will be named the same
+
+919
+00:34:42,510 --> 00:34:45,540
+and be comparable between each other.
+
+920
+00:34:45,540 --> 00:34:48,570
+So the PMU events will be named the same
+
+921
+00:34:48,570 --> 00:34:52,380
+and they'll map to the same basic ideas.
+
+922
+00:34:52,380 --> 00:34:53,940
+So cache misses are still cache misses,
+
+923
+00:34:53,940 --> 00:34:56,010
+instructions per cycle is
+still instructions per cycle.
+
+924
+00:34:56,010 --> 00:34:58,200
+So you can look at them
+and compare one to one.
+
+925
+00:34:58,200 --> 00:34:59,250
+- [Toby] So that's pretty huge,
+
+926
+00:34:59,250 --> 00:35:01,050
+if you've ever done any
+kind of performance stuff,
+
+927
+00:35:01,050 --> 00:35:02,460
+understanding the different, you know,
+
+928
+00:35:02,460 --> 00:35:06,960
+the different nuances between
+say Intel, and AMD, and our
+
+929
+00:35:06,960 --> 00:35:09,450
+is a big thing that we've
+already done for you.
+
+930
+00:35:09,450 --> 00:35:10,410
+So that's good.
+
+931
+00:35:10,410 --> 00:35:12,510
+- [Geoff] Yep, okay.
+
+932
+00:35:12,510 --> 00:35:15,150
+So let's jump straight to the PMU things
+
+933
+00:35:15,150 --> 00:35:17,130
+and so we can show some
+other features here.
+
+934
+00:35:17,130 --> 00:35:20,400
+So we had not only the
+summary in the original report
+
+935
+00:35:20,400 --> 00:35:21,990
+of this time series thing,
+
+936
+00:35:21,990 --> 00:35:24,300
+if we're not wanting to squint too hard,
+
+937
+00:35:24,300 --> 00:35:27,570
+is this line actually 10%
+higher than the other line?
+
+938
+00:35:27,570 --> 00:35:30,900
+We've now put a
+summarization on the reports
+
+939
+00:35:30,900 --> 00:35:33,450
+under comparison and we can see-
+
+940
+00:35:33,450 --> 00:35:34,890
+- [Toby] Pretty small.
+- [Geoff] That's pretty small
+
+941
+00:35:34,890 --> 00:35:37,260
+but I'll blow it up just a little bit.
+
+942
+00:35:37,260 --> 00:35:38,970
+We can see that instructions per cycle
+
+943
+00:35:38,970 --> 00:35:41,250
+did get 12% better on average.
+
+944
+00:35:41,250 --> 00:35:44,010
+So we did do what we said we could do.
+
+945
+00:35:44,010 --> 00:35:46,740
+We actually improved the
+performance of the CPU
+
+946
+00:35:46,740 --> 00:35:50,723
+by about 13%, even though
+the score went up by 17%.
+
+947
+00:35:51,750 --> 00:35:55,287
+Stall front-ends actually
+went down by about 6%.
+
+948
+00:35:55,287 --> 00:35:56,250
+It may not seem big,
+
+949
+00:35:56,250 --> 00:35:58,590
+but every time you can
+reduce front-end stalls,
+
+950
+00:35:58,590 --> 00:36:00,990
+they're far more expensive
+than anything on the backend.
+
+951
+00:36:00,990 --> 00:36:04,350
+'Cause the front-end works
+pretty much in order.
+
+952
+00:36:04,350 --> 00:36:06,660
+It has to get one set of instructions
+
+953
+00:36:06,660 --> 00:36:08,190
+before it can get the next from memory.
+
+954
+00:36:08,190 --> 00:36:09,750
+But the backend can do things
+
+955
+00:36:09,750 --> 00:36:11,400
+way out of order and in parallel.
+
+956
+00:36:12,660 --> 00:36:15,510
+And if we look at stall backends,
+
+957
+00:36:15,510 --> 00:36:17,910
+this is kind of the interesting
+thing you might notice
+
+958
+00:36:17,910 --> 00:36:19,230
+is that when you remove one bottleneck
+
+959
+00:36:19,230 --> 00:36:20,460
+you start pushing on another,
+
+960
+00:36:20,460 --> 00:36:22,380
+and if you removed all
+the stall front-ends,
+
+961
+00:36:22,380 --> 00:36:24,750
+you'd actually see this would blow up
+
+962
+00:36:24,750 --> 00:36:27,390
+to be a huge difference in
+the negative, in the red,
+
+963
+00:36:27,390 --> 00:36:29,010
+because now you've moved the bottleneck
+
+964
+00:36:29,010 --> 00:36:32,760
+from one part of the CPU,
+in this case, to another,
+
+965
+00:36:32,760 --> 00:36:35,940
+but as we talked about, this
+can happen in code as well.
+
+966
+00:36:35,940 --> 00:36:38,670
+Other things that happened
+is branch miss predictions
+
+967
+00:36:38,670 --> 00:36:39,930
+went down by 20%.
+
+968
+00:36:39,930 --> 00:36:40,950
+So that's good.
+
+969
+00:36:40,950 --> 00:36:43,110
+We're doing exactly
+what we said we would do
+
+970
+00:36:43,110 --> 00:36:45,420
+and all the things that
+we thought would happen
+
+971
+00:36:45,420 --> 00:36:47,010
+because we constricted the code cache,
+
+972
+00:36:47,010 --> 00:36:50,070
+we reduced the number of
+times we recompile methods.
+
+973
+00:36:50,070 --> 00:36:52,740
+And I'll show you just a
+second when we put things
+
+974
+00:36:52,740 --> 00:36:55,410
+in contiguous memory, things get faster.
+
+975
+00:36:55,410 --> 00:36:59,610
+So instructions got packed tighter.
+
+976
+00:36:59,610 --> 00:37:03,236
+So we're missing less in
+the instruction L1 cache
+
+977
+00:37:03,236 --> 00:37:05,370
+and then we put things
+in contiguous memory,
+
+978
+00:37:05,370 --> 00:37:08,370
+and we got a big jump
+in the amount of times
+
+979
+00:37:08,370 --> 00:37:10,950
+we miss in the cache that
+translates from virtual addresses
+
+980
+00:37:10,950 --> 00:37:12,720
+to physical addresses.
+
+981
+00:37:12,720 --> 00:37:15,090
+So the core doesn't always have to fault
+
+982
+00:37:15,090 --> 00:37:16,350
+and go look through a page table,
+
+983
+00:37:16,350 --> 00:37:17,910
+it doesn't take page faults all the time.
+
+984
+00:37:17,910 --> 00:37:20,730
+It actually tries to
+cache those translations.
+
+985
+00:37:20,730 --> 00:37:22,770
+And we can see this went down by 60%.
+
+986
+00:37:22,770 --> 00:37:25,320
+So a big, big decrease.
+
+987
+00:37:25,320 --> 00:37:29,343
+But if 20 percent's not
+enough, what can we do then?
+
+988
+00:37:30,270 --> 00:37:32,700
+We can continue down this path of,
+
+989
+00:37:32,700 --> 00:37:33,660
+well, let's get the hardware
+
+990
+00:37:33,660 --> 00:37:38,660
+just to execute our code
+faster and we can go to M8g.
+
+991
+00:37:39,090 --> 00:37:41,339
+And we've already run
+this in the background.
+
+992
+00:37:41,339 --> 00:37:46,339
+M8g is getting 7,000 requests
+per second for the same code
+
+993
+00:37:47,850 --> 00:37:49,290
+with the same optimizations,
+
+994
+00:37:49,290 --> 00:37:51,600
+and we're actually running
+at a little bit better
+
+995
+00:37:51,600 --> 00:37:52,920
+of a P99 latency,
+
+996
+00:37:52,920 --> 00:37:55,950
+but again, if we push past
+7,000, it blows up pretty quick.
+
+997
+00:37:55,950 --> 00:37:58,353
+So we're already at our
+breaking latency here.
+
+998
+00:37:59,580 --> 00:38:03,300
+7,000, okay, we got 60
+or 70% more performance,
+
+999
+00:38:03,300 --> 00:38:04,710
+10% higher cost,
+
+1000
+00:38:04,710 --> 00:38:07,260
+it's a 60% price performance benefit
+
+1001
+00:38:07,260 --> 00:38:09,240
+from going from 7g to 8g.
+
+1002
+00:38:09,240 --> 00:38:11,670
+That's actually a pretty big win.
+
+1003
+00:38:11,670 --> 00:38:13,830
+And so far we haven't
+actually touched any code,
+
+1004
+00:38:13,830 --> 00:38:15,360
+if you've noticed.
+
+1005
+00:38:15,360 --> 00:38:18,270
+If we open that report,
+
+1006
+00:38:18,270 --> 00:38:20,013
+I'll go through that really quick.
+
+1007
+00:38:22,110 --> 00:38:24,840
+And this is comparing back to the same one
+
+1008
+00:38:24,840 --> 00:38:27,930
+that we just looked at
+the optimized code path
+
+1009
+00:38:27,930 --> 00:38:30,810
+against an optimized code path in 8g,
+
+1010
+00:38:30,810 --> 00:38:35,804
+and if we increase that
+one, we get 38% more IPC.
+
+1011
+00:38:35,804 --> 00:38:38,985
+- [Toby] Just to jump in
+here, this is a function
+
+1012
+00:38:38,985 --> 00:38:42,300
+of the processor getting better, right?
+
+1013
+00:38:42,300 --> 00:38:44,100
+Like so the processor got more efficient
+
+1014
+00:38:44,100 --> 00:38:47,310
+and was able to give
+us these gains, right?
+
+1015
+00:38:47,310 --> 00:38:48,143
+- [Geoff] Yeah.
+
+1016
+00:38:48,143 --> 00:38:50,220
+- [Toby] And so you'd see that,
+
+1017
+00:38:50,220 --> 00:38:53,130
+year over year probably, or gen over gen
+
+1018
+00:38:53,130 --> 00:38:55,320
+on not only Graviton but
+basically any processor,
+
+1019
+00:38:55,320 --> 00:38:56,760
+that everybody's endeavoring to do
+
+1020
+00:38:56,760 --> 00:38:57,750
+this kind of stuff, right?
+
+1021
+00:38:57,750 --> 00:38:59,490
+- [Geoff] Everyone's trying
+to get the processor faster
+
+1022
+00:38:59,490 --> 00:39:01,040
+so you get those free upgrades.
+
+1023
+00:39:02,550 --> 00:39:04,650
+And Graviton is no different.
+
+1024
+00:39:04,650 --> 00:39:06,300
+So every generation we've
+been trying to shoot
+
+1025
+00:39:06,300 --> 00:39:08,280
+for 20 to 25%,
+
+1026
+00:39:08,280 --> 00:39:10,200
+Intel and AMD try to do the same,
+
+1027
+00:39:10,200 --> 00:39:11,820
+if we've got plenty of different levers
+
+1028
+00:39:11,820 --> 00:39:12,870
+to make things faster.
+
+1029
+00:39:12,870 --> 00:39:15,510
+But you can see even in APerf
+
+1030
+00:39:15,510 --> 00:39:16,713
+that this is what's happening.
+
+1031
+00:39:16,713 --> 00:39:18,210
+The cores are getting faster
+
+1032
+00:39:18,210 --> 00:39:19,980
+going from seventh gen to eighth gen,
+
+1033
+00:39:19,980 --> 00:39:22,073
+and we're getting a lot of performance
+
+1034
+00:39:22,073 --> 00:39:26,100
+for a fairly small bump in price.
+
+1035
+00:39:26,100 --> 00:39:29,133
+If that's a trade off
+you're willing to make.
+
+1036
+00:39:30,360 --> 00:39:33,270
+As we can see, backend stalls
+actually got higher again
+
+1037
+00:39:33,270 --> 00:39:34,320
+because we've moved the bottleneck
+
+1038
+00:39:34,320 --> 00:39:35,880
+from front-end to backend,
+
+1039
+00:39:35,880 --> 00:39:38,280
+and branch misses went down by almost 50%.
+
+1040
+00:39:38,280 --> 00:39:40,590
+So everything got better.
+
+1041
+00:39:40,590 --> 00:39:44,640
+But we could say, now I
+don't wanna move to 8g,
+
+1042
+00:39:44,640 --> 00:39:45,473
+what can we do then?
+
+1043
+00:39:45,473 --> 00:39:48,990
+- [Toby] Or like maybe
+there's some constraint,
+
+1044
+00:39:48,990 --> 00:39:50,820
+maybe we haven't dropped 8g in the region
+
+1045
+00:39:50,820 --> 00:39:52,500
+that you have to run in or
+something like that, right?
+
+1046
+00:39:52,500 --> 00:39:53,850
+So it's a real problem
+
+1047
+00:39:53,850 --> 00:39:55,750
+that we've heard customers talk about.
+
+1048
+00:39:57,480 --> 00:39:58,440
+- [Geoff] Okay.
+
+1049
+00:39:58,440 --> 00:40:01,920
+So at that point what's one of the answers
+
+1050
+00:40:01,920 --> 00:40:05,910
+and really the, as we said,
+everything has a cost.
+
+1051
+00:40:05,910 --> 00:40:07,920
+And aspect-oriented programming
+
+1052
+00:40:07,920 --> 00:40:12,210
+or leveraging object-oriented
+programming interfaces,
+
+1053
+00:40:12,210 --> 00:40:14,520
+abstract classes, lots of derived classes,
+
+1054
+00:40:14,520 --> 00:40:16,380
+all of these have costs.
+
+1055
+00:40:16,380 --> 00:40:19,170
+And a lot of the times the
+cost is hidden in extra code
+
+1056
+00:40:19,170 --> 00:40:22,230
+to make all of these nice
+software abstractions
+
+1057
+00:40:22,230 --> 00:40:26,973
+and constructs work in
+that, they run extra code.
+
+1058
+00:40:27,960 --> 00:40:32,760
+And if we are really set
+on, we need to use 7g,
+
+1059
+00:40:32,760 --> 00:40:35,120
+then we have to go and
+actually change the code.
+
+1060
+00:40:35,120 --> 00:40:37,830
+In this case we went the extreme version,
+
+1061
+00:40:37,830 --> 00:40:40,140
+we removed all of the aspects,
+
+1062
+00:40:40,140 --> 00:40:43,620
+except for the very handful
+of ones we absolutely need,
+
+1063
+00:40:43,620 --> 00:40:47,400
+like using the aspects to turn
+these into HTTP endpoints.
+
+1064
+00:40:47,400 --> 00:40:49,530
+And we started inlining
+a lot of the aspects
+
+1065
+00:40:49,530 --> 00:40:50,610
+that we showed earlier,
+
+1066
+00:40:50,610 --> 00:40:55,140
+like tracking authorization
+stats is now in-lined,
+
+1067
+00:40:55,140 --> 00:40:56,733
+logging is now in-lined.
+
+1068
+00:40:57,690 --> 00:41:02,361
+And if we go into here, we can also see,
+
+1069
+00:41:02,361 --> 00:41:05,760
+oh, this is my, this is
+the hello or the, yeah.
+
+1070
+00:41:05,760 --> 00:41:08,730
+The other things in here
+is we also inline metrics,
+
+1071
+00:41:08,730 --> 00:41:10,950
+we also inlined rate limiting.
+
+1072
+00:41:10,950 --> 00:41:13,980
+So a lot of things we've taken away,
+
+1073
+00:41:13,980 --> 00:41:15,360
+we've made the trade off now is,
+
+1074
+00:41:15,360 --> 00:41:16,800
+we're gonna make the
+code less maintainable.
+
+1075
+00:41:16,800 --> 00:41:18,330
+And maybe this is not a
+trade off you wanna make,
+
+1076
+00:41:18,330 --> 00:41:20,820
+but if we did, the question now becomes,
+
+1077
+00:41:20,820 --> 00:41:22,020
+well did this do anything?
+
+1078
+00:41:22,020 --> 00:41:25,350
+Did we spend a lot of effort
+and a lot of tech, you know,
+
+1079
+00:41:25,350 --> 00:41:29,460
+potentially tech debt to get
+a small mean, modest gain?
+
+1080
+00:41:29,460 --> 00:41:32,103
+And in this case, the answer for that was-
+
+1081
+00:41:33,089 --> 00:41:34,800
+- [Toby] Just to jump in here again,
+
+1082
+00:41:34,800 --> 00:41:36,990
+like, I hope I don't see a review
+
+1083
+00:41:36,990 --> 00:41:38,197
+or somebody in a survey that says,
+
+1084
+00:41:38,197 --> 00:41:39,097
+"Geoff and Toby told us
+
+1085
+00:41:39,097 --> 00:41:40,710
+"not to use object-oriented programming."
+
+1086
+00:41:40,710 --> 00:41:41,995
+Like that's not the goal, right?
+
+1087
+00:41:41,995 --> 00:41:46,859
+The goal is to show that there
+is a cost to all this stuff.
+
+1088
+00:41:46,859 --> 00:41:48,150
+It's not for free,
+
+1089
+00:41:48,150 --> 00:41:51,060
+although in your organization
+or whatever else,
+
+1090
+00:41:51,060 --> 00:41:53,220
+you may value maintainability
+
+1091
+00:41:53,220 --> 00:41:54,840
+and readability more than performance,
+
+1092
+00:41:54,840 --> 00:41:56,190
+and that is perfectly fine.
+
+1093
+00:41:56,190 --> 00:41:58,080
+But that's your decision to make.
+
+1094
+00:41:58,080 --> 00:41:58,913
+- [Geoff] Yep.
+
+1095
+00:41:58,913 --> 00:42:00,600
+And the point is that
+you can use all the data
+
+1096
+00:42:00,600 --> 00:42:02,490
+to try to come to these trade offs.
+
+1097
+00:42:02,490 --> 00:42:04,260
+You're seeing the CPU going slow,
+
+1098
+00:42:04,260 --> 00:42:05,820
+you have flame graphs
+
+1099
+00:42:05,820 --> 00:42:08,583
+that are two, 300, 400 stack frames deep,
+
+1100
+00:42:09,577 --> 00:42:12,090
+that's all telling you that the code
+
+1101
+00:42:12,090 --> 00:42:13,800
+might have gotten too complex
+
+1102
+00:42:13,800 --> 00:42:16,410
+or the things you're using are
+adding lots of extra overhead
+
+1103
+00:42:16,410 --> 00:42:18,600
+that wasn't immediately obvious,
+
+1104
+00:42:18,600 --> 00:42:20,940
+just by looking at the
+code that you wrote.
+
+1105
+00:42:20,940 --> 00:42:23,280
+And if we wind things back
+
+1106
+00:42:23,280 --> 00:42:25,680
+and take away some of these aspects,
+
+1107
+00:42:25,680 --> 00:42:28,230
+we actually get a pretty
+large healthy return
+
+1108
+00:42:28,230 --> 00:42:29,100
+for our application.
+
+1109
+00:42:29,100 --> 00:42:32,040
+We're up to 11,000 requests per second,
+
+1110
+00:42:32,040 --> 00:42:34,620
+and still under our SLO
+of 100 milliseconds,
+
+1111
+00:42:34,620 --> 00:42:36,758
+we're at 28 and-
+
+1112
+00:42:36,758 --> 00:42:37,860
+- [Toby] And that's on 7g, right?
+
+1113
+00:42:37,860 --> 00:42:38,857
+- [Geoff] That's on 7g.
+
+1114
+00:42:38,857 --> 00:42:41,670
+So 7g to 7g, we can
+increase the performance
+
+1115
+00:42:41,670 --> 00:42:46,380
+by almost 3X, just by
+rearranging parts of our code.
+
+1116
+00:42:46,380 --> 00:42:47,670
+We still have the same functionality
+
+1117
+00:42:47,670 --> 00:42:51,153
+but how it's implemented, compiled,
+
+1118
+00:42:52,678 --> 00:42:54,423
+and then run has changed.
+
+1119
+00:42:55,890 --> 00:42:58,870
+And we can go and take
+a look at the report
+
+1120
+00:43:01,878 --> 00:43:02,850
+and these are all scripts,
+
+1121
+00:43:02,850 --> 00:43:04,563
+just so I can open these up fast.
+
+1122
+00:43:05,640 --> 00:43:10,640
+And we will just go straight
+to the Java heat maps.
+
+1123
+00:43:10,680 --> 00:43:13,350
+We can put these also side by side,
+
+1124
+00:43:13,350 --> 00:43:18,330
+and the thing to notice here
+is AOP optimizes on the left.
+
+1125
+00:43:18,330 --> 00:43:21,240
+So that's the same code
+with all of our aspects.
+
+1126
+00:43:21,240 --> 00:43:25,980
+And then if we run the
+clean version on the right,
+
+1127
+00:43:25,980 --> 00:43:27,300
+one thing we noticed is the aspects,
+
+1128
+00:43:27,300 --> 00:43:30,570
+we still have these very,
+very deep flame graphs
+
+1129
+00:43:30,570 --> 00:43:33,540
+that are lots and lots of
+calls that we have to make
+
+1130
+00:43:33,540 --> 00:43:36,600
+just to make the code work.
+
+1131
+00:43:36,600 --> 00:43:38,550
+And if we start backing those out,
+
+1132
+00:43:38,550 --> 00:43:40,440
+I don't have to scroll down nearly as much
+
+1133
+00:43:40,440 --> 00:43:42,900
+to get to the end of the code.
+
+1134
+00:43:42,900 --> 00:43:45,690
+So really what we did here
+is instead of, you know,
+
+1135
+00:43:45,690 --> 00:43:48,240
+I didn't go and make
+redo concurrent hash map,
+
+1136
+00:43:48,240 --> 00:43:50,970
+I didn't optimize anything with assembly,
+
+1137
+00:43:50,970 --> 00:43:53,400
+all we did was take away the overheads
+
+1138
+00:43:53,400 --> 00:43:55,890
+that we saw from the
+signals we got from APerf,
+
+1139
+00:43:55,890 --> 00:43:58,440
+which was, we're running a
+lot of code we didn't expect,
+
+1140
+00:43:58,440 --> 00:44:00,990
+can I take away some of that
+code, run less instructions?
+
+1141
+00:44:00,990 --> 00:44:04,140
+And that leads to some pretty
+sizable performance gains.
+
+1142
+00:44:04,140 --> 00:44:05,910
+It's not always about,
+
+1143
+00:44:05,910 --> 00:44:07,410
+I came up with a clever new algorithm.
+
+1144
+00:44:07,410 --> 00:44:09,570
+It may just be things like this
+
+1145
+00:44:09,570 --> 00:44:11,370
+that are just hiding in plain sight.
+
+1146
+00:44:12,540 --> 00:44:14,163
+And so that's the Groovy demo.
+
+1147
+00:44:15,240 --> 00:44:17,280
+We do have the Getting Started Guide
+
+1148
+00:44:17,280 --> 00:44:19,950
+for all of these
+optimizations we talked about.
+
+1149
+00:44:19,950 --> 00:44:21,600
+- [Toby] Yeah, so that
+was the thing I wanted to,
+
+1150
+00:44:21,600 --> 00:44:23,933
+sorry, if I blinded somebody
+with the laser there.
+
+1151
+00:44:25,110 --> 00:44:26,153
+That's one thing we wanna talk about.
+
+1152
+00:44:26,153 --> 00:44:29,430
+So there is a Getting
+Started Guide, that's the,
+
+1153
+00:44:29,430 --> 00:44:30,810
+it's a Graviton Getting Started Guide,
+
+1154
+00:44:30,810 --> 00:44:31,710
+don't the name fool you.
+
+1155
+00:44:31,710 --> 00:44:33,090
+All the stuff that we suggested in there
+
+1156
+00:44:33,090 --> 00:44:34,470
+is applicable across architecture.
+
+1157
+00:44:34,470 --> 00:44:36,377
+So it's not just a Graviton thing
+
+1158
+00:44:36,377 --> 00:44:38,280
+and it's all for a bunch
+of different languages
+
+1159
+00:44:38,280 --> 00:44:39,113
+in there too.
+
+1160
+00:44:39,113 --> 00:44:39,990
+So it's not just gonna be Java
+
+1161
+00:44:39,990 --> 00:44:42,600
+or JVM based languages
+that you'll see in C++
+
+1162
+00:44:42,600 --> 00:44:45,483
+and some other stuff in there
+too, if you're interested.
+
+1163
+00:44:47,820 --> 00:44:48,653
+Cool.
+
+1164
+00:44:48,653 --> 00:44:50,340
+Any questions on the Groovy stuff?
+
+1165
+00:44:50,340 --> 00:44:52,173
+Any comments, any?
+
+1166
+00:44:53,130 --> 00:44:54,360
+I have stickers I can give away.
+
+1167
+00:44:54,360 --> 00:44:55,299
+Yeah.
+
+1168
+00:44:55,299 --> 00:44:56,760
+- [Audience Member] That paper tool
+
+1169
+00:44:56,760 --> 00:44:58,728
+is not specific to Graviton.
+
+1170
+00:44:58,728 --> 00:44:59,670
+- [Toby] That's correct.
+
+1171
+00:44:59,670 --> 00:45:02,320
+You could run it on on Intel,
+AMD, whatever you want.
+
+1172
+00:45:03,990 --> 00:45:06,108
+Okay, so next demo,
+
+1173
+00:45:06,108 --> 00:45:08,280
+and we're coming up on 15 minutes
+
+1174
+00:45:08,280 --> 00:45:11,003
+so we're gonna probably buzz
+through this fairly quickly.
+
+1175
+00:45:12,180 --> 00:45:14,190
+We have MongoDB.
+
+1176
+00:45:14,190 --> 00:45:16,020
+The whole goal of this was to show you
+
+1177
+00:45:16,020 --> 00:45:18,420
+that APerf is going to surface signals,
+
+1178
+00:45:18,420 --> 00:45:19,803
+not just of your own code,
+
+1179
+00:45:21,030 --> 00:45:23,190
+but of other things too, right?
+
+1180
+00:45:23,190 --> 00:45:25,170
+It's an ambient collector,
+it just sits on the box
+
+1181
+00:45:25,170 --> 00:45:26,700
+and it just collects all this stuff,
+
+1182
+00:45:26,700 --> 00:45:29,070
+and surfaces 'em to you
+and gives you nice visuals.
+
+1183
+00:45:29,070 --> 00:45:30,750
+So what if one of those things
+
+1184
+00:45:30,750 --> 00:45:32,640
+that we needed to do was Mongo?
+
+1185
+00:45:32,640 --> 00:45:34,830
+If we had Mongo and it was running poorly,
+
+1186
+00:45:34,830 --> 00:45:37,560
+is there any way, without rewriting Mongo,
+
+1187
+00:45:37,560 --> 00:45:38,820
+is there any way to kind of figure out
+
+1188
+00:45:38,820 --> 00:45:41,070
+why it is running poorly?
+
+1189
+00:45:41,070 --> 00:45:44,280
+So this is our next setup here.
+
+1190
+00:45:44,280 --> 00:45:46,650
+Again, the topology of
+this is very, very simple.
+
+1191
+00:45:46,650 --> 00:45:47,700
+Same three node groups.
+
+1192
+00:45:47,700 --> 00:45:49,860
+First one being our load generator,
+
+1193
+00:45:49,860 --> 00:45:52,560
+where we're running YCSB
+to kind of load this up.
+
+1194
+00:45:52,560 --> 00:45:55,350
+Another one running two different types.
+
+1195
+00:45:55,350 --> 00:45:57,273
+This is actually, there's a typo in this.
+
+1196
+00:45:57,273 --> 00:46:00,000
+It's an M7g and an M8g,
+that is not the case.
+
+1197
+00:46:00,000 --> 00:46:02,970
+We have an M7g and an M7gd.
+
+1198
+00:46:02,970 --> 00:46:05,703
+Does anybody know what the
+D on the end of the G is?
+
+1199
+00:46:06,660 --> 00:46:08,100
+It's attached NVME.
+
+1200
+00:46:08,100 --> 00:46:09,300
+So no surprise
+
+1201
+00:46:09,300 --> 00:46:11,250
+which one's gonna probably
+run faster here, right?
+
+1202
+00:46:11,250 --> 00:46:15,950
+So we've got EBS back storage
+and NVME storage for the gd.
+
+1203
+00:46:15,950 --> 00:46:20,520
+So the two node groups in
+M7g xlarge, M7gd xlarge,
+
+1204
+00:46:20,520 --> 00:46:21,420
+both running Mongo.
+
+1205
+00:46:21,420 --> 00:46:23,460
+Again, that little A is indicating
+
+1206
+00:46:23,460 --> 00:46:25,620
+that we have an APerf pod
+running on there alongside it,
+
+1207
+00:46:25,620 --> 00:46:27,300
+after we start it up and load it up.
+
+1208
+00:46:27,300 --> 00:46:32,280
+So I'll let Geoff do his thing and we'll-
+
+1209
+00:46:32,280 --> 00:46:33,499
+- [Geoff] Okay.
+- [Toby] Look at that.
+
+1210
+00:46:33,499 --> 00:46:36,300
+- [Geoff] Okay, so because
+this is an application
+
+1211
+00:46:36,300 --> 00:46:37,320
+that we didn't write,
+
+1212
+00:46:37,320 --> 00:46:39,420
+we're not gonna show any code of Mongo.
+
+1213
+00:46:39,420 --> 00:46:43,380
+We're just gonna say we deployed
+a pod with this pod spec
+
+1214
+00:46:43,380 --> 00:46:45,757
+where we took Mongo 8.0 and said,
+
+1215
+00:46:45,757 --> 00:46:47,610
+"Okay, we wanna run
+Mongo 8.0 on three cores
+
+1216
+00:46:47,610 --> 00:46:49,710
+and we want to get, you know,
+
+1217
+00:46:49,710 --> 00:46:52,869
+say 6,000 requests per
+second on Mongo 8.0,
+
+1218
+00:46:52,869 --> 00:46:55,530
+and we're gonna attach some storage to it.
+
+1219
+00:46:55,530 --> 00:46:58,620
+And we just attach 128
+gigabytes of storage
+
+1220
+00:46:58,620 --> 00:47:01,980
+and we use a volume claim,
+
+1221
+00:47:01,980 --> 00:47:04,590
+persistent volume claim on gp2
+
+1222
+00:47:04,590 --> 00:47:07,230
+and we think this should be good enough.
+
+1223
+00:47:07,230 --> 00:47:10,650
+And if we run YCSB against
+it, just to load test
+
+1224
+00:47:10,650 --> 00:47:12,930
+and see if we're correct.
+
+1225
+00:47:12,930 --> 00:47:17,930
+We come out with a score of
+only 4,000 requests per second.
+
+1226
+00:47:19,260 --> 00:47:20,490
+And so this is a case where,
+
+1227
+00:47:20,490 --> 00:47:22,560
+well, what can we do to make this faster?
+
+1228
+00:47:22,560 --> 00:47:24,417
+And we're not gonna optimize code.
+
+1229
+00:47:24,417 --> 00:47:26,730
+The point of this talk is
+to show you can optimize
+
+1230
+00:47:26,730 --> 00:47:28,680
+by optimizing EC2,
+
+1231
+00:47:28,680 --> 00:47:30,360
+how do you do it with all of EC2,
+
+1232
+00:47:30,360 --> 00:47:32,400
+all the instance types available?
+
+1233
+00:47:32,400 --> 00:47:34,590
+And so again, we went and recorded APerf,
+
+1234
+00:47:34,590 --> 00:47:36,210
+what will APerf show us?
+
+1235
+00:47:36,210 --> 00:47:39,120
+So we go and start looking
+at all the signals first
+
+1236
+00:47:39,120 --> 00:47:40,447
+before we just dive in and say,
+
+1237
+00:47:40,447 --> 00:47:42,000
+"Well, maybe I shouldn't use Mongo."
+
+1238
+00:47:42,000 --> 00:47:44,647
+That is an option, "But
+can I make Mongo go faster?
+
+1239
+00:47:44,647 --> 00:47:45,847
+"'Cause I really want to use Mongo
+
+1240
+00:47:45,847 --> 00:47:47,397
+"for some features it has."
+
+1241
+00:47:49,650 --> 00:47:51,630
+So we'll open up the EBS report.
+
+1242
+00:47:51,630 --> 00:47:53,310
+Again, now we should be very familiar
+
+1243
+00:47:53,310 --> 00:47:56,130
+with the APerf start page.
+
+1244
+00:47:56,130 --> 00:47:58,920
+We made sure we were running on M7g
+
+1245
+00:47:58,920 --> 00:48:02,133
+and we don't have to go very
+far before we see a problem.
+
+1246
+00:48:03,120 --> 00:48:06,840
+We see that our CPU utilization
+total is pegged at 100%
+
+1247
+00:48:06,840 --> 00:48:09,210
+or very close to 100%.
+
+1248
+00:48:09,210 --> 00:48:11,850
+And along the legend we are looking for,
+
+1249
+00:48:11,850 --> 00:48:15,420
+if we look for user and
+system, it's way down here,
+
+1250
+00:48:15,420 --> 00:48:19,860
+it's hardly using any like
+active user code at all.
+
+1251
+00:48:19,860 --> 00:48:22,770
+And because we're using EBS,
+
+1252
+00:48:22,770 --> 00:48:24,540
+we're actually sitting a lot of times
+
+1253
+00:48:24,540 --> 00:48:26,610
+just waiting for the disk we're in IO wait
+
+1254
+00:48:26,610 --> 00:48:29,550
+most of the time, 65, 80% of the time.
+
+1255
+00:48:29,550 --> 00:48:31,627
+IO wait is just a signal telling you that,
+
+1256
+00:48:31,627 --> 00:48:33,367
+"Hey, I have threads ready to run.
+
+1257
+00:48:33,367 --> 00:48:37,380
+"They could do something if my
+disk came back fast enough."
+
+1258
+00:48:37,380 --> 00:48:42,330
+And so in this case, we're
+just looking at, you know,
+
+1259
+00:48:42,330 --> 00:48:43,560
+we're disk- bound.
+
+1260
+00:48:43,560 --> 00:48:44,940
+I don't have to change the code.
+
+1261
+00:48:44,940 --> 00:48:48,660
+Maybe if I just throw in
+something with faster storage,
+
+1262
+00:48:48,660 --> 00:48:51,000
+we can do better.
+
+1263
+00:48:51,000 --> 00:48:52,830
+And we have a little thing-
+
+1264
+00:48:52,830 --> 00:48:55,730
+- [Toby] This is where we have
+to say, what are the costs?
+
+1265
+00:48:58,153 --> 00:48:59,880
+- [Geoff] Okay, yeah, here we go.
+
+1266
+00:48:59,880 --> 00:49:02,880
+So this is another thing
+we're thinking about,
+
+1267
+00:49:02,880 --> 00:49:03,750
+with performance engineering,
+
+1268
+00:49:03,750 --> 00:49:05,490
+we look at it holistically
+with all our data,
+
+1269
+00:49:05,490 --> 00:49:07,500
+it's what are the costs to access data?
+
+1270
+00:49:07,500 --> 00:49:09,930
+This graph is just all the
+various things you can access
+
+1271
+00:49:09,930 --> 00:49:10,763
+on the system that,
+
+1272
+00:49:10,763 --> 00:49:14,010
+some form of memory or
+storage from a CPU register
+
+1273
+00:49:14,010 --> 00:49:15,540
+all the way up to S3.
+
+1274
+00:49:15,540 --> 00:49:18,210
+And along the Y axis is latency
+
+1275
+00:49:18,210 --> 00:49:20,220
+and nanoseconds on a log scale.
+
+1276
+00:49:20,220 --> 00:49:23,280
+So as we go, we're increasing
+the amount of time it takes
+
+1277
+00:49:23,280 --> 00:49:25,440
+by 10X, it's a log 10 scale
+
+1278
+00:49:25,440 --> 00:49:26,940
+and it's not even a linear chart.
+
+1279
+00:49:26,940 --> 00:49:28,560
+It's actually more than linear.
+
+1280
+00:49:28,560 --> 00:49:29,970
+So it's more than exponential
+
+1281
+00:49:29,970 --> 00:49:32,880
+as we get out to disk where we're taking
+
+1282
+00:49:32,880 --> 00:49:35,310
+tens of thousands of nanoseconds,
+hundreds of thousands.
+
+1283
+00:49:35,310 --> 00:49:37,350
+And if you're using S3 as your storage,
+
+1284
+00:49:37,350 --> 00:49:40,290
+it's tens of millions to hundreds
+of millions of nanoseconds
+
+1285
+00:49:40,290 --> 00:49:44,100
+to just gather some data
+to use for your compute.
+
+1286
+00:49:44,100 --> 00:49:46,150
+And in the CPU terms, that's an eternity.
+
+1287
+00:49:47,070 --> 00:49:48,976
+If we put this into human time,
+
+1288
+00:49:48,976 --> 00:49:53,790
+this chart is just that same
+graph but in a table form.
+
+1289
+00:49:53,790 --> 00:49:56,250
+The CPU times are in the actual time,
+
+1290
+00:49:56,250 --> 00:49:58,800
+but if we scaled it to,
+you're doing the math,
+
+1291
+00:49:58,800 --> 00:50:00,210
+you're the math engine,
+
+1292
+00:50:00,210 --> 00:50:02,790
+and you can do a math
+problem once a second.
+
+1293
+00:50:02,790 --> 00:50:06,965
+If we're going out to
+local EBS or remote EBS,
+
+1294
+00:50:06,965 --> 00:50:09,480
+'cause EBS is its own
+distributed storage system
+
+1295
+00:50:09,480 --> 00:50:12,066
+that's spread across an entire region.
+
+1296
+00:50:12,066 --> 00:50:13,710
+If you have to get a piece of data
+
+1297
+00:50:13,710 --> 00:50:16,620
+before you can complete your calculation,
+
+1298
+00:50:16,620 --> 00:50:19,050
+it could take anywhere from
+20 of your days or my days,
+
+1299
+00:50:19,050 --> 00:50:20,400
+to half a year of sitting there
+
+1300
+00:50:20,400 --> 00:50:23,100
+waiting for someone to
+run and get you the paper
+
+1301
+00:50:23,100 --> 00:50:24,270
+and give it to you.
+
+1302
+00:50:24,270 --> 00:50:25,170
+And that's where we say,
+
+1303
+00:50:25,170 --> 00:50:29,280
+well, maybe we should try
+something like local SSD, the gd,
+
+1304
+00:50:29,280 --> 00:50:30,600
+it would only take it one day.
+
+1305
+00:50:30,600 --> 00:50:33,033
+That's a order of magnitude faster.
+
+1306
+00:50:34,290 --> 00:50:38,370
+So we'll go back and we'll
+see if that's actually true.
+
+1307
+00:50:38,370 --> 00:50:40,560
+If the data that we collected with APerf
+
+1308
+00:50:40,560 --> 00:50:44,460
+is actually going to
+give us some advantages.
+
+1309
+00:50:44,460 --> 00:50:45,870
+If we went to say the 7gd
+
+1310
+00:50:45,870 --> 00:50:49,020
+and we ran this in the background
+while we've been talking.
+
+1311
+00:50:49,020 --> 00:50:51,750
+And if we run YCSB with 7gd,
+
+1312
+00:50:51,750 --> 00:50:54,240
+we see a 3X performance increase,
+
+1313
+00:50:54,240 --> 00:50:57,030
+we're up to 12,000 requests per second.
+
+1314
+00:50:57,030 --> 00:51:00,660
+And it does exactly, if I
+opened up the APerf report,
+
+1315
+00:51:00,660 --> 00:51:03,840
+you'll see exactly that IO
+wait goes down to almost zero
+
+1316
+00:51:03,840 --> 00:51:06,690
+and our CPU time is now
+the dominant factor.
+
+1317
+00:51:06,690 --> 00:51:09,210
+We're actually computing
+stuff on our document database
+
+1318
+00:51:09,210 --> 00:51:12,300
+instead of just waiting for
+the disk to get back to us.
+
+1319
+00:51:12,300 --> 00:51:14,573
+And so that ends the code demo.
+
+1320
+00:51:14,573 --> 00:51:15,645
+- [Toby] Okay.
+- [Geoff] Yep.
+
+1321
+00:51:15,645 --> 00:51:17,722
+- [Toby] Cool, so back to the PowerPoint.
+
+1322
+00:51:17,722 --> 00:51:20,130
+So takeaways?
+- [Geoff] Yep.
+
+1323
+00:51:20,130 --> 00:51:21,930
+So takeaways here are just, you know,
+
+1324
+00:51:21,930 --> 00:51:25,410
+performance engineering is
+not just about hacking up
+
+1325
+00:51:25,410 --> 00:51:28,380
+great new algorithms and
+writing in low level languages,
+
+1326
+00:51:28,380 --> 00:51:29,700
+assembly, or C,
+
+1327
+00:51:29,700 --> 00:51:33,060
+but it's about finding
+opportunities wherever they are.
+
+1328
+00:51:33,060 --> 00:51:35,400
+So it may not even be code,
+it may just be opportunities
+
+1329
+00:51:35,400 --> 00:51:38,160
+of optimizing the EC2 instances
+
+1330
+00:51:38,160 --> 00:51:39,600
+and their setup that you use.
+
+1331
+00:51:39,600 --> 00:51:42,000
+And we did that plenty during this demo
+
+1332
+00:51:42,000 --> 00:51:44,257
+where we weren't hacking
+on code so much as we were,
+
+1333
+00:51:44,257 --> 00:51:48,600
+"Let's try the 8g or 7gd instead of 7g.
+
+1334
+00:51:48,600 --> 00:51:51,660
+And as we said, those
+opportunities could be anywhere.
+
+1335
+00:51:51,660 --> 00:51:54,120
+They're not necessarily
+always in the algorithm,
+
+1336
+00:51:54,120 --> 00:51:57,540
+they could be how you set up
+the networking on your devices,
+
+1337
+00:51:57,540 --> 00:51:59,130
+the instance families that you choose,
+
+1338
+00:51:59,130 --> 00:52:02,880
+the sizes that you choose,
+cores and memory ratios.
+
+1339
+00:52:02,880 --> 00:52:06,690
+And so that's where we've
+found a lot of great takeaways
+
+1340
+00:52:06,690 --> 00:52:08,880
+to share with you, which is using APerf
+
+1341
+00:52:08,880 --> 00:52:10,410
+or other tools to get that whole view
+
+1342
+00:52:10,410 --> 00:52:14,610
+before you go and start hacking
+away to make things faster.
+
+1343
+00:52:14,610 --> 00:52:16,170
+- [Toby] Yeah, part of it is understanding
+
+1344
+00:52:16,170 --> 00:52:18,410
+what your system wants more of, right?
+
+1345
+00:52:18,410 --> 00:52:20,100
+How do you identify that?
+
+1346
+00:52:20,100 --> 00:52:21,780
+And then once you've identified it,
+
+1347
+00:52:21,780 --> 00:52:22,980
+then you can make the right decision,
+
+1348
+00:52:22,980 --> 00:52:25,890
+whether that's new instance,
+whether that's faster disks,
+
+1349
+00:52:25,890 --> 00:52:26,723
+or whatever, right?
+
+1350
+00:52:26,723 --> 00:52:28,410
+So that's it.
+
+1351
+00:52:28,410 --> 00:52:31,290
+We've got seven minutes
+left or we let you go early,
+
+1352
+00:52:31,290 --> 00:52:33,030
+if you've got questions,
+we're happy to answer 'em,
+
+1353
+00:52:33,030 --> 00:52:36,120
+but if not, please fill out a survey,
+
+1354
+00:52:36,120 --> 00:52:38,940
+tell us you loved it,
+hated it, or whatever,
+
+1355
+00:52:38,940 --> 00:52:40,950
+so we can get better next time.
+
+1356
+00:52:40,950 --> 00:52:41,783
+But I do have stickers.
+
+1357
+00:52:41,783 --> 00:52:42,900
+I have-
+

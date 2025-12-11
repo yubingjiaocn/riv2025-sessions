@@ -1,0 +1,5811 @@
+1
+00:00:00,330 --> 00:00:01,580
+- Good morning, everyone.
+
+2
+00:00:04,290 --> 00:00:08,493
+As builders, and as humans,
+we know clocks are important.
+
+3
+00:00:09,420 --> 00:00:11,160
+Today we're gonna cover why,
+
+4
+00:00:11,160 --> 00:00:12,510
+why they're important,
+
+5
+00:00:12,510 --> 00:00:13,590
+and how they're good
+
+6
+00:00:13,590 --> 00:00:16,113
+in the systems and
+technologies that we build.
+
+7
+00:00:17,190 --> 00:00:18,967
+This is CMP409,
+
+8
+00:00:18,967 --> 00:00:22,740
+"It's About Time! Improving
+Distributed Systems
+
+9
+00:00:22,740 --> 00:00:25,020
+with Amazon Times Sync."
+
+10
+00:00:25,020 --> 00:00:26,790
+My name is Josh Levinson.
+
+11
+00:00:26,790 --> 00:00:29,880
+I'm a principal product manager for EC2.
+
+12
+00:00:29,880 --> 00:00:31,570
+I'm joined by Julien Ridoux,
+
+13
+00:00:31,570 --> 00:00:34,140
+who's a principal software engineer,
+
+14
+00:00:34,140 --> 00:00:36,540
+and Nikolai Larbalestier,
+
+15
+00:00:36,540 --> 00:00:37,950
+who's a senior vice president
+
+16
+00:00:37,950 --> 00:00:42,453
+of Cloud Strategy and Enterprise
+Architecture at Nasdaq.
+
+17
+00:00:46,800 --> 00:00:51,800
+Today we're gonna go
+very deep into clocks,
+
+18
+00:00:52,050 --> 00:00:53,520
+making a clock,
+
+19
+00:00:53,520 --> 00:00:55,680
+what is a good clock?
+
+20
+00:00:55,680 --> 00:00:58,080
+Leveraging and using a good clock,
+
+21
+00:00:58,080 --> 00:01:02,310
+and then using good clocks
+globally at planetary scale
+
+22
+00:01:02,310 --> 00:01:03,333
+on AWS.
+
+23
+00:01:04,380 --> 00:01:08,730
+I wanna remind you that
+this is a 400-level talk.
+
+24
+00:01:08,730 --> 00:01:10,950
+You do not need to understand the concepts
+
+25
+00:01:10,950 --> 00:01:14,190
+we're gonna go through at the
+start of this presentation.
+
+26
+00:01:14,190 --> 00:01:18,780
+Towards the end, we're gonna
+share how we simplify things,
+
+27
+00:01:18,780 --> 00:01:20,640
+and we've done the heavy lifting for you
+
+28
+00:01:20,640 --> 00:01:24,180
+so you could take advantage
+of this in your systems,
+
+29
+00:01:24,180 --> 00:01:27,030
+or using AWS partners systems
+
+30
+00:01:27,030 --> 00:01:32,030
+to use these definitely tricky
+concepts in your workloads.
+
+31
+00:01:35,940 --> 00:01:37,650
+I like starting with a quote,
+
+32
+00:01:37,650 --> 00:01:39,667
+and this one from Barbara Liskov.
+
+33
+00:01:39,667 --> 00:01:42,240
+"Synchronized clocks are interesting
+
+34
+00:01:42,240 --> 00:01:43,260
+because they can be used
+
+35
+00:01:43,260 --> 00:01:47,100
+to improve the performance
+of a distributed system
+
+36
+00:01:47,100 --> 00:01:48,777
+by reducing communication."
+
+37
+00:01:50,670 --> 00:01:52,270
+We're going to get back to this,
+
+38
+00:01:53,340 --> 00:01:55,320
+how clocks reduce communication,
+
+39
+00:01:55,320 --> 00:01:59,130
+and how clocks make systems more simple
+
+40
+00:01:59,130 --> 00:02:00,730
+when you take advantage of them.
+
+41
+00:02:03,840 --> 00:02:05,250
+Starting just with a baseline
+
+42
+00:02:05,250 --> 00:02:07,950
+before we get into what a clock is,
+
+43
+00:02:07,950 --> 00:02:10,020
+is what clocks are used for.
+
+44
+00:02:10,020 --> 00:02:11,070
+I think we all understand
+
+45
+00:02:11,070 --> 00:02:14,066
+clocks as a common scale of measurement,
+
+46
+00:02:14,066 --> 00:02:16,920
+and historically distributed systems
+
+47
+00:02:16,920 --> 00:02:20,220
+have not been built to trust clocks.
+
+48
+00:02:20,220 --> 00:02:23,160
+Clocks are used for human observability.
+
+49
+00:02:23,160 --> 00:02:27,241
+That's log messages, metrics monitoring,
+
+50
+00:02:27,241 --> 00:02:29,430
+UI dashboards.
+
+51
+00:02:29,430 --> 00:02:30,960
+We think of sports,
+
+52
+00:02:30,960 --> 00:02:33,570
+how much time is left in a period,
+
+53
+00:02:33,570 --> 00:02:36,903
+or how much time it took
+for someone to run a race.
+
+54
+00:02:37,920 --> 00:02:40,170
+Auditing, another place that I think
+
+55
+00:02:40,170 --> 00:02:42,570
+we're all familiar with clocks,
+
+56
+00:02:42,570 --> 00:02:46,470
+in industries like financial
+services, healthcare,
+
+57
+00:02:46,470 --> 00:02:50,550
+broadcast media, online gaming,
+
+58
+00:02:50,550 --> 00:02:54,693
+making sure events happen
+synchronously at the same time.
+
+59
+00:02:55,786 --> 00:02:58,230
+And in the last quadrant,
+I have distributed systems
+
+60
+00:02:58,230 --> 00:03:00,390
+with a question mark.
+
+61
+00:03:00,390 --> 00:03:03,750
+Again, going back to that
+quote from, from Barbara Liskov
+
+62
+00:03:03,750 --> 00:03:07,650
+where, if you have a reliable clock,
+
+63
+00:03:07,650 --> 00:03:09,930
+you can simplify your systems,
+
+64
+00:03:09,930 --> 00:03:12,180
+reduce locking, leader election,
+
+65
+00:03:12,180 --> 00:03:14,850
+reduce those communications,
+
+66
+00:03:14,850 --> 00:03:18,543
+and we're gonna answer the
+how in this presentation.
+
+67
+00:03:20,550 --> 00:03:25,470
+To start off, I like to talk
+about just what is a clock.
+
+68
+00:03:25,470 --> 00:03:28,890
+Julien, could you share what is a clock?
+
+69
+00:03:28,890 --> 00:03:29,723
+- I will try my best.
+
+70
+00:03:29,723 --> 00:03:30,556
+Thank you, Josh.
+
+71
+00:03:32,310 --> 00:03:33,660
+So the beginning of this journey,
+
+72
+00:03:33,660 --> 00:03:36,330
+we really wanted to start
+with some of the basics,
+
+73
+00:03:36,330 --> 00:03:39,300
+which is how to build a computer clock.
+
+74
+00:03:39,300 --> 00:03:41,940
+And at this level, you
+really need two things,
+
+75
+00:03:41,940 --> 00:03:42,810
+very simple things.
+
+76
+00:03:42,810 --> 00:03:45,090
+One thing that ticks periodically,
+
+77
+00:03:45,090 --> 00:03:48,660
+and one thing that counts
+this number of cycles.
+
+78
+00:03:48,660 --> 00:03:50,610
+Usually this is a piece of hardware
+
+79
+00:03:50,610 --> 00:03:52,200
+that is combining these two functions.
+
+80
+00:03:52,200 --> 00:03:55,500
+But again, something that
+ticks, something that counts.
+
+81
+00:03:55,500 --> 00:03:58,020
+If you have this information,
+you can then build a clock,
+
+82
+00:03:58,020 --> 00:04:00,090
+and that's represented by the equation
+
+83
+00:04:00,090 --> 00:04:02,280
+at the bottom of this slide.
+
+84
+00:04:02,280 --> 00:04:06,150
+At the perfect time, T, you
+could read the clock C here
+
+85
+00:04:06,150 --> 00:04:09,060
+by saying that this is the
+number of cycles that it laps
+
+86
+00:04:09,060 --> 00:04:11,370
+divided by the frequency,
+and some constant.
+
+87
+00:04:11,370 --> 00:04:12,840
+Sounds a little bit esoteric.
+
+88
+00:04:12,840 --> 00:04:14,610
+Lemme make it simpler.
+
+89
+00:04:14,610 --> 00:04:18,120
+Imagine that you have
+counted 1,000 cycles,
+
+90
+00:04:18,120 --> 00:04:19,980
+and you know that your hardware
+
+91
+00:04:19,980 --> 00:04:22,290
+is doing one cycle per second.
+
+92
+00:04:22,290 --> 00:04:24,900
+Well, 1,000 cycles, one second each,
+
+93
+00:04:24,900 --> 00:04:27,150
+1,000 seconds have elapsed.
+
+94
+00:04:27,150 --> 00:04:28,560
+You have now built a clock.
+
+95
+00:04:28,560 --> 00:04:29,880
+This is the fundamental component
+
+96
+00:04:29,880 --> 00:04:32,313
+that allow you to build
+a clock on the computer.
+
+97
+00:04:33,330 --> 00:04:36,900
+Alright, I just talk about some hardware.
+
+98
+00:04:36,900 --> 00:04:37,733
+What does that look like?
+
+99
+00:04:37,733 --> 00:04:39,570
+You have a range of options.
+
+100
+00:04:39,570 --> 00:04:42,120
+From the left-hand side
+here to the right-hand side,
+
+101
+00:04:42,120 --> 00:04:45,720
+it ranges from small form
+factor crystal oscillators
+
+102
+00:04:45,720 --> 00:04:48,870
+to equipment that you will
+find in the physics lab.
+
+103
+00:04:48,870 --> 00:04:51,300
+Cesium beams, hydrogen masers,
+
+104
+00:04:51,300 --> 00:04:54,240
+and optical clock soon to be released.
+
+105
+00:04:54,240 --> 00:04:56,460
+In terms of form factor, you
+range from a few millimeters
+
+106
+00:04:56,460 --> 00:04:58,050
+to things that are pieces of equipment
+
+107
+00:04:58,050 --> 00:05:00,150
+that are size of a cabinet.
+
+108
+00:05:00,150 --> 00:05:01,830
+Even this ones are a bit more difficult
+
+109
+00:05:01,830 --> 00:05:03,630
+to fit into a computer.
+
+110
+00:05:03,630 --> 00:05:05,580
+And of course the price
+point changes as well.
+
+111
+00:05:05,580 --> 00:05:06,480
+On the left-hand side
+
+112
+00:05:06,480 --> 00:05:10,260
+it tends to be a better price
+point for cloud computing.
+
+113
+00:05:10,260 --> 00:05:11,340
+On the right-hand side,
+
+114
+00:05:11,340 --> 00:05:13,470
+this can range from hundreds
+of thousands of dollars
+
+115
+00:05:13,470 --> 00:05:15,480
+if you want to buy this
+piece of equipment.
+
+116
+00:05:15,480 --> 00:05:17,700
+So we have trade offs in
+terms of small form factor
+
+117
+00:05:17,700 --> 00:05:20,070
+or not in terms of price points,
+
+118
+00:05:20,070 --> 00:05:21,480
+but also in terms of the quality
+
+119
+00:05:21,480 --> 00:05:24,003
+of the hardware you can
+purchase to build a clock.
+
+120
+00:05:24,900 --> 00:05:26,070
+The ability for hardware
+
+121
+00:05:26,070 --> 00:05:28,260
+to keep accuracy within one microsecond
+
+122
+00:05:28,260 --> 00:05:30,090
+changes along that scale.
+
+123
+00:05:30,090 --> 00:05:31,500
+On the left-hand side,
+
+124
+00:05:31,500 --> 00:05:33,420
+you can hold one microsecond accuracy
+
+125
+00:05:33,420 --> 00:05:35,910
+for about a couple of seconds.
+
+126
+00:05:35,910 --> 00:05:36,743
+On the right-hand side,
+
+127
+00:05:36,743 --> 00:05:38,940
+when you go to hydrogen
+masers and optical clock,
+
+128
+00:05:38,940 --> 00:05:41,550
+you can keep accuracy for
+years, if not centuries,
+
+129
+00:05:41,550 --> 00:05:43,500
+on watch that promise.
+
+130
+00:05:43,500 --> 00:05:46,890
+So the other range of hardware
+that you can choose from
+
+131
+00:05:46,890 --> 00:05:48,490
+to be the clock in the computer.
+
+132
+00:05:50,490 --> 00:05:53,040
+But no matter what decision you make,
+
+133
+00:05:53,040 --> 00:05:54,570
+all oscillators drift,
+
+134
+00:05:54,570 --> 00:05:57,300
+even the most accurate
+atomic clock do drift,
+
+135
+00:05:57,300 --> 00:05:59,040
+just that it'll take them centuries
+
+136
+00:05:59,040 --> 00:06:02,520
+for you to observe that
+drift at a microsecond level.
+
+137
+00:06:02,520 --> 00:06:04,860
+In general, we tend to
+have a small form factor,
+
+138
+00:06:04,860 --> 00:06:05,970
+a good price point,
+
+139
+00:06:05,970 --> 00:06:07,200
+and these oscillators that drift
+
+140
+00:06:07,200 --> 00:06:10,470
+due to manufacturing process or aging,
+
+141
+00:06:10,470 --> 00:06:11,670
+these are mostly considerations
+
+142
+00:06:11,670 --> 00:06:14,250
+that are of importance for physicists.
+
+143
+00:06:14,250 --> 00:06:17,250
+For us, cloud providers
+building computers,
+
+144
+00:06:17,250 --> 00:06:19,260
+we mostly care about small differences
+
+145
+00:06:19,260 --> 00:06:22,230
+in power supply or temperature variations
+
+146
+00:06:22,230 --> 00:06:24,000
+due to the impact of your workload
+
+147
+00:06:24,000 --> 00:06:26,067
+on your processor CPUs,
+
+148
+00:06:26,067 --> 00:06:27,453
+and the server as a whole.
+
+149
+00:06:28,350 --> 00:06:31,500
+So I did lie a little
+in my previous slide.
+
+150
+00:06:31,500 --> 00:06:33,450
+I gave you an equation that
+say you can build a clock
+
+151
+00:06:33,450 --> 00:06:35,610
+if you know the number of cycles
+
+152
+00:06:35,610 --> 00:06:37,770
+and you know how long each cycle is.
+
+153
+00:06:37,770 --> 00:06:40,590
+But the truth is that the
+frequency of this cycle
+
+154
+00:06:40,590 --> 00:06:41,760
+does change over time,
+
+155
+00:06:41,760 --> 00:06:43,797
+as is shown in this equation.
+
+156
+00:06:43,797 --> 00:06:46,560
+And the net result is that clocks drift.
+
+157
+00:06:46,560 --> 00:06:47,583
+And we are showing you an example in here
+
+158
+00:06:47,583 --> 00:06:49,260
+with this graph.
+
+159
+00:06:49,260 --> 00:06:51,000
+Here we picked an EC2 instance
+
+160
+00:06:51,000 --> 00:06:53,250
+that's been running for about five days,
+
+161
+00:06:53,250 --> 00:06:55,650
+and we let the oscillator free running,
+
+162
+00:06:55,650 --> 00:06:57,390
+no correction applied.
+
+163
+00:06:57,390 --> 00:06:59,610
+What you see is that over
+a period of five days,
+
+164
+00:06:59,610 --> 00:07:02,910
+the clock has been drifting
+by about 75 millisecond,
+
+165
+00:07:02,910 --> 00:07:04,710
+which is something you would expect.
+
+166
+00:07:06,090 --> 00:07:09,690
+Alright, so we have the hardware
+in order to build a clock.
+
+167
+00:07:09,690 --> 00:07:12,240
+We've observed that the
+hardware does drift over time.
+
+168
+00:07:12,240 --> 00:07:13,650
+What can we do about this?
+
+169
+00:07:13,650 --> 00:07:17,310
+Well we need to track and
+correct for that drift.
+
+170
+00:07:17,310 --> 00:07:18,540
+How does that work?
+
+171
+00:07:18,540 --> 00:07:20,670
+Well, computers are no
+different than us humans.
+
+172
+00:07:20,670 --> 00:07:22,380
+Imagine you have a wristwatch,
+
+173
+00:07:22,380 --> 00:07:24,150
+and that watch is not on time.
+
+174
+00:07:24,150 --> 00:07:26,370
+You will ask a friend, Josh, for example,
+
+175
+00:07:26,370 --> 00:07:27,247
+asking what time it is.
+
+176
+00:07:27,247 --> 00:07:29,070
+Josh give you the answer.
+
+177
+00:07:29,070 --> 00:07:31,830
+You can adjust your
+watch, you're good to go.
+
+178
+00:07:31,830 --> 00:07:33,840
+Computers are no different.
+
+179
+00:07:33,840 --> 00:07:35,790
+Here we're representing a small example
+
+180
+00:07:35,790 --> 00:07:38,340
+that is illustrate the
+network time protocol
+
+181
+00:07:38,340 --> 00:07:40,830
+that has been used for decades now.
+
+182
+00:07:40,830 --> 00:07:42,330
+Effectively you have a clock,
+
+183
+00:07:42,330 --> 00:07:43,860
+that's the bottom line on this graph
+
+184
+00:07:43,860 --> 00:07:45,960
+that needs to be adjusted.
+
+185
+00:07:45,960 --> 00:07:48,390
+The top line is a server
+clock, a reference clock,
+
+186
+00:07:48,390 --> 00:07:50,460
+that you will have over the network.
+
+187
+00:07:50,460 --> 00:07:52,440
+And the client clock sends a message
+
+188
+00:07:52,440 --> 00:07:53,940
+asking what time it is,
+
+189
+00:07:53,940 --> 00:07:57,030
+server reads this time,
+sends a response back.
+
+190
+00:07:57,030 --> 00:07:58,020
+In this later example,
+
+191
+00:07:58,020 --> 00:08:00,450
+the client can then have
+all the information it needs
+
+192
+00:08:00,450 --> 00:08:01,650
+to adjust its time,
+
+193
+00:08:01,650 --> 00:08:04,350
+realize it's running two minutes beyond,
+
+194
+00:08:04,350 --> 00:08:07,140
+and will correct its
+clock, and it's good to go.
+
+195
+00:08:07,140 --> 00:08:08,133
+But is it?
+
+196
+00:08:09,090 --> 00:08:12,750
+The reality is that the
+frequency changes all the time.
+
+197
+00:08:12,750 --> 00:08:15,780
+You cannot ask what time is
+it only once, and be done.
+
+198
+00:08:15,780 --> 00:08:19,590
+You have to continuously ask
+what time is it repeatedly.
+
+199
+00:08:19,590 --> 00:08:21,060
+So this operation repeats,
+
+200
+00:08:21,060 --> 00:08:23,130
+and this communication of other network
+
+201
+00:08:23,130 --> 00:08:24,720
+then sees messages being exchanged
+
+202
+00:08:24,720 --> 00:08:26,280
+with certain various dealers,
+
+203
+00:08:26,280 --> 00:08:27,510
+and, of course, the risk of failure
+
+204
+00:08:27,510 --> 00:08:28,833
+when messages are dropped.
+
+205
+00:08:31,470 --> 00:08:34,560
+Alright, we talked about
+clocks, how to fix them,
+
+206
+00:08:34,560 --> 00:08:36,030
+how to track the drift,
+
+207
+00:08:36,030 --> 00:08:37,290
+track drift and correct them.
+
+208
+00:08:37,290 --> 00:08:42,290
+So why is clocks synchronization
+a hard problem still?
+
+209
+00:08:42,630 --> 00:08:46,590
+The short answer is that the
+network is part of the problem.
+
+210
+00:08:46,590 --> 00:08:49,620
+This communication between
+a clock to be adjusted
+
+211
+00:08:49,620 --> 00:08:50,682
+and your trusted friend
+
+212
+00:08:50,682 --> 00:08:53,280
+that can give you the accurate time,
+
+213
+00:08:53,280 --> 00:08:54,873
+is problematic for two reason.
+
+214
+00:08:55,860 --> 00:08:58,383
+First on on left-hand side
+we show you an example.
+
+215
+00:08:59,280 --> 00:09:00,810
+The first reason is
+
+216
+00:09:00,810 --> 00:09:04,260
+that the viability in the
+delays of communications
+
+217
+00:09:04,260 --> 00:09:05,820
+have an impact.
+
+218
+00:09:05,820 --> 00:09:07,542
+Here, the blue line shows you
+
+219
+00:09:07,542 --> 00:09:11,340
+the noise of the communication delays
+
+220
+00:09:11,340 --> 00:09:14,760
+when a server repeatedly
+ask what time it's.
+
+221
+00:09:14,760 --> 00:09:15,720
+And the hard problem is
+
+222
+00:09:15,720 --> 00:09:17,550
+to identify this purple line here,
+
+223
+00:09:17,550 --> 00:09:19,320
+which is actually the cloud drift
+
+224
+00:09:19,320 --> 00:09:22,020
+from this very, very noisy blue input.
+
+225
+00:09:22,020 --> 00:09:23,460
+That's one key difficulty,
+
+226
+00:09:23,460 --> 00:09:24,510
+seeing through the noise,
+
+227
+00:09:24,510 --> 00:09:27,423
+seeing through the viability
+of the communication delays.
+
+228
+00:09:28,650 --> 00:09:31,530
+The second problem that
+happens with the network
+
+229
+00:09:31,530 --> 00:09:34,293
+is that the network is not symmetrical.
+
+230
+00:09:35,160 --> 00:09:37,830
+So far I've shown an example
+where you can adjust your time,
+
+231
+00:09:37,830 --> 00:09:38,663
+you have an exchange
+
+232
+00:09:38,663 --> 00:09:40,530
+and as you can see on the top graph,
+
+233
+00:09:40,530 --> 00:09:43,383
+you have a nice triangle
+that is very symmetrical.
+
+234
+00:09:44,280 --> 00:09:46,470
+Imagine now that these
+two clocks are perfect.
+
+235
+00:09:46,470 --> 00:09:49,263
+Imagine that we have achieved
+perfect synchronization.
+
+236
+00:09:50,100 --> 00:09:53,250
+On that first triangle
+graph in here is great,
+
+237
+00:09:53,250 --> 00:09:54,510
+time is being exchanged,
+
+238
+00:09:54,510 --> 00:09:55,950
+two clocks are in agreement,
+
+239
+00:09:55,950 --> 00:09:57,840
+they're perfectly synchronized.
+
+240
+00:09:57,840 --> 00:10:00,780
+Second example, clocks are still perfect,
+
+241
+00:10:00,780 --> 00:10:03,123
+but the standard network
+is not symmetrical.
+
+242
+00:10:03,960 --> 00:10:05,250
+When the client compares the time
+
+243
+00:10:05,250 --> 00:10:06,810
+from the server to its own time,
+
+244
+00:10:06,810 --> 00:10:09,180
+it'll observe a difference.
+
+245
+00:10:09,180 --> 00:10:12,802
+That difference is not the clock error,
+
+246
+00:10:12,802 --> 00:10:14,550
+we have assumed the clocks are perfect,
+
+247
+00:10:14,550 --> 00:10:16,440
+it's just a network asymmetry.
+
+248
+00:10:16,440 --> 00:10:18,180
+But from a client point
+of view, it's ambiguous.
+
+249
+00:10:18,180 --> 00:10:19,500
+It cannot make a difference
+
+250
+00:10:19,500 --> 00:10:22,173
+between the clock error
+and the network asymmetry.
+
+251
+00:10:25,080 --> 00:10:27,990
+All right, so this is a
+very fast-tracked view
+
+252
+00:10:27,990 --> 00:10:29,097
+about what the problem is.
+
+253
+00:10:29,097 --> 00:10:32,280
+And a few years ago we really
+wanted to build good clocks
+
+254
+00:10:32,280 --> 00:10:35,430
+for the purpose of
+synchronizing our cloud.
+
+255
+00:10:35,430 --> 00:10:36,810
+So we went through this analysis,
+
+256
+00:10:36,810 --> 00:10:37,680
+what clocks are,
+
+257
+00:10:37,680 --> 00:10:40,170
+how they're made, and what the primes are.
+
+258
+00:10:40,170 --> 00:10:41,400
+We knew the primes of tracking clock
+
+259
+00:10:41,400 --> 00:10:43,620
+based over a non-deterministic network
+
+260
+00:10:43,620 --> 00:10:45,900
+is not something any of our customers
+
+261
+00:10:45,900 --> 00:10:47,910
+wanted to have to worry about.
+
+262
+00:10:47,910 --> 00:10:49,620
+So we put ourself to work,
+
+263
+00:10:49,620 --> 00:10:51,633
+and I'm gonna let Josh take us there.
+
+264
+00:10:54,030 --> 00:10:59,030
+- So Julien just covered a lot
+for 9:00 AM on a Wednesday,
+
+265
+00:10:59,580 --> 00:11:01,860
+or if you're watching this recording.
+
+266
+00:11:01,860 --> 00:11:03,330
+And, again, as he said,
+
+267
+00:11:03,330 --> 00:11:05,820
+the good news is you
+don't need to know that.
+
+268
+00:11:05,820 --> 00:11:07,220
+We've done the work for you.
+
+269
+00:11:08,280 --> 00:11:11,340
+We started with the
+Amazon Time Sync Service,
+
+270
+00:11:11,340 --> 00:11:15,540
+which was a NTP, network
+time protocol endpoint,
+
+271
+00:11:15,540 --> 00:11:20,370
+a link local for every
+EC2 instance worldwide.
+
+272
+00:11:20,370 --> 00:11:22,890
+We invested in engineering and hardware
+
+273
+00:11:22,890 --> 00:11:25,920
+to support this service globally,
+
+274
+00:11:25,920 --> 00:11:29,550
+and we did this in 2017 for our customers.
+
+275
+00:11:29,550 --> 00:11:32,583
+I wanna start by showing
+you what that looks like.
+
+276
+00:11:34,860 --> 00:11:37,710
+So here's an EC2 instance.
+
+277
+00:11:37,710 --> 00:11:40,350
+You have the the Nitro system down below,
+
+278
+00:11:40,350 --> 00:11:42,000
+the instance up above,
+
+279
+00:11:42,000 --> 00:11:45,693
+chronyd or or your time
+daemon in your software.
+
+280
+00:11:46,710 --> 00:11:49,950
+And what you have is a NTP packet
+
+281
+00:11:49,950 --> 00:11:52,380
+from our distribution system
+
+282
+00:11:52,380 --> 00:11:54,930
+through the Nitro system to your server
+
+283
+00:11:54,930 --> 00:11:57,063
+that you can use to correct your clock.
+
+284
+00:11:58,260 --> 00:12:03,210
+The accuracy for our NTP service
+is under one millisecond.
+
+285
+00:12:03,210 --> 00:12:08,210
+It's really in the the 500
+to 700 microsecond range.
+
+286
+00:12:08,430 --> 00:12:09,840
+And customers were happy.
+
+287
+00:12:09,840 --> 00:12:10,950
+This is easy.
+
+288
+00:12:10,950 --> 00:12:12,090
+It's hands off.
+
+289
+00:12:12,090 --> 00:12:14,190
+Again, you don't need to understand
+
+290
+00:12:14,190 --> 00:12:16,860
+the science, the
+technology, the methodology
+
+291
+00:12:16,860 --> 00:12:17,693
+behind doing this.
+
+292
+00:12:17,693 --> 00:12:18,843
+It's handled for you,
+
+293
+00:12:21,840 --> 00:12:24,150
+but customers have asked for more.
+
+294
+00:12:24,150 --> 00:12:27,600
+And when you really wanna use
+clocks in distributed systems,
+
+295
+00:12:27,600 --> 00:12:32,100
+you need to get much better
+than one millisecond.
+
+296
+00:12:32,100 --> 00:12:34,110
+And we challenge ourselves,
+
+297
+00:12:34,110 --> 00:12:37,203
+how do you get to nanoseconds?
+
+298
+00:12:38,640 --> 00:12:41,370
+Other cloud providers and scalers
+
+299
+00:12:41,370 --> 00:12:43,473
+try to do this with software.
+
+300
+00:12:44,310 --> 00:12:45,360
+And there are different ways
+
+301
+00:12:45,360 --> 00:12:48,720
+that you could go through
+with lucky packets,
+
+302
+00:12:48,720 --> 00:12:53,160
+and very clever algorithms
+and designs to get close.
+
+303
+00:12:53,160 --> 00:12:58,050
+We found in testing you really
+need to invest in hardware,
+
+304
+00:12:58,050 --> 00:12:59,880
+all the way down to the servers,
+
+305
+00:12:59,880 --> 00:13:01,593
+to get to nanoseconds.
+
+306
+00:13:02,880 --> 00:13:04,920
+And this is how we did it.
+
+307
+00:13:04,920 --> 00:13:07,800
+Here's an animation of what it looks like,
+
+308
+00:13:07,800 --> 00:13:12,800
+but we have dedicated cables from GPS
+
+309
+00:13:12,857 --> 00:13:16,320
+redundant atomic hardware clocks,
+
+310
+00:13:16,320 --> 00:13:19,950
+and we send a signal, a referenced signal,
+
+311
+00:13:19,950 --> 00:13:21,840
+essentially a GPS signal,
+
+312
+00:13:21,840 --> 00:13:25,080
+to your EC2 instances.
+
+313
+00:13:25,080 --> 00:13:29,550
+This is not over the EC2
+network and the AWS network.
+
+314
+00:13:29,550 --> 00:13:31,680
+It's not over the data plane,
+
+315
+00:13:31,680 --> 00:13:34,050
+it's not over the control plane.
+
+316
+00:13:34,050 --> 00:13:38,763
+This is entirely dedicated
+for clock synchronization.
+
+317
+00:13:41,010 --> 00:13:42,930
+And I wanna show what
+that looks like, again,
+
+318
+00:13:42,930 --> 00:13:45,210
+at the instance, going deeper,
+
+319
+00:13:45,210 --> 00:13:47,730
+'cause this is a a 400-level talk
+
+320
+00:13:47,730 --> 00:13:50,460
+on what the infrastructure looks like,
+
+321
+00:13:50,460 --> 00:13:52,320
+'cause we really took the network
+
+322
+00:13:52,320 --> 00:13:54,810
+out of network time synchronization,
+
+323
+00:13:54,810 --> 00:13:58,080
+and everything's
+hardware-based and Nitro-based.
+
+324
+00:13:58,080 --> 00:14:02,703
+It's a great story about
+Nitro and the Nitro System.
+
+325
+00:14:04,170 --> 00:14:05,790
+So what does that look like?
+
+326
+00:14:05,790 --> 00:14:09,513
+You now see there's a Nitro
+clock, hardware reference clock.
+
+327
+00:14:10,350 --> 00:14:14,310
+and if you're using NTP, your NTP packet,
+
+328
+00:14:14,310 --> 00:14:17,130
+the network time protocol,
+
+329
+00:14:17,130 --> 00:14:18,390
+does not go over the network,
+
+330
+00:14:18,390 --> 00:14:21,453
+it's just directly to
+the Nitro card and back.
+
+331
+00:14:22,530 --> 00:14:26,910
+We've also added a PTP hardware clock
+
+332
+00:14:26,910 --> 00:14:29,850
+directly in the Nitro System.
+
+333
+00:14:29,850 --> 00:14:32,520
+And the way that that works for you,
+
+334
+00:14:32,520 --> 00:14:36,183
+is you read the the PTP
+hardware clock, the PHC,
+
+335
+00:14:37,140 --> 00:14:42,140
+and you can correct the
+system clock right there.
+
+336
+00:14:42,900 --> 00:14:46,713
+So as you see, there's
+no network communication.
+
+337
+00:14:47,730 --> 00:14:52,680
+We give the PTP, the precision
+time protocol, for you,
+
+338
+00:14:52,680 --> 00:14:54,900
+because that's what most
+software and systems
+
+339
+00:14:54,900 --> 00:14:56,220
+are familiar with.
+
+340
+00:14:56,220 --> 00:14:57,930
+But as you can see, there is no backend,
+
+341
+00:14:57,930 --> 00:15:00,750
+there's no PTP distribution within AWS.
+
+342
+00:15:00,750 --> 00:15:03,060
+It's all local to a reference block.
+
+343
+00:15:03,060 --> 00:15:05,299
+That is how we get into
+
+344
+00:15:05,299 --> 00:15:07,593
+the microsecond and nanosecond range.
+
+345
+00:15:08,670 --> 00:15:12,750
+When you're using the Amazon
+Time Sync Service this way,
+
+346
+00:15:12,750 --> 00:15:16,050
+NTP is gonna be under
+a hundred microseconds
+
+347
+00:15:16,050 --> 00:15:19,080
+at the software level in your guest.
+
+348
+00:15:19,080 --> 00:15:21,660
+And then PTP is gonna be in the range
+
+349
+00:15:21,660 --> 00:15:23,910
+of around 20 microseconds,
+
+350
+00:15:23,910 --> 00:15:27,570
+again, in the software
+layer at your guest.
+
+351
+00:15:27,570 --> 00:15:31,500
+And then just to to recap, this
+is built on the Nitro System
+
+352
+00:15:31,500 --> 00:15:35,580
+where we've added these
+reference PTP hardware clocks.
+
+353
+00:15:35,580 --> 00:15:38,790
+What's really cool about that
+is we add them everywhere.
+
+354
+00:15:38,790 --> 00:15:43,230
+It could be built on
+Graviton, on Intel, on AMD,
+
+355
+00:15:43,230 --> 00:15:46,650
+on our latest GPU servers as well,
+
+356
+00:15:46,650 --> 00:15:50,190
+because, again, the base is the
+hardware of the Nitro System
+
+357
+00:15:50,190 --> 00:15:52,830
+and this large infrastructure investment
+
+358
+00:15:52,830 --> 00:15:55,803
+we're doing worldwide
+to support this feature.
+
+359
+00:15:57,480 --> 00:15:59,730
+Now if you're paying close attention,
+
+360
+00:15:59,730 --> 00:16:02,940
+you might realize I
+talked about nanoseconds,
+
+361
+00:16:02,940 --> 00:16:04,830
+but that in the software layer
+
+362
+00:16:04,830 --> 00:16:07,290
+you're in the microsecond range.
+
+363
+00:16:07,290 --> 00:16:10,650
+And our customers have
+called us out on this too,
+
+364
+00:16:10,650 --> 00:16:14,970
+said, "Hey, if you have these
+nanosecond reference blocks,
+
+365
+00:16:14,970 --> 00:16:18,810
+how do we get to nanoseconds as well?"
+
+366
+00:16:18,810 --> 00:16:21,300
+Julien, can we share how we go further
+
+367
+00:16:21,300 --> 00:16:22,923
+in getting to the nanoseconds?
+
+368
+00:16:24,390 --> 00:16:25,830
+- Thank you Josh.
+
+369
+00:16:25,830 --> 00:16:26,880
+Yes, we can definitely talk
+
+370
+00:16:26,880 --> 00:16:28,530
+about one of the key applications.
+
+371
+00:16:28,530 --> 00:16:31,770
+So far we went through
+explaining or describing
+
+372
+00:16:31,770 --> 00:16:33,300
+what is a clock made of,
+
+373
+00:16:33,300 --> 00:16:34,440
+how to correct for it,
+
+374
+00:16:34,440 --> 00:16:36,563
+and the system we build at AWS
+
+375
+00:16:36,563 --> 00:16:38,793
+to have this level of accuracy in there.
+
+376
+00:16:40,470 --> 00:16:41,550
+One of the key application
+
+377
+00:16:41,550 --> 00:16:43,680
+that our customers were
+really interested in
+
+378
+00:16:43,680 --> 00:16:46,653
+is the ability to do
+hardware packet timestamping.
+
+379
+00:16:47,820 --> 00:16:50,790
+This is the feature we've
+launched earlier this year,
+
+380
+00:16:50,790 --> 00:16:54,330
+and has a lot of benefit, first
+of all from observability.
+
+381
+00:16:54,330 --> 00:16:57,000
+If you can timestamp
+packet closer to the wire,
+
+382
+00:16:57,000 --> 00:16:59,970
+you get a more accurate view
+about the network performance,
+
+383
+00:16:59,970 --> 00:17:00,870
+which is very important
+
+384
+00:17:00,870 --> 00:17:03,480
+if you are running a distributed workload.
+
+385
+00:17:03,480 --> 00:17:05,490
+Some application also are very interested
+
+386
+00:17:05,490 --> 00:17:06,990
+in hardware packet timestamping,
+
+387
+00:17:06,990 --> 00:17:08,970
+because it allows to order messages
+
+388
+00:17:08,970 --> 00:17:10,953
+that you're receiving in your server.
+
+389
+00:17:12,390 --> 00:17:15,270
+That facility is built
+in in the ENA driver,
+
+390
+00:17:15,270 --> 00:17:17,790
+and so you can access it today readily.
+
+391
+00:17:17,790 --> 00:17:20,940
+It provides nanosecond
+resolution on received timestamp
+
+392
+00:17:20,940 --> 00:17:22,950
+to your instance for
+all the network packet
+
+393
+00:17:22,950 --> 00:17:24,693
+that your server is involved with.
+
+394
+00:17:25,890 --> 00:17:27,720
+How do you access this facility?
+
+395
+00:17:27,720 --> 00:17:30,180
+You can access this through
+the classic circuit API
+
+396
+00:17:30,180 --> 00:17:31,710
+that most applications are built over,
+
+397
+00:17:31,710 --> 00:17:34,530
+or the DPDK toolkit
+
+398
+00:17:34,530 --> 00:17:37,530
+that allows to bypass
+kernel infrastructure
+
+399
+00:17:37,530 --> 00:17:41,490
+and get access to the
+packets going to the wire.
+
+400
+00:17:41,490 --> 00:17:42,780
+So with this facility
+
+401
+00:17:42,780 --> 00:17:45,540
+you get the benefit of
+a very accurate clock,
+
+402
+00:17:45,540 --> 00:17:46,920
+and gain a lot of insight
+
+403
+00:17:46,920 --> 00:17:50,613
+into how your application
+operates over the network.
+
+404
+00:17:52,380 --> 00:17:53,520
+This sounds a little bit abstract
+
+405
+00:17:53,520 --> 00:17:55,280
+so I want to take you through the example
+
+406
+00:17:55,280 --> 00:17:57,750
+of the before and the after.
+
+407
+00:17:57,750 --> 00:17:58,583
+Here on this slide
+
+408
+00:17:58,583 --> 00:18:02,190
+I'm going to illustrate how
+would you do the same things
+
+409
+00:18:02,190 --> 00:18:04,740
+before this feature was released.
+
+410
+00:18:04,740 --> 00:18:06,870
+So we are first looking at the application
+
+411
+00:18:06,870 --> 00:18:08,970
+of timestamping packets
+messages you receive
+
+412
+00:18:08,970 --> 00:18:10,500
+at the application layer.
+
+413
+00:18:10,500 --> 00:18:12,420
+Let me start with a simple animation.
+
+414
+00:18:12,420 --> 00:18:14,010
+Here we still have the Nitro System
+
+415
+00:18:14,010 --> 00:18:17,250
+that underpins our virtualization layers
+
+416
+00:18:17,250 --> 00:18:19,830
+and the instance that runs on top.
+
+417
+00:18:19,830 --> 00:18:22,560
+A message arrives, passes
+through the Nitro System,
+
+418
+00:18:22,560 --> 00:18:23,850
+goes through your instance,
+
+419
+00:18:23,850 --> 00:18:26,040
+the application receive the packet,
+
+420
+00:18:26,040 --> 00:18:27,990
+reads the time from the system clock.
+
+421
+00:18:27,990 --> 00:18:30,633
+You now have a time stamp
+attached to your message.
+
+422
+00:18:31,590 --> 00:18:33,720
+How much work does it take to do this?
+
+423
+00:18:33,720 --> 00:18:35,640
+Well on the right-hand side you can see
+
+424
+00:18:35,640 --> 00:18:39,180
+it takes about four lines
+of C code in this example.
+
+425
+00:18:39,180 --> 00:18:40,290
+You open a socket.
+
+426
+00:18:40,290 --> 00:18:42,510
+Here I'm using the
+socket AP as an example.
+
+427
+00:18:42,510 --> 00:18:43,950
+You receive the packet.
+
+428
+00:18:43,950 --> 00:18:46,290
+Once you have received that
+message you can read the time.
+
+429
+00:18:46,290 --> 00:18:47,463
+It's relatively simple.
+
+430
+00:18:48,900 --> 00:18:50,750
+Let me now show you how
+you would do the same thing
+
+431
+00:18:50,750 --> 00:18:54,840
+by using the hardware packet
+timestamping facilities.
+
+432
+00:18:54,840 --> 00:18:56,880
+Again, the Nitro System is here,
+
+433
+00:18:56,880 --> 00:19:00,600
+but now we have the natural
+clock that Josh described prior.
+
+434
+00:19:00,600 --> 00:19:03,480
+Again, let's go through
+a little animation.
+
+435
+00:19:03,480 --> 00:19:04,410
+Message arrives.
+
+436
+00:19:04,410 --> 00:19:06,390
+This time the package is timestamping
+
+437
+00:19:06,390 --> 00:19:08,460
+by the Nitro System and the Nitro clock
+
+438
+00:19:08,460 --> 00:19:10,890
+before it reaches your instances.
+
+439
+00:19:10,890 --> 00:19:13,650
+Then the message and the
+timestamp created for you
+
+440
+00:19:13,650 --> 00:19:16,323
+is then passed to your
+application, up to the layers.
+
+441
+00:19:17,310 --> 00:19:18,900
+On the right-hand side of the slide,
+
+442
+00:19:18,900 --> 00:19:20,190
+bit of an illustration
+
+443
+00:19:20,190 --> 00:19:22,560
+around how much work does it take.
+
+444
+00:19:22,560 --> 00:19:23,400
+Well, a little bit more.
+
+445
+00:19:23,400 --> 00:19:26,550
+You can see the number of
+lines of code has increased.
+
+446
+00:19:26,550 --> 00:19:27,840
+You still need to create a socket,
+
+447
+00:19:27,840 --> 00:19:29,610
+you still need to receive a message,
+
+448
+00:19:29,610 --> 00:19:31,200
+but you have to do a little bit more work
+
+449
+00:19:31,200 --> 00:19:33,060
+to process control information,
+
+450
+00:19:33,060 --> 00:19:35,610
+extract the timestamp that's
+been creating for you.
+
+451
+00:19:36,810 --> 00:19:40,260
+Nothing catastrophic, but
+just a little bit more work.
+
+452
+00:19:40,260 --> 00:19:42,570
+Now, what do you get
+
+453
+00:19:42,570 --> 00:19:45,750
+from doing this extra
+piece of work in here
+
+454
+00:19:45,750 --> 00:19:46,710
+and to access the timestamp
+
+455
+00:19:46,710 --> 00:19:48,963
+that are created by the Nitro System?
+
+456
+00:19:50,040 --> 00:19:51,510
+So here we have a little illustration,
+
+457
+00:19:51,510 --> 00:19:54,210
+we have two instances pinging each other
+
+458
+00:19:54,210 --> 00:19:55,800
+across an availability zone,
+
+459
+00:19:55,800 --> 00:19:57,570
+and we're recording the round-trip time
+
+460
+00:19:57,570 --> 00:19:59,460
+of this exchanges.
+
+461
+00:19:59,460 --> 00:20:02,100
+We have two graphs, two
+lines on this graph,
+
+462
+00:20:02,100 --> 00:20:05,610
+but they are actually
+measuring the exact same thing.
+
+463
+00:20:05,610 --> 00:20:08,190
+They are both measuring
+the round-trip time
+
+464
+00:20:08,190 --> 00:20:09,633
+between these two instances.
+
+465
+00:20:10,830 --> 00:20:12,510
+The line at the top, in blue,
+
+466
+00:20:12,510 --> 00:20:14,520
+is if you measure this round-trip time
+
+467
+00:20:14,520 --> 00:20:16,560
+using userspace in your application,
+
+468
+00:20:16,560 --> 00:20:18,480
+the first example, the before.
+
+469
+00:20:18,480 --> 00:20:20,160
+As you can see, we're in the range
+
+470
+00:20:20,160 --> 00:20:22,680
+of 400 microseconds of round-trip time
+
+471
+00:20:22,680 --> 00:20:24,213
+between these two instances.
+
+472
+00:20:25,080 --> 00:20:27,180
+The red line is measuring
+the exact same thing,
+
+473
+00:20:27,180 --> 00:20:30,210
+but this time using the
+hardware packet timestamping
+
+474
+00:20:30,210 --> 00:20:32,070
+offered by the Nitro system.
+
+475
+00:20:32,070 --> 00:20:33,172
+And this time we're in the range
+
+476
+00:20:33,172 --> 00:20:37,200
+of about 100, 150 microsecond
+of round-trip time measure.
+
+477
+00:20:37,200 --> 00:20:38,640
+We measure the same thing,
+
+478
+00:20:38,640 --> 00:20:41,613
+but our yard stick is much
+more accurate and much precise.
+
+479
+00:20:42,690 --> 00:20:44,280
+The difference between these two lines
+
+480
+00:20:44,280 --> 00:20:48,270
+is around 250 microsecond in that example.
+
+481
+00:20:48,270 --> 00:20:50,490
+And this is the amount of time they spent
+
+482
+00:20:50,490 --> 00:20:53,640
+into your operating
+system, the network stack,
+
+483
+00:20:53,640 --> 00:20:56,730
+and passing this information
+to the user space.
+
+484
+00:20:56,730 --> 00:20:57,690
+If you look at this example,
+
+485
+00:20:57,690 --> 00:21:00,833
+this represent about two
+thirds of the round-trip time,
+
+486
+00:21:00,833 --> 00:21:04,050
+that is actually the time
+spent over the network.
+
+487
+00:21:04,050 --> 00:21:06,507
+So you get a much more accurate
+view of what's going on.
+
+488
+00:21:06,507 --> 00:21:08,610
+The observability of
+the network performance
+
+489
+00:21:08,610 --> 00:21:10,230
+is becoming much crisper.
+
+490
+00:21:10,230 --> 00:21:13,050
+It can start identifying and breaking down
+
+491
+00:21:13,050 --> 00:21:13,883
+what are the delays
+
+492
+00:21:13,883 --> 00:21:15,933
+between your application and the network.
+
+493
+00:21:20,820 --> 00:21:22,740
+Alright, I'm gonna pass
+that back to Josh now.
+
+494
+00:21:22,740 --> 00:21:24,060
+Thank you very much.
+
+495
+00:21:24,060 --> 00:21:24,903
+- Thanks Julien.
+
+496
+00:21:27,420 --> 00:21:28,890
+With this technology
+
+497
+00:21:28,890 --> 00:21:31,980
+we wanted to give examples
+of why this matters
+
+498
+00:21:31,980 --> 00:21:33,810
+and how this is used.
+
+499
+00:21:33,810 --> 00:21:36,660
+I'm very happy to introduce Nikolai,
+
+500
+00:21:36,660 --> 00:21:37,680
+the Senior Vice President
+
+501
+00:21:37,680 --> 00:21:41,160
+of Cloud Strategy and Enterprise
+Architecture at Nasdaq
+
+502
+00:21:41,160 --> 00:21:43,890
+to show how they are
+leveraging precision time
+
+503
+00:21:43,890 --> 00:21:45,723
+with the Amazon Time Sync Service.
+
+504
+00:21:47,880 --> 00:21:49,053
+- Thank you, Josh.
+
+505
+00:21:49,053 --> 00:21:49,953
+Thank you, Julien.
+
+506
+00:21:50,970 --> 00:21:54,150
+So building on all of that
+excellent background of work,
+
+507
+00:21:54,150 --> 00:21:56,670
+we're gonna walk you through a little bit
+
+508
+00:21:56,670 --> 00:21:58,710
+about just background on who Nasdaq is,
+
+509
+00:21:58,710 --> 00:22:00,810
+but how we're using this technology
+
+510
+00:22:00,810 --> 00:22:04,410
+to demonstrate progress towards our goals
+
+511
+00:22:04,410 --> 00:22:06,693
+of running markets in public cloud.
+
+512
+00:22:08,910 --> 00:22:10,230
+So first a little bit of background.
+
+513
+00:22:10,230 --> 00:22:12,990
+Nasdaq is an innovator.
+
+514
+00:22:12,990 --> 00:22:16,200
+We were the world's
+first electronic exchange
+
+515
+00:22:16,200 --> 00:22:18,420
+created in 1971.
+
+516
+00:22:18,420 --> 00:22:22,530
+We operate more than 30
+markets around the world,
+
+517
+00:22:22,530 --> 00:22:25,800
+in the US and Nordics that covers stocks,
+
+518
+00:22:25,800 --> 00:22:29,013
+bonds, and options, and other derivatives.
+
+519
+00:22:31,290 --> 00:22:34,710
+We are known as the
+home of technology stock
+
+520
+00:22:34,710 --> 00:22:38,220
+and technology stocks globally.
+
+521
+00:22:38,220 --> 00:22:43,170
+And we host the top four
+companies by market cap,
+
+522
+00:22:43,170 --> 00:22:45,450
+of course including Amazon,
+
+523
+00:22:45,450 --> 00:22:48,843
+Who were are proud to
+have as a listed company.
+
+524
+00:22:50,130 --> 00:22:51,540
+We also provide technology
+
+525
+00:22:51,540 --> 00:22:55,080
+to more than 130 market operators.
+
+526
+00:22:55,080 --> 00:22:59,973
+So exchanges, clearing houses,
+regulators around the globe,
+
+527
+00:23:02,010 --> 00:23:04,110
+and provide technology
+
+528
+00:23:04,110 --> 00:23:07,920
+to more than 2300 financial institutions.
+
+529
+00:23:07,920 --> 00:23:10,260
+That could be from managing surveillance,
+
+530
+00:23:10,260 --> 00:23:13,530
+anti-financial crime or capital flows,
+
+531
+00:23:13,530 --> 00:23:16,470
+reporting, number of other things,
+
+532
+00:23:16,470 --> 00:23:18,390
+and more than 6,000 corporates.
+
+533
+00:23:18,390 --> 00:23:22,080
+We provide technology
+to support their journey
+
+534
+00:23:22,080 --> 00:23:23,910
+in both private and public markets
+
+535
+00:23:23,910 --> 00:23:27,273
+through the full life
+cycle of capital markets.
+
+536
+00:23:28,885 --> 00:23:30,480
+We have a listing venue,
+
+537
+00:23:30,480 --> 00:23:35,220
+and we have approximately
+4,400 public companies listed
+
+538
+00:23:35,220 --> 00:23:37,293
+on Nasdaq exchanges globally.
+
+539
+00:23:39,510 --> 00:23:42,090
+Now, we have been an innovator in cloud,
+
+540
+00:23:42,090 --> 00:23:43,810
+and we started our cloud journey
+
+541
+00:23:45,690 --> 00:23:46,883
+well over 10 years ago now,
+
+542
+00:23:46,883 --> 00:23:49,473
+I think probably close
+to 15 at this point.
+
+543
+00:23:51,270 --> 00:23:53,460
+But we'd had approached it very carefully
+
+544
+00:23:53,460 --> 00:23:54,835
+and very thoughtfully.
+
+545
+00:23:54,835 --> 00:23:57,660
+And so what you see here
+is a kind of representation
+
+546
+00:23:57,660 --> 00:24:01,650
+of we started from the edge out,
+
+547
+00:24:01,650 --> 00:24:04,440
+we started with our data
+repositories, data warehousing.
+
+548
+00:24:04,440 --> 00:24:06,330
+So we had our first data warehouse
+
+549
+00:24:06,330 --> 00:24:10,233
+in 2012, 2013-ish,
+
+550
+00:24:11,070 --> 00:24:14,763
+created natively in AWS using Redshift.
+
+551
+00:24:15,840 --> 00:24:17,100
+We've continued to evolve that.
+
+552
+00:24:17,100 --> 00:24:20,760
+We now store about 60 petabytes of data
+
+553
+00:24:20,760 --> 00:24:22,200
+in that data warehouse.
+
+554
+00:24:22,200 --> 00:24:24,870
+And that underpins a
+number of key functions,
+
+555
+00:24:24,870 --> 00:24:26,820
+mostly back office in this case,
+
+556
+00:24:26,820 --> 00:24:28,980
+that support the operation
+of our exchanges,
+
+557
+00:24:28,980 --> 00:24:32,610
+including billing and
+regulatory reporting.
+
+558
+00:24:32,610 --> 00:24:33,690
+But we didn't stop there.
+
+559
+00:24:33,690 --> 00:24:34,890
+We continued our journey
+
+560
+00:24:34,890 --> 00:24:39,033
+into more and more real-time processing.
+
+561
+00:24:40,470 --> 00:24:44,190
+Started with things like
+our market surveillance,
+
+562
+00:24:44,190 --> 00:24:47,580
+taking streaming real-time
+market information
+
+563
+00:24:47,580 --> 00:24:48,840
+to perform that.
+
+564
+00:24:48,840 --> 00:24:51,480
+Market data distribution is now available
+
+565
+00:24:51,480 --> 00:24:53,760
+through public cloud.
+
+566
+00:24:53,760 --> 00:24:55,650
+You can subscribe to Nasdaq products,
+
+567
+00:24:55,650 --> 00:24:57,723
+and a number of alternative data sets.
+
+568
+00:24:59,550 --> 00:25:03,810
+And of course in 2022 we
+announced, and we launched,
+
+569
+00:25:03,810 --> 00:25:07,110
+our first options exchange on AWS Outpost,
+
+570
+00:25:07,110 --> 00:25:08,877
+Nasdaq MRX.
+
+571
+00:25:08,877 --> 00:25:10,530
+And we've continued that cadence,
+
+572
+00:25:10,530 --> 00:25:14,610
+and we now have six-plus market systems
+
+573
+00:25:14,610 --> 00:25:16,170
+running on Outpost.
+
+574
+00:25:16,170 --> 00:25:17,640
+We continue that journey.
+
+575
+00:25:17,640 --> 00:25:21,240
+In addition, a number of our
+critical surrounding systems
+
+576
+00:25:21,240 --> 00:25:25,080
+that provide real time
+insight to market participants
+
+577
+00:25:25,080 --> 00:25:28,740
+on the trading activity that's
+occurring on the market.
+
+578
+00:25:28,740 --> 00:25:30,600
+Those are hosted natively
+in the public cloud
+
+579
+00:25:30,600 --> 00:25:32,571
+and we take advantage of the scalability
+
+580
+00:25:32,571 --> 00:25:35,700
+and the performance that are right-sizing
+
+581
+00:25:35,700 --> 00:25:38,760
+to process the large volumes
+of messages we handle,
+
+582
+00:25:38,760 --> 00:25:41,163
+and the peaks managed capacity.
+
+583
+00:25:43,440 --> 00:25:46,410
+So of course we do have
+some specific challenges
+
+584
+00:25:46,410 --> 00:25:47,853
+in moving to the cloud.
+
+585
+00:25:49,380 --> 00:25:52,590
+One of those is that the,
+in particular in the US
+
+586
+00:25:52,590 --> 00:25:56,010
+there's a very specific geography
+
+587
+00:25:56,010 --> 00:25:57,930
+in which trading occurs,
+
+588
+00:25:57,930 --> 00:26:00,300
+and that's predominantly
+in northern New Jersey
+
+589
+00:26:00,300 --> 00:26:02,553
+for equities and equity options.
+
+590
+00:26:03,510 --> 00:26:04,950
+So that provides some constraints
+
+591
+00:26:04,950 --> 00:26:06,630
+on where you can deploy the compute,
+
+592
+00:26:06,630 --> 00:26:11,190
+because there's latency
+dependencies between those exchanges
+
+593
+00:26:11,190 --> 00:26:14,583
+that are all hosted in that general area.
+
+594
+00:26:16,680 --> 00:26:20,340
+We also have ultra-low
+latency transactions.
+
+595
+00:26:20,340 --> 00:26:23,520
+And by that I mean something on the order
+
+596
+00:26:23,520 --> 00:26:27,780
+of 20 microseconds measured
+as what we call order to act.
+
+597
+00:26:27,780 --> 00:26:29,910
+So that's the time and
+order comes into our system,
+
+598
+00:26:29,910 --> 00:26:32,100
+gets processed, booked in to match,
+
+599
+00:26:32,100 --> 00:26:34,623
+potentially trades, and
+return to the customer.
+
+600
+00:26:36,180 --> 00:26:39,093
+And coming with that, we
+also have large volumes,
+
+601
+00:26:40,380 --> 00:26:44,373
+well north of a hundred
+billion messages day currently,
+
+602
+00:26:45,480 --> 00:26:49,290
+with any specific exchange system
+
+603
+00:26:49,290 --> 00:26:52,533
+processing up to two to three
+million messages a second.
+
+604
+00:26:54,030 --> 00:26:57,660
+We also have high resiliency
+in uptime expectations.
+
+605
+00:26:57,660 --> 00:27:00,630
+The capital markets depend on us.
+
+606
+00:27:00,630 --> 00:27:02,280
+We are a primary listing venue
+
+607
+00:27:02,280 --> 00:27:06,870
+for a number of public
+companies, as mentioned earlier.
+
+608
+00:27:06,870 --> 00:27:09,840
+And us being there to
+provide that liquidity,
+
+609
+00:27:09,840 --> 00:27:12,390
+provide that venue for people to trade
+
+610
+00:27:12,390 --> 00:27:17,010
+and generate price
+discovery is a key function
+
+611
+00:27:17,010 --> 00:27:19,470
+of how we keep our
+capital market sufficient
+
+612
+00:27:19,470 --> 00:27:20,763
+and operating well.
+
+613
+00:27:22,020 --> 00:27:25,680
+And of course, we do
+have regulatory oversight
+
+614
+00:27:25,680 --> 00:27:26,730
+of what we do,
+
+615
+00:27:26,730 --> 00:27:28,710
+where we run things, how we run things,
+
+616
+00:27:28,710 --> 00:27:30,720
+and what third parties
+we're interacting with.
+
+617
+00:27:30,720 --> 00:27:32,223
+So we put all these together,
+
+618
+00:27:33,270 --> 00:27:34,950
+and I think you start to see the picture
+
+619
+00:27:34,950 --> 00:27:37,050
+of why we've been a very intentional
+
+620
+00:27:37,050 --> 00:27:39,480
+over the past 10 to 15 years,
+
+621
+00:27:39,480 --> 00:27:44,070
+continuing to move progressively
+to more and more real time
+
+622
+00:27:44,070 --> 00:27:45,450
+and into the match.
+
+623
+00:27:45,450 --> 00:27:47,650
+Okay, so now we're running these exchanges
+
+624
+00:27:50,460 --> 00:27:51,300
+on Outpost,
+
+625
+00:27:51,300 --> 00:27:54,150
+and many of the supporting
+systems in public region.
+
+626
+00:27:54,150 --> 00:27:55,890
+But we don't wanna stop there.
+
+627
+00:27:55,890 --> 00:27:59,640
+So this is where Amazon
+Time Sync comes in,
+
+628
+00:27:59,640 --> 00:28:00,840
+and I wanted to talk through
+
+629
+00:28:00,840 --> 00:28:04,410
+some of the prototyping and
+experimentation we've been doing
+
+630
+00:28:04,410 --> 00:28:06,870
+to demonstrate some of the capabilities
+
+631
+00:28:06,870 --> 00:28:11,373
+that will enable us to deploy
+markets into the public cloud.
+
+632
+00:28:13,560 --> 00:28:18,560
+But first, a short primer
+on an exchange system.
+
+633
+00:28:18,810 --> 00:28:21,370
+So a very high-level architecture view
+
+634
+00:28:22,650 --> 00:28:24,300
+of an exchange trading system.
+
+635
+00:28:24,300 --> 00:28:28,110
+There's really three primary components.
+
+636
+00:28:28,110 --> 00:28:29,520
+Before I go there,
+
+637
+00:28:29,520 --> 00:28:32,640
+should mention that we operate
+three equities exchanges
+
+638
+00:28:32,640 --> 00:28:36,210
+and six options exchanges in the US.
+
+639
+00:28:36,210 --> 00:28:37,320
+And as mentioned before,
+
+640
+00:28:37,320 --> 00:28:39,513
+more than 100 billion messages a day,
+
+641
+00:28:40,590 --> 00:28:45,590
+with a single exchange out of
+those six options exchanges
+
+642
+00:28:46,110 --> 00:28:48,783
+running north of 30
+billion messages a day.
+
+643
+00:28:50,490 --> 00:28:51,323
+And as mentioned,
+
+644
+00:28:51,323 --> 00:28:54,093
+the median latency is about
+20 microseconds for that.
+
+645
+00:28:55,230 --> 00:29:00,230
+So if we look at the
+components of the system here,
+
+646
+00:29:03,540 --> 00:29:06,375
+we have of course at the
+top left, as you can see,
+
+647
+00:29:06,375 --> 00:29:07,260
+the matching engine.
+
+648
+00:29:07,260 --> 00:29:09,840
+And that is where the primary logic
+
+649
+00:29:09,840 --> 00:29:12,900
+to book orders and trades,
+and match buyers and sellers,
+
+650
+00:29:12,900 --> 00:29:16,743
+and generate trades occurs.
+
+651
+00:29:18,780 --> 00:29:19,770
+Going one level down,
+
+652
+00:29:19,770 --> 00:29:22,590
+we have what we refer to as order ports,
+
+653
+00:29:22,590 --> 00:29:25,680
+and those are the primary point
+of interface for customers
+
+654
+00:29:25,680 --> 00:29:28,863
+who are sending order
+flow to our exchange,
+
+655
+00:29:29,700 --> 00:29:32,073
+and act as the point of validation,
+
+656
+00:29:34,140 --> 00:29:36,540
+and in some cases pre-trade risk
+
+657
+00:29:36,540 --> 00:29:39,153
+and other functions occur there.
+
+658
+00:29:40,980 --> 00:29:41,820
+Next to that, on the right,
+
+659
+00:29:41,820 --> 00:29:44,460
+we have our, what we call
+our public market data feeds.
+
+660
+00:29:44,460 --> 00:29:46,980
+So this is a published view
+
+661
+00:29:46,980 --> 00:29:49,950
+of what's happening in the
+matching engine to the market,
+
+662
+00:29:49,950 --> 00:29:52,533
+Nasdaq ITCH, for those
+of you familiar with it.
+
+663
+00:29:53,790 --> 00:29:56,040
+And then of course at the bottom,
+
+664
+00:29:56,040 --> 00:29:57,900
+but maybe the driver for the whole thing,
+
+665
+00:29:57,900 --> 00:30:00,390
+are the clients that
+provide the order flow
+
+666
+00:30:00,390 --> 00:30:02,970
+to the order ports, to
+the matching engine,
+
+667
+00:30:02,970 --> 00:30:05,310
+through their inbound transactions
+
+668
+00:30:05,310 --> 00:30:07,160
+from a round trip through the system.
+
+669
+00:30:08,940 --> 00:30:12,003
+So with that background,
+
+670
+00:30:14,280 --> 00:30:18,450
+an exchange trading system
+on-prem is a traditional model.
+
+671
+00:30:18,450 --> 00:30:19,950
+It's a model we run today,
+
+672
+00:30:19,950 --> 00:30:21,903
+and most other exchanges in the world.
+
+673
+00:30:24,210 --> 00:30:26,370
+You wanna provide a deterministic
+
+674
+00:30:26,370 --> 00:30:30,300
+and statistically fair
+market to participants.
+
+675
+00:30:30,300 --> 00:30:32,160
+And so how do we accomplish that?
+
+676
+00:30:32,160 --> 00:30:35,160
+Well, given that it's an
+on-premise data center,
+
+677
+00:30:35,160 --> 00:30:39,180
+there's certain physical
+characteristics we can rely upon.
+
+678
+00:30:39,180 --> 00:30:43,260
+That is the lengths of
+fibers in the data center,
+
+679
+00:30:43,260 --> 00:30:45,180
+the number of switch hops
+
+680
+00:30:45,180 --> 00:30:49,023
+between components of
+the system and customers.
+
+681
+00:30:51,150 --> 00:30:55,620
+And those drive what you
+see here as D1 and D2,
+
+682
+00:30:55,620 --> 00:31:00,300
+the primary sources of
+network latency in the system.
+
+683
+00:31:00,300 --> 00:31:03,660
+And then D3 encompassing
+both the network components
+
+684
+00:31:03,660 --> 00:31:06,210
+and the processing components.
+
+685
+00:31:06,210 --> 00:31:08,370
+D3 being one half of the round trip.
+
+686
+00:31:08,370 --> 00:31:12,213
+So you can think of that as
+about roughly 10 microseconds.
+
+687
+00:31:13,620 --> 00:31:15,900
+So because of those
+physical characteristics
+
+688
+00:31:15,900 --> 00:31:18,933
+and the sequential processing
+of the matching engine,
+
+689
+00:31:20,430 --> 00:31:24,390
+you result in an orderly
+processing of orders
+
+690
+00:31:24,390 --> 00:31:27,300
+that are processed as they're
+submitted by customers
+
+691
+00:31:27,300 --> 00:31:32,280
+and returned to customers
+and public market data feed
+
+692
+00:31:32,280 --> 00:31:36,783
+in a consistent and
+repeatable time period.
+
+693
+00:31:40,140 --> 00:31:42,810
+So that doesn't work so well
+
+694
+00:31:42,810 --> 00:31:45,900
+when you're talking about
+public cloud, obviously.
+
+695
+00:31:45,900 --> 00:31:48,900
+We definitely do not
+have fixed cable lengths.
+
+696
+00:31:48,900 --> 00:31:52,050
+We definitely often don't
+have any idea really
+
+697
+00:31:52,050 --> 00:31:54,333
+how many switch hops sit between nodes,
+
+698
+00:31:55,860 --> 00:31:57,390
+and there can be various other things
+
+699
+00:31:57,390 --> 00:31:59,040
+happening in the network.
+
+700
+00:31:59,040 --> 00:32:03,900
+There can be other traffic
+that's delaying packets,
+
+701
+00:32:03,900 --> 00:32:08,900
+or just the placement of
+compute nodes can be, you know,
+
+702
+00:32:09,410 --> 00:32:12,990
+it can be unpredictably from
+even within the data center
+
+703
+00:32:12,990 --> 00:32:14,280
+can be on one side or the other
+
+704
+00:32:14,280 --> 00:32:16,230
+or it could be in across AZs,
+
+705
+00:32:16,230 --> 00:32:19,410
+or it could even be across
+regions potentially.
+
+706
+00:32:19,410 --> 00:32:21,093
+So what do you do about that?
+
+707
+00:32:24,780 --> 00:32:26,640
+Given that we, you know, again,
+
+708
+00:32:26,640 --> 00:32:30,090
+focus on these three kind
+of key time periods here,
+
+709
+00:32:30,090 --> 00:32:32,493
+so D1, D2, and D3.
+
+710
+00:32:36,330 --> 00:32:37,920
+This is where the timestamps come in.
+
+711
+00:32:37,920 --> 00:32:39,930
+So using hardware timestamps
+
+712
+00:32:39,930 --> 00:32:44,040
+to record the time of each transaction
+
+713
+00:32:44,040 --> 00:32:45,740
+at each point through the network.
+
+714
+00:32:46,770 --> 00:32:51,770
+We can then use this high-precision
+distributed time source
+
+715
+00:32:54,930 --> 00:32:58,740
+to understand when orders
+came into the system
+
+716
+00:32:58,740 --> 00:33:01,440
+or were sent by customers,
+
+717
+00:33:01,440 --> 00:33:03,690
+and hence then when we should process them
+
+718
+00:33:03,690 --> 00:33:06,751
+to ensure the sequential processing
+
+719
+00:33:06,751 --> 00:33:10,473
+and sequential distribution
+of those messages.
+
+720
+00:33:14,610 --> 00:33:17,996
+So if you look here at
+the kind of key components
+
+721
+00:33:17,996 --> 00:33:20,460
+that we have that are relevant, right,
+
+722
+00:33:20,460 --> 00:33:25,460
+so we have our RBs, or
+reordering buffer at the top left
+
+723
+00:33:26,400 --> 00:33:28,140
+sitting in front of the matching engine.
+
+724
+00:33:28,140 --> 00:33:32,005
+And it's important to note that
+this POC is really focusing,
+
+725
+00:33:32,005 --> 00:33:33,450
+and what we're discussing here,
+
+726
+00:33:33,450 --> 00:33:36,900
+is focusing on the ordering
+of inbound transactions.
+
+727
+00:33:36,900 --> 00:33:41,280
+Now there's obviously a
+similar problem domain for,
+
+728
+00:33:41,280 --> 00:33:43,950
+or a network flow going
+the other direction.
+
+729
+00:33:43,950 --> 00:33:45,300
+Similar techniques apply,
+
+730
+00:33:45,300 --> 00:33:47,190
+and I think you can use your imagination
+
+731
+00:33:47,190 --> 00:33:48,300
+to see how that would expand.
+
+732
+00:33:48,300 --> 00:33:52,293
+But that's not the specific
+focus of this POC that we did.
+
+733
+00:33:53,700 --> 00:33:55,440
+But using that reordering buffer
+
+734
+00:33:55,440 --> 00:33:59,070
+and the hardware timestamps
+that are provided through Nitro
+
+735
+00:33:59,070 --> 00:34:02,250
+and through the Time Sync Service,
+
+736
+00:34:02,250 --> 00:34:05,760
+we are now now able to
+determine, for example,
+
+737
+00:34:05,760 --> 00:34:09,960
+T1 being the time of
+an order being received
+
+738
+00:34:09,960 --> 00:34:12,510
+at the order port from client one,
+
+739
+00:34:12,510 --> 00:34:15,962
+T2 being the time an order was received
+
+740
+00:34:15,962 --> 00:34:19,263
+at the order port from client two,
+
+741
+00:34:21,510 --> 00:34:25,050
+and T3 being the time of an order received
+
+742
+00:34:25,050 --> 00:34:26,073
+from client three.
+
+743
+00:34:26,940 --> 00:34:29,010
+Given that those are hardware timestamps
+
+744
+00:34:29,010 --> 00:34:31,500
+with nanosecond precision,
+
+745
+00:34:31,500 --> 00:34:36,003
+we can use that information to
+define a time-based boundary,
+
+746
+00:34:37,890 --> 00:34:39,750
+and using the reordering buffer
+
+747
+00:34:39,750 --> 00:34:43,020
+that understands those timestamps
+
+748
+00:34:43,020 --> 00:34:44,610
+to put them back in the,
+
+749
+00:34:44,610 --> 00:34:46,230
+or ensure that they're in the order
+
+750
+00:34:46,230 --> 00:34:48,030
+that they originated from.
+
+751
+00:34:48,030 --> 00:34:51,270
+Now this is obviously
+a specific challenge,
+
+752
+00:34:51,270 --> 00:34:54,660
+and we'll talk just a little
+bit more about what that means.
+
+753
+00:34:54,660 --> 00:34:57,150
+So how they're used, right,
+
+754
+00:34:57,150 --> 00:35:01,710
+so if you think back to
+the prior slide with,
+
+755
+00:35:01,710 --> 00:35:05,490
+excuse me, with the T1, T2, T3,
+
+756
+00:35:05,490 --> 00:35:09,490
+in this case we have on
+the inbound side order T1
+
+757
+00:35:10,410 --> 00:35:12,903
+flushed at time T1,
+
+758
+00:35:14,520 --> 00:35:17,280
+or received, I should say, at time T1,
+
+759
+00:35:17,280 --> 00:35:18,780
+gets flushed at time T11.
+
+760
+00:35:18,780 --> 00:35:22,953
+So we have T1 and at
+time T3 we have order T3,
+
+761
+00:35:23,894 --> 00:35:25,833
+and T4 we have order T2.
+
+762
+00:35:28,140 --> 00:35:29,520
+As a result of the reordering,
+
+763
+00:35:29,520 --> 00:35:32,670
+on the outbound side
+we see it as order T1,
+
+764
+00:35:32,670 --> 00:35:34,920
+order T2, and order T3,
+
+765
+00:35:34,920 --> 00:35:38,223
+reordered to their originating timestamp.
+
+766
+00:35:39,090 --> 00:35:41,010
+So this is a clear,
+
+767
+00:35:41,010 --> 00:35:44,070
+and we have a patent for this technique
+
+768
+00:35:44,070 --> 00:35:45,180
+to use time for this.
+
+769
+00:35:45,180 --> 00:35:47,220
+This is something we've been working on
+
+770
+00:35:47,220 --> 00:35:48,720
+for a number of years,
+
+771
+00:35:48,720 --> 00:35:52,680
+and we see as foundational
+to continue to evolve
+
+772
+00:35:52,680 --> 00:35:54,960
+our posture towards public cloud
+
+773
+00:35:54,960 --> 00:35:59,670
+for these kinds of very
+sensitive, low-latency systems.
+
+774
+00:35:59,670 --> 00:36:00,990
+So what did we do this with?
+
+775
+00:36:00,990 --> 00:36:03,390
+So if I go back to the prior slides.
+
+776
+00:36:03,390 --> 00:36:07,410
+So just thinking about the prototype
+
+777
+00:36:07,410 --> 00:36:08,820
+that we built with this.
+
+778
+00:36:08,820 --> 00:36:13,750
+So we're running on AWS public instances
+
+779
+00:36:15,660 --> 00:36:17,703
+using those r7i.2xls,
+
+780
+00:36:20,010 --> 00:36:22,320
+using proximity placement groups
+
+781
+00:36:22,320 --> 00:36:24,450
+to ensure that the compute nodes
+
+782
+00:36:24,450 --> 00:36:28,307
+were placed close in
+relation to each other
+
+783
+00:36:28,307 --> 00:36:32,913
+within a few racks, or
+within the same rack.
+
+784
+00:36:35,070 --> 00:36:37,020
+And then using these hardware timestamps
+
+785
+00:36:37,020 --> 00:36:39,273
+to reorder those packets.
+
+786
+00:36:40,170 --> 00:36:43,830
+So what we have here, if
+you look at this example
+
+787
+00:36:43,830 --> 00:36:45,870
+and you take these timestamps,
+
+788
+00:36:45,870 --> 00:36:48,390
+and we, in our testing example,
+
+789
+00:36:48,390 --> 00:36:49,860
+we used two time boundaries
+
+790
+00:36:49,860 --> 00:36:51,810
+to demonstrate the impact of this.
+
+791
+00:36:51,810 --> 00:36:55,920
+One was a five-microsecond boundary.
+
+792
+00:36:55,920 --> 00:36:58,440
+And at five microseconds,
+as you might imagine,
+
+793
+00:36:58,440 --> 00:37:01,230
+you're not successful in
+reordering all that many packets,
+
+794
+00:37:01,230 --> 00:37:04,620
+because that's probably more,
+
+795
+00:37:04,620 --> 00:37:07,590
+you will take many packets
+much longer than that
+
+796
+00:37:07,590 --> 00:37:09,000
+to arrive at the matching engine.
+
+797
+00:37:09,000 --> 00:37:11,010
+So they fall outside
+the reordering boundary.
+
+798
+00:37:11,010 --> 00:37:12,330
+But that's about,
+
+799
+00:37:12,330 --> 00:37:15,000
+let's say roughly that
+was about 25% of packets
+
+800
+00:37:15,000 --> 00:37:19,020
+got reordered successfully
+in that time boundary.
+
+801
+00:37:19,020 --> 00:37:22,353
+When we move it up to 50 microseconds,
+
+802
+00:37:23,550 --> 00:37:26,733
+we see, depending on the message rate,
+
+803
+00:37:28,530 --> 00:37:30,540
+84% or higher, right?
+
+804
+00:37:30,540 --> 00:37:33,120
+So we continue to iterate on that boundary
+
+805
+00:37:33,120 --> 00:37:35,670
+work on how we can continue
+
+806
+00:37:35,670 --> 00:37:38,370
+to evolve the proximity
+placement functions
+
+807
+00:37:38,370 --> 00:37:40,350
+so that we can get greater granularity
+
+808
+00:37:40,350 --> 00:37:42,000
+of where to place them,
+
+809
+00:37:42,000 --> 00:37:44,880
+and leveraging the
+Amazon Time Sync Service
+
+810
+00:37:44,880 --> 00:37:45,933
+to accomplish that.
+
+811
+00:37:48,210 --> 00:37:50,580
+So if we look forward
+with this foundation,
+
+812
+00:37:50,580 --> 00:37:51,990
+and as I mentioned earlier,
+
+813
+00:37:51,990 --> 00:37:54,150
+this is a key part of our innovation,
+
+814
+00:37:54,150 --> 00:37:58,560
+and working with AWS to solve problems
+
+815
+00:37:58,560 --> 00:38:00,930
+that are hard for public cloud,
+
+816
+00:38:00,930 --> 00:38:03,300
+as we believe that many of
+these problems will be solved
+
+817
+00:38:03,300 --> 00:38:06,330
+or will get migrated to
+the cloud in the future.
+
+818
+00:38:06,330 --> 00:38:08,553
+We wanna be part of that solution.
+
+819
+00:38:09,600 --> 00:38:12,570
+So this is about, for us
+
+820
+00:38:12,570 --> 00:38:14,730
+a developing scalable trading systems,
+
+821
+00:38:14,730 --> 00:38:16,650
+continuing to ensure that our systems
+
+822
+00:38:16,650 --> 00:38:20,820
+are the most scalable
+and performant systems
+
+823
+00:38:20,820 --> 00:38:22,650
+wherever they are deployed,
+
+824
+00:38:22,650 --> 00:38:24,813
+if that's in public cloud or on premise.
+
+825
+00:38:26,760 --> 00:38:28,380
+We know there's a lot of innovation
+
+826
+00:38:28,380 --> 00:38:29,730
+happening in public cloud,
+
+827
+00:38:29,730 --> 00:38:33,480
+and certain things like
+the explosion of AI,
+
+828
+00:38:33,480 --> 00:38:34,980
+and how we're gonna apply that.
+
+829
+00:38:34,980 --> 00:38:37,220
+And certainly, you know,
+bringing our data to public cloud
+
+830
+00:38:37,220 --> 00:38:38,860
+is a key part of that strategy
+
+831
+00:38:39,750 --> 00:38:42,240
+enhancing our security and reliability.
+
+832
+00:38:42,240 --> 00:38:43,803
+So as mentioned before,
+
+833
+00:38:45,360 --> 00:38:49,800
+we have high expectations
+both from ourselves,
+
+834
+00:38:49,800 --> 00:38:50,970
+and from our clients,
+
+835
+00:38:50,970 --> 00:38:54,600
+and from the regulators in
+terms of being available
+
+836
+00:38:54,600 --> 00:38:57,813
+and ensuring that the capital
+markets continue to flow.
+
+837
+00:38:59,070 --> 00:39:00,060
+And public cloud
+
+838
+00:39:00,060 --> 00:39:02,910
+has significant advantages
+in both of those
+
+839
+00:39:02,910 --> 00:39:05,310
+in that, you know, you
+do have to understand
+
+840
+00:39:05,310 --> 00:39:07,830
+the resiliency considerations,
+
+841
+00:39:07,830 --> 00:39:10,290
+and make sure that you're
+building with those in mind.
+
+842
+00:39:10,290 --> 00:39:12,000
+They're not the same as on-prem,
+
+843
+00:39:12,000 --> 00:39:15,660
+but built responsibly
+and in the right way,
+
+844
+00:39:15,660 --> 00:39:18,300
+they're much more resilient and secure.
+
+845
+00:39:18,300 --> 00:39:21,030
+And of course, the final part point there
+
+846
+00:39:21,030 --> 00:39:25,830
+is that leveraging our
+strategic market expertise,
+
+847
+00:39:25,830 --> 00:39:29,910
+are, you know, operation
+of 30 exchanges globally,
+
+848
+00:39:29,910 --> 00:39:34,383
+and as a supplier to 130
+marketplaces around the world,
+
+849
+00:39:35,520 --> 00:39:36,353
+we are a leader,
+
+850
+00:39:36,353 --> 00:39:38,100
+we need to think strategically about this,
+
+851
+00:39:38,100 --> 00:39:41,190
+and how we apply technology to this.
+
+852
+00:39:41,190 --> 00:39:42,480
+So thank you.
+
+853
+00:39:42,480 --> 00:39:44,340
+Thanks for the time to Josh and Julien
+
+854
+00:39:44,340 --> 00:39:45,420
+for the Time Sync work,
+
+855
+00:39:45,420 --> 00:39:49,263
+and we look forward to
+future innovation here.
+
+856
+00:39:51,210 --> 00:39:52,043
+- Thanks.
+
+857
+00:39:58,860 --> 00:39:59,693
+Thanks Nikolai.
+
+858
+00:40:00,870 --> 00:40:04,140
+I love that example in technical depth,
+
+859
+00:40:04,140 --> 00:40:06,660
+and we get really deep
+into the hardware world
+
+860
+00:40:06,660 --> 00:40:09,090
+and hardware timestamps.
+
+861
+00:40:09,090 --> 00:40:12,240
+But most people are not
+building a financial exchange
+
+862
+00:40:12,240 --> 00:40:13,860
+like Nasdaq.
+
+863
+00:40:13,860 --> 00:40:18,360
+And we wanna get into how you
+leverage really good clocks
+
+864
+00:40:18,360 --> 00:40:21,720
+in your systems globally, and at scale,
+
+865
+00:40:21,720 --> 00:40:23,913
+and back into the software world.
+
+866
+00:40:25,920 --> 00:40:29,400
+I'm going back to this
+quote from Barbara Liskov
+
+867
+00:40:29,400 --> 00:40:33,123
+on distributed systems and
+reducing communication,
+
+868
+00:40:34,080 --> 00:40:37,160
+'cause we now have a very good clock
+
+869
+00:40:37,160 --> 00:40:39,030
+in the nanosecond range,
+
+870
+00:40:39,030 --> 00:40:42,027
+where in the software world
+you're in microsecond range.
+
+871
+00:40:42,027 --> 00:40:44,493
+And we have the hardware
+packet timestamping.
+
+872
+00:40:45,870 --> 00:40:48,480
+This allows your
+applications to be better.
+
+873
+00:40:48,480 --> 00:40:51,570
+You can measure your network latency.
+
+874
+00:40:51,570 --> 00:40:54,150
+You have monitoring and observability
+
+875
+00:40:54,150 --> 00:40:56,460
+in the micro- and nanosecond scale
+
+876
+00:40:56,460 --> 00:41:00,090
+and consistent point-in-time snapshots.
+
+877
+00:41:00,090 --> 00:41:02,520
+But we still haven't talked
+about distributed systems.
+
+878
+00:41:02,520 --> 00:41:06,033
+And distributed systems
+are all about ordering.
+
+879
+00:41:08,790 --> 00:41:11,484
+Distributed systems have multiple clocks,
+
+880
+00:41:11,484 --> 00:41:13,320
+that's why it's a distributed system.
+
+881
+00:41:13,320 --> 00:41:15,270
+So in the first example on the left,
+
+882
+00:41:15,270 --> 00:41:18,993
+if you have a system with
+one clock and three events,
+
+883
+00:41:19,830 --> 00:41:24,360
+it's relatively easy to
+know what event comes first.
+
+884
+00:41:24,360 --> 00:41:26,130
+But as Nikolai pointed out,
+
+885
+00:41:26,130 --> 00:41:28,983
+when you have multiple servers,
+
+886
+00:41:29,850 --> 00:41:32,070
+they each have their own clock,
+
+887
+00:41:32,070 --> 00:41:35,460
+and each clock is a little different.
+
+888
+00:41:35,460 --> 00:41:39,183
+And as that system scales,
+it gets more complex.
+
+889
+00:41:40,920 --> 00:41:41,973
+In the past,
+
+890
+00:41:43,350 --> 00:41:46,260
+it's been difficult to rely on the clocks
+
+891
+00:41:46,260 --> 00:41:49,140
+'cause they were not
+good enough to compare.
+
+892
+00:41:49,140 --> 00:41:51,780
+So things like distributed locks,
+
+893
+00:41:51,780 --> 00:41:54,780
+leader election consensus algorithms
+
+894
+00:41:54,780 --> 00:41:58,980
+built by decades of very
+smart computer scientists,
+
+895
+00:41:58,980 --> 00:42:00,393
+Turing Award winners,
+
+896
+00:42:02,220 --> 00:42:05,193
+have been done to do
+ordering on a complex system.
+
+897
+00:42:06,150 --> 00:42:09,237
+But these algorithms put
+a limit onto performance.
+
+898
+00:42:09,237 --> 00:42:13,383
+And as the system grows larger,
+so does that complexity.
+
+899
+00:42:16,440 --> 00:42:19,620
+In order to use a clock,
+we recommend, you know,
+
+900
+00:42:19,620 --> 00:42:22,830
+changing the way you read a clock.
+
+901
+00:42:22,830 --> 00:42:24,360
+I look at, you know,
+
+902
+00:42:24,360 --> 00:42:26,640
+Julien's example asking a friend for time.
+
+903
+00:42:26,640 --> 00:42:28,380
+You ask, "What time is it?"
+
+904
+00:42:28,380 --> 00:42:32,613
+And we think, as humans, as
+people, it's it's 2:00 PM.
+
+905
+00:42:34,230 --> 00:42:37,980
+But no clock is perfect, and
+each clock has an uncertainty.
+
+906
+00:42:37,980 --> 00:42:40,050
+So if you're using our precision clocks
+
+907
+00:42:40,050 --> 00:42:42,210
+in the software layer,
+
+908
+00:42:42,210 --> 00:42:43,410
+when you say, "What time is it?"
+
+909
+00:42:43,410 --> 00:42:44,243
+you need to think about,
+
+910
+00:42:44,243 --> 00:42:48,210
+"Oh, it's 2:00 PM plus or
+minus 20 microseconds."
+
+911
+00:42:48,210 --> 00:42:53,210
+And perfect time must be
+within that uncertainty window.
+
+912
+00:42:53,640 --> 00:42:57,365
+And you have to factor
+in a margin of error
+
+913
+00:42:57,365 --> 00:42:59,823
+in your software application.
+
+914
+00:43:00,810 --> 00:43:03,420
+I'm gonna go a little deeper into why,
+
+915
+00:43:03,420 --> 00:43:06,210
+and then Julien will
+show how we simplify that
+
+916
+00:43:06,210 --> 00:43:07,043
+so that you could do it
+
+917
+00:43:07,043 --> 00:43:09,630
+without needing to
+understand these details.
+
+918
+00:43:09,630 --> 00:43:10,800
+But I think it's important
+
+919
+00:43:10,800 --> 00:43:13,740
+to share these really deep details.
+
+920
+00:43:13,740 --> 00:43:17,190
+Here's a simplified
+example of a bank account.
+
+921
+00:43:17,190 --> 00:43:19,680
+Let's say you're starting
+with a balance of zero,
+
+922
+00:43:19,680 --> 00:43:22,530
+and there's two places where
+there are transactions.
+
+923
+00:43:22,530 --> 00:43:26,340
+Maybe a deposit of $10
+at the bank on node two,
+
+924
+00:43:26,340 --> 00:43:30,090
+that could be a direct
+deposit, electronically,
+
+925
+00:43:30,090 --> 00:43:31,353
+and then a withdrawal.
+
+926
+00:43:32,580 --> 00:43:34,530
+Looking at those confidence intervals,
+
+927
+00:43:34,530 --> 00:43:37,440
+you know, that event
+one, that first deposit,
+
+928
+00:43:37,440 --> 00:43:41,223
+occurred before the other
+two with absolute certainty,
+
+929
+00:43:42,120 --> 00:43:45,180
+but processing the other
+two is really important.
+
+930
+00:43:45,180 --> 00:43:48,180
+If you get the order wrong,
+you might have an overdraft,
+
+931
+00:43:48,180 --> 00:43:50,760
+you might not have enough
+money funds in your account
+
+932
+00:43:50,760 --> 00:43:51,783
+to withdraw.
+
+933
+00:43:53,040 --> 00:43:56,130
+So Julien, knowing this, how do do we,
+
+934
+00:43:56,130 --> 00:43:59,373
+how do customers know
+what these intervals are?
+
+935
+00:44:01,020 --> 00:44:04,170
+- Well, that's actually a
+fairly complex question,
+
+936
+00:44:04,170 --> 00:44:07,953
+and we thought we would
+start by an example, right?
+
+937
+00:44:08,820 --> 00:44:11,160
+We know that no clock is perfect,
+
+938
+00:44:11,160 --> 00:44:13,560
+and so we need to estimate
+the error of this clock
+
+939
+00:44:13,560 --> 00:44:15,813
+to build this window of uncertainty.
+
+940
+00:44:16,950 --> 00:44:18,420
+So let's start with this example here.
+
+941
+00:44:18,420 --> 00:44:20,703
+If you were to start an EC2 instance
+
+942
+00:44:20,703 --> 00:44:22,620
+with a default configuration,
+
+943
+00:44:22,620 --> 00:44:25,350
+you could inspect your
+time synchronization then,
+
+944
+00:44:25,350 --> 00:44:27,570
+and to look at the sources it's using
+
+945
+00:44:27,570 --> 00:44:30,000
+to synchronize your own clock.
+
+946
+00:44:30,000 --> 00:44:32,970
+I'm gonna start from the
+bottom of this output in here.
+
+947
+00:44:32,970 --> 00:44:34,470
+One row at a time.
+
+948
+00:44:34,470 --> 00:44:36,390
+The bottom line represents a source
+
+949
+00:44:36,390 --> 00:44:37,890
+that is over on the internet.
+
+950
+00:44:37,890 --> 00:44:39,420
+NTP servers on the internet,
+
+951
+00:44:39,420 --> 00:44:44,130
+for example, time.aws.com
+will be a source of time here.
+
+952
+00:44:44,130 --> 00:44:46,050
+The second row from the bottom up
+
+953
+00:44:46,050 --> 00:44:49,020
+is accessing the local NTP servers
+
+954
+00:44:49,020 --> 00:44:52,530
+offered by the Nitro System
+that Josh described before.
+
+955
+00:44:52,530 --> 00:44:54,308
+And last, the row at the top
+
+956
+00:44:54,308 --> 00:44:56,130
+represent the PTP hardware clock,
+
+957
+00:44:56,130 --> 00:44:59,163
+which is our Amazon Time
+Sync Service in here
+
+958
+00:44:59,163 --> 00:45:01,623
+that is provided again
+by the Nitro system.
+
+959
+00:45:02,520 --> 00:45:03,900
+What matters in this output?
+
+960
+00:45:03,900 --> 00:45:04,950
+Lots of numbers.
+
+961
+00:45:04,950 --> 00:45:08,070
+What matters in there is the
+column on the right-hand side.
+
+962
+00:45:08,070 --> 00:45:11,820
+That is what the time
+synchronization daemon believe
+
+963
+00:45:11,820 --> 00:45:14,310
+is the size of the window of uncertainty
+
+964
+00:45:14,310 --> 00:45:16,140
+that Josh was describing.
+
+965
+00:45:16,140 --> 00:45:17,490
+Again, from the bottom,
+
+966
+00:45:17,490 --> 00:45:20,490
+if you use an NTP source over
+the internet in this example,
+
+967
+00:45:20,490 --> 00:45:24,960
+395 microsecond is the
+width of that window.
+
+968
+00:45:24,960 --> 00:45:26,700
+If you use the local NTP sources,
+
+969
+00:45:26,700 --> 00:45:28,590
+it shrinks to 90 microsecond,
+
+970
+00:45:28,590 --> 00:45:30,600
+much better, much more accurate.
+
+971
+00:45:30,600 --> 00:45:33,450
+And lastly, if you use
+the PTP hardware clock,
+
+972
+00:45:33,450 --> 00:45:36,240
+the time daemon here
+announces 32 nanosecond
+
+973
+00:45:36,240 --> 00:45:37,680
+as the size of the window,
+
+974
+00:45:37,680 --> 00:45:38,823
+something quite small.
+
+975
+00:45:40,410 --> 00:45:43,200
+But the reality is that there's
+a little bit more to it.
+
+976
+00:45:43,200 --> 00:45:45,450
+And we, Josh, myself,
+
+977
+00:45:45,450 --> 00:45:47,880
+and the team behind the Amazon
+Time Sync Service knows that,
+
+978
+00:45:47,880 --> 00:45:50,610
+we have engineered the
+system from the ground up.
+
+979
+00:45:50,610 --> 00:45:52,410
+It turns out there's a
+little bit more to know
+
+980
+00:45:52,410 --> 00:45:54,750
+behind this number than
+just what is printed out
+
+981
+00:45:54,750 --> 00:45:55,920
+in this output.
+
+982
+00:45:55,920 --> 00:45:58,650
+And I want to give you a bit
+more information and details
+
+983
+00:45:58,650 --> 00:46:00,393
+about what that is.
+
+984
+00:46:02,010 --> 00:46:04,590
+But the reality is that
+getting this information
+
+985
+00:46:04,590 --> 00:46:05,490
+is extremely complex,
+
+986
+00:46:05,490 --> 00:46:07,320
+and we cannot ask any of our customer
+
+987
+00:46:07,320 --> 00:46:10,260
+to know the details beyond
+the engineering and the setup,
+
+988
+00:46:10,260 --> 00:46:12,690
+the infrastructure that
+we have put in place.
+
+989
+00:46:12,690 --> 00:46:14,610
+So to solve that question,
+to answer that question,
+
+990
+00:46:14,610 --> 00:46:18,450
+simply since 2021, we
+have released a software,
+
+991
+00:46:18,450 --> 00:46:21,090
+infrastructure software
+demo called ClockBound.
+
+992
+00:46:21,090 --> 00:46:22,170
+It's open source,
+
+993
+00:46:22,170 --> 00:46:23,003
+and it's available on GitHub,
+
+994
+00:46:23,003 --> 00:46:26,913
+at the URL printed in here on the slide.
+
+995
+00:46:28,020 --> 00:46:30,050
+The key information about this software
+
+996
+00:46:30,050 --> 00:46:32,670
+is that it gives you
+the answers in one call.
+
+997
+00:46:32,670 --> 00:46:33,870
+In a single operation,
+
+998
+00:46:33,870 --> 00:46:36,120
+you get three pieces of information.
+
+999
+00:46:36,120 --> 00:46:37,530
+First you get the current time,
+
+1000
+00:46:37,530 --> 00:46:39,120
+it's Monday, 2:00 pm.
+
+1001
+00:46:39,120 --> 00:46:42,660
+Second you get the size of that window,
+
+1002
+00:46:42,660 --> 00:46:44,910
+plus minus 20 microsecond.
+
+1003
+00:46:44,910 --> 00:46:45,743
+And last,
+
+1004
+00:46:45,743 --> 00:46:47,310
+because it's important to
+every single application,
+
+1005
+00:46:47,310 --> 00:46:50,670
+you get a status about
+the validity of the clock.
+
+1006
+00:46:50,670 --> 00:46:51,930
+Is it initialized?
+
+1007
+00:46:51,930 --> 00:46:52,830
+Is it free-running?
+
+1008
+00:46:52,830 --> 00:46:54,240
+Is it synchronized?
+
+1009
+00:46:54,240 --> 00:46:57,690
+So in one call, you get these
+three pieces of information,
+
+1010
+00:46:57,690 --> 00:47:00,600
+which gives you much richer information
+
+1011
+00:47:00,600 --> 00:47:02,070
+about time and the clock status,
+
+1012
+00:47:02,070 --> 00:47:03,660
+and the quality of times
+
+1013
+00:47:03,660 --> 00:47:06,110
+upon which you can build
+your own business logic.
+
+1014
+00:47:07,020 --> 00:47:08,606
+The ClockBound demo has been supporting
+
+1015
+00:47:08,606 --> 00:47:13,380
+PDP hardware clock sources and
+NTP sources from the get-go.
+
+1016
+00:47:13,380 --> 00:47:15,180
+It scales to the most demanding workload.
+
+1017
+00:47:15,180 --> 00:47:17,610
+You can ask this question
+millions of time per second
+
+1018
+00:47:17,610 --> 00:47:19,380
+to make sure that we can match workload
+
+1019
+00:47:19,380 --> 00:47:22,710
+such as the one that Nikolai
+was describing before.
+
+1020
+00:47:22,710 --> 00:47:24,720
+It is a piece of software
+that is written in Rust,
+
+1021
+00:47:24,720 --> 00:47:26,010
+something we like in Amazon
+
+1022
+00:47:26,010 --> 00:47:28,020
+for performance and memory safety.
+
+1023
+00:47:28,020 --> 00:47:29,940
+We really care about this concept.
+
+1024
+00:47:29,940 --> 00:47:31,680
+It's available in Rust as a client
+
+1025
+00:47:31,680 --> 00:47:34,713
+and also for your C application
+if you want to back-port it.
+
+1026
+00:47:36,450 --> 00:47:38,760
+Now I want to give you
+a bit of an intuition
+
+1027
+00:47:38,760 --> 00:47:40,950
+about the calculation behind the scene.
+
+1028
+00:47:40,950 --> 00:47:43,480
+Again, you do not need
+to know these details,
+
+1029
+00:47:43,480 --> 00:47:46,110
+ClockBound, solve this problem for you.
+
+1030
+00:47:46,110 --> 00:47:47,850
+However, it's nice to
+have a bit of an intuition
+
+1031
+00:47:47,850 --> 00:47:49,300
+about what this is all about.
+
+1032
+00:47:50,340 --> 00:47:53,670
+If I were to summarize what
+the Clock Error Bound is
+
+1033
+00:47:53,670 --> 00:47:54,870
+in one sentence,
+
+1034
+00:47:54,870 --> 00:47:57,240
+this would be the tightest bound
+
+1035
+00:47:57,240 --> 00:47:59,250
+on the worst case clock error
+
+1036
+00:47:59,250 --> 00:48:01,698
+that is due to either oscillator drift
+
+1037
+00:48:01,698 --> 00:48:03,693
+and communication delays.
+
+1038
+00:48:04,680 --> 00:48:06,217
+And this illustration
+one the right-hand side
+
+1039
+00:48:06,217 --> 00:48:10,290
+gives you a sense for
+how errors accumulate.
+
+1040
+00:48:10,290 --> 00:48:11,250
+At the bottom of the stack,
+
+1041
+00:48:11,250 --> 00:48:13,050
+we have the Amazon Time Sync Service,
+
+1042
+00:48:13,050 --> 00:48:15,900
+with all the infrastructure
+that Josh described before.
+
+1043
+00:48:15,900 --> 00:48:17,910
+GNSS antennas, atomic clock.
+
+1044
+00:48:17,910 --> 00:48:21,990
+We get into the nanosecond
+range of accuracy in hardware.
+
+1045
+00:48:21,990 --> 00:48:25,650
+But of course this information
+has to be passed up the stack
+
+1046
+00:48:25,650 --> 00:48:28,740
+through layers of operating
+system and your application.
+
+1047
+00:48:28,740 --> 00:48:32,490
+And this is where some
+little errors do accumulate.
+
+1048
+00:48:32,490 --> 00:48:35,010
+When you target nanosecond
+and microsecond level,
+
+1049
+00:48:35,010 --> 00:48:37,380
+everything does matter.
+
+1050
+00:48:37,380 --> 00:48:38,640
+And so as you move up the stack,
+
+1051
+00:48:38,640 --> 00:48:40,500
+you move from nanosecond accuracy
+
+1052
+00:48:40,500 --> 00:48:42,300
+up to microsecond accuracy,
+
+1053
+00:48:42,300 --> 00:48:45,083
+and this is where chronyd
+shine and give you the answer.
+
+1054
+00:48:47,040 --> 00:48:49,980
+Now again, giving you some
+intuitions about this,
+
+1055
+00:48:49,980 --> 00:48:52,800
+let's imagine that you have
+studied an EC2 instance
+
+1056
+00:48:52,800 --> 00:48:55,200
+that you're running the
+ClockBound demo and the client.
+
+1057
+00:48:55,200 --> 00:48:56,927
+You can inspect it and ask
+
+1058
+00:48:56,927 --> 00:49:00,120
+what is the value and the size
+of this uncertainty window
+
+1059
+00:49:00,120 --> 00:49:01,263
+at any point in time.
+
+1060
+00:49:02,250 --> 00:49:03,720
+So in this example in here,
+
+1061
+00:49:03,720 --> 00:49:04,920
+the white dotted line
+
+1062
+00:49:04,920 --> 00:49:07,680
+represents an hypothetical
+perfect synchronization,
+
+1063
+00:49:07,680 --> 00:49:08,613
+the perfect clock.
+
+1064
+00:49:09,480 --> 00:49:11,340
+And as you can see, over time
+
+1065
+00:49:11,340 --> 00:49:14,220
+the size of the window grows and shrinks.
+
+1066
+00:49:14,220 --> 00:49:15,330
+It grows linearly,
+
+1067
+00:49:15,330 --> 00:49:18,180
+and shrinks when the clock
+is updated on every tick,
+
+1068
+00:49:18,180 --> 00:49:19,770
+and grows again.
+
+1069
+00:49:19,770 --> 00:49:21,090
+At any point in time you can ask
+
+1070
+00:49:21,090 --> 00:49:22,350
+what is the size of the window,
+
+1071
+00:49:22,350 --> 00:49:24,330
+which is represented
+here but this interval
+
+1072
+00:49:24,330 --> 00:49:27,960
+between the earliest and the
+latest borders boundaries
+
+1073
+00:49:27,960 --> 00:49:29,553
+of that uncertainty window.
+
+1074
+00:49:30,991 --> 00:49:32,700
+So with ClockBound,
+
+1075
+00:49:32,700 --> 00:49:34,260
+the result is that all this complexity
+
+1076
+00:49:34,260 --> 00:49:36,137
+is handled for you, right?
+
+1077
+00:49:37,193 --> 00:49:38,610
+And you will get this result
+
+1078
+00:49:38,610 --> 00:49:41,433
+and be able to access it as
+from here in this diagram.
+
+1079
+00:49:42,510 --> 00:49:44,010
+Now with ClockBound,
+
+1080
+00:49:44,010 --> 00:49:47,010
+we now have a tool that
+allows applications
+
+1081
+00:49:47,010 --> 00:49:47,970
+and customer application
+
+1082
+00:49:47,970 --> 00:49:50,880
+to leverage their local
+time with confidence.
+
+1083
+00:49:50,880 --> 00:49:52,890
+And some applications are
+particularly interested
+
+1084
+00:49:52,890 --> 00:49:54,180
+in this new functionality
+
+1085
+00:49:54,180 --> 00:49:56,280
+and Josh is going to tell us all about it.
+
+1086
+00:49:57,990 --> 00:49:58,840
+- Thanks, Julien.
+
+1087
+00:50:00,060 --> 00:50:02,070
+Now's the fun part.
+
+1088
+00:50:02,070 --> 00:50:05,790
+Getting into who is using
+this, and how they're using it.
+
+1089
+00:50:05,790 --> 00:50:10,590
+Again, doing all of the
+difficult communications for you,
+
+1090
+00:50:10,590 --> 00:50:14,880
+we have the primitive of the
+precision time, the hardware,
+
+1091
+00:50:14,880 --> 00:50:15,930
+the hardware timestamps,
+
+1092
+00:50:15,930 --> 00:50:18,537
+and then ClockBound doing that work
+
+1093
+00:50:18,537 --> 00:50:22,710
+to reduce the communications
+that we talked about
+
+1094
+00:50:22,710 --> 00:50:24,983
+in the quote at the start
+of the presentation.
+
+1095
+00:50:26,070 --> 00:50:28,230
+The first example I wanted to share
+
+1096
+00:50:28,230 --> 00:50:29,670
+is yugabyteGB.
+
+1097
+00:50:29,670 --> 00:50:32,070
+Yugabyte is an open-source database
+
+1098
+00:50:32,070 --> 00:50:36,090
+using our open source ClockBound software.
+
+1099
+00:50:36,090 --> 00:50:39,690
+And they have a system called
+a Hybrid Logical Clock.
+
+1100
+00:50:39,690 --> 00:50:43,980
+They do some of the ordering,
+you know, logically,
+
+1101
+00:50:43,980 --> 00:50:45,810
+as a traditional database would
+
+1102
+00:50:45,810 --> 00:50:49,083
+combined with our precision clocks.
+
+1103
+00:50:50,040 --> 00:50:52,890
+And when leveraging the
+Amazon Time Sync Service
+
+1104
+00:50:52,890 --> 00:50:54,390
+in ClockBound,
+
+1105
+00:50:54,390 --> 00:50:56,880
+the first thing that they
+saw was reduced latency
+
+1106
+00:50:56,880 --> 00:50:59,520
+for their customers by three times.
+
+1107
+00:50:59,520 --> 00:51:00,468
+They also saw
+
+1108
+00:51:00,468 --> 00:51:04,260
+increased throughput in
+the transactions doubles.
+
+1109
+00:51:04,260 --> 00:51:06,780
+And then the big number
+
+1110
+00:51:06,780 --> 00:51:10,080
+I wanna share and focus on is incredible,
+
+1111
+00:51:10,080 --> 00:51:13,980
+a thousand times fewer retries.
+
+1112
+00:51:13,980 --> 00:51:15,480
+A retry would typically occur
+
+1113
+00:51:15,480 --> 00:51:17,340
+when you have two transactions,
+
+1114
+00:51:17,340 --> 00:51:20,370
+let's say a read and a
+write at the same time,
+
+1115
+00:51:20,370 --> 00:51:22,290
+and there's a conflict.
+
+1116
+00:51:22,290 --> 00:51:25,200
+And these retries, it's
+additional communication,
+
+1117
+00:51:25,200 --> 00:51:28,290
+it's load on on their
+network communications,
+
+1118
+00:51:28,290 --> 00:51:31,740
+it's load on their servers
+that no longer exists.
+
+1119
+00:51:31,740 --> 00:51:35,070
+The result is a better experience
+
+1120
+00:51:35,070 --> 00:51:37,650
+for their customers in consistency,
+
+1121
+00:51:37,650 --> 00:51:38,910
+you know, isolation,
+
+1122
+00:51:38,910 --> 00:51:43,890
+but also just end user
+experience in their database.
+
+1123
+00:51:43,890 --> 00:51:46,871
+Have a QR code there of a blog
+
+1124
+00:51:46,871 --> 00:51:51,660
+I co-wrote with Karthik,
+co-founder and co-CEO of yugabyte,
+
+1125
+00:51:51,660 --> 00:51:55,200
+if you wanna learn more about
+their Hybrid Logical Clocks,
+
+1126
+00:51:55,200 --> 00:51:57,003
+and see some examples of this.
+
+1127
+00:51:58,920 --> 00:52:03,720
+At AWS we are also using our
+precision clocks at scale.
+
+1128
+00:52:03,720 --> 00:52:06,480
+We're doing that with Aurora DSQL
+
+1129
+00:52:06,480 --> 00:52:09,780
+and with DynamoDB Global Tables.
+
+1130
+00:52:09,780 --> 00:52:12,270
+These are both multi-region
+
+1131
+00:52:12,270 --> 00:52:15,483
+global planetary scale databases.
+
+1132
+00:52:17,010 --> 00:52:20,490
+The reason why it's shown
+in this diagram here.
+
+1133
+00:52:20,490 --> 00:52:24,180
+So these are network
+latencies in milliseconds
+
+1134
+00:52:24,180 --> 00:52:26,430
+across three regions in the US.
+
+1135
+00:52:26,430 --> 00:52:30,900
+So if you look at us-west-2 to us-east-1,
+
+1136
+00:52:30,900 --> 00:52:35,190
+you're gonna have a latency
+of around 70 milliseconds.
+
+1137
+00:52:35,190 --> 00:52:37,260
+And again, we're talking about clocks
+
+1138
+00:52:37,260 --> 00:52:41,040
+in microseconds in nanosecond range.
+
+1139
+00:52:41,040 --> 00:52:43,680
+So using our precision clocks,
+
+1140
+00:52:43,680 --> 00:52:47,580
+you know faster than sending
+a packet over the network,
+
+1141
+00:52:47,580 --> 00:52:49,653
+the order of your transactions.
+
+1142
+00:52:52,170 --> 00:52:55,140
+And this is what it looks
+like with Aurora DSQL.
+
+1143
+00:52:55,140 --> 00:52:56,700
+This is the same example,
+
+1144
+00:52:56,700 --> 00:52:59,010
+the same diagram I showed you earlier
+
+1145
+00:52:59,010 --> 00:53:00,570
+with the bank accounts,
+
+1146
+00:53:00,570 --> 00:53:03,840
+getting a little deeper
+and more complicated.
+
+1147
+00:53:03,840 --> 00:53:06,330
+And this time we're looking at two nodes
+
+1148
+00:53:06,330 --> 00:53:09,630
+from two different
+regions for Aurora DSQL.
+
+1149
+00:53:09,630 --> 00:53:10,470
+And getting this right
+
+1150
+00:53:10,470 --> 00:53:14,520
+is critical for consistency in isolation
+
+1151
+00:53:14,520 --> 00:53:16,830
+in a multi-region database.
+
+1152
+00:53:16,830 --> 00:53:19,830
+Using ClockBound's uncertainty window,
+
+1153
+00:53:19,830 --> 00:53:22,710
+you have event one with
+a T start and T commit
+
+1154
+00:53:22,710 --> 00:53:25,830
+which is guaranteed to be in the past,
+
+1155
+00:53:25,830 --> 00:53:28,593
+compared to event two or event three.
+
+1156
+00:53:29,850 --> 00:53:32,010
+Now, event two and three, as you can see,
+
+1157
+00:53:32,010 --> 00:53:33,810
+have some overlap,
+
+1158
+00:53:33,810 --> 00:53:36,303
+and they need to be processed carefully.
+
+1159
+00:53:37,410 --> 00:53:41,190
+One thing you can do is delay an event.
+
+1160
+00:53:41,190 --> 00:53:44,042
+So delay the T start of event three,
+
+1161
+00:53:44,042 --> 00:53:45,300
+so there's no retry.
+
+1162
+00:53:45,300 --> 00:53:48,780
+If let's say that was a read,
+and event two was a write.
+
+1163
+00:53:48,780 --> 00:53:53,070
+But again, it depends on your
+database or system design,
+
+1164
+00:53:53,070 --> 00:53:55,860
+the type of events that are occurring,
+
+1165
+00:53:55,860 --> 00:53:58,293
+and what you want for your customers.
+
+1166
+00:54:00,090 --> 00:54:01,890
+But this is not a database talk,
+
+1167
+00:54:01,890 --> 00:54:03,990
+I'm not gonna go further into that.
+
+1168
+00:54:03,990 --> 00:54:05,310
+It could take hours.
+
+1169
+00:54:05,310 --> 00:54:08,760
+Here are three sessions going
+deep into the architecture
+
+1170
+00:54:08,760 --> 00:54:11,823
+of Aurora DSQL and Aurora DynamoDB.
+
+1171
+00:54:13,440 --> 00:54:14,790
+These are all later this week.
+
+1172
+00:54:14,790 --> 00:54:17,400
+And for people listening
+in on the recording,
+
+1173
+00:54:17,400 --> 00:54:19,650
+these are also all recorded sessions
+
+1174
+00:54:19,650 --> 00:54:21,753
+that you can find online.
+
+1175
+00:54:24,630 --> 00:54:25,590
+Now, we've covered a lot.
+
+1176
+00:54:25,590 --> 00:54:29,010
+We've gone very deep
+into the science of time.
+
+1177
+00:54:29,010 --> 00:54:32,970
+We have Nasdaq's example on
+leveraging hardware timestamps
+
+1178
+00:54:32,970 --> 00:54:36,630
+for in-region financial exchanges.
+
+1179
+00:54:36,630 --> 00:54:38,940
+We've talked about thinking,
+
+1180
+00:54:38,940 --> 00:54:41,910
+and changing the way
+that you think about time
+
+1181
+00:54:41,910 --> 00:54:45,300
+in measuring not just a specific time,
+
+1182
+00:54:45,300 --> 00:54:47,970
+but in interval and confidence.
+
+1183
+00:54:47,970 --> 00:54:51,960
+AWS partners and AWS
+databases leveraging this.
+
+1184
+00:54:51,960 --> 00:54:55,680
+But I promised you at the
+beginning of this presentation
+
+1185
+00:54:55,680 --> 00:54:57,600
+that while it's good to understand this,
+
+1186
+00:54:57,600 --> 00:55:01,800
+you don't need to go that
+deep to put this to you
+
+1187
+00:55:01,800 --> 00:55:03,363
+to work in your systems.
+
+1188
+00:55:06,030 --> 00:55:10,800
+So we have one more thing to
+share with everyone today,
+
+1189
+00:55:10,800 --> 00:55:12,907
+because customers ask us,
+
+1190
+00:55:12,907 --> 00:55:15,600
+"These primitives are
+incredible and very powerful,
+
+1191
+00:55:15,600 --> 00:55:17,640
+but how do we make it easier to use?
+
+1192
+00:55:17,640 --> 00:55:20,640
+How do we build our software in Systems
+
+1193
+00:55:20,640 --> 00:55:24,120
+and have this this work done for us?"
+
+1194
+00:55:24,120 --> 00:55:26,220
+Julien, do we have an answer?
+
+1195
+00:55:26,220 --> 00:55:27,053
+- Well that's the part
+
+1196
+00:55:27,053 --> 00:55:30,120
+where I'm probably going
+to get a bit more excited.
+
+1197
+00:55:30,120 --> 00:55:31,530
+So as we described,
+
+1198
+00:55:31,530 --> 00:55:33,240
+we have built a very accurate
+
+1199
+00:55:33,240 --> 00:55:36,480
+time synchronization service at Amazon.
+
+1200
+00:55:36,480 --> 00:55:38,490
+We support many workload.
+
+1201
+00:55:38,490 --> 00:55:39,600
+We support innovation.
+
+1202
+00:55:39,600 --> 00:55:41,220
+We have example from Nasdaq,
+
+1203
+00:55:41,220 --> 00:55:43,803
+innovation in the new
+generation of databases.
+
+1204
+00:55:44,670 --> 00:55:45,503
+The point of this
+
+1205
+00:55:45,503 --> 00:55:48,150
+is that our customers
+put their trust in us.
+
+1206
+00:55:48,150 --> 00:55:50,490
+And so we have to continue
+to keep that trust,
+
+1207
+00:55:50,490 --> 00:55:54,633
+and continue to improve the
+customer experience over time.
+
+1208
+00:55:55,710 --> 00:55:57,600
+And that's why I'm very happy to announce
+
+1209
+00:55:57,600 --> 00:56:01,085
+that we have just raised
+a new AWS time daemon.
+
+1210
+00:56:01,085 --> 00:56:04,170
+The thing is, it's under
+the same software stack,
+
+1211
+00:56:04,170 --> 00:56:05,550
+the same ClockBound software
+
+1212
+00:56:05,550 --> 00:56:06,720
+that we have at least four years.
+
+1213
+00:56:06,720 --> 00:56:08,340
+And it's still accessible on GitHub,
+
+1214
+00:56:08,340 --> 00:56:11,433
+but this URL, the QR code
+will take you there as well.
+
+1215
+00:56:12,300 --> 00:56:14,340
+There are a lot of improvements
+we have made in there.
+
+1216
+00:56:14,340 --> 00:56:15,660
+A lot of work has been done in it
+
+1217
+00:56:15,660 --> 00:56:18,240
+to continue to improve and
+deliver higher accuracy
+
+1218
+00:56:18,240 --> 00:56:21,750
+and higher reliability for our customers.
+
+1219
+00:56:21,750 --> 00:56:23,730
+One of the key change, and key innovation
+
+1220
+00:56:23,730 --> 00:56:27,420
+is that ClockBound now
+includes this time daemon,
+
+1221
+00:56:27,420 --> 00:56:30,600
+which is a standalone
+time client and daemon.
+
+1222
+00:56:30,600 --> 00:56:33,300
+It does not rely on
+third-party software anymore.
+
+1223
+00:56:33,300 --> 00:56:36,150
+It will synchronize your
+operating system clock for you,
+
+1224
+00:56:36,150 --> 00:56:38,760
+as well as continue to
+give you this information
+
+1225
+00:56:38,760 --> 00:56:41,310
+for your application to
+know what time it is,
+
+1226
+00:56:41,310 --> 00:56:43,500
+the size of the window of uncertainty,
+
+1227
+00:56:43,500 --> 00:56:45,650
+and the status of the
+clock, all in one go.
+
+1228
+00:56:47,190 --> 00:56:49,050
+It's important for many reason.
+
+1229
+00:56:49,050 --> 00:56:51,330
+Nikolai mentioned regulatory reason there,
+
+1230
+00:56:51,330 --> 00:56:53,937
+but also just simple observability
+
+1231
+00:56:53,937 --> 00:56:55,770
+for your distributed system.
+
+1232
+00:56:55,770 --> 00:56:56,910
+We have built-in metrics.
+
+1233
+00:56:56,910 --> 00:56:58,650
+Observability is a first-class citizen,
+
+1234
+00:56:58,650 --> 00:57:00,903
+and must be absolutely
+a first-class citizen.
+
+1235
+00:57:01,950 --> 00:57:05,430
+Again is the same build on
+same software stack in Rust
+
+1236
+00:57:05,430 --> 00:57:08,220
+that is provide memory
+safety and high performance
+
+1237
+00:57:08,220 --> 00:57:10,440
+and performance is achieved
+through different means.
+
+1238
+00:57:10,440 --> 00:57:12,300
+Here we have a shared memory segment
+
+1239
+00:57:12,300 --> 00:57:14,280
+that allows for interprocess communication
+
+1240
+00:57:14,280 --> 00:57:16,800
+that allows us to provide this information
+
+1241
+00:57:16,800 --> 00:57:18,603
+at a very high rate.
+
+1242
+00:57:20,220 --> 00:57:22,410
+So this is very exciting,
+and there are two more things
+
+1243
+00:57:22,410 --> 00:57:23,340
+that I want to share with you
+
+1244
+00:57:23,340 --> 00:57:26,010
+before going into more details
+in the following slide.
+
+1245
+00:57:26,010 --> 00:57:28,650
+The first one is that we
+have redesigned the system
+
+1246
+00:57:28,650 --> 00:57:30,630
+to be a cloud-first design.
+
+1247
+00:57:30,630 --> 00:57:33,480
+Time synchronization software
+has existed for decades
+
+1248
+00:57:33,480 --> 00:57:35,400
+before the cloud existed.
+
+1249
+00:57:35,400 --> 00:57:38,880
+Here we make a massive change in paradigm.
+
+1250
+00:57:38,880 --> 00:57:41,643
+Most of the historical system
+use a feedback-loop system
+
+1251
+00:57:41,643 --> 00:57:45,090
+that is not well suited
+to cloud application.
+
+1252
+00:57:45,090 --> 00:57:46,230
+We've changed that around.
+
+1253
+00:57:46,230 --> 00:57:47,400
+We now have a system
+
+1254
+00:57:47,400 --> 00:57:49,770
+that feed forward
+information in the system
+
+1255
+00:57:49,770 --> 00:57:51,690
+which is much more friendly
+to cloud application.
+
+1256
+00:57:51,690 --> 00:57:54,090
+And we'll talk a bit more
+about this in a second.
+
+1257
+00:57:54,090 --> 00:57:56,070
+And last, if you're like us,
+
+1258
+00:57:56,070 --> 00:57:57,660
+you are a time nerd in the room,
+
+1259
+00:57:57,660 --> 00:57:59,129
+or watching this online,
+
+1260
+00:57:59,129 --> 00:58:02,340
+I just want you to know
+that the new software stack
+
+1261
+00:58:02,340 --> 00:58:06,540
+ships with a simulator that
+allows you to test the software,
+
+1262
+00:58:06,540 --> 00:58:08,070
+see it for yourself,
+
+1263
+00:58:08,070 --> 00:58:09,330
+find what you like in it,
+
+1264
+00:58:09,330 --> 00:58:11,040
+potentially report some issues,
+
+1265
+00:58:11,040 --> 00:58:12,300
+or things you would like to see improved.
+
+1266
+00:58:12,300 --> 00:58:15,120
+And we will welcome your
+feedback of course as you try it.
+
+1267
+00:58:15,120 --> 00:58:16,590
+So let me go back quickly
+
+1268
+00:58:16,590 --> 00:58:19,650
+into the last components
+of the talk in here.
+
+1269
+00:58:19,650 --> 00:58:21,900
+First we talk about
+cloud-native synchronization.
+
+1270
+00:58:21,900 --> 00:58:25,620
+So you know that at AWS
+availability is a top priority
+
+1271
+00:58:25,620 --> 00:58:28,050
+through all the layers of the utilization.
+
+1272
+00:58:28,050 --> 00:58:29,520
+We made some innovation in here,
+
+1273
+00:58:29,520 --> 00:58:32,220
+and contributed a new
+feature to the Linux kernel
+
+1274
+00:58:32,220 --> 00:58:35,430
+called VMClock, for virtual machine clock.
+
+1275
+00:58:35,430 --> 00:58:37,980
+And this feature, combined
+with our new ClockBound,
+
+1276
+00:58:37,980 --> 00:58:39,210
+when it release,
+
+1277
+00:58:39,210 --> 00:58:41,070
+allows the direct transfer of time
+
+1278
+00:58:41,070 --> 00:58:44,536
+from the Nitro Clock into your instance.
+
+1279
+00:58:44,536 --> 00:58:47,730
+It's an improvement over
+any kind of maintenance
+
+1280
+00:58:47,730 --> 00:58:48,780
+event to the point
+
+1281
+00:58:48,780 --> 00:58:51,060
+that you now have your
+workload rolling smoothly
+
+1282
+00:58:51,060 --> 00:58:52,143
+at any point in time.
+
+1283
+00:58:53,400 --> 00:58:54,233
+Great.
+
+1284
+00:58:54,233 --> 00:58:55,470
+Let's have a quick look at how this looks,
+
+1285
+00:58:55,470 --> 00:58:57,183
+as well in terms of performance.
+
+1286
+00:58:58,620 --> 00:59:00,360
+Similar to the earlier slides,
+
+1287
+00:59:00,360 --> 00:59:02,490
+top graph in here shows
+the drift of an oscillator
+
+1288
+00:59:02,490 --> 00:59:05,190
+in a banner, like
+thousands of microsecond.
+
+1289
+00:59:05,190 --> 00:59:06,300
+How well are we doing?
+
+1290
+00:59:06,300 --> 00:59:08,160
+What result is the graph below?
+
+1291
+00:59:08,160 --> 00:59:09,000
+Given this input,
+
+1292
+00:59:09,000 --> 00:59:11,250
+we managed to track and
+correct for the drift
+
+1293
+00:59:11,250 --> 00:59:14,040
+to within the band of plus
+or minus one microsecond
+
+1294
+00:59:14,040 --> 00:59:16,260
+over this period of multiple hours.
+
+1295
+00:59:16,260 --> 00:59:18,510
+This is how good the
+system is working today.
+
+1296
+00:59:19,650 --> 00:59:21,207
+So this is for the internal of the system,
+
+1297
+00:59:21,207 --> 00:59:22,890
+but we mentioned that what matters
+
+1298
+00:59:22,890 --> 00:59:27,330
+to the customer application
+is the window of uncertainty.
+
+1299
+00:59:27,330 --> 00:59:28,920
+So here we have a little application,
+
+1300
+00:59:28,920 --> 00:59:30,420
+a little demonstration,
+
+1301
+00:59:30,420 --> 00:59:31,590
+where we can see in real time
+
+1302
+00:59:31,590 --> 00:59:34,890
+that we are constantly
+querying the ClockBound daemon
+
+1303
+00:59:34,890 --> 00:59:39,090
+to plot the size of the
+window of uncertainty.
+
+1304
+00:59:39,090 --> 00:59:40,200
+As you can see in the previous graph,
+
+1305
+00:59:40,200 --> 00:59:41,670
+it has this saw-tooth behavior.
+
+1306
+00:59:41,670 --> 00:59:44,430
+It grows and shrinks as
+the clock gets updated.
+
+1307
+00:59:44,430 --> 00:59:45,600
+But what matters in here
+
+1308
+00:59:45,600 --> 00:59:47,610
+is that the result are in the band
+
+1309
+00:59:47,610 --> 00:59:51,360
+of somewhere between
+20 and 26 microsecond.
+
+1310
+00:59:51,360 --> 00:59:53,970
+That's the size of the window
+of certainty you can achieve
+
+1311
+00:59:53,970 --> 00:59:57,033
+inside your application by
+using this new application.
+
+1312
+00:59:58,020 --> 00:59:59,397
+And now I see that we're almost at time,
+
+1313
+00:59:59,397 --> 01:00:02,100
+and it's now a good opportunity
+for Josh to conclude
+
+1314
+01:00:02,100 --> 01:00:03,000
+and take us there.
+
+1315
+01:00:04,710 --> 01:00:05,703
+- Thanks, everyone.
+
+1316
+01:00:06,690 --> 01:00:08,460
+Now it's time for you to build
+
+1317
+01:00:08,460 --> 01:00:11,460
+and take advantage of the
+Amazon Time Sync Service
+
+1318
+01:00:11,460 --> 01:00:14,160
+and the precision time
+capabilities that we have.
+
+1319
+01:00:14,160 --> 01:00:17,730
+Again, we've built this
+into Amazon EC2 instances.
+
+1320
+01:00:17,730 --> 01:00:21,360
+You could use AWS Databases, AWS Services
+
+1321
+01:00:21,360 --> 01:00:23,160
+built to take advantage.
+
+1322
+01:00:23,160 --> 01:00:26,520
+Using Nasdaq, AWS partners like yugabyte,
+
+1323
+01:00:26,520 --> 01:00:28,860
+who are leveraging time for you.
+
+1324
+01:00:28,860 --> 01:00:33,510
+Again, Amazon Time Sync and
+ClockBound do the work for you,
+
+1325
+01:00:33,510 --> 01:00:37,380
+and I can't wait to see
+what you build using this.
+
+1326
+01:00:37,380 --> 01:00:38,960
+Thank you.
+
+1327
+01:00:38,960 --> 01:00:42,210
+(audience applauding)
+

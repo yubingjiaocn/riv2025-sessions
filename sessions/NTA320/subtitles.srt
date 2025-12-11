@@ -1,0 +1,4541 @@
+1
+00:00:01,260 --> 00:00:02,430
+- My name is Siddhesh,
+
+2
+00:00:02,430 --> 00:00:05,070
+and I'm thrilled to have all
+
+3
+00:00:05,070 --> 00:00:06,070
+of you here with me.
+
+4
+00:00:07,500 --> 00:00:09,660
+Before we start on with the session,
+
+5
+00:00:09,660 --> 00:00:11,880
+a quick show of hands.
+
+6
+00:00:11,880 --> 00:00:13,920
+So how many of you have
+
+7
+00:00:13,920 --> 00:00:16,440
+any live production applications
+
+8
+00:00:16,440 --> 00:00:17,703
+running right now?
+
+9
+00:00:20,430 --> 00:00:22,800
+Almost everyone, right?
+
+10
+00:00:22,800 --> 00:00:24,900
+And you're here at re:Invent,
+
+11
+00:00:24,900 --> 00:00:27,120
+enjoying the sessions, learning.
+
+12
+00:00:27,120 --> 00:00:30,330
+How many of you know what you would do
+
+13
+00:00:30,330 --> 00:00:31,863
+if the application goes down?
+
+14
+00:00:33,660 --> 00:00:35,220
+Oh, fantastic.
+
+15
+00:00:35,220 --> 00:00:36,810
+So you're actually on the step one,
+
+16
+00:00:36,810 --> 00:00:39,480
+what you would do if the
+application goes down.
+
+17
+00:00:39,480 --> 00:00:41,580
+How many of you have tested
+
+18
+00:00:41,580 --> 00:00:43,923
+that workflow in last 90 days?
+
+19
+00:00:45,090 --> 00:00:46,623
+Fantastic. Great.
+
+20
+00:00:47,820 --> 00:00:50,010
+So, today, I'm going to talk
+
+21
+00:00:50,010 --> 00:00:53,820
+about a very important aspect
+
+22
+00:00:53,820 --> 00:00:55,410
+of any business requirement,
+
+23
+00:00:55,410 --> 00:00:56,910
+which is DR,
+
+24
+00:00:56,910 --> 00:00:59,280
+which is business resiliency, right?
+
+25
+00:00:59,280 --> 00:01:01,980
+And with me, we also have Zydus,
+
+26
+00:01:01,980 --> 00:01:04,380
+a global pharmaceutical giant.
+
+27
+00:01:04,380 --> 00:01:05,880
+We will walk through their journey
+
+28
+00:01:05,880 --> 00:01:08,790
+of how they implemented disaster recovery
+
+29
+00:01:08,790 --> 00:01:12,720
+for a very complicated and
+complex suit of applications
+
+30
+00:01:12,720 --> 00:01:15,933
+using AWS Disaster Recovery system.
+
+31
+00:01:17,400 --> 00:01:20,340
+But let me start with first talking to you
+
+32
+00:01:20,340 --> 00:01:22,860
+about the agenda for today.
+
+33
+00:01:22,860 --> 00:01:25,350
+So, for the longest time,
+
+34
+00:01:25,350 --> 00:01:27,420
+backup and disaster recovery
+
+35
+00:01:27,420 --> 00:01:29,490
+was done using tapes.
+
+36
+00:01:29,490 --> 00:01:30,630
+You have your data,
+
+37
+00:01:30,630 --> 00:01:32,130
+copy that to the tapes,
+
+38
+00:01:32,130 --> 00:01:34,830
+save the tapes at a secure location.
+
+39
+00:01:34,830 --> 00:01:36,630
+Anyone does that now?
+
+40
+00:01:36,630 --> 00:01:37,830
+I hope not.
+
+41
+00:01:37,830 --> 00:01:38,760
+Okay, great.
+
+42
+00:01:38,760 --> 00:01:39,593
+In today's time,
+
+43
+00:01:39,593 --> 00:01:43,410
+we have multiple architectural patterns
+
+44
+00:01:43,410 --> 00:01:45,120
+and solutions to give you
+
+45
+00:01:45,120 --> 00:01:47,730
+much faster DR.
+
+46
+00:01:47,730 --> 00:01:49,710
+That, too, at a much lower cost.
+
+47
+00:01:49,710 --> 00:01:52,770
+Of course, backup and
+archival still exist,
+
+48
+00:01:52,770 --> 00:01:55,740
+but you also have a active-active setup,
+
+49
+00:01:55,740 --> 00:01:58,860
+which is much faster, near real time.
+
+50
+00:01:58,860 --> 00:02:00,690
+But that also comes at a cost.
+
+51
+00:02:00,690 --> 00:02:03,150
+You also have multi-AZ deployments,
+
+52
+00:02:03,150 --> 00:02:04,530
+which cloud offers you.
+
+53
+00:02:04,530 --> 00:02:06,630
+Again, there's a different cost angle
+
+54
+00:02:06,630 --> 00:02:07,890
+to that, right?
+
+55
+00:02:07,890 --> 00:02:11,100
+So DRS gives you the benefit
+
+56
+00:02:11,100 --> 00:02:14,770
+of a much more efficient disaster recovery
+
+57
+00:02:16,357 --> 00:02:17,550
+at a lower cost, right?
+
+58
+00:02:17,550 --> 00:02:20,550
+So you get the benefit of near,
+
+59
+00:02:20,550 --> 00:02:24,750
+in sub-seconds RPO,
+and few minutes of RTO,
+
+60
+00:02:24,750 --> 00:02:27,000
+without taking the entire cost
+
+61
+00:02:27,000 --> 00:02:29,040
+of active-active setup.
+
+62
+00:02:29,040 --> 00:02:31,320
+So, today, we have Mr. Ravi,
+
+63
+00:02:31,320 --> 00:02:34,740
+chief financial officer for Zydus,
+
+64
+00:02:34,740 --> 00:02:35,730
+who will talk to us
+
+65
+00:02:35,730 --> 00:02:37,860
+about what their applications are,
+
+66
+00:02:37,860 --> 00:02:41,070
+give us a brief overview of the company.
+
+67
+00:02:41,070 --> 00:02:44,640
+And then I'll talk about how DRS
+
+68
+00:02:44,640 --> 00:02:46,500
+helps you solve the DR problem.
+
+69
+00:02:46,500 --> 00:02:48,990
+How do you set up a lifecycle
+
+70
+00:02:48,990 --> 00:02:51,840
+of disaster recovery using DRS solution?
+
+71
+00:02:51,840 --> 00:02:53,520
+And, finally, we have Ashish,
+
+72
+00:02:53,520 --> 00:02:55,140
+our enterprise architect,
+
+73
+00:02:55,140 --> 00:02:56,820
+who will give a short demo
+
+74
+00:02:56,820 --> 00:02:58,860
+of how the service actually works
+
+75
+00:02:58,860 --> 00:03:00,660
+and talk about how we architected
+
+76
+00:03:00,660 --> 00:03:02,430
+the solution for Zydus,
+
+77
+00:03:02,430 --> 00:03:05,400
+not only from the backup perspective,
+
+78
+00:03:05,400 --> 00:03:08,070
+but how we architected the network.
+
+79
+00:03:08,070 --> 00:03:10,830
+How did we achieve security and resiliency
+
+80
+00:03:10,830 --> 00:03:14,250
+for their environment using AWS DRS?
+
+81
+00:03:14,250 --> 00:03:16,050
+Well, with this, I would like
+
+82
+00:03:16,050 --> 00:03:18,030
+to invite Mr. Ravi
+
+83
+00:03:18,030 --> 00:03:20,730
+to talk about Zydus and give us a overview
+
+84
+00:03:20,730 --> 00:03:21,980
+of the problem statement.
+
+85
+00:03:25,110 --> 00:03:26,340
+- Hello.
+
+86
+00:03:26,340 --> 00:03:27,240
+Good afternoon, everyone.
+
+87
+00:03:27,240 --> 00:03:30,120
+My name is Ravi Yadavar, as Siddhesh said.
+
+88
+00:03:30,120 --> 00:03:32,190
+Thank you, Siddhesh, for the introduction.
+
+89
+00:03:32,190 --> 00:03:33,540
+I'm the chief financial officer
+
+90
+00:03:33,540 --> 00:03:36,300
+for Zydus in US operations.
+
+91
+00:03:36,300 --> 00:03:37,800
+So, first two slides,
+
+92
+00:03:37,800 --> 00:03:40,830
+I'm going to talk about
+what Zydus is about.
+
+93
+00:03:40,830 --> 00:03:43,770
+And one more slide on the challenges,
+
+94
+00:03:43,770 --> 00:03:45,630
+what we faced with the
+current DR solution,
+
+95
+00:03:45,630 --> 00:03:46,890
+what we have.
+
+96
+00:03:46,890 --> 00:03:49,620
+And the last slide, before
+I hand it over to Siddhesh,
+
+97
+00:03:49,620 --> 00:03:50,700
+like what is the scope
+
+98
+00:03:50,700 --> 00:03:53,040
+or what is the expectation from AWS
+
+99
+00:03:53,040 --> 00:03:56,640
+to help us with the DR solution?
+
+100
+00:03:56,640 --> 00:03:59,250
+With this, if you can see on the screen,
+
+101
+00:03:59,250 --> 00:04:00,900
+like, Zydus is one
+
+102
+00:04:00,900 --> 00:04:03,480
+of the global pharmaceutical company.
+
+103
+00:04:03,480 --> 00:04:06,720
+Founded in 1952,
+headquartered in Ahmedabad,
+
+104
+00:04:06,720 --> 00:04:07,860
+which is like in India.
+
+105
+00:04:07,860 --> 00:04:09,990
+It's India-based pharmaceutical company.
+
+106
+00:04:09,990 --> 00:04:10,980
+Having grown into more
+
+107
+00:04:10,980 --> 00:04:13,680
+than 29,000 employees worldwide.
+
+108
+00:04:13,680 --> 00:04:15,480
+And we also have business operations
+
+109
+00:04:15,480 --> 00:04:16,470
+in multiple countries.
+
+110
+00:04:16,470 --> 00:04:18,060
+Like, India is the main.
+
+111
+00:04:18,060 --> 00:04:20,760
+The second largest is US.
+
+112
+00:04:20,760 --> 00:04:22,740
+We also have a business in Europe.
+
+113
+00:04:22,740 --> 00:04:24,290
+Like, many countries in Europe.
+
+114
+00:04:25,170 --> 00:04:27,570
+Brazil and Mexico.
+
+115
+00:04:27,570 --> 00:04:30,690
+And many other like emerging markets.
+
+116
+00:04:30,690 --> 00:04:32,940
+If you see the screen,
+
+117
+00:04:32,940 --> 00:04:34,890
+like, we have business offices
+
+118
+00:04:34,890 --> 00:04:37,230
+in multiple locations in the world.
+
+119
+00:04:37,230 --> 00:04:40,950
+And, also, we have 41
+manufacturing plants.
+
+120
+00:04:40,950 --> 00:04:42,540
+Out of 41 manufacturing plants,
+
+121
+00:04:42,540 --> 00:04:44,680
+we have like 16
+
+122
+00:04:45,990 --> 00:04:47,580
+US FDA-approved facility,
+
+123
+00:04:47,580 --> 00:04:49,800
+nine formulation, five PIs,
+
+124
+00:04:49,800 --> 00:04:52,140
+one biologics, and one animal health,
+
+125
+00:04:52,140 --> 00:04:53,880
+all catering to the US market.
+
+126
+00:04:53,880 --> 00:04:56,668
+And, also, we have eight R and D centers
+
+127
+00:04:56,668 --> 00:04:57,501
+(indistinct) this year.
+
+128
+00:04:57,501 --> 00:04:59,790
+The group aspires to transform their lives
+
+129
+00:04:59,790 --> 00:05:01,410
+through path-breaking discoveries.
+
+130
+00:05:01,410 --> 00:05:04,200
+So not only do we have
+(indistinct) company in the US,
+
+131
+00:05:04,200 --> 00:05:06,750
+but globally, we would like to go
+
+132
+00:05:06,750 --> 00:05:08,790
+into like that discovery-based,
+
+133
+00:05:08,790 --> 00:05:10,110
+RNC-based company.
+
+134
+00:05:10,110 --> 00:05:12,540
+That's the way we want to like grow.
+
+135
+00:05:12,540 --> 00:05:15,540
+We are, as I said, 29,000 employees.
+
+136
+00:05:15,540 --> 00:05:16,740
+So I will talk a little bit
+
+137
+00:05:16,740 --> 00:05:20,010
+about the R and D initiatives, innovation,
+
+138
+00:05:20,010 --> 00:05:22,170
+what we have taken, in the next slide.
+
+139
+00:05:22,170 --> 00:05:23,340
+So if you look at this slide,
+
+140
+00:05:23,340 --> 00:05:24,780
+like we are talking about,
+
+141
+00:05:24,780 --> 00:05:26,580
+we have almost,
+
+142
+00:05:26,580 --> 00:05:30,450
+more than 1,500 research
+scientists working
+
+143
+00:05:30,450 --> 00:05:33,630
+across 19 sites, developing on many
+
+144
+00:05:33,630 --> 00:05:36,513
+like NCEs, biosimilars,
+
+145
+00:05:37,620 --> 00:05:41,340
+vaccines, and many niche technologies,
+
+146
+00:05:41,340 --> 00:05:43,410
+developing into many new products
+
+147
+00:05:43,410 --> 00:05:45,210
+for across the globe.
+
+148
+00:05:45,210 --> 00:05:47,460
+So we can see that we are more focusing
+
+149
+00:05:47,460 --> 00:05:50,430
+on like NCEs, peptides,
+monoclonal antibodies,
+
+150
+00:05:50,430 --> 00:05:54,000
+formulation development,
+and the nutraceuticals.
+
+151
+00:05:54,000 --> 00:05:56,950
+And we recently like
+published or announced
+
+152
+00:05:58,803 --> 00:06:01,023
+our positive results of,
+
+153
+00:06:02,790 --> 00:06:06,510
+positive results on like
+our pivotal phase IIb,
+
+154
+00:06:06,510 --> 00:06:08,340
+phase II and III clinical trials
+
+155
+00:06:08,340 --> 00:06:10,830
+for Saroglitazar in adult patients
+
+156
+00:06:10,830 --> 00:06:13,050
+in primary, like for PBC treatment
+
+157
+00:06:13,050 --> 00:06:14,400
+for adult patients.
+
+158
+00:06:14,400 --> 00:06:17,820
+And we expect to submit our FDA
+
+159
+00:06:17,820 --> 00:06:18,990
+the beginning of next year.
+
+160
+00:06:18,990 --> 00:06:21,090
+And we expect the product to be launched
+
+161
+00:06:21,090 --> 00:06:23,580
+in beginning of 2027.
+
+162
+00:06:23,580 --> 00:06:25,500
+This will be our first NCE product
+
+163
+00:06:25,500 --> 00:06:27,540
+coming out of our research facility,
+
+164
+00:06:27,540 --> 00:06:29,160
+which is based in India.
+
+165
+00:06:29,160 --> 00:06:30,510
+So we take pride in saying
+
+166
+00:06:30,510 --> 00:06:32,730
+that we'll be the first
+company introducing NCE
+
+167
+00:06:32,730 --> 00:06:33,843
+from our facility.
+
+168
+00:06:34,980 --> 00:06:38,130
+So having said this very high-level brief
+
+169
+00:06:38,130 --> 00:06:39,693
+of what Zydus is about,
+
+170
+00:06:40,620 --> 00:06:42,480
+we'll talk about, quickly,
+
+171
+00:06:42,480 --> 00:06:45,360
+like what is the critical
+challenges Zydus faced
+
+172
+00:06:45,360 --> 00:06:46,800
+and which draw us to seek
+
+173
+00:06:46,800 --> 00:06:49,380
+for a new disaster recovery solution?
+
+174
+00:06:49,380 --> 00:06:51,240
+So we can focus,
+
+175
+00:06:51,240 --> 00:06:54,020
+like we can divide the challenge
+
+176
+00:06:54,020 --> 00:06:57,270
+in what we faced in
+three major like hurdles
+
+177
+00:06:57,270 --> 00:06:59,010
+or challenges, what we faced.
+
+178
+00:06:59,010 --> 00:07:02,520
+The first one is like
+higher RPO and RTO rate.
+
+179
+00:07:02,520 --> 00:07:03,843
+You may know, like RPO,
+
+180
+00:07:03,843 --> 00:07:06,360
+we had RPO of almost,
+
+181
+00:07:06,360 --> 00:07:09,060
+recovery point objective, almost 24 hours,
+
+182
+00:07:09,060 --> 00:07:13,080
+and RTO of like more than 24 to 48 hours.
+
+183
+00:07:13,080 --> 00:07:16,650
+So this high level of RPO/RTO time result
+
+184
+00:07:16,650 --> 00:07:19,230
+into very long recovery time of data
+
+185
+00:07:19,230 --> 00:07:21,750
+in case of any hardware failures
+
+186
+00:07:21,750 --> 00:07:24,000
+or any loss of data
+
+187
+00:07:24,000 --> 00:07:25,110
+or accidental deletion,
+
+188
+00:07:25,110 --> 00:07:26,940
+or maybe any security events,
+
+189
+00:07:26,940 --> 00:07:30,150
+which is not good for any pharma industry.
+
+190
+00:07:30,150 --> 00:07:31,800
+The extended time of getting
+
+191
+00:07:31,800 --> 00:07:33,240
+our shutdown results
+
+192
+00:07:33,240 --> 00:07:35,280
+into like delay in production
+
+193
+00:07:35,280 --> 00:07:38,460
+and regulatory compliance issues.
+
+194
+00:07:38,460 --> 00:07:41,400
+And any loss of data is
+negatively looked at,
+
+195
+00:07:41,400 --> 00:07:43,530
+are view by regulated authorities.
+
+196
+00:07:43,530 --> 00:07:45,810
+And, also, any delay in
+manufacturing activities
+
+197
+00:07:45,810 --> 00:07:48,150
+also result in delaying
+in delivering product
+
+198
+00:07:48,150 --> 00:07:49,860
+to the needy patients.
+
+199
+00:07:49,860 --> 00:07:52,100
+The second hurdle or
+challenge, what we faced,
+
+200
+00:07:52,100 --> 00:07:54,510
+is the cost and operational overhead.
+
+201
+00:07:54,510 --> 00:07:55,800
+As we all know,
+
+202
+00:07:55,800 --> 00:07:58,500
+any investment or
+infrastructure investment,
+
+203
+00:07:58,500 --> 00:08:00,303
+building of any facilities, always,
+
+204
+00:08:01,140 --> 00:08:03,330
+we invest a lot of amount.
+
+205
+00:08:03,330 --> 00:08:05,880
+And, also, we have to spend
+
+206
+00:08:05,880 --> 00:08:07,830
+huge amount of money or amount
+
+207
+00:08:07,830 --> 00:08:08,970
+in running the facility,
+
+208
+00:08:08,970 --> 00:08:11,640
+operational cost and
+operational complexities.
+
+209
+00:08:11,640 --> 00:08:12,810
+And, lastly, we can say
+
+210
+00:08:12,810 --> 00:08:14,130
+the security and the skilled staff.
+
+211
+00:08:14,130 --> 00:08:16,980
+Like, onsite disaster recovery site
+
+212
+00:08:16,980 --> 00:08:20,430
+is always prone to any cyber
+threats, cyber incidents.
+
+213
+00:08:20,430 --> 00:08:22,740
+And, also, we have to hire people,
+
+214
+00:08:22,740 --> 00:08:24,600
+develop skilled people to run
+
+215
+00:08:24,600 --> 00:08:26,220
+the multiple sites,
+
+216
+00:08:26,220 --> 00:08:29,760
+and keep them like trained
+
+217
+00:08:29,760 --> 00:08:31,500
+for like application, hardware center
+
+218
+00:08:31,500 --> 00:08:33,330
+and other plant center locations.
+
+219
+00:08:33,330 --> 00:08:35,700
+So these three major challenges,
+
+220
+00:08:35,700 --> 00:08:38,100
+which forced us or which drove us
+
+221
+00:08:38,100 --> 00:08:40,860
+to seek, go to AWS, and help us
+
+222
+00:08:40,860 --> 00:08:44,460
+with a better disaster recovery solution.
+
+223
+00:08:44,460 --> 00:08:46,080
+So with this, we'll just quickly talk
+
+224
+00:08:46,080 --> 00:08:47,910
+about what it that we wanted.
+
+225
+00:08:47,910 --> 00:08:49,410
+What is the scope of the work?
+
+226
+00:08:49,410 --> 00:08:51,000
+What was the expectation of Zydus
+
+227
+00:08:51,000 --> 00:08:54,240
+from this team, AWS team, to help us?
+
+228
+00:08:54,240 --> 00:08:57,120
+So if you look at this,
+
+229
+00:08:57,120 --> 00:08:58,800
+the whole thing, what
+we are talking about,
+
+230
+00:08:58,800 --> 00:09:01,710
+this applications or
+the servers, everything,
+
+231
+00:09:01,710 --> 00:09:03,480
+this shows how complicated,
+
+232
+00:09:03,480 --> 00:09:05,790
+how complex the IT infrastructure is
+
+233
+00:09:05,790 --> 00:09:07,050
+for any pharmaceutical company,
+
+234
+00:09:07,050 --> 00:09:09,480
+like big company like ours, example.
+
+235
+00:09:09,480 --> 00:09:13,500
+So we have 10 mission-critical
+pharma applications
+
+236
+00:09:13,500 --> 00:09:15,660
+running like multiple applications,
+
+237
+00:09:15,660 --> 00:09:16,533
+like ones here.
+
+238
+00:09:18,330 --> 00:09:19,163
+Sorry.
+
+239
+00:09:19,163 --> 00:09:20,610
+So like we have this
+
+240
+00:09:20,610 --> 00:09:22,920
+like lab information system,
+
+241
+00:09:22,920 --> 00:09:24,270
+the quality management system
+
+242
+00:09:24,270 --> 00:09:26,010
+or document management system,
+
+243
+00:09:26,010 --> 00:09:27,540
+warehouse execution systems,
+
+244
+00:09:27,540 --> 00:09:29,250
+and warehouse management system,
+
+245
+00:09:29,250 --> 00:09:30,450
+manufacture execution systems,
+
+246
+00:09:30,450 --> 00:09:31,890
+all these, e-log book.
+
+247
+00:09:31,890 --> 00:09:34,080
+All this mission-critical application
+
+248
+00:09:34,080 --> 00:09:36,993
+running on 60-plus like virtual,
+
+249
+00:09:38,100 --> 00:09:39,870
+physical, virtual servers,
+
+250
+00:09:39,870 --> 00:09:42,150
+running on multiple operating system,
+
+251
+00:09:42,150 --> 00:09:43,920
+like Windows and Linux, and also database,
+
+252
+00:09:43,920 --> 00:09:46,830
+like SQL database, Oracle database.
+
+253
+00:09:46,830 --> 00:09:49,640
+But the volume of data you use, example,
+
+254
+00:09:49,640 --> 00:09:53,610
+if you look at, we have almost
+80-plus terabyte of data
+
+255
+00:09:53,610 --> 00:09:55,741
+in data center.
+
+256
+00:09:55,741 --> 00:09:57,900
+And there's multiple,
+eight plant locations.
+
+257
+00:09:57,900 --> 00:09:59,640
+These are all not just cold storage data,
+
+258
+00:09:59,640 --> 00:10:02,520
+these are all actual
+live transactional data
+
+259
+00:10:02,520 --> 00:10:04,843
+which requires very quick RPO time
+
+260
+00:10:04,843 --> 00:10:05,840
+and RTO time.
+
+261
+00:10:05,840 --> 00:10:07,620
+Obviously, RPO time of 15 minutes,
+
+262
+00:10:07,620 --> 00:10:11,070
+RTO time of less than three hours.
+
+263
+00:10:11,070 --> 00:10:14,363
+And, also, on top of this very quick RPO
+
+264
+00:10:14,363 --> 00:10:17,340
+and RTO time, we also take care
+
+265
+00:10:17,340 --> 00:10:20,340
+of this security and compliance issues.
+
+266
+00:10:20,340 --> 00:10:23,700
+Because for pharma company like us,
+
+267
+00:10:23,700 --> 00:10:26,043
+regulatory compliance
+is not just mandatory.
+
+268
+00:10:27,525 --> 00:10:30,900
+It is mandated by regulatory
+bodies across the world.
+
+269
+00:10:30,900 --> 00:10:33,600
+And every aspect of DR solution,
+
+270
+00:10:33,600 --> 00:10:34,470
+what we implement,
+
+271
+00:10:34,470 --> 00:10:38,370
+should be, like is easily validated,
+
+272
+00:10:38,370 --> 00:10:41,190
+it is documented, and it is audited
+
+273
+00:10:41,190 --> 00:10:42,390
+by the regulatory authorities.
+
+274
+00:10:42,390 --> 00:10:43,740
+So we have to keep in mind,
+
+275
+00:10:44,640 --> 00:10:47,040
+not only it is helping us
+to recover the data quickly,
+
+276
+00:10:47,040 --> 00:10:48,600
+no loss of data,
+
+277
+00:10:48,600 --> 00:10:51,900
+plus it is complying with
+all of the GxP requirements.
+
+278
+00:10:51,900 --> 00:10:53,760
+Having given all this scope,
+
+279
+00:10:53,760 --> 00:10:55,410
+we approached the team
+
+280
+00:10:55,410 --> 00:10:57,060
+and they helped us to develop
+
+281
+00:10:57,060 --> 00:10:58,327
+a system for us.
+
+282
+00:10:58,327 --> 00:10:59,880
+I'll hand it over to Siddhesh to help us
+
+283
+00:10:59,880 --> 00:11:02,370
+or show us what the system
+they have done for us,
+
+284
+00:11:02,370 --> 00:11:04,110
+how they tried to achieve
+
+285
+00:11:04,110 --> 00:11:05,760
+our scope of objective.
+
+286
+00:11:05,760 --> 00:11:06,593
+Thank you very much.
+
+287
+00:11:06,593 --> 00:11:08,460
+Thank you, Siddhesh.
+
+288
+00:11:08,460 --> 00:11:09,760
+- Hey, thanks a lot, Ravi.
+
+289
+00:11:10,680 --> 00:11:13,080
+Thank you for giving us a brief overview
+
+290
+00:11:13,080 --> 00:11:14,910
+of not only the scale
+
+291
+00:11:14,910 --> 00:11:17,830
+of operations at Zydus, but also
+
+292
+00:11:18,690 --> 00:11:20,880
+the business requirements
+
+293
+00:11:20,880 --> 00:11:22,890
+in terms of RPO and RTO.
+
+294
+00:11:22,890 --> 00:11:25,290
+Well, let me just summarize
+
+295
+00:11:25,290 --> 00:11:27,030
+what Ravi just mentioned in terms
+
+296
+00:11:27,030 --> 00:11:28,140
+of business requirements.
+
+297
+00:11:28,140 --> 00:11:31,980
+And building this solution at Zydus' scale
+
+298
+00:11:31,980 --> 00:11:33,630
+was the toughest part, right?
+
+299
+00:11:33,630 --> 00:11:35,040
+Not only they wanted
+
+300
+00:11:35,040 --> 00:11:36,780
+a minimal RPO and RTO,
+
+301
+00:11:36,780 --> 00:11:38,997
+of 15 minutes RPO
+
+302
+00:11:38,997 --> 00:11:41,190
+and less than three hours RTO,
+
+303
+00:11:41,190 --> 00:11:44,580
+but, also, the solution has
+to be cost-efficient, right?
+
+304
+00:11:44,580 --> 00:11:46,230
+The scale at which they operate,
+
+305
+00:11:46,230 --> 00:11:48,720
+with 80-plus terabytes of data,
+
+306
+00:11:48,720 --> 00:11:50,640
+multiple plant locations,
+
+307
+00:11:50,640 --> 00:11:53,940
+and these servers offer
+multiple applications.
+
+308
+00:11:53,940 --> 00:11:54,773
+You saw (indistinct),
+
+309
+00:11:54,773 --> 00:11:57,270
+you saw different management systems.
+
+310
+00:11:57,270 --> 00:11:59,130
+All of these are deployed
+
+311
+00:11:59,130 --> 00:12:01,380
+across different infrastructures.
+
+312
+00:12:01,380 --> 00:12:02,970
+There were physical servers,
+
+313
+00:12:02,970 --> 00:12:04,380
+there were virtual servers.
+
+314
+00:12:04,380 --> 00:12:07,950
+The servers also had
+multiple operating systems,
+
+315
+00:12:07,950 --> 00:12:09,930
+different technology stacks, right?
+
+316
+00:12:09,930 --> 00:12:11,460
+So the problem
+
+317
+00:12:11,460 --> 00:12:14,453
+was of the scale and
+diversity of tech stack
+
+318
+00:12:14,453 --> 00:12:16,650
+and the source application.
+
+319
+00:12:16,650 --> 00:12:20,190
+Next is, because they have
+multiple plant locations,
+
+320
+00:12:20,190 --> 00:12:22,290
+we had to establish secure
+
+321
+00:12:22,290 --> 00:12:24,450
+and resilient networking
+
+322
+00:12:24,450 --> 00:12:26,190
+between different plant locations
+
+323
+00:12:26,190 --> 00:12:27,720
+and AWS regions.
+
+324
+00:12:27,720 --> 00:12:29,730
+And, of course, as Ravi mentioned,
+
+325
+00:12:29,730 --> 00:12:31,410
+all of their software
+
+326
+00:12:31,410 --> 00:12:34,560
+and applications is
+regulated by compliance
+
+327
+00:12:34,560 --> 00:12:36,540
+since they're a pharmaceutical company.
+
+328
+00:12:36,540 --> 00:12:37,740
+So we had to make sure
+
+329
+00:12:37,740 --> 00:12:39,660
+we designed the entire solution,
+
+330
+00:12:39,660 --> 00:12:41,490
+not only test and operate it,
+
+331
+00:12:41,490 --> 00:12:43,473
+but also keep it compliant.
+
+332
+00:12:44,460 --> 00:12:45,990
+Now, let me talk about
+
+333
+00:12:45,990 --> 00:12:49,470
+AWS Elastic Disaster
+Recovery service, right?
+
+334
+00:12:49,470 --> 00:12:51,423
+But before I talk about the service,
+
+335
+00:12:52,290 --> 00:12:53,490
+let's just take a step back
+
+336
+00:12:53,490 --> 00:12:55,373
+and understand what exactly is RPO
+
+337
+00:12:55,373 --> 00:12:57,510
+and RTO is, very briefly.
+
+338
+00:12:57,510 --> 00:12:59,850
+RPO is recovery point objective.
+
+339
+00:12:59,850 --> 00:13:02,490
+Basically, your data loss tolerance,
+
+340
+00:13:02,490 --> 00:13:05,670
+how much data your
+business can afford to lose
+
+341
+00:13:05,670 --> 00:13:07,350
+in case there is a disaster.
+
+342
+00:13:07,350 --> 00:13:10,710
+While RTO is recovery time objective,
+
+343
+00:13:10,710 --> 00:13:13,920
+which is how much downtime your business
+
+344
+00:13:13,920 --> 00:13:17,670
+can afford or your application
+downtime tolerance.
+
+345
+00:13:17,670 --> 00:13:19,257
+And, of course, everybody wants RPO
+
+346
+00:13:19,257 --> 00:13:21,690
+and RTO to be minimum, right?
+
+347
+00:13:21,690 --> 00:13:23,550
+But that comes at a cost.
+
+348
+00:13:23,550 --> 00:13:26,190
+So there is a calculated trade-off
+
+349
+00:13:26,190 --> 00:13:29,790
+between how much RPO and
+RTO you want to achieve
+
+350
+00:13:29,790 --> 00:13:32,370
+based on how much money
+you're willing to spend.
+
+351
+00:13:32,370 --> 00:13:35,190
+Lower RPO, RTO, higher the cost,
+
+352
+00:13:35,190 --> 00:13:37,980
+right, and vice versa.
+
+353
+00:13:37,980 --> 00:13:41,160
+So Elastic Disaster Recovery gives you
+
+354
+00:13:41,160 --> 00:13:44,250
+a balance of RPO in few seconds,
+
+355
+00:13:44,250 --> 00:13:45,660
+RTO in few minutes,
+
+356
+00:13:45,660 --> 00:13:48,360
+and without the extensive cost
+
+357
+00:13:48,360 --> 00:13:51,753
+of running duplicate
+servers in two environments.
+
+358
+00:13:52,830 --> 00:13:54,690
+Some key features of the service are,
+
+359
+00:13:54,690 --> 00:13:57,990
+the first one is account isolation, right?
+
+360
+00:13:57,990 --> 00:14:01,560
+The account or the environment
+
+361
+00:14:01,560 --> 00:14:04,020
+where your data is copied
+
+362
+00:14:04,020 --> 00:14:05,040
+is on AWS.
+
+363
+00:14:05,040 --> 00:14:06,630
+That's your staging environment.
+
+364
+00:14:06,630 --> 00:14:09,720
+That is completely
+isolated from your primary.
+
+365
+00:14:09,720 --> 00:14:11,160
+Your primary could be on-prem,
+
+366
+00:14:11,160 --> 00:14:13,500
+your primary could be a
+different AWS account,
+
+367
+00:14:13,500 --> 00:14:14,970
+or any other cloud
+
+368
+00:14:14,970 --> 00:14:16,890
+that is completely isolated
+
+369
+00:14:16,890 --> 00:14:18,630
+from your staging environment.
+
+370
+00:14:18,630 --> 00:14:20,190
+So if your primary is down
+
+371
+00:14:20,190 --> 00:14:22,500
+or compromised or impacted,
+
+372
+00:14:22,500 --> 00:14:24,690
+your data still remains safe
+
+373
+00:14:24,690 --> 00:14:26,400
+in your staging environment.
+
+374
+00:14:26,400 --> 00:14:27,840
+The second key feature
+
+375
+00:14:27,840 --> 00:14:30,000
+is immutable snapshots.
+
+376
+00:14:30,000 --> 00:14:34,320
+The data snapshots that DRS
+takes cannot be overwritten.
+
+377
+00:14:34,320 --> 00:14:36,270
+This is a very strong defense
+
+378
+00:14:36,270 --> 00:14:38,610
+in case there is a ransomware attack
+
+379
+00:14:38,610 --> 00:14:40,350
+or there's a cyber attack.
+
+380
+00:14:40,350 --> 00:14:41,730
+Your data is intact,
+
+381
+00:14:41,730 --> 00:14:44,010
+your data is not corrupted.
+
+382
+00:14:44,010 --> 00:14:45,930
+The third key feature is it helps you
+
+383
+00:14:45,930 --> 00:14:49,260
+to have test drills and validation.
+
+384
+00:14:49,260 --> 00:14:51,360
+This is not only a best practice,
+
+385
+00:14:51,360 --> 00:14:53,970
+but also a compliance requirement,
+
+386
+00:14:53,970 --> 00:14:57,660
+that you need to periodically
+test the solution
+
+387
+00:14:57,660 --> 00:15:01,500
+by conducting DR drills
+and a validation test
+
+388
+00:15:01,500 --> 00:15:04,500
+to ensure your data integrity is intact
+
+389
+00:15:04,500 --> 00:15:07,080
+and your DR solution actually works
+
+390
+00:15:07,080 --> 00:15:10,173
+when there is a need
+for a disaster recovery.
+
+391
+00:15:11,831 --> 00:15:12,664
+And the final point that I want
+
+392
+00:15:12,664 --> 00:15:13,830
+to talk about is it helps you
+
+393
+00:15:13,830 --> 00:15:15,630
+with point-in-time recovery,
+
+394
+00:15:15,630 --> 00:15:17,490
+which means that you can go back
+
+395
+00:15:17,490 --> 00:15:19,830
+to a particular snapshot,
+
+396
+00:15:19,830 --> 00:15:23,700
+a particular time when
+your data was intact.
+
+397
+00:15:23,700 --> 00:15:26,400
+That's before the attack or
+before the disaster happens.
+
+398
+00:15:26,400 --> 00:15:30,150
+So, collectively, this gives
+you a very strong control
+
+399
+00:15:30,150 --> 00:15:31,770
+on your disaster recovery.
+
+400
+00:15:31,770 --> 00:15:34,710
+That, too, at a low cost.
+
+401
+00:15:34,710 --> 00:15:39,150
+Now, the AWS DRS is purpose-build solution
+
+402
+00:15:39,150 --> 00:15:42,210
+for all your disaster recovery needs.
+
+403
+00:15:42,210 --> 00:15:45,090
+The first key feature is it is flexible.
+
+404
+00:15:45,090 --> 00:15:47,910
+Your data, your service,
+could be anywhere,
+
+405
+00:15:47,910 --> 00:15:50,610
+on-prem, cloud, hybrid, physical,
+
+406
+00:15:50,610 --> 00:15:52,680
+virtual, anywhere, right?
+
+407
+00:15:52,680 --> 00:15:54,210
+DRS supports that.
+
+408
+00:15:54,210 --> 00:15:57,330
+It supports wide range
+of operating system,
+
+409
+00:15:57,330 --> 00:15:59,610
+multiple technology stacks.
+
+410
+00:15:59,610 --> 00:16:02,070
+The entire service is reliable,
+
+411
+00:16:02,070 --> 00:16:04,740
+which means that it is
+non-disruptive, right?
+
+412
+00:16:04,740 --> 00:16:06,510
+You can perform your drills
+
+413
+00:16:06,510 --> 00:16:09,180
+and your tests without impacting
+
+414
+00:16:09,180 --> 00:16:11,430
+your production live-use case.
+
+415
+00:16:11,430 --> 00:16:14,190
+Without impacting your
+production and live environment,
+
+416
+00:16:14,190 --> 00:16:17,070
+you can perform these
+drills and these testing.
+
+417
+00:16:17,070 --> 00:16:19,560
+And all of this is highly automated.
+
+418
+00:16:19,560 --> 00:16:21,090
+Hence, it's easy to use.
+
+419
+00:16:21,090 --> 00:16:24,450
+If there is a disaster, the
+last thing you want to do
+
+420
+00:16:24,450 --> 00:16:27,210
+is figure out which EC2 do I launch
+
+421
+00:16:27,210 --> 00:16:29,100
+or what are my login credentials
+
+422
+00:16:29,100 --> 00:16:31,650
+or how do I set up my environment, right?
+
+423
+00:16:31,650 --> 00:16:34,770
+This is where creating launch templates
+
+424
+00:16:34,770 --> 00:16:37,230
+and automating your entire process
+
+425
+00:16:37,230 --> 00:16:39,210
+and testing it multiple times
+
+426
+00:16:39,210 --> 00:16:41,673
+comes really at hand.
+
+427
+00:16:42,540 --> 00:16:44,910
+And, overall, it helps you to reduce
+
+428
+00:16:44,910 --> 00:16:47,190
+your total cost of ownership
+
+429
+00:16:47,190 --> 00:16:50,100
+of building a disaster recovery solution.
+
+430
+00:16:50,100 --> 00:16:53,010
+And at AWS, security and resiliency
+
+431
+00:16:53,010 --> 00:16:55,530
+is a shared responsibility, which means
+
+432
+00:16:55,530 --> 00:16:57,480
+that AWS takes care of security
+
+433
+00:16:57,480 --> 00:16:59,760
+and resiliency of the cloud,
+
+434
+00:16:59,760 --> 00:17:02,550
+ensuring the data is encrypted in transit,
+
+435
+00:17:02,550 --> 00:17:05,490
+at-rest physical security
+of all your server,
+
+436
+00:17:05,490 --> 00:17:07,140
+of your data volumes.
+
+437
+00:17:07,140 --> 00:17:10,650
+And it's customer's
+responsibility to make sure
+
+438
+00:17:10,650 --> 00:17:13,710
+and ensure security and
+resiliency in the cloud.
+
+439
+00:17:13,710 --> 00:17:15,660
+What that means is you have to ensure
+
+440
+00:17:15,660 --> 00:17:18,540
+that correct monitoring, observability,
+
+441
+00:17:18,540 --> 00:17:21,420
+and security protocols are in place.
+
+442
+00:17:21,420 --> 00:17:23,850
+You set up and adopt correct backup
+
+443
+00:17:23,850 --> 00:17:27,270
+and DR strategy as per
+your application needs,
+
+444
+00:17:27,270 --> 00:17:28,590
+and you test them as well.
+
+445
+00:17:28,590 --> 00:17:30,450
+That is customer's responsibility.
+
+446
+00:17:30,450 --> 00:17:34,230
+And the underlying infrastructure
+is compliance ready,
+
+447
+00:17:34,230 --> 00:17:37,020
+which gives you a very robust platform
+
+448
+00:17:37,020 --> 00:17:39,780
+to build healthcare and applications,
+
+449
+00:17:39,780 --> 00:17:42,330
+which require different GxP compliance.
+
+450
+00:17:42,330 --> 00:17:44,250
+So it helps you during your audits
+
+451
+00:17:44,250 --> 00:17:45,963
+and compliance checks.
+
+452
+00:17:47,370 --> 00:17:50,940
+Now, let me talk about
+the entire lifecycle
+
+453
+00:17:50,940 --> 00:17:53,460
+of disaster recovery service.
+
+454
+00:17:53,460 --> 00:17:55,620
+The step one is set up.
+
+455
+00:17:55,620 --> 00:17:59,130
+During setup stage, you
+set up a replication agent
+
+456
+00:17:59,130 --> 00:18:00,690
+on your application service.
+
+457
+00:18:00,690 --> 00:18:02,280
+Again, your servers could be anywhere,
+
+458
+00:18:02,280 --> 00:18:03,660
+any operating system.
+
+459
+00:18:03,660 --> 00:18:04,920
+As long as you can install
+
+460
+00:18:04,920 --> 00:18:07,590
+a replication agent, you're good to go.
+
+461
+00:18:07,590 --> 00:18:10,740
+Once your replication agent
+is set up on your servers,
+
+462
+00:18:10,740 --> 00:18:12,647
+it starts backing up your data
+
+463
+00:18:12,647 --> 00:18:14,610
+to the staging environment.
+
+464
+00:18:14,610 --> 00:18:18,480
+It does this by doing
+block-level replication.
+
+465
+00:18:18,480 --> 00:18:20,700
+Once all your data is copied
+
+466
+00:18:20,700 --> 00:18:22,260
+in the staging environment,
+
+467
+00:18:22,260 --> 00:18:25,020
+your setup is ready and
+you're good to test.
+
+468
+00:18:25,020 --> 00:18:27,900
+In the testing phase,
+you simulate a disaster.
+
+469
+00:18:27,900 --> 00:18:30,870
+In that, you create recovery instances
+
+470
+00:18:30,870 --> 00:18:33,840
+or recovery EC2s through launch templates
+
+471
+00:18:33,840 --> 00:18:35,580
+in your recovery environment,
+
+472
+00:18:35,580 --> 00:18:37,980
+which is, again, completely separate
+
+473
+00:18:37,980 --> 00:18:40,140
+from your primary environment.
+
+474
+00:18:40,140 --> 00:18:43,230
+Once you test that your recovery workload
+
+475
+00:18:43,230 --> 00:18:46,080
+is up and running, data
+integrity is intact,
+
+476
+00:18:46,080 --> 00:18:48,900
+that's the time you get
+into the operating phase.
+
+477
+00:18:48,900 --> 00:18:51,810
+At operate phase, the agent,
+
+478
+00:18:51,810 --> 00:18:53,580
+the replication agent,
+
+479
+00:18:53,580 --> 00:18:57,420
+continuously does block-level
+replication of your data.
+
+480
+00:18:57,420 --> 00:18:59,310
+So, and this is how we ensure
+
+481
+00:18:59,310 --> 00:19:03,210
+that you don't pay for
+active-active setup.
+
+482
+00:19:03,210 --> 00:19:05,460
+You just pay for the block-level storage
+
+483
+00:19:05,460 --> 00:19:08,310
+that you consume to copy your data.
+
+484
+00:19:08,310 --> 00:19:10,920
+If there is a actual
+disaster, either natural
+
+485
+00:19:10,920 --> 00:19:15,030
+or a cyber attack or a
+human error, you failover.
+
+486
+00:19:15,030 --> 00:19:18,960
+During failover, you are
+using your staging data,
+
+487
+00:19:18,960 --> 00:19:21,510
+you create your recovery instances,
+
+488
+00:19:21,510 --> 00:19:23,430
+and your business starts operating,
+
+489
+00:19:23,430 --> 00:19:26,100
+instead of from primary, through staging.
+
+490
+00:19:26,100 --> 00:19:27,720
+And, finally, fallback.
+
+491
+00:19:27,720 --> 00:19:29,790
+Fallback is equally important.
+
+492
+00:19:29,790 --> 00:19:32,310
+When your primary site is again up
+
+493
+00:19:32,310 --> 00:19:34,590
+and running post-disaster,
+
+494
+00:19:34,590 --> 00:19:37,200
+all your data from your
+recovery environment
+
+495
+00:19:37,200 --> 00:19:40,140
+is copied back to your
+primary environment,
+
+496
+00:19:40,140 --> 00:19:41,890
+and your business is up and running
+
+497
+00:19:43,140 --> 00:19:44,433
+from the primary site.
+
+498
+00:19:45,660 --> 00:19:48,700
+Now let's take a look at how this works
+
+499
+00:19:50,149 --> 00:19:52,500
+by taking a look at the
+technical architecture.
+
+500
+00:19:52,500 --> 00:19:56,040
+On left, you will see
+the on-premises setup,
+
+501
+00:19:56,040 --> 00:19:58,650
+where all your source VM exists.
+
+502
+00:19:58,650 --> 00:20:02,130
+Now, you have to install
+a replication agent
+
+503
+00:20:02,130 --> 00:20:04,140
+on these source VMs.
+
+504
+00:20:04,140 --> 00:20:06,780
+All this data will be continuously copied
+
+505
+00:20:06,780 --> 00:20:09,660
+with the help of replication servers
+
+506
+00:20:09,660 --> 00:20:12,690
+in AWS on your staging subnet.
+
+507
+00:20:12,690 --> 00:20:16,410
+So what a replication server
+does, it copies your data,
+
+508
+00:20:16,410 --> 00:20:20,400
+it reads your discs,
+compresses it, encrypts it,
+
+509
+00:20:20,400 --> 00:20:23,880
+and sends over TCP to your staging subnet.
+
+510
+00:20:23,880 --> 00:20:26,310
+On staging subnet, all of this is copied
+
+511
+00:20:26,310 --> 00:20:28,140
+into your EBS volumes.
+
+512
+00:20:28,140 --> 00:20:29,670
+So the cost that you bear
+
+513
+00:20:29,670 --> 00:20:32,220
+is only for replication servers,
+
+514
+00:20:32,220 --> 00:20:34,830
+which are, again, not
+full-scale production servers,
+
+515
+00:20:34,830 --> 00:20:36,300
+which you would otherwise use
+
+516
+00:20:36,300 --> 00:20:38,760
+to run your application workloads.
+
+517
+00:20:38,760 --> 00:20:42,330
+But replication servers
+are low-cost servers
+
+518
+00:20:42,330 --> 00:20:44,340
+and your EBS volumes.
+
+519
+00:20:44,340 --> 00:20:45,330
+Both of them are, again,
+
+520
+00:20:45,330 --> 00:20:47,523
+comparatively much more cost-efficient.
+
+521
+00:20:48,750 --> 00:20:51,930
+And you also set up
+
+522
+00:20:51,930 --> 00:20:54,030
+your EC2 launch templates.
+
+523
+00:20:54,030 --> 00:20:57,120
+So launch template is where you predefine,
+
+524
+00:20:57,120 --> 00:20:59,160
+in case there is a disaster,
+
+525
+00:20:59,160 --> 00:21:01,260
+what EC2 instance do I launch?
+
+526
+00:21:01,260 --> 00:21:04,620
+How much, what capacity,
+what configuration?
+
+527
+00:21:04,620 --> 00:21:06,540
+What should be my network configuration?
+
+528
+00:21:06,540 --> 00:21:09,180
+What should be my CIDR ranges?
+
+529
+00:21:09,180 --> 00:21:10,023
+And all of that.
+
+530
+00:21:12,000 --> 00:21:13,140
+Now, let's take a look
+
+531
+00:21:13,140 --> 00:21:16,320
+at what happens when there is a disaster.
+
+532
+00:21:16,320 --> 00:21:19,890
+When there is a disaster,
+your primary site goes down.
+
+533
+00:21:19,890 --> 00:21:23,700
+That's when the replication servers check
+
+534
+00:21:23,700 --> 00:21:26,370
+that all your data is actually copied
+
+535
+00:21:26,370 --> 00:21:28,050
+to your EBS volumes.
+
+536
+00:21:28,050 --> 00:21:30,150
+Once the data integrity is tested,
+
+537
+00:21:30,150 --> 00:21:33,120
+then it quickly creates snapshots
+
+538
+00:21:33,120 --> 00:21:34,680
+using your EBS volumes.
+
+539
+00:21:34,680 --> 00:21:36,060
+And using the launch template
+
+540
+00:21:36,060 --> 00:21:37,890
+that we have defined earlier
+
+541
+00:21:37,890 --> 00:21:41,220
+and these snapshots, a
+new environment is created
+
+542
+00:21:41,220 --> 00:21:42,930
+in your recovery subnet.
+
+543
+00:21:42,930 --> 00:21:44,670
+At this time, all you have to do
+
+544
+00:21:44,670 --> 00:21:47,580
+is point your network DNS
+
+545
+00:21:47,580 --> 00:21:49,920
+to use the recovery subnet
+
+546
+00:21:49,920 --> 00:21:51,720
+instead of your primary.
+
+547
+00:21:51,720 --> 00:21:54,630
+Right, now you're operating
+in a failover mode,
+
+548
+00:21:54,630 --> 00:21:56,880
+where your application is entirely running
+
+549
+00:21:56,880 --> 00:21:59,850
+from the recovery subnet, running on AWS,
+
+550
+00:21:59,850 --> 00:22:00,990
+and not running
+
+551
+00:22:00,990 --> 00:22:05,670
+from the disaster-impacted
+primary source, all right?
+
+552
+00:22:05,670 --> 00:22:07,740
+All of this is automated
+
+553
+00:22:07,740 --> 00:22:09,210
+so that if there is a disaster
+
+554
+00:22:09,210 --> 00:22:11,490
+at 3 a.m. at night, you don't have
+
+555
+00:22:11,490 --> 00:22:14,340
+to actually figure out what EC2 to launch,
+
+556
+00:22:14,340 --> 00:22:15,870
+where to launch it, and all of that.
+
+557
+00:22:15,870 --> 00:22:19,140
+All of that is already
+tested, already automated,
+
+558
+00:22:19,140 --> 00:22:21,270
+and already defined when you do
+
+559
+00:22:21,270 --> 00:22:23,370
+the setup stage for DRS.
+
+560
+00:22:23,370 --> 00:22:25,470
+And DRS (indistinct) helps you
+
+561
+00:22:25,470 --> 00:22:27,870
+with building this end-to-end solution,
+
+562
+00:22:27,870 --> 00:22:30,870
+which you can test as often as you can,
+
+563
+00:22:30,870 --> 00:22:32,490
+as you want to.
+
+564
+00:22:32,490 --> 00:22:36,000
+Now, this is half of the DR cycle.
+
+565
+00:22:36,000 --> 00:22:40,380
+Now what happens when your primary site
+
+566
+00:22:40,380 --> 00:22:41,730
+is up and running?
+
+567
+00:22:41,730 --> 00:22:43,860
+So when your primary
+site is up and running,
+
+568
+00:22:43,860 --> 00:22:45,250
+you have to fallback
+
+569
+00:22:46,950 --> 00:22:49,290
+from your recovery subnet
+
+570
+00:22:49,290 --> 00:22:51,180
+to your original primary one.
+
+571
+00:22:51,180 --> 00:22:53,620
+For that, you have
+Failback Client installed
+
+572
+00:22:54,750 --> 00:22:56,430
+on your primary site, which copies
+
+573
+00:22:56,430 --> 00:22:59,610
+the data back from your AWS environment
+
+574
+00:22:59,610 --> 00:23:01,260
+to your source environment.
+
+575
+00:23:01,260 --> 00:23:04,170
+Once all the data is in sync,
+
+576
+00:23:04,170 --> 00:23:06,600
+you perform a failback.
+
+577
+00:23:06,600 --> 00:23:09,900
+And your, again, disaster
+recovery cycle is complete.
+
+578
+00:23:09,900 --> 00:23:11,940
+You start running your application back
+
+579
+00:23:11,940 --> 00:23:13,590
+from your source environment.
+
+580
+00:23:13,590 --> 00:23:16,380
+And then you can decommission
+the new instances
+
+581
+00:23:16,380 --> 00:23:20,220
+which you started in your recovery subnet.
+
+582
+00:23:20,220 --> 00:23:23,340
+Now, Ashish will give
+us a walkthrough demo
+
+583
+00:23:23,340 --> 00:23:25,440
+of how this entire cycle works,
+
+584
+00:23:25,440 --> 00:23:27,510
+and then he'll also
+give us a brief overview
+
+585
+00:23:27,510 --> 00:23:30,513
+of how we architected the network,
+
+586
+00:23:31,960 --> 00:23:33,690
+and talk to us about few learnings
+
+587
+00:23:33,690 --> 00:23:35,280
+while doing this for Zydus.
+
+588
+00:23:35,280 --> 00:23:36,113
+Ashish.
+
+589
+00:23:38,563 --> 00:23:39,577
+- Thank you, Siddhesh.
+
+590
+00:23:39,577 --> 00:23:40,740
+Thank you very much.
+
+591
+00:23:40,740 --> 00:23:42,330
+Good afternoon, everyone.
+
+592
+00:23:42,330 --> 00:23:45,030
+So as we have now learned about Zydus,
+
+593
+00:23:45,030 --> 00:23:47,010
+their challenges, and also how
+
+594
+00:23:47,010 --> 00:23:50,490
+the AWS Disaster Recovery
+overall service architecture
+
+595
+00:23:50,490 --> 00:23:51,990
+and the compliance,
+
+596
+00:23:51,990 --> 00:23:53,640
+let me take you through a journey
+
+597
+00:23:53,640 --> 00:23:56,220
+of Zydus solution.
+
+598
+00:23:56,220 --> 00:23:58,380
+I mean, where Zydus started,
+
+599
+00:23:58,380 --> 00:24:00,450
+it was not a single month
+
+600
+00:24:00,450 --> 00:24:03,483
+or a year journey, multi-year journey.
+
+601
+00:24:04,410 --> 00:24:07,020
+They started, they wanted
+to first verify how
+
+602
+00:24:07,020 --> 00:24:09,420
+the solution actually works
+
+603
+00:24:09,420 --> 00:24:11,340
+for their key requirement,
+
+604
+00:24:11,340 --> 00:24:13,650
+which is the minimal RPO.
+
+605
+00:24:13,650 --> 00:24:16,590
+And for that, they
+wanted to understand how
+
+606
+00:24:16,590 --> 00:24:19,170
+the application-level RPO and RTO
+
+607
+00:24:19,170 --> 00:24:20,850
+is met with the solution.
+
+608
+00:24:20,850 --> 00:24:24,423
+So we created a disaster
+recovery service demo,
+
+609
+00:24:25,410 --> 00:24:28,983
+more of a use-case demo,
+where we showcased,
+
+610
+00:24:30,360 --> 00:24:32,070
+and we will see in a minute,
+
+611
+00:24:32,070 --> 00:24:33,810
+that we take an example
+
+612
+00:24:33,810 --> 00:24:35,910
+of a Windows-based application server
+
+613
+00:24:35,910 --> 00:24:39,210
+and a SQL server database, pretty normal
+
+614
+00:24:39,210 --> 00:24:42,690
+in the pharmaceutical
+application workloads.
+
+615
+00:24:42,690 --> 00:24:44,370
+And then what we did
+
+616
+00:24:44,370 --> 00:24:47,880
+was we created an abrupt failure scenario.
+
+617
+00:24:47,880 --> 00:24:51,630
+We recovered that to
+hundreds of kilometer away
+
+618
+00:24:51,630 --> 00:24:53,850
+in a different region,
+
+619
+00:24:53,850 --> 00:24:55,680
+and measure the RPO,
+
+620
+00:24:55,680 --> 00:24:58,083
+RTO, and the data integrity.
+
+621
+00:24:58,980 --> 00:25:02,613
+So this is how we will
+see in the solution demo.
+
+622
+00:25:03,930 --> 00:25:08,310
+This demo required a failover scenario
+
+623
+00:25:08,310 --> 00:25:11,310
+and also verifying the data integrity.
+
+624
+00:25:11,310 --> 00:25:13,320
+It is approximately 20, 25 minutes,
+
+625
+00:25:13,320 --> 00:25:17,133
+and that's why we have
+prerecorded this particular demo.
+
+626
+00:25:17,970 --> 00:25:20,043
+So let's look into the demo.
+
+627
+00:25:22,710 --> 00:25:24,120
+As you can see here,
+
+628
+00:25:24,120 --> 00:25:25,350
+we have an application server
+
+629
+00:25:25,350 --> 00:25:26,400
+and a database server
+
+630
+00:25:27,330 --> 00:25:29,670
+in a source region Mumbai,
+
+631
+00:25:29,670 --> 00:25:32,190
+and replicating into the Singapore region,
+
+632
+00:25:32,190 --> 00:25:34,890
+which is more than 4,000 kilometer,
+
+633
+00:25:34,890 --> 00:25:37,173
+or 4,500 miles, apart.
+
+634
+00:25:39,360 --> 00:25:41,490
+Let's verify the source environment.
+
+635
+00:25:41,490 --> 00:25:43,083
+This is a CMS application.
+
+636
+00:25:46,770 --> 00:25:48,870
+Let's see, in the server, also,
+
+637
+00:25:48,870 --> 00:25:51,300
+it's a TCP server
+
+638
+00:25:51,300 --> 00:25:53,110
+and running on a .NET 5
+
+639
+00:25:55,710 --> 00:25:56,543
+application.
+
+640
+00:25:58,050 --> 00:26:00,690
+Let's verify the database server,
+
+641
+00:26:00,690 --> 00:26:02,942
+approximately 150GB.
+
+642
+00:26:02,942 --> 00:26:03,780
+And to measure the RPO,
+
+643
+00:26:03,780 --> 00:26:05,971
+what we have done is we have created
+
+644
+00:26:05,971 --> 00:26:07,890
+a date script which modifies
+
+645
+00:26:07,890 --> 00:26:10,080
+the date table every second,
+
+646
+00:26:10,080 --> 00:26:12,600
+and so that we can measure the RPO
+
+647
+00:26:12,600 --> 00:26:15,450
+in the overall disaster scenario.
+
+648
+00:26:15,450 --> 00:26:16,740
+And, as you can see,
+
+649
+00:26:16,740 --> 00:26:18,390
+it's modifying the script.
+
+650
+00:26:18,390 --> 00:26:20,673
+And we will keep this running.
+
+651
+00:26:25,950 --> 00:26:27,100
+Let's now also
+
+652
+00:26:28,980 --> 00:26:31,662
+check the application-level RPO
+
+653
+00:26:31,662 --> 00:26:33,220
+and RTO measurement
+
+654
+00:26:34,110 --> 00:26:35,853
+with creating a blog post.
+
+655
+00:26:45,300 --> 00:26:46,320
+Now let's mimic
+
+656
+00:26:46,320 --> 00:26:48,810
+the exact abrupt failure scenario.
+
+657
+00:26:48,810 --> 00:26:50,340
+So both the server.
+
+658
+00:26:50,340 --> 00:26:52,830
+We will skip the operating
+system shut down.
+
+659
+00:26:52,830 --> 00:26:56,880
+That means it may corrupt the data
+
+660
+00:26:56,880 --> 00:27:00,480
+or system stability issues may occur.
+
+661
+00:27:00,480 --> 00:27:02,250
+Majorly, generally, that's where
+
+662
+00:27:02,250 --> 00:27:04,170
+the disaster, whenever occurs,
+
+663
+00:27:04,170 --> 00:27:05,283
+this is the scenario.
+
+664
+00:27:07,470 --> 00:27:10,050
+And, immediately, we get to the action.
+
+665
+00:27:10,050 --> 00:27:11,790
+Both the servers (indistinct).
+
+666
+00:27:11,790 --> 00:27:13,260
+We will recover.
+
+667
+00:27:13,260 --> 00:27:15,993
+And if you see, we have various snapshots.
+
+668
+00:27:17,457 --> 00:27:18,810
+But for this particular demo,
+
+669
+00:27:18,810 --> 00:27:20,820
+we will use the latest snapshot
+
+670
+00:27:20,820 --> 00:27:22,413
+to measure the RPO.
+
+671
+00:27:25,380 --> 00:27:27,333
+As you can see, the job has started.
+
+672
+00:27:30,540 --> 00:27:34,170
+Let's also measure the
+exact time of the disaster
+
+673
+00:27:34,170 --> 00:27:37,263
+from the CloudTrail audit API service.
+
+674
+00:27:40,440 --> 00:27:43,980
+During the jobs, I mean, the recovery job,
+
+675
+00:27:43,980 --> 00:27:45,180
+one of the key step
+
+676
+00:27:45,180 --> 00:27:49,110
+is the conversion process.
+
+677
+00:27:49,110 --> 00:27:51,330
+So, any source, as we have seen,
+
+678
+00:27:51,330 --> 00:27:55,350
+any source machines can
+be recovered on AWS.
+
+679
+00:27:55,350 --> 00:27:57,360
+So this particular conversion process,
+
+680
+00:27:57,360 --> 00:28:00,810
+what it does is it make
+changes into the boot loader
+
+681
+00:28:00,810 --> 00:28:03,060
+so that your source server type,
+
+682
+00:28:03,060 --> 00:28:04,740
+it could be a physical
+server, virtual server,
+
+683
+00:28:04,740 --> 00:28:08,100
+Hyper-V, VMware, or any virtualization,
+
+684
+00:28:08,100 --> 00:28:10,530
+it can boot natively on AWS.
+
+685
+00:28:10,530 --> 00:28:13,130
+That's the temporary
+(indistinct) server we spin up.
+
+686
+00:28:14,460 --> 00:28:15,510
+And, as you can see now,
+
+687
+00:28:15,510 --> 00:28:17,823
+the recovery is completed,
+
+688
+00:28:19,110 --> 00:28:21,630
+and now it's time for verification
+
+689
+00:28:21,630 --> 00:28:22,893
+of the data integrity.
+
+690
+00:28:30,900 --> 00:28:32,950
+We'll check the application server first.
+
+691
+00:28:38,940 --> 00:28:40,172
+As part of the recovery,
+
+692
+00:28:40,172 --> 00:28:41,790
+if you know the Windows operating system,
+
+693
+00:28:41,790 --> 00:28:44,010
+if it have done a abrupt failure,
+
+694
+00:28:44,010 --> 00:28:46,143
+it will give you a shutdown event tracker,
+
+695
+00:28:47,460 --> 00:28:51,210
+which, because of the abrupt shut down
+
+696
+00:28:51,210 --> 00:28:52,923
+of the operating system.
+
+697
+00:28:55,800 --> 00:28:57,510
+We'll start the IS server.
+
+698
+00:28:57,510 --> 00:29:00,360
+And meantime, it boots up,
+
+699
+00:29:00,360 --> 00:29:02,823
+let's check the SQL database.
+
+700
+00:29:09,690 --> 00:29:11,523
+Same shutdown tracker.
+
+701
+00:29:15,420 --> 00:29:18,510
+Let now check the date script,
+
+702
+00:29:18,510 --> 00:29:21,870
+how much data we are able to recover
+
+703
+00:29:21,870 --> 00:29:23,493
+from the abrupt failure.
+
+704
+00:29:27,720 --> 00:29:29,943
+So we'll query date table.
+
+705
+00:29:37,770 --> 00:29:40,020
+As you can see, like it's 11:45:48.
+
+706
+00:29:40,020 --> 00:29:42,270
+And we'll summarize in the next slide
+
+707
+00:29:42,270 --> 00:29:43,720
+how much RPO
+
+708
+00:29:45,041 --> 00:29:47,340
+we are able to recover
+
+709
+00:29:47,340 --> 00:29:50,250
+or how much data we are able to recover.
+
+710
+00:29:50,250 --> 00:29:53,190
+Let's also check the application-level RPO
+
+711
+00:29:53,190 --> 00:29:57,420
+and RTO integrity with the blog.
+
+712
+00:29:57,420 --> 00:30:00,900
+So we are able to also see
+the blog is also available,
+
+713
+00:30:00,900 --> 00:30:04,443
+which was just created
+before the abrupt scenario.
+
+714
+00:30:06,420 --> 00:30:08,520
+So what we observe?
+
+715
+00:30:08,520 --> 00:30:11,580
+So AWS Disaster Recovery
+service was successfully able
+
+716
+00:30:11,580 --> 00:30:15,600
+to recover a Windows-based application
+
+717
+00:30:15,600 --> 00:30:19,290
+and a SQL-server-based
+database application
+
+718
+00:30:19,290 --> 00:30:20,740
+from an abrupt failure
+
+719
+00:30:21,690 --> 00:30:26,463
+to a completely recovered state,
+
+720
+00:30:27,300 --> 00:30:30,003
+which was there in the
+original state of application.
+
+721
+00:30:31,620 --> 00:30:34,860
+This particular process
+had, we are able to do,
+
+722
+00:30:34,860 --> 00:30:37,410
+I mean, nine second of an RPO
+
+723
+00:30:37,410 --> 00:30:39,450
+and less than 25 minutes of an RTO.
+
+724
+00:30:39,450 --> 00:30:41,820
+So it was, the job took around 21 minutes,
+
+725
+00:30:41,820 --> 00:30:44,310
+and then we could take the IS boot up time
+
+726
+00:30:44,310 --> 00:30:45,540
+because that's where the application
+
+727
+00:30:45,540 --> 00:30:47,433
+is accessible to the users.
+
+728
+00:30:49,230 --> 00:30:52,710
+This was with Mumbai and Singapore region,
+
+729
+00:30:52,710 --> 00:30:56,430
+which is like 4,000 kilometer,
+or 2,500 miles, apart.
+
+730
+00:30:56,430 --> 00:30:58,770
+And distance plays a role in RPO,
+
+731
+00:30:58,770 --> 00:30:59,920
+as you may know, right?
+
+732
+00:31:00,960 --> 00:31:01,890
+This is great.
+
+733
+00:31:01,890 --> 00:31:05,130
+I mean, if you see the Zydus scale,
+
+734
+00:31:05,130 --> 00:31:06,360
+it has a data center
+
+735
+00:31:06,360 --> 00:31:10,710
+and multiple plant locations
+across the country.
+
+736
+00:31:10,710 --> 00:31:13,620
+And for that, how,
+
+737
+00:31:13,620 --> 00:31:15,750
+I mean, what could be the scenario
+
+738
+00:31:15,750 --> 00:31:17,943
+where they can achieve a less RPO?
+
+739
+00:31:18,810 --> 00:31:19,710
+Any guesses?
+
+740
+00:31:19,710 --> 00:31:22,800
+I mean, what could be the important aspect
+
+741
+00:31:22,800 --> 00:31:26,343
+of NET architecting the solution?
+
+742
+00:31:27,930 --> 00:31:29,040
+Network architecture.
+
+743
+00:31:29,040 --> 00:31:30,810
+You may have guessed it right.
+
+744
+00:31:30,810 --> 00:31:33,363
+So let's look into the
+network architecture.
+
+745
+00:31:35,970 --> 00:31:38,160
+So this is the core foundation
+
+746
+00:31:38,160 --> 00:31:41,100
+of Zydus disaster recovery solution,
+
+747
+00:31:41,100 --> 00:31:43,830
+providing resilience, security,
+
+748
+00:31:43,830 --> 00:31:46,053
+and performance all together.
+
+749
+00:31:47,910 --> 00:31:49,500
+If you start from the left,
+
+750
+00:31:49,500 --> 00:31:52,080
+if you see the Zydus
+corporate data center,
+
+751
+00:31:52,080 --> 00:31:55,650
+which was already connected
+with all the Zydus plant
+
+752
+00:31:55,650 --> 00:31:59,160
+before we started this particular
+solution implementation.
+
+753
+00:31:59,160 --> 00:32:03,030
+They already had an
+active/passive network,
+
+754
+00:32:03,030 --> 00:32:05,280
+different network provider connectivity
+
+755
+00:32:05,280 --> 00:32:08,760
+between their data center
+and all the plants.
+
+756
+00:32:08,760 --> 00:32:12,340
+All the traffic was going
+from the plant locations
+
+757
+00:32:13,793 --> 00:32:15,660
+to the central data center locations.
+
+758
+00:32:15,660 --> 00:32:17,670
+What we did was we just extended
+
+759
+00:32:17,670 --> 00:32:21,330
+the existing resilient
+network architecture
+
+760
+00:32:21,330 --> 00:32:23,940
+to AWS Direct Connect,
+
+761
+00:32:23,940 --> 00:32:28,350
+with a distinct AWS
+Direct Connect locations
+
+762
+00:32:28,350 --> 00:32:30,510
+with the same resilient pattern
+
+763
+00:32:30,510 --> 00:32:31,683
+with active/passive,
+
+764
+00:32:33,120 --> 00:32:36,243
+with two different
+network service provider.
+
+765
+00:32:37,770 --> 00:32:40,980
+Here, the key service
+is AWS Direct Connect,
+
+766
+00:32:40,980 --> 00:32:44,580
+which is a secure and
+private connectivity service.
+
+767
+00:32:44,580 --> 00:32:46,140
+Connects between your on-premise
+
+768
+00:32:46,140 --> 00:32:47,943
+and the cloud environment.
+
+769
+00:32:49,320 --> 00:32:52,440
+One of the key thing or
+design decision we had to make
+
+770
+00:32:52,440 --> 00:32:55,773
+was after establishing this
+particular connectivity,
+
+771
+00:32:57,690 --> 00:32:59,970
+I mean, in the existing network pattern,
+
+772
+00:32:59,970 --> 00:33:02,790
+all the disaster recovery
+traffic will also go
+
+773
+00:33:02,790 --> 00:33:04,620
+to the data center,
+
+774
+00:33:04,620 --> 00:33:07,020
+and then we'll move the cloud.
+
+775
+00:33:07,020 --> 00:33:09,390
+That would create bandwidth issues
+
+776
+00:33:09,390 --> 00:33:11,640
+at the data center level.
+
+777
+00:33:11,640 --> 00:33:14,040
+So what we did is we
+designed the network path
+
+778
+00:33:14,040 --> 00:33:18,030
+such that only the DR replication traffic
+
+779
+00:33:18,030 --> 00:33:20,280
+will move from the plant location
+
+780
+00:33:20,280 --> 00:33:23,580
+directly to the AWS
+Direct Connect location.
+
+781
+00:33:23,580 --> 00:33:26,490
+And the rest of the plant traffic
+
+782
+00:33:26,490 --> 00:33:28,680
+will move on an existing path
+
+783
+00:33:28,680 --> 00:33:30,753
+of the Zydus corporate path.
+
+784
+00:33:32,190 --> 00:33:33,780
+So this was a very key decision.
+
+785
+00:33:33,780 --> 00:33:35,793
+This actually optimized the bandwidth.
+
+786
+00:33:36,900 --> 00:33:38,730
+Just imagine at a greater scale,
+
+787
+00:33:38,730 --> 00:33:40,320
+when they add new plants,
+
+788
+00:33:40,320 --> 00:33:43,590
+this would have created exponential issues
+
+789
+00:33:43,590 --> 00:33:44,440
+at the bandwidth.
+
+790
+00:33:45,960 --> 00:33:48,540
+Let's move within the AWS cloud, where,
+
+791
+00:33:48,540 --> 00:33:51,360
+if you see the service called
+AWS Direct Connect Gateway.
+
+792
+00:33:51,360 --> 00:33:54,060
+So Direct Connect Gateway is a service
+
+793
+00:33:54,060 --> 00:33:57,483
+where you can connect
+to multiple AWS regions.
+
+794
+00:33:58,320 --> 00:34:00,660
+Just imagine, I mean,
+
+795
+00:34:00,660 --> 00:34:03,450
+with a single resilient connectivity,
+
+796
+00:34:03,450 --> 00:34:07,020
+Zydus is now able to connect
+to any of the AWS regions.
+
+797
+00:34:07,020 --> 00:34:10,500
+They don't have to mimic
+the same connectivity
+
+798
+00:34:10,500 --> 00:34:12,510
+for every region, and that is enabled
+
+799
+00:34:12,510 --> 00:34:15,123
+by the AWS Direct Connect Gateway.
+
+800
+00:34:16,380 --> 00:34:19,440
+The next key service
+is the transit gateway,
+
+801
+00:34:19,440 --> 00:34:21,480
+which is the central router
+
+802
+00:34:21,480 --> 00:34:22,930
+and a network segmentation
+
+803
+00:34:24,000 --> 00:34:27,063
+using hub-and-spoke topology.
+
+804
+00:34:28,110 --> 00:34:31,860
+This is a very key
+service which enables you
+
+805
+00:34:31,860 --> 00:34:35,850
+for isolating your critical workload
+
+806
+00:34:35,850 --> 00:34:38,430
+into separate AWS accounts
+
+807
+00:34:38,430 --> 00:34:41,073
+and virtual private clouds.
+
+808
+00:34:42,420 --> 00:34:43,503
+If you see here,
+
+809
+00:34:44,820 --> 00:34:48,840
+from the different network accounts
+
+810
+00:34:48,840 --> 00:34:51,480
+and the disaster recovery
+production account,
+
+811
+00:34:51,480 --> 00:34:54,120
+and as well as multiple VPCs
+
+812
+00:34:54,120 --> 00:34:57,540
+having network account,
+
+813
+00:34:57,540 --> 00:34:59,760
+having disaster recovery,
+
+814
+00:34:59,760 --> 00:35:02,580
+staging subnets, recovery subnets,
+
+815
+00:35:02,580 --> 00:35:07,200
+all are isolated for network segmentation,
+
+816
+00:35:07,200 --> 00:35:09,783
+better security point of view.
+
+817
+00:35:11,520 --> 00:35:16,020
+Let's deep dive into the overall Zydus
+
+818
+00:35:16,020 --> 00:35:17,943
+complete disaster recovery solution.
+
+819
+00:35:19,530 --> 00:35:20,763
+Starting from the left,
+
+820
+00:35:23,550 --> 00:35:27,510
+we installed the AWS
+Disaster Recovery agent
+
+821
+00:35:27,510 --> 00:35:31,560
+on each source server,
+
+822
+00:35:31,560 --> 00:35:34,950
+which started replicating encrypted
+
+823
+00:35:34,950 --> 00:35:36,940
+and compressed block-level data
+
+824
+00:35:38,220 --> 00:35:39,783
+to this staging subnet.
+
+825
+00:35:40,680 --> 00:35:41,513
+If you see here,
+
+826
+00:35:42,390 --> 00:35:44,370
+we have already seen the Direct Connect
+
+827
+00:35:44,370 --> 00:35:47,583
+and how it is enabled by
+the networking services.
+
+828
+00:35:48,960 --> 00:35:51,060
+Moving to the recovery subnets.
+
+829
+00:35:51,060 --> 00:35:54,120
+If you see here, the recovery subnet,
+
+830
+00:35:54,120 --> 00:35:57,813
+there is not a single workload
+which is running 24 by 7,
+
+831
+00:35:58,800 --> 00:36:00,790
+and that has only been
+
+832
+00:36:02,970 --> 00:36:06,150
+available during disaster recovery drill
+
+833
+00:36:06,150 --> 00:36:09,303
+or a failover scenario.
+
+834
+00:36:11,910 --> 00:36:15,510
+Zydus followed a three step of recovery
+
+835
+00:36:15,510 --> 00:36:17,280
+in the recovery subnet.
+
+836
+00:36:17,280 --> 00:36:18,780
+In the first step,
+
+837
+00:36:18,780 --> 00:36:22,500
+they recovered a primary active directory.
+
+838
+00:36:22,500 --> 00:36:24,240
+It's recovered and configured,
+
+839
+00:36:24,240 --> 00:36:27,630
+along with a third-party firewall instance
+
+840
+00:36:27,630 --> 00:36:31,440
+with a pre-configured
+Amazon machine image,
+
+841
+00:36:31,440 --> 00:36:34,890
+which provides additional network security
+
+842
+00:36:34,890 --> 00:36:37,593
+to their existing disaster
+recovery environment.
+
+843
+00:36:39,480 --> 00:36:41,340
+As you know, like, your data has
+
+844
+00:36:41,340 --> 00:36:44,370
+to be stable and available
+
+845
+00:36:44,370 --> 00:36:46,320
+before your application can connect.
+
+846
+00:36:46,320 --> 00:36:48,510
+And so in the second phase,
+
+847
+00:36:48,510 --> 00:36:50,280
+all the database servers
+
+848
+00:36:50,280 --> 00:36:53,400
+were recovered and configured.
+
+849
+00:36:53,400 --> 00:36:56,430
+And, at last, in the
+third stage of recovery,
+
+850
+00:36:56,430 --> 00:36:58,080
+all the application servers
+
+851
+00:36:58,080 --> 00:36:59,733
+are recovered and configured.
+
+852
+00:37:02,760 --> 00:37:05,910
+At last, if you see, I mean,
+
+853
+00:37:05,910 --> 00:37:08,430
+this is all the overall
+network architecture
+
+854
+00:37:08,430 --> 00:37:09,870
+and the solution architecture.
+
+855
+00:37:09,870 --> 00:37:11,430
+If you go into the solution now,
+
+856
+00:37:11,430 --> 00:37:14,670
+let's say what was the
+implementation phase, right?
+
+857
+00:37:14,670 --> 00:37:16,683
+You must have those questions.
+
+858
+00:37:20,400 --> 00:37:23,310
+So Zydus followed a
+structured and phased approach
+
+859
+00:37:23,310 --> 00:37:25,173
+in their implementation,
+
+860
+00:37:26,250 --> 00:37:29,460
+starting with establishing a secure
+
+861
+00:37:29,460 --> 00:37:32,820
+and resilient AWS cloud foundation
+
+862
+00:37:32,820 --> 00:37:34,620
+we have seen in the previous slides.
+
+863
+00:37:35,880 --> 00:37:38,400
+Then, after, we started, application-wise
+
+864
+00:37:38,400 --> 00:37:42,510
+and location-wise,
+replicating the data on cloud.
+
+865
+00:37:42,510 --> 00:37:44,583
+This was in the first phase.
+
+866
+00:37:45,600 --> 00:37:49,500
+In the second phase, the
+replication was completed
+
+867
+00:37:49,500 --> 00:37:51,150
+of all the application servers
+
+868
+00:37:51,150 --> 00:37:54,000
+and the database servers, and then
+
+869
+00:37:54,000 --> 00:37:57,600
+it was extensively tested
+for configurations.
+
+870
+00:37:57,600 --> 00:38:00,420
+This was done in the second phase.
+
+871
+00:38:00,420 --> 00:38:03,730
+Followed by a phase called as in hypercare
+
+872
+00:38:05,790 --> 00:38:08,253
+to addressing any unplanned issues.
+
+873
+00:38:09,720 --> 00:38:13,710
+Hypercare is a temporary phase,
+
+874
+00:38:13,710 --> 00:38:18,480
+temporary phase where we
+provide intensive support
+
+875
+00:38:18,480 --> 00:38:20,790
+to address any unplanned issues,
+
+876
+00:38:20,790 --> 00:38:23,632
+like a replication lag,
+
+877
+00:38:23,632 --> 00:38:25,083
+or a replication backlog,
+
+878
+00:38:26,040 --> 00:38:28,470
+or, let's say, recovery configurations
+
+879
+00:38:28,470 --> 00:38:30,240
+which you may encounter during
+
+880
+00:38:30,240 --> 00:38:31,893
+your extensive testing.
+
+881
+00:38:33,900 --> 00:38:36,000
+The third phrase, and this is one
+
+882
+00:38:36,000 --> 00:38:39,240
+of the very critical phase
+in terms of implementation,
+
+883
+00:38:39,240 --> 00:38:43,170
+where we did a centralized monitoring
+
+884
+00:38:43,170 --> 00:38:45,450
+and automated alerts
+
+885
+00:38:45,450 --> 00:38:48,570
+for key matrices, like replication lag,
+
+886
+00:38:48,570 --> 00:38:51,420
+replication backlog,
+
+887
+00:38:51,420 --> 00:38:54,240
+and network state monitoring,
+
+888
+00:38:54,240 --> 00:38:56,070
+which is very important
+
+889
+00:38:56,070 --> 00:38:59,583
+to make sure like the
+overall RPO is minimal.
+
+890
+00:39:01,500 --> 00:39:02,643
+In the same phase,
+
+891
+00:39:03,990 --> 00:39:07,620
+we have also done solution validation.
+
+892
+00:39:07,620 --> 00:39:09,870
+So the solution was validated
+
+893
+00:39:09,870 --> 00:39:13,650
+as per the GxP guidelines to ensure
+
+894
+00:39:13,650 --> 00:39:17,130
+the data integrity and availability.
+
+895
+00:39:17,130 --> 00:39:20,400
+Accordingly, Zydus teams have completed
+
+896
+00:39:20,400 --> 00:39:24,753
+the GxP-compliant solution
+validation documentation.
+
+897
+00:39:26,280 --> 00:39:29,253
+And at the last phase, the solution,
+
+898
+00:39:30,270 --> 00:39:33,880
+we have done a complete
+disaster recovery drill
+
+899
+00:39:35,310 --> 00:39:38,823
+with complete failover
+and failback testing.
+
+900
+00:39:41,070 --> 00:39:41,943
+As you can see,
+
+901
+00:39:43,080 --> 00:39:45,723
+within six month of a period,
+
+902
+00:39:46,800 --> 00:39:51,600
+enterprise-scale complex
+solution implementation,
+
+903
+00:39:51,600 --> 00:39:53,280
+as well as validation,
+
+904
+00:39:53,280 --> 00:39:55,920
+was completed by the Zydus team.
+
+905
+00:39:55,920 --> 00:39:58,860
+And this is one of the
+outstanding efforts by Zydus IT
+
+906
+00:39:58,860 --> 00:40:00,513
+and the business teams together.
+
+907
+00:40:05,160 --> 00:40:07,083
+Here comes one of my favorite section.
+
+908
+00:40:08,610 --> 00:40:11,340
+Not only, I mean, failed implementation,
+
+909
+00:40:11,340 --> 00:40:14,070
+even the successful
+implementations like this
+
+910
+00:40:14,070 --> 00:40:16,590
+also teaches us something valuable,
+
+911
+00:40:16,590 --> 00:40:19,440
+and we would like to summarize
+in three key lessons.
+
+912
+00:40:19,440 --> 00:40:21,960
+The first one, with the cloud foundation,
+
+913
+00:40:21,960 --> 00:40:24,570
+where Zydus prioritized the secure
+
+914
+00:40:24,570 --> 00:40:27,300
+and resilient cloud foundation,
+
+915
+00:40:27,300 --> 00:40:29,850
+as we have seen in the
+phase-wise approach.
+
+916
+00:40:29,850 --> 00:40:31,620
+Why this is important?
+
+917
+00:40:31,620 --> 00:40:33,270
+And if you ask this question, I mean,
+
+918
+00:40:33,270 --> 00:40:37,350
+because it ensures that the
+DR environment stability
+
+919
+00:40:37,350 --> 00:40:39,660
+is there throughout,
+
+920
+00:40:39,660 --> 00:40:41,640
+ensuring the minimal RPO,
+
+921
+00:40:41,640 --> 00:40:43,470
+which was their key requirement
+
+922
+00:40:43,470 --> 00:40:45,900
+for implementing the DR solution.
+
+923
+00:40:45,900 --> 00:40:48,840
+Not only that, that also enabled them
+
+924
+00:40:48,840 --> 00:40:50,910
+to spin up new workload,
+
+925
+00:40:50,910 --> 00:40:52,980
+which are in isolated environments,
+
+926
+00:40:52,980 --> 00:40:54,750
+based on the network
+
+927
+00:40:54,750 --> 00:40:57,123
+and the security-based architecture.
+
+928
+00:40:59,670 --> 00:41:04,200
+The second one is here,
+where the things was,
+
+929
+00:41:04,200 --> 00:41:06,900
+I mean, things went interesting.
+
+930
+00:41:06,900 --> 00:41:10,620
+So while in the second
+phase, what we realized
+
+931
+00:41:10,620 --> 00:41:13,860
+was there were three database servers
+
+932
+00:41:13,860 --> 00:41:16,593
+which were having consistent
+replication lag issues.
+
+933
+00:41:17,460 --> 00:41:18,480
+And this was very odd
+
+934
+00:41:18,480 --> 00:41:22,140
+because there are more
+than 10 database servers,
+
+935
+00:41:22,140 --> 00:41:24,930
+and they are very, very, I mean, critical
+
+936
+00:41:24,930 --> 00:41:27,093
+in terms of the transaction volumes,
+
+937
+00:41:28,260 --> 00:41:31,500
+but only these three database
+servers in their peak times.
+
+938
+00:41:31,500 --> 00:41:33,270
+Another database server
+in their peak times,
+
+939
+00:41:33,270 --> 00:41:36,020
+also, they were not showing
+any replication lag issues.
+
+940
+00:41:37,050 --> 00:41:40,920
+So Zydus teams, AWS support team,
+
+941
+00:41:40,920 --> 00:41:43,020
+and as well as the partner teams,
+
+942
+00:41:43,020 --> 00:41:45,420
+they actually worked together,
+deep dive into the issues
+
+943
+00:41:45,420 --> 00:41:47,220
+in multiple level of diagnosings.
+
+944
+00:41:47,220 --> 00:41:48,053
+What they figured out
+
+945
+00:41:48,053 --> 00:41:52,860
+was there was a very extreme change rate
+
+946
+00:41:52,860 --> 00:41:55,893
+was there on those three database servers.
+
+947
+00:41:56,790 --> 00:42:00,150
+And just summarizing the resolution
+
+948
+00:42:00,150 --> 00:42:01,980
+which happened in the stages,
+
+949
+00:42:01,980 --> 00:42:05,400
+was with configuring
+
+950
+00:42:05,400 --> 00:42:08,700
+their firewall QS policy,
+
+951
+00:42:08,700 --> 00:42:11,580
+the corporate QS firewall policy.
+
+952
+00:42:11,580 --> 00:42:15,180
+Then putting a dedicated
+replication servers,
+
+953
+00:42:15,180 --> 00:42:18,690
+and as well as increasing the IOPs
+
+954
+00:42:18,690 --> 00:42:22,143
+and the throughput of
+those database servers.
+
+955
+00:42:23,640 --> 00:42:25,230
+Now, you may have a question.
+
+956
+00:42:25,230 --> 00:42:28,830
+This is a block-level replication,
+
+957
+00:42:28,830 --> 00:42:31,230
+when you have just
+replicated the same disc
+
+958
+00:42:31,230 --> 00:42:34,680
+or a replicated DR environment.
+
+959
+00:42:34,680 --> 00:42:36,417
+How come IOPS
+
+960
+00:42:36,417 --> 00:42:39,150
+and storage throughput can be changed
+
+961
+00:42:39,150 --> 00:42:41,430
+without changing the storage size?
+
+962
+00:42:41,430 --> 00:42:42,930
+Because storage size is same
+
+963
+00:42:42,930 --> 00:42:45,750
+because of the block-level
+replication, right?
+
+964
+00:42:45,750 --> 00:42:48,060
+So AWS has a GP3,
+
+965
+00:42:48,060 --> 00:42:49,860
+which is the latest volumes,
+
+966
+00:42:49,860 --> 00:42:53,220
+where you can increase the
+IOPS and the throughput
+
+967
+00:42:53,220 --> 00:42:56,610
+without changing the storage size.
+
+968
+00:42:56,610 --> 00:42:58,050
+And this was very key in achieving
+
+969
+00:42:58,050 --> 00:43:00,483
+our solution, also, overall.
+
+970
+00:43:02,760 --> 00:43:04,770
+Let's move to last one,
+
+971
+00:43:04,770 --> 00:43:07,173
+lesson learned, monitoring and alerting.
+
+972
+00:43:08,010 --> 00:43:10,410
+So automated monitoring
+and alerting was set up,
+
+973
+00:43:10,410 --> 00:43:11,430
+you already know, as part
+
+974
+00:43:11,430 --> 00:43:13,080
+of the phase-wise implementation.
+
+975
+00:43:13,980 --> 00:43:18,810
+What we observed was certain alerts
+
+976
+00:43:18,810 --> 00:43:21,420
+were coming quite often,
+
+977
+00:43:21,420 --> 00:43:24,210
+and due to the nature of the networking,
+
+978
+00:43:24,210 --> 00:43:27,420
+which is part of the remote sites,
+
+979
+00:43:27,420 --> 00:43:30,720
+and they were also
+automatically getting dissolved.
+
+980
+00:43:30,720 --> 00:43:34,470
+And so overall governance point of view,
+
+981
+00:43:34,470 --> 00:43:37,380
+we were getting a lot of
+alerts without any insights.
+
+982
+00:43:37,380 --> 00:43:40,113
+So it was more of an alert
+fatigue, you can say.
+
+983
+00:43:41,250 --> 00:43:45,711
+So what we, as AWS, our AWS partner,
+
+984
+00:43:45,711 --> 00:43:48,870
+(indistinct) Technologies,
+who have actually helped
+
+985
+00:43:48,870 --> 00:43:53,640
+with the semi-automated
+reporting, daily reporting,
+
+986
+00:43:53,640 --> 00:43:57,000
+which made sure like only
+for those set of alerts.
+
+987
+00:43:57,000 --> 00:43:59,040
+Also, we are not missing the key insights
+
+988
+00:43:59,040 --> 00:44:00,270
+at the end of a day.
+
+989
+00:44:00,270 --> 00:44:03,660
+And it helped, actually,
+in overall governance.
+
+990
+00:44:03,660 --> 00:44:07,050
+Though, I mean, this is
+part of a single sort of,
+
+991
+00:44:07,050 --> 00:44:10,320
+or I would say three to four matrixes.
+
+992
+00:44:10,320 --> 00:44:11,880
+The key learnings from here
+
+993
+00:44:11,880 --> 00:44:14,370
+is like monitoring and alerting,
+
+994
+00:44:14,370 --> 00:44:16,500
+making sure like when you are establishing
+
+995
+00:44:16,500 --> 00:44:17,490
+a complete governance,
+
+996
+00:44:17,490 --> 00:44:19,800
+you're not missing any
+insights out of that.
+
+997
+00:44:19,800 --> 00:44:22,890
+Certain alerts, if
+they're not making sense,
+
+998
+00:44:22,890 --> 00:44:25,560
+maybe removing it is a better choice.
+
+999
+00:44:25,560 --> 00:44:28,620
+If they're making sense
+and having repeated alert,
+
+1000
+00:44:28,620 --> 00:44:32,220
+like false positives,
+then you need to make sure
+
+1001
+00:44:32,220 --> 00:44:36,060
+like you get better insights
+with some daily reporting
+
+1002
+00:44:36,060 --> 00:44:39,123
+or maybe early reporting
+sort of implementation.
+
+1003
+00:44:42,150 --> 00:44:44,070
+Let's move to like summarize
+
+1004
+00:44:44,070 --> 00:44:47,610
+the transformative disaster
+recovery solution implementation
+
+1005
+00:44:47,610 --> 00:44:48,810
+by Zydus.
+
+1006
+00:44:48,810 --> 00:44:50,250
+So, as you can see,
+
+1007
+00:44:50,250 --> 00:44:53,790
+from 24 hours of an RPO
+
+1008
+00:44:53,790 --> 00:44:56,437
+to less than 15 minutes of an RPO,
+
+1009
+00:44:57,789 --> 00:45:00,300
+and 24 to 48 hours of RTO
+
+1010
+00:45:00,300 --> 00:45:02,760
+to less than three hours of an RTO.
+
+1011
+00:45:02,760 --> 00:45:07,260
+All this while not running
+
+1012
+00:45:07,260 --> 00:45:09,960
+any disaster recovery site up and running
+
+1013
+00:45:09,960 --> 00:45:13,050
+or any infrastructure up and running
+
+1014
+00:45:13,050 --> 00:45:15,840
+or without having any operating system
+
+1015
+00:45:15,840 --> 00:45:18,300
+or a database licensing,
+
+1016
+00:45:18,300 --> 00:45:21,003
+which means like no capital investment.
+
+1017
+00:45:21,900 --> 00:45:25,560
+Operationally, also a
+very simplified solution
+
+1018
+00:45:25,560 --> 00:45:27,510
+which takes care of your physical servers
+
+1019
+00:45:27,510 --> 00:45:29,490
+and the virtual servers,
+
+1020
+00:45:29,490 --> 00:45:32,700
+all while having completely managed
+
+1021
+00:45:32,700 --> 00:45:34,800
+in an isolated staging area.
+
+1022
+00:45:34,800 --> 00:45:37,080
+And you can do unlimited number
+
+1023
+00:45:37,080 --> 00:45:39,270
+of disaster recovery drills
+
+1024
+00:45:39,270 --> 00:45:43,200
+without impacting your
+actually primary environment,
+
+1025
+00:45:43,200 --> 00:45:46,800
+which is very critical for
+your regulatory compliances.
+
+1026
+00:45:46,800 --> 00:45:48,720
+So all this was achieved.
+
+1027
+00:45:48,720 --> 00:45:50,433
+Summarizing are the key benefits.
+
+1028
+00:45:52,770 --> 00:45:55,230
+I'm sure, I mean, all these benefits are,
+
+1029
+00:45:55,230 --> 00:45:57,660
+all the benefits are
+equally important for Zydus.
+
+1030
+00:45:57,660 --> 00:45:59,790
+However, if I may ask Mr. Ravi
+
+1031
+00:45:59,790 --> 00:46:03,720
+to choose like single benefit
+
+1032
+00:46:03,720 --> 00:46:06,933
+which would like to highlight.
+
+1033
+00:46:08,490 --> 00:46:10,590
+- Yeah, Ashish.
+
+1034
+00:46:10,590 --> 00:46:11,970
+See, you're talking about four benefits,
+
+1035
+00:46:11,970 --> 00:46:15,150
+like no capital investment,
+minimal RPO, RTO,
+
+1036
+00:46:15,150 --> 00:46:18,180
+simplified setup, and
+security and compliant.
+
+1037
+00:46:18,180 --> 00:46:21,270
+See, so everything is important, right?
+
+1038
+00:46:21,270 --> 00:46:24,000
+But as a finance person, for me,
+
+1039
+00:46:24,000 --> 00:46:26,100
+no capital investment,
+or minimum investment
+
+1040
+00:46:26,100 --> 00:46:28,590
+with minimal operational
+cost, may be the key.
+
+1041
+00:46:28,590 --> 00:46:31,020
+But I will, without
+saying which is better,
+
+1042
+00:46:31,020 --> 00:46:32,490
+I will rate it.
+
+1043
+00:46:32,490 --> 00:46:35,250
+I'll rate maybe no capital
+investment is number one.
+
+1044
+00:46:35,250 --> 00:46:37,380
+But, for me, equally important
+
+1045
+00:46:37,380 --> 00:46:39,600
+is minimal RPO, minimal RTO as well
+
+1046
+00:46:39,600 --> 00:46:41,250
+because that is more important
+
+1047
+00:46:41,250 --> 00:46:44,010
+from data point of view,
+compliance point of view.
+
+1048
+00:46:44,010 --> 00:46:44,880
+- Thank you.
+
+1049
+00:46:44,880 --> 00:46:46,170
+Thank you very much-
+- Thank you.
+
+1050
+00:46:46,170 --> 00:46:47,460
+- For your view.
+
+1051
+00:46:47,460 --> 00:46:51,270
+And let's now move into
+the last slide of ours.
+
+1052
+00:46:51,270 --> 00:46:52,500
+What's next?
+
+1053
+00:46:52,500 --> 00:46:54,960
+So typical cloud journey starts
+
+1054
+00:46:54,960 --> 00:46:56,097
+with a disaster recovery,
+
+1055
+00:46:56,097 --> 00:46:59,400
+and Zydus has adopted a very strategic
+
+1056
+00:46:59,400 --> 00:47:00,600
+and measured approach
+
+1057
+00:47:00,600 --> 00:47:02,520
+in their cloud journey.
+
+1058
+00:47:02,520 --> 00:47:05,130
+Starting small with disaster recovery,
+
+1059
+00:47:05,130 --> 00:47:07,650
+proving the value,
+building the confidence,
+
+1060
+00:47:07,650 --> 00:47:11,760
+and then gradually increasing
+the cloud workload.
+
+1061
+00:47:11,760 --> 00:47:13,800
+So they're in advanced stage
+
+1062
+00:47:13,800 --> 00:47:17,100
+of implementing the
+cloud-based file service,
+
+1063
+00:47:17,100 --> 00:47:22,020
+having secure and virtually
+infinite scale storage
+
+1064
+00:47:22,020 --> 00:47:23,643
+at their plant locations.
+
+1065
+00:47:24,630 --> 00:47:27,510
+They're also, on the generative AI front,
+
+1066
+00:47:27,510 --> 00:47:30,000
+Zydus is investing in
+their technical teams
+
+1067
+00:47:30,000 --> 00:47:32,430
+by making them smarter and faster
+
+1068
+00:47:32,430 --> 00:47:34,830
+by using Amazon Q Developer.
+
+1069
+00:47:34,830 --> 00:47:37,560
+And they're also evaluating to move
+
+1070
+00:47:37,560 --> 00:47:41,823
+their non-critical
+primary workload on cloud.
+
+1071
+00:47:42,690 --> 00:47:44,910
+So with this, we come
+
+1072
+00:47:44,910 --> 00:47:46,830
+to an end of this session.
+
+1073
+00:47:46,830 --> 00:47:49,140
+Thank you very much for joining us.
+
+1074
+00:47:49,140 --> 00:47:52,800
+And take a moment,
+please, and your feedback,
+
+1075
+00:47:52,800 --> 00:47:56,220
+valuable feedback will
+be highly appreciated.
+
+1076
+00:47:56,220 --> 00:48:00,213
+Please have that in the AWS events app.
+
+1077
+00:48:01,260 --> 00:48:02,430
+Thank you, again, and enjoy
+
+1078
+00:48:02,430 --> 00:48:03,960
+the rest of the re:Invent.
+
+1079
+00:48:03,960 --> 00:48:05,160
+Thank you.
+- Thank you.
+

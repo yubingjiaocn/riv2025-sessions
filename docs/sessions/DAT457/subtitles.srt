@@ -1,0 +1,6019 @@
+1
+00:00:00,750 --> 00:00:01,980
+- [Forrest] Awesome, thanks very much
+
+2
+00:00:01,980 --> 00:00:03,598
+for being here late in the afternoon.
+
+3
+00:00:03,598 --> 00:00:06,540
+By Wednesday, I've been
+to this event five times.
+
+4
+00:00:06,540 --> 00:00:08,040
+It's really tiring both for attendees
+
+5
+00:00:08,040 --> 00:00:10,200
+and for people that work
+here and presenting.
+
+6
+00:00:10,200 --> 00:00:11,450
+So thanks for being here.
+
+7
+00:00:12,540 --> 00:00:17,340
+And welcome to our code
+talk about Web3 agents.
+
+8
+00:00:17,340 --> 00:00:19,830
+So today what we're gonna
+do is we're gonna facilitate
+
+9
+00:00:19,830 --> 00:00:20,970
+a technical session.
+
+10
+00:00:20,970 --> 00:00:23,610
+We're gonna show you some live code,
+
+11
+00:00:23,610 --> 00:00:25,350
+we'll walk through the code, what it does,
+
+12
+00:00:25,350 --> 00:00:27,870
+why we made some of the
+decisions we did about services
+
+13
+00:00:27,870 --> 00:00:29,730
+and primitives that we use,
+
+14
+00:00:29,730 --> 00:00:30,600
+and we'll also demonstrate
+
+15
+00:00:30,600 --> 00:00:32,550
+and show you how the pieces
+fit together, how they work,
+
+16
+00:00:32,550 --> 00:00:35,883
+and what the value of doing
+things this way would be.
+
+17
+00:00:36,960 --> 00:00:40,620
+A couple things that I
+want to call out up front,
+
+18
+00:00:40,620 --> 00:00:42,840
+you're gonna hear a lot about AgentCore,
+
+19
+00:00:42,840 --> 00:00:45,540
+which I'm sure you've heard
+a lot about this whole week.
+
+20
+00:00:45,540 --> 00:00:49,589
+So both excited to
+share how we're using it
+
+21
+00:00:49,589 --> 00:00:51,299
+with a Web3 flavor.
+
+22
+00:00:51,299 --> 00:00:53,850
+So the takeaway from
+today is how you can use
+
+23
+00:00:53,850 --> 00:00:57,000
+some of those primitives from
+AgentCore to build an agent
+
+24
+00:00:57,000 --> 00:00:59,820
+that's capable of
+becoming a Web3 assistant.
+
+25
+00:00:59,820 --> 00:01:01,590
+Then there are of course
+ways you can extend that
+
+26
+00:01:01,590 --> 00:01:02,640
+for your own use cases
+
+27
+00:01:02,640 --> 00:01:05,090
+and we'll talk about some
+of those opportunities.
+
+28
+00:01:06,210 --> 00:01:08,190
+The other thing is I wanna talk about
+
+29
+00:01:08,190 --> 00:01:10,099
+what that agent is going to be able to do
+
+30
+00:01:10,099 --> 00:01:13,320
+and what sort of the run
+of show is gonna look like.
+
+31
+00:01:13,320 --> 00:01:16,983
+So this is sort of our
+general agenda for the day.
+
+32
+00:01:18,060 --> 00:01:19,950
+A code talk, again I mentioned it
+
+33
+00:01:19,950 --> 00:01:22,469
+walking through live code
+with you talking about it
+
+34
+00:01:22,469 --> 00:01:25,808
+and we'll do some
+introductions of the different
+
+35
+00:01:25,808 --> 00:01:27,930
+Amazon Bedrock AgentCore primitives
+
+36
+00:01:27,930 --> 00:01:28,980
+as where they introduced,
+
+37
+00:01:28,980 --> 00:01:31,500
+we introduced them in our code.
+
+38
+00:01:31,500 --> 00:01:33,780
+But what are the requirements
+for this Web3 agent?
+
+39
+00:01:33,780 --> 00:01:34,920
+So we thought about what some of the,
+
+40
+00:01:34,920 --> 00:01:36,780
+like the baseline needs someone would have
+
+41
+00:01:36,780 --> 00:01:41,100
+to make an agent valuable
+for a Web3 customer,
+
+42
+00:01:41,100 --> 00:01:44,490
+a user that's in the Web3
+space, the Web3 enthusiast.
+
+43
+00:01:44,490 --> 00:01:46,456
+First and foremost it
+needs to have context
+
+44
+00:01:46,456 --> 00:01:50,040
+from blockchain, so blockchain data,
+
+45
+00:01:50,040 --> 00:01:51,540
+but also market, right?
+
+46
+00:01:51,540 --> 00:01:56,540
+If you're interested in news,
+sentiment, prices, et cetera.
+
+47
+00:01:56,580 --> 00:01:59,610
+So we want an agent that
+is able to go get that data
+
+48
+00:01:59,610 --> 00:02:04,350
+that it needs to act on
+the prompts from the user.
+
+49
+00:02:04,350 --> 00:02:06,390
+Secondly, it needs to have memory,
+
+50
+00:02:06,390 --> 00:02:10,768
+it needs to be able to
+remember user preferences,
+
+51
+00:02:10,768 --> 00:02:15,420
+be able to recall and search
+through previous conversations
+
+52
+00:02:15,420 --> 00:02:17,027
+and state from previous conversations.
+
+53
+00:02:17,027 --> 00:02:20,280
+So remembering facts about a
+person, what chains do you use?
+
+54
+00:02:20,280 --> 00:02:22,458
+Maybe what addresses do you have,
+
+55
+00:02:22,458 --> 00:02:24,720
+even balances and things like that.
+
+56
+00:02:24,720 --> 00:02:28,467
+So we want our agent to
+have memory to be stateful.
+
+57
+00:02:28,467 --> 00:02:31,200
+And then lastly, we also
+want our agent to be able
+
+58
+00:02:31,200 --> 00:02:34,770
+to trigger or invoke other agents
+
+59
+00:02:34,770 --> 00:02:36,210
+that specialize in a given task.
+
+60
+00:02:36,210 --> 00:02:41,100
+So today we'll show you sort
+of a reference of an agent
+
+61
+00:02:41,100 --> 00:02:43,800
+that can sign and broadcast transactions
+
+62
+00:02:43,800 --> 00:02:48,480
+or get balance for a given
+address or wallet on chain.
+
+63
+00:02:48,480 --> 00:02:49,380
+That's on Ethereum, right?
+
+64
+00:02:49,380 --> 00:02:50,427
+- [David] Yep.
+
+65
+00:02:50,427 --> 00:02:52,080
+- [Forrest] Yeah, on Ethereum.
+
+66
+00:02:52,080 --> 00:02:55,170
+And so I think the last thing
+I wanna say is this agent
+
+67
+00:02:55,170 --> 00:02:57,534
+is not intended to be like a robo-advisor
+
+68
+00:02:57,534 --> 00:03:00,574
+or to execute trades or trade intent.
+
+69
+00:03:00,574 --> 00:03:03,300
+So I just want to call that upfront.
+
+70
+00:03:03,300 --> 00:03:04,500
+Think of it as an assistant,
+
+71
+00:03:04,500 --> 00:03:06,930
+not something that's
+gonna make trades for you.
+
+72
+00:03:06,930 --> 00:03:09,450
+And then lastly,
+
+73
+00:03:09,450 --> 00:03:12,893
+I'm going to put a QR
+code up on the screen now
+
+74
+00:03:12,893 --> 00:03:14,460
+so you can actually follow along,
+
+75
+00:03:14,460 --> 00:03:15,750
+you can go to the repository.
+
+76
+00:03:15,750 --> 00:03:18,720
+All the code that we're gonna
+be using today is in here
+
+77
+00:03:18,720 --> 00:03:21,030
+as well as a, it's not a Jupyter notebook
+
+78
+00:03:21,030 --> 00:03:22,590
+but like a markdown file
+
+79
+00:03:22,590 --> 00:03:24,450
+with all the steps that
+we're gonna go through today.
+
+80
+00:03:24,450 --> 00:03:25,906
+So if you wanted to go
+and run this yourself,
+
+81
+00:03:25,906 --> 00:03:27,210
+dive a little deeper.
+
+82
+00:03:27,210 --> 00:03:28,590
+We only have 60 minutes
+
+83
+00:03:28,590 --> 00:03:31,549
+so we can only talk about
+everything in so much detail.
+
+84
+00:03:31,549 --> 00:03:33,322
+You can go ahead and do that.
+
+85
+00:03:33,322 --> 00:03:38,322
+So with that David, let's
+fire it up and switch views.
+
+86
+00:03:39,870 --> 00:03:40,870
+- [David] All right.
+
+87
+00:03:42,540 --> 00:03:44,520
+So what we see here,
+
+88
+00:03:44,520 --> 00:03:46,710
+this is actually the
+public GitHub repository
+
+89
+00:03:46,710 --> 00:03:48,390
+that we are using today.
+
+90
+00:03:48,390 --> 00:03:51,400
+And I switch to the workshop folder
+
+91
+00:03:52,680 --> 00:03:54,900
+and here we have basically
+the entire outline
+
+92
+00:03:54,900 --> 00:03:57,450
+of the session, what
+we're planning to do today
+
+93
+00:03:57,450 --> 00:03:59,970
+so that you can actually also look into it
+
+94
+00:03:59,970 --> 00:04:01,830
+and there's like a technical explanation
+
+95
+00:04:01,830 --> 00:04:05,550
+for every single step enlisted here.
+
+96
+00:04:05,550 --> 00:04:06,540
+Now back to Forrest.
+
+97
+00:04:06,540 --> 00:04:07,590
+- [Forrest] Yeah, absolutely.
+
+98
+00:04:07,590 --> 00:04:09,533
+So I think the first,
+
+99
+00:04:09,533 --> 00:04:13,002
+the preliminary setup
+that we're gonna have,
+
+100
+00:04:13,002 --> 00:04:15,510
+the beginning, the first bit of code
+
+101
+00:04:15,510 --> 00:04:18,870
+that David's gonna walk
+through is a baseline agent
+
+102
+00:04:18,870 --> 00:04:22,980
+that's gonna be capable
+of searching the web
+
+103
+00:04:22,980 --> 00:04:26,160
+and capable of adopting memory.
+
+104
+00:04:26,160 --> 00:04:30,120
+So creating long-term memory
+using AgentCore memory.
+
+105
+00:04:30,120 --> 00:04:33,240
+We're gonna deploy that agent
+using AgentCore runtime.
+
+106
+00:04:33,240 --> 00:04:34,560
+I think one of the most important things
+
+107
+00:04:34,560 --> 00:04:36,030
+that I want to call out
+for AgentCore runtime,
+
+108
+00:04:36,030 --> 00:04:39,150
+obviously it's an environment
+where you can deploy
+
+109
+00:04:39,150 --> 00:04:40,260
+and operate your agents
+
+110
+00:04:40,260 --> 00:04:41,700
+and I think that's very clear.
+
+111
+00:04:41,700 --> 00:04:43,050
+But one of the things
+that I want to call out
+
+112
+00:04:43,050 --> 00:04:45,720
+about AgentCore runtime
+is particularly important
+
+113
+00:04:45,720 --> 00:04:48,750
+I think for use cases
+like this related to Web3
+
+114
+00:04:48,750 --> 00:04:50,400
+is session isolation.
+
+115
+00:04:50,400 --> 00:04:54,990
+So when you run an agent
+sessions, you invoke an agent
+
+116
+00:04:54,990 --> 00:04:58,950
+with its session ID, it
+creates its own micro VM
+
+117
+00:04:58,950 --> 00:05:03,750
+with isolated compute memory
+and file system for storage.
+
+118
+00:05:03,750 --> 00:05:06,210
+So if you think about, let's say an agent
+
+119
+00:05:06,210 --> 00:05:09,240
+that helps users process
+transaction history
+
+120
+00:05:09,240 --> 00:05:14,240
+to generate an opinion for
+cryptocurrency taxes for example.
+
+121
+00:05:14,370 --> 00:05:17,070
+You don't want sessions being
+mixed between different users
+
+122
+00:05:17,070 --> 00:05:19,560
+where they're pushing
+really sensitive information
+
+123
+00:05:19,560 --> 00:05:23,460
+like transaction history,
+Xpub, public keys,
+
+124
+00:05:23,460 --> 00:05:24,540
+addresses, et cetera.
+
+125
+00:05:24,540 --> 00:05:26,730
+All of those things you want
+to make sure are isolated
+
+126
+00:05:26,730 --> 00:05:30,360
+and kept separated from other users.
+
+127
+00:05:30,360 --> 00:05:32,310
+And so that's one thing
+I wanted to call out
+
+128
+00:05:32,310 --> 00:05:33,990
+about AgentCore runtime
+
+129
+00:05:33,990 --> 00:05:35,280
+and something to keep
+in the back of your mind
+
+130
+00:05:35,280 --> 00:05:36,510
+as we we talk about
+
+131
+00:05:36,510 --> 00:05:38,001
+or we start doing the deployment.
+
+132
+00:05:38,001 --> 00:05:40,233
+We wanna move to the architecture, David.
+
+133
+00:05:41,552 --> 00:05:43,860
+And so this is sort of the end state
+
+134
+00:05:43,860 --> 00:05:46,050
+of where we're gonna get for like
+
+135
+00:05:46,050 --> 00:05:48,210
+the part that we build with you here.
+
+136
+00:05:48,210 --> 00:05:49,173
+There are some other components
+
+137
+00:05:49,173 --> 00:05:52,500
+that it'll interact with there.
+
+138
+00:05:52,500 --> 00:05:54,090
+I think there's another
+architecture diagram later
+
+139
+00:05:54,090 --> 00:05:55,470
+that we can show you.
+
+140
+00:05:55,470 --> 00:05:57,600
+But generally speaking
+this is where gonna land
+
+141
+00:05:57,600 --> 00:05:59,200
+at the end of the session today.
+
+142
+00:06:00,330 --> 00:06:02,700
+Obviously we're using AgentCore runtime,
+
+143
+00:06:02,700 --> 00:06:04,074
+which I just mentioned
+
+144
+00:06:04,074 --> 00:06:06,990
+and we're using the Strands Agents SDK,
+
+145
+00:06:06,990 --> 00:06:10,590
+but you could execute this
+sort of the same setup
+
+146
+00:06:10,590 --> 00:06:12,940
+with any other agent
+framework that you prefer.
+
+147
+00:06:13,950 --> 00:06:15,060
+So we chose strands
+
+148
+00:06:15,060 --> 00:06:16,080
+but you could choose something else
+
+149
+00:06:16,080 --> 00:06:18,120
+like lane chain for example.
+
+150
+00:06:18,120 --> 00:06:22,131
+We're also gonna be utilizing
+observability for logging.
+
+151
+00:06:22,131 --> 00:06:25,022
+We're also gonna be using a browser tool,
+
+152
+00:06:25,022 --> 00:06:27,450
+the AgentCore browser tool
+
+153
+00:06:27,450 --> 00:06:30,030
+to get access to some of
+that data that we want.
+
+154
+00:06:30,030 --> 00:06:32,056
+So from things like block explorers.
+
+155
+00:06:32,056 --> 00:06:37,056
+So David, let's maybe start
+with the first round of work.
+
+156
+00:06:38,580 --> 00:06:41,700
+- [David] Alright, so
+we also want to call out
+
+157
+00:06:41,700 --> 00:06:43,860
+that this session is really
+intended to be interactive.
+
+158
+00:06:43,860 --> 00:06:44,970
+So if you have questions,
+
+159
+00:06:44,970 --> 00:06:47,790
+if you want to do like a deep
+dive into certain things,
+
+160
+00:06:47,790 --> 00:06:49,080
+please raise,
+
+161
+00:06:49,080 --> 00:06:51,510
+like don't hesitate, ask us,
+
+162
+00:06:51,510 --> 00:06:54,090
+there's a lot of content
+here for certain things
+
+163
+00:06:54,090 --> 00:06:57,120
+as Forrest said, like we
+will like use like Bedrock,
+
+164
+00:06:57,120 --> 00:06:59,100
+we will use the memory part.
+
+165
+00:06:59,100 --> 00:07:01,933
+You probably have seen some of that stuff
+
+166
+00:07:01,933 --> 00:07:02,820
+already in other like workshops.
+
+167
+00:07:02,820 --> 00:07:03,653
+We are using it
+
+168
+00:07:03,653 --> 00:07:05,250
+but we want to actually
+also get to the end
+
+169
+00:07:05,250 --> 00:07:07,192
+for like the Web3 specifics here.
+
+170
+00:07:07,192 --> 00:07:09,450
+So we will not spend like too much time
+
+171
+00:07:09,450 --> 00:07:11,700
+on like the Bedrock AgentCore part.
+
+172
+00:07:11,700 --> 00:07:13,380
+We will not spend too
+much time on the memory
+
+173
+00:07:13,380 --> 00:07:14,790
+how that works, the hooks.
+
+174
+00:07:14,790 --> 00:07:17,130
+We will call out the
+most important things.
+
+175
+00:07:17,130 --> 00:07:18,420
+But if you feel that you want
+
+176
+00:07:18,420 --> 00:07:21,103
+to have like certain things a bit like,
+
+177
+00:07:21,103 --> 00:07:23,293
+or a bit more explanation
+on certain things,
+
+178
+00:07:23,293 --> 00:07:24,960
+please ask us.
+
+179
+00:07:24,960 --> 00:07:27,060
+Because we do not really
+have too much time here.
+
+180
+00:07:27,060 --> 00:07:28,470
+We are like with-
+
+181
+00:07:28,470 --> 00:07:29,303
+- [Forrest] Yeah.
+
+182
+00:07:29,303 --> 00:07:31,080
+- [David] Roughly 50 minutes left.
+
+183
+00:07:31,080 --> 00:07:34,782
+So, and then also afterwards
+if you have questions
+
+184
+00:07:34,782 --> 00:07:39,330
+we are outside, please do not hesitate,
+
+185
+00:07:39,330 --> 00:07:41,610
+reach out to us, talk
+to us, connect with us
+
+186
+00:07:41,610 --> 00:07:44,820
+or look into the repository.
+
+187
+00:07:44,820 --> 00:07:47,460
+Alright, so with having that said,
+
+188
+00:07:47,460 --> 00:07:51,480
+this particular folder or
+like this particular workshop
+
+189
+00:07:51,480 --> 00:07:52,313
+that I'm showing,
+
+190
+00:07:52,313 --> 00:07:56,160
+we have like all the
+code examples in here.
+
+191
+00:07:56,160 --> 00:08:00,360
+These particular code examples
+are also in the code folder
+
+192
+00:08:00,360 --> 00:08:02,520
+that I will be using today.
+
+193
+00:08:02,520 --> 00:08:07,520
+So this is basically the folder
+that you're seeing over here
+
+194
+00:08:07,920 --> 00:08:11,790
+and what we will do is we are using
+
+195
+00:08:11,790 --> 00:08:12,990
+like a Docker-based approach
+
+196
+00:08:12,990 --> 00:08:15,450
+so something that is actually
+really close to production.
+
+197
+00:08:15,450 --> 00:08:17,433
+So we are assuming like
+okay you have like an agent
+
+198
+00:08:17,433 --> 00:08:18,900
+that you wanna build,
+
+199
+00:08:18,900 --> 00:08:20,700
+we are using like a Docker build process,
+
+200
+00:08:20,700 --> 00:08:22,170
+we are pushing it to ECR,
+
+201
+00:08:22,170 --> 00:08:24,510
+basically like to contain our repository
+
+202
+00:08:24,510 --> 00:08:26,160
+and we are actually
+fetching it from there.
+
+203
+00:08:26,160 --> 00:08:27,750
+So you will see this,
+
+204
+00:08:27,750 --> 00:08:29,550
+and just this is actually
+
+205
+00:08:29,550 --> 00:08:32,100
+because it is really like
+more like closer to production
+
+206
+00:08:32,100 --> 00:08:33,963
+instead of using like
+any of the wrapping tools
+
+207
+00:08:33,963 --> 00:08:36,573
+or like bootstrapping tools for this.
+
+208
+00:08:37,950 --> 00:08:41,610
+Alright, also there in our,
+
+209
+00:08:41,610 --> 00:08:44,460
+if you are following
+through on your own machine,
+
+210
+00:08:44,460 --> 00:08:45,990
+there are a certain set of policies
+
+211
+00:08:45,990 --> 00:08:49,020
+required in the IM policy for example
+
+212
+00:08:49,020 --> 00:08:52,230
+for a CLI to deploy these
+things, pointing it out
+
+213
+00:08:52,230 --> 00:08:54,510
+for sure you need like couple of Bedrock
+
+214
+00:08:54,510 --> 00:08:56,953
+and Bedrock AgentCore requirements
+
+215
+00:08:56,953 --> 00:08:59,610
+but we have these things
+actually listed in the README
+
+216
+00:08:59,610 --> 00:09:01,863
+or in the workshop file as well.
+
+217
+00:09:04,590 --> 00:09:08,340
+Alright, so the first module is actually,
+
+218
+00:09:08,340 --> 00:09:13,340
+now we will now create
+like a base Strands Agent
+
+219
+00:09:13,980 --> 00:09:18,660
+using like with memory support basically.
+
+220
+00:09:18,660 --> 00:09:21,110
+To do that we have like UV in it.
+
+221
+00:09:21,110 --> 00:09:22,290
+So UV is like a Python,
+
+222
+00:09:22,290 --> 00:09:24,810
+like a next generation
+Python package manager,
+
+223
+00:09:24,810 --> 00:09:28,170
+and like the README
+
+224
+00:09:28,170 --> 00:09:29,760
+or this particular workshop file
+
+225
+00:09:29,760 --> 00:09:31,530
+explains how you set up everything,
+
+226
+00:09:31,530 --> 00:09:33,350
+how you're creating it,
+
+227
+00:09:33,350 --> 00:09:36,270
+you run UV in it, you run UVM,
+
+228
+00:09:36,270 --> 00:09:37,950
+and then add like boto3,
+
+229
+00:09:37,950 --> 00:09:39,810
+the Python dependencies Bedrock AgentCore
+
+230
+00:09:39,810 --> 00:09:40,980
+and boto core.
+
+231
+00:09:40,980 --> 00:09:43,380
+As you see on the screen here
+
+232
+00:09:43,380 --> 00:09:47,550
+we have the uv.lock and we have
+like already like this file,
+
+233
+00:09:48,510 --> 00:09:50,610
+basically the code folder
+has been initialized
+
+234
+00:09:50,610 --> 00:09:52,620
+as like a UV project.
+
+235
+00:09:52,620 --> 00:09:54,870
+So I can now run UV
+
+236
+00:09:54,870 --> 00:09:58,230
+or like use UV run to run our commands.
+
+237
+00:09:58,230 --> 00:10:01,650
+That basically means we have
+like all the requirements,
+
+238
+00:10:01,650 --> 00:10:02,670
+like all the dependencies,
+
+239
+00:10:02,670 --> 00:10:05,610
+the Python dependencies in the folder.
+
+240
+00:10:05,610 --> 00:10:07,390
+Also what I did is like
+
+241
+00:10:09,900 --> 00:10:11,280
+I venved it, so I have like
+
+242
+00:10:11,280 --> 00:10:14,670
+my venv folder here with uv venv
+
+243
+00:10:14,670 --> 00:10:17,070
+So you could actually
+even source it from there.
+
+244
+00:10:20,130 --> 00:10:21,210
+What I did is,
+
+245
+00:10:21,210 --> 00:10:23,000
+or what we did is we have like the UV,
+
+246
+00:10:23,000 --> 00:10:23,833
+UV basically
+
+247
+00:10:23,833 --> 00:10:26,220
+or in this folder we have
+like the base requirements
+
+248
+00:10:26,220 --> 00:10:28,380
+to run like the scripts later on.
+
+249
+00:10:28,380 --> 00:10:30,240
+For example the deployment
+
+250
+00:10:30,240 --> 00:10:32,910
+or the AgentCore grade.
+
+251
+00:10:32,910 --> 00:10:34,800
+So the boto3, the Python dependencies
+
+252
+00:10:34,800 --> 00:10:35,940
+are in this folder
+
+253
+00:10:35,940 --> 00:10:40,440
+and we have like a dedicated
+requirements.txt in here.
+
+254
+00:10:40,440 --> 00:10:43,590
+This particular requirements
+txt basically points out
+
+255
+00:10:43,590 --> 00:10:44,760
+like all the requirements,
+
+256
+00:10:44,760 --> 00:10:47,640
+all the Python requirements
+for our Strands Agent.
+
+257
+00:10:47,640 --> 00:10:50,250
+And I don't want to go too
+deep into these things.
+
+258
+00:10:50,250 --> 00:10:52,383
+We have like Strands AgentCore, AgentCore,
+
+259
+00:10:52,383 --> 00:10:53,940
+the core dependencies,
+
+260
+00:10:53,940 --> 00:10:55,470
+playwright is one of these,
+
+261
+00:10:55,470 --> 00:10:57,660
+browser support, browser related tools
+
+262
+00:10:57,660 --> 00:11:00,633
+that we'll have in the,
+that we need in the,
+
+263
+00:11:01,830 --> 00:11:06,540
+that we need in one of the build out steps
+
+264
+00:11:06,540 --> 00:11:09,300
+for the Strands agent when
+we are using the browser
+
+265
+00:11:09,300 --> 00:11:11,310
+and we will use the boto3 later
+
+266
+00:11:11,310 --> 00:11:12,690
+to invoke another agent.
+
+267
+00:11:12,690 --> 00:11:14,850
+So there's some sort of
+like an A2A basically
+
+268
+00:11:14,850 --> 00:11:16,803
+that we are looking here to do as well.
+
+269
+00:11:18,390 --> 00:11:20,880
+Also what I wanna point out
+there is like another stack.
+
+270
+00:11:20,880 --> 00:11:24,330
+So we have the bigger,
+the overarching repository
+
+271
+00:11:24,330 --> 00:11:27,570
+that we are looking into here,
+it's called crypto AI agents.
+
+272
+00:11:27,570 --> 00:11:29,820
+There's like another cryptographic
+
+273
+00:11:29,820 --> 00:11:31,620
+like a crypto agent in place
+
+274
+00:11:31,620 --> 00:11:33,420
+that I already pre deployed.
+
+275
+00:11:33,420 --> 00:11:35,790
+These requirements, the
+sources and all these things,
+
+276
+00:11:35,790 --> 00:11:37,340
+they are all in the repository.
+
+277
+00:11:38,250 --> 00:11:40,530
+So it's everything in the repository.
+
+278
+00:11:40,530 --> 00:11:42,420
+But like what I did in
+this particular account,
+
+279
+00:11:42,420 --> 00:11:46,560
+I already pre deployed the crypto AI agent
+
+280
+00:11:46,560 --> 00:11:48,690
+because this is a bit more effort
+
+281
+00:11:48,690 --> 00:11:50,040
+and I'm actually gonna invoke it
+
+282
+00:11:50,040 --> 00:11:51,780
+or integrate our Strands Agent
+
+283
+00:11:51,780 --> 00:11:54,213
+with that crypto AI agent later on.
+
+284
+00:11:55,830 --> 00:11:58,830
+But we will actually talk
+about that in more detail
+
+285
+00:11:58,830 --> 00:12:00,873
+when we are at the last build-out step.
+
+286
+00:12:02,610 --> 00:12:07,610
+Alright, so the first
+agent that we are creating
+
+287
+00:12:07,793 --> 00:12:10,080
+is basically as I mentioned before,
+
+288
+00:12:10,080 --> 00:12:12,673
+we have like a couple
+of core dependencies.
+
+289
+00:12:12,673 --> 00:12:14,733
+There is create agent,
+
+290
+00:12:17,040 --> 00:12:21,000
+there's the memory client
+that we are using over here.
+
+291
+00:12:21,000 --> 00:12:22,080
+Give me one sec.
+
+292
+00:12:22,080 --> 00:12:22,913
+Yeah.
+
+293
+00:12:25,650 --> 00:12:27,150
+Just to create the core memory
+
+294
+00:12:27,150 --> 00:12:28,110
+because like Strands
+
+295
+00:12:28,110 --> 00:12:30,630
+or like Bedrock AgentCore supports memory
+
+296
+00:12:30,630 --> 00:12:32,880
+and memory is like a core functionality
+
+297
+00:12:32,880 --> 00:12:35,670
+if we are building out
+of Web3 related agent
+
+298
+00:12:35,670 --> 00:12:38,640
+because we need to explain
+like a couple of things,
+
+299
+00:12:38,640 --> 00:12:40,777
+we need to tell it like, "Okay,
+what are we interested in?
+
+300
+00:12:40,777 --> 00:12:42,127
+"Is there like a specific coin,
+
+301
+00:12:42,127 --> 00:12:44,910
+"is there a specific
+role that I'm having?"
+
+302
+00:12:44,910 --> 00:12:47,340
+So we need some sort of
+like long-term memory,
+
+303
+00:12:47,340 --> 00:12:49,020
+and this particular long-term memory
+
+304
+00:12:49,020 --> 00:12:51,060
+we are setting this up before.
+
+305
+00:12:51,060 --> 00:12:54,480
+There is a script called
+create_Web3_agent_memory.py.
+
+306
+00:12:54,480 --> 00:12:56,010
+We can run this
+
+307
+00:12:56,010 --> 00:12:59,670
+and we have a couple of
+different memory strategies
+
+308
+00:12:59,670 --> 00:13:02,500
+defined in here that
+are being used later on
+
+309
+00:13:03,590 --> 00:13:04,444
+just in a-
+
+310
+00:13:04,444 --> 00:13:05,580
+- [Forrest] I can talk a little more
+
+311
+00:13:05,580 --> 00:13:07,230
+about the memory strategies.
+
+312
+00:13:07,230 --> 00:13:10,650
+So when we were designing
+this and working on this,
+
+313
+00:13:10,650 --> 00:13:12,610
+we started researching
+
+314
+00:13:13,710 --> 00:13:17,201
+how you'd go about building
+agent memory from scratch.
+
+315
+00:13:17,201 --> 00:13:19,050
+So how would you go about doing this
+
+316
+00:13:19,050 --> 00:13:23,256
+if you were to set this up
+yourself without using AgentCore?
+
+317
+00:13:23,256 --> 00:13:26,010
+It's relatively straightforward
+to use open source tooling
+
+318
+00:13:26,010 --> 00:13:28,320
+to create memory, put raw data somewhere
+
+319
+00:13:28,320 --> 00:13:30,810
+and give your agent access to that.
+
+320
+00:13:30,810 --> 00:13:33,030
+And when we started doing
+a little bit more research
+
+321
+00:13:33,030 --> 00:13:35,270
+on how you would actually utilize this
+
+322
+00:13:35,270 --> 00:13:36,927
+in a practical sense,
+
+323
+00:13:36,927 --> 00:13:40,620
+we started testing it
+with AgentCore memory.
+
+324
+00:13:40,620 --> 00:13:43,030
+So just a couple of things
+about how this works.
+
+325
+00:13:43,030 --> 00:13:46,380
+One, AgentCore memory
+has the short term memory
+
+326
+00:13:46,380 --> 00:13:47,700
+which is raw data.
+
+327
+00:13:47,700 --> 00:13:50,820
+So basically as events
+get created by your agent,
+
+328
+00:13:50,820 --> 00:13:52,580
+those get stored as raw data
+
+329
+00:13:52,580 --> 00:13:56,230
+in a short term data store
+for short term memory.
+
+330
+00:13:56,230 --> 00:13:59,010
+If you enable long-term memory
+
+331
+00:13:59,010 --> 00:14:00,900
+and you have memory strategies
+
+332
+00:14:00,900 --> 00:14:02,370
+for things like summarization,
+
+333
+00:14:02,370 --> 00:14:04,830
+semantic search from previous state,
+
+334
+00:14:04,830 --> 00:14:06,510
+or user preferences,
+
+335
+00:14:06,510 --> 00:14:08,430
+there's an asynchronous automatic process
+
+336
+00:14:08,430 --> 00:14:12,930
+that pulls events from that
+raw storage short-term memory
+
+337
+00:14:12,930 --> 00:14:15,600
+and vector creates
+vector embeddings for it
+
+338
+00:14:15,600 --> 00:14:18,240
+and stores it in a vector
+store for long-term memory.
+
+339
+00:14:18,240 --> 00:14:20,220
+You can configure how long the,
+
+340
+00:14:20,220 --> 00:14:21,810
+I guess the time to live is for that data.
+
+341
+00:14:21,810 --> 00:14:23,739
+So how long the data will persist
+
+342
+00:14:23,739 --> 00:14:27,840
+and I believe that the
+timescale for that is a year
+
+343
+00:14:27,840 --> 00:14:29,460
+that you can extend it to.
+
+344
+00:14:29,460 --> 00:14:30,720
+Default is seven days.
+
+345
+00:14:30,720 --> 00:14:32,580
+That's what we're using here.
+
+346
+00:14:32,580 --> 00:14:35,340
+I think the real value
+is in this piece here
+
+347
+00:14:35,340 --> 00:14:36,210
+that you see on the screen.
+
+348
+00:14:36,210 --> 00:14:39,300
+So the prebuilt memory
+strategies for long-term memory
+
+349
+00:14:39,300 --> 00:14:41,610
+'cause it cuts down a
+lot of the complexity
+
+350
+00:14:41,610 --> 00:14:45,979
+and the time it takes to build
+a vector store based approach
+
+351
+00:14:45,979 --> 00:14:49,740
+especially for things like semantic search
+
+352
+00:14:49,740 --> 00:14:52,290
+and summaries of previous
+conversations that you have.
+
+353
+00:14:52,290 --> 00:14:54,240
+And so when we start
+demonstrating this agent,
+
+354
+00:14:54,240 --> 00:14:58,260
+you'll see it remembers some
+of the previous conversation
+
+355
+00:14:58,260 --> 00:14:59,490
+that we've had with it
+
+356
+00:14:59,490 --> 00:15:01,290
+or I guess that David's had with it.
+
+357
+00:15:03,029 --> 00:15:05,613
+- [David] Yep, all right
+so we have like a memory,
+
+358
+00:15:06,600 --> 00:15:08,910
+so database basically in place.
+
+359
+00:15:08,910 --> 00:15:12,780
+The next step and this
+again the workshop guide
+
+360
+00:15:12,780 --> 00:15:15,300
+asks you to create this Web3 agent.memory
+
+361
+00:15:15,300 --> 00:15:17,050
+and you see like okay
+
+362
+00:15:21,488 --> 00:15:24,180
+I already have like my file in here
+
+363
+00:15:24,180 --> 00:15:28,200
+so I actually have
+these things copied over
+
+364
+00:15:28,200 --> 00:15:30,810
+and the next thing that we need to do
+
+365
+00:15:30,810 --> 00:15:32,040
+is for sure, okay we need
+
+366
+00:15:32,040 --> 00:15:34,380
+to tell like our entire infrastructure,
+
+367
+00:15:34,380 --> 00:15:38,643
+okay where do we want to
+deploy this AWS account ID,
+
+368
+00:15:42,030 --> 00:15:44,970
+and oops,
+
+369
+00:15:44,970 --> 00:15:46,590
+I already have my account set up
+
+370
+00:15:46,590 --> 00:15:48,690
+that I want to deploy it into.
+
+371
+00:15:48,690 --> 00:15:50,043
+Alright, there we go.
+
+372
+00:15:51,540 --> 00:15:53,910
+Now when you're running this on your own,
+
+373
+00:15:53,910 --> 00:15:58,530
+what you need to do is basically
+uv run web agent memory.py
+
+374
+00:15:58,530 --> 00:16:01,200
+and this will actually
+return like memory id.
+
+375
+00:16:01,200 --> 00:16:02,940
+This memory id is very important.
+
+376
+00:16:02,940 --> 00:16:05,460
+We will remember and we
+will use this later on.
+
+377
+00:16:05,460 --> 00:16:09,388
+I already did or created
+this particular one.
+
+378
+00:16:09,388 --> 00:16:12,330
+We will see that this,
+
+379
+00:16:12,330 --> 00:16:15,360
+we will see this memory
+id actually later on again
+
+380
+00:16:15,360 --> 00:16:17,310
+but I have it in an environment variable
+
+381
+00:16:17,310 --> 00:16:18,963
+now in my terminal right now.
+
+382
+00:16:21,660 --> 00:16:23,970
+Also to be a bit faster with like
+
+383
+00:16:23,970 --> 00:16:26,070
+or to quickly go over what like
+
+384
+00:16:26,070 --> 00:16:28,320
+how we do like the memory integration,
+
+385
+00:16:28,320 --> 00:16:31,650
+the next thing is that we
+have like a memory.py file
+
+386
+00:16:31,650 --> 00:16:34,980
+which will automatically be
+added to the Dockerfile as well.
+
+387
+00:16:34,980 --> 00:16:37,530
+memory.py is basically
+just like a helper module
+
+388
+00:16:37,530 --> 00:16:39,678
+that we will use for our Strands Agent.
+
+389
+00:16:39,678 --> 00:16:42,990
+memory.py has like in this class,
+
+390
+00:16:42,990 --> 00:16:44,790
+this long-term memory hooks provider
+
+391
+00:16:44,790 --> 00:16:47,430
+that we have defined for our agent here.
+
+392
+00:16:47,430 --> 00:16:49,650
+This is the constructor,
+
+393
+00:16:49,650 --> 00:16:53,010
+we're passing like the
+memory ID over to it later on
+
+394
+00:16:53,010 --> 00:16:54,900
+so that we know like which
+particular memory store
+
+395
+00:16:54,900 --> 00:16:56,490
+to talk to.
+
+396
+00:16:56,490 --> 00:16:59,640
+We have the function with
+which we used our context,
+
+397
+00:16:59,640 --> 00:17:01,470
+we have save conversation,
+
+398
+00:17:01,470 --> 00:17:03,570
+and then basically we
+have to register hook
+
+399
+00:17:03,570 --> 00:17:05,340
+so that every time like the user,
+
+400
+00:17:05,340 --> 00:17:08,987
+our Web3 analyst or the Web3 person,
+
+401
+00:17:08,987 --> 00:17:10,407
+every time we are interacting
+
+402
+00:17:10,407 --> 00:17:11,490
+with the agent,
+
+403
+00:17:11,490 --> 00:17:13,410
+that the agent basically is like trig,
+
+404
+00:17:13,410 --> 00:17:14,880
+these hooks are being triggered
+
+405
+00:17:14,880 --> 00:17:16,980
+and that we are actually
+saving this information
+
+406
+00:17:16,980 --> 00:17:18,333
+in like a long-term memory.
+
+407
+00:17:21,000 --> 00:17:25,320
+All right, so this is
+basically in the memory.py
+
+408
+00:17:25,320 --> 00:17:27,078
+again here I have like everything
+
+409
+00:17:27,078 --> 00:17:31,263
+in like my memory file.
+
+410
+00:17:32,610 --> 00:17:33,443
+Oops.
+
+411
+00:17:37,020 --> 00:17:38,490
+The next thing to build
+
+412
+00:17:38,490 --> 00:17:42,510
+or like build out like base Web3 agent
+
+413
+00:17:42,510 --> 00:17:46,053
+we have something called the
+Strands Agent streaming memory.
+
+414
+00:17:48,846 --> 00:17:50,850
+We have a file that
+
+415
+00:17:50,850 --> 00:17:53,598
+or like we have this
+particular Strands Agent.
+
+416
+00:17:53,598 --> 00:17:56,460
+Strands Agent, you might
+have seen it already as
+
+417
+00:17:56,460 --> 00:17:57,627
+or probably have seen it already,
+
+418
+00:17:57,627 --> 00:18:00,600
+you have participated in another
+session here at re:Invent.
+
+419
+00:18:00,600 --> 00:18:04,132
+If not, we will just quickly
+walk over through it.
+
+420
+00:18:04,132 --> 00:18:07,230
+Using like asyncio for
+non-blocking interaction,
+
+421
+00:18:07,230 --> 00:18:08,437
+we have like import the Strands,
+
+422
+00:18:08,437 --> 00:18:09,900
+the agent and the tool.
+
+423
+00:18:09,900 --> 00:18:11,970
+Tool we will use for later
+
+424
+00:18:11,970 --> 00:18:13,770
+for our tool integration
+
+425
+00:18:13,770 --> 00:18:18,123
+like of the crypto AI agent stack.
+
+426
+00:18:19,050 --> 00:18:21,210
+And then we are actually
+importing like memory client
+
+427
+00:18:21,210 --> 00:18:23,400
+from Bedrock AgentCore memory.
+
+428
+00:18:23,400 --> 00:18:25,650
+And this particular import
+that you're seeing here,
+
+429
+00:18:25,650 --> 00:18:28,323
+this is basically where we
+import the long-term memory hooks
+
+430
+00:18:28,323 --> 00:18:32,010
+from our memory file that
+we have previously created.
+
+431
+00:18:32,010 --> 00:18:33,990
+And besides that, everything is basically
+
+432
+00:18:33,990 --> 00:18:36,540
+like a standard agent.
+
+433
+00:18:36,540 --> 00:18:40,533
+We have a hard code user ID
+here right now for our demo.
+
+434
+00:18:42,060 --> 00:18:45,000
+And what we did is like we
+have like a little tool,
+
+435
+00:18:45,000 --> 00:18:47,460
+this is basically just like get version
+
+436
+00:18:47,460 --> 00:18:49,410
+so that we know like
+which particular agent
+
+437
+00:18:49,410 --> 00:18:50,310
+we are interacting with
+
+438
+00:18:50,310 --> 00:18:53,043
+in case that something goes
+wrong with the deployment.
+
+439
+00:18:54,270 --> 00:18:56,260
+And then we have the system prompt
+
+440
+00:18:57,120 --> 00:18:59,665
+which is basically now specifying
+
+441
+00:18:59,665 --> 00:19:01,980
+the Web3 user requirements.
+
+442
+00:19:01,980 --> 00:19:04,320
+You want to mention a few things about it?
+
+443
+00:19:04,320 --> 00:19:06,900
+- [Forrest] Yeah, so
+we've created a handful
+
+444
+00:19:06,900 --> 00:19:08,280
+of different types of agents,
+
+445
+00:19:08,280 --> 00:19:09,690
+some that are a little more specialized,
+
+446
+00:19:09,690 --> 00:19:11,160
+some that are more general in nature.
+
+447
+00:19:11,160 --> 00:19:13,380
+Obviously this one is more general.
+
+448
+00:19:13,380 --> 00:19:15,963
+But I think that system prompt
+is one of the best places
+
+449
+00:19:15,963 --> 00:19:20,963
+for helping specialize that
+agent for a specific task.
+
+450
+00:19:21,090 --> 00:19:23,010
+So I think I recognize a couple of faces
+
+451
+00:19:23,010 --> 00:19:24,870
+from the session we had,
+
+452
+00:19:24,870 --> 00:19:26,640
+I think it was like an hour and a half ago
+
+453
+00:19:26,640 --> 00:19:28,020
+about blockchain data.
+
+454
+00:19:28,020 --> 00:19:31,767
+So we had a blockchain data analyst agent.
+
+455
+00:19:31,767 --> 00:19:33,420
+And so in the system prompt there
+
+456
+00:19:33,420 --> 00:19:37,350
+we provided a bunch of you
+know tips, best practices
+
+457
+00:19:37,350 --> 00:19:41,850
+and patterns for how blockchain
+data is stored and queried.
+
+458
+00:19:41,850 --> 00:19:43,110
+And again for an assistant,
+
+459
+00:19:43,110 --> 00:19:43,980
+this is a place where
+
+460
+00:19:43,980 --> 00:19:45,880
+as you test this agent incrementally
+
+461
+00:19:46,740 --> 00:19:49,860
+you would add additional
+like steering here
+
+462
+00:19:49,860 --> 00:19:53,730
+for which tools to use
+based on which prompts,
+
+463
+00:19:53,730 --> 00:19:54,570
+what data
+
+464
+00:19:54,570 --> 00:19:55,920
+like also for memory
+
+465
+00:19:55,920 --> 00:19:57,930
+you can also kind of
+give the agent autonomy
+
+466
+00:19:57,930 --> 00:19:59,640
+and determining what
+should be stored in memory
+
+467
+00:19:59,640 --> 00:20:01,170
+and what shouldn't be.
+
+468
+00:20:01,170 --> 00:20:03,090
+So what we have here is relatively simple,
+
+469
+00:20:03,090 --> 00:20:05,730
+we'll add to it sort of
+throughout the session.
+
+470
+00:20:05,730 --> 00:20:06,960
+But again this is a place
+
+471
+00:20:06,960 --> 00:20:09,003
+you can customize your agent a lot.
+
+472
+00:20:10,050 --> 00:20:12,060
+- [David] All right, down here we see
+
+473
+00:20:12,060 --> 00:20:13,920
+we have like our memory hooks
+
+474
+00:20:13,920 --> 00:20:16,050
+integrated with and the hooks provider
+
+475
+00:20:16,050 --> 00:20:18,360
+and we have to the tool
+
+476
+00:20:18,360 --> 00:20:19,590
+where we are actually just passing
+
+477
+00:20:19,590 --> 00:20:21,854
+like the get version right now.
+
+478
+00:20:21,854 --> 00:20:24,660
+And last but not least
+
+479
+00:20:24,660 --> 00:20:26,460
+for our model we are providing this like
+
+480
+00:20:26,460 --> 00:20:27,570
+as an environment variable.
+
+481
+00:20:27,570 --> 00:20:29,580
+We actually will talk
+about this in the next step
+
+482
+00:20:29,580 --> 00:20:30,660
+with the Docker
+
+483
+00:20:30,660 --> 00:20:32,860
+but we're using clouds on it for this
+
+484
+00:20:33,930 --> 00:20:36,630
+so that we are actually now like inference
+
+485
+00:20:36,630 --> 00:20:39,180
+or which model which LLM
+we are using for this.
+
+486
+00:20:39,180 --> 00:20:40,830
+Last but not least there is,
+
+487
+00:20:40,830 --> 00:20:43,920
+in Strands we have this app entry point
+
+488
+00:20:43,920 --> 00:20:46,470
+basically the agent invocation
+
+489
+00:20:46,470 --> 00:20:48,930
+and what we do is we
+have like a stream agent,
+
+490
+00:20:48,930 --> 00:20:49,763
+a stream thing.
+
+491
+00:20:49,763 --> 00:20:52,820
+So that basically means as we
+do not wait for like the LLM
+
+492
+00:20:52,820 --> 00:20:54,660
+or for the full response to be created,
+
+493
+00:20:54,660 --> 00:20:56,310
+we are streaming everything back.
+
+494
+00:20:56,310 --> 00:20:57,870
+You will see this in our client now.
+
+495
+00:20:57,870 --> 00:20:59,280
+So we thought like okay,
+
+496
+00:20:59,280 --> 00:21:02,220
+like an interactive like
+a streaming client is like
+
+497
+00:21:02,220 --> 00:21:04,820
+it's a bit more interactive
+for a session like that.
+
+498
+00:21:06,900 --> 00:21:09,840
+Also what you can see here is basically
+
+499
+00:21:09,840 --> 00:21:11,130
+these are just like a de-
+
+500
+00:21:11,130 --> 00:21:12,360
+a couple of debug statements.
+
+501
+00:21:12,360 --> 00:21:15,510
+If you want to get some more
+information about tool use,
+
+502
+00:21:15,510 --> 00:21:17,280
+about the reasoning of the model,
+
+503
+00:21:17,280 --> 00:21:19,140
+you could actually uncomment this
+
+504
+00:21:19,140 --> 00:21:20,520
+and then you will actually see like
+
+505
+00:21:20,520 --> 00:21:22,470
+how the model reasons about certain tools
+
+506
+00:21:22,470 --> 00:21:26,040
+and returns like these
+things in the stream as well.
+
+507
+00:21:26,040 --> 00:21:27,344
+But this we will not do today
+
+508
+00:21:27,344 --> 00:21:29,850
+because it would actually be very noisy.
+
+509
+00:21:29,850 --> 00:21:31,140
+And it's really good for debugging
+
+510
+00:21:31,140 --> 00:21:34,380
+but not that good for our thing.
+
+511
+00:21:34,380 --> 00:21:38,790
+So this particular agent
+that I have now shown
+
+512
+00:21:38,790 --> 00:21:41,670
+is living in Strands
+Agent streaming memory.py,
+
+513
+00:21:41,670 --> 00:21:44,703
+we have this exactly over here.
+
+514
+00:21:47,100 --> 00:21:48,750
+So we are almost done.
+
+515
+00:21:48,750 --> 00:21:51,060
+So we have like a Strands Agent defined,
+
+516
+00:21:51,060 --> 00:21:52,950
+we have like a memory set up.
+
+517
+00:21:52,950 --> 00:21:54,330
+As I mentioned the memory,
+
+518
+00:21:54,330 --> 00:21:56,490
+I run this before, the memory,
+
+519
+00:21:56,490 --> 00:21:58,530
+the database creation
+takes a couple of minutes
+
+520
+00:21:58,530 --> 00:22:00,939
+so we have like a memory in place already
+
+521
+00:22:00,939 --> 00:22:04,800
+and I have like this memory
+ID you will see it later on.
+
+522
+00:22:04,800 --> 00:22:09,210
+Now to build everything,
+
+523
+00:22:09,210 --> 00:22:10,860
+so we need like Docker for this
+
+524
+00:22:10,860 --> 00:22:12,450
+and we can actually see like okay,
+
+525
+00:22:12,450 --> 00:22:15,693
+Docker PS, docker--version.
+
+526
+00:22:17,040 --> 00:22:18,900
+We see okay we have Docker installed,
+
+527
+00:22:18,900 --> 00:22:20,370
+there is no specific requirement,
+
+528
+00:22:20,370 --> 00:22:22,290
+is this just that we are
+using a Docker-based build,
+
+529
+00:22:22,290 --> 00:22:23,970
+so you need to have Docker on your machine
+
+530
+00:22:23,970 --> 00:22:25,800
+or you need to have
+like some remote Docker
+
+531
+00:22:25,800 --> 00:22:29,040
+or like remote build engine somewhere.
+
+532
+00:22:29,040 --> 00:22:30,090
+Now let's have a quick look
+
+533
+00:22:30,090 --> 00:22:34,680
+on how we can integrate and
+how we can deploy our agent.
+
+534
+00:22:34,680 --> 00:22:37,440
+Again we are using Docker
+
+535
+00:22:37,440 --> 00:22:39,330
+so what is like required for Docker?
+
+536
+00:22:39,330 --> 00:22:40,920
+Okay, we are or like a container
+
+537
+00:22:40,920 --> 00:22:43,400
+we require like a Dockerfile.
+
+538
+00:22:45,109 --> 00:22:48,540
+Here we have our Dockerfile listed.
+
+539
+00:22:48,540 --> 00:22:49,470
+It's very simple,
+
+540
+00:22:49,470 --> 00:22:53,340
+in this case we're using
+like a Python base image.
+
+541
+00:22:53,340 --> 00:22:57,240
+We are copying and installing
+like the requirements.
+
+542
+00:22:57,240 --> 00:23:00,000
+These are the requirements that
+we defined in the beginning.
+
+543
+00:23:00,000 --> 00:23:03,939
+So these are basically just
+as Strands agent requirements
+
+544
+00:23:03,939 --> 00:23:06,240
+where we have the browser integration
+
+545
+00:23:06,240 --> 00:23:09,963
+and where we have the boto3.
+
+546
+00:23:11,880 --> 00:23:16,470
+Then we also install like
+an OpenTelemetry Distro
+
+547
+00:23:16,470 --> 00:23:18,570
+in this particular Docker image
+
+548
+00:23:18,570 --> 00:23:19,920
+or in the Docker container.
+
+549
+00:23:19,920 --> 00:23:22,050
+This is really so that we can separate
+
+550
+00:23:22,050 --> 00:23:24,603
+like the operational piece
+from the duplication.
+
+551
+00:23:25,800 --> 00:23:29,400
+So that is just what we
+are doing it over here.
+
+552
+00:23:29,400 --> 00:23:31,530
+Then we are setting the AWS region
+
+553
+00:23:31,530 --> 00:23:33,090
+where we want to deploy it.
+
+554
+00:23:33,090 --> 00:23:34,525
+We are setting up the inference profile.
+
+555
+00:23:34,525 --> 00:23:36,870
+This is like the cross
+region inference profile
+
+556
+00:23:36,870 --> 00:23:40,350
+that we are using Cloud Sonnet over here.
+
+557
+00:23:40,350 --> 00:23:41,190
+How can we see this?
+
+558
+00:23:41,190 --> 00:23:42,990
+This is now actually like cross region
+
+559
+00:23:42,990 --> 00:23:44,301
+for the US.
+
+560
+00:23:44,301 --> 00:23:45,330
+You will see.
+
+561
+00:23:45,330 --> 00:23:47,730
+So we are deploying our agent in EU
+
+562
+00:23:47,730 --> 00:23:49,069
+so it's running in Frankfurt.
+
+563
+00:23:49,069 --> 00:23:51,660
+You will see like the changes in a moment.
+
+564
+00:23:51,660 --> 00:23:53,850
+And then last but not least,
+
+565
+00:23:53,850 --> 00:23:55,080
+we have our memory ID
+
+566
+00:23:55,080 --> 00:23:57,450
+that we are also passing
+into the Docker container
+
+567
+00:23:57,450 --> 00:23:58,680
+and a lot of these things today
+
+568
+00:23:58,680 --> 00:24:00,780
+are really like just
+optimized for the demo.
+
+569
+00:24:00,780 --> 00:24:02,220
+Like this is basically like
+
+570
+00:24:02,220 --> 00:24:04,623
+what we are passing the
+parameters in that way.
+
+571
+00:24:05,700 --> 00:24:10,700
+Now if we just have like
+a quick look on how this,
+
+572
+00:24:13,140 --> 00:24:15,520
+what is different in my
+Docker file over here
+
+573
+00:24:16,500 --> 00:24:18,420
+we see instead of like the US east one,
+
+574
+00:24:18,420 --> 00:24:20,360
+we have EU central,
+
+575
+00:24:20,360 --> 00:24:23,940
+instead of the US cross region profile,
+
+576
+00:24:23,940 --> 00:24:25,083
+we use the EU,
+
+577
+00:24:26,280 --> 00:24:29,790
+and then basically we have
+like already the memory
+
+578
+00:24:29,790 --> 00:24:31,320
+is already in there,
+
+579
+00:24:31,320 --> 00:24:32,790
+and then for the later agent
+
+580
+00:24:32,790 --> 00:24:35,430
+we have like a couple of like references
+
+581
+00:24:35,430 --> 00:24:36,263
+for the other agent
+
+582
+00:24:36,263 --> 00:24:38,583
+but we will talk about
+this in the next step.
+
+583
+00:24:39,960 --> 00:24:40,793
+All right.
+
+584
+00:24:41,790 --> 00:24:45,080
+So what is the base requirement
+to build like such an Docker
+
+585
+00:24:45,080 --> 00:24:47,760
+or like such an agent base requirement
+
+586
+00:24:47,760 --> 00:24:48,990
+is that we have a repository,
+
+587
+00:24:48,990 --> 00:24:50,550
+I created a repository,
+
+588
+00:24:50,550 --> 00:24:51,840
+but if you're running this code
+
+589
+00:24:51,840 --> 00:24:55,140
+you will actually get like
+your ECR repository back
+
+590
+00:24:55,140 --> 00:24:59,013
+and then you basically just
+need to log in into this.
+
+591
+00:25:03,990 --> 00:25:06,510
+And again like if this
+is too fast or something
+
+592
+00:25:06,510 --> 00:25:07,860
+because we need to explain like
+
+593
+00:25:07,860 --> 00:25:10,020
+how you are actually building
+up the infrastructure,
+
+594
+00:25:10,020 --> 00:25:12,824
+if you have questions
+please do not hesitate.
+
+595
+00:25:12,824 --> 00:25:14,793
+But other, yeah.
+
+596
+00:25:20,190 --> 00:25:21,540
+- [Participant 1] You said
+what's the architecture
+
+597
+00:25:21,540 --> 00:25:22,790
+for the Docker container?
+
+598
+00:25:24,405 --> 00:25:26,822
+(indistinct)
+
+599
+00:25:28,920 --> 00:25:29,753
+- [Forrest] Correct.
+
+600
+00:25:29,753 --> 00:25:34,753
+The expect, the required
+architecture is ARM64,
+
+601
+00:25:34,939 --> 00:25:38,550
+in like for example if you were
+doing this in an environment
+
+602
+00:25:38,550 --> 00:25:40,560
+where you're using AND,
+you can use Docker Buildx
+
+603
+00:25:40,560 --> 00:25:42,300
+to cross platform build
+
+604
+00:25:42,300 --> 00:25:44,370
+but the expectation is yeah, ARM64.
+
+605
+00:25:44,370 --> 00:25:45,630
+- [David] So you see exactly
+
+606
+00:25:45,630 --> 00:25:46,463
+this is what we are doing here.
+
+607
+00:25:46,463 --> 00:25:48,420
+We are using the Buildx
+
+608
+00:25:48,420 --> 00:25:51,198
+because ARM64 is target basically.
+
+609
+00:25:51,198 --> 00:25:54,402
+No big deal on like a mega like machine.
+
+610
+00:25:54,402 --> 00:25:56,808
+Like if you're doing this like on an X86,
+
+611
+00:25:56,808 --> 00:25:59,010
+yeah, you need to have like some sort of
+
+612
+00:25:59,010 --> 00:26:00,150
+like a cross compile there.
+
+613
+00:26:00,150 --> 00:26:02,070
+- [Forrest] In fact if you're
+building this on CloudShell
+
+614
+00:26:02,070 --> 00:26:03,360
+you'll run into this issue
+
+615
+00:26:03,360 --> 00:26:05,643
+because the architecture's different.
+
+616
+00:26:06,870 --> 00:26:11,280
+- [David] Alright, so now what
+I will do is I will make sure
+
+617
+00:26:11,280 --> 00:26:15,150
+that like I have like the most
+recent credentials in here
+
+618
+00:26:15,150 --> 00:26:19,560
+and then we are triggering
+the Buildx basically
+
+619
+00:26:19,560 --> 00:26:22,830
+and then we are pushing
+it up to our repository.
+
+620
+00:26:22,830 --> 00:26:24,330
+This is basically what is every,
+
+621
+00:26:24,330 --> 00:26:26,820
+like everything that is
+integrated in this command,
+
+622
+00:26:26,820 --> 00:26:28,530
+Docker Buildx build,
+
+623
+00:26:28,530 --> 00:26:30,750
+we have like our platform specified
+
+624
+00:26:30,750 --> 00:26:32,760
+and then we are directly,
+
+625
+00:26:32,760 --> 00:26:37,590
+we have like our target
+repository in here as you see
+
+626
+00:26:37,590 --> 00:26:38,890
+and then we're pushing it.
+
+627
+00:26:50,580 --> 00:26:53,370
+Okay with credentials,
+Docker is going through.
+
+628
+00:26:53,370 --> 00:26:56,553
+Okay, there we go.
+
+629
+00:26:59,640 --> 00:27:00,510
+Perfect.
+
+630
+00:27:00,510 --> 00:27:02,610
+So now we have like our Strands Agent
+
+631
+00:27:02,610 --> 00:27:05,343
+and we have pushed it
+to the ECR repository.
+
+632
+00:27:06,630 --> 00:27:08,640
+Now there's also one more like there's
+
+633
+00:27:08,640 --> 00:27:11,550
+as you know like you
+cannot do anything on AWS
+
+634
+00:27:11,550 --> 00:27:14,670
+without proper IIM policies.
+
+635
+00:27:14,670 --> 00:27:16,110
+So we have like another step
+
+636
+00:27:16,110 --> 00:27:17,850
+that is required for the deployment.
+
+637
+00:27:17,850 --> 00:27:20,673
+There's a great agent runtime role.
+
+638
+00:27:21,840 --> 00:27:22,980
+This is like the runtime
+
+639
+00:27:22,980 --> 00:27:25,523
+or the IIM policy required for our,
+
+640
+00:27:25,523 --> 00:27:30,523
+for the AgentCore Bedrock AgentCore.
+
+641
+00:27:31,050 --> 00:27:33,990
+Here we have like the
+invoke model defined,
+
+642
+00:27:33,990 --> 00:27:37,050
+we have like the ECR permissions
+and all these things.
+
+643
+00:27:37,050 --> 00:27:39,390
+And if you're running this
+
+644
+00:27:39,390 --> 00:27:42,690
+you will get this particular
+AgentCore execution role.
+
+645
+00:27:42,690 --> 00:27:44,100
+And in this particular workshop
+
+646
+00:27:44,100 --> 00:27:47,850
+or like in the file we will
+actually like iteratively
+
+647
+00:27:47,850 --> 00:27:50,010
+add like more permissions so that like
+
+648
+00:27:50,010 --> 00:27:51,330
+with more features
+
+649
+00:27:51,330 --> 00:27:53,880
+we are always adding like
+additional IIM permission
+
+650
+00:27:53,880 --> 00:27:55,140
+so that we have like
+
+651
+00:27:55,140 --> 00:27:57,990
+that we follow the least
+privilege policy as well.
+
+652
+00:27:57,990 --> 00:27:59,760
+- [Forrest] We ave a
+least privileged IIM role-
+
+653
+00:27:59,760 --> 00:28:00,593
+- [David] Yeah.
+
+654
+00:28:00,593 --> 00:28:02,130
+- [Forrest] In a folder in the repo now.
+
+655
+00:28:02,130 --> 00:28:07,130
+- [David] Alright, so then
+there's also like deploy agent.
+
+656
+00:28:07,470 --> 00:28:10,650
+Deploy agent is like a small
+Python crypto Python helper
+
+657
+00:28:10,650 --> 00:28:12,810
+that created for this.
+
+658
+00:28:12,810 --> 00:28:14,310
+This basically is just using
+
+659
+00:28:14,310 --> 00:28:17,130
+like boto3 Bedrock AgentCore control
+
+660
+00:28:17,130 --> 00:28:19,770
+and then says like client
+create reagent runtime.
+
+661
+00:28:19,770 --> 00:28:21,990
+This particular client
+create agent runtime
+
+662
+00:28:21,990 --> 00:28:25,710
+creates like a new
+Bedrock AgentCore runtime
+
+663
+00:28:25,710 --> 00:28:27,480
+that we will then use.
+
+664
+00:28:27,480 --> 00:28:31,120
+And what we do, we are pointing
+that particular runtime
+
+665
+00:28:32,010 --> 00:28:35,730
+to over our ECR repository.
+
+666
+00:28:35,730 --> 00:28:38,730
+This is our repository so
+that that runtime knows
+
+667
+00:28:38,730 --> 00:28:41,310
+okay we are always pulling
+like our containers
+
+668
+00:28:41,310 --> 00:28:42,860
+from this particular repository
+
+669
+00:28:44,340 --> 00:28:48,688
+and we are passing like
+the IIM policy to it.
+
+670
+00:28:48,688 --> 00:28:50,717
+This is what we see here, the roleArn
+
+671
+00:28:51,770 --> 00:28:54,663
+is basically our Web3
+AgentCore execution role.
+
+672
+00:28:57,240 --> 00:29:01,117
+If you run the deployment
+you will then see okay,
+
+673
+00:29:01,117 --> 00:29:05,070
+AgentCore runtime created
+successfully runtime ARN
+
+674
+00:29:05,070 --> 00:29:07,080
+and because I created
+it and we will actually
+
+675
+00:29:07,080 --> 00:29:08,790
+come to this later,
+
+676
+00:29:08,790 --> 00:29:10,390
+what I will do instead
+
+677
+00:29:11,790 --> 00:29:14,790
+I will not run create,
+
+678
+00:29:14,790 --> 00:29:17,650
+I will run like another
+script which is actually,
+
+679
+00:29:17,650 --> 00:29:22,650
+oops, update agent because I like had
+
+680
+00:29:23,280 --> 00:29:25,320
+like these things pre deployed.
+
+681
+00:29:25,320 --> 00:29:27,570
+If you have no Bedrock
+AgentCore environment,
+
+682
+00:29:27,570 --> 00:29:29,190
+you just like run the create one.
+
+683
+00:29:29,190 --> 00:29:30,603
+Otherwise you run update.
+
+684
+00:29:32,070 --> 00:29:36,000
+Alright, now we are getting back
+
+685
+00:29:36,000 --> 00:29:37,510
+like the agent runtime ARN
+
+686
+00:29:38,460 --> 00:29:39,780
+and this particular runtime ARN
+
+687
+00:29:39,780 --> 00:29:42,360
+we are putting into like an agent runtime
+
+688
+00:29:42,360 --> 00:29:44,910
+into like an environment variable.
+
+689
+00:29:44,910 --> 00:29:46,503
+This one is basically,
+
+690
+00:29:47,580 --> 00:29:51,450
+this is our runtime like
+the AgentCore runtime ARN
+
+691
+00:29:51,450 --> 00:29:53,040
+that we are using.
+
+692
+00:29:53,040 --> 00:29:55,910
+Now we are using like an
+invoke agent async file there.
+
+693
+00:29:55,910 --> 00:30:00,030
+So this is also like we have
+like a small terminal in here,
+
+694
+00:30:00,030 --> 00:30:01,080
+like a streaming client
+
+695
+00:30:01,080 --> 00:30:03,960
+that we can now interact
+with this particular,
+
+696
+00:30:03,960 --> 00:30:06,540
+with this Bedrock agent.
+
+697
+00:30:06,540 --> 00:30:09,240
+This file is called invoke agent async
+
+698
+00:30:09,240 --> 00:30:11,010
+and this is actually now what we can use
+
+699
+00:30:11,010 --> 00:30:13,320
+to interact with our agent.
+
+700
+00:30:13,320 --> 00:30:15,690
+And this particular terminal
+
+701
+00:30:15,690 --> 00:30:20,690
+or this particular
+streaming terminal basically
+
+702
+00:30:20,829 --> 00:30:23,370
+for our interact with our agent
+
+703
+00:30:23,370 --> 00:30:27,000
+is basically sourcing
+this agent runtime ARN.
+
+704
+00:30:27,000 --> 00:30:29,010
+So we, this is like how it knows
+
+705
+00:30:29,010 --> 00:30:31,233
+what particular Strands Agent to talk to.
+
+706
+00:30:32,940 --> 00:30:35,130
+Then you copy this particular
+one also in your file
+
+707
+00:30:35,130 --> 00:30:36,450
+and then we go
+
+708
+00:30:36,450 --> 00:30:39,003
+and interact with our
+agent for the first time.
+
+709
+00:30:40,080 --> 00:30:43,467
+So this is again like uv
+run invoke agent async,
+
+710
+00:30:43,467 --> 00:30:45,750
+okay this is like a random session ID
+
+711
+00:30:45,750 --> 00:30:47,160
+that we are creating every time.
+
+712
+00:30:47,160 --> 00:30:49,473
+And so how are we doing?
+
+713
+00:30:51,090 --> 00:30:53,253
+Let's see like if our agent is responding.
+
+714
+00:30:57,360 --> 00:30:58,263
+All right.
+
+715
+00:31:03,090 --> 00:31:05,160
+so now as you see
+
+716
+00:31:05,160 --> 00:31:07,244
+I've like set this things up a bit
+
+717
+00:31:07,244 --> 00:31:09,360
+like to speed up the process,
+
+718
+00:31:09,360 --> 00:31:13,320
+it kind of remembers I told
+it like my name is David,
+
+719
+00:31:13,320 --> 00:31:14,760
+so Hi David.
+
+720
+00:31:14,760 --> 00:31:17,280
+Based on our previous conversation
+
+721
+00:31:17,280 --> 00:31:18,630
+I told it that I was interested
+
+722
+00:31:18,630 --> 00:31:21,000
+in some of like the crypto related things.
+
+723
+00:31:21,000 --> 00:31:23,640
+Okay, it remembers that
+
+724
+00:31:23,640 --> 00:31:25,230
+and that now it's actually recalling
+
+725
+00:31:25,230 --> 00:31:27,510
+the previous conversations.
+
+726
+00:31:27,510 --> 00:31:28,865
+So now it knows,
+
+727
+00:31:28,865 --> 00:31:31,410
+what does it know in
+the Web3 space about me?
+
+728
+00:31:31,410 --> 00:31:32,370
+Let's see.
+
+729
+00:31:32,370 --> 00:31:35,425
+It knows something about
+Bitcoin and Ethereum,
+
+730
+00:31:35,425 --> 00:31:37,567
+and now we can actually also tell it
+
+731
+00:31:37,567 --> 00:31:42,567
+"Oh for future conversations
+please also include-"
+
+732
+00:31:53,310 --> 00:31:57,273
+- [Forrest] Is there like
+a preference, Solana?
+
+733
+00:31:58,230 --> 00:31:59,063
+- [David] Okay.
+
+734
+00:32:04,119 --> 00:32:05,130
+So this is actually now
+
+735
+00:32:05,130 --> 00:32:07,948
+how we are building up our preference.
+
+736
+00:32:07,948 --> 00:32:09,603
+Okay, there we go.
+
+737
+00:32:11,640 --> 00:32:12,950
+And what we have seen now,
+
+738
+00:32:12,950 --> 00:32:16,320
+it has already updated
+like our portfolio focus
+
+739
+00:32:16,320 --> 00:32:17,963
+now we like every time we
+are interacting with it,
+
+740
+00:32:17,963 --> 00:32:21,333
+it will also return like
+everything from Solana.
+
+741
+00:32:23,860 --> 00:32:25,320
+- [Participant 2] Sorry,
+- [David] Yes.
+
+742
+00:32:25,320 --> 00:32:28,204
+- [Participant 2] I see
+environment you are using,
+
+743
+00:32:28,204 --> 00:32:30,621
+(indistinct)
+
+744
+00:32:33,720 --> 00:32:35,429
+is that accurate?
+
+745
+00:32:35,429 --> 00:32:37,620
+- [David] No, so what you're referring to
+
+746
+00:32:37,620 --> 00:32:40,200
+is basically this other,
+
+747
+00:32:40,200 --> 00:32:41,033
+yeah, no.
+
+748
+00:32:42,210 --> 00:32:43,557
+We will get into this,
+
+749
+00:32:43,557 --> 00:32:45,853
+like this is the other stack
+that you're referring to.
+
+750
+00:32:45,853 --> 00:32:49,050
+There is a default parameter
+like for the polygon RPC
+
+751
+00:32:49,050 --> 00:32:51,330
+but you can update the RPC endpoint.
+
+752
+00:32:51,330 --> 00:32:54,300
+But the RPC endpoint is like
+then again like just required
+
+753
+00:32:54,300 --> 00:32:56,340
+if you're doing like a direct interaction
+
+754
+00:32:56,340 --> 00:32:59,310
+with the blockchain itself,
+
+755
+00:32:59,310 --> 00:33:00,450
+if you're for example asking
+
+756
+00:33:00,450 --> 00:33:04,950
+for a specific account like
+a balance of an account
+
+757
+00:33:04,950 --> 00:33:06,004
+or like certain things,
+
+758
+00:33:06,004 --> 00:33:08,640
+we are like more on a
+high level right now,
+
+759
+00:33:08,640 --> 00:33:10,590
+we are not yet interacting with this.
+
+760
+00:33:10,590 --> 00:33:12,150
+Because like this RPC endpoint
+
+761
+00:33:12,150 --> 00:33:13,470
+is really like the other stack,
+
+762
+00:33:13,470 --> 00:33:15,663
+the other agent that it requires.
+
+763
+00:33:16,500 --> 00:33:18,930
+- [Participant 2] So for
+like the portfolio focus,
+
+764
+00:33:18,930 --> 00:33:23,100
+like do you have like a single place
+
+765
+00:33:23,100 --> 00:33:24,210
+where the memory is,
+
+766
+00:33:24,210 --> 00:33:27,330
+where you have like okay I
+have some memory about like
+
+767
+00:33:27,330 --> 00:33:29,730
+this is like the portfolio focus,
+
+768
+00:33:29,730 --> 00:33:30,563
+this is the stuff
+
+769
+00:33:30,563 --> 00:33:32,490
+that I should be including in my output
+
+770
+00:33:32,490 --> 00:33:35,760
+and then this is user information
+over here in this place.
+
+771
+00:33:35,760 --> 00:33:40,560
+Like should we like be
+splitting up our memory
+
+772
+00:33:40,560 --> 00:33:42,240
+into multiple minute focuses?
+
+773
+00:33:42,240 --> 00:33:43,380
+Just can you keep it all together
+
+774
+00:33:43,380 --> 00:33:45,360
+and let the model figure it out?
+
+775
+00:33:45,360 --> 00:33:46,193
+- [David] Yeah.
+
+776
+00:33:46,193 --> 00:33:47,026
+- [Participant 2] What are your thoughts?
+
+777
+00:33:47,026 --> 00:33:48,720
+- [Forrest] So there are options there.
+
+778
+00:33:48,720 --> 00:33:50,737
+So the built-in strategies,
+
+779
+00:33:50,737 --> 00:33:55,140
+well and the memory hooks will basically,
+
+780
+00:33:55,140 --> 00:33:57,270
+will usually use reasoning to determine
+
+781
+00:33:57,270 --> 00:33:59,040
+what needs to be stored and where
+
+782
+00:33:59,040 --> 00:34:01,440
+in terms of like from a user ID
+
+783
+00:34:01,440 --> 00:34:03,120
+and session ID perspective,
+
+784
+00:34:03,120 --> 00:34:04,920
+the memory is name spaced and encrypted.
+
+785
+00:34:04,920 --> 00:34:06,780
+So it's also kept separate,
+
+786
+00:34:06,780 --> 00:34:09,216
+otherwise it would defeat the
+purpose of session isolation
+
+787
+00:34:09,216 --> 00:34:10,653
+at the runtime layer.
+
+788
+00:34:11,640 --> 00:34:13,856
+But there's also the option
+to do custom strategies
+
+789
+00:34:13,856 --> 00:34:15,900
+that extend the default behavior
+
+790
+00:34:15,900 --> 00:34:18,540
+of some of these default
+strategies that we showed.
+
+791
+00:34:18,540 --> 00:34:20,799
+And then there you can sort of predefine
+
+792
+00:34:20,799 --> 00:34:23,160
+what types of insights need to be stored
+
+793
+00:34:23,160 --> 00:34:24,207
+where it's stored together.
+
+794
+00:34:24,207 --> 00:34:26,880
+And obviously this is even more
+helpful in long-term memory
+
+795
+00:34:26,880 --> 00:34:29,599
+from a vector embeddings perspective.
+
+796
+00:34:29,599 --> 00:34:33,150
+So you have either the
+more out of the box method
+
+797
+00:34:33,150 --> 00:34:35,070
+or a more custom method.
+
+798
+00:34:35,070 --> 00:34:36,180
+- [Participant 2] And
+is the custom method,
+
+799
+00:34:36,180 --> 00:34:37,856
+is it basically just natural language
+
+800
+00:34:37,856 --> 00:34:41,548
+like tell the whatever agent
+is giving the evaluation
+
+801
+00:34:41,548 --> 00:34:43,140
+of where it needs to go?
+
+802
+00:34:43,140 --> 00:34:45,870
+- [Forrest] Yes there are ways
+to do it in natural language
+
+803
+00:34:45,870 --> 00:34:48,150
+but then there's also
+ways to do it logically
+
+804
+00:34:48,150 --> 00:34:49,276
+when you set up your memory,
+
+805
+00:34:49,276 --> 00:34:52,410
+the memory provider and memory hooks.
+
+806
+00:34:52,410 --> 00:34:53,243
+Yeah, absolutely.
+
+807
+00:34:53,243 --> 00:34:54,748
+And this stuff is documented
+
+808
+00:34:54,748 --> 00:34:56,190
+and I can get with you after
+
+809
+00:34:56,190 --> 00:34:58,090
+and show you the documentation for it.
+
+810
+00:34:59,190 --> 00:35:00,450
+Any other questions we can answer
+
+811
+00:35:00,450 --> 00:35:01,887
+while we're at like a
+stopping point, yeah.
+
+812
+00:35:01,887 --> 00:35:04,520
+- [Participant 3] How would
+you be able to distinguish
+
+813
+00:35:04,520 --> 00:35:07,497
+if you have different customers?
+
+814
+00:35:07,497 --> 00:35:08,370
+- [Forrest] Yeah.
+
+815
+00:35:08,370 --> 00:35:09,203
+- [Participant 3] Different customers
+
+816
+00:35:09,203 --> 00:35:10,468
+might have different preferences.
+
+817
+00:35:10,468 --> 00:35:12,173
+I (indistinct).
+
+818
+00:35:12,173 --> 00:35:14,310
+The other one might want and so on.
+
+819
+00:35:14,310 --> 00:35:15,143
+- [Forrest] Precisely, yeah.
+
+820
+00:35:15,143 --> 00:35:19,650
+- So when David briefly
+showed the Dockerfile,
+
+821
+00:35:19,650 --> 00:35:20,483
+I think it was,
+
+822
+00:35:20,483 --> 00:35:22,964
+he has defined in there a user id
+
+823
+00:35:22,964 --> 00:35:24,750
+like in a production agent
+
+824
+00:35:24,750 --> 00:35:26,100
+where you have many users,
+
+825
+00:35:26,100 --> 00:35:27,616
+you would have obviously dynamic user IDs,
+
+826
+00:35:27,616 --> 00:35:30,180
+you might be tying into identity platform.
+
+827
+00:35:30,180 --> 00:35:32,534
+You have OAuth for
+example, you have user IDs.
+
+828
+00:35:32,534 --> 00:35:35,940
+And then each session that's opened
+
+829
+00:35:35,940 --> 00:35:37,260
+would first check the user ID
+
+830
+00:35:37,260 --> 00:35:39,450
+and then that's what you
+would name space memory for.
+
+831
+00:35:39,450 --> 00:35:42,445
+So you would have all of
+your user memory separated
+
+832
+00:35:42,445 --> 00:35:44,340
+and then that would
+resolve that issue, right?
+
+833
+00:35:44,340 --> 00:35:46,080
+So each user has its own preferences,
+
+834
+00:35:46,080 --> 00:35:48,154
+it has its own conversation history,
+
+835
+00:35:48,154 --> 00:35:50,730
+list of previous sessions, et cetera.
+
+836
+00:35:50,730 --> 00:35:51,690
+So great question.
+
+837
+00:35:51,690 --> 00:35:52,980
+And yeah, for the sake of this demo
+
+838
+00:35:52,980 --> 00:35:54,000
+we wanted to simplify it,
+
+839
+00:35:54,000 --> 00:35:56,490
+but in reality in production
+you would have everyone
+
+840
+00:35:56,490 --> 00:35:57,510
+with different user IDs
+
+841
+00:35:57,510 --> 00:35:59,700
+and that's how you
+would resolve that, yes.
+
+842
+00:35:59,700 --> 00:36:00,820
+- [Participant 4] Can the memory be
+
+843
+00:36:01,673 --> 00:36:03,324
+queryable like separately?
+
+844
+00:36:03,324 --> 00:36:05,010
+(indistinct)
+
+845
+00:36:05,010 --> 00:36:05,843
+- [Forrest] Sorry, could you repeat?
+
+846
+00:36:05,843 --> 00:36:07,244
+- [Participant 4] Can the memory be
+
+847
+00:36:07,244 --> 00:36:09,383
+queryable like separately?
+
+848
+00:36:09,383 --> 00:36:12,150
+(indistinct)
+
+849
+00:36:12,150 --> 00:36:13,380
+- [Forrest] You know,
+that's a good question.
+
+850
+00:36:13,380 --> 00:36:14,400
+I don't know the answer to that.
+
+851
+00:36:14,400 --> 00:36:15,840
+I don't want tell you the wrong thing
+
+852
+00:36:15,840 --> 00:36:17,190
+but I will get you an answer.
+
+853
+00:36:17,190 --> 00:36:19,110
+If the memory is queryable separately.
+
+854
+00:36:19,110 --> 00:36:21,210
+I know you can access
+it from multiple agents
+
+855
+00:36:21,210 --> 00:36:22,170
+but I don't know if you can do it
+
+856
+00:36:22,170 --> 00:36:24,153
+from some other client directly.
+
+857
+00:36:26,561 --> 00:36:28,890
+Any other questions before we move on
+
+858
+00:36:28,890 --> 00:36:31,530
+to the sort of the next
+version of this agent?
+
+859
+00:36:31,530 --> 00:36:33,780
+We building some
+incremental features on top.
+
+860
+00:36:34,920 --> 00:36:36,240
+Awesome.
+- [David] All right-
+
+861
+00:36:36,240 --> 00:36:38,250
+- [Forrest] David, one
+thing before you jump in,
+
+862
+00:36:38,250 --> 00:36:39,240
+I also want to sort of,
+
+863
+00:36:39,240 --> 00:36:42,330
+I wanted to call out to the
+sort of like the build process
+
+864
+00:36:42,330 --> 00:36:44,670
+and the iterative nature of it.
+
+865
+00:36:44,670 --> 00:36:47,220
+So the build process generally
+remains the same, right?
+
+866
+00:36:47,220 --> 00:36:50,550
+You change code in your agent,
+you build a Docker image,
+
+867
+00:36:50,550 --> 00:36:51,840
+you push it to ECR,
+
+868
+00:36:51,840 --> 00:36:53,220
+and then you either create a net new
+
+869
+00:36:53,220 --> 00:36:55,147
+or you update your agent.
+
+870
+00:36:55,147 --> 00:36:59,070
+So really compatible with
+the CICD processes et cetera.
+
+871
+00:36:59,070 --> 00:37:02,250
+But also AgentCore
+runtime works really well
+
+872
+00:37:02,250 --> 00:37:06,630
+with this sort of pattern
+because it supports versioning
+
+873
+00:37:06,630 --> 00:37:09,090
+and so as you create new versions
+
+874
+00:37:09,090 --> 00:37:11,138
+of an existing agent by name,
+
+875
+00:37:11,138 --> 00:37:15,420
+it will point the endpoint for that agent
+
+876
+00:37:15,420 --> 00:37:16,770
+to the latest version.
+
+877
+00:37:16,770 --> 00:37:18,330
+But you also have control over this.
+
+878
+00:37:18,330 --> 00:37:21,360
+So you can start to separate
+multiple versions of agents
+
+879
+00:37:21,360 --> 00:37:22,200
+with different endpoints.
+
+880
+00:37:22,200 --> 00:37:23,430
+So you can separate environments.
+
+881
+00:37:23,430 --> 00:37:26,190
+So you can do development staging and prod
+
+882
+00:37:26,190 --> 00:37:28,530
+each of the different
+version of your agent code,
+
+883
+00:37:28,530 --> 00:37:31,589
+or you can start to diverge
+the behavior of those agents
+
+884
+00:37:31,589 --> 00:37:35,130
+and separate them by endpoints as well.
+
+885
+00:37:35,130 --> 00:37:37,350
+So you have a lot of control over this.
+
+886
+00:37:37,350 --> 00:37:39,210
+The default behavior is
+handled for you obviously,
+
+887
+00:37:39,210 --> 00:37:41,010
+which is just directing the agent,
+
+888
+00:37:41,010 --> 00:37:42,960
+the invocation endpoint
+to the latest version.
+
+889
+00:37:42,960 --> 00:37:46,743
+But you can control that either
+via API or from the console.
+
+890
+00:37:48,090 --> 00:37:48,923
+- [David] Alright, yes.
+
+891
+00:37:48,923 --> 00:37:50,772
+So now let's talk about the next browser.
+
+892
+00:37:50,772 --> 00:37:54,027
+- [Forrest] Sorry, the next browser?
+
+893
+00:37:54,027 --> 00:37:56,640
+- [David] No, about the next iteration.
+
+894
+00:37:56,640 --> 00:37:59,000
+So what we will do now
+is actually use like x,
+
+895
+00:37:59,000 --> 00:38:03,570
+add like browser use or like
+browser access to the agent
+
+896
+00:38:03,570 --> 00:38:06,060
+because if we want to have like an agent
+
+897
+00:38:06,060 --> 00:38:07,620
+that is supposed to somehow like query
+
+898
+00:38:07,620 --> 00:38:09,000
+like current information,
+
+899
+00:38:09,000 --> 00:38:09,840
+there's always a way,
+
+900
+00:38:09,840 --> 00:38:10,673
+okay we can go
+
+901
+00:38:10,673 --> 00:38:14,158
+to like some predefined
+rest APIs for example.
+
+902
+00:38:14,158 --> 00:38:16,530
+There are like plenty
+of rest APIs out there
+
+903
+00:38:16,530 --> 00:38:18,780
+that provide like market information.
+
+904
+00:38:18,780 --> 00:38:21,450
+But I mean there are
+other pages, web pages
+
+905
+00:38:21,450 --> 00:38:23,070
+that provide a lot of information,
+
+906
+00:38:23,070 --> 00:38:24,851
+sentiment analysis and all these things
+
+907
+00:38:24,851 --> 00:38:27,720
+like basically directly for free.
+
+908
+00:38:27,720 --> 00:38:29,350
+The data is unstructured,
+
+909
+00:38:29,350 --> 00:38:32,670
+like usually the other APIs,
+they're like super structured.
+
+910
+00:38:32,670 --> 00:38:34,080
+They provide like proper JSON,
+
+911
+00:38:34,080 --> 00:38:36,570
+that again like is a lot
+of work like to integrate.
+
+912
+00:38:36,570 --> 00:38:39,330
+So we thought like okay
+for Web3, let's see,
+
+913
+00:38:39,330 --> 00:38:41,673
+let's use some browser
+related things as well.
+
+914
+00:38:43,680 --> 00:38:45,453
+Also just to follow the process,
+
+915
+00:38:46,830 --> 00:38:47,790
+as I mentioned before,
+
+916
+00:38:47,790 --> 00:38:50,550
+like you always have to
+increase IIM permissions.
+
+917
+00:38:50,550 --> 00:38:52,470
+So what we will do
+
+918
+00:38:52,470 --> 00:38:54,552
+or what I did is actually for the policy,
+
+919
+00:38:54,552 --> 00:38:57,390
+there's the script that
+actually allows us now
+
+920
+00:38:57,390 --> 00:39:00,510
+to use like the AgentCore browser feature.
+
+921
+00:39:00,510 --> 00:39:02,340
+So it adds like all the
+permissions required
+
+922
+00:39:02,340 --> 00:39:04,112
+for the browser access.
+
+923
+00:39:04,112 --> 00:39:07,230
+And you copy this particular
+file to your file system
+
+924
+00:39:07,230 --> 00:39:09,330
+and then you run it basically.
+
+925
+00:39:09,330 --> 00:39:11,110
+And every time you run it
+
+926
+00:39:12,300 --> 00:39:15,600
+you will get like your
+AgentCore execution policy
+
+927
+00:39:15,600 --> 00:39:17,013
+basically updated.
+
+928
+00:39:17,970 --> 00:39:20,010
+So I did this before
+
+929
+00:39:20,010 --> 00:39:22,860
+so that we can actually
+save a bit of time here.
+
+930
+00:39:22,860 --> 00:39:24,903
+Now we are looking at the Strands Agent.
+
+931
+00:39:25,860 --> 00:39:28,950
+Browser use is basically
+being added in here.
+
+932
+00:39:28,950 --> 00:39:30,870
+We have like playwright
+
+933
+00:39:30,870 --> 00:39:33,720
+and we have like Bedrock
+AgentCore tools browser client
+
+934
+00:39:33,720 --> 00:39:34,710
+that we will see,
+
+935
+00:39:34,710 --> 00:39:36,600
+and if you look in the console
+
+936
+00:39:36,600 --> 00:39:39,333
+you will also like see
+browser sessions coming up.
+
+937
+00:39:40,530 --> 00:39:45,510
+Besides that, we have a tool defined now
+
+938
+00:39:45,510 --> 00:39:50,190
+for our Strands Agent.
+
+939
+00:39:50,190 --> 00:39:53,760
+This tool is called get
+coin data, SQL playwright
+
+940
+00:39:53,760 --> 00:39:57,720
+and we have like a tool called
+get coin data with browser.
+
+941
+00:39:57,720 --> 00:40:00,150
+This is calling this method
+
+942
+00:40:00,150 --> 00:40:03,990
+and this method is then
+basically where we define,
+
+943
+00:40:03,990 --> 00:40:06,060
+okay, with browser session
+
+944
+00:40:06,060 --> 00:40:07,440
+we're passing the region
+
+945
+00:40:07,440 --> 00:40:09,000
+and all this information into it,
+
+946
+00:40:09,000 --> 00:40:11,500
+region is being sourced
+from environment variable.
+
+947
+00:40:12,690 --> 00:40:14,940
+And what it basically does is,
+
+948
+00:40:14,940 --> 00:40:18,390
+okay, we want to use coin
+market cap in this case
+
+949
+00:40:18,390 --> 00:40:20,490
+and we want to just go to coin market cap
+
+950
+00:40:20,490 --> 00:40:22,860
+and get like the coin specific information
+
+951
+00:40:22,860 --> 00:40:24,360
+and then basically process it.
+
+952
+00:40:28,350 --> 00:40:30,627
+Then we basically consume
+this data in the LLM
+
+953
+00:40:30,627 --> 00:40:34,710
+and we analyze it and then
+hope that like it makes,
+
+954
+00:40:34,710 --> 00:40:36,860
+like provides like good
+information for us.
+
+955
+00:40:38,250 --> 00:40:41,070
+And that's basically what we have here.
+
+956
+00:40:41,070 --> 00:40:42,810
+Now I will exit this particular
+
+957
+00:40:42,810 --> 00:40:47,810
+and you see I have my Strands
+agent memory browser.py,
+
+958
+00:40:50,820 --> 00:40:52,173
+I have this file in here.
+
+959
+00:40:55,290 --> 00:40:59,793
+And what we can now do is
+like vim, like the Docker.
+
+960
+00:41:10,140 --> 00:41:10,973
+Oops.
+
+961
+00:41:17,670 --> 00:41:19,230
+I can do this now with the Dockerfile
+
+962
+00:41:19,230 --> 00:41:22,080
+because the Dockerfile
+includes the entire directory,
+
+963
+00:41:22,080 --> 00:41:23,220
+like all the files,
+
+964
+00:41:23,220 --> 00:41:26,760
+and I'm just basically telling
+like my process in the Docker
+
+965
+00:41:26,760 --> 00:41:28,050
+like which particular tool
+
+966
+00:41:28,050 --> 00:41:30,150
+or which particular Strands
+Agent version to call.
+
+967
+00:41:30,150 --> 00:41:32,040
+That's why I can just type in the browser
+
+968
+00:41:32,040 --> 00:41:33,633
+and it gets get automatically.
+
+969
+00:41:35,640 --> 00:41:40,640
+So what I do now is like I
+just do lock the Docker Buildx.
+
+970
+00:41:41,040 --> 00:41:43,110
+So we are basically
+building the next version,
+
+971
+00:41:43,110 --> 00:41:44,730
+now this particular Dockerfile
+
+972
+00:41:44,730 --> 00:41:48,000
+is using like the
+browser-enabled Strands Agent
+
+973
+00:41:48,000 --> 00:41:51,450
+and we are running the
+uv run update agent.
+
+974
+00:41:51,450 --> 00:41:53,793
+So basically we are
+pulling like the latest,
+
+975
+00:41:55,620 --> 00:41:57,930
+we are telling it to use
+the latest Docker version
+
+976
+00:41:57,930 --> 00:41:59,433
+for our Strands Agent.
+
+977
+00:42:07,950 --> 00:42:08,783
+- [Forrest] While we wait,
+
+978
+00:42:08,783 --> 00:42:10,470
+the browser tool that we're using here
+
+979
+00:42:10,470 --> 00:42:11,580
+is the one that's available in AgentCore.
+
+980
+00:42:11,580 --> 00:42:13,830
+So it's a built-in tool
+
+981
+00:42:13,830 --> 00:42:15,810
+that's available through AgentCore.
+
+982
+00:42:15,810 --> 00:42:18,570
+It's a headless browser that allows you
+
+983
+00:42:18,570 --> 00:42:21,300
+to automate a lot of
+different browser tasks.
+
+984
+00:42:21,300 --> 00:42:23,460
+Here we're using it to get coin data
+
+985
+00:42:23,460 --> 00:42:26,460
+instead of using a structured set of APIs.
+
+986
+00:42:26,460 --> 00:42:27,330
+Because it allows us to get
+
+987
+00:42:27,330 --> 00:42:30,416
+a broader set of data more easily.
+
+988
+00:42:30,416 --> 00:42:32,940
+It's also something you
+could use pretty readily
+
+989
+00:42:32,940 --> 00:42:36,420
+for doing some general sentiment analysis
+
+990
+00:42:36,420 --> 00:42:39,750
+by pulling from news syndication websites
+
+991
+00:42:39,750 --> 00:42:40,583
+and other things like that,
+
+992
+00:42:40,583 --> 00:42:43,173
+which we did test when
+we were building this.
+
+993
+00:42:44,460 --> 00:42:47,490
+- [David] Alright, so
+this is why I just had
+
+994
+00:42:47,490 --> 00:42:50,370
+like this tiny little version thing.
+
+995
+00:42:50,370 --> 00:42:52,500
+So I wanted to see like
+what version it is.
+
+996
+00:42:52,500 --> 00:42:56,100
+In this case it is now the
+agent with memory and browser
+
+997
+00:42:56,100 --> 00:42:57,738
+and okay, let's provide
+
+998
+00:42:57,738 --> 00:43:02,738
+and we see, provide some market data
+
+999
+00:43:07,080 --> 00:43:09,333
+for my crypto.
+
+1000
+00:43:15,000 --> 00:43:16,410
+Oops, okay.
+
+1001
+00:43:16,410 --> 00:43:17,243
+- [Forrest] It'll figure it out.
+
+1002
+00:43:17,243 --> 00:43:18,623
+- [David] Yeah, it'll figure it out.
+
+1003
+00:43:22,890 --> 00:43:26,160
+So now it should actually
+use the browser figure these,
+
+1004
+00:43:26,160 --> 00:43:29,057
+yeah, use like Solana,
+Ethereum and Bitcoin,
+
+1005
+00:43:29,057 --> 00:43:31,140
+create the data
+
+1006
+00:43:31,140 --> 00:43:33,363
+and then provide like some analysis.
+
+1007
+00:43:38,730 --> 00:43:39,693
+Okay, awesome.
+
+1008
+00:43:41,670 --> 00:43:44,250
+Oh wow, it seems like
+there is something happened
+
+1009
+00:43:44,250 --> 00:43:45,570
+in Ethereum today.
+
+1010
+00:43:45,570 --> 00:43:46,473
+So we was,
+
+1011
+00:43:47,670 --> 00:43:50,250
+okay now we have like a Web3 agent
+
+1012
+00:43:50,250 --> 00:43:52,380
+that is actually able to
+interact with the browser
+
+1013
+00:43:52,380 --> 00:43:55,110
+with unstructured data
+and all these things.
+
+1014
+00:43:55,110 --> 00:43:58,500
+Now this is basically on
+the data gathering side.
+
+1015
+00:43:58,500 --> 00:43:59,970
+Now to have like a browser
+
+1016
+00:43:59,970 --> 00:44:02,940
+or like an agent that is
+really able to interact
+
+1017
+00:44:02,940 --> 00:44:05,370
+with the blockchain itself,
+
+1018
+00:44:05,370 --> 00:44:07,743
+we have to add like a bit more complexity.
+
+1019
+00:44:09,180 --> 00:44:10,473
+To do so.
+
+1020
+00:44:11,425 --> 00:44:13,476
+- [Participant 5] Question.
+
+1021
+00:44:13,476 --> 00:44:14,309
+- [David] Yeah.
+
+1022
+00:44:14,309 --> 00:44:15,142
+- [Forrest] Yeah, sorry, I missed you.
+
+1023
+00:44:15,142 --> 00:44:16,260
+- [Participant 5] Is
+there an easy way to see
+
+1024
+00:44:16,260 --> 00:44:18,370
+like all of the tool calls
+
+1025
+00:44:18,370 --> 00:44:21,017
+that exuding or all the browser
+interactions (indistinct).
+
+1026
+00:44:22,140 --> 00:44:22,973
+- [Forrest] Yeah, so this-
+
+1027
+00:44:22,973 --> 00:44:24,240
+- [David] Yeah, we could actually enable
+
+1028
+00:44:24,240 --> 00:44:26,100
+the debug flags for this.
+
+1029
+00:44:26,100 --> 00:44:26,933
+- [Forrest] Yeah.
+
+1030
+00:44:26,933 --> 00:44:29,490
+- [Forrest] This would
+be exactly these things
+
+1031
+00:44:29,490 --> 00:44:31,353
+that I called, pointed out.
+
+1032
+00:44:32,550 --> 00:44:33,690
+I have not enabled them,
+
+1033
+00:44:33,690 --> 00:44:37,563
+but this is for example up here,
+
+1034
+00:44:38,981 --> 00:44:40,920
+what's up here-
+
+1035
+00:44:40,920 --> 00:44:41,753
+- [Forrest] Right there.
+
+1036
+00:44:41,753 --> 00:44:42,776
+- [Participant 5] Yeah.
+
+1037
+00:44:42,776 --> 00:44:43,609
+- These, these,
+
+1038
+00:44:43,609 --> 00:44:44,442
+they would actually tell you
+
+1039
+00:44:44,442 --> 00:44:45,275
+like the reasoning about like
+
+1040
+00:44:45,275 --> 00:44:47,940
+what tool to use and when to call what,
+
+1041
+00:44:47,940 --> 00:44:49,740
+because I mean this is really important
+
+1042
+00:44:49,740 --> 00:44:53,520
+and like with agents when you
+need to really be specific
+
+1043
+00:44:53,520 --> 00:44:56,070
+with the system prompt and do the routing
+
+1044
+00:44:56,070 --> 00:44:57,720
+and tell it exactly what to call.
+
+1045
+00:44:57,720 --> 00:44:59,700
+Because otherwise it
+might just get confused
+
+1046
+00:44:59,700 --> 00:45:01,380
+and starts to hallucinate, right?
+
+1047
+00:45:01,380 --> 00:45:04,740
+With like, oh yeah, I have
+this information or something.
+
+1048
+00:45:04,740 --> 00:45:09,420
+So it's like having these hooks in here
+
+1049
+00:45:09,420 --> 00:45:10,710
+and I'm calling out this information
+
+1050
+00:45:10,710 --> 00:45:12,059
+that is really helpful for that.
+
+1051
+00:45:12,059 --> 00:45:12,909
+- [Forrest] Yeah.
+
+1052
+00:45:17,520 --> 00:45:18,930
+- [David] All right,
+so we have like roughly
+
+1053
+00:45:18,930 --> 00:45:20,913
+15 minutes left.
+
+1054
+00:45:23,880 --> 00:45:26,313
+and alright.
+
+1055
+00:45:28,590 --> 00:45:30,900
+Yeah, so what we have
+done now is like our agent
+
+1056
+00:45:30,900 --> 00:45:32,328
+is interacting with like coin,
+
+1057
+00:45:32,328 --> 00:45:33,870
+like can now interact
+
+1058
+00:45:33,870 --> 00:45:37,980
+with like for example any
+coin related market data
+
+1059
+00:45:37,980 --> 00:45:41,100
+like crypto related webpage.
+
+1060
+00:45:41,100 --> 00:45:42,420
+The beauty of that is it gets
+
+1061
+00:45:42,420 --> 00:45:43,807
+like all this data points now, right?
+
+1062
+00:45:43,807 --> 00:45:45,570
+It gets a market, the volume,
+
+1063
+00:45:45,570 --> 00:45:47,150
+it gets sentiment and all these things.
+
+1064
+00:45:47,150 --> 00:45:49,688
+It can actually extract everything
+from these pages directly
+
+1065
+00:45:49,688 --> 00:45:52,808
+without me having to
+collect like or connect
+
+1066
+00:45:52,808 --> 00:45:55,200
+to whatever, like 30-
+
+1067
+00:45:55,200 --> 00:45:56,033
+- [Forrest] 30.
+
+1068
+00:45:56,033 --> 00:45:58,860
+- [David] 30 different rest end points
+
+1069
+00:45:58,860 --> 00:46:01,440
+and do Twitter feeds and all these things.
+
+1070
+00:46:01,440 --> 00:46:02,273
+I mean-
+
+1071
+00:46:02,273 --> 00:46:03,106
+- [Forrest] Yeah.
+
+1072
+00:46:04,560 --> 00:46:05,598
+- [David] All right, now-
+
+1073
+00:46:05,598 --> 00:46:09,020
+- [Forrest] Yeah, so
+then the last step here
+
+1074
+00:46:09,020 --> 00:46:10,830
+you only had two at the beginning,
+
+1075
+00:46:10,830 --> 00:46:11,910
+the last step is connect,
+
+1076
+00:46:11,910 --> 00:46:14,550
+allowing this agent to invoke other agents
+
+1077
+00:46:14,550 --> 00:46:16,020
+that specialize in a given task.
+
+1078
+00:46:16,020 --> 00:46:18,060
+And so the task we wanted to show you here
+
+1079
+00:46:18,060 --> 00:46:21,240
+is connecting to an agent
+that can actually interact
+
+1080
+00:46:21,240 --> 00:46:23,308
+with the blockchain directly.
+
+1081
+00:46:23,308 --> 00:46:27,153
+And so an agent that can leverage,
+
+1082
+00:46:27,999 --> 00:46:31,120
+the key management service of KMS
+
+1083
+00:46:31,120 --> 00:46:33,450
+to sign a transaction and broadcast it
+
+1084
+00:46:33,450 --> 00:46:35,160
+or just simply make read requests
+
+1085
+00:46:35,160 --> 00:46:37,653
+like RPC requests to chain.
+
+1086
+00:46:38,850 --> 00:46:40,499
+This diagram that you see here
+
+1087
+00:46:40,499 --> 00:46:42,750
+is from actually an architecture
+
+1088
+00:46:42,750 --> 00:46:44,610
+that a colleague of ours built
+
+1089
+00:46:44,610 --> 00:46:46,980
+and we sort of tacked on top of this
+
+1090
+00:46:46,980 --> 00:46:48,240
+for the sake of this workshop.
+
+1091
+00:46:48,240 --> 00:46:50,610
+So we could show multiple
+agents working together
+
+1092
+00:46:50,610 --> 00:46:51,819
+to do something
+
+1093
+00:46:51,819 --> 00:46:56,763
+and in this he had some
+news source knowledge bases,
+
+1094
+00:46:58,229 --> 00:47:00,600
+a data analyst agent
+
+1095
+00:47:00,600 --> 00:47:03,090
+and then access as well through tool calls
+
+1096
+00:47:03,090 --> 00:47:05,388
+to a crypto price API,
+
+1097
+00:47:05,388 --> 00:47:09,810
+and then lastly a tool call
+
+1098
+00:47:09,810 --> 00:47:11,550
+for accessing the chain directly.
+
+1099
+00:47:11,550 --> 00:47:16,260
+So we're gonna, David's gonna
+show you the ladder, right?
+
+1100
+00:47:16,260 --> 00:47:17,093
+Interacting with the chain.
+
+1101
+00:47:17,093 --> 00:47:18,060
+- [David] Yeah, alright.
+
+1102
+00:47:18,060 --> 00:47:19,920
+And you you'll see this particular stack,
+
+1103
+00:47:19,920 --> 00:47:21,720
+this is the other,
+
+1104
+00:47:21,720 --> 00:47:22,950
+this is the CDK
+
+1105
+00:47:22,950 --> 00:47:24,360
+that is actually also included
+
+1106
+00:47:24,360 --> 00:47:26,910
+in this crypto agents with Bedrock.
+
+1107
+00:47:26,910 --> 00:47:28,860
+So you can actually deploy it with CDK
+
+1108
+00:47:28,860 --> 00:47:30,960
+and there is actually also like a,
+
+1109
+00:47:30,960 --> 00:47:32,910
+like a couple of like
+blockchain related things
+
+1110
+00:47:32,910 --> 00:47:34,020
+like RPC endpoints
+
+1111
+00:47:34,020 --> 00:47:36,720
+and these are required for this stack now.
+
+1112
+00:47:36,720 --> 00:47:38,070
+And we will actually now integrate
+
+1113
+00:47:38,070 --> 00:47:39,270
+with this particular stack
+
+1114
+00:47:39,270 --> 00:47:41,583
+and then see what we can do with that.
+
+1115
+00:47:43,406 --> 00:47:44,523
+All right.
+
+1116
+00:47:46,890 --> 00:47:49,050
+Again, it's as important,
+
+1117
+00:47:49,050 --> 00:47:50,340
+I mean, I pre deployed it
+
+1118
+00:47:50,340 --> 00:47:51,900
+because that will take a bit too much time
+
+1119
+00:47:51,900 --> 00:47:54,335
+particularly because
+of like knowledge basis
+
+1120
+00:47:54,335 --> 00:47:55,317
+and all these things.
+
+1121
+00:47:55,317 --> 00:47:56,760
+And what I did as well
+
+1122
+00:47:56,760 --> 00:48:00,750
+is we actually updated our IIM policies
+
+1123
+00:48:00,750 --> 00:48:03,423
+because we need to have like additional,
+
+1124
+00:48:04,860 --> 00:48:07,350
+we need to have like a Bedrock
+invoke agent permission
+
+1125
+00:48:07,350 --> 00:48:08,183
+for this.
+
+1126
+00:48:09,090 --> 00:48:10,593
+And then yes.
+
+1127
+00:48:11,490 --> 00:48:12,323
+All right,
+
+1128
+00:48:12,323 --> 00:48:16,650
+now we are looking at
+our Strands Agent again
+
+1129
+00:48:16,650 --> 00:48:20,940
+and how do we actually update
+it for like the A2A use
+
+1130
+00:48:20,940 --> 00:48:22,410
+or like how can we now integrate it
+
+1131
+00:48:22,410 --> 00:48:24,830
+with like the other crypto stack
+
+1132
+00:48:24,830 --> 00:48:26,190
+that is fairly straightforward here.
+
+1133
+00:48:26,190 --> 00:48:28,320
+We are using boto3 for that
+
+1134
+00:48:28,320 --> 00:48:30,903
+and we have like our own
+tool definition again,
+
+1135
+00:48:32,220 --> 00:48:34,683
+and this is really like
+we are just calling,
+
+1136
+00:48:35,970 --> 00:48:37,350
+we are doing like a Bedrock agent
+
+1137
+00:48:37,350 --> 00:48:40,080
+runtime client invoke agent
+
+1138
+00:48:40,080 --> 00:48:43,833
+and we are then having like
+agent ID, agent alias ID,
+
+1139
+00:48:44,988 --> 00:48:48,587
+and that basically tells like
+our Strands Agent to invoke,
+
+1140
+00:48:49,440 --> 00:48:52,560
+use that tool, that tool
+will then actually interact
+
+1141
+00:48:52,560 --> 00:48:55,683
+with our Bedrock agent.
+
+1142
+00:48:56,580 --> 00:48:58,800
+Again, we have like our
+tool definition here.
+
+1143
+00:48:58,800 --> 00:49:00,090
+And now it is really crucial
+
+1144
+00:49:00,090 --> 00:49:03,040
+that we are also updating
+our system prompt
+
+1145
+00:49:04,020 --> 00:49:06,720
+and do basically like the
+proper routing here, right?
+
+1146
+00:49:06,720 --> 00:49:07,890
+So we need to tell it, okay,
+
+1147
+00:49:07,890 --> 00:49:11,400
+so we have like invoke Bedrock agent
+
+1148
+00:49:11,400 --> 00:49:12,561
+and what is this?
+
+1149
+00:49:12,561 --> 00:49:16,980
+Everything that is for
+example for wallet operations,
+
+1150
+00:49:16,980 --> 00:49:20,400
+send, check balances,
+please reach out to it.
+
+1151
+00:49:20,400 --> 00:49:22,140
+This particular other stack has like
+
+1152
+00:49:22,140 --> 00:49:24,210
+also some data feed gathering.
+
+1153
+00:49:24,210 --> 00:49:27,027
+So we can also use this particular agent
+
+1154
+00:49:27,027 --> 00:49:32,027
+for cryptocurrency price
+fetching and all these things.
+
+1155
+00:49:32,790 --> 00:49:36,030
+And we have like a couple
+of examples in here.
+
+1156
+00:49:36,030 --> 00:49:38,010
+So for example,
+
+1157
+00:49:38,010 --> 00:49:40,350
+if I want to check my account balance
+
+1158
+00:49:40,350 --> 00:49:42,156
+and we're talking about like
+an account that I created
+
+1159
+00:49:42,156 --> 00:49:45,210
+or like an account on
+Ethereum, Sepolia or testnet,
+
+1160
+00:49:45,210 --> 00:49:47,060
+then it'll actually invoke this tool.
+
+1161
+00:49:48,720 --> 00:49:52,680
+Besides that, not much has changed
+
+1162
+00:49:52,680 --> 00:49:54,030
+but I removed the browser
+
+1163
+00:49:54,030 --> 00:49:57,600
+because like we are just like
+going from tool to tool here
+
+1164
+00:49:57,600 --> 00:49:59,043
+and all right.
+
+1165
+00:50:00,000 --> 00:50:05,000
+This particular file
+is located in the A2A.
+
+1166
+00:50:05,130 --> 00:50:05,990
+So to do...
+
+1167
+00:50:14,730 --> 00:50:15,563
+Oops.
+
+1168
+00:50:19,200 --> 00:50:21,820
+So instead of browser, I'm now using A2A
+
+1169
+00:50:26,730 --> 00:50:29,820
+and will now trigger this entire build
+
+1170
+00:50:29,820 --> 00:50:32,313
+and update pipeline again.
+
+1171
+00:50:35,850 --> 00:50:37,230
+And as I mentioned before,
+
+1172
+00:50:37,230 --> 00:50:38,940
+and you have seen that in the Dockerfile,
+
+1173
+00:50:38,940 --> 00:50:42,060
+the agent ID and the agent alias ID,
+
+1174
+00:50:42,060 --> 00:50:43,650
+these are in the Dockerfile already.
+
+1175
+00:50:43,650 --> 00:50:45,213
+So this is pre-configured.
+
+1176
+00:50:52,260 --> 00:50:53,793
+All right, it's updating.
+
+1177
+00:50:59,093 --> 00:51:01,960
+So let's see what it's doing
+
+1178
+00:51:04,020 --> 00:51:05,673
+invoke agent runtime.
+
+1179
+00:51:14,130 --> 00:51:16,593
+Takes a bit till the first response.
+
+1180
+00:51:19,954 --> 00:51:22,620
+I don't even know what
+the specific version was,
+
+1181
+00:51:22,620 --> 00:51:23,793
+it's an, okay.
+
+1182
+00:51:27,660 --> 00:51:32,370
+So this other stack now has
+like in KMS key associated.
+
+1183
+00:51:32,370 --> 00:51:35,550
+A KMS is like the Amazon
+key management system,
+
+1184
+00:51:35,550 --> 00:51:39,600
+and KMS allows us to manage
+like private keys as well
+
+1185
+00:51:39,600 --> 00:51:41,700
+or like, it's primarily
+for key management.
+
+1186
+00:51:41,700 --> 00:51:45,296
+So private keys, the beauty of KMS is here
+
+1187
+00:51:45,296 --> 00:51:47,493
+that we can actually also
+directly integrate it
+
+1188
+00:51:47,493 --> 00:51:48,420
+with like an,
+
+1189
+00:51:48,420 --> 00:51:51,989
+or use KMS to sign EVM transactions,
+
+1190
+00:51:51,989 --> 00:51:55,260
+SECP256K1 for particularly.
+
+1191
+00:51:55,260 --> 00:51:57,420
+So like everything with
+this elliptic curve
+
+1192
+00:51:57,420 --> 00:51:58,462
+we can use the, oh-
+
+1193
+00:51:58,462 --> 00:52:02,040
+(indistinct chattering)
+
+1194
+00:52:02,040 --> 00:52:03,090
+- [Forrest] Wouldn't be a live demo
+
+1195
+00:52:03,090 --> 00:52:05,583
+without the service unavailable exception.
+
+1196
+00:52:07,950 --> 00:52:08,790
+- [David] Okay, I think I got-
+
+1197
+00:52:08,790 --> 00:52:10,650
+- [Forrest] Like probably
+if you rerun it'll,
+
+1198
+00:52:10,650 --> 00:52:11,483
+- [David] Yeah-
+
+1199
+00:52:11,483 --> 00:52:12,743
+- [Forrest] Chat with it again, it'll-
+
+1200
+00:52:14,174 --> 00:52:16,500
+- [David] But it's
+really, it's rotted, okay.
+
+1201
+00:52:16,500 --> 00:52:17,450
+Or something, yeah.
+
+1202
+00:52:22,741 --> 00:52:27,058
+But yeah, we are live, I
+mean these things can happen.
+
+1203
+00:52:27,058 --> 00:52:29,216
+But yeah, as I said, oh, let's see.
+
+1204
+00:52:29,216 --> 00:52:31,113
+Oh, okay, now there we go.
+
+1205
+00:52:32,750 --> 00:52:34,680
+So with KMS what we can do
+
+1206
+00:52:34,680 --> 00:52:37,590
+is actually we can now
+sign blockchain transaction
+
+1207
+00:52:37,590 --> 00:52:40,140
+and is everybody familiar with like
+
+1208
+00:52:40,140 --> 00:52:43,920
+how like wallets work
+on Ethereum for example,
+
+1209
+00:52:43,920 --> 00:52:45,270
+or like public keys?
+
+1210
+00:52:45,270 --> 00:52:48,240
+So it is important like
+on like blockchain,
+
+1211
+00:52:48,240 --> 00:52:52,500
+like Ethereum like the
+accounts or like wallets,
+
+1212
+00:52:52,500 --> 00:52:55,680
+like these are like
+basically identified by
+
+1213
+00:52:55,680 --> 00:52:59,010
+or balances like associated
+with like in public address.
+
+1214
+00:52:59,010 --> 00:53:02,490
+And the public address is
+basically like a just, yeah,
+
+1215
+00:53:02,490 --> 00:53:03,720
+this is the public key.
+
+1216
+00:53:03,720 --> 00:53:05,431
+Like the public key of like a certain
+
+1217
+00:53:05,431 --> 00:53:07,680
+private and public key pair.
+
+1218
+00:53:07,680 --> 00:53:09,540
+And when we are using like KMS,
+
+1219
+00:53:09,540 --> 00:53:11,250
+we can actually extract it public key
+
+1220
+00:53:11,250 --> 00:53:13,680
+and then we have like a
+bit of like calculation,
+
+1221
+00:53:13,680 --> 00:53:15,900
+but basically we can
+actually use the public key
+
+1222
+00:53:15,900 --> 00:53:19,680
+from a KMS-based private
+to public key pair
+
+1223
+00:53:19,680 --> 00:53:21,603
+for Ethereum for example.
+
+1224
+00:53:30,930 --> 00:53:32,430
+I'm not even sure if this is the right way
+
+1225
+00:53:32,430 --> 00:53:33,303
+to ask for it.
+
+1226
+00:53:38,340 --> 00:53:39,420
+That is okay.
+
+1227
+00:53:56,510 --> 00:53:58,590
+So while we are waiting
+for the response here,
+
+1228
+00:53:58,590 --> 00:54:01,380
+otherwise I have to do like another,
+
+1229
+00:54:01,380 --> 00:54:04,800
+okay, this is the wallet address,
+
+1230
+00:54:04,800 --> 00:54:06,210
+and I will actually go in detail
+
+1231
+00:54:06,210 --> 00:54:07,877
+like now what happened in the state like,
+
+1232
+00:54:07,877 --> 00:54:11,100
+but we will first of all check, okay,
+
+1233
+00:54:11,100 --> 00:54:12,750
+what is the,
+
+1234
+00:54:12,750 --> 00:54:17,750
+what balance do we have on our account?
+
+1235
+00:54:31,470 --> 00:54:35,370
+So yeah, it's now interacting
+with the other agent
+
+1236
+00:54:35,370 --> 00:54:38,373
+and then basically reaching
+out to the RPC endpoint.
+
+1237
+00:54:39,720 --> 00:54:41,400
+Okay, that looks correct.
+
+1238
+00:54:41,400 --> 00:54:42,233
+Oh that's-
+
+1239
+00:54:42,233 --> 00:54:43,680
+(Forrest and David chuckling)
+
+1240
+00:54:43,680 --> 00:54:45,420
+But how do we validate that?
+
+1241
+00:54:45,420 --> 00:54:47,650
+So we're taking this particular address
+
+1242
+00:54:49,110 --> 00:54:50,850
+and we go here
+
+1243
+00:54:50,850 --> 00:54:53,670
+and this is now for
+everybody who has never seen,
+
+1244
+00:54:53,670 --> 00:54:56,823
+I mean this is the Sepolia Block Explorer.
+
+1245
+00:54:57,960 --> 00:54:59,763
+And then typing this one in,
+
+1246
+00:55:00,870 --> 00:55:02,070
+and while,
+
+1247
+00:55:02,070 --> 00:55:05,980
+so it seems like someone
+funded this particular address
+
+1248
+00:55:07,560 --> 00:55:09,993
+with some Sepolia test these, awesome.
+
+1249
+00:55:11,190 --> 00:55:12,330
+Now how does actually,
+
+1250
+00:55:12,330 --> 00:55:15,150
+how do these things work?
+
+1251
+00:55:15,150 --> 00:55:16,530
+So oops,
+
+1252
+00:55:21,480 --> 00:55:22,710
+if you're interested in this,
+
+1253
+00:55:22,710 --> 00:55:25,260
+like what happens is basically,
+
+1254
+00:55:25,260 --> 00:55:27,577
+in the other, we have
+like the crypto AI agent
+
+1255
+00:55:27,577 --> 00:55:28,950
+supervisor stack,
+
+1256
+00:55:28,950 --> 00:55:30,559
+we have a lambda function,
+
+1257
+00:55:30,559 --> 00:55:33,600
+everything is in the index py
+
+1258
+00:55:33,600 --> 00:55:35,070
+and we have a couple of different
+
+1259
+00:55:35,070 --> 00:55:36,510
+functions and methods in here.
+
+1260
+00:55:36,510 --> 00:55:38,160
+And I can really, if
+you're interested in this,
+
+1261
+00:55:38,160 --> 00:55:40,800
+I wrote like a few blog posts about like
+
+1262
+00:55:40,800 --> 00:55:44,820
+how you can use KMS for Ethereum,
+
+1263
+00:55:44,820 --> 00:55:47,370
+particularly with different type
+
+1264
+00:55:47,370 --> 00:55:52,370
+of like signature standards,
+EIP-155 and 4337 for example,
+
+1265
+00:55:52,890 --> 00:55:55,230
+for like different transaction types.
+
+1266
+00:55:55,230 --> 00:55:58,740
+But like the way how you
+would usually do that
+
+1267
+00:55:58,740 --> 00:56:00,390
+or like how you can actually first of all
+
+1268
+00:56:00,390 --> 00:56:03,030
+map like a KMS key or
+like a KMS public key
+
+1269
+00:56:03,030 --> 00:56:05,340
+because you do not have
+access to the private key.
+
+1270
+00:56:05,340 --> 00:56:08,190
+KMS is really like you
+create a private key,
+
+1271
+00:56:08,190 --> 00:56:11,431
+it remains inside the HSM,
+it cannot be exported.
+
+1272
+00:56:11,431 --> 00:56:13,080
+You can import a key,
+
+1273
+00:56:13,080 --> 00:56:15,240
+like you can for example use import
+
+1274
+00:56:15,240 --> 00:56:17,640
+like your meta mask key into KMS,
+
+1275
+00:56:17,640 --> 00:56:18,660
+but you cannot export it.
+
+1276
+00:56:18,660 --> 00:56:19,890
+That's basically the idea.
+
+1277
+00:56:19,890 --> 00:56:21,240
+It's a fully managed block,
+
+1278
+00:56:21,240 --> 00:56:23,580
+like a fully managed
+key management service
+
+1279
+00:56:23,580 --> 00:56:25,833
+and fully managed means like,
+
+1280
+00:56:27,041 --> 00:56:29,139
+like the backups and everything.
+
+1281
+00:56:29,139 --> 00:56:31,320
+AWS takes care of that.
+
+1282
+00:56:31,320 --> 00:56:33,150
+And the security to permissions,
+
+1283
+00:56:33,150 --> 00:56:36,030
+that's basically what
+you would do with IIM.
+
+1284
+00:56:36,030 --> 00:56:39,240
+Now, as I mentioned, like you have to be,
+
+1285
+00:56:39,240 --> 00:56:42,060
+do a little bit of calculation to extract
+
+1286
+00:56:42,060 --> 00:56:44,610
+or like to trans,
+
+1287
+00:56:44,610 --> 00:56:45,810
+yeah, to do the mapping
+
+1288
+00:56:45,810 --> 00:56:48,570
+of like a public key on KMS
+
+1289
+00:56:48,570 --> 00:56:52,890
+to like a public address
+on Ethereum for example,
+
+1290
+00:56:52,890 --> 00:56:53,790
+here we have an,
+
+1291
+00:56:53,790 --> 00:56:54,930
+whoops, we have a method,
+
+1292
+00:56:54,930 --> 00:56:56,100
+there's calc Ethereum,
+
+1293
+00:56:56,100 --> 00:56:57,630
+and we are passing like the public key.
+
+1294
+00:56:57,630 --> 00:56:59,730
+This is the bytes, the byte representation
+
+1295
+00:56:59,730 --> 00:57:01,140
+of the public key.
+
+1296
+00:57:01,140 --> 00:57:04,050
+And then if you look into like
+how keys are being handled
+
+1297
+00:57:04,050 --> 00:57:07,380
+inside like HSMs,
+
+1298
+00:57:07,380 --> 00:57:10,467
+there's usually something
+like ASN, ASN notif
+
+1299
+00:57:10,467 --> 00:57:12,180
+and ASN notion.
+
+1300
+00:57:12,180 --> 00:57:17,010
+So you basically need to decode
+
+1301
+00:57:17,010 --> 00:57:18,810
+some of these things.
+
+1302
+00:57:18,810 --> 00:57:21,000
+And what we have here, we are actually,
+
+1303
+00:57:21,000 --> 00:57:23,670
+the information that we are looking for
+
+1304
+00:57:23,670 --> 00:57:26,520
+is basically the subject private key.
+
+1305
+00:57:26,520 --> 00:57:27,660
+And this is what is happening here.
+
+1306
+00:57:27,660 --> 00:57:30,510
+We have like the subject
+ASN key definition
+
+1307
+00:57:30,510 --> 00:57:34,080
+and these things are all
+like defined in IEEE.
+
+1308
+00:57:34,080 --> 00:57:36,450
+So certain standards on this.
+
+1309
+00:57:36,450 --> 00:57:38,880
+We are then actually
+extracting the public key
+
+1310
+00:57:38,880 --> 00:57:43,317
+and we are doing a bit of like
+merging or like calculation.
+
+1311
+00:57:45,480 --> 00:57:46,860
+So we're taking the bytes,
+
+1312
+00:57:46,860 --> 00:57:51,860
+we are actually just taking the first,
+
+1313
+00:57:52,560 --> 00:57:55,860
+yeah, last 40 of this, of the six address.
+
+1314
+00:57:55,860 --> 00:57:56,693
+And then we are,
+
+1315
+00:57:56,693 --> 00:58:01,693
+if actually we can turn
+this particular public key
+
+1316
+00:58:01,770 --> 00:58:03,826
+that we calculate into
+like a checksum address,
+
+1317
+00:58:03,826 --> 00:58:06,517
+an Ethereum checksum address
+is basically identified
+
+1318
+00:58:06,517 --> 00:58:09,630
+for everybody who is not aware of this,
+
+1319
+00:58:09,630 --> 00:58:11,460
+like the upper and the lower case
+
+1320
+00:58:11,460 --> 00:58:12,780
+and the public key,
+
+1321
+00:58:12,780 --> 00:58:14,820
+basically this is like the checksum,
+
+1322
+00:58:14,820 --> 00:58:16,770
+this is actually how you can validate
+
+1323
+00:58:16,770 --> 00:58:18,720
+like if an Ethereum public key,
+
+1324
+00:58:18,720 --> 00:58:20,640
+like I said like if you
+wanna send something
+
+1325
+00:58:20,640 --> 00:58:23,250
+you can validate if this
+is a valid address or not,
+
+1326
+00:58:23,250 --> 00:58:24,600
+or if something is missing.
+
+1327
+00:58:26,070 --> 00:58:28,410
+And yes, this is
+basically now integrating,
+
+1328
+00:58:28,410 --> 00:58:30,480
+providing all the functionality for us.
+
+1329
+00:58:30,480 --> 00:58:32,190
+And this is actually important
+
+1330
+00:58:32,190 --> 00:58:34,740
+when we are doing this get wallet address.
+
+1331
+00:58:34,740 --> 00:58:36,930
+The other client, the other agent
+
+1332
+00:58:36,930 --> 00:58:39,060
+is actually just like instantiating,
+
+1333
+00:58:39,060 --> 00:58:40,920
+like a boto3 client with KMS
+
+1334
+00:58:40,920 --> 00:58:42,900
+and it's basically
+downloading the public key.
+
+1335
+00:58:42,900 --> 00:58:46,560
+And the public key is then
+like basically recalculated
+
+1336
+00:58:46,560 --> 00:58:49,830
+and this is then turned
+into our public key address.
+
+1337
+00:58:49,830 --> 00:58:52,070
+And in the same way that
+we are just having like,
+
+1338
+00:58:52,070 --> 00:58:55,380
+in the same way that we
+are basically mapping
+
+1339
+00:58:55,380 --> 00:58:59,670
+like in KMS public key on
+like an Ethereum wallet
+
+1340
+00:58:59,670 --> 00:59:01,143
+or an on Ethereum,
+
+1341
+00:59:02,040 --> 00:59:04,179
+yeah, like an Ethereum account,
+
+1342
+00:59:04,179 --> 00:59:05,520
+like an e,
+
+1343
+00:59:05,520 --> 00:59:07,680
+like an, you would say
+like in Ethereum EOA,
+
+1344
+00:59:07,680 --> 00:59:09,990
+like an externally on the account.
+
+1345
+00:59:09,990 --> 00:59:12,210
+In the same way we can now also
+
+1346
+00:59:12,210 --> 00:59:14,880
+do a bit of like magic for signature.
+
+1347
+00:59:14,880 --> 00:59:17,670
+So we can use KMS to create signatures
+
+1348
+00:59:17,670 --> 00:59:19,590
+for blockchain transactions.
+
+1349
+00:59:19,590 --> 00:59:23,400
+Basically what you would do
+is you pre-calculate the,
+
+1350
+00:59:23,400 --> 00:59:26,880
+you set like the Ethereum,
+the EVM transaction.
+
+1351
+00:59:26,880 --> 00:59:29,820
+You take the hash value,
+you sign this hash basically
+
+1352
+00:59:29,820 --> 00:59:30,930
+with KMS,
+
+1353
+00:59:30,930 --> 00:59:34,800
+and then you decode it into
+its different components.
+
+1354
+00:59:34,800 --> 00:59:38,370
+For EVM it would usually be R, S, and V.
+
+1355
+00:59:38,370 --> 00:59:40,980
+So you have like these
+three different parameters
+
+1356
+00:59:40,980 --> 00:59:42,840
+that are being validated,
+
+1357
+00:59:42,840 --> 00:59:45,990
+and this is actually also
+everything is encapsulated
+
+1358
+00:59:45,990 --> 00:59:49,203
+or everything is written
+down in this index.py.
+
+1359
+00:59:51,270 --> 00:59:54,180
+All right, and now what this
+basically allows us to do
+
+1360
+00:59:54,180 --> 00:59:55,440
+is like from our agent,
+
+1361
+00:59:55,440 --> 00:59:57,930
+we can actually query our account balance.
+
+1362
+00:59:57,930 --> 00:59:59,680
+We can also go and like check
+
+1363
+01:00:01,110 --> 01:00:03,780
+like the account balance of other accounts
+
+1364
+01:00:03,780 --> 01:00:04,860
+if we want to,
+
+1365
+01:00:04,860 --> 01:00:05,700
+or we can ask it
+
+1366
+01:00:05,700 --> 01:00:08,571
+to send certain funds
+from our blockchain wallet
+
+1367
+01:00:08,571 --> 01:00:10,937
+to for example, yeah.
+
+1368
+01:00:10,937 --> 01:00:13,650
+to someone you wanna
+send like to his funds to
+
+1369
+01:00:13,650 --> 01:00:15,540
+or something else.
+
+1370
+01:00:15,540 --> 01:00:16,950
+- [Forrest] So I think we're at time now.
+
+1371
+01:00:16,950 --> 01:00:20,219
+We covered a lot of
+ground like we wanted to
+
+1372
+01:00:20,219 --> 01:00:22,800
+and we ended up landing on
+
+1373
+01:00:22,800 --> 01:00:24,930
+the other agent functionality
+
+1374
+01:00:24,930 --> 01:00:26,700
+that we had hoped we'd get to.
+
+1375
+01:00:26,700 --> 01:00:27,870
+So really appreciate your time.
+
+1376
+01:00:27,870 --> 01:00:29,520
+If you have questions about anything
+
+1377
+01:00:29,520 --> 01:00:32,310
+that we didn't get questions
+on during the session,
+
+1378
+01:00:32,310 --> 01:00:34,170
+we will stick around
+right outside the door.
+
+1379
+01:00:34,170 --> 01:00:35,750
+Feel free to come
+introduce yourself to us,
+
+1380
+01:00:35,750 --> 01:00:37,480
+ask us any questions that you have
+
+1381
+01:00:37,480 --> 01:00:39,660
+and again, enjoy the
+rest of the conference
+
+1382
+01:00:39,660 --> 01:00:42,360
+and have a great rest of your evening.
+
+1383
+01:00:42,360 --> 01:00:43,193
+Thank you.
+
+1384
+01:00:43,193 --> 01:00:44,889
+(audience clapping)
+

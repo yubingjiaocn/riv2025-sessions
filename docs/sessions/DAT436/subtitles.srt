@@ -1,0 +1,6334 @@
+1
+00:00:00,090 --> 00:00:01,893
+- So, this talk is about DynamoDB.
+
+2
+00:00:04,949 --> 00:00:05,970
+I'm gonna start with this one,
+
+3
+00:00:05,970 --> 00:00:07,740
+which is probably a better talk.
+
+4
+00:00:07,740 --> 00:00:08,693
+It's like...
+
+5
+00:00:08,693 --> 00:00:09,780
+(crowd clapping)
+
+6
+00:00:09,780 --> 00:00:12,450
+You guys didn't wanna give
+me a round of applause.
+
+7
+00:00:12,450 --> 00:00:13,433
+Come on, start.
+
+8
+00:00:13,433 --> 00:00:14,266
+(crowd cheering)
+
+9
+00:00:14,266 --> 00:00:15,099
+Okay.
+
+10
+00:00:17,910 --> 00:00:19,710
+I did not expect this slide here.
+
+11
+00:00:19,710 --> 00:00:22,020
+Do you have any idea
+what the slide is about?
+
+12
+00:00:22,020 --> 00:00:23,686
+I just thought-
+- [Craig] This is your slide.
+
+13
+00:00:23,686 --> 00:00:27,480
+- Okay, so this is probably an indication
+
+14
+00:00:27,480 --> 00:00:29,280
+for you how the rest of
+this talk is gonna go.
+
+15
+00:00:29,280 --> 00:00:32,280
+Craig and I worked
+together for several years.
+
+16
+00:00:32,280 --> 00:00:33,113
+My name's Amrith.
+
+17
+00:00:33,113 --> 00:00:34,323
+I'm the guy on the right here.
+
+18
+00:00:35,910 --> 00:00:37,410
+We worked together for several years,
+
+19
+00:00:37,410 --> 00:00:39,750
+but we go back and forth a heck of a lot.
+
+20
+00:00:39,750 --> 00:00:41,963
+That's what you're gonna
+see during this talk.
+
+21
+00:00:42,960 --> 00:00:44,430
+Both of us work on DynamoDB.
+
+22
+00:00:44,430 --> 00:00:45,580
+He's Craig, I'm Amrith.
+
+23
+00:00:47,250 --> 00:00:49,800
+What I've found in the
+last six or so years
+
+24
+00:00:49,800 --> 00:00:53,220
+that I've worked in DynamoDB, in AWS,
+
+25
+00:00:53,220 --> 00:00:56,590
+is that customers who build
+applications on DynamoDB
+
+26
+00:00:58,020 --> 00:01:01,323
+need to understand not
+only how the service works,
+
+27
+00:01:02,340 --> 00:01:04,440
+but also how we made some of the decisions
+
+28
+00:01:04,440 --> 00:01:05,940
+about how the service works.
+
+29
+00:01:05,940 --> 00:01:10,320
+So, this talk is more about
+how we made those decisions.
+
+30
+00:01:10,320 --> 00:01:11,373
+This is who we are.
+
+31
+00:01:12,870 --> 00:01:16,860
+The exact decisions we made
+may not be relevant to you,
+
+32
+00:01:16,860 --> 00:01:19,530
+but what I hope you
+will take away from this
+
+33
+00:01:19,530 --> 00:01:22,860
+is how we come about those decisions.
+
+34
+00:01:22,860 --> 00:01:25,710
+Because those may be more
+applicable to you as well.
+
+35
+00:01:25,710 --> 00:01:27,510
+So, the way in which
+
+36
+00:01:27,510 --> 00:01:31,053
+as a large organization
+making a service like Dynamo,
+
+37
+00:01:32,010 --> 00:01:34,260
+I think, somebody here is
+wondering which talk they're in.
+
+38
+00:01:34,260 --> 00:01:36,093
+This is the DynamoDB talk, okay?
+
+39
+00:01:37,800 --> 00:01:40,000
+The objective is if you have a large team
+
+40
+00:01:41,130 --> 00:01:44,340
+and you need to make
+everybody in the team able
+
+41
+00:01:44,340 --> 00:01:47,940
+to be productive at their maximum level,
+
+42
+00:01:47,940 --> 00:01:50,673
+you cannot have centralized
+decision making.
+
+43
+00:01:52,620 --> 00:01:54,393
+We build a distributed database.
+
+44
+00:01:55,440 --> 00:01:59,940
+The idea is you want to distribute
+things across many nodes
+
+45
+00:01:59,940 --> 00:02:02,340
+and have the power of many nodes.
+
+46
+00:02:02,340 --> 00:02:04,350
+What's the point in having a team
+
+47
+00:02:04,350 --> 00:02:06,033
+which has one decision maker?
+
+48
+00:02:07,020 --> 00:02:07,950
+No point.
+
+49
+00:02:07,950 --> 00:02:10,200
+So, we have tenets in DynamoDB
+
+50
+00:02:10,200 --> 00:02:13,260
+and these give the team an understanding,
+
+51
+00:02:13,260 --> 00:02:15,090
+a shared understanding,
+
+52
+00:02:15,090 --> 00:02:17,850
+so that we can push down decision making
+
+53
+00:02:17,850 --> 00:02:19,920
+into the organization.
+
+54
+00:02:19,920 --> 00:02:22,350
+This is something which I
+think you should understand.
+
+55
+00:02:22,350 --> 00:02:23,910
+This is how we work at Amazon.
+
+56
+00:02:23,910 --> 00:02:27,960
+This is something which is
+common to all AWS services.
+
+57
+00:02:27,960 --> 00:02:30,330
+It helps teams make decisions.
+
+58
+00:02:30,330 --> 00:02:32,313
+And these are our tenets.
+
+59
+00:02:33,570 --> 00:02:35,733
+First, security.
+
+60
+00:02:37,140 --> 00:02:39,600
+Second, durability.
+
+61
+00:02:39,600 --> 00:02:41,193
+Third, availability.
+
+62
+00:02:42,150 --> 00:02:43,923
+These are non-negotiable.
+
+63
+00:02:45,000 --> 00:02:47,460
+I don't care what the feature
+
+64
+00:02:47,460 --> 00:02:49,920
+or the implementation choices,
+
+65
+00:02:49,920 --> 00:02:52,360
+I will never trade security
+
+66
+00:02:53,310 --> 00:02:55,500
+in order to give you something else.
+
+67
+00:02:55,500 --> 00:02:57,390
+And what's the fourth one down there?
+
+68
+00:02:57,390 --> 00:02:59,730
+Predictable (low) latency.
+
+69
+00:02:59,730 --> 00:03:02,010
+This is a DynamoDB feature.
+
+70
+00:03:02,010 --> 00:03:06,843
+We wanna guarantee predictable
+(low) latency at any scale,
+
+71
+00:03:08,040 --> 00:03:10,890
+but we will never trade one of those.
+
+72
+00:03:10,890 --> 00:03:13,920
+So, in the rest of this
+talk, what you're gonna hear
+
+73
+00:03:13,920 --> 00:03:16,890
+is a reiteration of these tenets.
+
+74
+00:03:16,890 --> 00:03:21,890
+Security, durability, availability,
+
+75
+00:03:22,020 --> 00:03:24,093
+and predictable (low) latency.
+
+76
+00:03:26,040 --> 00:03:28,893
+These need not be the
+tenets in your organization,
+
+77
+00:03:29,880 --> 00:03:33,210
+but as a decision maker
+in your organization,
+
+78
+00:03:33,210 --> 00:03:35,490
+the thing I would urge you to do
+
+79
+00:03:35,490 --> 00:03:38,103
+is think about what these tenets are.
+
+80
+00:03:40,320 --> 00:03:42,840
+Make sure that everybody in the team
+
+81
+00:03:42,840 --> 00:03:45,540
+has a shared understanding of these tenets
+
+82
+00:03:45,540 --> 00:03:48,510
+so that when they're making a decision,
+
+83
+00:03:48,510 --> 00:03:51,030
+they will understand
+what these tenets are.
+
+84
+00:03:51,030 --> 00:03:54,270
+Now, in the rest of this talk,
+
+85
+00:03:54,270 --> 00:03:56,340
+we're gonna talk about
+these over and over again,
+
+86
+00:03:56,340 --> 00:03:57,840
+but many of these choices
+
+87
+00:03:57,840 --> 00:04:00,930
+are gonna come down to
+predictable (low) latency.
+
+88
+00:04:00,930 --> 00:04:04,890
+Because like I said, security, durability
+
+89
+00:04:04,890 --> 00:04:07,653
+and availability are non-negotiable items.
+
+90
+00:04:08,550 --> 00:04:11,190
+So, if we have to give you
+predictable (low) latency...
+
+91
+00:04:11,190 --> 00:04:13,497
+Just show of hands, how many
+of you here use DynamoDB?
+
+92
+00:04:13,497 --> 00:04:15,750
+And how many of you have
+never used DynamoDB?
+
+93
+00:04:15,750 --> 00:04:17,940
+Never used DynamoDB, show of hands?
+
+94
+00:04:17,940 --> 00:04:20,280
+All right, very small number.
+
+95
+00:04:20,280 --> 00:04:22,920
+The rest of you understand, we try
+
+96
+00:04:22,920 --> 00:04:27,180
+to give you predictable single
+digit millisecond latency
+
+97
+00:04:27,180 --> 00:04:28,740
+at any scale.
+
+98
+00:04:28,740 --> 00:04:31,080
+So, with that, let's talk about-
+
+99
+00:04:31,080 --> 00:04:33,840
+- All right, all right,
+you've talked enough.
+
+100
+00:04:33,840 --> 00:04:35,970
+- All right, this is how it
+usually works with Craig.
+
+101
+00:04:35,970 --> 00:04:37,440
+You wanna take it over then go ahead.
+
+102
+00:04:37,440 --> 00:04:38,400
+- Yeah.
+
+103
+00:04:38,400 --> 00:04:40,647
+So, we're talking about scaling, right?
+
+104
+00:04:40,647 --> 00:04:43,983
+And I wanna give you a sense
+of the scale of DynamoDB.
+
+105
+00:04:45,660 --> 00:04:48,540
+You know, half a million
+requests per second, right?
+
+106
+00:04:48,540 --> 00:04:49,740
+That's a lot, right?
+
+107
+00:04:49,740 --> 00:04:52,710
+We have hundreds of tables right now,
+
+108
+00:04:52,710 --> 00:04:55,140
+just right now, that are all pushing half
+
+109
+00:04:55,140 --> 00:04:56,070
+a million requests per second.
+
+110
+00:04:56,070 --> 00:04:58,380
+This is just normal for us every day.
+
+111
+00:04:58,380 --> 00:05:00,000
+This is what we see.
+
+112
+00:05:00,000 --> 00:05:03,030
+And it's not just, you know,
+just barely half a million.
+
+113
+00:05:03,030 --> 00:05:04,650
+We've got, for instance,
+
+114
+00:05:04,650 --> 00:05:07,770
+the Amazon stores business on Prime Day.
+
+115
+00:05:07,770 --> 00:05:10,200
+They've peaked at 151
+million requests per second.
+
+116
+00:05:10,200 --> 00:05:12,300
+That's one customer of ours.
+
+117
+00:05:12,300 --> 00:05:14,010
+So, a lot of the scaling causes us
+
+118
+00:05:14,010 --> 00:05:16,313
+to think about things a
+little bit differently.
+
+119
+00:05:18,421 --> 00:05:20,430
+And when you combine the scale
+
+120
+00:05:20,430 --> 00:05:23,100
+with state in a distributed system,
+
+121
+00:05:23,100 --> 00:05:25,320
+this is where a lot of
+the challenges come from.
+
+122
+00:05:25,320 --> 00:05:27,330
+You know, I'm not saying that
+stateless distributed systems
+
+123
+00:05:27,330 --> 00:05:29,310
+are easy by any means,
+
+124
+00:05:29,310 --> 00:05:32,433
+but state full is a whole
+nother level of complexity.
+
+125
+00:05:33,930 --> 00:05:35,640
+Before we get into lot of the details
+
+126
+00:05:35,640 --> 00:05:38,790
+of Dynamo on the specific
+choices that we made.
+
+127
+00:05:38,790 --> 00:05:40,410
+I wanna talk about some kind of,
+
+128
+00:05:40,410 --> 00:05:41,820
+some of this problem in the abstract,
+
+129
+00:05:41,820 --> 00:05:43,970
+just kind of so we're
+all on the same page.
+
+130
+00:05:45,420 --> 00:05:49,650
+So, if you're building an
+application that has a state,
+
+131
+00:05:49,650 --> 00:05:51,570
+the simplest thing to do
+is put the application,
+
+132
+00:05:51,570 --> 00:05:53,970
+the state on the same instance, right?
+
+133
+00:05:53,970 --> 00:05:55,590
+- [Amrith] Sorry, are you
+saying that it's gonna be easy
+
+134
+00:05:55,590 --> 00:05:58,953
+to do this or, like, it's
+like is this easy or what?
+
+135
+00:05:59,850 --> 00:06:02,400
+- I mean, concurrent programming
+is not necessarily easy,
+
+136
+00:06:02,400 --> 00:06:04,020
+but relatively speaking.
+
+137
+00:06:04,020 --> 00:06:05,220
+Yes, I'm saying this is easier
+
+138
+00:06:05,220 --> 00:06:06,920
+than distributed state management.
+
+139
+00:06:08,310 --> 00:06:10,620
+This pattern works great
+for a lot of applications,
+
+140
+00:06:10,620 --> 00:06:11,700
+but pretty soon you wanna scale,
+
+141
+00:06:11,700 --> 00:06:13,380
+you wanna scale things independently.
+
+142
+00:06:13,380 --> 00:06:16,120
+And so you move, you state
+onto a separate instance
+
+143
+00:06:19,350 --> 00:06:23,793
+and now you've gotta
+deal with failure, right?
+
+144
+00:06:24,840 --> 00:06:26,910
+Because you've got these two things now
+
+145
+00:06:26,910 --> 00:06:27,750
+that have to be available,
+
+146
+00:06:27,750 --> 00:06:29,910
+your application server
+has to be available.
+
+147
+00:06:29,910 --> 00:06:31,770
+Now your stateful server
+has to be available.
+
+148
+00:06:31,770 --> 00:06:32,850
+They both have to be available.
+
+149
+00:06:32,850 --> 00:06:34,170
+This is strictly less available
+
+150
+00:06:34,170 --> 00:06:36,330
+than the previous approach.
+
+151
+00:06:36,330 --> 00:06:38,850
+But you get some benefits
+because you can now scale
+
+152
+00:06:38,850 --> 00:06:40,943
+the state and the
+application independently.
+
+153
+00:06:42,150 --> 00:06:44,190
+But it also means that the
+state can disappear out
+
+154
+00:06:44,190 --> 00:06:45,840
+from underneath you at any time.
+
+155
+00:06:45,840 --> 00:06:47,490
+And so you have to, you know, think
+
+156
+00:06:47,490 --> 00:06:49,890
+about these failure cases
+throughout your code everywhere.
+
+157
+00:06:49,890 --> 00:06:51,780
+- [Amrith] So, how does your
+application actually know
+
+158
+00:06:51,780 --> 00:06:54,030
+what the state of the
+underlying database is?
+
+159
+00:06:55,050 --> 00:06:58,380
+- Well, in some cases it doesn't, right?
+
+160
+00:06:58,380 --> 00:07:00,780
+Because there's, especially
+as we start scaling,
+
+161
+00:07:00,780 --> 00:07:02,047
+we get to the world where we say,
+
+162
+00:07:02,047 --> 00:07:06,090
+"Hey, one instance isn't sufficient."
+
+163
+00:07:06,090 --> 00:07:07,860
+You know, we're gonna
+have multiple instances
+
+164
+00:07:07,860 --> 00:07:09,420
+and it's now we're
+introducing coordination.
+
+165
+00:07:09,420 --> 00:07:10,650
+And coordination is where a lot
+
+166
+00:07:10,650 --> 00:07:13,143
+is complexity comes from, right?
+
+167
+00:07:15,030 --> 00:07:16,380
+And so you can end up, you know this,
+
+168
+00:07:16,380 --> 00:07:18,106
+one of the simplest things
+you can do then is move
+
+169
+00:07:18,106 --> 00:07:20,670
+from a single instance model to a primary
+
+170
+00:07:20,670 --> 00:07:22,290
+and secondary model, right?
+
+171
+00:07:22,290 --> 00:07:23,123
+And this is great.
+
+172
+00:07:23,123 --> 00:07:25,260
+You do all your read and
+rights to the primary
+
+173
+00:07:25,260 --> 00:07:28,110
+and, you know, you think
+through this and you're like,
+
+174
+00:07:28,110 --> 00:07:31,110
+okay, well, I gotta deal with
+when the primary fails, right?
+
+175
+00:07:32,100 --> 00:07:32,933
+That's easy.
+
+176
+00:07:32,933 --> 00:07:33,766
+Everybody thinks about when,
+
+177
+00:07:33,766 --> 00:07:34,599
+what happens when the primary fails-
+
+178
+00:07:34,599 --> 00:07:36,265
+- [Amrith] What happens to the
+other side? Secondary fails.
+
+179
+00:07:36,265 --> 00:07:38,100
+- Oh, the secondary fails.
+
+180
+00:07:38,100 --> 00:07:39,752
+Yes, this one's actually more interesting
+
+181
+00:07:39,752 --> 00:07:42,180
+and this is one that's,
+it's a little more subtle
+
+182
+00:07:42,180 --> 00:07:44,760
+is because what do you
+do in this case, right?
+
+183
+00:07:44,760 --> 00:07:48,240
+Do you continue to accept
+rights on the primary?
+
+184
+00:07:48,240 --> 00:07:50,220
+But those rights won't
+end up on the secondary
+
+185
+00:07:50,220 --> 00:07:51,780
+because it's down.
+
+186
+00:07:51,780 --> 00:07:53,340
+And so what happens to those rights,
+
+187
+00:07:53,340 --> 00:07:55,020
+you know, when the secondary
+gets healthy again?
+
+188
+00:07:55,020 --> 00:07:56,460
+Like how are you gonna repair all this?
+
+189
+00:07:56,460 --> 00:07:58,920
+And you start getting into
+a lot of these corner cases
+
+190
+00:07:58,920 --> 00:08:00,150
+and the complexity that comes
+
+191
+00:08:00,150 --> 00:08:02,943
+from this distributed
+state coordination, right?
+
+192
+00:08:03,959 --> 00:08:05,820
+And so two, right?
+
+193
+00:08:05,820 --> 00:08:08,070
+Well, maybe two isn't the answer.
+
+194
+00:08:08,070 --> 00:08:09,570
+So, three, two doesn't work.
+
+195
+00:08:09,570 --> 00:08:10,403
+Let's try three.
+
+196
+00:08:10,403 --> 00:08:12,630
+We'll just keep counting up here.
+
+197
+00:08:12,630 --> 00:08:14,910
+So, three is the real minimum then, right?
+
+198
+00:08:14,910 --> 00:08:15,743
+Right?
+
+199
+00:08:15,743 --> 00:08:16,576
+Well, this is great
+
+200
+00:08:16,576 --> 00:08:18,210
+because now if you wanna
+survive a single box failing,
+
+201
+00:08:18,210 --> 00:08:20,220
+you can, because you still got two healthy
+
+202
+00:08:20,220 --> 00:08:21,120
+and you've got another one.
+
+203
+00:08:21,120 --> 00:08:22,830
+The right comes into one of the nodes
+
+204
+00:08:22,830 --> 00:08:24,600
+and you can get it to
+one of the other nodes.
+
+205
+00:08:24,600 --> 00:08:25,980
+It's now your right's in two places.
+
+206
+00:08:25,980 --> 00:08:28,830
+And you, that right is
+no longer susceptible
+
+207
+00:08:28,830 --> 00:08:30,150
+to losing a single box.
+
+208
+00:08:30,150 --> 00:08:32,640
+- [Amrith] If three is not
+enough, what are you gonna do?
+
+209
+00:08:32,640 --> 00:08:35,010
+- Well, so three is not enough.
+
+210
+00:08:35,010 --> 00:08:36,390
+Let's try four, right?
+
+211
+00:08:36,390 --> 00:08:38,370
+If three is good, four must be better.
+
+212
+00:08:38,370 --> 00:08:41,700
+Okay, well, so with four,
+
+213
+00:08:41,700 --> 00:08:44,910
+you know, now in theory you can
+survive two failures, right?
+
+214
+00:08:44,910 --> 00:08:47,130
+Because I can still get
+the right to the other node
+
+215
+00:08:47,130 --> 00:08:48,780
+and that's fine.
+
+216
+00:08:48,780 --> 00:08:53,780
+But, well, no-
+
+217
+00:08:54,050 --> 00:08:55,960
+- [Amrith] How do you know
+these two are the correct two?
+
+218
+00:08:56,850 --> 00:08:58,230
+- Okay, how do I know the,
+
+219
+00:08:58,230 --> 00:09:00,270
+yeah, so there's this failure case, right?
+
+220
+00:09:00,270 --> 00:09:03,480
+Like maybe all the nodes
+are actually healthy
+
+221
+00:09:03,480 --> 00:09:04,560
+and they just can't talk to each other.
+
+222
+00:09:04,560 --> 00:09:06,240
+We have a network partition, right?
+
+223
+00:09:06,240 --> 00:09:07,950
+So, both sides think that,
+
+224
+00:09:07,950 --> 00:09:10,140
+well, I'm on the healthy
+side, the other side's dead.
+
+225
+00:09:10,140 --> 00:09:12,300
+I'm gonna keep accepting rights.
+
+226
+00:09:12,300 --> 00:09:15,090
+And so you end up with this,
+what we call "split brain"
+
+227
+00:09:15,090 --> 00:09:17,673
+where you've got rights, that's data,
+
+228
+00:09:18,618 --> 00:09:20,463
+the data set diverges over time.
+
+229
+00:09:21,360 --> 00:09:22,980
+And now when this partition heals,
+
+230
+00:09:22,980 --> 00:09:24,780
+you've got these two
+totally different data sets
+
+231
+00:09:24,780 --> 00:09:26,340
+you have to merge.
+
+232
+00:09:26,340 --> 00:09:30,330
+So, having an even number
+is a horrible idea.
+
+233
+00:09:30,330 --> 00:09:32,520
+Four is a really bad option.
+
+234
+00:09:32,520 --> 00:09:33,990
+- [Amrith] So, basically
+the idea is you need
+
+235
+00:09:33,990 --> 00:09:35,268
+to have an odd number of nodes.
+
+236
+00:09:35,268 --> 00:09:36,990
+Is that the story?
+
+237
+00:09:36,990 --> 00:09:37,980
+- Yeah.
+
+238
+00:09:37,980 --> 00:09:39,153
+So what about five?
+
+239
+00:09:40,110 --> 00:09:43,170
+You know, let's just, let's
+keep counting up, right?
+
+240
+00:09:43,170 --> 00:09:45,660
+So, four is out, we could do five.
+
+241
+00:09:45,660 --> 00:09:49,440
+So, with five you can
+survive two failures.
+
+242
+00:09:49,440 --> 00:09:50,273
+Maybe that's good.
+
+243
+00:09:50,273 --> 00:09:51,570
+Like maybe that's what you want.
+
+244
+00:09:51,570 --> 00:09:55,020
+But what we've found through
+a lot of our experience
+
+245
+00:09:55,020 --> 00:09:58,410
+is that as soon as one fails,
+
+246
+00:09:58,410 --> 00:09:59,880
+you're working as hard as you can
+
+247
+00:09:59,880 --> 00:10:01,830
+to get that replica back to par.
+
+248
+00:10:01,830 --> 00:10:02,820
+You're bringing a new node,
+
+249
+00:10:02,820 --> 00:10:04,740
+you're gonna repair the situation.
+
+250
+00:10:04,740 --> 00:10:06,030
+And so what you're actually doing here
+
+251
+00:10:06,030 --> 00:10:07,710
+for the second failure
+
+252
+00:10:07,710 --> 00:10:12,090
+is you're racing how fast can
+I get a node healthy again
+
+253
+00:10:12,090 --> 00:10:14,250
+to get this cluster back to par,
+
+254
+00:10:14,250 --> 00:10:17,283
+back and normal before
+we lose another box.
+
+255
+00:10:18,270 --> 00:10:19,440
+And so a lot of the effort
+
+256
+00:10:19,440 --> 00:10:22,500
+that goes into having
+more nodes might actually
+
+257
+00:10:22,500 --> 00:10:25,440
+be better spent trying
+to repair a node faster.
+
+258
+00:10:25,440 --> 00:10:26,640
+Because you're gonna need to do the repair
+
+259
+00:10:26,640 --> 00:10:28,053
+in this case anyways.
+
+260
+00:10:31,060 --> 00:10:31,893
+The-
+
+261
+00:10:31,893 --> 00:10:32,820
+- [Amrith] So at this point
+you're basically saying you need
+
+262
+00:10:32,820 --> 00:10:34,080
+to have an odd number of nodes.
+
+263
+00:10:34,080 --> 00:10:36,120
+Is that, it's like three is okay.
+
+264
+00:10:36,120 --> 00:10:38,100
+Five's okay, four's not okay.
+
+265
+00:10:38,100 --> 00:10:39,330
+Two's clearly not okay.
+
+266
+00:10:39,330 --> 00:10:40,163
+Is that?
+
+267
+00:10:40,163 --> 00:10:41,430
+- Yeah, right.
+
+268
+00:10:41,430 --> 00:10:42,940
+And, you know, as you're going up,
+
+269
+00:10:42,940 --> 00:10:45,030
+you have to do more rights.
+
+270
+00:10:45,030 --> 00:10:45,990
+Like even in this world,
+
+271
+00:10:45,990 --> 00:10:48,840
+like you have to have the majority healthy
+
+272
+00:10:48,840 --> 00:10:51,960
+so that you know that
+you're on the healthy side
+
+273
+00:10:51,960 --> 00:10:53,580
+and so you're adding more boxes.
+
+274
+00:10:53,580 --> 00:10:54,690
+And so you gotta think about the cost.
+
+275
+00:10:54,690 --> 00:10:56,520
+So, let's take this to the extreme.
+
+276
+00:10:56,520 --> 00:10:57,840
+Like let's say for scale reasons,
+
+277
+00:10:57,840 --> 00:11:00,210
+you need to have a 1000, 1,001
+
+278
+00:11:00,210 --> 00:11:02,220
+because it's gotta be
+an odd number, right?
+
+279
+00:11:02,220 --> 00:11:03,420
+So, you've got 1,001.
+
+280
+00:11:03,420 --> 00:11:06,660
+In order to accept the right,
+I've gotta have 502 boxes.
+
+281
+00:11:06,660 --> 00:11:08,910
+It's gotta be the
+majority, except the right.
+
+282
+00:11:10,860 --> 00:11:12,330
+- [Amrith] Well, statistically
+you can't do that.
+
+283
+00:11:12,330 --> 00:11:13,163
+No.
+
+284
+00:11:13,163 --> 00:11:13,996
+- Oh, okay.
+
+285
+00:11:13,996 --> 00:11:15,327
+- [Amrith] Because any one of those 500
+
+286
+00:11:15,327 --> 00:11:17,100
+and whatever boxes can fail.
+
+287
+00:11:17,100 --> 00:11:20,610
+So, if you do this, you're
+gonna trade off availability.
+
+288
+00:11:20,610 --> 00:11:21,570
+- Yes.
+
+289
+00:11:21,570 --> 00:11:23,610
+It's also really expensive
+
+290
+00:11:23,610 --> 00:11:24,960
+because you just, like,
+you've got all these,
+
+291
+00:11:24,960 --> 00:11:27,510
+like you really need to
+write that thing 502 times
+
+292
+00:11:27,510 --> 00:11:29,483
+just so you know you can
+survive some failures.
+
+293
+00:11:29,483 --> 00:11:31,020
+Yeah.
+
+294
+00:11:31,020 --> 00:11:32,130
+- [Amrith] So what do you do?
+
+295
+00:11:32,130 --> 00:11:33,600
+- So an alternative that we think
+
+296
+00:11:33,600 --> 00:11:35,940
+is a much better alternative
+
+297
+00:11:35,940 --> 00:11:38,250
+is you have lots of groups of three.
+
+298
+00:11:38,250 --> 00:11:40,020
+You still can have, you know, a 1000 nodes
+
+299
+00:11:40,020 --> 00:11:42,060
+or however many tens of thousands
+nodes wherever you want.
+
+300
+00:11:42,060 --> 00:11:45,393
+But you do, you group the data
+sets into groups of three.
+
+301
+00:11:46,620 --> 00:11:50,640
+Because in the groups of three,
+
+302
+00:11:50,640 --> 00:11:52,140
+it has all the properties we like, right?
+
+303
+00:11:52,140 --> 00:11:55,170
+We can replace the boxes
+quickly, we know it's correct.
+
+304
+00:11:55,170 --> 00:11:56,343
+It's a nice odd number.
+
+305
+00:11:57,420 --> 00:11:59,633
+- [Amrith] How do you know
+where to send a request to?
+
+306
+00:12:00,750 --> 00:12:02,190
+- You and your complexity?
+
+307
+00:12:02,190 --> 00:12:03,428
+Yeah, if I send a request,
+
+308
+00:12:03,428 --> 00:12:06,240
+I wanna put all these boxes
+behind a Load Balancer, right?
+
+309
+00:12:06,240 --> 00:12:08,130
+So, the client doesn't necessarily know,
+
+310
+00:12:08,130 --> 00:12:11,340
+no, in this case C, F
+and J are the three boxes
+
+311
+00:12:11,340 --> 00:12:13,500
+that are in the cluster for the data set
+
+312
+00:12:13,500 --> 00:12:15,330
+that this client is interested in.
+
+313
+00:12:15,330 --> 00:12:17,250
+But if I send a request through
+a Load balancer or whatever,
+
+314
+00:12:17,250 --> 00:12:18,900
+it's probably gonna land somewhere else,
+
+315
+00:12:18,900 --> 00:12:22,680
+almost certainly as the
+number of boxes goes up.
+
+316
+00:12:22,680 --> 00:12:24,420
+And so what K has to do then is, like,
+
+317
+00:12:24,420 --> 00:12:26,760
+okay, well, K can either
+return or redirect
+
+318
+00:12:26,760 --> 00:12:30,183
+or it can proxy the, onto
+the correct node for you.
+
+319
+00:12:31,710 --> 00:12:34,020
+But if you think about that, right,
+
+320
+00:12:34,020 --> 00:12:36,450
+K then just becomes the client.
+
+321
+00:12:36,450 --> 00:12:38,307
+Because K's gotta know the data set.
+
+322
+00:12:38,307 --> 00:12:41,580
+And so we have the exact
+same problem to go solve
+
+323
+00:12:41,580 --> 00:12:43,680
+of, for this particular data set.
+
+324
+00:12:43,680 --> 00:12:44,513
+Where is it?
+
+325
+00:12:44,513 --> 00:12:45,813
+I got a lot of boxes.
+
+326
+00:12:47,370 --> 00:12:49,230
+- [Amrith] So, it basically,
+you're gonna add one level
+
+327
+00:12:49,230 --> 00:12:51,960
+of indirection here and
+say that every problem
+
+328
+00:12:51,960 --> 00:12:53,310
+in computer science can be solved
+
+329
+00:12:53,310 --> 00:12:54,480
+with one level of indirection
+
+330
+00:12:54,480 --> 00:12:56,130
+and K needs to know
+where to go look this up.
+
+331
+00:12:56,130 --> 00:12:56,963
+Okay, fine.
+
+332
+00:12:56,963 --> 00:12:57,796
+All right.
+
+333
+00:12:57,796 --> 00:12:58,629
+- Yeah.
+- [Amrith] Okay, that right.
+
+334
+00:12:58,629 --> 00:13:00,295
+- Okay. Have you seen these slides before?
+
+335
+00:13:00,295 --> 00:13:01,128
+- [Amrith] No, I have not.
+
+336
+00:13:01,128 --> 00:13:02,520
+You made the slides, I
+haven't seen them too.
+
+337
+00:13:02,520 --> 00:13:03,353
+- Okay, I thought maybe.
+
+338
+00:13:03,353 --> 00:13:05,297
+So, yes, another level
+of indirection, right?
+
+339
+00:13:05,297 --> 00:13:08,070
+And so we add a data set
+
+340
+00:13:08,070 --> 00:13:10,020
+which is the data about
+where the data lives.
+
+341
+00:13:10,020 --> 00:13:12,270
+So, the, or metadata, right?
+
+342
+00:13:12,270 --> 00:13:14,580
+And so the protocol then is the client,
+
+343
+00:13:14,580 --> 00:13:17,400
+in order to go figure out I wanna go talk,
+
+344
+00:13:17,400 --> 00:13:18,960
+you know, get this particular data,
+
+345
+00:13:18,960 --> 00:13:20,430
+I do a lookup in metadata
+
+346
+00:13:20,430 --> 00:13:25,110
+and then I go get the box I
+need to go connect to, right?
+
+347
+00:13:25,110 --> 00:13:25,943
+- [Amrith] Hmm.
+
+348
+00:13:27,240 --> 00:13:28,833
+Two lookups is like expensive.
+
+349
+00:13:29,700 --> 00:13:30,930
+- Yeah.
+
+350
+00:13:30,930 --> 00:13:32,371
+So, now, we're doing double lookups
+
+351
+00:13:32,371 --> 00:13:34,980
+and so we have to do X request per second
+
+352
+00:13:34,980 --> 00:13:36,510
+to the data set.
+
+353
+00:13:36,510 --> 00:13:40,083
+I also have to do X request
+per second to the metadata set.
+
+354
+00:13:42,810 --> 00:13:43,920
+So, I know what you're gonna suggest next.
+
+355
+00:13:43,920 --> 00:13:44,753
+- [Amrith] Yeah.
+
+356
+00:13:45,600 --> 00:13:46,980
+There has to be an easier solution
+
+357
+00:13:46,980 --> 00:13:48,480
+because if you were to do this,
+
+358
+00:13:48,480 --> 00:13:52,380
+then you need to scale your
+metadata to the same capacity
+
+359
+00:13:52,380 --> 00:13:55,140
+as your actual data, which
+I'm not willing to do.
+
+360
+00:13:55,140 --> 00:13:56,469
+- Yeah.
+
+361
+00:13:56,469 --> 00:13:58,523
+- [Amrith] So, you need to
+give me a different answer.
+
+362
+00:14:00,240 --> 00:14:01,073
+- So, we've got two
+
+363
+00:14:01,073 --> 00:14:02,850
+of our classic computer
+science solutions now,
+
+364
+00:14:02,850 --> 00:14:05,730
+an extra layer of indirection
+and caching, right?
+
+365
+00:14:05,730 --> 00:14:07,620
+So, if you add a cache
+here between the metadata,
+
+366
+00:14:07,620 --> 00:14:09,210
+which is fine because these
+data sets don't change
+
+367
+00:14:09,210 --> 00:14:10,043
+that often.
+
+368
+00:14:10,043 --> 00:14:14,310
+You can cache this, you have
+less than X request per second
+
+369
+00:14:14,310 --> 00:14:16,943
+and metadata doesn't have to
+scale to the same request rate.
+
+370
+00:14:18,150 --> 00:14:19,542
+Any snarky comments about this one?
+
+371
+00:14:19,542 --> 00:14:20,375
+- [Amrith] No.
+
+372
+00:14:20,375 --> 00:14:21,930
+Okay.
+
+373
+00:14:21,930 --> 00:14:23,640
+What are you gonna do
+if your caches are cold
+
+374
+00:14:23,640 --> 00:14:25,080
+and what are you gonna do in situations
+
+375
+00:14:25,080 --> 00:14:26,610
+where your metadata is not able to keep up
+
+376
+00:14:26,610 --> 00:14:28,590
+with the uncached data?
+
+377
+00:14:28,590 --> 00:14:29,550
+All of those things?
+
+378
+00:14:29,550 --> 00:14:30,900
+- You're foreshadowing your portion
+
+379
+00:14:30,900 --> 00:14:32,250
+of the presentation is coming up later.
+
+380
+00:14:32,250 --> 00:14:33,090
+- [Amrith] Thank you for telling me
+
+381
+00:14:33,090 --> 00:14:34,422
+what I'm gonna talk about.
+
+382
+00:14:34,422 --> 00:14:35,516
+It's gonna be nice to know, okay.
+
+383
+00:14:35,516 --> 00:14:36,690
+- Caches can be a risk
+
+384
+00:14:36,690 --> 00:14:37,950
+and we'll talk about that more later.
+
+385
+00:14:37,950 --> 00:14:39,060
+We'll also talk about the,
+
+386
+00:14:39,060 --> 00:14:41,343
+how we do this routing
+a little more detail.
+
+387
+00:14:43,380 --> 00:14:45,741
+The other thing is boxes
+can still fail, right?
+
+388
+00:14:45,741 --> 00:14:46,574
+So, we have these large boxes,
+
+389
+00:14:46,574 --> 00:14:49,110
+we have to deal with this
+case. And so when a box fails
+
+390
+00:14:49,110 --> 00:14:50,700
+and so in this case J has failed
+
+391
+00:14:50,700 --> 00:14:52,860
+and we wanna replace it with L.
+
+392
+00:14:52,860 --> 00:14:54,297
+L then has to then go
+
+393
+00:14:54,297 --> 00:14:56,610
+and update metadata somehow
+
+394
+00:14:56,610 --> 00:14:59,277
+and indicate, "Hey, I'm part of this set."
+
+395
+00:15:00,360 --> 00:15:01,193
+Right?
+
+396
+00:15:02,880 --> 00:15:04,830
+And so we have this problem, right?
+
+397
+00:15:04,830 --> 00:15:09,090
+This problem is, who is the authority
+
+398
+00:15:09,090 --> 00:15:12,990
+of which servers
+participate in which groups?
+
+399
+00:15:12,990 --> 00:15:13,890
+Right?
+
+400
+00:15:13,890 --> 00:15:16,380
+You know, you think it
+should be the metadata
+
+401
+00:15:16,380 --> 00:15:18,900
+because I'm doing all the lookups.
+
+402
+00:15:18,900 --> 00:15:20,580
+But you've, we've got this race
+
+403
+00:15:20,580 --> 00:15:24,360
+between when a box becomes
+part of one of these clusters
+
+404
+00:15:24,360 --> 00:15:26,940
+of three and when it can serve traffic
+
+405
+00:15:26,940 --> 00:15:28,140
+and when it tells metadata,
+
+406
+00:15:28,140 --> 00:15:32,070
+and when the client
+caches can recognize it.
+
+407
+00:15:32,070 --> 00:15:33,960
+We're talk a little
+more about this as well.
+
+408
+00:15:33,960 --> 00:15:36,090
+- [Amrith] So, basically the
+idea you're talking about
+
+409
+00:15:36,090 --> 00:15:41,090
+is a system which is a
+system of record, authority
+
+410
+00:15:42,060 --> 00:15:43,560
+and something which points to it
+
+411
+00:15:43,560 --> 00:15:45,720
+which is potentially,
+eventually consistent.
+
+412
+00:15:45,720 --> 00:15:49,230
+So, are you suggesting
+that for scale you need
+
+413
+00:15:49,230 --> 00:15:51,960
+to understand eventual
+consistency and deal with it?
+
+414
+00:15:51,960 --> 00:15:52,980
+- Yeah.
+
+415
+00:15:52,980 --> 00:15:53,813
+Yes.
+
+416
+00:15:53,813 --> 00:15:55,170
+- [Amrith] Okay.
+
+417
+00:15:55,170 --> 00:15:56,250
+- It's hard but-
+
+418
+00:15:56,250 --> 00:15:57,083
+- [Amrith] All right.
+
+419
+00:15:57,083 --> 00:15:57,916
+- It's hard but that's reality, right?
+
+420
+00:15:57,916 --> 00:16:00,416
+- [Amrith] Works for me, okay.
+
+421
+00:16:01,397 --> 00:16:03,450
+- But of course we've got
+this magic metadata thing
+
+422
+00:16:03,450 --> 00:16:04,283
+we've been talking about.
+
+423
+00:16:04,283 --> 00:16:05,116
+What the heck is this?
+
+424
+00:16:05,116 --> 00:16:06,843
+Like how's that gonna work?
+
+425
+00:16:07,950 --> 00:16:09,570
+And there's two options here.
+
+426
+00:16:09,570 --> 00:16:12,645
+Like, we could just make
+metadata another one
+
+427
+00:16:12,645 --> 00:16:14,697
+of these tables, right?
+
+428
+00:16:14,697 --> 00:16:16,380
+And this works great like,
+
+429
+00:16:16,380 --> 00:16:17,730
+but you still have that routing problem
+
+430
+00:16:17,730 --> 00:16:20,987
+of which subset of metadata
+do I need to talk to.
+
+431
+00:16:20,987 --> 00:16:23,670
+And so I gotta go solve all of that again.
+
+432
+00:16:23,670 --> 00:16:25,470
+It makes the rights
+relatively simple though
+
+433
+00:16:25,470 --> 00:16:28,080
+because there's only one
+place I need to write to
+
+434
+00:16:28,080 --> 00:16:30,651
+and, you know, the system's gonna have
+
+435
+00:16:30,651 --> 00:16:33,960
+a lot lower request rates
+because of the caches,
+
+436
+00:16:33,960 --> 00:16:36,120
+but it's also gonna be
+significantly smaller
+
+437
+00:16:36,120 --> 00:16:38,617
+because all you need is
+a single item to say,
+
+438
+00:16:38,617 --> 00:16:40,748
+"Hey, like tens of gigabytes of data
+
+439
+00:16:40,748 --> 00:16:42,497
+that you're looking for,
+they're over there."
+
+440
+00:16:42,497 --> 00:16:44,100
+And so this system's gonna be multiple
+
+441
+00:16:44,100 --> 00:16:46,320
+of orders of magnitude smaller
+
+442
+00:16:46,320 --> 00:16:48,123
+in terms of data size as well.
+
+443
+00:16:49,260 --> 00:16:51,630
+Which opens up an alternative of instead
+
+444
+00:16:51,630 --> 00:16:53,370
+of having subsets of this,
+
+445
+00:16:53,370 --> 00:16:56,820
+you can have entire replicas, right?
+
+446
+00:16:56,820 --> 00:16:58,110
+If you have entire replicas,
+
+447
+00:16:58,110 --> 00:16:59,460
+the lookup problem gets really easy
+
+448
+00:16:59,460 --> 00:17:00,540
+because as a client you just have to talk
+
+449
+00:17:00,540 --> 00:17:02,130
+to one of the metadata nodes.
+
+450
+00:17:02,130 --> 00:17:05,160
+It doesn't matter which
+one, but the trade off is,
+
+451
+00:17:05,160 --> 00:17:06,870
+it makes the right problem a lot harder
+
+452
+00:17:06,870 --> 00:17:09,240
+when we change the membership set.
+
+453
+00:17:09,240 --> 00:17:11,390
+It somehow we now have to go update all
+
+454
+00:17:11,390 --> 00:17:15,210
+of the metadata nodes that exist.
+
+455
+00:17:15,210 --> 00:17:16,260
+Because you can't predict which one
+
+456
+00:17:16,260 --> 00:17:18,813
+the client's gonna go talk to you later.
+
+457
+00:17:19,680 --> 00:17:22,293
+So, this makes it more
+eventually consistent.
+
+458
+00:17:26,700 --> 00:17:27,570
+Oh, that was the back button.
+
+459
+00:17:27,570 --> 00:17:29,236
+- [Amrith] That went the
+wrong way. All right.
+
+460
+00:17:29,236 --> 00:17:30,069
+- I apologize.
+
+461
+00:17:30,069 --> 00:17:30,902
+There we go.
+
+462
+00:17:33,120 --> 00:17:33,953
+So, through the rest of the talk
+
+463
+00:17:33,953 --> 00:17:35,820
+we're gonna dig into three aspects of this
+
+464
+00:17:35,820 --> 00:17:37,260
+and choices we've made in Dynamo,
+
+465
+00:17:37,260 --> 00:17:38,850
+and look at them kinda
+a more tangible of what,
+
+466
+00:17:38,850 --> 00:17:41,490
+how did Dynamo decide to
+solve some of these problems?
+
+467
+00:17:41,490 --> 00:17:43,200
+We're gonna look at request routing,
+
+468
+00:17:43,200 --> 00:17:46,350
+how the client gets to the
+storage that we just described.
+
+469
+00:17:46,350 --> 00:17:49,470
+We'll talk about how we
+structure a metadata,
+
+470
+00:17:49,470 --> 00:17:50,850
+but also in a system this size,
+
+471
+00:17:50,850 --> 00:17:53,010
+we'll talk about some of the constraints
+
+472
+00:17:53,010 --> 00:17:55,080
+and the limits that we
+have to put into place
+
+473
+00:17:55,080 --> 00:17:56,580
+and why those exist.
+
+474
+00:17:56,580 --> 00:17:59,310
+Customers will run to these and when you,
+
+475
+00:17:59,310 --> 00:18:01,560
+if you understand why we think this
+
+476
+00:18:01,560 --> 00:18:04,083
+will help you build your applications.
+
+477
+00:18:05,970 --> 00:18:06,803
+So, routing.
+
+478
+00:18:08,897 --> 00:18:11,490
+A very simple description.
+
+479
+00:18:11,490 --> 00:18:13,350
+This is what Dynamo looks like.
+
+480
+00:18:13,350 --> 00:18:14,910
+You know, storage node fleet on the right
+
+481
+00:18:14,910 --> 00:18:15,743
+is what we were just talking about
+
+482
+00:18:15,743 --> 00:18:17,610
+with that large, you know, thousands
+
+483
+00:18:17,610 --> 00:18:20,640
+of nodes through with, you
+know, clusters of three.
+
+484
+00:18:20,640 --> 00:18:22,830
+And the request router fleet is the fleet
+
+485
+00:18:22,830 --> 00:18:24,968
+that sends the request
+to the appropriate box.
+
+486
+00:18:24,968 --> 00:18:26,700
+And so when a client comes in,
+
+487
+00:18:26,700 --> 00:18:29,775
+they get sent to a random
+request router node.
+
+488
+00:18:29,775 --> 00:18:32,310
+And the request router has two jobs,
+
+489
+00:18:32,310 --> 00:18:35,340
+first one is to do authorization
+and authentication.
+
+490
+00:18:35,340 --> 00:18:36,930
+Are you who you say you are?
+
+491
+00:18:36,930 --> 00:18:37,950
+Do you have access to this data?
+
+492
+00:18:37,950 --> 00:18:40,170
+This is where we do the SigV4 processing.
+
+493
+00:18:40,170 --> 00:18:42,540
+Then we also do the metadata lookup.
+
+494
+00:18:42,540 --> 00:18:43,373
+And from there we say,
+
+495
+00:18:43,373 --> 00:18:46,890
+"Okay, now I know which particular
+storage node to talk to."
+
+496
+00:18:46,890 --> 00:18:48,190
+We forward the request on.
+
+497
+00:18:52,247 --> 00:18:54,900
+Okay, this picture's too simple,
+
+498
+00:18:54,900 --> 00:18:56,580
+there's more to it, right?
+
+499
+00:18:56,580 --> 00:18:57,900
+I said Load Balancers.
+
+500
+00:18:57,900 --> 00:19:01,200
+So, we've got Load Balancers
+in front of the request routers
+
+501
+00:19:01,200 --> 00:19:05,250
+and they're just normal Load Balancers.
+
+502
+00:19:05,250 --> 00:19:07,293
+We use Network Load Balancer,
+
+503
+00:19:08,220 --> 00:19:09,510
+but because we have so
+many Load Balancers,
+
+504
+00:19:09,510 --> 00:19:11,520
+we have DNS in front of the Load Balancers
+
+505
+00:19:11,520 --> 00:19:13,470
+because it's becomes
+like the Load Balancer
+
+506
+00:19:13,470 --> 00:19:14,520
+of the Load Balancers.
+
+507
+00:19:14,520 --> 00:19:15,720
+Because it's the thing that sends traffic
+
+508
+00:19:15,720 --> 00:19:17,020
+to all the Load Balancers.
+
+509
+00:19:19,560 --> 00:19:22,110
+And of course, we're
+running within a region.
+
+510
+00:19:22,110 --> 00:19:23,790
+Regions have availability zones.
+
+511
+00:19:23,790 --> 00:19:26,553
+Availability zones are
+independent failure domains,
+
+512
+00:19:27,840 --> 00:19:30,270
+you know, availability zones
+composed of multiple buildings
+
+513
+00:19:30,270 --> 00:19:33,150
+where the actual EC2
+instances eventually run
+
+514
+00:19:33,150 --> 00:19:34,830
+at the end of the day. These
+we're all talking about,
+
+515
+00:19:34,830 --> 00:19:36,730
+like, there's real hardware somewhere.
+
+516
+00:19:38,190 --> 00:19:39,780
+So, this separation's really important
+
+517
+00:19:39,780 --> 00:19:44,100
+for how we provide our
+availability, durability guarantees.
+
+518
+00:19:44,100 --> 00:19:45,510
+Provide some challenges for latency.
+
+519
+00:19:45,510 --> 00:19:46,973
+So, that's what we're gonna talk about.
+
+520
+00:19:49,920 --> 00:19:51,600
+So, everything we have
+is just an EC2 instance
+
+521
+00:19:51,600 --> 00:19:52,433
+at the end of the day,
+
+522
+00:19:52,433 --> 00:19:54,600
+which means it runs in
+an availability zone.
+
+523
+00:19:54,600 --> 00:19:56,940
+We've been very careful
+about how we've put
+
+524
+00:19:56,940 --> 00:20:00,240
+our servers across the
+availability zone, right?
+
+525
+00:20:00,240 --> 00:20:03,153
+So we've striped them across
+multiple availability zones.
+
+526
+00:20:04,354 --> 00:20:05,367
+In every availability zone,
+
+527
+00:20:05,367 --> 00:20:08,070
+you know, we have a choice here.
+
+528
+00:20:08,070 --> 00:20:11,170
+We've constrained our Load
+Balancers to be within
+
+529
+00:20:12,060 --> 00:20:13,800
+an availability zone
+because we find it easier
+
+530
+00:20:13,800 --> 00:20:15,840
+to think about these units of failure.
+
+531
+00:20:15,840 --> 00:20:17,970
+You know, this is the
+choice that we've made.
+
+532
+00:20:17,970 --> 00:20:19,800
+And this picture's overly simplified
+
+533
+00:20:19,800 --> 00:20:22,263
+if you zoom in on one availability zone.
+
+534
+00:20:23,100 --> 00:20:25,470
+One, I think, I double
+clicked on that one,
+
+535
+00:20:25,470 --> 00:20:26,820
+I did double click on that.
+
+536
+00:20:28,500 --> 00:20:30,180
+If you zoom in on one availability zone,
+
+537
+00:20:30,180 --> 00:20:32,010
+we've got a whole bunch of Load Balancers
+
+538
+00:20:32,010 --> 00:20:34,890
+and behind every Load Balancer
+is a bunch of instances,
+
+539
+00:20:34,890 --> 00:20:36,490
+but I'm simplifying the picture.
+
+540
+00:20:41,400 --> 00:20:44,490
+So, if we go back to the simple picture,
+
+541
+00:20:44,490 --> 00:20:46,650
+like, Load Bouncer is there,
+
+542
+00:20:46,650 --> 00:20:50,520
+every Dynamo table is
+divided up into partitions,
+
+543
+00:20:50,520 --> 00:20:52,470
+which we'll talk a little
+bit more about later.
+
+544
+00:20:52,470 --> 00:20:54,270
+Every partition has three replicas
+
+545
+00:20:54,270 --> 00:20:55,620
+and so we've spread the replicas
+
+546
+00:20:55,620 --> 00:20:58,443
+across the three
+availability zones, right?
+
+547
+00:20:59,460 --> 00:21:01,317
+And this is how we
+provide our availability
+
+548
+00:21:01,317 --> 00:21:03,540
+and durability guarantees, right?
+
+549
+00:21:03,540 --> 00:21:05,370
+Because as we talked
+about at the beginning,
+
+550
+00:21:05,370 --> 00:21:08,520
+we can lose one box, one replica
+
+551
+00:21:08,520 --> 00:21:11,490
+and this cluster can stay healthy, right?
+
+552
+00:21:11,490 --> 00:21:14,010
+A risk is if we lose two. And
+so as soon as we lose one,
+
+553
+00:21:14,010 --> 00:21:15,390
+we're gonna try very hard to replace this.
+
+554
+00:21:15,390 --> 00:21:16,920
+And so we're trying to
+replace the instance
+
+555
+00:21:16,920 --> 00:21:21,920
+as fast as possible, but a
+risk is correlated failure.
+
+556
+00:21:23,220 --> 00:21:24,960
+And the most likely
+correlated failure, we'll see,
+
+557
+00:21:24,960 --> 00:21:26,940
+is across an availability zone
+
+558
+00:21:26,940 --> 00:21:30,000
+because of, you know,
+some larger scale events
+
+559
+00:21:30,000 --> 00:21:32,790
+because we do all of our
+software deployments,
+
+560
+00:21:32,790 --> 00:21:36,570
+we scope them all to
+individual availability zone.
+
+561
+00:21:36,570 --> 00:21:38,220
+We wanna make sure if two boxes fail,
+
+562
+00:21:38,220 --> 00:21:41,100
+they don't impact two of
+the replicas in a partition.
+
+563
+00:21:41,100 --> 00:21:43,983
+We do this by spreading them
+across availability zones.
+
+564
+00:21:44,993 --> 00:21:46,530
+So, this is critical to what we do,
+
+565
+00:21:46,530 --> 00:21:48,570
+but there's a consequence to this, right?
+
+566
+00:21:48,570 --> 00:21:50,310
+These availability zones, like I say,
+
+567
+00:21:50,310 --> 00:21:53,040
+there's, they're physical
+buildings, they're connected
+
+568
+00:21:53,040 --> 00:21:56,310
+and you can and you should do
+this is look at the distance
+
+569
+00:21:56,310 --> 00:21:57,143
+between some of these,
+
+570
+00:21:57,143 --> 00:21:58,620
+the network distance I'm talking about.
+
+571
+00:21:58,620 --> 00:22:01,740
+Launch two instances in
+availability zone, ping them,
+
+572
+00:22:01,740 --> 00:22:02,850
+see what times you get,
+
+573
+00:22:02,850 --> 00:22:04,260
+do this in different availability zones.
+
+574
+00:22:04,260 --> 00:22:05,880
+You'll see it's different in
+different availability zones.
+
+575
+00:22:05,880 --> 00:22:07,770
+Do the same thing across
+availability zones.
+
+576
+00:22:07,770 --> 00:22:10,500
+You'll see it's different
+across availability zones.
+
+577
+00:22:10,500 --> 00:22:12,990
+What's always true is
+that the network distance
+
+578
+00:22:12,990 --> 00:22:15,750
+between availability zones
+is significantly higher
+
+579
+00:22:15,750 --> 00:22:18,293
+than the network distance
+within an availability zone.
+
+580
+00:22:19,580 --> 00:22:22,950
+And so our clients are
+running on EC2 instances,
+
+581
+00:22:22,950 --> 00:22:25,980
+Lambda functions, you know,
+containers within ECS, EKS,
+
+582
+00:22:25,980 --> 00:22:26,820
+whatever it is.
+
+583
+00:22:26,820 --> 00:22:29,730
+They're in availability zones too.
+
+584
+00:22:29,730 --> 00:22:31,410
+And so the simplest thing we can do
+
+585
+00:22:31,410 --> 00:22:36,060
+for Load Balancing is to
+randomly route across all
+
+586
+00:22:36,060 --> 00:22:39,010
+of our available instances,
+which means we're highly likely
+
+587
+00:22:40,080 --> 00:22:42,690
+to route a customer across
+an availability zone
+
+588
+00:22:42,690 --> 00:22:44,670
+and back across availability zone.
+
+589
+00:22:44,670 --> 00:22:45,503
+So, we'll be paying
+
+590
+00:22:45,503 --> 00:22:47,913
+the extra latency penalty multiple times.
+
+591
+00:22:49,530 --> 00:22:51,580
+So, ideally, what we'd like to do is this
+
+592
+00:22:52,560 --> 00:22:54,600
+and use the shorter network path.
+
+593
+00:22:54,600 --> 00:22:57,060
+And this is meaningful
+to a service like Dynamo
+
+594
+00:22:57,060 --> 00:22:59,880
+because if you look at the
+components of our latency,
+
+595
+00:22:59,880 --> 00:23:02,640
+our server side processing time
+is actually relatively small
+
+596
+00:23:02,640 --> 00:23:04,080
+and of a similar order of magnitude
+
+597
+00:23:04,080 --> 00:23:05,883
+to the network distance itself.
+
+598
+00:23:06,990 --> 00:23:08,670
+And so one of the biggest things we can do
+
+599
+00:23:08,670 --> 00:23:09,930
+as we work on improving
+
+600
+00:23:09,930 --> 00:23:12,330
+our predictable low latency over time
+
+601
+00:23:12,330 --> 00:23:14,400
+is shrink the distance.
+
+602
+00:23:14,400 --> 00:23:16,440
+We don't have to do any op,
+
+603
+00:23:16,440 --> 00:23:18,390
+like software optimizations
+within the server itself.
+
+604
+00:23:18,390 --> 00:23:20,130
+We just shrink the distance.
+
+605
+00:23:20,130 --> 00:23:21,810
+And by shrinking the distance
+
+606
+00:23:21,810 --> 00:23:24,480
+that ends up with a meaningful improvement
+
+607
+00:23:24,480 --> 00:23:26,133
+in customer latency.
+
+608
+00:23:28,140 --> 00:23:32,223
+So, I said DNS is our Load
+Balancer across Load Balancers.
+
+609
+00:23:33,240 --> 00:23:35,820
+So, if you dig, you know, do a DNS lookup
+
+610
+00:23:35,820 --> 00:23:39,450
+for our domain name, this
+is, you know, us-west-2,
+
+611
+00:23:39,450 --> 00:23:40,650
+you keep doing this over and over again,
+
+612
+00:23:40,650 --> 00:23:42,690
+you'll get different IPs
+for different Load Balancers
+
+613
+00:23:42,690 --> 00:23:43,683
+within the regions.
+
+614
+00:23:45,330 --> 00:23:47,010
+So, one of the things that we can do then
+
+615
+00:23:47,010 --> 00:23:49,860
+is we can do split-horizon DNS
+
+616
+00:23:49,860 --> 00:23:51,750
+is where you get a different answer,
+
+617
+00:23:51,750 --> 00:23:54,000
+depending on where the query came from.
+
+618
+00:23:54,000 --> 00:23:55,740
+And so if you're in one
+of the availability zones,
+
+619
+00:23:55,740 --> 00:23:57,240
+you'll get a set of Load Balancers
+
+620
+00:23:57,240 --> 00:23:58,470
+in that same availability zone.
+
+621
+00:23:58,470 --> 00:23:59,580
+If you're in different availability zone,
+
+622
+00:23:59,580 --> 00:24:01,280
+you get Load Balancers from there.
+
+623
+00:24:02,875 --> 00:24:04,200
+And so that means that DNS
+
+624
+00:24:04,200 --> 00:24:07,683
+is our availability zone selector as well.
+
+625
+00:24:08,790 --> 00:24:10,440
+Yeah, and that's it.
+
+626
+00:24:10,440 --> 00:24:11,273
+Piece of cake, right?
+
+627
+00:24:11,273 --> 00:24:12,106
+We're all done.
+
+628
+00:24:12,106 --> 00:24:12,939
+Woo hoo.
+
+629
+00:24:13,860 --> 00:24:17,790
+Well, failure is where
+this all gets hard, right?
+
+630
+00:24:17,790 --> 00:24:18,810
+This is what we expect to see.
+
+631
+00:24:18,810 --> 00:24:20,070
+This is what we like to see is.
+
+632
+00:24:20,070 --> 00:24:22,140
+You end up with, you know, a third
+
+633
+00:24:22,140 --> 00:24:23,700
+of the traffic in every availability zone.
+
+634
+00:24:23,700 --> 00:24:25,530
+Meaning every availability
+zone processes a third
+
+635
+00:24:25,530 --> 00:24:27,810
+of the requests that's
+relatively easy to scale
+
+636
+00:24:27,810 --> 00:24:30,360
+and deal with from a capacity
+planning perspective.
+
+637
+00:24:31,200 --> 00:24:32,220
+We gotta deal with a case where
+
+638
+00:24:32,220 --> 00:24:35,400
+an entire availability
+zone fails or we want,
+
+639
+00:24:35,400 --> 00:24:37,680
+you know, we wanna take it
+out for whatever reason.
+
+640
+00:24:37,680 --> 00:24:39,210
+In that case, what we then have to do
+
+641
+00:24:39,210 --> 00:24:43,560
+is all the traffic from that
+availability zone now has
+
+642
+00:24:43,560 --> 00:24:46,560
+to go somewhere because we
+prioritize the availability
+
+643
+00:24:46,560 --> 00:24:47,760
+over the latency, right?
+
+644
+00:24:48,762 --> 00:24:50,340
+And so you'll notice here
+that availability zone,
+
+645
+00:24:50,340 --> 00:24:53,490
+one and three, are now
+seeing a 50% increase
+
+646
+00:24:53,490 --> 00:24:56,610
+in the amount of traffic
+that would've had otherwise.
+
+647
+00:24:56,610 --> 00:24:58,740
+And so as a regional service,
+this is a thing that we have
+
+648
+00:24:58,740 --> 00:25:00,903
+to, you know, plan for ahead of time.
+
+649
+00:25:01,787 --> 00:25:03,660
+And so we just have
+capacity sitting there,
+
+650
+00:25:03,660 --> 00:25:05,097
+ready all the time.
+
+651
+00:25:05,097 --> 00:25:07,800
+So, the price of doing
+business as a regional service
+
+652
+00:25:07,800 --> 00:25:10,380
+and, you know, AWS services,
+you know price follows cost
+
+653
+00:25:10,380 --> 00:25:14,460
+and so, you know, this is baked
+into the price of DynamoDB.
+
+654
+00:25:14,460 --> 00:25:15,690
+To be able to handle the things like this.
+
+655
+00:25:15,690 --> 00:25:17,940
+So customers don't have to
+know under the covers that,
+
+656
+00:25:17,940 --> 00:25:20,640
+okay, we're dealing with an
+impaired AZ at the moment.
+
+657
+00:25:23,490 --> 00:25:24,323
+So, that's fine.
+
+658
+00:25:25,470 --> 00:25:27,210
+But if you think about the case like,
+
+659
+00:25:27,210 --> 00:25:30,540
+well, what if the traffic
+in one availability zone
+
+660
+00:25:30,540 --> 00:25:32,940
+is significantly larger,
+we have a traffic skew.
+
+661
+00:25:33,990 --> 00:25:35,550
+Well, one option is we could just scale up
+
+662
+00:25:35,550 --> 00:25:37,950
+the number of servers in
+that availability zone.
+
+663
+00:25:37,950 --> 00:25:40,080
+That's relatively easy, right?
+
+664
+00:25:40,080 --> 00:25:42,870
+But, again, think about what
+happens when that one fails.
+
+665
+00:25:42,870 --> 00:25:44,310
+Now what you see is availability one
+
+666
+00:25:44,310 --> 00:25:46,770
+and availability zones, one and three,
+
+667
+00:25:46,770 --> 00:25:49,440
+they have to handle a doubling in traffic.
+
+668
+00:25:49,440 --> 00:25:51,000
+So, that idle capacity that we have
+
+669
+00:25:51,000 --> 00:25:54,300
+to have sitting there
+ready in case of this event
+
+670
+00:25:54,300 --> 00:25:55,410
+is significantly larger.
+
+671
+00:25:55,410 --> 00:25:57,300
+So, this is a way more
+expensive way for us
+
+672
+00:25:57,300 --> 00:25:58,563
+to run this service.
+
+673
+00:26:01,050 --> 00:26:02,190
+So, that would mean that we'd have
+
+674
+00:26:02,190 --> 00:26:03,510
+to pass on the cost to customers.
+
+675
+00:26:03,510 --> 00:26:05,313
+And so we don't like that option.
+
+676
+00:26:06,600 --> 00:26:08,197
+The alternative is what we do is we say,
+
+677
+00:26:08,197 --> 00:26:10,710
+"Well, we'll never send more
+than a third of traffic.
+
+678
+00:26:10,710 --> 00:26:13,500
+This makes our DNS management
+a lot more complex."
+
+679
+00:26:13,500 --> 00:26:15,060
+And it does mean that some requests
+
+680
+00:26:15,060 --> 00:26:17,310
+will always be going
+cross availability zone.
+
+681
+00:26:19,170 --> 00:26:22,170
+In reality, you know, law of
+large numbers helps us out
+
+682
+00:26:22,170 --> 00:26:23,610
+and we don't have a very large skew,
+
+683
+00:26:23,610 --> 00:26:25,560
+and so we don't really see this scenario.
+
+684
+00:26:25,560 --> 00:26:27,870
+We also have some traffic coming
+straight from the internet.
+
+685
+00:26:27,870 --> 00:26:29,520
+And so the internet is close
+
+686
+00:26:29,520 --> 00:26:31,350
+to every availability
+zone at the same time.
+
+687
+00:26:31,350 --> 00:26:33,120
+And so we can send that
+traffic wherever we want
+
+688
+00:26:33,120 --> 00:26:36,210
+with more DNS complexity
+so we can fill in the gaps.
+
+689
+00:26:36,210 --> 00:26:38,250
+But these are the types of
+things you must think through
+
+690
+00:26:38,250 --> 00:26:40,550
+as you're building this
+style of architecture.
+
+691
+00:26:41,730 --> 00:26:43,650
+But that's how we shrink the first top.
+
+692
+00:26:43,650 --> 00:26:47,013
+This is a big latency win,
+but there's more, right?
+
+693
+00:26:47,970 --> 00:26:49,200
+Because you look about that second hop
+
+694
+00:26:49,200 --> 00:26:52,170
+between the request router
+and the storage node.
+
+695
+00:26:52,170 --> 00:26:53,003
+Again, ideally we send a,
+
+696
+00:26:53,003 --> 00:26:55,500
+you know, third of the traffic everywhere.
+
+697
+00:26:55,500 --> 00:26:58,100
+From capacity planning
+perspective, this is easiest.
+
+698
+00:26:58,950 --> 00:27:00,600
+Dynamo did this since launch.
+
+699
+00:27:00,600 --> 00:27:04,180
+And the, I thing, is we've
+kind of baked in this model
+
+700
+00:27:05,520 --> 00:27:08,130
+into our capacity planning, our pricing
+
+701
+00:27:08,130 --> 00:27:09,363
+and our limits.
+
+702
+00:27:11,220 --> 00:27:13,350
+Because when you're doing
+a strongly consistent read,
+
+703
+00:27:13,350 --> 00:27:16,350
+you must talk to a node
+that we've elected leader.
+
+704
+00:27:16,350 --> 00:27:17,183
+So, there's only one box you can talk to,
+
+705
+00:27:17,183 --> 00:27:19,710
+you have the request
+processing capacity of one box,
+
+706
+00:27:19,710 --> 00:27:22,980
+but eventually consistent reads
+you can talk to any of them.
+
+707
+00:27:22,980 --> 00:27:25,230
+And so we said, "Okay,
+well one of the boxes
+
+708
+00:27:25,230 --> 00:27:27,570
+might be unhealthy so
+we can't count on that,
+
+709
+00:27:27,570 --> 00:27:29,400
+but this is, but we've got
+the processing capacity
+
+710
+00:27:29,400 --> 00:27:30,233
+of two boxes.
+
+711
+00:27:30,233 --> 00:27:32,780
+That box has to be there
+anyways, so let's just use it.
+
+712
+00:27:34,050 --> 00:27:36,750
+So, this is why an
+eventually consistent reads
+
+713
+00:27:36,750 --> 00:27:38,700
+the limits are higher
+and the price is lower,
+
+714
+00:27:38,700 --> 00:27:39,990
+is because we have this capacity
+
+715
+00:27:39,990 --> 00:27:41,520
+that would've been idle otherwise
+
+716
+00:27:41,520 --> 00:27:42,970
+that we can use all the time.
+
+717
+00:27:45,240 --> 00:27:46,980
+Actually making this
+change to route locally
+
+718
+00:27:46,980 --> 00:27:48,690
+is pretty easy because we
+control the, in this case,
+
+719
+00:27:48,690 --> 00:27:50,010
+we control the client and the server.
+
+720
+00:27:50,010 --> 00:27:52,227
+We have to know about all
+three replicas anyways.
+
+721
+00:27:52,227 --> 00:27:55,650
+And so we just pick the one
+in the same availability zone
+
+722
+00:27:55,650 --> 00:27:56,820
+that we are.
+
+723
+00:27:56,820 --> 00:27:58,320
+We send all the traffic there.
+
+724
+00:27:59,640 --> 00:28:01,530
+Unless of course you're
+relying on this fact
+
+725
+00:28:01,530 --> 00:28:03,030
+that you can send two X,
+
+726
+00:28:03,030 --> 00:28:05,520
+the request for an
+eventually assistant read
+
+727
+00:28:05,520 --> 00:28:09,210
+because you could now be sending
+two boxes worth of traffic
+
+728
+00:28:09,210 --> 00:28:10,383
+to a single box.
+
+729
+00:28:11,850 --> 00:28:13,050
+That's no good.
+
+730
+00:28:13,050 --> 00:28:14,220
+And so what we have to
+do is we actually have
+
+731
+00:28:14,220 --> 00:28:16,620
+to monitor statistics on the server side
+
+732
+00:28:16,620 --> 00:28:17,790
+and detect when this happens.
+
+733
+00:28:17,790 --> 00:28:21,180
+This happens sometimes doesn't
+happen super frequently,
+
+734
+00:28:21,180 --> 00:28:23,640
+but when it does, we can send
+a message back to the client
+
+735
+00:28:23,640 --> 00:28:25,020
+and say, "Hey, for this table,
+
+736
+00:28:25,020 --> 00:28:26,550
+let's go back to the random routing mode
+
+737
+00:28:26,550 --> 00:28:28,740
+because we need to prioritize availability
+
+738
+00:28:28,740 --> 00:28:30,590
+over the lower latency in this case."
+
+739
+00:28:31,980 --> 00:28:34,740
+And, again, in reality, most of the tables
+
+740
+00:28:34,740 --> 00:28:36,420
+that are, you know, much higher traffic,
+
+741
+00:28:36,420 --> 00:28:37,650
+their clients are distributed
+
+742
+00:28:37,650 --> 00:28:39,300
+across availability zones all the time.
+
+743
+00:28:39,300 --> 00:28:40,500
+And so they're being routed
+
+744
+00:28:40,500 --> 00:28:42,660
+to each individual availability zone,
+
+745
+00:28:42,660 --> 00:28:45,690
+which means that when we do the local AZ,
+
+746
+00:28:45,690 --> 00:28:47,700
+we see the spread that we'd expect to see.
+
+747
+00:28:47,700 --> 00:28:48,780
+And so we don't end up in this case
+
+748
+00:28:48,780 --> 00:28:50,230
+as often as you might expect.
+
+749
+00:28:53,100 --> 00:28:55,050
+So, this is the path on that we've taken
+
+750
+00:28:55,050 --> 00:28:57,270
+on how we can shrink our latency.
+
+751
+00:28:57,270 --> 00:28:59,847
+And a few times we've
+bumped up against this,
+
+752
+00:28:59,847 --> 00:29:01,170
+you know, the availability
+
+753
+00:29:01,170 --> 00:29:04,530
+versus predictable low latency trade off.
+
+754
+00:29:04,530 --> 00:29:05,760
+And when forced to choose,
+
+755
+00:29:05,760 --> 00:29:07,230
+we're gonna make the service available.
+
+756
+00:29:07,230 --> 00:29:10,710
+But in a lot of cases there is no conflict
+
+757
+00:29:10,710 --> 00:29:12,840
+and we can do both.
+
+758
+00:29:12,840 --> 00:29:15,480
+It leads to a bunch of
+complexity on our side,
+
+759
+00:29:15,480 --> 00:29:17,070
+but these are the tenets and
+the most important things
+
+760
+00:29:17,070 --> 00:29:19,200
+for our service and for our customers.
+
+761
+00:29:19,200 --> 00:29:21,840
+And so we think this
+complexity is worth it in order
+
+762
+00:29:21,840 --> 00:29:25,260
+to provide a a better
+product to you folks.
+
+763
+00:29:25,260 --> 00:29:27,990
+- I know the next slide is, do
+you want me to take this one?
+
+764
+00:29:27,990 --> 00:29:29,095
+- Yeah, I hope so.
+
+765
+00:29:29,095 --> 00:29:29,928
+- Okay.
+
+766
+00:29:29,928 --> 00:29:30,761
+All right.
+
+767
+00:29:33,690 --> 00:29:35,753
+Get a drink of water or whatever you want.
+
+768
+00:29:36,960 --> 00:29:39,210
+So, a couple of things
+which Craig mentioned,
+
+769
+00:29:40,500 --> 00:29:42,467
+he talked about we do client routing
+
+770
+00:29:43,938 --> 00:29:46,183
+and 1/3 of the traffic goes to each AZ.
+
+771
+00:29:48,180 --> 00:29:49,740
+Another thing which we do is we try
+
+772
+00:29:49,740 --> 00:29:52,683
+and keep 1/3 of the leaders on each AZ.
+
+773
+00:29:53,640 --> 00:29:56,250
+Therefore even on the
+strongly consistent reads,
+
+774
+00:29:56,250 --> 00:29:58,863
+you're evenly distributing
+traffic across the ACs.
+
+775
+00:29:59,880 --> 00:30:00,930
+Sorry, didn't wanna interrupt you
+
+776
+00:30:00,930 --> 00:30:03,000
+when you were talking about it.
+
+777
+00:30:03,000 --> 00:30:04,283
+- [Craig] That's the first.
+
+778
+00:30:05,460 --> 00:30:06,870
+- All right, first time
+I'm seeing these slides,
+
+779
+00:30:06,870 --> 00:30:08,130
+so it's gonna be interesting.
+
+780
+00:30:08,130 --> 00:30:10,500
+All right, so you have
+a request, it comes in,
+
+781
+00:30:10,500 --> 00:30:12,200
+you talked about how it
+goes all the way through
+
+782
+00:30:12,200 --> 00:30:13,533
+to the request router.
+
+783
+00:30:14,490 --> 00:30:16,950
+The important decision
+which a request router needs
+
+784
+00:30:16,950 --> 00:30:21,580
+to make is, should we serve this request
+
+785
+00:30:22,770 --> 00:30:26,370
+and should we serve this request
+as a three part question.
+
+786
+00:30:26,370 --> 00:30:27,903
+Are you who you claim you are?
+
+787
+00:30:30,210 --> 00:30:34,140
+Is your SigV4 signature
+matching your request?
+
+788
+00:30:34,140 --> 00:30:35,850
+Do you have the permission to do the thing
+
+789
+00:30:35,850 --> 00:30:37,140
+which you want to do on the table,
+
+790
+00:30:37,140 --> 00:30:39,630
+which you're claiming you wanna do it on?
+
+791
+00:30:39,630 --> 00:30:42,030
+And the third one is, are
+you within your limits?
+
+792
+00:30:42,030 --> 00:30:43,620
+So, those are the three questions
+
+793
+00:30:43,620 --> 00:30:47,130
+which we have to answer, each
+and every request we get.
+
+794
+00:30:47,130 --> 00:30:50,010
+Now, we've got hundreds of customers
+
+795
+00:30:50,010 --> 00:30:52,410
+who do over a half a
+million requests per second.
+
+796
+00:30:52,410 --> 00:30:56,170
+We do this stuff billions of times a day
+
+797
+00:30:57,270 --> 00:30:59,520
+and we have to do this really, really fast
+
+798
+00:30:59,520 --> 00:31:01,170
+because what are we after?
+
+799
+00:31:01,170 --> 00:31:03,783
+Predictable (low) latency at any scale.
+
+800
+00:31:05,280 --> 00:31:06,990
+That's what we're supposed to get, okay?
+
+801
+00:31:06,990 --> 00:31:08,700
+All right, I don't know about this crew,
+
+802
+00:31:08,700 --> 00:31:10,650
+but, okay, all right, thank you.
+
+803
+00:31:10,650 --> 00:31:12,210
+Somebody heard it?
+
+804
+00:31:12,210 --> 00:31:14,490
+So, we're after predictable (low) latency,
+
+805
+00:31:14,490 --> 00:31:17,400
+but once the request router knows
+
+806
+00:31:17,400 --> 00:31:19,560
+that your request is legitimate
+
+807
+00:31:19,560 --> 00:31:20,823
+and we do wanna serve it.
+
+808
+00:31:21,660 --> 00:31:22,890
+The next question which we have
+
+809
+00:31:22,890 --> 00:31:26,790
+to ask is, which storage
+node do we send it to?
+
+810
+00:31:26,790 --> 00:31:29,370
+Now, Craig talked about
+distributing a table
+
+811
+00:31:29,370 --> 00:31:31,650
+into multiple partitions and partitions
+
+812
+00:31:31,650 --> 00:31:33,270
+across multiple storage nodes.
+
+813
+00:31:33,270 --> 00:31:34,530
+We have three storage nodes here.
+
+814
+00:31:34,530 --> 00:31:36,750
+I, sorry, I don't have a clicker here,
+
+815
+00:31:36,750 --> 00:31:39,450
+but there's literally
+hundreds of thousands
+
+816
+00:31:39,450 --> 00:31:41,900
+of storage nodes across
+which we distribute data.
+
+817
+00:31:43,020 --> 00:31:45,580
+When I asked earlier, how
+many of you use DynamoDB
+
+818
+00:31:46,530 --> 00:31:48,480
+or how many of you don't
+use DynamoDB at this point.
+
+819
+00:31:48,480 --> 00:31:50,010
+Only one person raise their hands.
+
+820
+00:31:50,010 --> 00:31:52,410
+So, the rest of you, I
+have a simple ask of you.
+
+821
+00:31:53,460 --> 00:31:54,543
+Look to your right.
+
+822
+00:31:56,340 --> 00:31:57,480
+Other right.
+
+823
+00:31:57,480 --> 00:31:59,163
+Okay, look to your left.
+
+824
+00:32:00,600 --> 00:32:02,550
+All of you who use DynamoDB,
+
+825
+00:32:02,550 --> 00:32:04,920
+your data is co-located on storage nodes,
+
+826
+00:32:04,920 --> 00:32:06,870
+which people who are next to you,
+
+827
+00:32:06,870 --> 00:32:08,400
+it's completely shared infrastructure.
+
+828
+00:32:08,400 --> 00:32:10,590
+We do not spin up a cluster for you.
+
+829
+00:32:10,590 --> 00:32:14,190
+So, your data is co-located
+on hundreds of thousands
+
+830
+00:32:14,190 --> 00:32:17,040
+of storage nodes with other people's data
+
+831
+00:32:17,040 --> 00:32:19,500
+and hundreds of millions of times a second
+
+832
+00:32:19,500 --> 00:32:22,590
+we need to decide where to
+send each of these requests.
+
+833
+00:32:22,590 --> 00:32:25,170
+So, that's the problem
+which we have to solve.
+
+834
+00:32:25,170 --> 00:32:26,340
+Once the request makes it
+
+835
+00:32:26,340 --> 00:32:27,570
+to a storage node.
+
+836
+00:32:27,570 --> 00:32:31,863
+First, all data is
+always encrypted at rest.
+
+837
+00:32:32,850 --> 00:32:34,110
+Anybody know why?
+
+838
+00:32:34,110 --> 00:32:35,560
+Shout it out if you know why?
+
+839
+00:32:37,260 --> 00:32:39,160
+What's the first tenet I talked about?
+
+840
+00:32:40,680 --> 00:32:42,359
+Come on, shout it out. I
+can't hear, I don't have-
+
+841
+00:32:42,359 --> 00:32:43,192
+- [Crowd Member] Security.
+
+842
+00:32:43,192 --> 00:32:44,025
+- Thank you.
+
+843
+00:32:44,025 --> 00:32:48,030
+Security, all data is
+always encrypted at rest.
+
+844
+00:32:48,030 --> 00:32:49,443
+You can provide us a key,
+
+845
+00:32:50,550 --> 00:32:52,170
+but if you don't provide a key,
+
+846
+00:32:52,170 --> 00:32:55,050
+one will be provided for you.
+
+847
+00:32:55,050 --> 00:32:57,060
+All data is always encrypted at rest.
+
+848
+00:32:57,060 --> 00:33:00,510
+So, we need to get that security that key.
+
+849
+00:33:00,510 --> 00:33:04,770
+Then we need to decide are
+you overrunning a partition,
+
+850
+00:33:04,770 --> 00:33:07,890
+shared infrastructure, rate
+limits, provision, throughput,
+
+851
+00:33:07,890 --> 00:33:09,240
+all of those kinds of things.
+
+852
+00:33:09,240 --> 00:33:11,760
+We need to make sure that we
+want to admit the request.
+
+853
+00:33:11,760 --> 00:33:13,530
+So, there's two places where we decide
+
+854
+00:33:13,530 --> 00:33:15,990
+whether to admit your
+request or throttle you.
+
+855
+00:33:15,990 --> 00:33:18,300
+Once we're done with that,
+we have to serve your request
+
+856
+00:33:18,300 --> 00:33:20,400
+and your response is gonna
+go from the storage node back
+
+857
+00:33:20,400 --> 00:33:22,253
+to the request router and back to you.
+
+858
+00:33:23,700 --> 00:33:25,320
+Everybody good with this flow so far?
+
+859
+00:33:25,320 --> 00:33:27,150
+Quick show of hands, yes or no?
+
+860
+00:33:27,150 --> 00:33:29,376
+All right, more than 50%.
+
+861
+00:33:29,376 --> 00:33:30,209
+Okay.
+
+862
+00:33:31,320 --> 00:33:34,170
+For those of you who used DynamoDB before.
+
+863
+00:33:34,170 --> 00:33:39,170
+Simple table, unique
+attribute, login name,
+
+864
+00:33:41,430 --> 00:33:44,460
+non-unique attribute, human being's name.
+
+865
+00:33:44,460 --> 00:33:46,350
+So, somewhere in the middle
+there, there's two people
+
+866
+00:33:46,350 --> 00:33:48,990
+with the same name, but they
+have different login IDs.
+
+867
+00:33:48,990 --> 00:33:51,030
+You've all faced this problem.
+
+868
+00:33:51,030 --> 00:33:55,890
+The primary key on this table is login.
+
+869
+00:33:55,890 --> 00:33:58,110
+So, when you create a table,
+we ask you for three things,
+
+870
+00:33:58,110 --> 00:33:59,610
+only three things.
+
+871
+00:33:59,610 --> 00:34:02,550
+What's the name of the table,
+what's the primary key?
+
+872
+00:34:02,550 --> 00:34:04,020
+What's your credit card number?
+
+873
+00:34:04,020 --> 00:34:05,610
+Only three things.
+
+874
+00:34:05,610 --> 00:34:07,740
+How are you gonna pay for it?
+
+875
+00:34:07,740 --> 00:34:09,660
+That's your primary key.
+
+876
+00:34:09,660 --> 00:34:12,240
+Once you tell us what the primary key is,
+
+877
+00:34:12,240 --> 00:34:14,703
+we compute a hash of your primary key.
+
+878
+00:34:16,410 --> 00:34:19,293
+We order your data, based on the hash.
+
+879
+00:34:20,430 --> 00:34:21,450
+Notice that the order
+
+880
+00:34:21,450 --> 00:34:22,560
+of the names is different
+
+881
+00:34:22,560 --> 00:34:24,330
+from the order of the names on the left
+
+882
+00:34:24,330 --> 00:34:26,223
+because we ordered it by hashes here.
+
+883
+00:34:28,140 --> 00:34:31,173
+Contiguous ranges of
+hashes become partitions.
+
+884
+00:34:32,550 --> 00:34:34,200
+Craig talked about partitioning a table
+
+885
+00:34:34,200 --> 00:34:35,340
+for horizontal scale.
+
+886
+00:34:35,340 --> 00:34:36,790
+This is partitioning for you.
+
+887
+00:34:37,680 --> 00:34:39,380
+Once you've partitioned the table,
+
+888
+00:34:40,560 --> 00:34:42,063
+if you want to fetch an item,
+
+889
+00:34:43,110 --> 00:34:45,210
+I need to find the partition where it is.
+
+890
+00:34:45,210 --> 00:34:47,250
+So, I wanna find the item for Jorge
+
+891
+00:34:47,250 --> 00:34:49,380
+or for Richard, or whoever.
+
+892
+00:34:49,380 --> 00:34:51,960
+I will compute the hash on that.
+
+893
+00:34:51,960 --> 00:34:55,050
+I will find which range
+of hashes it falls within
+
+894
+00:34:55,050 --> 00:34:57,250
+and I will send my
+request to that location.
+
+895
+00:34:58,410 --> 00:35:01,120
+Hundreds of millions of claims a second
+
+896
+00:35:02,490 --> 00:35:04,023
+with predictable latency.
+
+897
+00:35:04,920 --> 00:35:06,240
+That's the thing we're after.
+
+898
+00:35:06,240 --> 00:35:08,250
+So, in matter of fact,
+
+899
+00:35:08,250 --> 00:35:10,020
+we've built a system which will do this
+
+900
+00:35:10,020 --> 00:35:11,493
+in tens of microseconds.
+
+901
+00:35:12,600 --> 00:35:14,070
+Tens of microseconds, literally.
+
+902
+00:35:14,070 --> 00:35:15,420
+We measure this thing
+
+903
+00:35:15,420 --> 00:35:17,460
+and when it starts to
+get out of this bound,
+
+904
+00:35:17,460 --> 00:35:20,403
+we're really antsy about it
+because we do it so often.
+
+905
+00:35:21,360 --> 00:35:22,590
+And what we have to do
+
+906
+00:35:22,590 --> 00:35:25,353
+is locate the partition
+where your data is.
+
+907
+00:35:26,608 --> 00:35:27,441
+You all right?
+
+908
+00:35:29,790 --> 00:35:31,252
+All right.
+
+909
+00:35:31,252 --> 00:35:33,990
+Look at where your traffic, data is.
+
+910
+00:35:33,990 --> 00:35:36,240
+And today the traffic we have
+
+911
+00:35:36,240 --> 00:35:39,300
+is hundreds of millions
+of requests per second.
+
+912
+00:35:39,300 --> 00:35:40,590
+But at any point in time,
+
+913
+00:35:40,590 --> 00:35:42,783
+the things which we have to deal with are;
+
+914
+00:35:44,040 --> 00:35:45,390
+how many storage nodes do we have?
+
+915
+00:35:45,390 --> 00:35:47,820
+How many request orders do we have?
+
+916
+00:35:47,820 --> 00:35:50,853
+All these numbers are measured
+in like six digits or more.
+
+917
+00:35:52,650 --> 00:35:57,300
+And at any point in time
+you are creating tables,
+
+918
+00:35:57,300 --> 00:35:59,280
+you're dropping tables,
+
+919
+00:35:59,280 --> 00:36:01,473
+you're scaling up traffic on some table.
+
+920
+00:36:02,970 --> 00:36:04,530
+We're splitting a table
+
+921
+00:36:04,530 --> 00:36:07,440
+because of that, partitions
+are moving around
+
+922
+00:36:07,440 --> 00:36:09,630
+and we need to figure
+out where your data is
+
+923
+00:36:09,630 --> 00:36:11,310
+in tens of milliseconds.
+
+924
+00:36:11,310 --> 00:36:13,650
+Tens, sorry, tens of microseconds.
+
+925
+00:36:13,650 --> 00:36:17,190
+So, I wanna talk to you about
+how we go about doing this.
+
+926
+00:36:17,190 --> 00:36:20,460
+And I wanna reiterate
+effectively what I wanna get back
+
+927
+00:36:20,460 --> 00:36:22,260
+to is the point which Craig talked about,
+
+928
+00:36:22,260 --> 00:36:27,260
+which is state is hard,
+shared state is really hard.
+
+929
+00:36:29,040 --> 00:36:31,680
+This is a distributed
+system we're trying to build
+
+930
+00:36:31,680 --> 00:36:34,440
+where these things on the left here...
+
+931
+00:36:34,440 --> 00:36:35,760
+I really should get a laser pointer.
+
+932
+00:36:35,760 --> 00:36:38,523
+But these request
+routers on the left here,
+
+933
+00:36:39,390 --> 00:36:43,140
+need to be able to figure
+out in tens of microseconds,
+
+934
+00:36:43,140 --> 00:36:45,900
+which storage node your data's on.
+
+935
+00:36:45,900 --> 00:36:48,200
+Because those storage
+nodes at the back there,
+
+936
+00:36:49,710 --> 00:36:52,290
+they're doing three cards, you
+know shuffling all the time.
+
+937
+00:36:52,290 --> 00:36:53,730
+They're moving partitions around,
+
+938
+00:36:53,730 --> 00:36:56,370
+they're splitting partitions,
+changing key ranges.
+
+939
+00:36:56,370 --> 00:36:58,890
+You're dropping tables,
+creating new tables.
+
+940
+00:36:58,890 --> 00:37:00,660
+These things have to stay in sync.
+
+941
+00:37:00,660 --> 00:37:02,640
+All right, this is the
+problem we have to solve.
+
+942
+00:37:02,640 --> 00:37:04,110
+So, how do we go about solving it?
+
+943
+00:37:04,110 --> 00:37:06,540
+These are the piece parts
+which we have to deal with.
+
+944
+00:37:06,540 --> 00:37:09,753
+There's request routers,
+there's storage notes,
+
+945
+00:37:10,860 --> 00:37:14,160
+there's a control plane,
+create table, update table,
+
+946
+00:37:14,160 --> 00:37:16,350
+drop table, delete table.
+
+947
+00:37:16,350 --> 00:37:17,580
+And there's this thing
+
+948
+00:37:17,580 --> 00:37:20,490
+which you introduced called "metadata",
+
+949
+00:37:20,490 --> 00:37:23,640
+partition metadata, which
+we're supposed to go look up.
+
+950
+00:37:23,640 --> 00:37:24,690
+These are the piece parts.
+
+951
+00:37:24,690 --> 00:37:27,063
+So, let's talk about this situation.
+
+952
+00:37:28,410 --> 00:37:31,110
+You create a table, you update a table.
+
+953
+00:37:31,110 --> 00:37:33,513
+Do a synchronous update
+to partition metadata.
+
+954
+00:37:34,505 --> 00:37:35,970
+Yeah, this is scalable.
+
+955
+00:37:35,970 --> 00:37:37,383
+How often does this happen?
+
+956
+00:37:38,400 --> 00:37:40,350
+Relatively low volume.
+
+957
+00:37:40,350 --> 00:37:42,780
+Tens of thousands of times
+a second, not a problem.
+
+958
+00:37:42,780 --> 00:37:43,880
+We can deal with this.
+
+959
+00:37:46,410 --> 00:37:49,443
+Partitions moving around,
+partitions splitting.
+
+960
+00:37:51,180 --> 00:37:53,460
+Leadership moving around on storage nodes
+
+961
+00:37:53,460 --> 00:37:56,190
+because we're doing software deployment.
+
+962
+00:37:56,190 --> 00:37:58,293
+Hundreds of thousands of times a second.
+
+963
+00:37:59,220 --> 00:38:02,040
+If you're gonna start updating
+your partition metadata,
+
+964
+00:38:02,040 --> 00:38:03,810
+you're building a pretty serious database
+
+965
+00:38:03,810 --> 00:38:05,850
+in the middle there, that in itself
+
+966
+00:38:05,850 --> 00:38:07,950
+will become a scalability problem for you.
+
+967
+00:38:09,450 --> 00:38:10,990
+The worst situation you have
+
+968
+00:38:12,150 --> 00:38:17,150
+is you, our customers, sending
+us billions of requests,
+
+969
+00:38:18,570 --> 00:38:22,443
+each of which need a look
+to, look up of metadata.
+
+970
+00:38:23,310 --> 00:38:26,040
+So, effectively this metadata system
+
+971
+00:38:26,040 --> 00:38:29,373
+is going to have to handle
+the same front door traffic,
+
+972
+00:38:30,240 --> 00:38:31,803
+which DynamoDB handles.
+
+973
+00:38:33,630 --> 00:38:35,403
+This is not a scalable system.
+
+974
+00:38:36,870 --> 00:38:41,870
+So, let's look maybe at
+the next obvious choice.
+
+975
+00:38:42,300 --> 00:38:44,130
+Any snarky comments for me?
+
+976
+00:38:44,130 --> 00:38:44,963
+Okay.
+
+977
+00:38:44,963 --> 00:38:45,796
+All right.
+
+978
+00:38:47,940 --> 00:38:51,393
+First option, put a cashier.
+
+979
+00:38:52,860 --> 00:38:54,900
+How many of you have been in a situation
+
+980
+00:38:54,900 --> 00:38:56,040
+where you're building a system
+
+981
+00:38:56,040 --> 00:38:57,750
+and somebody in your team
+says, "I need to scale.
+
+982
+00:38:57,750 --> 00:38:59,350
+I'm gonna put a cache in there."
+
+983
+00:39:01,350 --> 00:39:03,423
+How often has it worked out well for you?
+
+984
+00:39:05,250 --> 00:39:07,620
+Caches are a great solution.
+
+985
+00:39:07,620 --> 00:39:09,420
+They are a dangerous solution.
+
+986
+00:39:09,420 --> 00:39:11,460
+And we'll talk about what, great.
+
+987
+00:39:11,460 --> 00:39:12,630
+So, I have a cache.
+
+988
+00:39:12,630 --> 00:39:15,300
+Every request router now has a cache.
+
+989
+00:39:15,300 --> 00:39:16,983
+Magically we've implemented one.
+
+990
+00:39:19,440 --> 00:39:21,300
+The size of the arrows
+from the request router
+
+991
+00:39:21,300 --> 00:39:23,400
+that the partition metadata went down.
+
+992
+00:39:23,400 --> 00:39:26,610
+Let's assume this cache
+has a 99% hit rate.
+
+993
+00:39:26,610 --> 00:39:27,443
+Okay?
+
+994
+00:39:28,500 --> 00:39:30,800
+Partition metadata is serving only 1%
+
+995
+00:39:30,800 --> 00:39:33,213
+of the front door traffic, cache misses.
+
+996
+00:39:35,760 --> 00:39:37,910
+Any idea what could go
+wrong in the system?
+
+997
+00:39:39,690 --> 00:39:40,650
+Shout it out if you can.
+
+998
+00:39:40,650 --> 00:39:42,950
+I can hear you even if
+you have headphones on.
+
+999
+00:39:45,362 --> 00:39:46,195
+- [Crowd Member] Stale.
+
+1000
+00:39:46,195 --> 00:39:47,220
+- Stale, all right.
+
+1001
+00:39:47,220 --> 00:39:49,270
+What happens if all your caches go stale?
+
+1002
+00:39:50,730 --> 00:39:52,050
+If one cache goes stale?
+
+1003
+00:39:52,050 --> 00:39:52,953
+Yeah, who cares?
+
+1004
+00:39:54,120 --> 00:39:55,650
+What happens if you have a situation
+
+1005
+00:39:55,650 --> 00:39:58,320
+where for whatever reason,
+hundreds of thousands
+
+1006
+00:39:58,320 --> 00:39:59,403
+of caches go stale.
+
+1007
+00:40:01,380 --> 00:40:03,480
+Now your partition metadata
+is gonna get hundreds
+
+1008
+00:40:03,480 --> 00:40:06,213
+of thousands of cache misses
+and it's gonna fall over.
+
+1009
+00:40:08,070 --> 00:40:09,187
+We thought about this and said,
+
+1010
+00:40:09,187 --> 00:40:11,067
+"Yeah, the system, yeah, maybe not."
+
+1011
+00:40:12,090 --> 00:40:14,070
+So, we went one step further
+
+1012
+00:40:14,070 --> 00:40:17,427
+and we also said this is a
+situation of a large fleet
+
+1013
+00:40:17,427 --> 00:40:18,360
+and a small fleet.
+
+1014
+00:40:18,360 --> 00:40:20,610
+A large fleet of request routers
+
+1015
+00:40:20,610 --> 00:40:23,043
+and a small fleet in partition metadata.
+
+1016
+00:40:24,060 --> 00:40:26,110
+Could cause the small fleet to fall over.
+
+1017
+00:40:27,150 --> 00:40:28,620
+One of the things I said when I started
+
+1018
+00:40:28,620 --> 00:40:32,370
+was the specific choices we
+made may not be relevant to you,
+
+1019
+00:40:32,370 --> 00:40:34,950
+but there are some concepts
+which you should take away.
+
+1020
+00:40:34,950 --> 00:40:37,680
+If you're ever building a cache
+
+1021
+00:40:37,680 --> 00:40:40,443
+and a large fleet drives a small fleet,
+
+1022
+00:40:41,370 --> 00:40:44,100
+be very careful because
+it's not gonna end well
+
+1023
+00:40:44,100 --> 00:40:45,570
+for somebody.
+
+1024
+00:40:45,570 --> 00:40:47,550
+All right, so this didn't work.
+
+1025
+00:40:47,550 --> 00:40:50,490
+So, we came up with a
+next generation system
+
+1026
+00:40:50,490 --> 00:40:52,443
+where we built a two-tier cache,
+
+1027
+00:40:53,370 --> 00:40:56,940
+where we said MEMDS is
+gonna be one-tier of cache
+
+1028
+00:40:56,940 --> 00:41:00,033
+and the request rotors are gonna
+have another tier of cache.
+
+1029
+00:41:01,590 --> 00:41:04,143
+One-tier of cache is eventual consistency.
+
+1030
+00:41:05,340 --> 00:41:07,530
+This is now eventual consistency
+
+1031
+00:41:07,530 --> 00:41:09,990
+on top of eventual consistency.
+
+1032
+00:41:09,990 --> 00:41:12,090
+So, keep that in mind when I say this.
+
+1033
+00:41:12,090 --> 00:41:13,920
+You create a table,
+we're gonna push it down
+
+1034
+00:41:13,920 --> 00:41:15,300
+to MEMDS, great.
+
+1035
+00:41:15,300 --> 00:41:16,560
+There's gonna be a polar there,
+
+1036
+00:41:16,560 --> 00:41:19,207
+which is gonna go read all
+the storage now and say,
+
+1037
+00:41:19,207 --> 00:41:21,060
+"What partitions do you
+have for what tables?"
+
+1038
+00:41:21,060 --> 00:41:22,740
+Great, I'll push it to MEMDS.
+
+1039
+00:41:22,740 --> 00:41:24,060
+Great.
+
+1040
+00:41:24,060 --> 00:41:27,600
+This is now, MEMDS is now an
+eventually consistent cache.
+
+1041
+00:41:27,600 --> 00:41:30,090
+You make a request on the request router.
+
+1042
+00:41:30,090 --> 00:41:32,550
+If it gets a cache miss, it goes to MEMDS,
+
+1043
+00:41:32,550 --> 00:41:36,090
+which is itself eventually
+consistent cache.
+
+1044
+00:41:36,090 --> 00:41:37,350
+This is the system we built,
+
+1045
+00:41:37,350 --> 00:41:39,500
+and let me tell you
+why I think this works.
+
+1046
+00:41:40,800 --> 00:41:42,810
+Control plane, push new table creation.
+
+1047
+00:41:42,810 --> 00:41:43,643
+Great.
+
+1048
+00:41:44,580 --> 00:41:47,700
+The one thing which we
+added here is we version
+
+1049
+00:41:47,700 --> 00:41:49,293
+the data across the board.
+
+1050
+00:41:51,210 --> 00:41:54,150
+Whenever there's new data in the place
+
+1051
+00:41:54,150 --> 00:41:56,550
+of a, you talked about
+place of authority, right?
+
+1052
+00:41:56,550 --> 00:41:57,570
+Yes.
+
+1053
+00:41:57,570 --> 00:41:59,373
+The authority is the storage nodes.
+
+1054
+00:42:00,990 --> 00:42:03,967
+The storage nodes know what data they are.
+
+1055
+00:42:03,967 --> 00:42:04,800
+They're your storage node.
+
+1056
+00:42:04,800 --> 00:42:06,843
+Do you know what partitions
+you have? Absolutely you do.
+
+1057
+00:42:08,010 --> 00:42:10,110
+So, if the partition
+publisher comes to you
+
+1058
+00:42:10,110 --> 00:42:11,820
+and asks you what partitions do you have,
+
+1059
+00:42:11,820 --> 00:42:14,373
+you will give an absolutely
+authoritative answer.
+
+1060
+00:42:15,270 --> 00:42:16,740
+That's now pushed to MEMDS,
+
+1061
+00:42:16,740 --> 00:42:19,053
+but that is the state
+at that point in time.
+
+1062
+00:42:19,890 --> 00:42:21,450
+But you also say,
+
+1063
+00:42:21,450 --> 00:42:24,543
+my version is now version
+20 or something like that.
+
+1064
+00:42:25,530 --> 00:42:27,090
+At some point, if you wanna move
+
+1065
+00:42:27,090 --> 00:42:28,860
+a partition to one place to another,
+
+1066
+00:42:28,860 --> 00:42:31,890
+or there's a split,
+comes to the same thing.
+
+1067
+00:42:31,890 --> 00:42:33,030
+Bump the version number.
+
+1068
+00:42:33,030 --> 00:42:34,180
+So, here's what we did.
+
+1069
+00:42:36,450 --> 00:42:39,123
+A storage node had version 20 of metadata.
+
+1070
+00:42:40,110 --> 00:42:42,840
+It split a partition,
+it moved a partition.
+
+1071
+00:42:42,840 --> 00:42:45,537
+The new storage node says,
+"I'm now at version 21."
+
+1072
+00:42:48,090 --> 00:42:50,853
+Now, if a request were to
+come in to the front door,
+
+1073
+00:42:52,560 --> 00:42:56,100
+the storage node says I have
+a cache value, which says 20.
+
+1074
+00:42:56,100 --> 00:42:57,540
+Maybe it had a cache missing,
+
+1075
+00:42:57,540 --> 00:43:00,990
+it went to MEMDS and
+MEMDS said, "Value of 20."
+
+1076
+00:43:00,990 --> 00:43:02,250
+It doesn't matter.
+
+1077
+00:43:02,250 --> 00:43:05,853
+It goes to the place where
+version 20 pointed it to.
+
+1078
+00:43:07,620 --> 00:43:10,110
+Version 20 is the authoritative source
+
+1079
+00:43:10,110 --> 00:43:12,267
+and it says, "Eh-eh, not gonna work."
+
+1080
+00:43:13,440 --> 00:43:15,510
+You actually need to
+go to this other place
+
+1081
+00:43:15,510 --> 00:43:16,953
+because now we're at 21.
+
+1082
+00:43:18,390 --> 00:43:22,140
+The immediate thing
+which we do is the new,
+
+1083
+00:43:22,140 --> 00:43:24,940
+the request is gonna go
+straight to the new place
+
+1084
+00:43:26,550 --> 00:43:29,613
+and it is gonna get served immediately.
+
+1085
+00:43:30,720 --> 00:43:33,930
+So, even if you have
+eventually consistent data
+
+1086
+00:43:33,930 --> 00:43:37,620
+in this system, like the
+caches are two-tier steep
+
+1087
+00:43:37,620 --> 00:43:39,213
+and eventually consistent.
+
+1088
+00:43:40,590 --> 00:43:42,390
+If you do have a cache miss,
+
+1089
+00:43:42,390 --> 00:43:44,970
+which happens infrequently
+because there's a partition split
+
+1090
+00:43:44,970 --> 00:43:46,920
+or a partition move,
+
+1091
+00:43:46,920 --> 00:43:49,680
+we are still able to serve
+that in reasonable time.
+
+1092
+00:43:49,680 --> 00:43:52,050
+If you are interested in how
+all of this stuff's supposed
+
+1093
+00:43:52,050 --> 00:43:54,780
+to work, we published a paper about this.
+
+1094
+00:43:54,780 --> 00:43:56,283
+That's a QR code, scan it.
+
+1095
+00:43:57,450 --> 00:43:58,740
+Actually, this is not being recorded,
+
+1096
+00:43:58,740 --> 00:44:00,900
+so you probably wanna scan it.
+
+1097
+00:44:00,900 --> 00:44:03,720
+Or if you want to contact me afterwards.
+
+1098
+00:44:03,720 --> 00:44:05,340
+The basic idea is this.
+
+1099
+00:44:05,340 --> 00:44:08,373
+You've got a system with
+data which has entropy.
+
+1100
+00:44:09,570 --> 00:44:13,590
+You have a need to do stuff with caches,
+
+1101
+00:44:13,590 --> 00:44:16,380
+and these caches are gonna
+be eventually consistent
+
+1102
+00:44:16,380 --> 00:44:18,210
+and they need to deal with the situation
+
+1103
+00:44:18,210 --> 00:44:20,673
+where all the caches can probably go cold.
+
+1104
+00:44:22,380 --> 00:44:24,480
+So, far I've talked about the first two,
+
+1105
+00:44:24,480 --> 00:44:25,980
+I haven't talked about the last one.
+
+1106
+00:44:25,980 --> 00:44:27,960
+So, let's talk about that one.
+
+1107
+00:44:27,960 --> 00:44:30,150
+System of record, authoritative there,
+
+1108
+00:44:30,150 --> 00:44:32,580
+two levels of eventually
+consistent caches.
+
+1109
+00:44:32,580 --> 00:44:34,200
+We're good so far.
+
+1110
+00:44:34,200 --> 00:44:35,880
+Now, let's talk about the situation
+
+1111
+00:44:35,880 --> 00:44:38,883
+with large fleet, small fleet and hedging.
+
+1112
+00:44:39,870 --> 00:44:41,580
+If you are ever building a system
+
+1113
+00:44:41,580 --> 00:44:43,383
+and you want predictable latency.
+
+1114
+00:44:44,970 --> 00:44:46,800
+Use this concept called "Hedging."
+
+1115
+00:44:46,800 --> 00:44:48,180
+We do it internally.
+
+1116
+00:44:48,180 --> 00:44:50,100
+When a request arrives...
+
+1117
+00:44:50,100 --> 00:44:51,630
+By the way, hedging is not our idea.
+
+1118
+00:44:51,630 --> 00:44:53,070
+It's a idea from Google,
+
+1119
+00:44:53,070 --> 00:44:55,200
+that's a copy of the paper up there.
+
+1120
+00:44:55,200 --> 00:44:59,133
+When a request shows
+up at a request router.
+
+1121
+00:45:00,360 --> 00:45:04,470
+In the eventuality that we
+have a miss on the cache,
+
+1122
+00:45:04,470 --> 00:45:06,690
+we don't make one request,
+
+1123
+00:45:06,690 --> 00:45:10,653
+we make two requests to two MEMDS servers.
+
+1124
+00:45:12,300 --> 00:45:14,130
+Why is this a good idea?
+
+1125
+00:45:14,130 --> 00:45:17,550
+Assume that your system
+is like most systems
+
+1126
+00:45:17,550 --> 00:45:20,823
+and your latency is along some
+kind of normal distribution.
+
+1127
+00:45:21,690 --> 00:45:25,770
+If you make two requests,
+statistically one's on the left
+
+1128
+00:45:25,770 --> 00:45:28,500
+of the median, one's on
+the right of the median.
+
+1129
+00:45:28,500 --> 00:45:29,850
+Take the first response.
+
+1130
+00:45:29,850 --> 00:45:30,700
+It's always good.
+
+1131
+00:45:32,160 --> 00:45:34,200
+We hedge our requests.
+
+1132
+00:45:34,200 --> 00:45:38,190
+What this means is that in the
+eventuality of a cache miss,
+
+1133
+00:45:38,190 --> 00:45:39,023
+so far,
+
+1134
+00:45:41,296 --> 00:45:43,963
+(Amrith coughs)
+
+1135
+00:45:44,910 --> 00:45:48,870
+MEMDS is serving twice the traffic
+
+1136
+00:45:48,870 --> 00:45:50,620
+which we're getting for cache miss.
+
+1137
+00:45:54,180 --> 00:45:55,443
+We go one step further.
+
+1138
+00:45:56,580 --> 00:45:59,250
+What happens if all the
+caches happen to be cold?
+
+1139
+00:45:59,250 --> 00:46:01,983
+We introduce this
+concept of constant work.
+
+1140
+00:46:03,240 --> 00:46:05,760
+You make a request to DynamoDB,
+
+1141
+00:46:05,760 --> 00:46:08,520
+that request goes through Load
+Balancers and all that stuff,
+
+1142
+00:46:08,520 --> 00:46:10,860
+shows up at a request router.
+
+1143
+00:46:10,860 --> 00:46:13,060
+The request router says,
+"Where's this item?
+
+1144
+00:46:14,550 --> 00:46:16,980
+The cache is correct."
+
+1145
+00:46:16,980 --> 00:46:19,140
+It makes a request to the storage node.
+
+1146
+00:46:19,140 --> 00:46:21,090
+The storage node serves a response.
+
+1147
+00:46:21,090 --> 00:46:22,840
+We've already given you the answer.
+
+1148
+00:46:24,690 --> 00:46:26,910
+What do we do in the background?
+
+1149
+00:46:26,910 --> 00:46:31,620
+We send two requests to two MEMDS servers,
+
+1150
+00:46:31,620 --> 00:46:32,883
+even on a cache hit.
+
+1151
+00:46:35,310 --> 00:46:36,273
+Everybody with me?
+
+1152
+00:46:37,500 --> 00:46:38,703
+On a cache hit,
+
+1153
+00:46:39,630 --> 00:46:43,110
+we send two requests to two MEMDS servers.
+
+1154
+00:46:43,110 --> 00:46:43,943
+Why?
+
+1155
+00:46:45,060 --> 00:46:47,340
+Assume someday all the caches went cold?
+
+1156
+00:46:47,340 --> 00:46:50,190
+MEMDS would not know the difference.
+
+1157
+00:46:50,190 --> 00:46:54,090
+Large fleet, small fleet,
+this is the cost to us
+
+1158
+00:46:54,090 --> 00:46:54,960
+of doing business
+
+1159
+00:46:54,960 --> 00:46:57,750
+and giving you predictable
+(low) latency at any scale.
+
+1160
+00:46:57,750 --> 00:46:59,700
+These are the things which we keep in mind
+
+1161
+00:46:59,700 --> 00:47:01,440
+when we build our systems,
+
+1162
+00:47:01,440 --> 00:47:03,330
+and we try to build systems
+
+1163
+00:47:03,330 --> 00:47:05,790
+with a guarantee of availability.
+
+1164
+00:47:05,790 --> 00:47:07,110
+We can't just say your cache is cold,
+
+1165
+00:47:07,110 --> 00:47:09,030
+therefore we had loss of availability.
+
+1166
+00:47:09,030 --> 00:47:09,863
+Can't do that.
+
+1167
+00:47:11,070 --> 00:47:12,930
+The latency needs to be not just low,
+
+1168
+00:47:12,930 --> 00:47:15,180
+but predictably low.
+
+1169
+00:47:15,180 --> 00:47:16,650
+These are some of the considerations
+
+1170
+00:47:16,650 --> 00:47:20,223
+which we had to go through
+because these were our tenets.
+
+1171
+00:47:21,270 --> 00:47:23,970
+Figure out what your tenets are
+
+1172
+00:47:23,970 --> 00:47:27,930
+and have your decisions
+mirror your tenets.
+
+1173
+00:47:27,930 --> 00:47:30,090
+You're not gonna probably
+have to make the same choices,
+
+1174
+00:47:30,090 --> 00:47:32,043
+but in the event that you do,
+
+1175
+00:47:33,930 --> 00:47:36,840
+my suggestion to you is
+be very, very careful
+
+1176
+00:47:36,840 --> 00:47:39,390
+of the person who says, "We'll
+add a cache in front of it
+
+1177
+00:47:39,390 --> 00:47:40,710
+and it's gonna solve all the problems."
+
+1178
+00:47:40,710 --> 00:47:42,660
+Caching is damn hard.
+
+1179
+00:47:42,660 --> 00:47:46,620
+I've been doing this for about 35 years.
+
+1180
+00:47:46,620 --> 00:47:48,187
+The number of times
+when somebody has said,
+
+1181
+00:47:48,187 --> 00:47:49,500
+"I'll put a cache in front of it
+
+1182
+00:47:49,500 --> 00:47:50,877
+and life is gonna be good."
+
+1183
+00:47:51,780 --> 00:47:54,623
+The number of times they're
+wrong is close to a 100%.
+
+1184
+00:47:54,623 --> 00:47:56,073
+Caching is hard.
+
+1185
+00:47:57,150 --> 00:48:01,780
+But if you do understand
+that you wanna have caching,
+
+1186
+00:48:03,120 --> 00:48:05,163
+understand eventual consistency.
+
+1187
+00:48:06,270 --> 00:48:08,280
+Build systems with version data
+
+1188
+00:48:08,280 --> 00:48:11,253
+so that eventually consistent
+data is your friend.
+
+1189
+00:48:12,120 --> 00:48:13,837
+Don't run away from it and say,
+
+1190
+00:48:13,837 --> 00:48:16,680
+"I need synchronous upgrades
+across large numbers of node"
+
+1191
+00:48:16,680 --> 00:48:19,380
+because that is not a scalable solution.
+
+1192
+00:48:19,380 --> 00:48:21,090
+Eventual consistency is your friend
+
+1193
+00:48:21,090 --> 00:48:22,773
+if you want to go to scale.
+
+1194
+00:48:24,480 --> 00:48:27,420
+Why are these things important for us?
+
+1195
+00:48:27,420 --> 00:48:30,180
+Because our tenants were security,
+durability, availability.
+
+1196
+00:48:30,180 --> 00:48:31,290
+Great.
+
+1197
+00:48:31,290 --> 00:48:35,130
+Predictable (low) latency at any scale.
+
+1198
+00:48:35,130 --> 00:48:36,480
+If we want any scale,
+
+1199
+00:48:36,480 --> 00:48:39,243
+we need to understand
+eventual consistency ourself.
+
+1200
+00:48:41,310 --> 00:48:42,753
+Everybody good so far?
+
+1201
+00:48:44,610 --> 00:48:46,263
+I've talked a lot about caching.
+
+1202
+00:48:47,400 --> 00:48:49,950
+I've talked a lot about the
+things we do on a request order.
+
+1203
+00:48:49,950 --> 00:48:51,543
+What are the things we cache?
+
+1204
+00:48:52,710 --> 00:48:55,110
+You wanna connect to
+DynamoDB and make a request.
+
+1205
+00:48:55,110 --> 00:48:56,913
+We cache your identity credentials.
+
+1206
+00:48:58,110 --> 00:49:00,390
+You wanna make a request
+on some particular table.
+
+1207
+00:49:00,390 --> 00:49:01,953
+We cache your table metadata.
+
+1208
+00:49:03,990 --> 00:49:05,970
+Suppose you were to make a new connection
+
+1209
+00:49:05,970 --> 00:49:08,400
+to DynamoDB on every request.
+
+1210
+00:49:08,400 --> 00:49:11,280
+You're probably going
+to a new request router.
+
+1211
+00:49:11,280 --> 00:49:13,140
+Are you gonna get the benefit of caching?
+
+1212
+00:49:13,140 --> 00:49:14,730
+No.
+
+1213
+00:49:14,730 --> 00:49:16,880
+Make sure you have a
+long lived connection.
+
+1214
+00:49:18,030 --> 00:49:19,110
+What does that mean?
+
+1215
+00:49:19,110 --> 00:49:20,580
+Right size your connection pool.
+
+1216
+00:49:20,580 --> 00:49:22,800
+If you have low traffic,
+have a small connection pool.
+
+1217
+00:49:22,800 --> 00:49:23,730
+If you have high traffic,
+
+1218
+00:49:23,730 --> 00:49:26,160
+it's okay to have a
+larger connection pool.
+
+1219
+00:49:26,160 --> 00:49:28,050
+If you have a very
+small amount of traffic,
+
+1220
+00:49:28,050 --> 00:49:29,550
+don't have a huge number of hosts
+
+1221
+00:49:29,550 --> 00:49:31,560
+who are serving you that traffic.
+
+1222
+00:49:31,560 --> 00:49:33,540
+Think about these kinds of things
+
+1223
+00:49:33,540 --> 00:49:36,303
+to make sure that you get
+predictable (low) latency.
+
+1224
+00:49:38,040 --> 00:49:40,830
+Also, if you want
+predictable (low) latency
+
+1225
+00:49:40,830 --> 00:49:43,500
+from your application,
+hedge your requests.
+
+1226
+00:49:43,500 --> 00:49:44,523
+Send two requests.
+
+1227
+00:49:46,170 --> 00:49:48,570
+If their rights, make
+sure they're item potent.
+
+1228
+00:49:48,570 --> 00:49:51,720
+If they're reads,
+eventually consistent reads.
+
+1229
+00:49:51,720 --> 00:49:54,070
+Choose the first one,
+don't change the timeout.
+
+1230
+00:49:55,290 --> 00:49:58,320
+And if you are building
+caches, please by all means,
+
+1231
+00:49:58,320 --> 00:50:01,710
+build constant work into your plan.
+
+1232
+00:50:01,710 --> 00:50:03,330
+The other thing which we did in order
+
+1233
+00:50:03,330 --> 00:50:05,070
+to give you predictable (low) latency
+
+1234
+00:50:05,070 --> 00:50:07,500
+is this whole concept
+of limits in DynamoDB.
+
+1235
+00:50:07,500 --> 00:50:09,780
+And there's numerous limits we have here.
+
+1236
+00:50:09,780 --> 00:50:11,520
+I'm gonna talk quickly
+about a couple of these.
+
+1237
+00:50:11,520 --> 00:50:13,020
+There's read and write limits.
+
+1238
+00:50:14,820 --> 00:50:16,020
+The motivation for all
+
+1239
+00:50:16,020 --> 00:50:18,390
+of the limits we have
+is predictable latency,
+
+1240
+00:50:18,390 --> 00:50:20,160
+because at the end of the day,
+
+1241
+00:50:20,160 --> 00:50:22,650
+DynamoDB is running on physical hardware.
+
+1242
+00:50:22,650 --> 00:50:25,590
+Physical hardware has limitations,
+
+1243
+00:50:25,590 --> 00:50:27,813
+and this hardware is
+shared infrastructure.
+
+1244
+00:50:28,740 --> 00:50:30,420
+We have to make sure
+
+1245
+00:50:30,420 --> 00:50:33,900
+that we operate a service
+which is cost effective to us,
+
+1246
+00:50:33,900 --> 00:50:36,630
+so we can translate those
+benefits over to you.
+
+1247
+00:50:36,630 --> 00:50:38,910
+So at the end of the day,
+we've got physical hardware
+
+1248
+00:50:38,910 --> 00:50:41,130
+with some limitations on it.
+
+1249
+00:50:41,130 --> 00:50:42,340
+If you create a table
+
+1250
+00:50:43,260 --> 00:50:46,560
+and that table had some
+number of provisioned RCUs.
+
+1251
+00:50:46,560 --> 00:50:50,160
+In the old days, this is historical,
+
+1252
+00:50:50,160 --> 00:50:53,673
+we would divide that table
+into some number of partitions.
+
+1253
+00:50:56,820 --> 00:50:58,140
+When we split that table,
+
+1254
+00:50:58,140 --> 00:51:00,570
+unfortunately we divided the provisioning
+
+1255
+00:51:00,570 --> 00:51:01,830
+onto those two partitions.
+
+1256
+00:51:01,830 --> 00:51:03,780
+This was called IOPS dilution.
+
+1257
+00:51:03,780 --> 00:51:05,880
+The reason we have this
+up here is there's a bunch
+
+1258
+00:51:05,880 --> 00:51:08,250
+of people who've been using
+DynamoDB for a long time
+
+1259
+00:51:08,250 --> 00:51:09,510
+who think this is still a problem.
+
+1260
+00:51:09,510 --> 00:51:11,730
+This is no longer a problem.
+
+1261
+00:51:11,730 --> 00:51:13,320
+The way things work today,
+
+1262
+00:51:13,320 --> 00:51:16,220
+if you've got a number of
+partitions and we split a table.
+
+1263
+00:51:17,160 --> 00:51:18,540
+When we split the partitions,
+
+1264
+00:51:18,540 --> 00:51:21,543
+each partition gets the
+same partition level limit.
+
+1265
+00:51:23,220 --> 00:51:27,540
+Currently the limits are
+a 1000 WCUs and 3000 RCUs.
+
+1266
+00:51:27,540 --> 00:51:29,280
+The numbers may change over time.
+
+1267
+00:51:29,280 --> 00:51:31,020
+Don't take a commitment on those.
+
+1268
+00:51:31,020 --> 00:51:32,700
+But we have those
+
+1269
+00:51:32,700 --> 00:51:35,493
+because we want to guarantee
+predictable latency.
+
+1270
+00:51:36,480 --> 00:51:38,820
+I will make one small detour here.
+
+1271
+00:51:38,820 --> 00:51:40,027
+A lot of customers ask me,
+
+1272
+00:51:40,027 --> 00:51:42,510
+"What is the partition count on my table?"
+
+1273
+00:51:42,510 --> 00:51:45,483
+This is a meaningless
+metric for you to ask us.
+
+1274
+00:51:46,950 --> 00:51:48,693
+And the reason is simply this.
+
+1275
+00:51:50,040 --> 00:51:51,603
+If you were to have a table,
+
+1276
+00:51:52,710 --> 00:51:55,260
+there's no guarantee that each table has
+
+1277
+00:51:55,260 --> 00:51:59,310
+the same fraction of the key range.
+
+1278
+00:51:59,310 --> 00:52:02,340
+Each partition has the same
+fraction of the key range.
+
+1279
+00:52:02,340 --> 00:52:03,967
+The real question you're asking is,
+
+1280
+00:52:03,967 --> 00:52:07,260
+"I have a big cyber
+sale, Cyber Monday sale
+
+1281
+00:52:07,260 --> 00:52:08,580
+in a couple of days.
+
+1282
+00:52:08,580 --> 00:52:11,490
+Is my table gonna be able
+to serve my traffic?"
+
+1283
+00:52:11,490 --> 00:52:13,920
+The question you need to ask us is this.
+
+1284
+00:52:13,920 --> 00:52:17,160
+If I have a different
+size for each partition,
+
+1285
+00:52:17,160 --> 00:52:19,290
+I just made up these numbers here,
+
+1286
+00:52:19,290 --> 00:52:21,440
+which partition is
+gonna throttle me first?
+
+1287
+00:52:23,310 --> 00:52:25,710
+The real question is that partition there
+
+1288
+00:52:25,710 --> 00:52:27,480
+is the one which is gonna throttle you.
+
+1289
+00:52:27,480 --> 00:52:28,830
+So, just telling you that you happen
+
+1290
+00:52:28,830 --> 00:52:31,020
+to have eight partitions
+is gonna do nothing for you
+
+1291
+00:52:31,020 --> 00:52:33,273
+because eight times 3000 or 8,000,
+
+1292
+00:52:33,273 --> 00:52:35,550
+1000 is useless to you.
+
+1293
+00:52:35,550 --> 00:52:37,530
+So we introduced this feature,
+
+1294
+00:52:37,530 --> 00:52:41,430
+which was partition,
+table warm throughput.
+
+1295
+00:52:41,430 --> 00:52:43,653
+To answer this exact question,
+
+1296
+00:52:45,060 --> 00:52:46,920
+I have a major event coming up.
+
+1297
+00:52:46,920 --> 00:52:50,490
+Is my table gonna be able
+to serve my traffic or not?
+
+1298
+00:52:50,490 --> 00:52:53,100
+So, warm throughput is a
+feature which we launched.
+
+1299
+00:52:53,100 --> 00:52:54,990
+We launched it last year at re:Invent.
+
+1300
+00:52:54,990 --> 00:52:57,990
+Describe a table, it'll
+tell you what the traffic is
+
+1301
+00:52:57,990 --> 00:53:00,480
+that you can serve without throttling.
+
+1302
+00:53:00,480 --> 00:53:01,830
+Similar limit, which we have.
+
+1303
+00:53:01,830 --> 00:53:03,153
+Transaction size limit.
+
+1304
+00:53:04,410 --> 00:53:06,240
+When we launched DynamoDB,
+
+1305
+00:53:06,240 --> 00:53:09,060
+a transaction could have
+no more than 25 items.
+
+1306
+00:53:09,060 --> 00:53:10,173
+Today we have a 100.
+
+1307
+00:53:11,460 --> 00:53:13,740
+We offer standard asset transactions.
+
+1308
+00:53:13,740 --> 00:53:14,670
+If you built a relat,
+
+1309
+00:53:14,670 --> 00:53:16,530
+built stuff with a relational database,
+
+1310
+00:53:16,530 --> 00:53:18,543
+we have the same transactions for you.
+
+1311
+00:53:19,380 --> 00:53:22,983
+It allows you to build
+banking applications.
+
+1312
+00:53:24,060 --> 00:53:26,280
+All of the guarantees which you want.
+
+1313
+00:53:26,280 --> 00:53:28,800
+But our transactions are different.
+
+1314
+00:53:28,800 --> 00:53:30,240
+We have two kinds of transactions.
+
+1315
+00:53:30,240 --> 00:53:33,140
+We have read-only transactions
+and writeable transactions.
+
+1316
+00:53:35,670 --> 00:53:37,470
+All of the items in the transaction
+
+1317
+00:53:37,470 --> 00:53:39,183
+are specified at one time.
+
+1318
+00:53:40,080 --> 00:53:42,480
+All of these things
+are things which we did
+
+1319
+00:53:42,480 --> 00:53:45,153
+because we want predictable (low) latency.
+
+1320
+00:53:46,110 --> 00:53:47,550
+Have you ever been in a situation
+
+1321
+00:53:47,550 --> 00:53:49,260
+where your application is hung
+
+1322
+00:53:49,260 --> 00:53:52,140
+because somebody started a
+transaction and went to coffee?
+
+1323
+00:53:52,140 --> 00:53:53,430
+Cannot happen in DynamoDB
+
+1324
+00:53:53,430 --> 00:53:55,980
+because the transaction
+contains all of the changes
+
+1325
+00:53:55,980 --> 00:53:58,770
+which are gonna happen in one place.
+
+1326
+00:53:58,770 --> 00:54:01,560
+We offer standard serializable isolation.
+
+1327
+00:54:01,560 --> 00:54:02,700
+If you're built applications
+
+1328
+00:54:02,700 --> 00:54:05,280
+with relational databases,
+you understand this.
+
+1329
+00:54:05,280 --> 00:54:08,490
+We use the standard
+two-phase commit approach,
+
+1330
+00:54:08,490 --> 00:54:11,220
+standard two-phase
+commit, prepare, commit.
+
+1331
+00:54:11,220 --> 00:54:13,590
+Everything is standard the
+way in which you would expect
+
+1332
+00:54:13,590 --> 00:54:16,050
+with a two-phase commit transaction.
+
+1333
+00:54:16,050 --> 00:54:17,790
+We do those things.
+
+1334
+00:54:17,790 --> 00:54:20,970
+We did do one optimization for reads.
+
+1335
+00:54:20,970 --> 00:54:23,010
+We do not do two-phase commit for reads
+
+1336
+00:54:23,010 --> 00:54:26,313
+because it's cheaper for us
+to just do the read two times.
+
+1337
+00:54:27,510 --> 00:54:30,273
+If the items didn't change,
+your transaction is good.
+
+1338
+00:54:31,530 --> 00:54:34,200
+The question is then, why do
+we have transaction limits?
+
+1339
+00:54:34,200 --> 00:54:35,157
+Why 25?
+
+1340
+00:54:35,157 --> 00:54:36,120
+Why 100?
+
+1341
+00:54:36,120 --> 00:54:37,800
+And the simple answer is this.
+
+1342
+00:54:37,800 --> 00:54:40,143
+We want predictable (low) latency.
+
+1343
+00:54:41,010 --> 00:54:43,117
+We did a bunch of testing and we said,
+
+1344
+00:54:43,117 --> 00:54:46,680
+"If we increase the number
+of items in a transaction,
+
+1345
+00:54:46,680 --> 00:54:49,890
+what happens to latency and
+what happens to availability?"
+
+1346
+00:54:49,890 --> 00:54:52,080
+If you have contention on your items,
+
+1347
+00:54:52,080 --> 00:54:54,540
+which are being modified
+in the transaction,
+
+1348
+00:54:54,540 --> 00:54:56,733
+availability goes down, latency goes up.
+
+1349
+00:54:57,660 --> 00:55:00,420
+When we launched, we were
+able to safely do 25.
+
+1350
+00:55:00,420 --> 00:55:01,710
+Today we're able to do 100.
+
+1351
+00:55:01,710 --> 00:55:03,813
+We wanna increase the number even further.
+
+1352
+00:55:04,770 --> 00:55:05,940
+These are some of the reasons
+
+1353
+00:55:05,940 --> 00:55:07,620
+why we have limits on transactions.
+
+1354
+00:55:07,620 --> 00:55:09,660
+Similarly, item size limits.
+
+1355
+00:55:09,660 --> 00:55:12,030
+Why do you have an item
+size limit of 400 kilobytes?
+
+1356
+00:55:12,030 --> 00:55:15,030
+Well, it's shared infrastructure.
+
+1357
+00:55:15,030 --> 00:55:20,030
+We wanna make sure that you
+do not impact your own usage
+
+1358
+00:55:20,460 --> 00:55:24,150
+on some other item, which
+is in the same partition.
+
+1359
+00:55:24,150 --> 00:55:26,880
+As the num, size of the item goes up.
+
+1360
+00:55:26,880 --> 00:55:28,230
+The number of times you can read
+
+1361
+00:55:28,230 --> 00:55:30,081
+or write that goes down.
+
+1362
+00:55:30,081 --> 00:55:31,620
+The number of times,
+
+1363
+00:55:31,620 --> 00:55:33,960
+the amount of time it
+takes is gonna go up.
+
+1364
+00:55:33,960 --> 00:55:37,110
+We have item size limits
+of 400K for a limit.
+
+1365
+00:55:37,110 --> 00:55:39,570
+If you do need a larger number,
+
+1366
+00:55:39,570 --> 00:55:41,640
+I'd love to talk to you about it.
+
+1367
+00:55:41,640 --> 00:55:45,390
+We have limits on GSIs,
+global secondary indexes.
+
+1368
+00:55:45,390 --> 00:55:47,613
+When we launched, it was five.
+
+1369
+00:55:50,700 --> 00:55:51,850
+Today the number is 20.
+
+1370
+00:55:52,830 --> 00:55:55,533
+The reason is we want
+predictable (low) latency.
+
+1371
+00:55:59,100 --> 00:56:00,540
+Am I going backwards or forwards?
+
+1372
+00:56:00,540 --> 00:56:01,680
+I have no idea, okay.
+
+1373
+00:56:01,680 --> 00:56:02,513
+Today is 20.
+
+1374
+00:56:03,690 --> 00:56:05,640
+We were able to make
+changes to the software
+
+1375
+00:56:05,640 --> 00:56:07,950
+so that we gave you consistent,
+
+1376
+00:56:07,950 --> 00:56:11,700
+predictable replication lag to the GSIs.
+
+1377
+00:56:11,700 --> 00:56:12,850
+Today the number is 20.
+
+1378
+00:56:13,980 --> 00:56:15,630
+Why do you have GSIs?
+
+1379
+00:56:15,630 --> 00:56:18,003
+Because you have
+alternate access patterns.
+
+1380
+00:56:19,350 --> 00:56:22,650
+Now, of course, if you have
+a need for more than 20 GSIs,
+
+1381
+00:56:22,650 --> 00:56:23,880
+that's my email address.
+
+1382
+00:56:23,880 --> 00:56:25,170
+Please do contact me
+
+1383
+00:56:25,170 --> 00:56:27,570
+because I think there's
+a different conversation
+
+1384
+00:56:27,570 --> 00:56:29,270
+we need to have about your schema.
+
+1385
+00:56:30,150 --> 00:56:32,520
+Many of these decisions we took,
+
+1386
+00:56:32,520 --> 00:56:33,820
+every one of the limits
+
+1387
+00:56:34,800 --> 00:56:36,930
+were to give you predictable (low) latency
+
+1388
+00:56:36,930 --> 00:56:39,330
+because I think that's the one
+thing which differentiates us
+
+1389
+00:56:39,330 --> 00:56:40,740
+from any other database.
+
+1390
+00:56:40,740 --> 00:56:43,320
+Predictable (low) latency at any scale.
+
+1391
+00:56:43,320 --> 00:56:45,410
+So, I'm gonna kind of...
+
+1392
+00:56:47,280 --> 00:56:49,380
+Oh, I came to the end of this pretty good.
+
+1393
+00:56:50,670 --> 00:56:53,763
+So, conclusion is we
+talked about the tenets.
+
+1394
+00:56:55,800 --> 00:56:58,540
+Every one of the decisions
+we make as a team
+
+1395
+00:56:59,910 --> 00:57:01,740
+is based on our tenets.
+
+1396
+00:57:01,740 --> 00:57:03,483
+These are our high level tenets.
+
+1397
+00:57:04,680 --> 00:57:07,680
+Whenever we have a project,
+whenever we have a new feature,
+
+1398
+00:57:07,680 --> 00:57:12,630
+whenever we have a new thing
+which we want to develop,
+
+1399
+00:57:12,630 --> 00:57:14,797
+one of the things which
+we ask the team is,
+
+1400
+00:57:14,797 --> 00:57:17,160
+"What are your tenets?"
+
+1401
+00:57:17,160 --> 00:57:18,600
+Because those are the things
+
+1402
+00:57:18,600 --> 00:57:21,990
+which help distribute decision
+making across the team,
+
+1403
+00:57:21,990 --> 00:57:23,970
+and they make sure that the teams are able
+
+1404
+00:57:23,970 --> 00:57:25,383
+to iterate faster.
+
+1405
+00:57:26,760 --> 00:57:30,480
+But as a service, these are our tenets.
+
+1406
+00:57:30,480 --> 00:57:34,020
+If you ever have a question
+why we did something,
+
+1407
+00:57:34,020 --> 00:57:36,020
+the answer's probably one of these four.
+
+1408
+00:57:36,960 --> 00:57:39,600
+Why did you not store your
+data unencrypted on disk?
+
+1409
+00:57:39,600 --> 00:57:41,670
+Because it'll be faster.
+
+1410
+00:57:41,670 --> 00:57:42,620
+First one up there.
+
+1411
+00:57:43,740 --> 00:57:45,990
+Why don't we give you some
+other right guarantee,
+
+1412
+00:57:45,990 --> 00:57:48,930
+other than we will write
+the two availability zones
+
+1413
+00:57:48,930 --> 00:57:51,030
+and it'll be faster, won't it?
+
+1414
+00:57:51,030 --> 00:57:52,350
+Durability.
+
+1415
+00:57:52,350 --> 00:57:54,750
+We are a regional service.
+
+1416
+00:57:54,750 --> 00:57:57,870
+We guarantee that if a
+complete availability zone
+
+1417
+00:57:57,870 --> 00:58:02,100
+were to go away, we will not
+be in the least bit impacted.
+
+1418
+00:58:02,100 --> 00:58:05,403
+Your data is written to two
+AZs before we commit it to you.
+
+1419
+00:58:07,110 --> 00:58:09,510
+Availability is our third guarantee.
+
+1420
+00:58:09,510 --> 00:58:12,360
+There's no point having
+availability with wrong data
+
+1421
+00:58:12,360 --> 00:58:14,700
+or giving your data to the wrong person.
+
+1422
+00:58:14,700 --> 00:58:18,330
+Security, durability, then availability,
+
+1423
+00:58:18,330 --> 00:58:21,840
+and to us, as a service,
+predictable (low) latency.
+
+1424
+00:58:21,840 --> 00:58:24,810
+So, my ask to you would be this.
+
+1425
+00:58:24,810 --> 00:58:27,210
+In the projects you are
+building with DynamoDB,
+
+1426
+00:58:27,210 --> 00:58:29,280
+without DynamoDB, it doesn't matter.
+
+1427
+00:58:29,280 --> 00:58:31,020
+Think about these things.
+
+1428
+00:58:31,020 --> 00:58:32,970
+What are your tenets?
+
+1429
+00:58:32,970 --> 00:58:36,060
+How do you drive decision
+making in your organization?
+
+1430
+00:58:36,060 --> 00:58:37,800
+This is how we drive it in ours.
+
+1431
+00:58:37,800 --> 00:58:39,660
+So, I hope this was useful to you.
+
+1432
+00:58:39,660 --> 00:58:42,270
+We're gonna hang around here
+and answer any questions,
+
+1433
+00:58:42,270 --> 00:58:43,590
+but apparently if you want a hoodie,
+
+1434
+00:58:43,590 --> 00:58:45,300
+you have to come and talk to somebody
+
+1435
+00:58:45,300 --> 00:58:47,283
+in the database booths.
+
+1436
+00:58:50,550 --> 00:58:51,843
+There's no QR code here.
+
+1437
+00:58:52,890 --> 00:58:56,370
+There's a whole bunch of
+trainings which we do offer.
+
+1438
+00:58:56,370 --> 00:58:58,863
+The one other ask I have of you of this.
+
+1439
+00:59:00,300 --> 00:59:02,223
+One other ask I have of you is this.
+
+1440
+00:59:03,360 --> 00:59:04,830
+We do these presentations
+
+1441
+00:59:04,830 --> 00:59:06,990
+because we believe it's
+really important to share
+
+1442
+00:59:06,990 --> 00:59:09,060
+with you the things which
+we have learned operating
+
+1443
+00:59:09,060 --> 00:59:12,030
+a service at scale,
+and making the choices,
+
+1444
+00:59:12,030 --> 00:59:14,880
+which we made and learning from you.
+
+1445
+00:59:14,880 --> 00:59:16,080
+A part of it is standing here
+
+1446
+00:59:16,080 --> 00:59:18,060
+and talking to you about these things,
+
+1447
+00:59:18,060 --> 00:59:19,590
+but a part of it is listening to you
+
+1448
+00:59:19,590 --> 00:59:21,870
+after these conversations.
+
+1449
+00:59:21,870 --> 00:59:25,380
+But if you want more content
+like this at re:Invent,
+
+1450
+00:59:25,380 --> 00:59:27,930
+please do fill the feedback sessions.
+
+1451
+00:59:27,930 --> 00:59:29,100
+Thank you very much.
+
+1452
+00:59:29,100 --> 00:59:30,215
+I think that's the last one.
+
+1453
+00:59:30,215 --> 00:59:32,676
+(crowd clapping)
+

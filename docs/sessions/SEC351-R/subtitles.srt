@@ -1,0 +1,3854 @@
+1
+00:00:05,014 --> 00:00:07,380
+- [Kevin] All right, welcome everyone.
+
+2
+00:00:07,380 --> 00:00:09,060
+You've made it to the Mandalay Bay.
+
+3
+00:00:09,060 --> 00:00:11,823
+So for folks who had trouble
+finding it, you made it.
+
+4
+00:00:12,720 --> 00:00:14,070
+My name is Kevin Luo.
+
+5
+00:00:14,070 --> 00:00:16,710
+I'm a principal product
+manager at AWS Identity,
+
+6
+00:00:16,710 --> 00:00:17,790
+and I'm joined by.
+
+7
+00:00:17,790 --> 00:00:18,623
+- [Luke] I'm Luke Kennedy.
+
+8
+00:00:18,623 --> 00:00:21,540
+I'm a principal engineer
+on the AWS IAM team.
+
+9
+00:00:21,540 --> 00:00:22,373
+- [Kevin] Excellent.
+
+10
+00:00:22,373 --> 00:00:23,813
+Now before we get started,
+
+11
+00:00:23,813 --> 00:00:25,980
+even though this is a 300 level section,
+
+12
+00:00:25,980 --> 00:00:27,960
+I wanna get a sense of who's in the room,
+
+13
+00:00:27,960 --> 00:00:31,320
+and so by show of hands, who's new to AWS?
+
+14
+00:00:31,320 --> 00:00:32,403
+You're a new builder.
+
+15
+00:00:34,950 --> 00:00:37,110
+Like in the last year or so.
+
+16
+00:00:37,110 --> 00:00:40,800
+Okay, all right then, are
+you an experienced builder
+
+17
+00:00:40,800 --> 00:00:42,540
+so you kind of know your way around?
+
+18
+00:00:42,540 --> 00:00:44,283
+You can write IAM policies?
+
+19
+00:00:45,390 --> 00:00:48,330
+Show of hands. Okay, great.
+
+20
+00:00:48,330 --> 00:00:50,850
+And then how many of you
+can write IAM policies
+
+21
+00:00:50,850 --> 00:00:52,680
+with your eyes closed?
+
+22
+00:00:52,680 --> 00:00:53,630
+You just know them.
+
+23
+00:00:54,870 --> 00:00:57,123
+Okay, we got one hand there, two hands.
+
+24
+00:00:58,440 --> 00:00:59,606
+Luke?
+
+25
+00:00:59,606 --> 00:01:00,439
+Well, Luke didn't raise his hand
+
+26
+00:01:00,439 --> 00:01:02,670
+and he helped build IAM, right?
+
+27
+00:01:02,670 --> 00:01:04,980
+I've been building on AWS for 10 years now
+
+28
+00:01:04,980 --> 00:01:06,810
+and even I get hung up on it.
+
+29
+00:01:06,810 --> 00:01:09,090
+So, you know, today
+we're gonna talk to you
+
+30
+00:01:09,090 --> 00:01:10,710
+about IAM Policy Autopilot.
+
+31
+00:01:10,710 --> 00:01:12,480
+It's a new tool we just launched
+
+32
+00:01:12,480 --> 00:01:14,100
+that can help accelerate
+your workflows today.
+
+33
+00:01:14,100 --> 00:01:16,350
+You can get started faster with IAM
+
+34
+00:01:16,350 --> 00:01:17,940
+when you just want to build.
+
+35
+00:01:17,940 --> 00:01:18,930
+So this is a co-talk.
+
+36
+00:01:18,930 --> 00:01:23,284
+So we're gonna jump into a scenario here.
+
+37
+00:01:23,284 --> 00:01:26,832
+So today we're gonna build a microservice
+
+38
+00:01:26,832 --> 00:01:28,800
+that creates and encrypts S3 buckets
+
+39
+00:01:28,800 --> 00:01:31,950
+for a multi-tenant service,
+and this is really important
+
+40
+00:01:31,950 --> 00:01:33,983
+because when I have a multi-tenant service
+
+41
+00:01:33,983 --> 00:01:37,410
+and I onboard customers, I wanna make sure
+
+42
+00:01:37,410 --> 00:01:39,267
+that there's data isolation
+between that, right?
+
+43
+00:01:39,267 --> 00:01:42,261
+And so I wanna create a
+bucket just for that customer,
+
+44
+00:01:42,261 --> 00:01:44,880
+and then I wanna make
+sure I have a KMS key
+
+45
+00:01:44,880 --> 00:01:47,190
+just for that customer's data.
+
+46
+00:01:47,190 --> 00:01:51,581
+And so what we're gonna do is
+when a new customer signs up,
+
+47
+00:01:51,581 --> 00:01:54,060
+we'll create a dedicated
+KMS key for this customer,
+
+48
+00:01:54,060 --> 00:01:55,210
+we're gonna create a bucket,
+
+49
+00:01:55,210 --> 00:01:58,083
+and we're gonna configure a
+bucket to use their KMS key.
+
+50
+00:01:59,190 --> 00:02:00,990
+And so from an architecture perspective,
+
+51
+00:02:00,990 --> 00:02:02,490
+it's gonna be really simple.
+
+52
+00:02:02,490 --> 00:02:04,337
+We'll have a Lambda function,
+
+53
+00:02:04,337 --> 00:02:09,337
+it's gonna accept a customer
+ID and name as a parameter.
+
+54
+00:02:09,960 --> 00:02:11,040
+The first thing we're gonna do
+
+55
+00:02:11,040 --> 00:02:14,790
+is call KMS and create a key there.
+
+56
+00:02:14,790 --> 00:02:15,750
+Then we'll create a bucket
+
+57
+00:02:15,750 --> 00:02:19,683
+and then we're gonna call
+the encrypt bucket function.
+
+58
+00:02:20,550 --> 00:02:23,763
+So with that, let's jump into the code.
+
+59
+00:02:26,370 --> 00:02:28,830
+All right, so I have my ID open here
+
+60
+00:02:28,830 --> 00:02:32,460
+and I'll walk you just folks
+really quickly through the code
+
+61
+00:02:32,460 --> 00:02:34,584
+so you know what's going on.
+
+62
+00:02:34,584 --> 00:02:38,220
+So here we have a
+Python-based lambda function,
+
+63
+00:02:38,220 --> 00:02:40,620
+and at the top I'm importing
+some of the clients
+
+64
+00:02:40,620 --> 00:02:41,453
+that I'm gonna need.
+
+65
+00:02:41,453 --> 00:02:43,113
+So I'm using the BOTO 3 SDK.
+
+66
+00:02:44,490 --> 00:02:48,286
+And here you can see that
+we're accepting a customer ID
+
+67
+00:02:48,286 --> 00:02:51,995
+and customer name as a
+parameter for the event,
+
+68
+00:02:51,995 --> 00:02:53,760
+and the first thing we're gonna do
+
+69
+00:02:53,760 --> 00:02:55,380
+is we're gonna check if the bucket exists
+
+70
+00:02:55,380 --> 00:02:57,360
+because I don't wanna
+create multiple buckets
+
+71
+00:02:57,360 --> 00:02:59,255
+for that same customer.
+
+72
+00:02:59,255 --> 00:03:01,560
+And, you know, we're gonna
+keep the code simple.
+
+73
+00:03:01,560 --> 00:03:02,640
+There's a lot of things we could do
+
+74
+00:03:02,640 --> 00:03:03,900
+to make this super robust, right?
+
+75
+00:03:03,900 --> 00:03:05,970
+But we're gonna keep the code simple here.
+
+76
+00:03:05,970 --> 00:03:08,400
+And so I'm calling head
+bucket and if it exists,
+
+77
+00:03:08,400 --> 00:03:10,599
+then we'll just return early.
+
+78
+00:03:10,599 --> 00:03:14,020
+Otherwise we're gonna go ahead
+and create a key, a KMS key,
+
+79
+00:03:14,020 --> 00:03:16,114
+and we're doing a few
+different things here.
+
+80
+00:03:16,114 --> 00:03:18,390
+You know, we're also adding some tags
+
+81
+00:03:18,390 --> 00:03:21,060
+so it's easy for me to look it up later.
+
+82
+00:03:21,060 --> 00:03:22,631
+I'm passing in a key policy
+
+83
+00:03:22,631 --> 00:03:26,133
+to determine who can manage the key,
+
+84
+00:03:27,120 --> 00:03:29,035
+I'm gonna call Create Alias
+
+85
+00:03:29,035 --> 00:03:31,920
+just to make it easier to reference,
+
+86
+00:03:31,920 --> 00:03:35,430
+and then now I'm gonna go
+ahead and call Create Bucket,
+
+87
+00:03:35,430 --> 00:03:36,840
+and the very last thing we need to do
+
+88
+00:03:36,840 --> 00:03:38,490
+is call put bucket encryption
+
+89
+00:03:38,490 --> 00:03:41,190
+to make sure that we're
+using the key we just created
+
+90
+00:03:41,190 --> 00:03:43,230
+to encrypt all objects in that bucket.
+
+91
+00:03:43,230 --> 00:03:44,283
+So fairly simple.
+
+92
+00:03:45,270 --> 00:03:49,465
+And so if I'm getting
+started, right, let's just say
+
+93
+00:03:49,465 --> 00:03:51,390
+I'm gonna go create a Lambda function.
+
+94
+00:03:51,390 --> 00:03:55,642
+So I'll go to the Lambda console here
+
+95
+00:03:55,642 --> 00:03:58,023
+and we're gonna create a function.
+
+96
+00:04:00,240 --> 00:04:02,673
+We'll call this SEC351-Demo.
+
+97
+00:04:04,350 --> 00:04:08,627
+It's a Python function,
+and we're gonna create,
+
+98
+00:04:16,137 --> 00:04:18,090
+and then while that's creating, you know,
+
+99
+00:04:18,090 --> 00:04:20,190
+we're just starting with the
+default execution rule here.
+
+100
+00:04:20,190 --> 00:04:22,240
+We'll cover that in just a little second.
+
+101
+00:04:25,410 --> 00:04:26,243
+All right.
+
+102
+00:04:30,209 --> 00:04:32,970
+So I'm gonna paste my
+code in, I'm gonna deploy,
+
+103
+00:04:32,970 --> 00:04:34,800
+and then what I'm gonna
+do is create a test event
+
+104
+00:04:34,800 --> 00:04:36,543
+so that we could see if it works.
+
+105
+00:04:40,260 --> 00:04:45,000
+So as we mentioned, we're gonna create,
+
+106
+00:04:45,000 --> 00:04:48,363
+it's gonna accept a
+customer ID, customer name.
+
+107
+00:04:49,830 --> 00:04:52,293
+Let's do, I don't know, Acne123.
+
+108
+00:05:00,720 --> 00:05:02,190
+Let's just name it and save it
+
+109
+00:05:02,190 --> 00:05:04,173
+so it's easier for us to reference,
+
+110
+00:05:06,090 --> 00:05:07,623
+and so we're gonna test it.
+
+111
+00:05:08,640 --> 00:05:10,440
+And of course it fails, right?
+
+112
+00:05:10,440 --> 00:05:13,620
+Because this Lambda
+function needs permissions.
+
+113
+00:05:13,620 --> 00:05:15,904
+So here it's saying
+there was access denied
+
+114
+00:05:15,904 --> 00:05:17,729
+when calling to create key operation
+
+115
+00:05:17,729 --> 00:05:21,629
+because there's no KMS
+tag resource permissions.
+
+116
+00:05:21,629 --> 00:05:24,630
+And so what does this mean?
+
+117
+00:05:24,630 --> 00:05:27,517
+So if I go here and I
+look at a execution role,
+
+118
+00:05:27,517 --> 00:05:32,517
+we could do a quick primer
+on, you know, what this means.
+
+119
+00:05:34,081 --> 00:05:37,507
+So for those who are kind of newer to AWS,
+
+120
+00:05:37,507 --> 00:05:40,230
+IAM stands for Identity
+and Access Management
+
+121
+00:05:40,230 --> 00:05:43,290
+and controls who has access
+to what across everything.
+
+122
+00:05:43,290 --> 00:05:45,259
+Right, and so in this case,
+we have a lambda function
+
+123
+00:05:45,259 --> 00:05:46,950
+which needs an execution role,
+
+124
+00:05:46,950 --> 00:05:48,339
+which is really just an IAM role,
+
+125
+00:05:48,339 --> 00:05:50,654
+and then we're gonna define IAM policies
+
+126
+00:05:50,654 --> 00:05:52,140
+and attach them to that role
+
+127
+00:05:52,140 --> 00:05:56,250
+to determine what this Lambda
+function has access to.
+
+128
+00:05:56,250 --> 00:05:59,540
+And so in our case, you know,
+we need this lambda function
+
+129
+00:05:59,540 --> 00:06:02,667
+to have explicit permissions
+to check if the bucket exists,
+
+130
+00:06:02,667 --> 00:06:05,460
+create the KMS key, create the bucket,
+
+131
+00:06:05,460 --> 00:06:07,310
+and then configure bucket encryption.
+
+132
+00:06:08,310 --> 00:06:11,520
+And so if we go back here,
+
+133
+00:06:11,520 --> 00:06:14,343
+then we can go and modify
+this execution role.
+
+134
+00:06:17,250 --> 00:06:19,530
+All right, so and this is kind of
+
+135
+00:06:19,530 --> 00:06:20,790
+it comes with some basic stuff, right?
+
+136
+00:06:20,790 --> 00:06:22,350
+So this Lambda function
+
+137
+00:06:22,350 --> 00:06:25,710
+has permissions to go to CloudWatch logs
+
+138
+00:06:25,710 --> 00:06:27,690
+and create those logs so we could debug,
+
+139
+00:06:27,690 --> 00:06:29,520
+and so we're gonna attach here.
+
+140
+00:06:29,520 --> 00:06:31,503
+And so now we're here at this screen.
+
+141
+00:06:32,610 --> 00:06:34,496
+So how many of us
+
+142
+00:06:34,496 --> 00:06:39,003
+kind of just use
+administrator access here?
+
+143
+00:06:39,003 --> 00:06:41,040
+I'll just expand this.
+
+144
+00:06:41,040 --> 00:06:41,873
+Show of hands.
+
+145
+00:06:41,873 --> 00:06:42,843
+It's okay, be honest.
+
+146
+00:06:43,830 --> 00:06:45,230
+You're just getting started?
+
+147
+00:06:46,200 --> 00:06:48,063
+Nobody uses administrator access?
+
+148
+00:06:50,040 --> 00:06:51,023
+Not for what?
+
+149
+00:06:51,023 --> 00:06:51,856
+- [Attendee] Not for that.
+
+150
+00:06:51,856 --> 00:06:53,010
+- [Kevin] Not for Lambda?
+
+151
+00:06:53,010 --> 00:06:55,260
+Right, because it's really broad.
+
+152
+00:06:55,260 --> 00:06:57,206
+Well, when I got started
+for the first time,
+
+153
+00:06:57,206 --> 00:06:58,043
+I'm just, I'm like, hey,
+
+154
+00:06:58,043 --> 00:07:00,041
+I wanna just get this thing to work
+
+155
+00:07:00,041 --> 00:07:03,750
+and so I used to do this, and
+yeah, it's super broad, right?
+
+156
+00:07:03,750 --> 00:07:06,049
+It allows star, star, but
+there's some benefits.
+
+157
+00:07:06,049 --> 00:07:08,910
+If you're just, you know,
+prototyping something,
+
+158
+00:07:08,910 --> 00:07:10,560
+you're testing something,
+
+159
+00:07:10,560 --> 00:07:12,360
+you know, it has
+permissions and everything.
+
+160
+00:07:12,360 --> 00:07:15,150
+So when I make an update,
+maybe I don't want to use,
+
+161
+00:07:15,150 --> 00:07:16,290
+you know, I wanna use a different service
+
+162
+00:07:16,290 --> 00:07:18,300
+or I wanna add DynamoDB to this.
+
+163
+00:07:18,300 --> 00:07:20,640
+I don't wanna constantly
+update my permissions,
+
+164
+00:07:20,640 --> 00:07:22,830
+and so, you know, this
+is nice in the sense
+
+165
+00:07:22,830 --> 00:07:24,540
+that it reduces some work,
+
+166
+00:07:24,540 --> 00:07:26,430
+but we have to always scope down earlier
+
+167
+00:07:26,430 --> 00:07:28,740
+and we all remember to do that.
+
+168
+00:07:28,740 --> 00:07:31,260
+Okay, so then what's the other option?
+
+169
+00:07:31,260 --> 00:07:32,760
+So the other option is you could use
+
+170
+00:07:32,760 --> 00:07:34,320
+some of the other AWS managed policies
+
+171
+00:07:34,320 --> 00:07:36,210
+that are scoped down some more.
+
+172
+00:07:36,210 --> 00:07:40,170
+So we use S3, and so I
+could look for S3 here.
+
+173
+00:07:40,170 --> 00:07:42,780
+So how many folks use AWS managed policies
+
+174
+00:07:42,780 --> 00:07:44,973
+as a starting point for these policies?
+
+175
+00:07:46,170 --> 00:07:49,290
+Okay, I see about a third of the room.
+
+176
+00:07:49,290 --> 00:07:52,410
+Okay, and so AWS managed policies
+
+177
+00:07:52,410 --> 00:07:53,610
+are a much better starting point.
+
+178
+00:07:53,610 --> 00:07:56,210
+And so here, if I'm looking at S3,
+
+179
+00:07:56,210 --> 00:07:58,140
+well, I know I need to
+create buckets, right?
+
+180
+00:07:58,140 --> 00:07:59,485
+And so if I look at my options here,
+
+181
+00:07:59,485 --> 00:08:03,165
+I have read only access or full access.
+
+182
+00:08:03,165 --> 00:08:07,170
+These other ones are related
+to different parts of S3,
+
+183
+00:08:07,170 --> 00:08:09,030
+and so if I look at read only access,
+
+184
+00:08:09,030 --> 00:08:10,350
+well, I can't create a bucket.
+
+185
+00:08:10,350 --> 00:08:11,910
+So then my only other option here
+
+186
+00:08:11,910 --> 00:08:13,980
+is I could start with read only
+
+187
+00:08:13,980 --> 00:08:16,470
+and then add the specific
+permissions I need, right?
+
+188
+00:08:16,470 --> 00:08:20,026
+But now I'm jumping in between
+things or maybe I start here,
+
+189
+00:08:20,026 --> 00:08:23,100
+and so okay, it's a better starting point.
+
+190
+00:08:23,100 --> 00:08:26,880
+It's not the whole world,
+but it's still pretty broad
+
+191
+00:08:26,880 --> 00:08:28,590
+and we have to scope it down.
+
+192
+00:08:28,590 --> 00:08:29,906
+So let's just say for argument's sake,
+
+193
+00:08:29,906 --> 00:08:32,040
+we used AWS managed policies.
+
+194
+00:08:32,040 --> 00:08:33,819
+You know, I just wanna get started.
+
+195
+00:08:33,819 --> 00:08:38,819
+So we'll do S3 full access
+and then we use KMS.
+
+196
+00:08:39,225 --> 00:08:43,320
+So I'm gonna add the KMS managed policy
+
+197
+00:08:43,320 --> 00:08:44,670
+that I have available here.
+
+198
+00:08:46,590 --> 00:08:47,820
+And so we have it.
+
+199
+00:08:47,820 --> 00:08:51,270
+All right, so now the
+function should work, right?
+
+200
+00:08:51,270 --> 00:08:52,980
+So let's go.
+
+201
+00:08:52,980 --> 00:08:57,783
+Let's go to the test tab, and it works.
+
+202
+00:08:59,790 --> 00:09:02,043
+Uh-oh, so let's see what we have here.
+
+203
+00:09:02,940 --> 00:09:04,980
+So we have an error message
+
+204
+00:09:04,980 --> 00:09:09,030
+and it says it's a malformed
+policy document exception
+
+205
+00:09:09,030 --> 00:09:11,670
+when calling to create key operation.
+
+206
+00:09:11,670 --> 00:09:13,860
+The new key policy will not allow you
+
+207
+00:09:13,860 --> 00:09:15,810
+to update the key policy in the future.
+
+208
+00:09:17,310 --> 00:09:18,760
+Who knows what happened here?
+
+209
+00:09:22,680 --> 00:09:23,643
+What was that?
+
+210
+00:09:25,560 --> 00:09:27,723
+Does anyone know the root cause?
+
+211
+00:09:30,270 --> 00:09:31,740
+Right, okay, so then we gotta kind of...
+
+212
+00:09:31,740 --> 00:09:33,060
+Oh, you raised your hand.
+
+213
+00:09:33,060 --> 00:09:34,868
+- [Attendee] I think we need to have
+
+214
+00:09:34,868 --> 00:09:37,117
+a resource-based policy on that key.
+
+215
+00:09:37,117 --> 00:09:39,270
+- [Kevin] You need to have a
+resource based policy on a key.
+
+216
+00:09:39,270 --> 00:09:40,527
+Not quite right.
+
+217
+00:09:40,527 --> 00:09:43,740
+And so we have to kind of search
+around and figure this out.
+
+218
+00:09:43,740 --> 00:09:45,456
+So I'll save you some time.
+
+219
+00:09:45,456 --> 00:09:47,733
+It's because we're
+missing an IAM permission.
+
+220
+00:09:48,810 --> 00:09:52,901
+So what we're doing is if
+we go back to the code,
+
+221
+00:09:52,901 --> 00:09:56,100
+when we call create key,
+we're passing in a policy.
+
+222
+00:09:56,100 --> 00:09:58,650
+And so this is saying, hey,
+when I create this key,
+
+223
+00:09:58,650 --> 00:10:00,813
+I want it to have this policy by default.
+
+224
+00:10:01,680 --> 00:10:06,120
+But to do that you need a KMS
+put key policy permission,
+
+225
+00:10:06,120 --> 00:10:07,941
+and so what this error message is saying
+
+226
+00:10:07,941 --> 00:10:11,326
+is it's warning you about lockout.
+
+227
+00:10:11,326 --> 00:10:14,703
+It's saying, hey, because I
+couldn't put this key policy,
+
+228
+00:10:14,703 --> 00:10:16,890
+you're gonna run into a situation
+
+229
+00:10:16,890 --> 00:10:18,270
+where you're gonna be locked out
+
+230
+00:10:18,270 --> 00:10:20,340
+and you can't manage this key anymore,
+
+231
+00:10:20,340 --> 00:10:21,990
+and so that's what this
+error message is saying.
+
+232
+00:10:21,990 --> 00:10:24,060
+But, you know, if you're
+just getting started,
+
+233
+00:10:24,060 --> 00:10:27,391
+you're not familiar, this can
+take a lot of time to debug.
+
+234
+00:10:27,391 --> 00:10:32,250
+And so if I, you know, just to
+show you, I'm gonna go ahead
+
+235
+00:10:32,250 --> 00:10:35,070
+and now I'm gonna have to
+create an inline policy
+
+236
+00:10:35,070 --> 00:10:37,174
+because what we're seeing here
+
+237
+00:10:37,174 --> 00:10:40,320
+is that AWS managed policies
+don't necessarily have
+
+238
+00:10:40,320 --> 00:10:41,520
+all the permissions you need.
+
+239
+00:10:41,520 --> 00:10:43,470
+There's a lot of permissions out there
+
+240
+00:10:43,470 --> 00:10:46,083
+and sometimes you have
+to add the ones you know.
+
+241
+00:10:46,920 --> 00:10:48,480
+So here I'm gonna go to KMS,
+
+242
+00:10:48,480 --> 00:10:50,071
+and this is about permissions management.
+
+243
+00:10:50,071 --> 00:10:54,423
+So I'm gonna add the put key
+policy, and I'm gonna scope it,
+
+244
+00:10:55,495 --> 00:10:57,120
+and we're gonna click next.
+
+245
+00:10:57,120 --> 00:11:01,983
+So, put key policy.
+
+246
+00:11:06,219 --> 00:11:08,973
+Okay, so now if I go back,
+
+247
+00:11:12,840 --> 00:11:14,540
+might need some time to propagate.
+
+248
+00:11:21,840 --> 00:11:23,273
+Let's see what happened here.
+
+249
+00:11:31,685 --> 00:11:33,510
+Lemme just change this just in case,
+
+250
+00:11:33,510 --> 00:11:35,643
+but I think it should work.
+
+251
+00:11:40,770 --> 00:11:42,213
+Next. Save.
+
+252
+00:11:48,180 --> 00:11:49,440
+That's weird.
+
+253
+00:11:49,440 --> 00:11:52,980
+All right, well, oh, create alias.
+
+254
+00:11:52,980 --> 00:11:55,290
+Okay, so it's because
+the key already exists.
+
+255
+00:11:55,290 --> 00:11:58,410
+So let me just change the inputs here
+
+256
+00:11:58,410 --> 00:11:59,610
+so we're starting fresh.
+
+257
+00:12:06,960 --> 00:12:08,940
+The specified bucket is invalid.
+
+258
+00:12:08,940 --> 00:12:09,790
+What is going on?
+
+259
+00:12:12,429 --> 00:12:14,085
+- [Attendee] Can you zoom in?
+
+260
+00:12:14,085 --> 00:12:15,043
+- [Kevin] Is it two?
+
+261
+00:12:15,043 --> 00:12:17,040
+Okay, yeah, I could zoom in.
+
+262
+00:12:17,040 --> 00:12:19,233
+Specify bucket is invalid.
+
+263
+00:12:21,090 --> 00:12:22,530
+- [Luke] Do you have a space in your name?
+
+264
+00:12:22,530 --> 00:12:27,270
+- [Luke] I have a space, but
+I wasn't sure in the code.
+
+265
+00:12:27,270 --> 00:12:28,503
+In the code. I'm sorry.
+
+266
+00:12:33,330 --> 00:12:34,950
+In the inputs. Sorry.
+
+267
+00:12:34,950 --> 00:12:36,090
+But it looks like you're right.
+
+268
+00:12:36,090 --> 00:12:37,140
+Yeah. That's weird.
+
+269
+00:12:37,140 --> 00:12:38,880
+Well, for the sake of...
+
+270
+00:12:38,880 --> 00:12:41,130
+This is how you know
+it's a real demo, folks.
+
+271
+00:12:41,970 --> 00:12:43,110
+It's not scripted.
+
+272
+00:12:43,110 --> 00:12:46,230
+Yeah, so just trust me,
+it kind of works there.
+
+273
+00:12:46,230 --> 00:12:50,524
+So then, okay, what are the other options?
+
+274
+00:12:50,524 --> 00:12:54,930
+So let's see, it's 2025 and
+we're all using coding systems.
+
+275
+00:12:54,930 --> 00:12:57,750
+I don't need to hand
+write my policies anymore.
+
+276
+00:12:57,750 --> 00:12:59,970
+I have coding assistants
+that do that for me.
+
+277
+00:12:59,970 --> 00:13:02,403
+And so how many of us
+here use coding systems?
+
+278
+00:13:04,200 --> 00:13:05,580
+It's pretty much everyone, right?
+
+279
+00:13:05,580 --> 00:13:06,450
+I love it.
+
+280
+00:13:06,450 --> 00:13:08,004
+As a product manager, it's really great
+
+281
+00:13:08,004 --> 00:13:10,620
+because it's allowed me
+to kinda get my ideas
+
+282
+00:13:10,620 --> 00:13:12,450
+and build prototypes and
+kind of really interact
+
+283
+00:13:12,450 --> 00:13:16,860
+with my engineering teams,
+so that's been really great.
+
+284
+00:13:16,860 --> 00:13:19,700
+And so now, okay, let's try
+using a coding assistant,
+
+285
+00:13:19,700 --> 00:13:22,830
+and so I have my code
+here and I have Kiro.
+
+286
+00:13:22,830 --> 00:13:27,153
+I'm gonna say, hey, generate
+an AWS IAM policy for my code.
+
+287
+00:13:30,750 --> 00:13:32,450
+And so what is Kiro gonna do here?
+
+288
+00:13:33,420 --> 00:13:35,250
+So it's gonna analyze my code
+
+289
+00:13:35,250 --> 00:13:36,660
+and it's gonna generate a policy.
+
+290
+00:13:36,660 --> 00:13:39,056
+So it's reading this Python code.
+
+291
+00:13:39,056 --> 00:13:42,423
+This file acts as restricted
+to a workspace attempted path.
+
+292
+00:13:47,100 --> 00:13:47,933
+What is it doing?
+
+293
+00:13:47,933 --> 00:13:52,260
+Okay, I think it figured out
+a different way to read it.
+
+294
+00:13:52,260 --> 00:13:56,100
+So we have an IAM policy here
+
+295
+00:13:56,100 --> 00:13:57,900
+and it looks like it's got stuff.
+
+296
+00:13:57,900 --> 00:14:02,900
+So let's take this,
+and then we're gonna go
+
+297
+00:14:03,210 --> 00:14:06,030
+and modify that role.
+
+298
+00:14:06,030 --> 00:14:10,233
+So I'm gonna delete the
+stuff we just added,
+
+299
+00:14:18,570 --> 00:14:21,040
+and then we're gonna add an inline policy
+
+300
+00:14:23,181 --> 00:14:25,890
+and so I'm just gonna
+paste in what I have.
+
+301
+00:14:25,890 --> 00:14:27,709
+This is the Kiro-generated policy
+
+302
+00:14:27,709 --> 00:14:30,810
+and here we see something interesting.
+
+303
+00:14:30,810 --> 00:14:32,415
+So when you use the IAM console,
+
+304
+00:14:32,415 --> 00:14:34,530
+it comes with policy validation built in,
+
+305
+00:14:34,530 --> 00:14:35,670
+which is really great.
+
+306
+00:14:35,670 --> 00:14:38,790
+So it tells us, hey, is
+all this stuff real, right?
+
+307
+00:14:38,790 --> 00:14:41,280
+Or if I'm doing like AMT pattern,
+
+308
+00:14:41,280 --> 00:14:44,540
+and so we look at these error
+messages, what do we see here?
+
+309
+00:14:44,540 --> 00:14:48,240
+It says the action S3 head bucket.
+
+310
+00:14:48,240 --> 00:14:49,790
+I'll zoom in a little bit more.
+
+311
+00:14:51,210 --> 00:14:54,720
+The action S3 head bucket does not exist,
+
+312
+00:14:54,720 --> 00:14:56,460
+and indeed it does not exist.
+
+313
+00:14:56,460 --> 00:14:59,730
+When you call head bucket,
+it's actually a list bucket
+
+314
+00:14:59,730 --> 00:15:01,350
+for the permission.
+
+315
+00:15:01,350 --> 00:15:02,880
+This other one is interesting.
+
+316
+00:15:02,880 --> 00:15:03,720
+Put bucket encryption.
+
+317
+00:15:03,720 --> 00:15:06,780
+That seems like it should work,
+but actually the IAM action
+
+318
+00:15:06,780 --> 00:15:09,450
+is put encryption configuration.
+
+319
+00:15:09,450 --> 00:15:12,089
+And so if we think about why this is,
+
+320
+00:15:12,089 --> 00:15:15,420
+why do coding assistance in LMs
+
+321
+00:15:15,420 --> 00:15:18,150
+tend to struggle with AWS IAM, you know,
+
+322
+00:15:18,150 --> 00:15:20,409
+they're trained on public information
+
+323
+00:15:20,409 --> 00:15:23,700
+like documentation, code
+examples, et cetera,
+
+324
+00:15:23,700 --> 00:15:26,190
+and based on that they learn patterns.
+
+325
+00:15:26,190 --> 00:15:27,720
+And this is actually what humans do too.
+
+326
+00:15:27,720 --> 00:15:28,890
+We learn patterns.
+
+327
+00:15:28,890 --> 00:15:31,860
+Oh, I see the create key method call.
+
+328
+00:15:31,860 --> 00:15:35,580
+So, therefore, the IAM action
+is probably KMS create key,
+
+329
+00:15:35,580 --> 00:15:38,636
+and that's a reasonable assumption
+to make most of the time.
+
+330
+00:15:38,636 --> 00:15:41,815
+But then, you know, they
+don't understand things
+
+331
+00:15:41,815 --> 00:15:44,730
+like hidden dependencies.
+
+332
+00:15:44,730 --> 00:15:47,400
+So we talked a little bit
+earlier about create key,
+
+333
+00:15:47,400 --> 00:15:49,740
+and I put a policy as a parameter.
+
+334
+00:15:49,740 --> 00:15:52,953
+Oh, it also needs to
+put key policy action,
+
+335
+00:15:54,330 --> 00:15:56,220
+or there are these naming inconsistencies
+
+336
+00:15:56,220 --> 00:15:57,450
+like put bucket encryption.
+
+337
+00:15:57,450 --> 00:15:59,010
+That's the method call,
+
+338
+00:15:59,010 --> 00:16:01,443
+but the action is put
+encryption configuration.
+
+339
+00:16:02,760 --> 00:16:04,740
+And then it's not always the case
+
+340
+00:16:04,740 --> 00:16:07,830
+that one method call
+requires only one IAM action.
+
+341
+00:16:07,830 --> 00:16:10,170
+Sometimes it requires more than one.
+
+342
+00:16:10,170 --> 00:16:12,870
+For example, S3 copy object.
+
+343
+00:16:12,870 --> 00:16:15,750
+You need, you know,
+initially you might write,
+
+344
+00:16:15,750 --> 00:16:17,940
+oh, the permission is S3 copy object,
+
+345
+00:16:17,940 --> 00:16:19,050
+but that's actually two.
+
+346
+00:16:19,050 --> 00:16:20,490
+You need get object and put object,
+
+347
+00:16:20,490 --> 00:16:21,840
+which makes a lot of sense.
+
+348
+00:16:23,880 --> 00:16:27,399
+And so if we recap our options here,
+
+349
+00:16:27,399 --> 00:16:29,310
+you know, we have option one,
+
+350
+00:16:29,310 --> 00:16:30,990
+which was administrator access.
+
+351
+00:16:30,990 --> 00:16:32,970
+And for those who are really just kind of,
+
+352
+00:16:32,970 --> 00:16:34,380
+hey, I'm just trying to blaze through,
+
+353
+00:16:34,380 --> 00:16:36,780
+I'm in a sandbox environment, great.
+
+354
+00:16:36,780 --> 00:16:38,490
+It's the fastest way to get started.
+
+355
+00:16:38,490 --> 00:16:39,840
+And when I'm changing my code,
+
+356
+00:16:39,840 --> 00:16:42,330
+I'm adding different services,
+I'm changing my mind,
+
+357
+00:16:42,330 --> 00:16:43,470
+I'm gonna need to touch my permissions,
+
+358
+00:16:43,470 --> 00:16:45,030
+again, it just works.
+
+359
+00:16:45,030 --> 00:16:46,980
+But of course we know this is super broad,
+
+360
+00:16:46,980 --> 00:16:48,730
+it has powerful
+administrative permissions,
+
+361
+00:16:48,730 --> 00:16:52,110
+and the security team
+wouldn't like that, right?
+
+362
+00:16:52,110 --> 00:16:54,490
+But it's okay, I'm gonna
+scope this down later
+
+363
+00:16:54,490 --> 00:16:56,973
+and we all remember to do that.
+
+364
+00:16:58,770 --> 00:17:00,390
+Okay, so then option two
+
+365
+00:17:00,390 --> 00:17:03,090
+we talked about AWS managed policies
+
+366
+00:17:03,090 --> 00:17:05,220
+and this is also fast if you
+know what you're looking for,
+
+367
+00:17:05,220 --> 00:17:06,960
+you know what services you're using,
+
+368
+00:17:06,960 --> 00:17:09,900
+you know if you're using
+read or write permissions,
+
+369
+00:17:09,900 --> 00:17:13,860
+or you're using permissions
+that require permission updates,
+
+370
+00:17:13,860 --> 00:17:16,470
+and this is definitely
+a better starting point
+
+371
+00:17:16,470 --> 00:17:17,403
+than Star Star.
+
+372
+00:17:18,631 --> 00:17:20,730
+Now it comes with some trade-offs, right?
+
+373
+00:17:20,730 --> 00:17:23,100
+When you're making code updates,
+you're adding new services
+
+374
+00:17:23,100 --> 00:17:25,071
+or you're changing like
+maybe I want to read
+
+375
+00:17:25,071 --> 00:17:27,180
+from the S3 bucket now.
+
+376
+00:17:27,180 --> 00:17:28,805
+Well, now you might need to change
+
+377
+00:17:28,805 --> 00:17:31,203
+which AWS managed policies you use.
+
+378
+00:17:32,340 --> 00:17:34,770
+And we also learned they
+don't necessarily cover
+
+379
+00:17:34,770 --> 00:17:36,030
+all the possible permissions
+
+380
+00:17:36,030 --> 00:17:37,620
+like KMS book key call logs here.
+
+381
+00:17:37,620 --> 00:17:40,438
+And so these are great,
+it's a good starting point,
+
+382
+00:17:40,438 --> 00:17:41,954
+but it's still broad,
+
+383
+00:17:41,954 --> 00:17:45,333
+and we definitely all
+remember to scope this out.
+
+384
+00:17:46,890 --> 00:17:48,733
+How many people actually go
+and scope down these policies
+
+385
+00:17:48,733 --> 00:17:51,960
+for those who raised their
+hand on AWS managed policies?
+
+386
+00:17:51,960 --> 00:17:53,710
+Do we go and scope that down later?
+
+387
+00:17:54,690 --> 00:17:55,983
+I see a lot fewer hands.
+
+388
+00:17:57,589 --> 00:18:00,843
+Don't worry, I won't
+tell the security teams.
+
+389
+00:18:01,920 --> 00:18:04,080
+Okay, and so then we have option three.
+
+390
+00:18:04,080 --> 00:18:07,380
+Artisanal handcrafted policies.
+
+391
+00:18:07,380 --> 00:18:09,120
+And this is great, you know,
+
+392
+00:18:09,120 --> 00:18:10,710
+it's closest to least-privilege.
+
+393
+00:18:10,710 --> 00:18:12,760
+Luke can write them with his eyes closed.
+
+394
+00:18:14,190 --> 00:18:17,280
+But it's time consuming
+if you're not like Luke
+
+395
+00:18:17,280 --> 00:18:18,113
+and you didn't help build IAM.
+
+396
+00:18:18,113 --> 00:18:20,310
+It's time consuming to research
+
+397
+00:18:20,310 --> 00:18:22,337
+the exact permissions that you need,
+
+398
+00:18:22,337 --> 00:18:24,210
+and again, we went through that kind
+
+399
+00:18:24,210 --> 00:18:25,746
+of debugging flow there.
+
+400
+00:18:25,746 --> 00:18:27,960
+And then also every single time,
+
+401
+00:18:27,960 --> 00:18:29,940
+because it's least privilege,
+
+402
+00:18:29,940 --> 00:18:32,400
+every single time you do something
+
+403
+00:18:32,400 --> 00:18:34,191
+that requires additional
+permissions, you have to go back
+
+404
+00:18:34,191 --> 00:18:36,360
+and modify these permissions,
+
+405
+00:18:36,360 --> 00:18:38,790
+and so sometimes this can slow things down
+
+406
+00:18:38,790 --> 00:18:40,113
+and you just wanna build.
+
+407
+00:18:42,510 --> 00:18:44,490
+Of course, LMs solve that, right?
+
+408
+00:18:44,490 --> 00:18:48,840
+It's fast and a lot of times
+it does work until it doesn't,
+
+409
+00:18:48,840 --> 00:18:52,080
+and then that continues to
+add to that debug cycle.
+
+410
+00:18:52,080 --> 00:18:54,116
+Additionally, they're
+not always deterministic.
+
+411
+00:18:54,116 --> 00:18:56,310
+They don't always generate
+the same policies,
+
+412
+00:18:56,310 --> 00:18:58,770
+and that, you know, when it
+comes to access management,
+
+413
+00:18:58,770 --> 00:19:00,720
+you really want some determinism there.
+
+414
+00:19:02,370 --> 00:19:03,750
+And so I want to introduce you
+
+415
+00:19:03,750 --> 00:19:05,895
+to something we just launched on Sunday
+
+416
+00:19:05,895 --> 00:19:07,860
+and we made open source.
+
+417
+00:19:07,860 --> 00:19:10,020
+It's called IAM Policy Autopilot.
+
+418
+00:19:10,020 --> 00:19:11,040
+It's a command line tool
+
+419
+00:19:11,040 --> 00:19:13,440
+that can statically analyze your code
+
+420
+00:19:13,440 --> 00:19:17,340
+and generate policies based
+on what your code is doing.
+
+421
+00:19:17,340 --> 00:19:19,440
+We've also exposed it as an MCP server
+
+422
+00:19:19,440 --> 00:19:21,990
+so that your coding systems have access
+
+423
+00:19:21,990 --> 00:19:25,680
+to the same deterministic
+policy generation capabilities.
+
+424
+00:19:25,680 --> 00:19:28,030
+So let me talk a little
+bit about how it works.
+
+425
+00:19:29,472 --> 00:19:33,300
+So step one, we view static code analysis
+
+426
+00:19:33,300 --> 00:19:34,525
+to parse your code.
+
+427
+00:19:34,525 --> 00:19:37,846
+So, and we do this all
+locally on your machine,
+
+428
+00:19:37,846 --> 00:19:41,429
+and so here we have the
+Lambda function on the left
+
+429
+00:19:41,429 --> 00:19:44,940
+and we pick out all the SDK operations.
+
+430
+00:19:44,940 --> 00:19:49,773
+Head bucket, create key,
+create alias, and so on.
+
+431
+00:19:50,952 --> 00:19:55,770
+Then the next step is
+we map these operations
+
+432
+00:19:55,770 --> 00:19:57,093
+to IAM actions.
+
+433
+00:19:58,008 --> 00:20:01,257
+So one thing we do is
+we've actually published
+
+434
+00:20:01,257 --> 00:20:03,900
+our IAM service reference available.
+
+435
+00:20:03,900 --> 00:20:05,275
+So I have a URL here.
+
+436
+00:20:05,275 --> 00:20:08,040
+If you type that in,
+you'll get a big JSON blob
+
+437
+00:20:08,040 --> 00:20:10,470
+of all the IAM actions and conditions
+
+438
+00:20:10,470 --> 00:20:12,510
+for all the different
+services, and this is great.
+
+439
+00:20:12,510 --> 00:20:15,120
+This is a super helpful reference data.
+
+440
+00:20:15,120 --> 00:20:18,330
+And recently I think over the last month,
+
+441
+00:20:18,330 --> 00:20:20,067
+we just launched an enhancement to this
+
+442
+00:20:20,067 --> 00:20:22,669
+and we added operations
+to actions mappings,
+
+443
+00:20:22,669 --> 00:20:25,680
+and so here's just the JSON snippet here.
+
+444
+00:20:25,680 --> 00:20:27,390
+And so what this does, it says,
+
+445
+00:20:27,390 --> 00:20:30,657
+hey, we have this Boto3
+create key operation,
+
+446
+00:20:30,657 --> 00:20:32,818
+and it tells you what are all the actions
+
+447
+00:20:32,818 --> 00:20:35,700
+that are associated with that.
+
+448
+00:20:35,700 --> 00:20:37,710
+So here it's saying, okay,
+
+449
+00:20:37,710 --> 00:20:41,228
+when I call create key from Boto3,
+
+450
+00:20:41,228 --> 00:20:43,922
+I need the KMS create key action,
+
+451
+00:20:43,922 --> 00:20:48,570
+the KMS put key policy action,
+and the tag resource action.
+
+452
+00:20:48,570 --> 00:20:50,158
+Now I don't always need them,
+
+453
+00:20:50,158 --> 00:20:52,590
+but this is kinda like the outer boundary
+
+454
+00:20:52,590 --> 00:20:55,170
+of what you might need when
+you typically call that,
+
+455
+00:20:55,170 --> 00:20:57,873
+and this is based on actual
+service data that we have.
+
+456
+00:21:00,221 --> 00:21:02,970
+And so now the last
+step is we combine that.
+
+457
+00:21:02,970 --> 00:21:05,640
+So we got the method
+calls, we have our lookup
+
+458
+00:21:05,640 --> 00:21:08,430
+so now we can map out
+all the actions we need,
+
+459
+00:21:08,430 --> 00:21:10,440
+and then we can generate
+a policy deterministic
+
+460
+00:21:10,440 --> 00:21:11,550
+based on that.
+
+461
+00:21:11,550 --> 00:21:14,130
+Now I will say this policy
+is not a real one, right?
+
+462
+00:21:14,130 --> 00:21:16,061
+I needed it to fit on one screen,
+
+463
+00:21:16,061 --> 00:21:18,930
+but I'm trying to illustrate that.
+
+464
+00:21:18,930 --> 00:21:21,563
+You know, based on this we
+can now generate a policy.
+
+465
+00:21:22,566 --> 00:21:27,393
+And so there are three key
+benefits with this approach.
+
+466
+00:21:29,010 --> 00:21:31,653
+The first is it's really deterministic.
+
+467
+00:21:32,670 --> 00:21:34,200
+You give it the same code
+
+468
+00:21:34,200 --> 00:21:37,061
+and it generates the
+same actions and policies
+
+469
+00:21:37,061 --> 00:21:40,736
+every single time, and
+that's really valuable
+
+470
+00:21:40,736 --> 00:21:43,833
+when we want to think
+about access management.
+
+471
+00:21:44,772 --> 00:21:47,160
+It's also up to date.
+
+472
+00:21:47,160 --> 00:21:51,060
+It used the live service
+reference data we publish.
+
+473
+00:21:51,060 --> 00:21:52,740
+If we think about coding assistance,
+
+474
+00:21:52,740 --> 00:21:56,310
+their training data was
+like last Thanksgiving.
+
+475
+00:21:56,310 --> 00:21:57,510
+Something like that.
+
+476
+00:21:57,510 --> 00:21:58,680
+You know, there are tools and stuff
+
+477
+00:21:58,680 --> 00:22:02,190
+that can help keep it up to
+date, but here, you know,
+
+478
+00:22:02,190 --> 00:22:03,522
+we just launched a whole bunch of services
+
+479
+00:22:03,522 --> 00:22:05,970
+that all those actions are now available
+
+480
+00:22:05,970 --> 00:22:07,170
+in the service reference data,
+
+481
+00:22:07,170 --> 00:22:09,633
+and so it has live up to date information.
+
+482
+00:22:11,016 --> 00:22:12,112
+And it's reliable
+
+483
+00:22:12,112 --> 00:22:14,999
+because we're using this
+service reference data.
+
+484
+00:22:14,999 --> 00:22:17,762
+You're not gonna see S3 head bucket
+
+485
+00:22:17,762 --> 00:22:20,610
+as an action that shows up here.
+
+486
+00:22:20,610 --> 00:22:22,060
+It's all based on real stuff.
+
+487
+00:22:23,610 --> 00:22:26,670
+Now, you know, we're just
+getting started here,
+
+488
+00:22:26,670 --> 00:22:28,650
+and I do wanna call out some limitations
+
+489
+00:22:28,650 --> 00:22:30,420
+that you should be aware of.
+
+490
+00:22:30,420 --> 00:22:34,020
+So today we just generate
+identity policies,
+
+491
+00:22:34,020 --> 00:22:36,780
+and so we're not supporting
+kind of cross account use cases
+
+492
+00:22:36,780 --> 00:22:39,247
+where you might need a
+resource-based policy and account
+
+493
+00:22:39,247 --> 00:22:44,069
+to grant, you know,
+access to S3 bucket there.
+
+494
+00:22:44,069 --> 00:22:47,820
+And these policies, as
+I touched on earlier,
+
+495
+00:22:47,820 --> 00:22:51,420
+it's not necessarily gonna
+be the most shrink wrapped
+
+496
+00:22:51,420 --> 00:22:53,280
+these privileged ones, right?
+
+497
+00:22:53,280 --> 00:22:55,110
+We do the action mapping here,
+
+498
+00:22:55,110 --> 00:22:56,520
+and these are typically the actions
+
+499
+00:22:56,520 --> 00:22:58,992
+associated with that method call.
+
+500
+00:22:58,992 --> 00:23:01,770
+And so our intention here
+
+501
+00:23:01,770 --> 00:23:03,750
+is to give you a better starting point
+
+502
+00:23:03,750 --> 00:23:06,390
+than kind of some of these other
+broad options that we have.
+
+503
+00:23:06,390 --> 00:23:08,460
+And when we looked at some internal data,
+
+504
+00:23:08,460 --> 00:23:10,628
+we looked at the developers that, like,
+
+505
+00:23:10,628 --> 00:23:13,650
+actual policies that developers wrote,
+
+506
+00:23:13,650 --> 00:23:15,258
+and we compared them to
+the number of permissions
+
+507
+00:23:15,258 --> 00:23:18,030
+that IAM policy auto policy generated,
+
+508
+00:23:18,030 --> 00:23:21,510
+and we found that it generated
+just 3% of the permissions
+
+509
+00:23:21,510 --> 00:23:24,330
+of what's on live running code today.
+
+510
+00:23:24,330 --> 00:23:26,190
+And so that's meaningful, right?
+
+511
+00:23:26,190 --> 00:23:28,830
+What's out there is 97% over privileged
+
+512
+00:23:28,830 --> 00:23:31,293
+even though we all have
+good intentions, right?
+
+513
+00:23:32,624 --> 00:23:36,060
+The other thing is static analysis today
+
+514
+00:23:36,060 --> 00:23:39,000
+doesn't support automatic
+identification of resource names,
+
+515
+00:23:39,000 --> 00:23:41,910
+and, so you know, you do
+wanna scope your resources
+
+516
+00:23:41,910 --> 00:23:43,874
+down to the specific ones, right?
+
+517
+00:23:43,874 --> 00:23:46,290
+I don't want to just able to read
+
+518
+00:23:46,290 --> 00:23:49,213
+from every single S3
+bucket in this account,
+
+519
+00:23:49,213 --> 00:23:52,230
+and so we, you know, you
+definitely wanna scope that down
+
+520
+00:23:52,230 --> 00:23:55,110
+and depending on your journey
+and where you are, you know,
+
+521
+00:23:55,110 --> 00:23:56,280
+it could be something you do later,
+
+522
+00:23:56,280 --> 00:23:58,440
+or you wanna do right in that moment.
+
+523
+00:23:58,440 --> 00:24:01,713
+This is something that we
+definitely wanna add coming soon.
+
+524
+00:24:03,150 --> 00:24:06,870
+And then we have that
+operation to action mapping,
+
+525
+00:24:06,870 --> 00:24:08,867
+and it generally catches
+the vast majority,
+
+526
+00:24:08,867 --> 00:24:10,860
+but sometimes there are edge cases
+
+527
+00:24:10,860 --> 00:24:13,632
+where certain complex
+cross service dependencies
+
+528
+00:24:13,632 --> 00:24:16,488
+might be missing there, right?
+
+529
+00:24:16,488 --> 00:24:18,240
+I'll give you an example.
+
+530
+00:24:18,240 --> 00:24:22,140
+Sometimes when you read from
+an S3 bucket and encrypted,
+
+531
+00:24:22,140 --> 00:24:24,300
+you also need KMS permissions there.
+
+532
+00:24:24,300 --> 00:24:26,847
+So there's some cross service mappings.
+
+533
+00:24:26,847 --> 00:24:29,013
+And so we're continuously adding to this.
+
+534
+00:24:30,569 --> 00:24:33,450
+And so I've done enough talking now.
+
+535
+00:24:33,450 --> 00:24:34,710
+Let's actually see it in action
+
+536
+00:24:34,710 --> 00:24:37,320
+so I'm gonna pass the mic to Luke.
+
+537
+00:24:37,320 --> 00:24:38,153
+- [Kevin] I'm gonna take over,
+
+538
+00:24:38,153 --> 00:24:42,123
+and we'll start by setting
+up IAM Policy Autopilot.
+
+539
+00:24:43,650 --> 00:24:45,747
+So today we're gonna use Kiro,
+
+540
+00:24:45,747 --> 00:24:50,190
+and first we're going to
+get rid of this policy
+
+541
+00:24:50,190 --> 00:24:51,303
+that we know is wrong,
+
+542
+00:24:54,736 --> 00:24:56,850
+and we're going to get rid of this session
+
+543
+00:24:56,850 --> 00:24:58,290
+which gave us the wrong data.
+
+544
+00:24:58,290 --> 00:25:00,900
+But first we need to set
+up IAM Policy Autopilot.
+
+545
+00:25:00,900 --> 00:25:03,150
+So we're gonna pop over into our terminal,
+
+546
+00:25:03,150 --> 00:25:04,320
+and IAM Policy Autopilot
+
+547
+00:25:04,320 --> 00:25:06,150
+has a variety of ways
+that we distribute it,
+
+548
+00:25:06,150 --> 00:25:09,000
+but the easiest one to get
+started with is just doing pip.
+
+549
+00:25:09,000 --> 00:25:12,003
+So we'll just do a pip install
+of IAM Policy Autopilot.
+
+550
+00:25:17,760 --> 00:25:19,230
+And it's that easy.
+
+551
+00:25:19,230 --> 00:25:21,873
+So now I can just run
+IAM Policy Autopilot,
+
+552
+00:25:27,210 --> 00:25:28,080
+and there it is.
+
+553
+00:25:28,080 --> 00:25:30,840
+So as you can see, it does have
+functionality exposed here,
+
+554
+00:25:30,840 --> 00:25:34,470
+but today we're gonna focus
+mostly on the use case
+
+555
+00:25:34,470 --> 00:25:38,579
+where you're using it with a
+coding assistant in your IDE.
+
+556
+00:25:38,579 --> 00:25:42,720
+So the first step of that is
+setting it up as an MCP server,
+
+557
+00:25:42,720 --> 00:25:44,670
+and every coding assistant you use
+
+558
+00:25:44,670 --> 00:25:45,960
+is going to have a different method
+
+559
+00:25:45,960 --> 00:25:48,090
+of configuring an MCP server.
+
+560
+00:25:48,090 --> 00:25:50,310
+For Kiro, you click on
+the little ghosty icon,
+
+561
+00:25:50,310 --> 00:25:52,688
+you come down to the
+modify your MCP servers,
+
+562
+00:25:52,688 --> 00:25:55,529
+and you get this nice little configuration
+
+563
+00:25:55,529 --> 00:26:00,529
+and we're just going to paste
+in IAM Policy Autopilot.
+
+564
+00:26:01,590 --> 00:26:03,930
+Now for those familiar with pip,
+
+565
+00:26:03,930 --> 00:26:05,700
+you may be familiar with the UV tool,
+
+566
+00:26:05,700 --> 00:26:08,412
+which allows you to run pip applications.
+
+567
+00:26:08,412 --> 00:26:10,417
+I'm using UV in this case
+
+568
+00:26:10,417 --> 00:26:12,870
+so I can get the nice update functionality
+
+569
+00:26:12,870 --> 00:26:13,703
+that comes with it.
+
+570
+00:26:13,703 --> 00:26:15,808
+So it'll always update
+the pip installation
+
+571
+00:26:15,808 --> 00:26:17,942
+every time I run the server.
+
+572
+00:26:17,942 --> 00:26:19,118
+So now I'm gonna save this
+
+573
+00:26:19,118 --> 00:26:23,333
+and you can see over on
+the left that it connected,
+
+574
+00:26:23,333 --> 00:26:26,160
+and it found all of my tools.
+
+575
+00:26:26,160 --> 00:26:28,950
+So now, IAM Policy Autopilot
+is available to Kiro
+
+576
+00:26:28,950 --> 00:26:31,353
+as an agent it can use.
+
+577
+00:26:32,234 --> 00:26:36,158
+So let's go back to our code,
+and nothing has changed here,
+
+578
+00:26:36,158 --> 00:26:39,393
+but we're going to try to
+generate a new policy now.
+
+579
+00:26:40,680 --> 00:26:42,480
+Get rid of that session. Start over.
+
+580
+00:26:43,680 --> 00:26:45,090
+So I'm gonna ask Kiro once again
+
+581
+00:26:45,090 --> 00:26:47,703
+to please create an IAM
+policy for this script.
+
+582
+00:26:51,900 --> 00:26:53,310
+Now this is the fun part of the demo
+
+583
+00:26:53,310 --> 00:26:55,410
+because this is the non-determinism
+
+584
+00:26:55,410 --> 00:26:57,840
+that you get with any model-based thing.
+
+585
+00:26:57,840 --> 00:26:59,640
+So we're gonna hope
+that Kiro behaves today
+
+586
+00:26:59,640 --> 00:27:01,173
+and plays to our script.
+
+587
+00:27:03,420 --> 00:27:06,780
+So it starts, reads our
+file and says, you know,
+
+588
+00:27:06,780 --> 00:27:09,060
+hey, I wanna scope this appropriately.
+
+589
+00:27:09,060 --> 00:27:10,058
+So tell me what region
+
+590
+00:27:10,058 --> 00:27:12,660
+and what account ID you want to access.
+
+591
+00:27:12,660 --> 00:27:15,110
+So we're gonna use US-west-2,
+
+592
+00:27:20,130 --> 00:27:23,223
+and my account ID is
+also saved right here.
+
+593
+00:27:28,800 --> 00:27:31,260
+And so it's chosen to
+call IAM Policy Autopilot.
+
+594
+00:27:31,260 --> 00:27:34,170
+It's gonna pass these
+parameters, you know,
+
+595
+00:27:34,170 --> 00:27:35,880
+we're just gonna vibe today
+and not really read those
+
+596
+00:27:35,880 --> 00:27:36,730
+and just say run.
+
+597
+00:27:40,440 --> 00:27:42,383
+All right, and it spits out this policy,
+
+598
+00:27:43,710 --> 00:27:44,730
+and here's a short description.
+
+599
+00:27:44,730 --> 00:27:45,563
+Would you like me to save this file?
+
+600
+00:27:45,563 --> 00:27:47,133
+Yeah, sure. Please.
+
+601
+00:27:52,890 --> 00:27:54,690
+And let's look at these permissions.
+
+602
+00:27:55,920 --> 00:27:56,760
+So we'll start where we've got
+
+603
+00:27:56,760 --> 00:28:00,180
+these S3 permissions at the
+top, and most importantly,
+
+604
+00:28:00,180 --> 00:28:01,770
+I don't see head bucket.
+
+605
+00:28:01,770 --> 00:28:04,671
+I don't see any permissions
+that don't exist.
+
+606
+00:28:04,671 --> 00:28:06,930
+It did give me the full
+closure permissions
+
+607
+00:28:06,930 --> 00:28:09,898
+I may need for S3 based on the script,
+
+608
+00:28:09,898 --> 00:28:11,790
+but I know they're all gonna be correct
+
+609
+00:28:11,790 --> 00:28:13,140
+and they're gonna work.
+
+610
+00:28:13,140 --> 00:28:15,390
+Here's my KMS permissions.
+
+611
+00:28:15,390 --> 00:28:17,460
+You can see that the region is filled in,
+
+612
+00:28:17,460 --> 00:28:18,990
+the account ID is filled in.
+
+613
+00:28:18,990 --> 00:28:20,340
+Reese's are wildcards
+
+614
+00:28:20,340 --> 00:28:21,870
+because these are all create operations,
+
+615
+00:28:21,870 --> 00:28:24,303
+and so we can't scope
+them to a specific thing.
+
+616
+00:28:25,425 --> 00:28:28,020
+But now we have our policy,
+
+617
+00:28:28,020 --> 00:28:29,995
+and so if we wanna test out that policy,
+
+618
+00:28:29,995 --> 00:28:32,100
+instead of going the long way,
+
+619
+00:28:32,100 --> 00:28:34,440
+I'm going to use cloud
+formation to do this.
+
+620
+00:28:34,440 --> 00:28:35,273
+I encourage everyone
+
+621
+00:28:35,273 --> 00:28:37,290
+to use some type of
+infrastructures code set up
+
+622
+00:28:37,290 --> 00:28:39,600
+to manage their entities
+across their account,
+
+623
+00:28:39,600 --> 00:28:41,190
+and today I'm gonna use cloud formation
+
+624
+00:28:41,190 --> 00:28:42,840
+and Kiro's gonna write it for me.
+
+625
+00:28:46,369 --> 00:28:48,513
+Sorry, I need to accept those changes.
+
+626
+00:28:56,820 --> 00:28:59,910
+Okay, so now Kiro has everything it needs.
+
+627
+00:28:59,910 --> 00:29:03,390
+It has the code, it knows that
+if it's gonna make a Lambda,
+
+628
+00:29:03,390 --> 00:29:06,330
+it needs to run that using an IAM role
+
+629
+00:29:06,330 --> 00:29:08,363
+So it's probably gonna
+create that role too.
+
+630
+00:29:10,110 --> 00:29:11,510
+Let's see what it spits out.
+
+631
+00:29:14,700 --> 00:29:16,920
+All right, so here's my code.
+
+632
+00:29:16,920 --> 00:29:17,793
+That's great.
+
+633
+00:29:18,930 --> 00:29:21,450
+And here is my policy, and as we can see,
+
+634
+00:29:21,450 --> 00:29:24,480
+it is exactly the same
+policy that we generated.
+
+635
+00:29:24,480 --> 00:29:27,513
+It just took that in from the
+file and put it into here.
+
+636
+00:29:28,950 --> 00:29:32,536
+Using cloud formation,
+you can fill in variables
+
+637
+00:29:32,536 --> 00:29:35,400
+and do substitutions
+for created resources.
+
+638
+00:29:35,400 --> 00:29:37,380
+Our particular policy didn't have that
+
+639
+00:29:37,380 --> 00:29:39,780
+because we're doing crates,
+but this is one of those cases
+
+640
+00:29:39,780 --> 00:29:41,370
+where using something like infrastructure
+
+641
+00:29:41,370 --> 00:29:43,230
+as code with IAM Policy Autopilot
+
+642
+00:29:43,230 --> 00:29:44,746
+gives you a nice better together setup
+
+643
+00:29:44,746 --> 00:29:46,320
+where it starts to lease privilege
+
+644
+00:29:46,320 --> 00:29:48,240
+down to the resources you need
+
+645
+00:29:48,240 --> 00:29:50,730
+because it knows to fill
+in the variables at runtime
+
+646
+00:29:50,730 --> 00:29:52,083
+and at creation time.
+
+647
+00:29:54,060 --> 00:29:55,875
+So we have this now.
+
+648
+00:29:55,875 --> 00:29:58,263
+We're going to ask it
+to deploy our template.
+
+649
+00:30:07,240 --> 00:30:08,740
+All right, and go.
+
+650
+00:30:10,320 --> 00:30:11,610
+Okay, so while that's running,
+
+651
+00:30:11,610 --> 00:30:14,720
+we can talk a little bit about the CLI.
+
+652
+00:30:14,720 --> 00:30:16,327
+So as Kevin mentioned,
+
+653
+00:30:16,327 --> 00:30:19,230
+IAM Policy Autopilot does work as a CLI,
+
+654
+00:30:19,230 --> 00:30:20,370
+but also happens to have
+
+655
+00:30:20,370 --> 00:30:23,160
+an MCP server endpoint exposed to it.
+
+656
+00:30:23,160 --> 00:30:25,980
+When you use it as a CLI,
+it works just the same.
+
+657
+00:30:25,980 --> 00:30:28,401
+So I can say IAM Policy Autopilot,
+
+658
+00:30:28,401 --> 00:30:30,903
+and then let's do generate policies,
+
+659
+00:30:33,147 --> 00:30:35,370
+and then I'm in the same directory
+
+660
+00:30:35,370 --> 00:30:38,760
+so we'll just say my customer onboarding.
+
+661
+00:30:38,760 --> 00:30:40,740
+And I run that, and it
+immediately spits out
+
+662
+00:30:40,740 --> 00:30:41,733
+that same policy.
+
+663
+00:30:42,810 --> 00:30:45,450
+And let's make it a little
+easier to read for everyone
+
+664
+00:30:45,450 --> 00:30:49,173
+so we can see it is in fact the same.
+
+665
+00:30:50,130 --> 00:30:52,260
+And that's the determinism
+that you get from this tool
+
+666
+00:30:52,260 --> 00:30:53,430
+that it's always gonna give you
+
+667
+00:30:53,430 --> 00:30:55,263
+the same policy for your code.
+
+668
+00:30:56,649 --> 00:30:59,010
+The CLI allows you to
+easily integrate this
+
+669
+00:30:59,010 --> 00:31:00,840
+into other CI flows that you may have.
+
+670
+00:31:00,840 --> 00:31:04,530
+So if you have a existing
+flow that takes your code,
+
+671
+00:31:04,530 --> 00:31:06,082
+does some builds on it,
+we can now have that
+
+672
+00:31:06,082 --> 00:31:08,973
+integrate with this and spit
+out your policies as you go.
+
+673
+00:31:10,800 --> 00:31:13,250
+All right, let's go back
+to cloud formation here.
+
+674
+00:31:14,220 --> 00:31:17,660
+It says it's still running, but we can...
+
+675
+00:31:18,930 --> 00:31:20,040
+Oh, it says it just finished
+
+676
+00:31:20,040 --> 00:31:22,500
+but let's check on it just to be sure.
+
+677
+00:31:22,500 --> 00:31:24,210
+Hey, it's good. Perfect.
+
+678
+00:31:24,210 --> 00:31:27,480
+Okay, so now we need to
+test that lambda function
+
+679
+00:31:27,480 --> 00:31:30,360
+to make sure it works
+because I made these claims
+
+680
+00:31:30,360 --> 00:31:31,860
+that we have the write permission.
+
+681
+00:31:31,860 --> 00:31:33,960
+Let's enforce that then back it up
+
+682
+00:31:33,960 --> 00:31:35,810
+by saying let's invoke this function.
+
+683
+00:31:44,670 --> 00:31:46,380
+Okay, it's gonna ask to run the Lambda.
+
+684
+00:31:46,380 --> 00:31:47,553
+We're gonna say run.
+
+685
+00:31:48,660 --> 00:31:49,740
+You can see here in the terminal
+
+686
+00:31:49,740 --> 00:31:54,273
+it ran the CLI command, and status 200.
+
+687
+00:31:56,640 --> 00:31:58,980
+And Kira wants to run it
+again for some reason.
+
+688
+00:31:58,980 --> 00:32:03,180
+We don't know why, but
+we'll just tell it to stop.
+
+689
+00:32:03,180 --> 00:32:04,890
+Okay, so that's great.
+
+690
+00:32:04,890 --> 00:32:08,610
+I had some code, I ran it, it worked,
+
+691
+00:32:08,610 --> 00:32:10,838
+it made a function that was good,
+
+692
+00:32:10,838 --> 00:32:13,980
+but now let's say I want
+to iterate on this code
+
+693
+00:32:13,980 --> 00:32:18,501
+and I want to, instead
+of just creating the key,
+
+694
+00:32:18,501 --> 00:32:20,242
+creating the bucket, I also
+wanna get a notification
+
+695
+00:32:20,242 --> 00:32:21,870
+that this is done because I wanna do
+
+696
+00:32:21,870 --> 00:32:23,130
+some further events on that.
+
+697
+00:32:23,130 --> 00:32:27,090
+So let's add SQS as a notification queue.
+
+698
+00:32:27,090 --> 00:32:30,430
+So I got another script
+here, I'm gonna pull over
+
+699
+00:32:31,410 --> 00:32:33,650
+because I don't have time to type this,
+
+700
+00:32:33,650 --> 00:32:35,820
+but here's the same script.
+
+701
+00:32:35,820 --> 00:32:40,569
+I've added an SQS client,
+I've given it a QURL,
+
+702
+00:32:40,569 --> 00:32:45,240
+and down at the very end,
+after we create the bucket
+
+703
+00:32:45,240 --> 00:32:47,490
+and put the KMS configuration on it,
+
+704
+00:32:47,490 --> 00:32:50,490
+we now send a message
+to SQS to let us know
+
+705
+00:32:50,490 --> 00:32:52,860
+that we just created
+all the infrastructure
+
+706
+00:32:52,860 --> 00:32:54,060
+we needed for this new customer,
+
+707
+00:32:54,060 --> 00:32:56,460
+and here's the basic
+identifiers we need for it.
+
+708
+00:32:57,540 --> 00:33:01,491
+So from here, if we go back to our chat
+
+709
+00:33:01,491 --> 00:33:06,491
+and say please generate
+a CFN template for...
+
+710
+00:33:11,010 --> 00:33:12,573
+I can't spell. Apologies.
+
+711
+00:33:15,000 --> 00:33:16,143
+For the current file.
+
+712
+00:33:17,220 --> 00:33:18,510
+It's gonna go through
+the same process again,
+
+713
+00:33:18,510 --> 00:33:20,640
+it's going to create my template.
+
+714
+00:33:20,640 --> 00:33:22,749
+Now, I didn't explicitly ask it
+
+715
+00:33:22,749 --> 00:33:25,329
+to update the permissions on it,
+
+716
+00:33:25,329 --> 00:33:27,450
+and so it's probably gonna just pick up
+
+717
+00:33:27,450 --> 00:33:29,613
+the IAM policy JSON it used here.
+
+718
+00:33:33,540 --> 00:33:35,590
+It'll wait for the agent to do its thing.
+
+719
+00:33:45,930 --> 00:33:46,763
+Still going.
+
+720
+00:33:52,050 --> 00:33:54,870
+Okay, unfortunately, Kiro was very helpful
+
+721
+00:33:54,870 --> 00:33:56,670
+and decided to add this permission.
+
+722
+00:33:56,670 --> 00:33:58,893
+Let's unfix that.
+
+723
+00:33:59,910 --> 00:34:01,590
+So we're gonna come down here,
+
+724
+00:34:01,590 --> 00:34:03,840
+we're going to just remove this.
+
+725
+00:34:03,840 --> 00:34:05,040
+We all know that it's needed,
+
+726
+00:34:05,040 --> 00:34:07,500
+but now for the sake of the argument,
+
+727
+00:34:07,500 --> 00:34:10,050
+let's say that Kiro decided
+
+728
+00:34:10,050 --> 00:34:13,167
+not to mess with our policy, okay?
+
+729
+00:34:13,167 --> 00:34:14,763
+And now please deploy.
+
+730
+00:34:21,900 --> 00:34:22,733
+Okay.
+
+731
+00:34:27,183 --> 00:34:31,100
+Lemme go through again
+with the new change set.
+
+732
+00:34:40,983 --> 00:34:43,620
+- [Kevin] And while it's
+running here, so in this case,
+
+733
+00:34:43,620 --> 00:34:45,667
+Kiro did add the right permissions
+
+734
+00:34:45,667 --> 00:34:48,720
+and we did probably this dry run,
+
+735
+00:34:48,720 --> 00:34:50,100
+I don't know, 10 times, Luke?
+
+736
+00:34:50,100 --> 00:34:51,900
+- [Luke] At least two dozen times.
+
+737
+00:34:51,900 --> 00:34:53,220
+- [Kevin] And on, you know,
+
+738
+00:34:53,220 --> 00:34:55,050
+going back to that non-determinism,
+
+739
+00:34:55,050 --> 00:34:57,720
+it did it some of the time,
+but a lot of times it didn't.
+
+740
+00:34:57,720 --> 00:35:01,173
+So, you know, you're kind of
+coming down to chance on this.
+
+741
+00:35:02,880 --> 00:35:06,357
+So here we're gonna simulate
+an example of what happens
+
+742
+00:35:06,357 --> 00:35:10,830
+if it didn't add that permission,
+or sometimes ourselves.
+
+743
+00:35:10,830 --> 00:35:12,210
+We're all humans too, right?
+
+744
+00:35:12,210 --> 00:35:13,950
+And sometimes we deploy
+something and we're like,
+
+745
+00:35:13,950 --> 00:35:16,767
+oh, I forgot to update the execution role.
+
+746
+00:35:16,767 --> 00:35:20,848
+And so now we can see, you
+know, IAM Policy Autopilot
+
+747
+00:35:20,848 --> 00:35:22,920
+includes additional functionality
+
+748
+00:35:22,920 --> 00:35:24,420
+to help you with this as well.
+
+749
+00:35:30,330 --> 00:35:33,060
+- [Luke] So we see a case
+where cloud formation's just-
+
+750
+00:35:33,060 --> 00:35:33,900
+- [Kevin] Taking its time.
+
+751
+00:35:33,900 --> 00:35:36,450
+- [Luke] Taking its
+time, it's kind of stuck.
+
+752
+00:35:36,450 --> 00:35:38,040
+I have a feeling that
+stack will never finish
+
+753
+00:35:38,040 --> 00:35:42,770
+so we'll try again from...
+
+754
+00:35:44,100 --> 00:35:44,933
+Oops.
+
+755
+00:35:47,190 --> 00:35:48,633
+From a different template.
+
+756
+00:35:55,693 --> 00:35:57,660
+We're doing a little
+bit of a cooking show.
+
+757
+00:35:57,660 --> 00:35:58,680
+Anyone watch that?
+
+758
+00:35:58,680 --> 00:36:01,083
+You pull it from the oven.
+
+759
+00:36:05,400 --> 00:36:06,233
+All right.
+
+760
+00:36:07,140 --> 00:36:08,140
+Okay, so here we go.
+
+761
+00:36:09,510 --> 00:36:10,343
+It's deploying.
+
+762
+00:36:19,080 --> 00:36:20,550
+And we know this is gonna break.
+
+763
+00:36:20,550 --> 00:36:22,560
+So we know that it's going
+to create the template,
+
+764
+00:36:22,560 --> 00:36:23,680
+it's gonna create an IAM user,
+
+765
+00:36:23,680 --> 00:36:25,500
+it's gonna create an IAM role.
+
+766
+00:36:25,500 --> 00:36:28,920
+That role is not gonna have
+the required SQS permissions.
+
+767
+00:36:28,920 --> 00:36:29,753
+That's intended.
+
+768
+00:36:38,970 --> 00:36:41,093
+So we're gonna execute
+the Lambda function.
+
+769
+00:36:51,690 --> 00:36:53,140
+Now we already deployed that.
+
+770
+00:37:02,020 --> 00:37:03,670
+Okay, so let's run that function.
+
+771
+00:37:09,720 --> 00:37:12,540
+Okay, and we can see
+there is an error here.
+
+772
+00:37:12,540 --> 00:37:13,373
+Oops.
+
+773
+00:37:20,423 --> 00:37:23,010
+And that error is the KMS key yard exists.
+
+774
+00:37:23,010 --> 00:37:24,410
+Let's try a different input.
+
+775
+00:37:37,547 --> 00:37:38,700
+Okay, so now we're using
+customer bouncy pancake,
+
+776
+00:37:38,700 --> 00:37:42,180
+and okay, look, we got a
+message saying, as we expected,
+
+777
+00:37:42,180 --> 00:37:44,970
+we do not have permission
+to do this thing.
+
+778
+00:37:44,970 --> 00:37:46,440
+So this is where IAM Policy Autopilot
+
+779
+00:37:46,440 --> 00:37:47,720
+has additional functionality
+
+780
+00:37:47,720 --> 00:37:50,730
+that we can look at
+these messages and say,
+
+781
+00:37:50,730 --> 00:37:53,613
+hey, you don't have
+permission to do this thing.
+
+782
+00:37:53,613 --> 00:37:54,743
+Why don't you fix that for me?
+
+783
+00:37:58,650 --> 00:38:03,650
+And this is how we can do a
+full agentic flow with this.
+
+784
+00:38:03,990 --> 00:38:05,490
+By having the ability to analyze,
+
+785
+00:38:05,490 --> 00:38:08,373
+hey, I got an error, can
+you go fix it for me?
+
+786
+00:38:09,360 --> 00:38:12,270
+And it shows instead
+to modify the template.
+
+787
+00:38:12,270 --> 00:38:13,470
+So let's try this again.
+
+788
+00:38:22,530 --> 00:38:23,363
+Okay, now it realizes,
+
+789
+00:38:23,363 --> 00:38:25,470
+hey, I have a tool to fix these errors
+
+790
+00:38:25,470 --> 00:38:26,770
+so let's try running that.
+
+791
+00:38:28,500 --> 00:38:31,710
+And this tool allows us to look
+at an access denied message
+
+792
+00:38:31,710 --> 00:38:33,360
+and say, hey, I know
+what this resource is,
+
+793
+00:38:33,360 --> 00:38:34,770
+I know what this principle is,
+
+794
+00:38:34,770 --> 00:38:36,630
+I can generate a policy
+that's gonna fix this
+
+795
+00:38:36,630 --> 00:38:38,640
+and put all the necessary permissions in.
+
+796
+00:38:38,640 --> 00:38:41,130
+This is a simple case because
+it's just SQS send message,
+
+797
+00:38:41,130 --> 00:38:42,750
+but if it was a more complex case
+
+798
+00:38:42,750 --> 00:38:44,550
+where it had dependent actions,
+
+799
+00:38:44,550 --> 00:38:47,073
+IAM Policy Autopilot would also add those.
+
+800
+00:38:48,270 --> 00:38:50,753
+So now I'm gonna tell it
+to deploy it to my account.
+
+801
+00:38:55,500 --> 00:38:57,485
+It's going to invoke a tool
+
+802
+00:38:57,485 --> 00:39:01,143
+that I apparently just
+trusted all the way,
+
+803
+00:39:03,315 --> 00:39:07,085
+and so now it is deployed
+in a policy on my account
+
+804
+00:39:07,085 --> 00:39:08,607
+to give me those additional permissions,
+
+805
+00:39:08,607 --> 00:39:11,037
+and so it wants to test
+the function again,
+
+806
+00:39:11,037 --> 00:39:12,423
+and we can say run.
+
+807
+00:39:14,904 --> 00:39:16,410
+Now let's get to the
+bottom here and we can see,
+
+808
+00:39:16,410 --> 00:39:19,740
+oh, now it passed and
+there's our valid response
+
+809
+00:39:19,740 --> 00:39:23,487
+coming out of Lambda.
+
+810
+00:39:23,487 --> 00:39:24,900
+- [Kevin] And it might be
+important to talk about
+
+811
+00:39:24,900 --> 00:39:26,280
+why this is really useful.
+
+812
+00:39:26,280 --> 00:39:28,602
+So here we have kind of
+like a one-off instance,
+
+813
+00:39:28,602 --> 00:39:30,055
+but with these agents,
+
+814
+00:39:30,055 --> 00:39:32,074
+you want them to go run off by themselves.
+
+815
+00:39:32,074 --> 00:39:35,250
+I wanna say, hey, go
+complete this task for me
+
+816
+00:39:35,250 --> 00:39:37,530
+and I'm gonna go walk
+away, grab a cup of coffee,
+
+817
+00:39:37,530 --> 00:39:38,880
+and then come back.
+
+818
+00:39:38,880 --> 00:39:41,730
+And so with this, you
+know, it's easy enough
+
+819
+00:39:41,730 --> 00:39:44,520
+for a human to go, hey,
+okay, this error message,
+
+820
+00:39:44,520 --> 00:39:45,958
+I need to add this missing thing.
+
+821
+00:39:45,958 --> 00:39:47,935
+But if I'm walking away,
+I'm not supervising it,
+
+822
+00:39:47,935 --> 00:39:50,340
+I want my coding assistant in Kiro
+
+823
+00:39:50,340 --> 00:39:51,934
+to be able to do that myself.
+
+824
+00:39:51,934 --> 00:39:55,860
+And so now it has the tools
+to be able to do that,
+
+825
+00:39:55,860 --> 00:39:56,850
+and let's say sometimes
+
+826
+00:39:56,850 --> 00:39:59,250
+you have layered access
+denied errors, right?
+
+827
+00:39:59,250 --> 00:40:02,263
+You have one that shows
+up, you fix it, you run it,
+
+828
+00:40:02,263 --> 00:40:03,490
+another one shows up,
+
+829
+00:40:03,490 --> 00:40:05,730
+and so for humans it's kind of tedious.
+
+830
+00:40:05,730 --> 00:40:08,879
+But now by exposing this as a tool,
+
+831
+00:40:08,879 --> 00:40:12,060
+this coding assistant can
+go and unstuck itself,
+
+832
+00:40:12,060 --> 00:40:13,590
+and so that's kind of the power
+
+833
+00:40:13,590 --> 00:40:17,943
+on why we expose this
+capability as one of the tools.
+
+834
+00:40:19,800 --> 00:40:20,670
+Okay, cool.
+
+835
+00:40:20,670 --> 00:40:23,730
+So I'm gonna do a quick recap here.
+
+836
+00:40:23,730 --> 00:40:26,843
+So we showed you how to
+use IAM Policy Autopilot
+
+837
+00:40:26,843 --> 00:40:29,910
+to generate policies from your code,
+
+838
+00:40:29,910 --> 00:40:32,160
+and we showed it that when you combine it
+
+839
+00:40:32,160 --> 00:40:32,993
+with a coding assistant
+
+840
+00:40:32,993 --> 00:40:35,460
+and the findings of
+infrastructure as code,
+
+841
+00:40:35,460 --> 00:40:37,830
+it can do things like do
+the variable substitution
+
+842
+00:40:37,830 --> 00:40:39,720
+for scoping down by resources
+
+843
+00:40:39,720 --> 00:40:42,960
+and so there's a really
+great better together story.
+
+844
+00:40:42,960 --> 00:40:43,966
+We also talked to you a little bit
+
+845
+00:40:43,966 --> 00:40:46,647
+about that fixed access
+denied workflow, right?
+
+846
+00:40:46,647 --> 00:40:48,780
+And so this empowers your coding system
+
+847
+00:40:48,780 --> 00:40:50,370
+to get itself unstuck, right?
+
+848
+00:40:50,370 --> 00:40:52,140
+It's the same tools that, you know,
+
+849
+00:40:52,140 --> 00:40:53,460
+we ourselves would do if we looked at
+
+850
+00:40:53,460 --> 00:40:54,962
+the access denied error,
+
+851
+00:40:54,962 --> 00:40:57,570
+and we did this all
+without broad permissions
+
+852
+00:40:57,570 --> 00:41:00,630
+like administrator access,
+or AWS managed policies,
+
+853
+00:41:00,630 --> 00:41:04,980
+or just S3 Star even,
+and it was deterministic.
+
+854
+00:41:04,980 --> 00:41:09,120
+It only used real IAM
+actions and services,
+
+855
+00:41:09,120 --> 00:41:10,173
+and it's up to date.
+
+856
+00:41:11,610 --> 00:41:13,560
+Now, you know, we're just getting started.
+
+857
+00:41:13,560 --> 00:41:16,162
+So we are only supporting
+identity policies today
+
+858
+00:41:16,162 --> 00:41:20,760
+and it's not guaranteed to
+be least privilege, right?
+
+859
+00:41:20,760 --> 00:41:22,050
+So there's still some scoping down,
+
+860
+00:41:22,050 --> 00:41:23,940
+but now you have a much
+better starting point.
+
+861
+00:41:23,940 --> 00:41:26,706
+We talked a little bit
+about how policy autopilot
+
+862
+00:41:26,706 --> 00:41:28,710
+generates 3% of permissions
+
+863
+00:41:28,710 --> 00:41:31,892
+that kind of developer policies are today.
+
+864
+00:41:31,892 --> 00:41:33,900
+And then we're working on adding in
+
+865
+00:41:33,900 --> 00:41:35,070
+the static analysis support
+
+866
+00:41:35,070 --> 00:41:36,900
+to automatically identify your resources
+
+867
+00:41:36,900 --> 00:41:39,357
+so it would just only
+get better over time.
+
+868
+00:41:39,357 --> 00:41:42,383
+And so I have a call to action here.
+
+869
+00:41:42,383 --> 00:41:44,388
+We've open sourced this for a reason.
+
+870
+00:41:44,388 --> 00:41:45,990
+We wanna collect your feedback,
+
+871
+00:41:45,990 --> 00:41:47,818
+we wanna do the development in the open,
+
+872
+00:41:47,818 --> 00:41:51,948
+and so please go visit the
+GitHub repository, clone it.
+
+873
+00:41:51,948 --> 00:41:55,083
+We built it in Rust,
+which we love very much,
+
+874
+00:41:56,130 --> 00:41:58,199
+and if you have feedback
+or if you have questions,
+
+875
+00:41:58,199 --> 00:42:00,268
+feel free to engage with us there.
+
+876
+00:42:00,268 --> 00:42:02,634
+You know, we're always
+planning to improve it,
+
+877
+00:42:02,634 --> 00:42:05,550
+and keep on the lookout for that.
+
+878
+00:42:05,550 --> 00:42:09,913
+All right, so with that I
+have my obligatory thank you.
+
+879
+00:42:09,913 --> 00:42:11,430
+Luke and I will hang out here
+
+880
+00:42:11,430 --> 00:42:12,990
+if you have some one-on-one questions.
+
+881
+00:42:12,990 --> 00:42:14,100
+So, happy to take 'em,
+
+882
+00:42:14,100 --> 00:42:16,800
+or we can do a group
+discussion here upfront.
+
+883
+00:42:16,800 --> 00:42:18,240
+Otherwise, this is your reminder
+
+884
+00:42:18,240 --> 00:42:20,763
+to please complete the
+survey in the mobile app.
+

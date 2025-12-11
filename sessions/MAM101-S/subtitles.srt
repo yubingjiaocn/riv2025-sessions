@@ -1,0 +1,4372 @@
+1
+00:00:00,859 --> 00:00:02,970
+Oh, hi, everyone. Um, thanks for attending
+
+2
+00:00:02,970 --> 00:00:03,838
+my session today.
+
+3
+00:00:04,179 --> 00:00:06,299
+I really appreciate it. I know this is getting at the end
+
+4
+00:00:06,299 --> 00:00:08,419
+of a kind of a long and busy week, so I
+
+5
+00:00:08,419 --> 00:00:10,528
+appreciate you taking the time, uh, to come and,
+
+6
+00:00:10,579 --> 00:00:12,079
+and watch this presentation today.
+
+7
+00:00:12,419 --> 00:00:14,618
+Um, my name is Richard Nichol. I'm a
+
+8
+00:00:14,618 --> 00:00:16,179
+product solutions architect for NetApp.
+
+9
+00:00:16,539 --> 00:00:18,620
+Um, I've been working with NetApp for about 14
+
+10
+00:00:18,620 --> 00:00:19,440
+years now.
+
+11
+00:00:19,780 --> 00:00:21,978
+Um, with about half that time, I've been working, um,
+
+12
+00:00:22,059 --> 00:00:23,440
+in our cloud-based products.
+
+13
+00:00:23,958 --> 00:00:26,000
+And I've been working with FSX for ONTAP
+
+14
+00:00:26,000 --> 00:00:28,039
+really since its inception, right? Since it
+
+15
+00:00:28,039 --> 00:00:28,899
+was an idea
+
+16
+00:00:29,359 --> 00:00:31,359
+between ADbus and NetApp. So I've been involved with it
+
+17
+00:00:31,359 --> 00:00:32,450
+for a very long time.
+
+18
+00:00:32,759 --> 00:00:34,759
+And I've been working with the EBS, um, as
+
+19
+00:00:34,759 --> 00:00:36,679
+part of Early Access at the beginning of this year.
+
+20
+00:00:37,000 --> 00:00:38,918
+And so today, I'm going to talk to you about
+
+21
+00:00:39,189 --> 00:00:41,240
+how you can leverage FSX for ONTAP to
+
+22
+00:00:41,240 --> 00:00:43,348
+help optimize the storage cost for
+
+23
+00:00:43,348 --> 00:00:45,639
+your Amazon Elastic VMware deployments.
+
+24
+00:00:47,240 --> 00:00:49,158
+Um, so from agenda from a very high level,
+
+25
+00:00:49,450 --> 00:00:51,590
+um, we're gonna start by, I just want a level set
+
+26
+00:00:51,590 --> 00:00:53,649
+on what, you know, EBS is. It's a relatively
+
+27
+00:00:53,649 --> 00:00:55,289
+new service. So, you know, what are the main,
+
+28
+00:00:55,569 --> 00:00:57,609
+you know, functions and features of it. Um,
+
+29
+00:00:57,689 --> 00:00:59,689
+and then I'm gonna kind of do a similar thing for
+
+30
+00:00:59,689 --> 00:01:01,689
+FSX for OnTap. I'm gonna talk about, you
+
+31
+00:01:01,689 --> 00:01:04,129
+know, what it is, you know, everybody's not always super familiar
+
+32
+00:01:04,129 --> 00:01:04,959
+with it, um,
+
+33
+00:01:05,250 --> 00:01:07,448
+and, you know, what are its main features and how
+
+34
+00:01:07,448 --> 00:01:09,730
+those features work with EBS, right?
+
+35
+00:01:09,808 --> 00:01:11,808
+And what are the advantages of those features, and
+
+36
+00:01:11,808 --> 00:01:13,808
+then how do those two services actually end
+
+37
+00:01:13,808 --> 00:01:15,430
+up playing together as well.
+
+38
+00:01:15,799 --> 00:01:17,918
+Um, I also. So we'll then get into kind of like
+
+39
+00:01:17,918 --> 00:01:20,000
+3 main pillars, you know, how you can lower the
+
+40
+00:01:20,000 --> 00:01:22,159
+total cost of ownership, and a lot of that's around
+
+41
+00:01:22,159 --> 00:01:24,299
+how you can decouple compute from storage.
+
+42
+00:01:24,799 --> 00:01:26,959
+Um, I'm gonna talk about how you can improve
+
+43
+00:01:26,959 --> 00:01:29,120
+your SLAs for trying to protect your VMs
+
+44
+00:01:29,120 --> 00:01:31,260
+that are running, um, in the EBS environment.
+
+45
+00:01:31,599 --> 00:01:33,638
+Um, and then I'll get into like, you know, how you can
+
+46
+00:01:33,638 --> 00:01:35,719
+operate on-prem and in
+
+47
+00:01:35,719 --> 00:01:36,439
+cloud
+
+48
+00:01:36,790 --> 00:01:38,918
+using the same ways and, and functions and
+
+49
+00:01:38,918 --> 00:01:41,000
+ways that you've operated there, you're going to take
+
+50
+00:01:41,000 --> 00:01:43,040
+that same thing and operate it in the cloud. And I
+
+51
+00:01:43,040 --> 00:01:45,459
+will show you how like FSSONTA can help facilitate
+
+52
+00:01:45,459 --> 00:01:46,359
+that. Um.
+
+53
+00:01:46,778 --> 00:01:48,859
+And so then, um, I'm gonna get to really one that
+
+54
+00:01:48,859 --> 00:01:51,010
+I'm really, uh, excited about, uh, a
+
+55
+00:01:51,010 --> 00:01:52,480
+disaster recovery scenario
+
+56
+00:01:52,778 --> 00:01:54,888
+that leverages FSX for ONTAP, and there's some
+
+57
+00:01:54,888 --> 00:01:56,980
+new capabilities with FSX for ONTAP that makes
+
+58
+00:01:56,980 --> 00:01:58,159
+that a very compelling,
+
+59
+00:01:58,500 --> 00:02:00,599
+uh, use case for, um, kind of helping you
+
+60
+00:02:00,599 --> 00:02:02,680
+keep a minimum footprint for those types of,
+
+61
+00:02:02,689 --> 00:02:04,385
+uh, uh. Scenarios.
+
+62
+00:02:04,653 --> 00:02:06,653
+And then finally, I'm gonna get into a tool called
+
+63
+00:02:06,653 --> 00:02:07,513
+Workload Factory.
+
+64
+00:02:07,924 --> 00:02:10,344
+Uh, this is a free tool. I'll probably mentioned that multiple times,
+
+65
+00:02:10,534 --> 00:02:12,554
+and this is one that's gonna help you plan and migrate,
+
+66
+00:02:12,814 --> 00:02:15,175
+um, your workloads um from VMware
+
+67
+00:02:15,175 --> 00:02:17,493
+and operate them in uh ADOS
+
+68
+00:02:17,493 --> 00:02:19,774
+with EBS and FSXONTAP as, as
+
+69
+00:02:19,774 --> 00:02:20,314
+the storage.
+
+70
+00:02:21,819 --> 00:02:23,939
+Um, so I'm gonna start, um, with the Elastic,
+
+71
+00:02:24,020 --> 00:02:26,058
+uh, you know, Amazon Elastic VMware Service,
+
+72
+00:02:26,099 --> 00:02:28,179
+you know, talk about it at the highest levels. And
+
+73
+00:02:28,179 --> 00:02:30,300
+you can think about it at the highest levels, right? It
+
+74
+00:02:30,300 --> 00:02:32,479
+is just the fastest and easiest way
+
+75
+00:02:32,860 --> 00:02:34,919
+to take your VMware environments and
+
+76
+00:02:35,008 --> 00:02:37,118
+operate them efficiently and
+
+77
+00:02:37,169 --> 00:02:39,338
+with the same way in the cloud. So what you're basically doing is you're
+
+78
+00:02:39,338 --> 00:02:41,379
+taking You know, one of the main tenets for
+
+79
+00:02:41,379 --> 00:02:42,879
+EBS when it was created is that
+
+80
+00:02:43,139 --> 00:02:45,258
+we want to give you full control of
+
+81
+00:02:45,258 --> 00:02:47,338
+the environment in the cloud. So however you're operating,
+
+82
+00:02:47,449 --> 00:02:49,580
+you know, with your VCF stack, right, you're basically taking that
+
+83
+00:02:49,580 --> 00:02:51,580
+same VCF stack, and you're taking it up
+
+84
+00:02:51,580 --> 00:02:53,580
+to the cloud and operating it in a similar
+
+85
+00:02:53,580 --> 00:02:55,300
+way. And so, um,
+
+86
+00:02:55,580 --> 00:02:57,618
+so that's when, and then once you get up into the cloud, then you
+
+87
+00:02:57,618 --> 00:02:58,919
+have the access to
+
+88
+00:02:59,179 --> 00:03:01,460
+Amazon services, which, which is another great advantage
+
+89
+00:03:01,460 --> 00:03:03,490
+of EBS and a good way of getting, you know,
+
+90
+00:03:03,729 --> 00:03:05,770
+a lot of stuff that's on-prem and getting into the cloud
+
+91
+00:03:05,770 --> 00:03:07,360
+and get all of the advantages of the cloud.
+
+92
+00:03:07,699 --> 00:03:09,419
+And then so it's about, you know,
+
+93
+00:03:09,899 --> 00:03:12,210
+control, and then also choice. How do you want to then
+
+94
+00:03:12,538 --> 00:03:14,569
+handle that once you're up there. And that's the way you
+
+95
+00:03:14,569 --> 00:03:17,058
+can either manage it all yourself
+
+96
+00:03:17,058 --> 00:03:19,099
+or you can bring in a partner as well. And
+
+97
+00:03:19,099 --> 00:03:21,099
+so I'll talk a little bit more about that, um, on
+
+98
+00:03:21,099 --> 00:03:21,740
+the next slide.
+
+99
+00:03:22,319 --> 00:03:24,319
+So you can be customer managed, right? If
+
+100
+00:03:24,319 --> 00:03:26,639
+you have all the tech technical expertise
+
+101
+00:03:26,639 --> 00:03:28,838
+in-house, you know how to do migrations,
+
+102
+00:03:28,919 --> 00:03:31,000
+you know how to maybe set up HCX, you
+
+103
+00:03:31,000 --> 00:03:32,088
+know how to, um,
+
+104
+00:03:32,399 --> 00:03:34,919
+you know, run your day to day at ESXI
+
+105
+00:03:34,919 --> 00:03:37,028
+host, right? All those types of things, and you're comfortable with that,
+
+106
+00:03:37,038 --> 00:03:38,429
+and you have the technical know-how,
+
+107
+00:03:38,758 --> 00:03:40,838
+great, you can do it all yourself. You don't need
+
+108
+00:03:40,838 --> 00:03:43,270
+anybody else. But, uh, you know, ADMS
+
+109
+00:03:43,270 --> 00:03:45,399
+has met with a lot of partners who say, hey,
+
+110
+00:03:45,639 --> 00:03:48,159
+there's a lot of customers that maybe they need help migrating
+
+111
+00:03:48,159 --> 00:03:50,240
+up, right? Or maybe they just need some help
+
+112
+00:03:50,240 --> 00:03:52,469
+with automation. Right? So there's partners
+
+113
+00:03:52,469 --> 00:03:54,550
+that have been involved with EBS since
+
+114
+00:03:54,550 --> 00:03:55,909
+it was early access as well.
+
+115
+00:03:56,189 --> 00:03:58,210
+So it really is giving you that choice.
+
+116
+00:03:58,520 --> 00:04:00,538
+Maybe you don't want to get
+
+117
+00:04:00,538 --> 00:04:02,550
+uh a text in the middle of the night that there's a problem
+
+118
+00:04:02,550 --> 00:04:04,069
+with this ESXi hosts, right?
+
+119
+00:04:04,389 --> 00:04:06,389
+So partners can help, you know, manage, they can help you
+
+120
+00:04:06,389 --> 00:04:08,669
+migrate, they can meet you wherever you are, whatever
+
+121
+00:04:08,669 --> 00:04:10,710
+your needs are. So really the, the takeaway
+
+122
+00:04:10,710 --> 00:04:12,758
+here, right, is that Amazon, right, has given
+
+123
+00:04:12,758 --> 00:04:13,368
+you complete
+
+124
+00:04:13,909 --> 00:04:16,369
+choice, right, in, in how you want to operate
+
+125
+00:04:16,369 --> 00:04:18,569
+this VMware environment once you have it up and running
+
+126
+00:04:18,569 --> 00:04:19,189
+in the cloud.
+
+127
+00:04:20,949 --> 00:04:21,519
+Um,
+
+128
+00:04:22,019 --> 00:04:24,259
+you know, 11 more step back, right, you know, or,
+
+129
+00:04:24,329 --> 00:04:26,088
+or, or down, I guess, um, this is showing,
+
+130
+00:04:26,497 --> 00:04:28,588
+hey, what are we talking about here with EBS, right? You've
+
+131
+00:04:28,588 --> 00:04:30,038
+got an on-premises system,
+
+132
+00:04:30,348 --> 00:04:32,389
+and you've got your VCF stack, as I said before, you know,
+
+133
+00:04:32,427 --> 00:04:33,699
+you have your vSphere clients,
+
+134
+00:04:34,009 --> 00:04:34,949
+you have, um,
+
+135
+00:04:35,228 --> 00:04:37,329
+your, your NSX manager, you've got,
+
+136
+00:04:37,459 --> 00:04:39,709
+uh, your, your VSAN, right? And you've got all that
+
+137
+00:04:39,709 --> 00:04:41,927
+on-prem. And so basically you're taking that and you're
+
+138
+00:04:42,427 --> 00:04:44,437
+moving it into the cloud, you're operating it
+
+139
+00:04:44,437 --> 00:04:46,829
+exactly the same way. All those, you know, VCF
+
+140
+00:04:47,148 --> 00:04:49,228
+components are also there in the cloud.
+
+141
+00:04:49,468 --> 00:04:51,519
+Um. And there's multiple reasons why
+
+142
+00:04:51,519 --> 00:04:53,189
+you might be doing this, right? Um,
+
+143
+00:04:54,079 --> 00:04:56,088
+maybe you're shutting down, an existing data
+
+144
+00:04:56,088 --> 00:04:58,088
+center, right? For that existing data center, you
+
+145
+00:04:58,088 --> 00:05:00,170
+want to evacuate it, you're just migrating
+
+146
+00:05:00,170 --> 00:05:02,250
+this all up in the cloud, and you just wanna be there quick and
+
+147
+00:05:02,250 --> 00:05:04,290
+you have the expertise and you wanna operate it exactly
+
+148
+00:05:04,290 --> 00:05:04,910
+the same way.
+
+149
+00:05:05,369 --> 00:05:07,689
+It could be also that you're just extending
+
+150
+00:05:07,689 --> 00:05:09,798
+your data center. Maybe you are running out of
+
+151
+00:05:09,798 --> 00:05:11,809
+space. And may, or maybe you're like,
+
+152
+00:05:11,869 --> 00:05:13,928
+I'm not quite ready to go all the way into
+
+153
+00:05:13,928 --> 00:05:16,009
+the cloud, right? I wanna do dev test so I
+
+154
+00:05:16,009 --> 00:05:18,088
+can just move up some dev test workloads, get
+
+155
+00:05:18,088 --> 00:05:20,189
+comfortable with the cloud, right, and then, and then move from there.
+
+156
+00:05:20,738 --> 00:05:23,019
+Maybe it's a disaster recovery. You got your on-prem
+
+157
+00:05:23,019 --> 00:05:25,108
+and you don't wanna set up a whole other data center just for
+
+158
+00:05:25,108 --> 00:05:27,108
+disaster recovery, right? That's another option.
+
+159
+00:05:27,480 --> 00:05:29,540
+Or maybe this is just your first
+
+160
+00:05:29,540 --> 00:05:31,660
+step in, um, and I'm gonna talk more about
+
+161
+00:05:31,660 --> 00:05:33,738
+the disaster recovery because I think, uh, FSI for OnTap's
+
+162
+00:05:33,738 --> 00:05:35,428
+a really neat use case around that.
+
+163
+00:05:35,858 --> 00:05:37,949
+And then, um, maybe you're just, this is your first
+
+164
+00:05:37,949 --> 00:05:39,988
+step of modernization. You bring up some apps and
+
+165
+00:05:39,988 --> 00:05:42,108
+then you start tying. And so the whole key here, right? The other
+
+166
+00:05:42,108 --> 00:05:44,389
+whole half of this first picture is that you
+
+167
+00:05:44,389 --> 00:05:46,350
+tie into all those Amazon services.
+
+168
+00:05:46,670 --> 00:05:47,540
+Maybe you want to
+
+169
+00:05:47,869 --> 00:05:49,949
+do the first step of modernization, take an app up into
+
+170
+00:05:49,949 --> 00:05:52,028
+the cloud and, and run, um, Bedrock on
+
+171
+00:05:52,028 --> 00:05:54,399
+it, right? So there's, you know, a plethora
+
+172
+00:05:54,949 --> 00:05:57,139
+of, of Amazon services out there, right? So you're, you're
+
+173
+00:05:57,139 --> 00:05:59,230
+taking that first step into getting
+
+174
+00:05:59,230 --> 00:06:00,480
+access to all those services.
+
+175
+00:06:03,069 --> 00:06:05,069
+So just one more step down, right, on
+
+176
+00:06:05,069 --> 00:06:06,548
+what EBS is. Um,
+
+177
+00:06:06,858 --> 00:06:09,028
+the first thing is that it's an automated deployment,
+
+178
+00:06:09,178 --> 00:06:11,230
+right? So it's really, really easy to
+
+179
+00:06:11,230 --> 00:06:13,350
+use. It's really, really easy to get started with.
+
+180
+00:06:13,470 --> 00:06:15,629
+Um, so you can do it either through the console
+
+181
+00:06:15,629 --> 00:06:16,488
+or the API
+
+182
+00:06:16,910 --> 00:06:18,920
+and you really don't have to provide
+
+183
+00:06:19,069 --> 00:06:21,108
+a lot of information. You say, OK,
+
+184
+00:06:21,428 --> 00:06:23,439
+I need, I need to deploy it in a VPC, right? So
+
+185
+00:06:23,439 --> 00:06:24,949
+you're gonna supply a VPC.
+
+186
+00:06:25,269 --> 00:06:27,420
+You need some ESXi hosts, so you can supply
+
+187
+00:06:27,420 --> 00:06:29,428
+your EC2 instances. Um, you're gonna
+
+188
+00:06:29,428 --> 00:06:31,649
+supply. Um, your licensing
+
+189
+00:06:31,649 --> 00:06:33,678
+or your, or your subscription, your VCF subscription,
+
+190
+00:06:33,730 --> 00:06:35,730
+right? You're gonna have to apply that right when you deploy it.
+
+191
+00:06:36,048 --> 00:06:38,290
+Um, and you have to set some sitter ranges. There's
+
+192
+00:06:38,290 --> 00:06:40,488
+some, essentially, you know, the EBS is taking
+
+193
+00:06:40,488 --> 00:06:42,569
+the NSS's networking, and it's like
+
+194
+00:06:42,569 --> 00:06:44,569
+kind of emulating it. So there's some private VLANs, you have
+
+195
+00:06:44,569 --> 00:06:45,869
+to set up some sitters for that.
+
+196
+00:06:46,238 --> 00:06:48,290
+Um, once you've defined all that,
+
+197
+00:06:48,649 --> 00:06:49,699
+then you click go.
+
+198
+00:06:50,350 --> 00:06:52,470
+And in about 3 hours, you have a
+
+199
+00:06:52,470 --> 00:06:53,298
+completely functional
+
+200
+00:06:53,759 --> 00:06:55,759
+VCF stack running in the cloud. It's
+
+201
+00:06:55,759 --> 00:06:57,949
+pretty amazing, really. And it's using, it's, it's,
+
+202
+00:06:58,040 --> 00:07:00,278
+you see here, it's using Cloud Builder to do it, right?
+
+203
+00:07:00,519 --> 00:07:01,389
+Um, and so,
+
+204
+00:07:01,720 --> 00:07:03,738
+again, you, once you're done, then you have
+
+205
+00:07:03,879 --> 00:07:05,928
+an NSX manager. You have a, a,
+
+206
+00:07:06,149 --> 00:07:08,670
+a vSphere client, you have an SCDC
+
+207
+00:07:08,670 --> 00:07:10,670
+manager. And you have,
+
+208
+00:07:10,988 --> 00:07:13,100
+um, and it says here you have full control, right?
+
+209
+00:07:13,309 --> 00:07:13,850
+You get
+
+210
+00:07:14,149 --> 00:07:16,309
+with ADbus Secrets Manager, you get
+
+211
+00:07:16,309 --> 00:07:16,949
+access to
+
+212
+00:07:17,269 --> 00:07:19,459
+the username and a password for all those services.
+
+213
+00:07:19,670 --> 00:07:21,769
+You can even get to the ESXI
+
+214
+00:07:21,769 --> 00:07:23,790
+host, root ESXI host, right? So
+
+215
+00:07:23,790 --> 00:07:25,889
+when we say full control, it really is full
+
+216
+00:07:25,889 --> 00:07:27,730
+control when you're coming into the cloud. Um,
+
+217
+00:07:28,230 --> 00:07:30,619
+for right now, for the first pass right now, um,
+
+218
+00:07:30,889 --> 00:07:33,069
+there's i4I metal instances is what's
+
+219
+00:07:33,069 --> 00:07:33,850
+supported, right?
+
+220
+00:07:34,540 --> 00:07:37,000
+There are plans to add other metal instances,
+
+221
+00:07:37,019 --> 00:07:39,170
+um, in the future. Um, it will give you different, you
+
+222
+00:07:39,170 --> 00:07:41,619
+know, price points, different performance, different storage,
+
+223
+00:07:41,699 --> 00:07:43,939
+you know, footprints. And, so that is coming. But
+
+224
+00:07:43,939 --> 00:07:45,970
+for right now, you know, um, that's what it is,
+
+225
+00:07:46,019 --> 00:07:48,238
+is I4I, uh, metal. And when you
+
+226
+00:07:48,338 --> 00:07:50,660
+do that deployment right now, again, it's also
+
+227
+00:07:50,660 --> 00:07:53,059
+VCF 5.2.1. Um, there's
+
+228
+00:07:53,059 --> 00:07:55,059
+obviously plans for VCF 9, so both
+
+229
+00:07:55,059 --> 00:07:57,100
+of those things are going to be coming, but for right now, that's what
+
+230
+00:07:57,100 --> 00:07:59,319
+you get. And you do have to supply
+
+231
+00:07:59,319 --> 00:08:01,488
+your own licensing, right? So you have to supply your, your
+
+232
+00:08:01,488 --> 00:08:03,059
+VCF, uh, subscription.
+
+233
+00:08:03,399 --> 00:08:05,639
+And you got to make sure that the cores, that the VCF
+
+234
+00:08:05,639 --> 00:08:07,670
+subscription that you have has enough cores
+
+235
+00:08:07,670 --> 00:08:08,259
+for the
+
+236
+00:08:08,579 --> 00:08:10,059
+four-node minimum
+
+237
+00:08:10,639 --> 00:08:12,639
+I4I metal deployment. So right now it's a
+
+238
+00:08:12,639 --> 00:08:13,480
+4-node minimum.
+
+239
+00:08:13,798 --> 00:08:15,910
+So. Again, right, you're bringing all
+
+240
+00:08:15,910 --> 00:08:17,949
+this up. And we're talking about the consumption, um,
+
+241
+00:08:18,028 --> 00:08:18,660
+that's, you know,
+
+242
+00:08:18,949 --> 00:08:21,028
+the consumption of your EC2 host is really
+
+243
+00:08:21,028 --> 00:08:23,119
+what that's talking about there, right? Do you want to do on-demand?
+
+244
+00:08:23,178 --> 00:08:25,350
+Do you want to do one year? Do you want to do 3-year?
+
+245
+00:08:25,548 --> 00:08:27,759
+Obviously, you do 3-year, your price will come down,
+
+246
+00:08:27,899 --> 00:08:29,009
+um, significantly,
+
+247
+00:08:29,269 --> 00:08:31,309
+but, you know, you just gotta make sure you make that commitment or
+
+248
+00:08:31,309 --> 00:08:33,460
+not. Um, and then also,
+
+249
+00:08:33,570 --> 00:08:35,570
+you know, obviously when you do this deployment, at the end of that
+
+250
+00:08:35,570 --> 00:08:36,119
+deployment,
+
+251
+00:08:36,599 --> 00:08:38,678
+everything's there, you've got access to everything. You
+
+252
+00:08:38,678 --> 00:08:40,889
+do get VSAN storage, you know, by default,
+
+253
+00:08:40,960 --> 00:08:43,250
+right? The, the I4I metals come with some
+
+254
+00:08:43,538 --> 00:08:45,649
+instances stores that become the VSAN, and so you have
+
+255
+00:08:45,649 --> 00:08:47,428
+storage there with you. And that's actually where
+
+256
+00:08:47,889 --> 00:08:50,099
+the VMs are deployed, right? The VMs are deployed, the,
+
+257
+00:08:50,369 --> 00:08:52,408
+the SEC manager and the vSphere
+
+258
+00:08:52,408 --> 00:08:54,450
+client, all those things are deployed onto the VSAN.
+
+259
+00:08:54,759 --> 00:08:56,849
+But you also then have the option of
+
+260
+00:08:56,849 --> 00:08:58,889
+adding on FSX for ONTAP as
+
+261
+00:08:58,889 --> 00:08:59,869
+additional storage.
+
+262
+00:09:00,798 --> 00:09:02,239
+And that's where I'm gonna spend most of my time.
+
+263
+00:09:02,979 --> 00:09:05,070
+And so at the highest level here, right,
+
+264
+00:09:05,200 --> 00:09:07,399
+um, I think a really critical thing here, right, is that
+
+265
+00:09:07,519 --> 00:09:08,639
+Amazon FSX for ONTA
+
+266
+00:09:09,109 --> 00:09:11,558
+is the only ADS native storage
+
+267
+00:09:11,558 --> 00:09:13,918
+service, right, that's been certified for Amazon EBS.
+
+268
+00:09:14,200 --> 00:09:16,279
+So if you wanted to do, go native, right, with
+
+269
+00:09:16,279 --> 00:09:18,609
+your storage on Amazon EBS, it's gonna be FSX
+
+270
+00:09:18,609 --> 00:09:19,158
+for ONTAP.
+
+271
+00:09:20,619 --> 00:09:22,219
+Um, and so now really,
+
+272
+00:09:22,619 --> 00:09:24,658
+you know, what is FSX for ONTAP? I'm gonna spend a little bit
+
+273
+00:09:24,658 --> 00:09:26,779
+of time here because it can sometimes
+
+274
+00:09:26,779 --> 00:09:28,739
+be a little confusing for people because, you know,
+
+275
+00:09:29,200 --> 00:09:31,379
+it has ONTAP in the name or, and, um, and, and
+
+276
+00:09:31,379 --> 00:09:33,379
+has NetApp in the name as well, right? But it
+
+277
+00:09:33,379 --> 00:09:35,739
+is a fully managed AWS storage
+
+278
+00:09:35,739 --> 00:09:37,779
+service. Um, and it sits there next to
+
+279
+00:09:37,779 --> 00:09:39,979
+S3, EBS EFS, right?
+
+280
+00:09:40,019 --> 00:09:42,158
+It falls there. It sits underneath the
+
+281
+00:09:42,379 --> 00:09:44,619
+FSX, like the file system umbrella,
+
+282
+00:09:44,700 --> 00:09:46,960
+right? But it is a fully managed
+
+283
+00:09:47,058 --> 00:09:48,000
+AWS
+
+284
+00:09:48,500 --> 00:09:49,639
+storage service.
+
+285
+00:09:51,340 --> 00:09:53,548
+But what's unique about it? What is unique, you know, why, why
+
+286
+00:09:53,548 --> 00:09:55,750
+do they bring it in? It's because it's able
+
+287
+00:09:55,750 --> 00:09:58,210
+to bring enterprise grade features
+
+288
+00:09:58,469 --> 00:10:00,469
+to your, to your storage in the
+
+289
+00:10:00,469 --> 00:10:02,668
+cloud. And what do I mean by that? What kind of enterprise
+
+290
+00:10:02,668 --> 00:10:03,700
+grade features?
+
+291
+00:10:04,109 --> 00:10:06,548
+Accessibility. We support both file,
+
+292
+00:10:06,830 --> 00:10:09,269
+block, and object storage. And
+
+293
+00:10:09,548 --> 00:10:11,658
+for, you know, lots of times, I, I kind of always
+
+294
+00:10:11,658 --> 00:10:12,808
+highlight block because
+
+295
+00:10:13,109 --> 00:10:15,629
+we are, we're underneath the file system, right? FSX
+
+296
+00:10:15,629 --> 00:10:17,668
+file system, right? And people think of ONTA. Lots of times
+
+297
+00:10:17,668 --> 00:10:19,485
+people think of NFS. SMB,
+
+298
+00:10:19,846 --> 00:10:21,884
+but we also support Block. And about 30% of
+
+299
+00:10:21,884 --> 00:10:24,085
+the deployments of FSXONTAP
+
+300
+00:10:24,085 --> 00:10:26,166
+are leveraging Block, lots of times
+
+301
+00:10:26,166 --> 00:10:28,245
+for things like self-managed databases and those types
+
+302
+00:10:28,245 --> 00:10:29,865
+of things. So we do do Block as well.
+
+303
+00:10:30,285 --> 00:10:32,975
+Beyond B block, we also support multi-protocol
+
+304
+00:10:32,975 --> 00:10:35,035
+access. And that, what we mean by that is
+
+305
+00:10:35,035 --> 00:10:36,565
+one set of data, right?
+
+306
+00:10:36,926 --> 00:10:39,085
+You can access it with NFS and SMB
+
+307
+00:10:39,245 --> 00:10:41,806
+and lots of times customers have those requirements, right, on-prem
+
+308
+00:10:41,806 --> 00:10:43,985
+as well, right? And also
+
+309
+00:10:44,405 --> 00:10:46,525
+S3, and I, I'd be remiss if I didn't really
+
+310
+00:10:46,525 --> 00:10:47,660
+call that. That one out because,
+
+311
+00:10:47,942 --> 00:10:50,171
+um, that is, was just announced,
+
+312
+00:10:50,302 --> 00:10:52,421
+right, this week, um, at the, uh,
+
+313
+00:10:52,451 --> 00:10:53,822
+at the keynote, right?
+
+314
+00:10:54,110 --> 00:10:55,182
+That FSX or ONTA
+
+315
+00:10:55,541 --> 00:10:57,932
+can be an endpoint to all these different
+
+316
+00:10:57,932 --> 00:11:00,091
+now ADS services that leverage S3,
+
+317
+00:11:00,182 --> 00:11:01,261
+like Bedrock,
+
+318
+00:11:01,530 --> 00:11:03,610
+Redshift, right? All of those now. So
+
+319
+00:11:03,610 --> 00:11:04,961
+now you can have one set of data
+
+320
+00:11:05,302 --> 00:11:07,400
+and do like, you know, uh, uh,
+
+321
+00:11:07,562 --> 00:11:09,631
+AI type of stuff on that same set of data. Now,
+
+322
+00:11:09,701 --> 00:11:11,701
+that's not what this talk is about, but I did just wanna
+
+323
+00:11:11,701 --> 00:11:13,701
+make sure I highlighted, right, that that new announcement
+
+324
+00:11:13,701 --> 00:11:14,322
+just came out.
+
+325
+00:11:15,599 --> 00:11:17,700
+Um, so then resiliency and protection, um,
+
+326
+00:11:17,820 --> 00:11:19,210
+high availability. Essentially,
+
+327
+00:11:19,500 --> 00:11:21,558
+there's two nodes for an FSX OONTAP system,
+
+328
+00:11:21,570 --> 00:11:23,580
+and they're replicating data back and forth,
+
+329
+00:11:23,820 --> 00:11:25,899
+and so that your data is always available when you need
+
+330
+00:11:25,899 --> 00:11:28,009
+it. And really the superpower of
+
+331
+00:11:28,009 --> 00:11:30,298
+ONTAP, right, is snapshots. So
+
+332
+00:11:30,298 --> 00:11:32,298
+that you always have a local copy of your data. And why
+
+333
+00:11:32,298 --> 00:11:33,479
+do I say superpower? Because
+
+334
+00:11:33,969 --> 00:11:36,379
+they are pointer-based, they are instantaneous.
+
+335
+00:11:36,904 --> 00:11:38,984
+They, um, only do deltas, and
+
+336
+00:11:38,984 --> 00:11:41,065
+they're really the bedrock to use the,
+
+337
+00:11:41,144 --> 00:11:43,215
+the AI term. They're the bedrock of what
+
+338
+00:11:43,215 --> 00:11:45,303
+ONTAP has been built on for 30 years, and we're taking
+
+339
+00:11:45,303 --> 00:11:46,384
+that same type of
+
+340
+00:11:46,663 --> 00:11:49,024
+really enterprise grade storage functionality
+
+341
+00:11:49,024 --> 00:11:51,104
+that a lot of the other functionality that's in ONTAP is
+
+342
+00:11:51,104 --> 00:11:53,384
+based on snapshots as well. So, um, and
+
+343
+00:11:53,384 --> 00:11:55,384
+I'll show you later on, like, like, why that's
+
+344
+00:11:55,384 --> 00:11:57,484
+important as well for this particular deployment,
+
+345
+00:11:57,864 --> 00:12:00,224
+uh, for use with EBS and FSXONTAP.
+
+346
+00:12:01,250 --> 00:12:03,250
+Data security. This one's always, always
+
+347
+00:12:03,250 --> 00:12:04,210
+super important in the cloud.
+
+348
+00:12:04,570 --> 00:12:06,889
+Um, it's, you know, FSX FONTA
+
+349
+00:12:06,889 --> 00:12:08,928
+has, is secured from the bottom up, right? If you
+
+350
+00:12:08,928 --> 00:12:10,029
+start at the bottom of the stack,
+
+351
+00:12:10,308 --> 00:12:12,330
+data at rest is encrypted with
+
+352
+00:12:12,330 --> 00:12:14,269
+KMS or a customer KMS key.
+
+353
+00:12:14,729 --> 00:12:16,729
+Um, if you go up a level from that stack.
+
+354
+00:12:17,065 --> 00:12:19,065
+We can do uh data in transit. We
+
+355
+00:12:19,065 --> 00:12:20,683
+can encrypt with SMB encryption,
+
+356
+00:12:21,134 --> 00:12:23,144
+NFS with Kerberos. We also support
+
+357
+00:12:23,144 --> 00:12:24,923
+IPSec, right? Um,
+
+358
+00:12:25,183 --> 00:12:27,344
+then we also integrate with Active Directory, so
+
+359
+00:12:27,344 --> 00:12:29,625
+you have only the right people can talk to the files,
+
+360
+00:12:29,705 --> 00:12:32,183
+right, um, for, for SMB and NFS.
+
+361
+00:12:32,744 --> 00:12:35,024
+And then beyond that, even, right, then we also
+
+362
+00:12:35,024 --> 00:12:37,043
+have, um, immutable storage options.
+
+363
+00:12:37,264 --> 00:12:39,423
+Um, what I mean by that is that you can say, hey,
+
+364
+00:12:39,864 --> 00:12:41,864
+once this data has been written, it cannot be
+
+365
+00:12:41,864 --> 00:12:44,065
+deleted for a certain number of time. And we support
+
+366
+00:12:44,065 --> 00:12:45,043
+compliance.
+
+367
+00:12:45,678 --> 00:12:47,719
+Immutable storage, which means nobody
+
+368
+00:12:47,719 --> 00:12:49,840
+can change it. Not even, not even AWS. If you
+
+369
+00:12:49,840 --> 00:12:52,038
+call into a support ticket and you've put a lock
+
+370
+00:12:52,038 --> 00:12:54,000
+on that data for some certain period of time,
+
+371
+00:12:54,279 --> 00:12:56,340
+not even AWS, uh, uh,
+
+372
+00:12:56,349 --> 00:12:57,820
+administrators can delete it.
+
+373
+00:12:58,119 --> 00:13:00,399
+So it really is that, that level of protection. And
+
+374
+00:13:00,399 --> 00:13:02,580
+then one step on top of that even
+
+375
+00:13:02,580 --> 00:13:03,918
+is the malware protection.
+
+376
+00:13:04,308 --> 00:13:06,349
+There's a feature called autonomous ransomware
+
+377
+00:13:06,349 --> 00:13:08,500
+protection, um, that's built into the storage
+
+378
+00:13:08,500 --> 00:13:10,580
+layer. There's no external client that does this,
+
+379
+00:13:10,750 --> 00:13:12,869
+that looks for entropy changes or
+
+380
+00:13:12,869 --> 00:13:14,989
+looks for, uh, file extension changes.
+
+381
+00:13:15,178 --> 00:13:17,308
+And when it does that, it takes one of those immutable
+
+382
+00:13:17,308 --> 00:13:19,590
+snapshots instantaneously. So you can
+
+383
+00:13:19,590 --> 00:13:22,210
+make sure you stop it. Track. And not only is it taking that snapshot
+
+384
+00:13:22,359 --> 00:13:24,469
+with the version that's coming out really soon,
+
+385
+00:13:24,690 --> 00:13:26,690
+it's actually taking us a couple of snapshots right before that
+
+386
+00:13:26,690 --> 00:13:27,849
+as well, so that you can
+
+387
+00:13:28,129 --> 00:13:30,288
+go back in time before that you even noticed
+
+388
+00:13:30,288 --> 00:13:32,269
+that the um attack was happening.
+
+389
+00:13:32,570 --> 00:13:34,668
+So again, we're giving you that kind of capability,
+
+390
+00:13:34,840 --> 00:13:36,710
+um, with this, this enterprise grade.
+
+391
+00:13:37,210 --> 00:13:39,288
+Here's a big one, right? Always important, price and
+
+392
+00:13:39,288 --> 00:13:41,250
+performance, um, data footprint reduction,
+
+393
+00:13:41,529 --> 00:13:43,889
+FSX for RTA supports deduplication.
+
+394
+00:13:44,489 --> 00:13:46,529
+Compaction, compression, right? Those are
+
+395
+00:13:46,529 --> 00:13:48,928
+very important, uh, things to keep that storage
+
+396
+00:13:48,928 --> 00:13:50,529
+footprint, right, to a minimal amount.
+
+397
+00:13:50,808 --> 00:13:52,840
+It also supports data tiering,
+
+398
+00:13:53,129 --> 00:13:55,200
+where essentially data tiering is, um, we have an
+
+399
+00:13:55,200 --> 00:13:57,250
+SSD layer or an FSXONTA, but if we
+
+400
+00:13:57,250 --> 00:13:59,629
+notice that there are blocks that are cold,
+
+401
+00:14:00,090 --> 00:14:02,250
+then it will tear those blocks off
+
+402
+00:14:02,250 --> 00:14:04,710
+into the capacity tier. And so that can also
+
+403
+00:14:04,889 --> 00:14:06,889
+help reduce, um, you know, your overall
+
+404
+00:14:06,889 --> 00:14:08,849
+cost for, for running, uh, that storage.
+
+405
+00:14:09,129 --> 00:14:11,349
+And, and this can also, it'll come up again when we look at,
+
+406
+00:14:11,359 --> 00:14:13,609
+uh, the disaster recovery, uh, scenario.
+
+407
+00:14:14,308 --> 00:14:15,469
+Um, and then finally,
+
+408
+00:14:15,830 --> 00:14:18,190
+we can easily replicate data
+
+409
+00:14:18,190 --> 00:14:20,298
+using SnapMirror, which is again a snapshot-based thing to
+
+410
+00:14:20,298 --> 00:14:22,469
+other regions. And we also support a
+
+411
+00:14:22,469 --> 00:14:24,509
+feature called Flex clones. Flex clones are
+
+412
+00:14:24,509 --> 00:14:25,609
+really important because
+
+413
+00:14:26,029 --> 00:14:28,389
+they are, again, they're leveraging snapshots. They're,
+
+414
+00:14:28,469 --> 00:14:30,710
+so that you can create an instant
+
+415
+00:14:30,710 --> 00:14:32,070
+copy of your data.
+
+416
+00:14:32,359 --> 00:14:34,558
+And then, um, and since we're pointer-based,
+
+417
+00:14:34,678 --> 00:14:36,840
+um, any new rights are
+
+418
+00:14:36,840 --> 00:14:39,259
+the only thing that are saved, right? So it makes it a very
+
+419
+00:14:39,440 --> 00:14:41,840
+way inefficient. I'll point to later how that
+
+420
+00:14:42,158 --> 00:14:44,619
+can play in some of the, uh, VMware,
+
+421
+00:14:44,629 --> 00:14:45,798
+uh, flows later.
+
+422
+00:14:46,759 --> 00:14:48,928
+OK. So that's um that's
+
+423
+00:14:48,928 --> 00:14:50,090
+the uh FSX RONTAP.
+
+424
+00:14:52,369 --> 00:14:54,450
+So like, so now I said, OK, we got
+
+425
+00:14:54,450 --> 00:14:56,729
+FSX FONTAP and we have EBS. How
+
+426
+00:14:56,729 --> 00:14:57,629
+do these two
+
+427
+00:14:58,129 --> 00:15:00,519
+services play together? Well, we have two options, right?
+
+428
+00:15:00,849 --> 00:15:03,000
+Um, one is a data store, a supplemental
+
+429
+00:15:03,000 --> 00:15:05,250
+data store. And for that, as I said before, right,
+
+430
+00:15:05,330 --> 00:15:07,690
+we support multiple protocols. So we support NFS
+
+431
+00:15:07,690 --> 00:15:10,000
+data stores, and we support ISCSI data stores,
+
+432
+00:15:10,239 --> 00:15:12,250
+and also for Block now, we support NVME
+
+433
+00:15:12,250 --> 00:15:14,349
+data stores, right? So it's really whichever
+
+434
+00:15:14,349 --> 00:15:16,359
+one you're more comfortable with, right? If you've been
+
+435
+00:15:16,359 --> 00:15:18,210
+using NFS data stores on-prem.
+
+436
+00:15:18,899 --> 00:15:21,000
+Use it the same way in the cloud. If you've been using Block
+
+437
+00:15:21,000 --> 00:15:21,899
+and you're familiar with that,
+
+438
+00:15:22,219 --> 00:15:24,259
+then bring Block into the cloud, right? So both of those,
+
+439
+00:15:24,340 --> 00:15:26,580
+you have the options of, of, of whatever data
+
+440
+00:15:26,580 --> 00:15:28,599
+store you want. The other thing, right, that
+
+441
+00:15:28,599 --> 00:15:30,879
+we do, if you're not talking about external data store
+
+442
+00:15:30,879 --> 00:15:33,080
+itself, is that we can be guest attached
+
+443
+00:15:33,080 --> 00:15:34,739
+storage. So we're just essentially,
+
+444
+00:15:35,000 --> 00:15:37,000
+maybe you have some type of shared
+
+445
+00:15:37,558 --> 00:15:39,879
+uh storage requirement, right? And
+
+446
+00:15:39,879 --> 00:15:41,899
+multiple VEMs need to access that data,
+
+447
+00:15:42,090 --> 00:15:44,308
+right? And so we can be guest
+
+448
+00:15:44,308 --> 00:15:46,529
+mounts and we support NFS and SMB
+
+449
+00:15:46,529 --> 00:15:48,619
+as guest mounts to your VMs
+
+450
+00:15:48,750 --> 00:15:50,759
+that are running inside of EVS.
+
+451
+00:15:53,440 --> 00:15:55,639
+So, um, a little bit of an architectural picture.
+
+452
+00:15:55,759 --> 00:15:57,798
+Um, I won't super deep dive, but just at the
+
+453
+00:15:57,798 --> 00:15:59,940
+highest level, right? If you look at this picture,
+
+454
+00:16:00,200 --> 00:16:02,469
+what do you see? You see that the EVS deployment,
+
+455
+00:16:02,538 --> 00:16:04,719
+right, has an overlay network that's kind of, uh, shown
+
+456
+00:16:04,719 --> 00:16:07,418
+there. It's deployed into
+
+457
+00:16:08,158 --> 00:16:10,239
+your VPC, the customer VPC, right?
+
+458
+00:16:10,320 --> 00:16:12,399
+There's no shadow VPC, it goes right in
+
+459
+00:16:12,399 --> 00:16:14,428
+there. And what else is deployed
+
+460
+00:16:14,428 --> 00:16:16,109
+into that exact same VPC?
+
+461
+00:16:16,469 --> 00:16:17,450
+FSX RONTAP.
+
+462
+00:16:17,908 --> 00:16:19,950
+Now, you see there's, um, you see
+
+463
+00:16:19,950 --> 00:16:21,989
+there's a couple of like uh ENI's there. That's just
+
+464
+00:16:21,989 --> 00:16:24,139
+the way FSX RONTAP plugs into any, it's
+
+465
+00:16:24,139 --> 00:16:26,389
+a, it's a managed service. That's just the way it plugs in anytime
+
+466
+00:16:26,389 --> 00:16:27,750
+you're gonna deploy FSX for ONTAP.
+
+467
+00:16:28,109 --> 00:16:30,200
+So the, the way then to connect
+
+468
+00:16:30,200 --> 00:16:32,408
+this up as a data store is you set up a
+
+469
+00:16:32,710 --> 00:16:35,029
+NFS, for example, an NFS file
+
+470
+00:16:35,029 --> 00:16:35,960
+server, right,
+
+471
+00:16:36,379 --> 00:16:38,529
+on your FSX for RONTAP system.
+
+472
+00:16:39,048 --> 00:16:41,109
+You go into the vSphere
+
+473
+00:16:41,109 --> 00:16:42,599
+client that was deployed.
+
+474
+00:16:43,048 --> 00:16:45,259
+And you go through the steps to say,
+
+475
+00:16:45,808 --> 00:16:47,969
+set up a data store. All you do is choose
+
+476
+00:16:47,969 --> 00:16:49,009
+the IP address
+
+477
+00:16:49,408 --> 00:16:51,450
+of the of the NFS server that you set up
+
+478
+00:16:51,450 --> 00:16:52,440
+on FSX for OnTap.
+
+479
+00:16:53,048 --> 00:16:55,090
+Like I, I wrote the guide for how to, how to set
+
+480
+00:16:55,090 --> 00:16:55,629
+this up.
+
+481
+00:16:56,399 --> 00:16:58,440
+It was boring, right? I didn't have anything to
+
+482
+00:16:58,440 --> 00:17:00,469
+write. I was like, do what you've always done, right? It's the
+
+483
+00:17:00,469 --> 00:17:02,548
+exact same steps. The only thing, oh yeah, by the
+
+484
+00:17:02,548 --> 00:17:04,709
+way, we do connect up with
+
+485
+00:17:04,709 --> 00:17:06,880
+an ENI and you got to update the
+
+486
+00:17:06,880 --> 00:17:09,000
+security group on that ENI to make sure that the
+
+487
+00:17:09,000 --> 00:17:10,259
+NFS ports are open.
+
+488
+00:17:10,640 --> 00:17:13,000
+That's it. That's the only unique thing I had to do. Other than that, it's
+
+489
+00:17:13,000 --> 00:17:15,078
+the same way you have a data store, right? So the,
+
+490
+00:17:15,239 --> 00:17:17,479
+so then my, my, my takeaway from this is like
+
+491
+00:17:17,479 --> 00:17:19,578
+you set up a, a NFS server
+
+492
+00:17:19,838 --> 00:17:21,858
+and you connect it the same way that you've, that you've
+
+493
+00:17:21,858 --> 00:17:22,559
+always done it.
+
+494
+00:17:23,048 --> 00:17:25,159
+So very simple to, to hook up. Oh,
+
+495
+00:17:25,178 --> 00:17:27,198
+and one other thing I forgot to mention is that, so I have it
+
+496
+00:17:27,198 --> 00:17:29,358
+shown here, right, in the same VPC. You obviously
+
+497
+00:17:29,358 --> 00:17:31,438
+don't have to put your FSX RONTAP system in the
+
+498
+00:17:31,438 --> 00:17:33,698
+same VPC, right, as your,
+
+499
+00:17:33,868 --> 00:17:36,009
+as your um EVS. You could put it into a
+
+500
+00:17:36,009 --> 00:17:38,108
+separate VPC and do like VPC
+
+501
+00:17:38,108 --> 00:17:38,698
+pairing.
+
+502
+00:17:39,438 --> 00:17:41,479
+Technically, you could do Transit Gateway, but
+
+503
+00:17:41,479 --> 00:17:43,718
+I would not recommend Transit Gateway for a, for a data
+
+504
+00:17:43,718 --> 00:17:44,659
+store, uh, in general.
+
+505
+00:17:46,059 --> 00:17:47,199
+So that's one option, right?
+
+506
+00:17:47,959 --> 00:17:50,088
+The second option was the other one that I mentioned, you know,
+
+507
+00:17:50,250 --> 00:17:52,338
+guest attached storage, right? And for that,
+
+508
+00:17:52,900 --> 00:17:54,900
+it's similar, right? The, you still have the NI,
+
+509
+00:17:54,979 --> 00:17:56,660
+you still can be deployed in the same VPC,
+
+510
+00:17:57,019 --> 00:17:59,039
+but we're attaching to the VMs themselves
+
+511
+00:17:59,039 --> 00:18:01,660
+that are running inside your EVS like overlay
+
+512
+00:18:01,660 --> 00:18:03,729
+network, right? So you have your VMs that are up
+
+513
+00:18:03,729 --> 00:18:05,979
+and running there, and you're gonna mount those VMs.
+
+514
+00:18:06,029 --> 00:18:08,174
+Now, the other thing that's slightly different. Here
+
+515
+00:18:08,174 --> 00:18:10,375
+right before with the, with the data stores were coming
+
+516
+00:18:10,375 --> 00:18:11,844
+directly from the NSXi hosts.
+
+517
+00:18:12,285 --> 00:18:14,015
+With, uh, a guest mount,
+
+518
+00:18:14,295 --> 00:18:16,384
+there is a virtual router, and that's, it's
+
+519
+00:18:16,384 --> 00:18:18,493
+shown in the picture here is like an NSX Edge router,
+
+520
+00:18:18,535 --> 00:18:20,574
+right? Um, and so essentially, the,
+
+521
+00:18:20,693 --> 00:18:23,174
+the data does have to be moved right between the, the
+
+522
+00:18:23,174 --> 00:18:25,134
+kind of overlay network to the underlay network.
+
+523
+00:18:25,424 --> 00:18:28,134
+But the nice thing is, is that when you do that deployment.
+
+524
+00:18:28,858 --> 00:18:31,160
+Amazon, right, is part of that cloud builder, it does
+
+525
+00:18:31,160 --> 00:18:33,539
+all of that for you, right? And
+
+526
+00:18:33,699 --> 00:18:35,900
+if you go into your NSX and you want to add a new
+
+527
+00:18:35,900 --> 00:18:36,739
+network segment,
+
+528
+00:18:37,259 --> 00:18:39,578
+there's BGP on that virtual router.
+
+529
+00:18:39,699 --> 00:18:41,868
+It's gonna automatically update your ADBS
+
+530
+00:18:41,868 --> 00:18:43,939
+route tables to be able to get to that.
+
+531
+00:18:44,239 --> 00:18:46,328
+So it makes it super, super easy to do.
+
+532
+00:18:46,539 --> 00:18:48,618
+Not a lot of, hey, here's the special things that I have to
+
+533
+00:18:48,618 --> 00:18:50,699
+do to make this work. Um, and again, the
+
+534
+00:18:50,699 --> 00:18:53,039
+only thing you have to do is make sure that you have your ports open.
+
+535
+00:18:53,469 --> 00:18:55,709
+You want to set up NFS, you log into your VM
+
+536
+00:18:55,709 --> 00:18:56,848
+and you do mount.
+
+537
+00:18:57,390 --> 00:18:59,430
+Nothing more than mount, right? As long as that, those
+
+538
+00:18:59,430 --> 00:19:01,469
+ports are open, you got it up and running. Now here's
+
+539
+00:19:01,469 --> 00:19:03,549
+the other important thing I want to say here is, right? Remember we
+
+540
+00:19:03,549 --> 00:19:05,059
+talked about multi-protocol, right?
+
+541
+00:19:05,380 --> 00:19:07,430
+This is this scenario where lots of customers, if
+
+542
+00:19:07,430 --> 00:19:09,848
+they have multi-protocol requirements, right?
+
+543
+00:19:10,430 --> 00:19:12,529
+This is where they might want to set up some shared data store,
+
+544
+00:19:12,588 --> 00:19:14,789
+and you can have that one set of data. Your VM, this
+
+545
+00:19:14,789 --> 00:19:16,910
+NEDS can access that data, and your
+
+546
+00:19:16,910 --> 00:19:18,670
+SMB, uh, Linux, I mean, sorry,
+
+547
+00:19:19,029 --> 00:19:21,029
+Windows client can also access that same
+
+548
+00:19:21,029 --> 00:19:23,029
+data, right? So it's really giving you complete control
+
+549
+00:19:23,029 --> 00:19:25,078
+there. So
+
+550
+00:19:25,078 --> 00:19:27,439
+now we're gonna get into like, you know, some of this cost optimization.
+
+551
+00:19:28,140 --> 00:19:30,180
+Um, you know, we're gonna talk about several ways, right,
+
+552
+00:19:30,219 --> 00:19:32,219
+that, that the, uh, NFS, I'm sorry, the
+
+553
+00:19:32,219 --> 00:19:34,380
+FSSONTAP can help with some
+
+554
+00:19:34,380 --> 00:19:36,500
+different areas of, of, of operating your
+
+555
+00:19:36,500 --> 00:19:38,769
+environment. One is cost optimization.
+
+556
+00:19:38,939 --> 00:19:41,098
+And it's basically the ability to decouple, compute
+
+557
+00:19:41,098 --> 00:19:41,750
+and storage,
+
+558
+00:19:42,019 --> 00:19:44,140
+because for the, uh, ESXI host
+
+559
+00:19:44,140 --> 00:19:46,209
+right they're deployed right now with the I4I metal, you get
+
+560
+00:19:46,209 --> 00:19:47,519
+storage and compute together.
+
+561
+00:19:47,818 --> 00:19:50,059
+And so we're gonna help decouple that to, to
+
+562
+00:19:50,059 --> 00:19:51,039
+reduce your overall cost.
+
+563
+00:19:52,209 --> 00:19:54,209
+Um, next is the, if you're,
+
+564
+00:19:54,299 --> 00:19:56,680
+you need to do VM backups, right, we can help you
+
+565
+00:19:56,739 --> 00:19:59,009
+improve the performance and reliability of doing those backups,
+
+566
+00:19:59,059 --> 00:20:00,979
+making sure that you're meeting your SLAs.
+
+567
+00:20:01,759 --> 00:20:02,828
+And then finally,
+
+568
+00:20:03,309 --> 00:20:05,358
+improve operational excellence, like take everything that
+
+569
+00:20:05,358 --> 00:20:06,459
+you've been doing on-prem
+
+570
+00:20:06,838 --> 00:20:08,880
+and replicate that the same way and doing
+
+571
+00:20:08,880 --> 00:20:09,719
+it in the cloud.
+
+572
+00:20:12,130 --> 00:20:14,430
+So we're gonna start with lowering the total cost of ownership.
+
+573
+00:20:15,049 --> 00:20:17,519
+Um, one of the things about FSXONTAP
+
+574
+00:20:17,519 --> 00:20:19,769
+is it's very flexible. Um, and
+
+575
+00:20:19,769 --> 00:20:21,890
+so there's multiple storage types and performance
+
+576
+00:20:21,890 --> 00:20:23,969
+options. So let's just say that you were setting
+
+577
+00:20:23,969 --> 00:20:26,088
+up your, you know, your data store, and
+
+578
+00:20:26,088 --> 00:20:27,630
+at some point, you know, you had.
+
+579
+00:20:28,189 --> 00:20:30,390
+Um, uh, you know, some VMs are running there, but I also
+
+580
+00:20:30,390 --> 00:20:32,509
+need to add some more VMs that have a
+
+581
+00:20:32,509 --> 00:20:34,750
+higher performance need. You can simply
+
+582
+00:20:34,750 --> 00:20:37,108
+change the throughput on your FSX
+
+583
+00:20:37,108 --> 00:20:38,029
+RONTAP system.
+
+584
+00:20:38,309 --> 00:20:40,640
+And as I said before, it's an HA pair, right? So
+
+585
+00:20:40,868 --> 00:20:42,910
+it's, um, it's, uh, an active passive.
+
+586
+00:20:42,949 --> 00:20:45,170
+And so if you want to change the SKU
+
+587
+00:20:45,750 --> 00:20:47,890
+and add more performance to your storage.
+
+588
+00:20:48,219 --> 00:20:50,380
+It does it non-destructively because it does automatic
+
+589
+00:20:50,380 --> 00:20:52,420
+failovers. So you never lose access to
+
+590
+00:20:52,420 --> 00:20:54,459
+your data while you're doing those. And so you can scale up and
+
+591
+00:20:54,459 --> 00:20:56,539
+scale down your performance needs as you need
+
+592
+00:20:56,539 --> 00:20:58,578
+them, right? You can scale up your IOPs that
+
+593
+00:20:58,578 --> 00:21:00,900
+are needed for it, right? So it really gives you that, that
+
+594
+00:21:00,900 --> 00:21:02,598
+full ability to, to handle
+
+595
+00:21:03,019 --> 00:21:04,858
+whatever you need at the time that you need it.
+
+596
+00:21:05,910 --> 00:21:07,868
+Another one is the built-in storage efficiencies.
+
+597
+00:21:08,279 --> 00:21:10,400
+This one cannot be overlooked. Obviously, this, you know, I
+
+598
+00:21:10,400 --> 00:21:12,838
+said before, the deduplication, the compression and compaction.
+
+599
+00:21:13,279 --> 00:21:15,479
+With VDI workloads and deduplication, we
+
+600
+00:21:15,479 --> 00:21:17,299
+can save up to like 70%
+
+601
+00:21:17,759 --> 00:21:20,180
+on your, on your, uh, footprint, right? So that's,
+
+602
+00:21:20,309 --> 00:21:22,150
+can be a significant cost savings.
+
+603
+00:21:22,439 --> 00:21:24,838
+So, so definitely, you know, that those built-in storage efficiencies
+
+604
+00:21:24,838 --> 00:21:25,630
+are very important.
+
+605
+00:21:26,000 --> 00:21:28,078
+And finally, like we can decouple the storage from compute.
+
+606
+00:21:28,118 --> 00:21:29,279
+I've got a few slides that kind of, you know,
+
+607
+00:21:29,559 --> 00:21:31,519
+animate and show this, uh, in action.
+
+608
+00:21:32,900 --> 00:21:34,939
+So for a storage scaling example, um,
+
+609
+00:21:35,019 --> 00:21:37,019
+this is the 4-node minimum I was talking about before,
+
+610
+00:21:37,140 --> 00:21:37,759
+right? For,
+
+611
+00:21:38,108 --> 00:21:40,338
+uh, I4I metals, you're getting, you know, 30
+
+612
+00:21:40,338 --> 00:21:42,578
+terabytes of storage. All that's not usable,
+
+613
+00:21:42,699 --> 00:21:45,019
+but 30 tibobytes of storage, um, per,
+
+614
+00:21:45,180 --> 00:21:47,410
+uh, ESXihost, you know, 64, uh,
+
+615
+00:21:47,469 --> 00:21:48,118
+CPUs.
+
+616
+00:21:48,949 --> 00:21:51,059
+And you're, you're running along just fine, right?
+
+617
+00:21:51,108 --> 00:21:53,009
+You're happy with everything. And then you know what,
+
+618
+00:21:53,390 --> 00:21:55,430
+I need a little bit more storage, right? I need 40
+
+619
+00:21:55,430 --> 00:21:56,739
+terabytes more storage.
+
+620
+00:21:57,049 --> 00:21:58,269
+So what's the solution, right?
+
+621
+00:21:59,059 --> 00:22:01,420
+If you don't, if you're just having that, you know, tightly
+
+622
+00:22:01,420 --> 00:22:03,559
+coupled, um, you know, hyperconverged
+
+623
+00:22:03,779 --> 00:22:05,779
+CPU and storage coming in together, you have
+
+624
+00:22:05,779 --> 00:22:07,699
+to add 2 more ESXi hosts,
+
+625
+00:22:08,289 --> 00:22:10,799
+2 more ipori metal just to get that 40
+
+626
+00:22:11,328 --> 00:22:12,400
+tabbytes more of storage.
+
+627
+00:22:13,299 --> 00:22:15,299
+So that's unnecessary compute cost, right? You're not, you
+
+628
+00:22:15,299 --> 00:22:16,818
+didn't really need that extra compute.
+
+629
+00:22:17,380 --> 00:22:19,838
+So what we can do is bring in the 40 terabytes
+
+630
+00:22:19,939 --> 00:22:22,140
+on a supplemental data store from FSX
+
+631
+00:22:22,140 --> 00:22:22,739
+for ONTAP.
+
+632
+00:22:23,098 --> 00:22:25,259
+And, and not only are we bringing in the 40 tibobytes,
+
+633
+00:22:25,299 --> 00:22:27,259
+right? We're also doing de-dupe compression,
+
+634
+00:22:27,858 --> 00:22:30,098
+all those types of storage efficiency features. So
+
+635
+00:22:30,098 --> 00:22:32,140
+maybe you don't even need 40 tibobytes, right? So
+
+636
+00:22:32,140 --> 00:22:34,259
+it just depends on, on, on your, on your workload
+
+637
+00:22:34,259 --> 00:22:35,059
+and your use case.
+
+638
+00:22:36,430 --> 00:22:38,459
+So what I want to show here with this graph, right, is essentially,
+
+639
+00:22:38,549 --> 00:22:40,750
+right, that advantage that we bring in, right? As
+
+640
+00:22:40,750 --> 00:22:43,029
+your storage and your, your EBS environment
+
+641
+00:22:43,029 --> 00:22:45,189
+grows, right? That's gonna grow more and more, right?
+
+642
+00:22:45,229 --> 00:22:47,670
+So you're gonna have, you're gonna get more and more value out
+
+643
+00:22:47,670 --> 00:22:49,750
+of, you know, scaling those things
+
+644
+00:22:49,750 --> 00:22:51,910
+independently. Now, obviously this is, has some
+
+645
+00:22:51,910 --> 00:22:53,989
+type, this, you know, this chart is built in with some
+
+646
+00:22:53,989 --> 00:22:56,049
+assumptions about how much compute
+
+647
+00:22:56,049 --> 00:22:58,068
+I need, how much storage I need for how much compute. But
+
+648
+00:22:58,068 --> 00:23:00,150
+you can see, you know, as you really grow, you're gonna be
+
+649
+00:23:00,150 --> 00:23:01,328
+saved up in the millions of dollars.
+
+650
+00:23:02,045 --> 00:23:04,084
+The other kind of important thing on this particular
+
+651
+00:23:04,084 --> 00:23:06,125
+slide is that what we're showing for that
+
+652
+00:23:06,125 --> 00:23:08,604
+cost is just the cost by not
+
+653
+00:23:08,604 --> 00:23:11,064
+adding unnecessary ESXi
+
+654
+00:23:11,064 --> 00:23:12,424
+hosts. But
+
+655
+00:23:12,703 --> 00:23:14,983
+by not adding unnecessary ESXi
+
+656
+00:23:14,983 --> 00:23:17,144
+hosts, you're also reducing your core count.
+
+657
+00:23:17,404 --> 00:23:19,404
+The VCF subscriptions are tied to
+
+658
+00:23:19,404 --> 00:23:21,404
+core count. So we don't, we don't know what those numbers
+
+659
+00:23:21,404 --> 00:23:23,015
+are because they're different for every customer,
+
+660
+00:23:23,285 --> 00:23:25,775
+but you're actually also saving on your subscription
+
+661
+00:23:25,775 --> 00:23:27,625
+at the same time. So it can be very powerful.
+
+662
+00:23:29,529 --> 00:23:31,588
+All right. So that's, you know, that
+
+663
+00:23:31,588 --> 00:23:33,769
+decoupling is compute story is pretty straightforward
+
+664
+00:23:33,769 --> 00:23:35,890
+story, right? Um, and, and obviously this
+
+665
+00:23:35,890 --> 00:23:37,890
+is gonna change, right, as they add different, more
+
+666
+00:23:37,890 --> 00:23:40,108
+types of nodes when, when different things make sense.
+
+667
+00:23:40,568 --> 00:23:42,680
+Um, but beyond that, right, you've got to back
+
+668
+00:23:42,680 --> 00:23:44,670
+up your VMs. And so what I'm gonna do is I'm gonna kind of compare
+
+669
+00:23:45,170 --> 00:23:47,289
+how you back up VMs and EVS
+
+670
+00:23:47,289 --> 00:23:47,939
+on VSAN,
+
+671
+00:23:48,289 --> 00:23:50,529
+and then how it would work if you're leveraging FSX
+
+672
+00:23:50,529 --> 00:23:54,848
+RTP. So
+
+673
+00:23:54,848 --> 00:23:56,828
+here's a backup, right? You have a VSAN,
+
+674
+00:23:57,338 --> 00:23:59,380
+you have uh an a current image, you have
+
+675
+00:23:59,380 --> 00:24:01,598
+a VM and you wanna do a backup of that VM.
+
+676
+00:24:01,979 --> 00:24:04,118
+So you need to bring in some type of external backup
+
+677
+00:24:04,118 --> 00:24:06,039
+service to, to, to do the backup.
+
+678
+00:24:06,459 --> 00:24:08,500
+And so what that's gonna do is it's gonna take that
+
+679
+00:24:08,618 --> 00:24:10,318
+uh VMware snapshot, right?
+
+680
+00:24:10,689 --> 00:24:13,019
+And then that VMware snapshot has to be transferred.
+
+681
+00:24:13,108 --> 00:24:14,459
+Now, when you think about this,
+
+682
+00:24:14,858 --> 00:24:16,759
+this is putting a load on your
+
+683
+00:24:17,219 --> 00:24:19,259
+ESXI host, right? Having to do this work.
+
+684
+00:24:19,338 --> 00:24:20,088
+So you gotta think about,
+
+685
+00:24:20,380 --> 00:24:22,739
+are these big VMs? Can I do this in a certain SLA
+
+686
+00:24:22,739 --> 00:24:24,769
+in a certain window, right? When I'm, when I'm
+
+687
+00:24:24,769 --> 00:24:26,795
+off of, of. Production, you know,
+
+688
+00:24:27,074 --> 00:24:29,233
+key hours, right? So you gotta just keep all those
+
+689
+00:24:29,233 --> 00:24:29,875
+things in mind.
+
+690
+00:24:30,233 --> 00:24:32,314
+And then, so, you know, this can be a, it
+
+691
+00:24:32,314 --> 00:24:34,394
+can be a slow backup process. It depends on the size, it depends on what all
+
+692
+00:24:34,394 --> 00:24:36,545
+you have set up there. But to me, the other
+
+693
+00:24:36,545 --> 00:24:38,594
+important part here is that there's a VMware snapshot that's
+
+694
+00:24:38,594 --> 00:24:40,775
+taken. That's to have a VM consistent image,
+
+695
+00:24:40,993 --> 00:24:43,509
+right? The existence of that VM
+
+696
+00:24:43,509 --> 00:24:44,739
+consistent image, right,
+
+697
+00:24:45,029 --> 00:24:47,029
+has a performance penalty. And that's because as
+
+698
+00:24:47,029 --> 00:24:48,299
+future rights come in,
+
+699
+00:24:48,588 --> 00:24:50,789
+it has to keep track of the delta
+
+700
+00:24:50,789 --> 00:24:52,250
+with the current snapshot.
+
+701
+00:24:52,588 --> 00:24:54,868
+That has been shown to have a performance
+
+702
+00:24:54,868 --> 00:24:56,949
+impact. There's blogs out there about it, right? And a lot of the
+
+703
+00:24:56,949 --> 00:24:58,989
+things that try to correct it are basically by removing
+
+704
+00:24:58,989 --> 00:25:00,789
+snapshots. So then are you messing with your SLA?
+
+705
+00:25:01,568 --> 00:25:03,568
+Um, so, so you have to keep that in mind. So, you
+
+706
+00:25:03,568 --> 00:25:05,769
+know, it's more of a management difficulty. You have a, a,
+
+707
+00:25:05,930 --> 00:25:08,088
+uh, another backup service, you got to make sure that, you know, it's
+
+708
+00:25:08,088 --> 00:25:10,630
+not affecting your, your ESXI workloads.
+
+709
+00:25:10,848 --> 00:25:12,848
+And, um, so you're just adding a, a
+
+710
+00:25:12,848 --> 00:25:15,049
+bit of complexity to your overall backup
+
+711
+00:25:15,049 --> 00:25:17,049
+process. Now, let's compare that
+
+712
+00:25:17,049 --> 00:25:19,150
+with doing your backups if you're running,
+
+713
+00:25:19,410 --> 00:25:21,519
+uh, your data stores on
+
+714
+00:25:21,519 --> 00:25:22,608
+FSX for ONTAP instead of on,
+
+715
+00:25:23,009 --> 00:25:24,229
+on VSAN.
+
+716
+00:25:24,660 --> 00:25:26,259
+So we still have this current image, right?
+
+717
+00:25:26,618 --> 00:25:28,900
+The, the main thing is we're gonna set up a separate FSX
+
+718
+00:25:28,900 --> 00:25:30,979
+RONTAP system just to, to house
+
+719
+00:25:30,979 --> 00:25:31,608
+the backups.
+
+720
+00:25:31,880 --> 00:25:33,930
+Now the good thing about this separate system is that we
+
+721
+00:25:33,930 --> 00:25:36,098
+can scale it down, right? We don't need a large
+
+722
+00:25:36,098 --> 00:25:38,098
+throughput on it, right? So you'll pay less for throughput. We're
+
+723
+00:25:38,098 --> 00:25:40,368
+gonna put a, put a pretty minimal SSD
+
+724
+00:25:40,368 --> 00:25:42,598
+tier, like 90, you know, 5%
+
+725
+00:25:42,598 --> 00:25:44,689
+of the data will be sitting on the object
+
+726
+00:25:44,689 --> 00:25:46,739
+tier. And then you basically are going
+
+727
+00:25:46,739 --> 00:25:48,900
+to be doing where you're gonna still take
+
+728
+00:25:49,140 --> 00:25:51,219
+that VMware snapshot. Um, and that's
+
+729
+00:25:51,219 --> 00:25:53,059
+if you need a VM consistent image. Um.
+
+730
+00:25:53,519 --> 00:25:55,519
+Not, uh, on-prem. I've, I've talked to multiple people
+
+731
+00:25:55,519 --> 00:25:57,709
+who say, on-prem, lots of times, we
+
+732
+00:25:57,709 --> 00:25:59,920
+just need crash consistent. We don't even need a
+
+733
+00:25:59,920 --> 00:26:02,118
+VM consistent image. But for
+
+734
+00:26:02,118 --> 00:26:04,150
+this, this exercise, right, it depends on the
+
+735
+00:26:04,150 --> 00:26:05,519
+application, right? But for this exercise, we're gonna say,
+
+736
+00:26:05,779 --> 00:26:07,799
+hey, OK, we're doing the same thing, right? We're gonna take
+
+737
+00:26:07,799 --> 00:26:09,299
+a, a VMware snapshot.
+
+738
+00:26:09,759 --> 00:26:11,799
+Um, then we leverage that, you know,
+
+739
+00:26:11,880 --> 00:26:14,160
+that superpower of ONTA was that instantaneous
+
+740
+00:26:14,160 --> 00:26:14,920
+snapshot.
+
+741
+00:26:15,410 --> 00:26:17,529
+Um, and that just, you know, happens instantaneously. And
+
+742
+00:26:17,529 --> 00:26:18,328
+once you've done that,
+
+743
+00:26:18,608 --> 00:26:21,000
+here's the key, is that you can remove that VMware snapshot,
+
+744
+00:26:21,209 --> 00:26:23,250
+right? So now you're no longer gonna be having that
+
+745
+00:26:23,250 --> 00:26:25,108
+performance penalty. Now we also use,
+
+746
+00:26:25,598 --> 00:26:26,588
+um, that other
+
+747
+00:26:27,309 --> 00:26:29,410
+technology, SnapMirror, which is snapshot-based.
+
+748
+00:26:29,689 --> 00:26:31,848
+And it keeps that data d-duped and
+
+749
+00:26:31,848 --> 00:26:33,368
+compressed in transit.
+
+750
+00:26:33,729 --> 00:26:35,809
+So you're, so you're able to move the data and do
+
+751
+00:26:35,809 --> 00:26:38,289
+the backups faster, um, by leveraging
+
+752
+00:26:38,289 --> 00:26:40,449
+that same thing. The other main thing to, to, to
+
+753
+00:26:40,449 --> 00:26:41,634
+look, look at this. Picture?
+
+754
+00:26:41,934 --> 00:26:44,414
+Is this affecting your ESXi hosts? No. It's
+
+755
+00:26:44,414 --> 00:26:46,894
+at the storage layer, right? It's doing this, this replication
+
+756
+00:26:46,894 --> 00:26:48,894
+at the storage layer. So you're offloading
+
+757
+00:26:49,174 --> 00:26:51,693
+that to the storage layer and not affecting your ESXi
+
+758
+00:26:51,693 --> 00:26:53,074
+hosts. That's another big advantage.
+
+759
+00:26:53,375 --> 00:26:55,443
+So, you know, so this is giving you that faster backup
+
+760
+00:26:55,443 --> 00:26:57,805
+process. That snapshot was, the VMware snapshot
+
+761
+00:26:57,805 --> 00:26:59,973
+was deleted instantaneously. So that's zero
+
+762
+00:26:59,973 --> 00:27:02,055
+performance impact. And then a minimal
+
+763
+00:27:02,055 --> 00:27:04,213
+storage overhead because we have the, the data d-upped
+
+764
+00:27:04,213 --> 00:27:06,255
+and compressed, and we also move it d-upped and
+
+765
+00:27:06,255 --> 00:27:06,854
+compressed.
+
+766
+00:27:08,959 --> 00:27:10,660
+So that's the comparison of those two.
+
+767
+00:27:11,318 --> 00:27:13,640
+Now let's look at um how we
+
+768
+00:27:13,640 --> 00:27:16,390
+can operate the same way on-premises
+
+769
+00:27:16,390 --> 00:27:18,519
+as we do in the cloud. Um, and so for this
+
+770
+00:27:18,519 --> 00:27:21,059
+particular scenario, this is obviously talking about having on-Tap
+
+771
+00:27:21,059 --> 00:27:23,078
+on-prem, right? So we have ONTAP on-prem
+
+772
+00:27:23,078 --> 00:27:24,078
+and we have a data store.
+
+773
+00:27:24,400 --> 00:27:26,439
+Well, so when we set up our, you
+
+774
+00:27:26,439 --> 00:27:27,509
+know, EBS environment,
+
+775
+00:27:27,920 --> 00:27:30,029
+we can set up that data store. the same way. And it's just
+
+776
+00:27:30,029 --> 00:27:32,059
+giving you consistency. So having that
+
+777
+00:27:32,059 --> 00:27:34,150
+consistency, right, helps with discovery
+
+778
+00:27:34,150 --> 00:27:36,229
+and planning, right? And say, hey, however I'm
+
+779
+00:27:36,229 --> 00:27:38,269
+setting this up in here, whatever tools I'm using,
+
+780
+00:27:38,348 --> 00:27:40,489
+whatever automation, whatever, you know, maybe
+
+781
+00:27:40,670 --> 00:27:42,789
+playbooks I have for setting up my data stores
+
+782
+00:27:42,789 --> 00:27:44,910
+and managing those, I can do that
+
+783
+00:27:44,910 --> 00:27:46,588
+the exact same way in the cloud.
+
+784
+00:27:48,118 --> 00:27:49,640
+Avoid rewriting applications,
+
+785
+00:27:50,199 --> 00:27:52,449
+because, you know, this is an EBS, right? You can take an exact
+
+786
+00:27:52,449 --> 00:27:54,519
+image. It could be a very old image, right? And it might
+
+787
+00:27:54,519 --> 00:27:56,759
+not be one that's supported anymore, right? And
+
+788
+00:27:56,759 --> 00:27:58,799
+so you don't have to rewrite anything. You bring it up
+
+789
+00:27:58,799 --> 00:28:00,838
+into the cloud, you operate it in exactly the same
+
+790
+00:28:00,838 --> 00:28:02,949
+way. Um, and then you have
+
+791
+00:28:02,949 --> 00:28:05,229
+a simple and safe migration. Again, that same SnapMirror
+
+792
+00:28:05,229 --> 00:28:07,390
+I just talked about, right? You're gonna move the data
+
+793
+00:28:07,390 --> 00:28:09,430
+deep and compress a very easy way.
+
+794
+00:28:09,469 --> 00:28:11,509
+You take your data store on-prem, you just SnapMirror it up to the
+
+795
+00:28:11,509 --> 00:28:12,078
+cloud.
+
+796
+00:28:12,430 --> 00:28:14,799
+Um, and so you're really getting the full interoperability,
+
+797
+00:28:14,868 --> 00:28:17,180
+right? All those, you know, NSX managers, vSphere
+
+798
+00:28:17,180 --> 00:28:19,380
+clients, if you had any plug-ins to your vSphere
+
+799
+00:28:19,380 --> 00:28:20,930
+client, right, you can bring those up as well.
+
+800
+00:28:21,189 --> 00:28:23,390
+So you really are operating the same way if you had any,
+
+801
+00:28:23,549 --> 00:28:25,828
+you know, automations, those work the same way. Your playbooks
+
+802
+00:28:25,828 --> 00:28:26,848
+all work the same way.
+
+803
+00:28:27,449 --> 00:28:30,068
+But we're also preserving enterprise grade capabilities.
+
+804
+00:28:30,449 --> 00:28:32,689
+Things like, I mentioned Flex clones
+
+805
+00:28:32,689 --> 00:28:34,719
+before. So NetApp has a,
+
+806
+00:28:34,729 --> 00:28:36,930
+uh, technology along with VMware
+
+807
+00:28:36,930 --> 00:28:39,088
+called VAAI which offloads
+
+808
+00:28:39,088 --> 00:28:41,328
+certain um actions to the storage
+
+809
+00:28:41,328 --> 00:28:43,328
+layer, um, to help you operate faster.
+
+810
+00:28:43,529 --> 00:28:45,608
+And one of those is if you create a VM from
+
+811
+00:28:45,608 --> 00:28:46,189
+a template.
+
+812
+00:28:46,759 --> 00:28:48,930
+Um, you can leverage NetApp's Flex
+
+813
+00:28:48,930 --> 00:28:51,130
+clone technology, right, was that instantaneous copy
+
+814
+00:28:51,130 --> 00:28:53,189
+only storing the delta blocks. And so you can
+
+815
+00:28:53,189 --> 00:28:55,209
+spin up VMs much faster with
+
+816
+00:28:55,209 --> 00:28:57,559
+much less overhead by leveraging that
+
+817
+00:28:57,559 --> 00:28:58,189
+technology as well.
+
+818
+00:28:58,949 --> 00:29:00,949
+Also, maybe you had Snaplock, right? Maybe you
+
+819
+00:29:00,949 --> 00:29:03,170
+had that on-prem and you wanted to take that same level
+
+820
+00:29:03,170 --> 00:29:04,509
+of protection into the cloud.
+
+821
+00:29:04,789 --> 00:29:06,828
+So you're getting that consistent operational experience
+
+822
+00:29:06,828 --> 00:29:07,549
+on both sides.
+
+823
+00:29:08,920 --> 00:29:10,920
+All right, so now this gets us to uh
+
+824
+00:29:10,920 --> 00:29:13,108
+one that I'm really excited about, um, a disaster recovery
+
+825
+00:29:13,108 --> 00:29:15,150
+scenario that we have um with FSX for
+
+826
+00:29:15,150 --> 00:29:17,318
+OnTA, um, in this type of environment. Now
+
+827
+00:29:17,318 --> 00:29:19,318
+again, this is talking about on tap to
+
+828
+00:29:19,318 --> 00:29:21,439
+on tap, right? You have something on-prem,
+
+829
+00:29:21,719 --> 00:29:24,098
+uh, a data center running, that's running on vSphere.
+
+830
+00:29:24,868 --> 00:29:26,959
+Um, and you want to set up a disaster recovery
+
+831
+00:29:26,959 --> 00:29:29,199
+in the cloud. So what you can do is set a minimal
+
+832
+00:29:29,199 --> 00:29:31,529
+EVS cluster, right, that's deployed, um,
+
+833
+00:29:31,680 --> 00:29:34,318
+with it, and you would also keep a minimal FSXRWNTA
+
+834
+00:29:34,318 --> 00:29:34,828
+footprint.
+
+835
+00:29:35,118 --> 00:29:36,598
+So when you're doing this, right, you're gonna
+
+836
+00:29:36,880 --> 00:29:38,959
+replicate data up and most of that data
+
+837
+00:29:38,959 --> 00:29:41,039
+is going to be going into the capacity tier. You're gonna have a very
+
+838
+00:29:41,039 --> 00:29:43,219
+thin SSD tier, and you're gonna have just those 4
+
+839
+00:29:43,219 --> 00:29:45,400
+ESXI hosts, you know, kind of like a pilot light, right? This,
+
+840
+00:29:45,598 --> 00:29:47,640
+but right now, the 4 ESXI hosts is like the
+
+841
+00:29:47,640 --> 00:29:49,920
+minimum. Um. And that's tied to VCF
+
+842
+00:29:49,920 --> 00:29:52,049
+5.2.1. So that could change in the future, but right
+
+843
+00:29:52,049 --> 00:29:54,049
+now that's, that's the minimum. So, so we really have
+
+844
+00:29:54,049 --> 00:29:55,170
+a really minimal footprint.
+
+845
+00:29:55,489 --> 00:29:57,559
+Most of the data is going into the object
+
+846
+00:29:57,559 --> 00:29:59,598
+tier, and we only have 4 ESXi
+
+847
+00:29:59,598 --> 00:30:01,900
+hosts. So,
+
+848
+00:30:02,229 --> 00:30:04,709
+now what happens is, hey, a disaster
+
+849
+00:30:04,709 --> 00:30:05,809
+occurs. Um,
+
+850
+00:30:06,229 --> 00:30:08,269
+what you can then do is expand
+
+851
+00:30:08,269 --> 00:30:10,390
+the number, like now I'm gonna go production on this
+
+852
+00:30:10,390 --> 00:30:11,890
+side, right? I'm gonna need some more,
+
+853
+00:30:12,269 --> 00:30:14,509
+uh, compute, right? So I'm gonna add 4
+
+854
+00:30:14,509 --> 00:30:15,949
+additional ESXi hosts.
+
+855
+00:30:16,348 --> 00:30:18,509
+So I'm gonna scale up the SXI and
+
+856
+00:30:18,509 --> 00:30:20,670
+what I'm also gonna do is scale up the storage.
+
+857
+00:30:20,750 --> 00:30:22,789
+I'm gonna change the throughput on the FSX for
+
+858
+00:30:22,789 --> 00:30:24,910
+ONTAP system from maybe a 512
+
+859
+00:30:24,910 --> 00:30:26,989
+or 128, and I'm gonna put it to a 1
+
+860
+00:30:26,989 --> 00:30:28,689
+gig or a 2 gig SKU,
+
+861
+00:30:28,989 --> 00:30:31,108
+right? And so you're gonna meet the production workload, but
+
+862
+00:30:31,108 --> 00:30:33,189
+you weren't paying for that the whole time, right? That's really the beauty
+
+863
+00:30:33,189 --> 00:30:35,410
+of this is you only bring it up as you need. Now,
+
+864
+00:30:35,430 --> 00:30:37,584
+obviously, with this type of scenario You have to figure out
+
+865
+00:30:37,584 --> 00:30:39,134
+what are your SLAs, right?
+
+866
+00:30:39,463 --> 00:30:41,805
+Does this fit within your company's SLAs, right?
+
+867
+00:30:42,045 --> 00:30:44,064
+To have, because it will take some time, right,
+
+868
+00:30:44,364 --> 00:30:46,604
+to bring up additional ESXI
+
+869
+00:30:46,604 --> 00:30:48,184
+hosts, right? It will take some time
+
+870
+00:30:48,443 --> 00:30:50,625
+to, um, change the throughput, and
+
+871
+00:30:50,625 --> 00:30:52,723
+it's, you know, only like 30 some minutes, right, of your, of
+
+872
+00:30:52,723 --> 00:30:54,844
+your FSX VONTAP system. But there is, you know, an
+
+873
+00:30:54,844 --> 00:30:56,584
+impact there. So you just got to take all of that into account.
+
+874
+00:30:57,509 --> 00:30:59,509
+Um, and here's the other nice thing, right? Is that,
+
+875
+00:30:59,549 --> 00:31:01,858
+OK, we failed over, we're operating in the cloud,
+
+876
+00:31:02,108 --> 00:31:02,729
+and now
+
+877
+00:31:03,108 --> 00:31:05,269
+we're, you know, we've, we've corrected things and
+
+878
+00:31:05,269 --> 00:31:07,130
+now we want to go back to where we were before.
+
+879
+00:31:08,019 --> 00:31:10,098
+So you start replicating your data back all this
+
+880
+00:31:10,098 --> 00:31:12,588
+and using that SnapMirror technology, de-dupe and compressed,
+
+881
+00:31:12,739 --> 00:31:14,769
+the data, you know, very minimal footprint coming back,
+
+882
+00:31:14,890 --> 00:31:16,380
+um, when you do the replication back.
+
+883
+00:31:16,779 --> 00:31:19,088
+I mean, you scale down that EBS cluster, you no longer
+
+884
+00:31:19,088 --> 00:31:19,680
+need 4,
+
+885
+00:31:20,299 --> 00:31:22,338
+you know, 8 ESXI hosts, right? So you
+
+886
+00:31:22,338 --> 00:31:24,118
+can scale that, that back down to the minimum.
+
+887
+00:31:24,500 --> 00:31:26,578
+And here's the really cool thing, is that this
+
+888
+00:31:26,578 --> 00:31:29,209
+was a feature that's been asked about for a long time for FSXOTA,
+
+889
+00:31:29,250 --> 00:31:30,279
+and that was the ability to do
+
+890
+00:31:30,618 --> 00:31:31,289
+SSD,
+
+891
+00:31:31,769 --> 00:31:34,088
+well, shrink, or I think it's called SSD decrease.
+
+892
+00:31:34,348 --> 00:31:36,420
+But now, once you've done that,
+
+893
+00:31:36,618 --> 00:31:38,650
+you have to like at first evacuate the data up
+
+894
+00:31:38,650 --> 00:31:40,818
+into the capacity tier. But once that, the
+
+895
+00:31:40,818 --> 00:31:43,180
+data's been moved to the capacity tier, you can then shrink
+
+896
+00:31:43,180 --> 00:31:45,338
+down that SSD so this is not being used
+
+897
+00:31:45,338 --> 00:31:47,059
+anymore and really keep that minimum footprint.
+
+898
+00:31:47,368 --> 00:31:49,368
+Then you re-establish your, your
+
+899
+00:31:49,368 --> 00:31:51,449
+original snap relationship and you're back to this very
+
+900
+00:31:51,449 --> 00:31:52,410
+low level, right?
+
+901
+00:31:52,689 --> 00:31:54,689
+Had just what you need available for you at the
+
+902
+00:31:54,689 --> 00:31:57,430
+time. Um,
+
+903
+00:31:57,598 --> 00:31:59,098
+so, you know, obviously.
+
+904
+00:32:00,009 --> 00:32:02,118
+Disaster recovery can be more complex than what it was,
+
+905
+00:32:02,209 --> 00:32:04,328
+right, in that slide. There's a lot to do to
+
+906
+00:32:04,328 --> 00:32:06,608
+actually fail over, right? Complete working
+
+907
+00:32:06,608 --> 00:32:07,799
+environments on, uh,
+
+908
+00:32:08,239 --> 00:32:10,049
+you know, vSphere environment from one to the other.
+
+909
+00:32:10,328 --> 00:32:12,368
+So NetApp has a tool called NetApp Disaster Recovery
+
+910
+00:32:12,368 --> 00:32:14,680
+that helps you plan and manage and automate
+
+911
+00:32:14,680 --> 00:32:16,729
+that. And so it's not only doing the storage, it's
+
+912
+00:32:16,729 --> 00:32:18,769
+doing the storage with SnapMirror. And this is, this is
+
+913
+00:32:18,769 --> 00:32:20,368
+a tool only for OnTap to On-Tap.
+
+914
+00:32:20,769 --> 00:32:23,009
+And so, but it's, it's, you know, it's also,
+
+915
+00:32:23,189 --> 00:32:25,634
+um, failing over storage. Compute
+
+916
+00:32:25,634 --> 00:32:27,834
+and networking all together, right? And it has
+
+917
+00:32:27,834 --> 00:32:29,875
+plans for doing that. The other really cool feature
+
+918
+00:32:29,875 --> 00:32:31,795
+that it has, it has the ability to do
+
+919
+00:32:32,134 --> 00:32:34,314
+DR testing. And when it does the DR
+
+920
+00:32:34,314 --> 00:32:36,983
+testing, what it does is it leverages that
+
+921
+00:32:36,983 --> 00:32:38,453
+same Flex clone technology,
+
+922
+00:32:38,713 --> 00:32:40,795
+where when you fail over, it takes a Flex clone
+
+923
+00:32:40,795 --> 00:32:42,875
+and all the new data is being written on the Flex clone.
+
+924
+00:32:43,154 --> 00:32:45,324
+And again, it was an instantaneous copy of your data,
+
+925
+00:32:45,594 --> 00:32:47,434
+and only new deltas are being written.
+
+926
+00:32:47,875 --> 00:32:49,654
+Once that DR test is over.
+
+927
+00:32:50,108 --> 00:32:52,269
+You just delete the Flex clone and you're back to exactly
+
+928
+00:32:52,269 --> 00:32:53,009
+where you were before.
+
+929
+00:32:53,430 --> 00:32:55,549
+Um, so this is a tool that's, that was built for
+
+930
+00:32:55,549 --> 00:32:57,779
+this. Um, and since it's on tap to OnTap
+
+931
+00:32:57,779 --> 00:32:59,989
+is offered at a very competitive price
+
+932
+00:32:59,989 --> 00:33:02,189
+point, a lot of these tools will
+
+933
+00:33:02,189 --> 00:33:04,338
+charge per VM. This charges per storage,
+
+934
+00:33:04,549 --> 00:33:05,449
+and it charges it
+
+935
+00:33:05,789 --> 00:33:08,459
+at a very reasonable rate. Um, and it saves
+
+936
+00:33:08,459 --> 00:33:10,729
+you typically around 80% compared to other,
+
+937
+00:33:11,140 --> 00:33:13,209
+uh, disaster recovery tools that are out there in the market.
+
+938
+00:33:13,549 --> 00:33:15,789
+Um, if you're interested in it, um, just, you know, look up
+
+939
+00:33:15,838 --> 00:33:17,989
+NetApp disaster recovery, and there's a 30-day
+
+940
+00:33:17,989 --> 00:33:18,848
+free trial as well.
+
+941
+00:33:20,439 --> 00:33:22,759
+OK. So now switching gears
+
+942
+00:33:22,759 --> 00:33:24,920
+just a little bit, I'm gonna hop over to
+
+943
+00:33:24,920 --> 00:33:26,009
+uh Workload Factory.
+
+944
+00:33:26,439 --> 00:33:27,739
+So Workload Factory is a tool
+
+945
+00:33:28,199 --> 00:33:30,479
+that was developed, um, with kind of, uh, uh,
+
+946
+00:33:30,959 --> 00:33:32,959
+you know, ADS and NetApp together came up with this
+
+947
+00:33:32,959 --> 00:33:34,989
+plan for how do we want to set up a tool
+
+948
+00:33:34,989 --> 00:33:35,890
+that will allow you to
+
+949
+00:33:36,618 --> 00:33:38,939
+Optimize and use storage best practices across
+
+950
+00:33:38,939 --> 00:33:40,979
+multiple workloads where FSX ONTAP is
+
+951
+00:33:40,979 --> 00:33:42,838
+being used, right? And so this tool
+
+952
+00:33:43,180 --> 00:33:44,108
+works for
+
+953
+00:33:44,500 --> 00:33:46,259
+SQL workloads, um,
+
+954
+00:33:46,578 --> 00:33:47,959
+Oracle workloads,
+
+955
+00:33:48,219 --> 00:33:50,338
+uh, AI, right? It does a, a
+
+956
+00:33:50,338 --> 00:33:52,739
+plethora of different things. And it does it from planning
+
+957
+00:33:52,739 --> 00:33:54,910
+to making sure you stay well architected across
+
+958
+00:33:54,910 --> 00:33:56,979
+those different workloads, because things drift over time.
+
+959
+00:33:57,318 --> 00:33:59,459
+But in this particular case, right, we're talking about
+
+960
+00:33:59,459 --> 00:34:01,459
+what it's currently doing for VMware workloads.
+
+961
+00:34:01,719 --> 00:34:03,900
+And, um, for what it's doing right now is it basically
+
+962
+00:34:03,900 --> 00:34:06,309
+has some planning stuff, and it has this TCO calculator,
+
+963
+00:34:06,358 --> 00:34:08,438
+which I'm gonna show in a minute. And it has a way to make
+
+964
+00:34:08,438 --> 00:34:11,119
+sure that when you deploy your data stores, they're
+
+965
+00:34:11,119 --> 00:34:13,398
+gonna be leveraged by EBS that it does it
+
+966
+00:34:13,398 --> 00:34:15,179
+um with the optimal configurations.
+
+967
+00:34:15,719 --> 00:34:17,809
+So. I'm gonna start with the TCO
+
+968
+00:34:17,809 --> 00:34:19,998
+calculator. And for this TCO calculator,
+
+969
+00:34:20,197 --> 00:34:22,278
+basically, it's, it's just a really easy
+
+970
+00:34:22,278 --> 00:34:24,309
+tool. It's really convenient and nice to
+
+971
+00:34:24,309 --> 00:34:26,318
+use that will show you, you know,
+
+972
+00:34:26,548 --> 00:34:28,617
+different, uh, estimate the total cost of ownership
+
+973
+00:34:28,728 --> 00:34:30,759
+with different deployment scenarios that
+
+974
+00:34:30,759 --> 00:34:32,798
+you can put in there and identify cost
+
+975
+00:34:32,798 --> 00:34:35,039
+optimizations. I mean, obviously all
+
+976
+00:34:35,039 --> 00:34:35,628
+this data could
+
+977
+00:34:36,117 --> 00:34:38,197
+be figured out by the ADOS tools as well,
+
+978
+00:34:38,318 --> 00:34:40,349
+right? ADBS has pricing calculators, but it gets
+
+979
+00:34:40,349 --> 00:34:42,378
+a bit complex and this is a really easy
+
+980
+00:34:42,378 --> 00:34:44,637
+UI that can show it to you very quickly.
+
+981
+00:34:45,119 --> 00:34:47,030
+So I have a little uh demo on this one.
+
+982
+00:34:47,369 --> 00:34:49,728
+So at the very top here we have um console.
+
+983
+00:34:50,199 --> 00:34:52,329
+uh workloads.net.com. Anybody can go
+
+984
+00:34:52,329 --> 00:34:54,559
+here. It's free, right? Um,
+
+985
+00:34:54,688 --> 00:34:56,688
+and then you go into Explore savings. And so
+
+986
+00:34:56,688 --> 00:34:59,000
+at this point, what you're gonna basically be doing is putting into
+
+987
+00:34:59,000 --> 00:34:59,590
+the tool.
+
+988
+00:35:00,208 --> 00:35:02,530
+Hey, what am I looking at my EBS deployment
+
+989
+00:35:02,530 --> 00:35:04,639
+to be, right? What, how many, how much CPUs
+
+990
+00:35:04,639 --> 00:35:05,188
+do I need?
+
+991
+00:35:05,449 --> 00:35:07,530
+How many, um, what's my memory footprint?
+
+992
+00:35:07,849 --> 00:35:10,309
+What's my storage? And we give you these really convenient
+
+993
+00:35:10,309 --> 00:35:12,530
+sliders, right, to move that
+
+994
+00:35:12,530 --> 00:35:13,250
+information back and forth.
+
+995
+00:35:13,570 --> 00:35:15,570
+And as you're doing that over on the right-hand side,
+
+996
+00:35:15,668 --> 00:35:16,469
+right, you can see
+
+997
+00:35:16,820 --> 00:35:18,889
+what's my total cost gonna be? What's my total cost
+
+998
+00:35:19,128 --> 00:35:21,510
+for just doing EVS with this particular configuration
+
+999
+00:35:21,510 --> 00:35:23,688
+or, or EVS plus FSX
+
+1000
+00:35:23,688 --> 00:35:25,909
+for ONTAP, like how can we potentially save you money there?
+
+1001
+00:35:26,099 --> 00:35:28,550
+Obviously gonna change depending on your, your, your footprints.
+
+1002
+00:35:28,809 --> 00:35:30,869
+And then also we're saying is that this is the um
+
+1003
+00:35:30,869 --> 00:35:33,019
+1 year, 3-year or on-demand
+
+1004
+00:35:33,168 --> 00:35:35,168
+for the cost of those I4I metal.
+
+1005
+00:35:35,329 --> 00:35:36,139
+Now, obviously,
+
+1006
+00:35:36,409 --> 00:35:38,449
+as more different instance types comes out, we'll be
+
+1007
+00:35:38,449 --> 00:35:40,530
+adjusting this. Then it's gonna show you, hey,
+
+1008
+00:35:40,610 --> 00:35:42,849
+this is what my FSX4ONTAP deployment is. This
+
+1009
+00:35:42,849 --> 00:35:44,378
+is what we expect to save
+
+1010
+00:35:44,648 --> 00:35:45,500
+from a,
+
+1011
+00:35:46,010 --> 00:35:48,559
+you know, a data uh efficiency standpoint.
+
+1012
+00:35:48,769 --> 00:35:50,809
+And then this is the exact cost that you would pay for the
+
+1013
+00:35:50,809 --> 00:35:52,030
+FSX for ONTAP system.
+
+1014
+00:35:52,820 --> 00:35:54,820
+Um, what's also really nice, right, I was gonna
+
+1015
+00:35:54,820 --> 00:35:57,179
+show you that cost, is that over on the right, it
+
+1016
+00:35:57,179 --> 00:35:58,208
+shows you, hey,
+
+1017
+00:35:58,579 --> 00:36:00,579
+here are how many I4ite instances
+
+1018
+00:36:00,579 --> 00:36:02,889
+I need to match that, those parameters,
+
+1019
+00:36:03,260 --> 00:36:05,659
+but how many do I need that were just for storage,
+
+1020
+00:36:05,739 --> 00:36:07,639
+right? And so it's gonna easily show you,
+
+1021
+00:36:07,898 --> 00:36:10,019
+hey, I, I needed some of these ESXi
+
+1022
+00:36:10,019 --> 00:36:12,059
+hosts just for storage. And it's also gonna lay out
+
+1023
+00:36:12,059 --> 00:36:14,059
+all the costs, cause there are multiple cost
+
+1024
+00:36:14,059 --> 00:36:15,139
+components to EDS.
+
+1025
+00:36:15,500 --> 00:36:16,418
+There's the um.
+
+1026
+00:36:17,010 --> 00:36:19,070
+The just the, the there's a VPC, um,
+
+1027
+00:36:19,250 --> 00:36:21,289
+the EBS control plane, right, that you also had
+
+1028
+00:36:21,289 --> 00:36:23,409
+to pay for. You also had to pay for the route server. So there's
+
+1029
+00:36:23,409 --> 00:36:25,449
+a few other, they're not the major components. The I4I
+
+1030
+00:36:25,449 --> 00:36:27,449
+metal, right, is the main one, but there are
+
+1031
+00:36:27,449 --> 00:36:29,489
+some other components. So it's gonna take all of that stuff
+
+1032
+00:36:29,489 --> 00:36:31,750
+into account and give you that total cost of ownership
+
+1033
+00:36:31,849 --> 00:36:33,889
+and say, does it make sense to add FSXONTAP
+
+1034
+00:36:33,889 --> 00:36:36,010
+or does it not make sense? And that's just purely
+
+1035
+00:36:36,010 --> 00:36:38,269
+from a pure cost perspective.
+
+1036
+00:36:38,648 --> 00:36:41,168
+So that's, that's the, the calculator. Again, well,
+
+1037
+00:36:41,369 --> 00:36:43,648
+you can definitely, uh, log into it. I, I'll show a QR
+
+1038
+00:36:43,648 --> 00:36:44,449
+code in just a minute.
+
+1039
+00:36:44,949 --> 00:36:47,030
+The other, uh, main tool that we have right now
+
+1040
+00:36:47,030 --> 00:36:49,039
+is, you know, once you determine, hey, I want to
+
+1041
+00:36:49,039 --> 00:36:50,269
+use FSX for RONTAP,
+
+1042
+00:36:50,909 --> 00:36:52,889
+here's my, here's what I was kind of planning to do for it.
+
+1043
+00:36:53,148 --> 00:36:55,260
+Now I want to actually do the deployment of it. So it's gonna
+
+1044
+00:36:55,260 --> 00:36:57,619
+deploy your FSX for ONTAP
+
+1045
+00:36:57,619 --> 00:36:59,628
+system. It's gonna deploy the data storage, it's
+
+1046
+00:36:59,628 --> 00:37:01,668
+gonna set them up with best practices. You can actually
+
+1047
+00:37:01,668 --> 00:37:03,570
+even tie it into your EBS environment.
+
+1048
+00:37:04,199 --> 00:37:05,219
+And have it set,
+
+1049
+00:37:05,648 --> 00:37:07,719
+like if you're doing NFS for example, and that's what this one
+
+1050
+00:37:07,719 --> 00:37:09,719
+supports currently, it might, it might add others later.
+
+1051
+00:37:09,800 --> 00:37:12,188
+For right now, it'll set the right timing
+
+1052
+00:37:12,188 --> 00:37:14,320
+values. It'll set in connect values,
+
+1053
+00:37:14,389 --> 00:37:16,519
+right? So it's gonna do everything for, for best
+
+1054
+00:37:16,519 --> 00:37:17,119
+practices.
+
+1055
+00:37:19,099 --> 00:37:20,260
+And so this is the QR code.
+
+1056
+00:37:20,739 --> 00:37:22,820
+Feel free to take a picture of this, and this will take you to
+
+1057
+00:37:22,820 --> 00:37:24,820
+that calculator. It's 100% free, as
+
+1058
+00:37:24,820 --> 00:37:25,478
+I said before.
+
+1059
+00:37:25,978 --> 00:37:28,360
+Log in there. And actually, at the very top of that calculator
+
+1060
+00:37:28,360 --> 00:37:29,239
+is a little email
+
+1061
+00:37:29,539 --> 00:37:31,539
+that me and a couple other people from my team will
+
+1062
+00:37:31,539 --> 00:37:33,648
+get. So if you start using it and you have any
+
+1063
+00:37:33,648 --> 00:37:35,070
+questions, feel free to reach out to us.
+
+1064
+00:37:36,728 --> 00:37:39,079
+So the key takeaways today, right, um, is
+
+1065
+00:37:39,079 --> 00:37:41,079
+that this is bringing control and
+
+1066
+00:37:41,079 --> 00:37:43,398
+consistency. Like when you bring your EVS environment
+
+1067
+00:37:43,398 --> 00:37:43,909
+in here,
+
+1068
+00:37:44,239 --> 00:37:46,280
+you are getting complete control of your
+
+1069
+00:37:46,280 --> 00:37:47,860
+VCF environment, right? And if you're
+
+1070
+00:37:48,159 --> 00:37:50,159
+leveraging FSX for ONTAP, right, you're having
+
+1071
+00:37:50,159 --> 00:37:52,099
+that same consistency. If you're using,
+
+1072
+00:37:52,398 --> 00:37:54,599
+uh, you know, ONTAP in the, on-prem, you're
+
+1073
+00:37:54,599 --> 00:37:55,719
+getting that same way in the cloud.
+
+1074
+00:37:56,000 --> 00:37:58,478
+We're bringing all those enterprise grade capabilities,
+
+1075
+00:37:58,519 --> 00:37:59,918
+the deduplication, compression.
+
+1076
+00:38:00,239 --> 00:38:01,958
+The ability to do snapshots,
+
+1077
+00:38:02,320 --> 00:38:04,559
+the ability to do autonomous ransomware protection, right?
+
+1078
+00:38:04,829 --> 00:38:07,000
+All of those types of capabilities are also being
+
+1079
+00:38:07,000 --> 00:38:09,039
+brought into the cloud. And then, of course,
+
+1080
+00:38:09,159 --> 00:38:10,958
+you know, what people really care about,
+
+1081
+00:38:11,438 --> 00:38:13,519
+cost savings, right? So we're able
+
+1082
+00:38:13,519 --> 00:38:15,559
+to decouple that compute and storage as
+
+1083
+00:38:15,559 --> 00:38:17,760
+well as apply all those efficiencies, and
+
+1084
+00:38:17,760 --> 00:38:18,918
+that's gonna really help you keep uh your,
+
+1085
+00:38:19,369 --> 00:38:21,510
+your cost uh to as low as
+
+1086
+00:38:21,510 --> 00:38:23,019
+possible for your EBS deployments.
+
+1087
+00:38:24,300 --> 00:38:24,958
+And
+
+1088
+00:38:25,418 --> 00:38:27,739
+with that, I'll say thank you. Please, um, complete
+
+1089
+00:38:27,739 --> 00:38:29,708
+that session survey in the mobile app.
+
+1090
+00:38:30,139 --> 00:38:32,300
+Um, and I'll stay around here, um, for any
+
+1091
+00:38:32,300 --> 00:38:34,579
+questions. I'll just be right down here, I'd be happy to, to, to
+
+1092
+00:38:34,579 --> 00:38:36,860
+talk with anybody about anything around this, this topic.
+
+1093
+00:38:37,099 --> 00:38:37,898
+Thank you so much. I appreciate it.
+

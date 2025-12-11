@@ -1,128 +1,82 @@
-# AWS re:Invent 会议总结：使用 Amazon Bedrock Agent Core 构建多租户 SaaS 代理
+# AWS re:Invent 2025 - 构建多租户SaaS代理的Amazon Bedrock AgentCore会议总结
 
 ## 会议概述
 
-本次会议是一场 400 级别的技术深度分享，主题聚焦于如何使用 Amazon Bedrock Agent Core 构建多租户 SaaS 代理解决方案。演讲者 Bill Tar（首席合作伙伴解决方案架构师）和 Uday（高级首席合作伙伴解决方案架构师）详细介绍了将传统 SaaS 最佳实践应用于 AI 代理架构的方法。
+本次会议由AWS首席合作伙伴解决方案架构师Bill Tarr和高级首席合作伙伴解决方案架构师Ujwal Bukka主讲，重点介绍如何使用Amazon Bedrock AgentCore构建多租户SaaS代理。这是一个400级技术会议，深入探讨了将传统SaaS最佳实践应用到代理解决方案中的方法。
 
-会议围绕一个实际的示例架构展开，该架构包含一个编排代理（orchestrator agent），可以调用知识库代理、日志分析代理和编码代理来解决代码问题。演讲者强调这不是概念演示，而是有完整可用代码和配套 workshop 的真实解决方案，参会者可以通过 GitHub 获取代码或参加现场 workshop 进行实践。
+会议围绕五个核心SaaS架构挑战展开：租户入驻、SaaS身份管理、数据分区、租户隔离和SaaS可观测性。演讲者通过实际代码示例和架构模式，展示了如何在AgentCore环境中解决这些挑战。会议还提供了相应的实践工作坊，包含完整的代码库和可工作的解决方案。
 
-会议系统性地解决了五大 SaaS 架构挑战：租户入驻（tenant onboarding）、SaaS 身份认证、数据分区、租户隔离和可观测性。演讲者详细讲解了如何在 Agent Core 的各个组件（Runtime、Gateway、Identity、Memory）中实现这些 SaaS 最佳实践，特别强调了在 silo（专用）和 pool（共享）两种部署模型下的不同实现策略。
+## 详细时间线与关键要点
 
-## 详细时间线
+### 00:00-05:00 会议开场与背景介绍
+- 介绍生成式AI和代理革命的背景
+- 演讲者自我介绍：Bill Tarr（首席合作伙伴解决方案架构师）和Ujwal Bukka（高级首席合作伙伴解决方案架构师）
+- 强调这是400级会议，将包含代码示例和实际演示
+- 介绍相关工作坊，提供GitHub代码库访问
 
-### 开场与背景介绍
-[00:00 - 02:30] 演讲者开场致谢，介绍会议主题为使用 Amazon Bedrock Agent Core 构建多租户 SaaS 代理，这是一场 400 级别的技术深度会议，需要参会者具备一定的编码和 Agent Core 背景知识。
+### 05:00-10:00 示例架构概览
+- 展示完整的示例架构，包含AgentCore运行时
+- 介绍多个代理：编排代理、知识库代理、日志分析代理和编码代理
+- 说明AgentCore Gateway中的工具管理
+- 概述AgentCore身份管理和可观测性组件
 
-[02:30 - 04:00] 介绍配套 workshop，强调所有演示内容都基于真实可用的代码库，参会者可以通过 GitHub 获取或参加现场 workshop 实践。
+### 10:00-15:00 SaaS架构挑战
+- 详细阐述五个主要SaaS架构挑战：
+  - 租户入驻：快速让客户从了解产品到获得价值
+  - SaaS身份：用户授权认证和租户上下文传播
+  - 数据分区：租户数据的逻辑或物理分离
+  - 租户隔离：定义租户访问权限的策略
+  - SaaS可观测性：监控租户健康状况的能力
 
-[04:00 - 06:30] 展示示例架构概览，包含 Agent Core Runtime（运行代理代码）、多个专用代理（编排代理、知识库代理、日志分析代理、编码代理）、Agent Core Gateway（管理工具）、Agent Core Identity（身份管理）和可观测性组件。
+### 15:00-20:00 AgentCore基础概念
+- 定义代理的核心组件：代码、计算环境、大语言模型配置
+- 介绍工具代码和外部资源访问
+- 说明入站和出站调用的授权需求
+- 介绍内存管理和可观测性组件
+- 展示Amazon Bedrock AgentCore如何解决这些架构挑战
 
-### SaaS 架构挑战
-[06:30 - 09:00] Bill 介绍五大 SaaS 架构挑战：
-- 租户入驻（快速让客户从了解产品到获得价值）
-- SaaS 身份认证（授权和认证用户，传播租户上下文）
-- 数据分区（逻辑或物理隔离租户数据）
-- 租户隔离（定义租户访问权限的策略）
-- SaaS 可观测性（监控租户健康状况）
+### 20:00-25:00 多租户部署模型
+- 对比孤岛（Silo）模型和池化（Pooled）模型
+- 孤岛模型：每个租户独立的完整架构栈
+- 池化模型：共享基础设施，运行时决策授权
+- 讨论混合/桥接架构的权衡考虑
+- 分析不同模型的复杂性和效率差异
 
-### Agent 和 Agent Core 基础
-[09:00 - 12:30] Uday 定义 Agent 的核心组件：
-- 运行在计算环境中的代码
-- 配置大语言模型
-- 工具代码（扩展功能，访问外部资源）
-- 身份管理（入站和出站调用授权）
-- 内存管理（存储对话上下文）
-- 可观测性（监控代理行为）
+### 25:00-30:00 多租户代理实现
+- 展示孤岛代理：专用AgentCore运行时、内存和网关
+- 展示池化代理：共享AgentCore组件
+- 介绍AgentCore内存的短期和长期存储概念
+- 短期内存：存储会话级原始事件
+- 长期内存：存储跨会话的对话摘要和用户偏好
 
-[12:30 - 15:30] 介绍 Amazon Bedrock Agent Core 如何解决这些挑战：
-- Agent Core Runtime：部署和扩展代理代码
-- Agent Core Gateway：部署工具代码（MCP as a service）
-- Agent Core Identity：处理入站和出站授权
-- Agent Core Memory：短期和长期内存管理
-- Agent Core Observability：捕获指标和理解代理行为
+### 30:00-35:00 租户入驻解决方案
+- 介绍SaaS控制平面概念和相关服务
+- 展示租户入驻流程和架构部署
+- 说明如何通过层级（基础层/高级层）映射到不同模型
+- 演示孤岛模型的按需资源配置
+- 展示池化模型的预配置共享资源
 
-### 多租户部署模型
-[15:30 - 19:00] Bill 讲解多租户部署模型：
-- Silo/专用模型：每个租户独立的完整技术栈，架构简单但运营成本高
-- Pool/共享模型：共享基础设施，需要运行时决策和权限检查，架构复杂但效率高
-- 混合/桥接模型：部分组件共享，部分组件专用
+### 35:00-40:00 SaaS身份管理深入
+- 使用Amazon Cognito作为身份提供商
+- 实现每租户用户池的租户边界
+- 介绍自定义声明和JWT令牌结构
+- 区分身份令牌和访问令牌的用途
+- 使用预令牌生成Lambda触发器复制自定义声明
 
-[19:00 - 22:00] Uday 展示多租户代理实现：
-- Silo 代理：专用 Agent Core Runtime、专用 Memory、专用 Gateway 和专用资源
-- Pool 代理：共享 Agent Core Runtime、共享 Memory、共享 Gateway 和共享资源
-- 引入短期内存（存储会话级原始事件）和长期内存（存储跨会话摘要和偏好）概念
+### 40:00-45:00 AgentCore身份集成
+- 详细说明入站授权流程
+- 配置AgentCore身份与身份提供商的集成
+- 介绍工作负载身份概念
+- 实现人工参与循环的授权机制
+- 展示出站授权和访问令牌生成流程
+- 介绍Gateway拦截器功能
 
-### 租户入驻解决方案
-[22:00 - 25:30] Uday 讲解租户入驻最佳实践：
-- 构建 SaaS 控制平面（包含入驻服务、租户配置服务、租户管理服务、租户注册服务）
-- 通过控制平面部署租户特定架构到应用平面
-- Silo 模型在租户入驻时配置专用资源
-- Pool 模型可以预先配置共享资源
-- 通过定价层级（基础层对应 pool 模型，高级层对应 silo 模型）向客户展示不同模型
-
-### SaaS 身份认证深度解析
-[25:30 - 29:00] Bill 讲解 SaaS 身份认证基础：
-- 使用身份提供商（示例中使用 Amazon Cognito）管理租户用户
-- 采用每租户一个用户池的策略建立租户边界
-- 在用户上配置自定义声明/属性（如租户 ID、状态、层级等元数据）
-- JWT token 作为传递数据的载体
-
-[29:00 - 31:00] 解释 JWT token 结构：
-- Identity token：自动继承所有自定义声明
-- Access token：默认不继承自定义声明，需要使用 pre-token generation Lambda trigger 将自定义声明复制到 access token
-- Access token 在 Agent Core 中传递使用
-
-### Agent Core Identity 实现
-[31:00 - 36:00] Uday 详细讲解入站授权：
-- 用户通过身份提供商认证获得 JWT token（包含用户和租户信息）
-- 租户使用 JWT token 调用 Agent Core Runtime 中的代理
-- 配置 Agent Core Runtime 与 Agent Core Identity
-- 配置 Agent Core Identity 与身份提供商
-- Agent Core Identity 验证入站 JWT token 并授权调用
-
-[36:00 - 42:00] 讲解出站授权机制：
-- 对于 AWS 资源：使用 IAM 执行角色附加到 Agent Core Runtime
-- 对于需要 OAuth token 或 API key 的外部资源：
-  - 配置 Agent Core Identity 与外部凭证提供商
-  - Agent Core Identity 为每个代理创建工作负载身份（workload identity）
-  - 支持人工审批流程（human in the loop）
-  - Agent Core Runtime 请求 Agent Core Identity 生成访问 token
-  - Agent Core Identity 将请求映射到工作负载身份，再映射到配置的身份提供商，生成工作负载访问 token
-  - 代码中只需使用 @iterate requires access token 注解即可获取 token
-
-[42:00 - 44:30] 多租户出站授权：
-- 外部资源可能需要 token 中包含额外的租户元数据
-- 外部身份提供商可以自定义工作流，在生成访问 token 时添加自定义声明
-- 利用之前讲解的 pre-token generation 机制实现
-
-[44:30 - 47:00] Agent Core Gateway 的身份管理：
-- 工具代码部署在 Agent Core Gateway 中
-- Agent Core Runtime 使用 JWT token 调用 Agent Core Gateway
-- 配置 Agent Core Gateway 与 Agent Core Identity 进行授权
-- Gateway Interceptor 功能可以拦截请求，获取所有 headers 和 JWT token，提取租户上下文供工具使用
-
-### 数据分区策略
-[47:00 - 49:00] Bill 简要介绍数据分区概念：
-- 数据分区是将租户数据分隔到逻辑或物理存储桶
-- 在 Agent Core 中主要涉及两个领域：Agent Core Memory 和下游 AWS 资源（如知识库、DynamoDB）
-
-[49:00 - 54:00] Uday 详解 Agent Core Memory 数据分区：
-
-Silo 模型：
-- 每个租户专用 Agent Core Runtime、专用代理、专用 Memory
-- 短期内存事件创建需要：Memory ID（创建 Memory 时生成）、Session ID（每个会话唯一）、Actor ID（代理或用户的唯一标识）
-- 数据分区约定：Actor ID = tenant_id:subject（从 JWT token 获取），实现按租户用户分区
-- 长期内存使用命名空间（namespace）存储信息，命名空间中包含 Actor ID 实现分区
-
-Pool 模型：
-- 共享 Agent Core Runtime、共享代理、共享 Memory
-- 使用相同的 Actor ID 约定（tenant_id:subject）在共享内存中实现数据分区
-- 如果只需按租户分区（不按用户），Actor ID 可以只使用 tenant_id
-
-[54:00 - 58:00] AWS 资源数据分区：
-
-知识库（Knowledge Base）：
-- Silo 模型：每个租户专用知识库，配置专用向量数据库
-- Pool 模型：共享知识库配置共享向量存储，在数据摄取时附加租户 ID 作为元数据标签实现逻辑分区
-
-会议在此处字幕截断，但已经覆盖了核心的架构挑战和解决方案。
+### 45:00-50:00 数据分区、租户隔离与可观测性
+- AgentCore内存的数据分区策略
+- AWS资源（知识库、DynamoDB、S3）的分区方法
+- 使用IAM和ABAC角色实现租户隔离
+- 知识库元数据过滤实现
+- 强调可观测性在多租户解决方案中的重要性
+- 介绍令牌使用跟踪和成本分析
+- 展示CloudWatch集成和自定义仪表板创建
+- 最终架构回顾和所有概念的综合应用

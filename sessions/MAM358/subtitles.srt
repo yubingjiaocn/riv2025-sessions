@@ -1,0 +1,6101 @@
+1
+00:00:03,330 --> 00:00:04,530
+- Good afternoon, everybody.
+
+2
+00:00:04,530 --> 00:00:06,000
+Thank you for joining us today.
+
+3
+00:00:06,000 --> 00:00:07,050
+So my name's Adrian Begg.
+
+4
+00:00:07,050 --> 00:00:08,880
+I'm a solutions architect at AWS,
+
+5
+00:00:08,880 --> 00:00:11,043
+helping our customers with modernization.
+
+6
+00:00:12,090 --> 00:00:13,890
+- Hello, everyone. I'm Dirk.
+
+7
+00:00:13,890 --> 00:00:16,530
+I'm also a solutions architect with AWS.
+
+8
+00:00:16,530 --> 00:00:18,390
+I work with software companies
+
+9
+00:00:18,390 --> 00:00:21,540
+on their multidimensional transformation.
+
+10
+00:00:21,540 --> 00:00:23,910
+- Hello, my name is Robert,
+and not to bore you,
+
+11
+00:00:23,910 --> 00:00:26,459
+but I'm the third solutions
+architect on stage.
+
+12
+00:00:26,459 --> 00:00:28,710
+(Robert laughing)
+
+13
+00:00:28,710 --> 00:00:30,180
+- All right.
+
+14
+00:00:30,180 --> 00:00:32,400
+- So today, we're gonna
+be talking about...
+
+15
+00:00:32,400 --> 00:00:34,140
+Oh, apologies.
+
+16
+00:00:34,140 --> 00:00:35,070
+Today, we're gonna be talking
+
+17
+00:00:35,070 --> 00:00:38,160
+about three really important
+transformation patterns,
+
+18
+00:00:38,160 --> 00:00:40,683
+strangler fig, sagas,
+and circuit breakers.
+
+19
+00:00:41,640 --> 00:00:44,070
+And it doesn't really matter where you are
+
+20
+00:00:44,070 --> 00:00:46,050
+on your transformation journey.
+
+21
+00:00:46,050 --> 00:00:49,170
+Whether you're working on
+a monolithic application
+
+22
+00:00:49,170 --> 00:00:52,050
+or maybe you started to carve
+some of the components out
+
+23
+00:00:52,050 --> 00:00:55,203
+because that monolith is
+literally keeping you up at night.
+
+24
+00:00:56,760 --> 00:00:58,200
+Or maybe you've moved,
+
+25
+00:00:58,200 --> 00:00:59,160
+and you've started to move
+
+26
+00:00:59,160 --> 00:01:01,170
+towards a divide-and-conquer pattern.
+
+27
+00:01:01,170 --> 00:01:03,390
+You have a bunch of
+integrations with services
+
+28
+00:01:03,390 --> 00:01:06,123
+and you're integrating with
+external services as well.
+
+29
+00:01:07,950 --> 00:01:09,810
+In the same way that you wanna be prepared
+
+30
+00:01:09,810 --> 00:01:12,150
+when you're on a journey,
+
+31
+00:01:12,150 --> 00:01:14,310
+making sure you have, for example,
+
+32
+00:01:14,310 --> 00:01:18,570
+a four-wheel drive to
+navigate a bumpy road.
+
+33
+00:01:18,570 --> 00:01:19,403
+A good understanding
+
+34
+00:01:19,403 --> 00:01:21,780
+of different software
+architecture patterns
+
+35
+00:01:21,780 --> 00:01:26,610
+and how those patterns can help you,
+
+36
+00:01:26,610 --> 00:01:29,613
+will help you face unexpected
+challenges along the way.
+
+37
+00:01:31,680 --> 00:01:32,853
+But before we begin,
+
+38
+00:01:34,320 --> 00:01:36,870
+just wanna start by acknowledging
+
+39
+00:01:36,870 --> 00:01:40,440
+that every architecture
+decision that we make
+
+40
+00:01:40,440 --> 00:01:42,150
+involves trade-offs.
+
+41
+00:01:42,150 --> 00:01:45,243
+In other words, whatever you
+do, something's going to suck.
+
+42
+00:01:46,500 --> 00:01:48,750
+For the patterns that we're
+gonna be discussing today,
+
+43
+00:01:48,750 --> 00:01:52,050
+this typically means trading
+some kind of simplicity
+
+44
+00:01:52,050 --> 00:01:52,980
+in the architecture
+
+45
+00:01:52,980 --> 00:01:54,570
+for some kind of complexity,
+
+46
+00:01:54,570 --> 00:01:56,643
+but with a reason and a purpose.
+
+47
+00:01:59,040 --> 00:02:01,230
+What we need to do as architects
+
+48
+00:02:01,230 --> 00:02:04,380
+is choose the least painful option
+
+49
+00:02:04,380 --> 00:02:06,750
+and really focus on what's
+most important to us
+
+50
+00:02:06,750 --> 00:02:08,190
+or our customers,
+
+51
+00:02:08,190 --> 00:02:11,010
+whether that be improving
+customer experience,
+
+52
+00:02:11,010 --> 00:02:12,840
+reducing operational burden,
+
+53
+00:02:12,840 --> 00:02:14,610
+or increasing the agility
+
+54
+00:02:14,610 --> 00:02:16,893
+and evolvability of our application.
+
+55
+00:02:19,080 --> 00:02:21,180
+Okay, so for the purpose
+of discussion today,
+
+56
+00:02:21,180 --> 00:02:23,736
+we're gonna have a sample use case,
+
+57
+00:02:23,736 --> 00:02:25,770
+and we're gonna explore
+each of these patterns
+
+58
+00:02:25,770 --> 00:02:27,780
+and see how they can solve
+each of the problems.
+
+59
+00:02:27,780 --> 00:02:32,040
+So, to start with, we have
+our sample application.
+
+60
+00:02:32,040 --> 00:02:33,300
+Now, in the beginning,
+
+61
+00:02:33,300 --> 00:02:36,663
+it all started with three
+friends and a simple idea.
+
+62
+00:02:38,094 --> 00:02:40,890
+We were all interested in science news,
+
+63
+00:02:40,890 --> 00:02:42,900
+and we were really not satisfied
+
+64
+00:02:42,900 --> 00:02:46,080
+with the services that were available.
+
+65
+00:02:46,080 --> 00:02:49,113
+We wanted something
+entertaining, something engaging.
+
+66
+00:02:50,280 --> 00:02:51,690
+So, we sat together and we thought:
+
+67
+00:02:51,690 --> 00:02:53,670
+How can we solve this problem?
+
+68
+00:02:53,670 --> 00:02:56,250
+A couple of late nights, a lot of coffee,
+
+69
+00:02:56,250 --> 00:02:57,723
+a new science was born.
+
+70
+00:02:58,560 --> 00:03:01,530
+And in the beginning, it was
+a pretty simple application.
+
+71
+00:03:01,530 --> 00:03:04,530
+We had a way for users to register,
+
+72
+00:03:04,530 --> 00:03:08,970
+we had a way for our
+contributors to publish articles,
+
+73
+00:03:08,970 --> 00:03:10,770
+and we had a way for our users to comment
+
+74
+00:03:10,770 --> 00:03:12,093
+and give us some feedback.
+
+75
+00:03:14,400 --> 00:03:17,910
+We pushed to AWS, and we were live.
+
+76
+00:03:17,910 --> 00:03:21,000
+And within 24 hours, we're
+getting our first feedback.
+
+77
+00:03:21,000 --> 00:03:22,950
+Our customers love it,
+
+78
+00:03:22,950 --> 00:03:26,310
+but wouldn't it be good if
+we could find the articles?
+
+79
+00:03:26,310 --> 00:03:28,710
+Because there's no search
+feature at the moment.
+
+80
+00:03:28,710 --> 00:03:30,420
+Now, we always knew that
+this was gonna be something
+
+81
+00:03:30,420 --> 00:03:33,930
+that would come up fairly
+early, and we thought about it,
+
+82
+00:03:33,930 --> 00:03:35,980
+but it just wasn't important for the MVP.
+
+83
+00:03:36,990 --> 00:03:41,250
+So, we organized a meeting,
+we're gonna get a whiteboard,
+
+84
+00:03:41,250 --> 00:03:42,990
+we're gonna solve this problem.
+
+85
+00:03:42,990 --> 00:03:45,210
+The next day, we get into the office,
+
+86
+00:03:45,210 --> 00:03:49,177
+Slack notification pops
+up, it's from my CTO.
+
+87
+00:03:49,177 --> 00:03:50,587
+"It's done."
+
+88
+00:03:50,587 --> 00:03:51,657
+"Sorry, what's done?"
+
+89
+00:03:52,657 --> 00:03:54,750
+"Search, it's implemented."
+
+90
+00:03:54,750 --> 00:03:55,583
+Okay?
+
+91
+00:03:56,670 --> 00:03:59,250
+Now, it wasn't the most
+robust implementation,
+
+92
+00:03:59,250 --> 00:04:00,300
+but at this point in time,
+
+93
+00:04:00,300 --> 00:04:02,940
+the whole application's a
+couple hundred lines of code.
+
+94
+00:04:02,940 --> 00:04:04,800
+And there's only three developers.
+
+95
+00:04:04,800 --> 00:04:07,170
+We can kind of understand
+the whole application,
+
+96
+00:04:07,170 --> 00:04:10,890
+and look, it works, and our
+customers are delighted.
+
+97
+00:04:10,890 --> 00:04:13,353
+We can always go back
+and fix it later, right?
+
+98
+00:04:15,720 --> 00:04:17,670
+We're growing, and everything's great,
+
+99
+00:04:17,670 --> 00:04:19,353
+and this worked really well.
+
+100
+00:04:20,820 --> 00:04:21,723
+Until it didn't.
+
+101
+00:04:22,950 --> 00:04:24,690
+Now, we're a few years down the track
+
+102
+00:04:24,690 --> 00:04:28,350
+and a few problems are starting to occur.
+
+103
+00:04:28,350 --> 00:04:30,360
+So we've prioritized
+
+104
+00:04:30,360 --> 00:04:32,040
+getting new features into the application
+
+105
+00:04:32,040 --> 00:04:33,270
+as quickly as possible.
+
+106
+00:04:33,270 --> 00:04:36,007
+And as we started to grow,
+we started to notice,
+
+107
+00:04:36,007 --> 00:04:38,520
+"Hey, our costs are starting to explode."
+
+108
+00:04:38,520 --> 00:04:39,780
+This really led us into a path,
+
+109
+00:04:39,780 --> 00:04:42,580
+where we really leaned into
+our monolithic architecture.
+
+110
+00:04:44,430 --> 00:04:45,720
+Our original developers
+
+111
+00:04:45,720 --> 00:04:48,843
+have now since moved
+on to greener pastures,
+
+112
+00:04:49,920 --> 00:04:52,200
+and they were great builders,
+
+113
+00:04:52,200 --> 00:04:54,600
+but they weren't great
+at writing documentation.
+
+114
+00:04:55,650 --> 00:04:57,110
+We've got a whole bunch
+of these features now
+
+115
+00:04:57,110 --> 00:04:59,610
+in our application, a whole
+bunch of different components,
+
+116
+00:04:59,610 --> 00:05:02,940
+and nobody really understands
+how all of these things work.
+
+117
+00:05:02,940 --> 00:05:03,990
+We've even got things in there
+
+118
+00:05:03,990 --> 00:05:06,090
+that we don't understand
+what they really do.
+
+119
+00:05:06,090 --> 00:05:07,530
+We only know they're really important
+
+120
+00:05:07,530 --> 00:05:09,540
+because we changed them once
+
+121
+00:05:09,540 --> 00:05:11,463
+and the entire application went down.
+
+122
+00:05:13,500 --> 00:05:15,750
+We are not sure exactly
+when this happened,
+
+123
+00:05:15,750 --> 00:05:17,430
+but at some point,
+
+124
+00:05:17,430 --> 00:05:19,500
+we went from developing new features
+
+125
+00:05:19,500 --> 00:05:21,600
+and focusing on our backlog
+
+126
+00:05:21,600 --> 00:05:23,070
+to just coming into the office every day
+
+127
+00:05:23,070 --> 00:05:26,883
+and constantly just seeing
+what's on fire today.
+
+128
+00:05:28,890 --> 00:05:31,410
+Everyone's scared, fearful,
+
+129
+00:05:31,410 --> 00:05:33,630
+and now anytime we make a change,
+
+130
+00:05:33,630 --> 00:05:36,180
+we need to get approval
+from every product manager.
+
+131
+00:05:37,380 --> 00:05:40,890
+At some point, everything
+becomes a SevOne.
+
+132
+00:05:40,890 --> 00:05:43,530
+On top of that, as we've started to grow,
+
+133
+00:05:43,530 --> 00:05:45,089
+our application is just doing things
+
+134
+00:05:45,089 --> 00:05:47,193
+that we never really designed it to do.
+
+135
+00:05:48,090 --> 00:05:49,890
+We've been successful, we've grown,
+
+136
+00:05:49,890 --> 00:05:51,030
+but we really didn't design
+
+137
+00:05:51,030 --> 00:05:53,080
+for the user base that we had originally.
+
+138
+00:05:54,810 --> 00:05:59,490
+As I mentioned, our team's
+paralyzed, fearful, and unhappy.
+
+139
+00:05:59,490 --> 00:06:01,140
+The monolith that was helping us
+
+140
+00:06:01,140 --> 00:06:02,220
+to move quickly in the beginning
+
+141
+00:06:02,220 --> 00:06:04,670
+is now the thing that's
+starting to hold us back.
+
+142
+00:06:05,970 --> 00:06:08,550
+We thought about
+rebuilding the application,
+
+143
+00:06:08,550 --> 00:06:11,520
+but honestly, it's gonna take too long.
+
+144
+00:06:11,520 --> 00:06:12,780
+We estimate that it's gonna take
+
+145
+00:06:12,780 --> 00:06:14,490
+at least two years to do this,
+
+146
+00:06:14,490 --> 00:06:16,860
+and we are not even sure
+this is the right approach.
+
+147
+00:06:16,860 --> 00:06:17,693
+We make changes
+
+148
+00:06:17,693 --> 00:06:20,700
+in some of the parts of the
+application very frequently,
+
+149
+00:06:20,700 --> 00:06:22,300
+which we can't do at the moment,
+
+150
+00:06:23,280 --> 00:06:24,540
+but other parts of the application
+
+151
+00:06:24,540 --> 00:06:26,903
+haven't really changed
+since we implemented them.
+
+152
+00:06:27,930 --> 00:06:31,350
+So, if this, or some of these
+issues sound familiar to you,
+
+153
+00:06:31,350 --> 00:06:33,900
+it's because you're not alone.
+
+154
+00:06:33,900 --> 00:06:37,170
+These are problems that we
+see commonly with customers,
+
+155
+00:06:37,170 --> 00:06:41,520
+and untangling this mess can
+seem like an impossible task.
+
+156
+00:06:41,520 --> 00:06:43,322
+It's hard to know where to begin.
+
+157
+00:06:43,322 --> 00:06:46,808
+- [Audience] All right, so (indistinct).
+
+158
+00:06:46,808 --> 00:06:48,990
+- So, you may be asking yourself:
+
+159
+00:06:48,990 --> 00:06:52,770
+Why is there a picture of
+a tree on screen right now?
+
+160
+00:06:52,770 --> 00:06:54,150
+Just a quick show of hands,
+
+161
+00:06:54,150 --> 00:06:56,250
+does anybody actually recognize this tree?
+
+162
+00:06:57,180 --> 00:07:00,390
+Okay, I see a few hands,
+there is a hint in the title.
+
+163
+00:07:00,390 --> 00:07:02,730
+So this is, in fact,
+the strangler fig tree.
+
+164
+00:07:02,730 --> 00:07:04,073
+It's native to Queensland, Australia,
+
+165
+00:07:04,073 --> 00:07:05,670
+where I actually grew up.
+
+166
+00:07:05,670 --> 00:07:09,420
+And this particular strangler
+fig tree is actually...
+
+167
+00:07:09,420 --> 00:07:12,330
+This photo is taken in the
+botanical gardens in Brisbane,
+
+168
+00:07:12,330 --> 00:07:13,770
+and the buildings in the background
+
+169
+00:07:13,770 --> 00:07:14,820
+are actually the university
+
+170
+00:07:14,820 --> 00:07:16,410
+that I studied software architecture at
+
+171
+00:07:16,410 --> 00:07:17,460
+many, many years ago.
+
+172
+00:07:18,540 --> 00:07:21,090
+Now, these trees are, as you can see,
+
+173
+00:07:21,090 --> 00:07:23,130
+quite interesting in
+terms of how they grow.
+
+174
+00:07:23,130 --> 00:07:24,420
+They've got quite interesting patterns
+
+175
+00:07:24,420 --> 00:07:29,250
+with all of these branches or
+roots that are coming down,
+
+176
+00:07:29,250 --> 00:07:31,920
+looks like from the top of the canopy.
+
+177
+00:07:31,920 --> 00:07:36,570
+And I guess to explore why
+these trees look like this,
+
+178
+00:07:36,570 --> 00:07:39,063
+we need to understand how
+they start their lives.
+
+179
+00:07:40,380 --> 00:07:44,340
+So, the strangler fig tree
+is actually a parasitic tree.
+
+180
+00:07:44,340 --> 00:07:47,010
+So, a bird, or a possum,
+
+181
+00:07:47,010 --> 00:07:49,173
+or some kind of animal eats its seed,
+
+182
+00:07:50,070 --> 00:07:52,740
+flies away, finds another tree,
+
+183
+00:07:52,740 --> 00:07:55,200
+which I'll refer to as
+a host tree from now on,
+
+184
+00:07:55,200 --> 00:08:00,200
+and deposits the seed on
+one of the branches up top.
+
+185
+00:08:01,950 --> 00:08:04,110
+Now, because of the material
+that's mixed in with the seed,
+
+186
+00:08:04,110 --> 00:08:05,883
+it kind of sticks to the branch.
+
+187
+00:08:07,380 --> 00:08:09,330
+That seed will germinate
+
+188
+00:08:09,330 --> 00:08:12,120
+and the tree will actually
+start to grow from the top down.
+
+189
+00:08:12,120 --> 00:08:13,470
+So it'll start its life up the top
+
+190
+00:08:13,470 --> 00:08:15,540
+and kind of wrap itself
+around one of the branches.
+
+191
+00:08:15,540 --> 00:08:16,980
+And then as quickly as possible,
+
+192
+00:08:16,980 --> 00:08:19,050
+its objective is to get into the soil
+
+193
+00:08:19,050 --> 00:08:20,850
+so that it can suck up all the nutrients,
+
+194
+00:08:20,850 --> 00:08:22,650
+which will enable it to grow faster.
+
+195
+00:08:23,820 --> 00:08:25,620
+So you get this quite interesting pattern,
+
+196
+00:08:25,620 --> 00:08:28,020
+where these trees are
+actually hollow in the center.
+
+197
+00:08:28,020 --> 00:08:30,420
+So there's a cavity, for
+example, in the center there,
+
+198
+00:08:30,420 --> 00:08:31,620
+and you can actually go in,
+
+199
+00:08:31,620 --> 00:08:34,440
+kind of move your way through the tree,
+
+200
+00:08:34,440 --> 00:08:36,870
+and it's actually hollow up the top.
+
+201
+00:08:36,870 --> 00:08:37,980
+And the reason for this
+
+202
+00:08:37,980 --> 00:08:41,130
+is because this is not the
+tree that was originally there.
+
+203
+00:08:41,130 --> 00:08:43,320
+Eventually, they'll start to consume
+
+204
+00:08:43,320 --> 00:08:46,863
+and envelop the entire
+host tree and kill it.
+
+205
+00:08:48,270 --> 00:08:50,550
+But an interesting
+benefit for the host tree
+
+206
+00:08:50,550 --> 00:08:52,203
+is while this is happening,
+
+207
+00:08:53,130 --> 00:08:55,530
+those roots, all of these
+extra rooting points,
+
+208
+00:08:55,530 --> 00:08:58,260
+are actually providing
+more stability to the tree,
+
+209
+00:08:58,260 --> 00:09:00,183
+the host tree that's being killed.
+
+210
+00:09:01,740 --> 00:09:04,770
+This is relevant because in Queensland
+
+211
+00:09:04,770 --> 00:09:06,840
+where these trees live,
+
+212
+00:09:06,840 --> 00:09:08,490
+severe storms, cyclones,
+
+213
+00:09:08,490 --> 00:09:11,400
+or hurricanes of Category 5 are common.
+
+214
+00:09:11,400 --> 00:09:12,750
+In summer, almost every day,
+
+215
+00:09:12,750 --> 00:09:15,150
+there's severe storms
+with very high winds.
+
+216
+00:09:15,150 --> 00:09:17,940
+And ironically, the strangler fig
+
+217
+00:09:17,940 --> 00:09:20,910
+is actually providing more
+stability to that tree,
+
+218
+00:09:20,910 --> 00:09:22,590
+the host tree that it's killing
+
+219
+00:09:22,590 --> 00:09:25,173
+during the period of
+time where it's growing.
+
+220
+00:09:26,670 --> 00:09:29,070
+So it's really helping
+the host tree survive
+
+221
+00:09:29,070 --> 00:09:30,170
+while it's killing it.
+
+222
+00:09:31,320 --> 00:09:33,840
+So how does this apply to software,
+
+223
+00:09:33,840 --> 00:09:36,120
+and how can we apply this behavior
+
+224
+00:09:36,120 --> 00:09:39,420
+of providing the stability
+to the existing system
+
+225
+00:09:39,420 --> 00:09:41,120
+while killing it at the same time?
+
+226
+00:09:42,330 --> 00:09:45,540
+Now, this is where the
+strangler fig pattern comes in.
+
+227
+00:09:45,540 --> 00:09:47,130
+This is not a new pattern.
+
+228
+00:09:47,130 --> 00:09:50,610
+This is actually coined by
+Martin Fowler back in 2004,
+
+229
+00:09:50,610 --> 00:09:54,030
+and it's still relevant
+in 2025 because it works.
+
+230
+00:09:54,030 --> 00:09:57,303
+Turns out, that this isn't a
+very, very effective pattern.
+
+231
+00:09:58,590 --> 00:09:59,490
+The core concept
+
+232
+00:09:59,490 --> 00:10:03,390
+is we want to incrementally
+build a new system
+
+233
+00:10:03,390 --> 00:10:05,493
+on the edges of the existing system.
+
+234
+00:10:09,609 --> 00:10:11,550
+The focus is really to
+do this incrementally.
+
+235
+00:10:11,550 --> 00:10:14,700
+So focusing on the biggest
+problem that we have
+
+236
+00:10:14,700 --> 00:10:17,160
+and extracting that from the monolith
+
+237
+00:10:17,160 --> 00:10:20,130
+and building a new component
+around the edges of the system.
+
+238
+00:10:20,130 --> 00:10:22,080
+We can do the same
+thing with new features.
+
+239
+00:10:22,080 --> 00:10:24,660
+So we can start to build
+smaller, interdependent systems
+
+240
+00:10:24,660 --> 00:10:28,140
+around the edges of the
+monolith and slowly strangle it.
+
+241
+00:10:28,140 --> 00:10:30,630
+This gives us a couple of advantages.
+
+242
+00:10:30,630 --> 00:10:33,660
+Firstly, as we move those
+services off the monolith,
+
+243
+00:10:33,660 --> 00:10:35,820
+we're gonna improve the
+stability and the durability
+
+244
+00:10:35,820 --> 00:10:37,620
+of the monolith itself.
+
+245
+00:10:37,620 --> 00:10:39,930
+We'll start to solve some of
+the problems in the monolith,
+
+246
+00:10:39,930 --> 00:10:41,700
+and by doing so, the actual...
+
+247
+00:10:41,700 --> 00:10:43,470
+The monolith is gonna be more stable
+
+248
+00:10:43,470 --> 00:10:45,570
+and we can start to get
+some of that agility back,
+
+249
+00:10:45,570 --> 00:10:46,740
+but at the same time,
+
+250
+00:10:46,740 --> 00:10:49,490
+we're also reducing the risk
+of the thing falling over.
+
+251
+00:10:51,780 --> 00:10:53,220
+Okay, so this is the general idea,
+
+252
+00:10:53,220 --> 00:10:55,320
+but let's actually look at how we do this.
+
+253
+00:10:57,300 --> 00:10:58,740
+So, this is a typical starting point
+
+254
+00:10:58,740 --> 00:11:00,040
+for most of our customers.
+
+255
+00:11:01,050 --> 00:11:03,570
+We've got our monolith, it's
+been simplified a little bit,
+
+256
+00:11:03,570 --> 00:11:05,970
+but just for illustration purposes.
+
+257
+00:11:05,970 --> 00:11:07,650
+So the whole thing is a problem.
+
+258
+00:11:07,650 --> 00:11:08,580
+We talked about that,
+
+259
+00:11:08,580 --> 00:11:12,810
+but the biggest problem we
+have is this search service.
+
+260
+00:11:12,810 --> 00:11:14,490
+It's been there for years.
+
+261
+00:11:14,490 --> 00:11:17,130
+There's so much duct tape on that thing.
+
+262
+00:11:17,130 --> 00:11:19,200
+Every time there's any release,
+
+263
+00:11:19,200 --> 00:11:20,760
+there's always a problem there.
+
+264
+00:11:20,760 --> 00:11:22,470
+So this is where we're gonna start.
+
+265
+00:11:22,470 --> 00:11:23,760
+To compound this,
+
+266
+00:11:23,760 --> 00:11:25,830
+the search is implemented
+in a relational database.
+
+267
+00:11:25,830 --> 00:11:28,683
+That was probably not a good
+idea, but it's what we used.
+
+268
+00:11:30,120 --> 00:11:31,830
+We had a batch process that was running,
+
+269
+00:11:31,830 --> 00:11:34,200
+and it used to run in about
+one minute every hour,
+
+270
+00:11:34,200 --> 00:11:36,990
+and now it runs for the full
+hour, if it completes at all.
+
+271
+00:11:36,990 --> 00:11:39,723
+So this is thrashing our
+monolithic database as well.
+
+272
+00:11:42,090 --> 00:11:45,390
+So we've decided to start,
+but before we get started,
+
+273
+00:11:45,390 --> 00:11:47,700
+we need to introduce a
+component into the design
+
+274
+00:11:47,700 --> 00:11:49,080
+so that we can make these changes
+
+275
+00:11:49,080 --> 00:11:50,730
+without having to go into the code
+
+276
+00:11:50,730 --> 00:11:52,480
+and change the monolith every time.
+
+277
+00:11:54,090 --> 00:11:55,200
+So the first thing we're gonna do
+
+278
+00:11:55,200 --> 00:11:57,570
+is implement a facade or a proxy,
+
+279
+00:11:57,570 --> 00:12:01,143
+and it's gonna sit in between
+the users and the application.
+
+280
+00:12:02,340 --> 00:12:04,170
+This is gonna be used to steer traffic.
+
+281
+00:12:04,170 --> 00:12:06,180
+So initially, it's just
+gonna be a thin routing layer
+
+282
+00:12:06,180 --> 00:12:08,580
+that's just gonna send all
+of the existing requests
+
+283
+00:12:08,580 --> 00:12:10,170
+from the users of the user interface
+
+284
+00:12:10,170 --> 00:12:12,120
+straight through to the
+monolithic application,
+
+285
+00:12:12,120 --> 00:12:13,620
+pretty much as its operating state
+
+286
+00:12:13,620 --> 00:12:17,250
+should be transparent to the
+end users and the clients.
+
+287
+00:12:17,250 --> 00:12:20,430
+But we're gonna start
+selectively steering the traffic
+
+288
+00:12:20,430 --> 00:12:23,250
+based on the new services that we develop
+
+289
+00:12:23,250 --> 00:12:25,950
+to these new services or to the monolith.
+
+290
+00:12:25,950 --> 00:12:27,330
+This allows us to make those changes
+
+291
+00:12:27,330 --> 00:12:28,710
+without having to go back in
+
+292
+00:12:28,710 --> 00:12:30,060
+and change everything in the monolith
+
+293
+00:12:30,060 --> 00:12:31,860
+every time we want to
+implement new services.
+
+294
+00:12:31,860 --> 00:12:33,560
+So it gives us a bit more control.
+
+295
+00:12:35,370 --> 00:12:36,695
+So we've dedicated two sprints
+
+296
+00:12:36,695 --> 00:12:39,390
+to developing our new search service,
+
+297
+00:12:39,390 --> 00:12:41,160
+and we're gonna make different
+architectural choices
+
+298
+00:12:41,160 --> 00:12:41,993
+this time.
+
+299
+00:12:43,140 --> 00:12:46,410
+We are going to have the
+service own its own data
+
+300
+00:12:46,410 --> 00:12:47,670
+because this will allow us
+
+301
+00:12:47,670 --> 00:12:49,530
+to evolve that service independently
+
+302
+00:12:49,530 --> 00:12:51,240
+without having a shared data model
+
+303
+00:12:51,240 --> 00:12:52,740
+that requires us to go back in
+
+304
+00:12:52,740 --> 00:12:53,910
+and change all of those components
+
+305
+00:12:53,910 --> 00:12:55,950
+and potentially impact other services.
+
+306
+00:12:55,950 --> 00:12:57,450
+So this is gonna give
+us a bit more agility
+
+307
+00:12:57,450 --> 00:13:00,180
+to independently develop that service.
+
+308
+00:13:00,180 --> 00:13:02,730
+We're also gonna use a
+purpose-built data structure
+
+309
+00:13:02,730 --> 00:13:04,200
+that's optimized for search.
+
+310
+00:13:04,200 --> 00:13:05,340
+So, we're gonna move away
+
+311
+00:13:05,340 --> 00:13:08,910
+from our using a relational
+database for everything model.
+
+312
+00:13:08,910 --> 00:13:11,880
+And we're gonna reimagine
+how we do indexing as well.
+
+313
+00:13:11,880 --> 00:13:13,590
+We're gonna move to a
+constant work pattern,
+
+314
+00:13:13,590 --> 00:13:16,200
+where we're only incrementally
+loading some things in.
+
+315
+00:13:16,200 --> 00:13:18,870
+So we've made our choices,
+we've tested the service,
+
+316
+00:13:18,870 --> 00:13:20,460
+and everything's looking pretty good.
+
+317
+00:13:20,460 --> 00:13:22,290
+We're ready to cut over.
+
+318
+00:13:22,290 --> 00:13:27,240
+So how we do this is
+we're actually going to,
+
+319
+00:13:27,240 --> 00:13:29,550
+in the proxy, go back in, and add a route
+
+320
+00:13:29,550 --> 00:13:33,107
+to start routing that traffic
+to our new modern service.
+
+321
+00:13:33,107 --> 00:13:34,110
+All the existing requests
+
+322
+00:13:34,110 --> 00:13:36,600
+will continue to go through
+the monolith as usual,
+
+323
+00:13:36,600 --> 00:13:38,580
+but our new request for
+search will be redirected
+
+324
+00:13:38,580 --> 00:13:40,173
+to our new search service.
+
+325
+00:13:41,790 --> 00:13:43,470
+So we've taken our first step
+
+326
+00:13:43,470 --> 00:13:44,850
+towards moving to the monolith,
+
+327
+00:13:44,850 --> 00:13:47,010
+and we've solved two key problems.
+
+328
+00:13:47,010 --> 00:13:48,655
+We've taken a significant problem area
+
+329
+00:13:48,655 --> 00:13:51,450
+in our monolithic
+application and removed it.
+
+330
+00:13:51,450 --> 00:13:53,280
+At this point, this is
+just some dead code.
+
+331
+00:13:53,280 --> 00:13:55,560
+It's not doing anything, we
+could go and clean it up,
+
+332
+00:13:55,560 --> 00:13:57,360
+but we don't really need to.
+
+333
+00:13:57,360 --> 00:13:58,890
+But we've also alleviated
+a lot of the pressure
+
+334
+00:13:58,890 --> 00:14:01,173
+on our monolithic
+database at the same time.
+
+335
+00:14:02,850 --> 00:14:03,990
+So this one was fairly simple
+
+336
+00:14:03,990 --> 00:14:05,550
+because it didn't have
+too many dependencies
+
+337
+00:14:05,550 --> 00:14:08,640
+between other components in
+the monolithic application.
+
+338
+00:14:08,640 --> 00:14:11,220
+We've solved some of our
+problems, but as I mentioned,
+
+339
+00:14:11,220 --> 00:14:14,190
+we need to change parts of this
+application very frequently,
+
+340
+00:14:14,190 --> 00:14:16,473
+in particular the article
+management service.
+
+341
+00:14:17,550 --> 00:14:19,770
+We're actively developing
+this, or we want to,
+
+342
+00:14:19,770 --> 00:14:22,620
+if we can get our way out
+of fighting fires all day.
+
+343
+00:14:22,620 --> 00:14:25,380
+So this is where we're gonna
+focus next, but as you can see,
+
+344
+00:14:25,380 --> 00:14:28,113
+there's more interaction
+between these components.
+
+345
+00:14:29,040 --> 00:14:30,930
+So we need to actually
+introduce another component
+
+346
+00:14:30,930 --> 00:14:31,770
+into our design
+
+347
+00:14:31,770 --> 00:14:35,220
+to help us to be able to
+transform this component.
+
+348
+00:14:35,220 --> 00:14:36,390
+So we're gonna introduce something
+
+349
+00:14:36,390 --> 00:14:38,850
+that's called an anti-corruption layer.
+
+350
+00:14:38,850 --> 00:14:40,983
+Now, we could do this differently.
+
+351
+00:14:42,360 --> 00:14:45,570
+We could go back in and try
+and find all of the references
+
+352
+00:14:45,570 --> 00:14:47,010
+to these internal interfaces
+
+353
+00:14:47,010 --> 00:14:48,810
+and go and update them in our code,
+
+354
+00:14:48,810 --> 00:14:49,643
+but as I said,
+
+355
+00:14:49,643 --> 00:14:50,476
+we'd have to get approval
+
+356
+00:14:50,476 --> 00:14:52,140
+from all the product managers to do this.
+
+357
+00:14:52,140 --> 00:14:53,370
+It's gonna be difficult
+
+358
+00:14:53,370 --> 00:14:55,860
+and it's gonna be difficult
+to roll back as well.
+
+359
+00:14:55,860 --> 00:14:56,760
+Instead, what we're gonna do
+
+360
+00:14:56,760 --> 00:14:59,910
+is introduce a small
+wrapper into our monolith,
+
+361
+00:14:59,910 --> 00:15:04,020
+and all that's gonna do is
+translate the old to the new.
+
+362
+00:15:04,020 --> 00:15:05,970
+So it's just going to
+convert the data formats
+
+363
+00:15:05,970 --> 00:15:09,780
+and interfaces used by
+the old interactions
+
+364
+00:15:09,780 --> 00:15:11,553
+into the new interactions.
+
+365
+00:15:12,900 --> 00:15:14,910
+The goal here is really
+to minimize the change
+
+366
+00:15:14,910 --> 00:15:17,310
+to the monolith as much as possible.
+
+367
+00:15:17,310 --> 00:15:19,380
+So, again, we've taken the same approach,
+
+368
+00:15:19,380 --> 00:15:20,640
+we've dedicated a couple of sprints
+
+369
+00:15:20,640 --> 00:15:22,680
+to developing our new service,
+
+370
+00:15:22,680 --> 00:15:25,020
+we've implemented our anti-corruption
+layer in our monolith,
+
+371
+00:15:25,020 --> 00:15:26,420
+and we're ready to cut over.
+
+372
+00:15:27,540 --> 00:15:30,630
+So, we follow the same pattern,
+we go back into our proxy,
+
+373
+00:15:30,630 --> 00:15:31,710
+we implement our route,
+
+374
+00:15:31,710 --> 00:15:33,690
+and we deploy our anti-corruption layer.
+
+375
+00:15:33,690 --> 00:15:36,030
+Which is gonna forward
+any internal interfaces
+
+376
+00:15:36,030 --> 00:15:38,790
+out to our new modern service.
+
+377
+00:15:38,790 --> 00:15:42,120
+At this point, we essentially
+just written to repeat,
+
+378
+00:15:42,120 --> 00:15:43,560
+focusing on the biggest problems
+
+379
+00:15:43,560 --> 00:15:46,260
+or the most important problems to solve,
+
+380
+00:15:46,260 --> 00:15:48,060
+to give us back that agility
+
+381
+00:15:48,060 --> 00:15:50,130
+to independently evolve these components
+
+382
+00:15:50,130 --> 00:15:52,260
+but also to relieve pressure
+on the monolith itself
+
+383
+00:15:52,260 --> 00:15:54,240
+while we're doing this
+and give a more cycles
+
+384
+00:15:54,240 --> 00:15:56,550
+so that we can move towards innovating
+
+385
+00:15:56,550 --> 00:15:58,250
+instead of fighting fires all day.
+
+386
+00:16:00,420 --> 00:16:01,253
+By doing it this way,
+
+387
+00:16:01,253 --> 00:16:02,880
+we reduce a lot of the
+risks that would be involved
+
+388
+00:16:02,880 --> 00:16:05,430
+in just trying to
+redevelop the whole system.
+
+389
+00:16:05,430 --> 00:16:07,080
+We can continue to use this pattern also
+
+390
+00:16:07,080 --> 00:16:08,820
+to develop new features as well,
+
+391
+00:16:08,820 --> 00:16:10,950
+and we slowly start to
+build those components
+
+392
+00:16:10,950 --> 00:16:12,950
+around the edges of our existing system.
+
+393
+00:16:14,250 --> 00:16:16,590
+So we'll quickly go back
+to our original application
+
+394
+00:16:16,590 --> 00:16:18,690
+and see how you can implement this pattern
+
+395
+00:16:18,690 --> 00:16:21,300
+using AWS services, for example.
+
+396
+00:16:21,300 --> 00:16:22,947
+So we have our application,
+
+397
+00:16:22,947 --> 00:16:24,690
+and the first thing we need to do
+
+398
+00:16:24,690 --> 00:16:27,510
+is we need to insert that proxy.
+
+399
+00:16:27,510 --> 00:16:30,420
+So for that we're gonna
+use Amazon API Gateway
+
+400
+00:16:30,420 --> 00:16:32,430
+as our strangler fig proxy.
+
+401
+00:16:32,430 --> 00:16:33,570
+Why API Gateway?
+
+402
+00:16:33,570 --> 00:16:35,040
+There are other options here.
+
+403
+00:16:35,040 --> 00:16:36,870
+But from our use case,
+
+404
+00:16:36,870 --> 00:16:39,510
+the way we do our billing is per request,
+
+405
+00:16:39,510 --> 00:16:42,120
+so it works pretty well for that.
+
+406
+00:16:42,120 --> 00:16:43,320
+It scales automatically
+
+407
+00:16:43,320 --> 00:16:46,020
+and we hate managing reverse proxy fleets.
+
+408
+00:16:46,020 --> 00:16:48,900
+So, it's serverless and
+this is great for us.
+
+409
+00:16:48,900 --> 00:16:51,270
+So, to start with, we're
+just gonna have a pattern
+
+410
+00:16:51,270 --> 00:16:53,100
+that's just gonna proxy all requests
+
+411
+00:16:53,100 --> 00:16:55,000
+through to our monolithic application.
+
+412
+00:16:56,670 --> 00:16:59,160
+Next, we go in and develop
+our search service.
+
+413
+00:16:59,160 --> 00:17:00,270
+So we're gonna make, as I said,
+
+414
+00:17:00,270 --> 00:17:01,103
+we're gonna make
+
+415
+00:17:01,103 --> 00:17:02,760
+a couple of different
+design decisions this time.
+
+416
+00:17:02,760 --> 00:17:04,230
+So we're gonna use AWS Lambda
+
+417
+00:17:04,230 --> 00:17:06,253
+to implement the the front end components
+
+418
+00:17:06,253 --> 00:17:08,730
+or the the API components.
+
+419
+00:17:08,730 --> 00:17:10,710
+We're doing that because
+we have variable load,
+
+420
+00:17:10,710 --> 00:17:12,330
+we don't have requests coming in all day,
+
+421
+00:17:12,330 --> 00:17:14,580
+so this fits pretty well for
+our variable use pattern,
+
+422
+00:17:14,580 --> 00:17:17,460
+and it also allows us to
+scale up as we need to
+
+423
+00:17:17,460 --> 00:17:19,110
+and reduces a lot of
+our operational burden
+
+424
+00:17:19,110 --> 00:17:22,140
+that we have managing
+the application today.
+
+425
+00:17:22,140 --> 00:17:24,630
+We're also gonna use
+Amazon OpenSearch Service
+
+426
+00:17:24,630 --> 00:17:26,460
+for our data store.
+
+427
+00:17:26,460 --> 00:17:28,620
+The reason for this is
+it's much better suited
+
+428
+00:17:28,620 --> 00:17:29,700
+for our search use case,
+
+429
+00:17:29,700 --> 00:17:31,590
+and it's gonna allow
+us to ship new features
+
+430
+00:17:31,590 --> 00:17:32,940
+around that search service
+
+431
+00:17:32,940 --> 00:17:35,610
+and serve our future customer needs.
+
+432
+00:17:35,610 --> 00:17:39,390
+So again, we're tested extensively,
+and we're happy with it.
+
+433
+00:17:39,390 --> 00:17:40,490
+It's time to cut over.
+
+434
+00:17:41,760 --> 00:17:42,593
+The next thing we'll do
+
+435
+00:17:42,593 --> 00:17:45,330
+is we'll add a route into our API gateway
+
+436
+00:17:45,330 --> 00:17:48,240
+to redirect any search
+requests to the new service
+
+437
+00:17:48,240 --> 00:17:49,530
+and continue to send those through
+
+438
+00:17:49,530 --> 00:17:51,630
+to our existing application,
+
+439
+00:17:51,630 --> 00:17:52,710
+the rest of the services.
+
+440
+00:17:52,710 --> 00:17:53,543
+Now, you might have noticed
+
+441
+00:17:53,543 --> 00:17:55,590
+that once we've removed
+the search service,
+
+442
+00:17:55,590 --> 00:17:57,090
+we've actually reduced the number of tasks
+
+443
+00:17:57,090 --> 00:17:59,397
+that are serving the original
+monolithic application.
+
+444
+00:17:59,397 --> 00:18:01,410
+And this is the other
+benefit we get by doing this
+
+445
+00:18:01,410 --> 00:18:04,080
+is as we start to reduce
+load on our monolith,
+
+446
+00:18:04,080 --> 00:18:06,480
+we can actually start to
+right size that down as well,
+
+447
+00:18:06,480 --> 00:18:08,400
+and we get an additional
+cost benefit there
+
+448
+00:18:08,400 --> 00:18:10,833
+as we kind of reduce the
+load on that component.
+
+449
+00:18:13,320 --> 00:18:15,090
+Next, we have our article
+management service.
+
+450
+00:18:15,090 --> 00:18:16,320
+We pretty much take the same approach,
+
+451
+00:18:16,320 --> 00:18:17,490
+but this time again,
+
+452
+00:18:17,490 --> 00:18:20,610
+we wanna make different design
+decisions here, and we can.
+
+453
+00:18:20,610 --> 00:18:22,380
+So, we have a slight difference here.
+
+454
+00:18:22,380 --> 00:18:23,820
+So for our search use case,
+
+455
+00:18:23,820 --> 00:18:25,020
+we're not gonna migrate any data
+
+456
+00:18:25,020 --> 00:18:26,250
+from our relational database,
+
+457
+00:18:26,250 --> 00:18:27,810
+we're just gonna re-index it.
+
+458
+00:18:27,810 --> 00:18:30,570
+So we didn't necessarily
+have to migrate any data,
+
+459
+00:18:30,570 --> 00:18:31,680
+but with our articles,
+
+460
+00:18:31,680 --> 00:18:33,600
+we've got like five or six
+years worth of articles,
+
+461
+00:18:33,600 --> 00:18:35,790
+and we do wanna migrate that data.
+
+462
+00:18:35,790 --> 00:18:38,102
+We've chosen Amazon S3 as the store
+
+463
+00:18:38,102 --> 00:18:41,760
+for storing our article
+data in our new application
+
+464
+00:18:41,760 --> 00:18:43,230
+because it's pretty effective
+
+465
+00:18:43,230 --> 00:18:45,030
+for the static content that we have,
+
+466
+00:18:45,030 --> 00:18:47,820
+it's cost-effective, and it scales well.
+
+467
+00:18:47,820 --> 00:18:48,900
+We have some metadata,
+
+468
+00:18:48,900 --> 00:18:51,510
+we're just gonna saw that in DynamoDB,
+
+469
+00:18:51,510 --> 00:18:55,020
+and we're gonna use AWS
+Database Migration Service,
+
+470
+00:18:55,020 --> 00:18:59,130
+or AWS DMS, to actually do
+a heterogeneous migrations
+
+471
+00:18:59,130 --> 00:19:02,640
+of selective parts of
+the database into S3.
+
+472
+00:19:02,640 --> 00:19:05,880
+This way, we can load just
+the article data into S3,
+
+473
+00:19:05,880 --> 00:19:09,033
+continually synchronize that,
+until we're ready to cut over.
+
+474
+00:19:11,580 --> 00:19:13,560
+So, once we're ready to cut over,
+
+475
+00:19:13,560 --> 00:19:15,660
+we again go back into our API gateway,
+
+476
+00:19:15,660 --> 00:19:18,147
+and we implement a new route
+for our article service,
+
+477
+00:19:18,147 --> 00:19:19,890
+and we can use the Lambda integration
+
+478
+00:19:19,890 --> 00:19:21,540
+to directly integrate with our new service
+
+479
+00:19:21,540 --> 00:19:23,213
+that we've built around the edges.
+
+480
+00:19:24,630 --> 00:19:25,930
+So, using this pattern,
+
+481
+00:19:25,930 --> 00:19:28,200
+we've started to build smaller components
+
+482
+00:19:28,200 --> 00:19:30,060
+around the edges of our application.
+
+483
+00:19:30,060 --> 00:19:32,335
+We're able to move a
+little bit faster again.
+
+484
+00:19:32,335 --> 00:19:34,380
+(audience applauding)
+
+485
+00:19:34,380 --> 00:19:37,320
+We can evolve those
+components independently,
+
+486
+00:19:37,320 --> 00:19:39,750
+and whilst this process does take time,
+
+487
+00:19:39,750 --> 00:19:41,400
+we're incrementally tackling the problems
+
+488
+00:19:41,400 --> 00:19:42,903
+that are most important to us.
+
+489
+00:19:44,400 --> 00:19:46,980
+We're gaining time back, we're
+not fighting fires all day,
+
+490
+00:19:46,980 --> 00:19:49,770
+and we can actually focus
+back on our roadmap.
+
+491
+00:19:49,770 --> 00:19:51,360
+Easy, right?
+
+492
+00:19:51,360 --> 00:19:54,753
+Well, as I mentioned, every
+decision comes with trade-offs.
+
+493
+00:19:55,650 --> 00:19:57,090
+We move forward with a monolith...
+
+494
+00:19:57,090 --> 00:19:59,010
+As we move from a monolithic pattern
+
+495
+00:19:59,010 --> 00:20:00,690
+to a distributed system,
+
+496
+00:20:00,690 --> 00:20:03,480
+integrating and coordinating
+those interactions
+
+497
+00:20:03,480 --> 00:20:06,690
+between those components
+does get more complex.
+
+498
+00:20:06,690 --> 00:20:09,660
+So, Dirk's gonna dive
+into a little bit deeper
+
+499
+00:20:09,660 --> 00:20:11,190
+into some of the more complex components,
+
+500
+00:20:11,190 --> 00:20:13,340
+and we'll explore how
+we can address those.
+
+501
+00:20:14,940 --> 00:20:15,940
+- Thank you, Adrian.
+
+502
+00:20:17,430 --> 00:20:19,080
+It's an interesting journey so far,
+
+503
+00:20:19,080 --> 00:20:22,710
+and I'm very happy that
+I'm part of this journey
+
+504
+00:20:22,710 --> 00:20:26,043
+as a new Chief Integration
+Architect for New Science.
+
+505
+00:20:27,180 --> 00:20:29,280
+And of course, this
+journey cannot stop here.
+
+506
+00:20:29,280 --> 00:20:31,050
+We need to continue.
+
+507
+00:20:31,050 --> 00:20:33,390
+Similarly to a lift-and-shift migration,
+
+508
+00:20:33,390 --> 00:20:35,430
+where you shouldn't stop
+after that migration,
+
+509
+00:20:35,430 --> 00:20:38,580
+but then also modernize your workload,
+
+510
+00:20:38,580 --> 00:20:41,610
+we also now need to
+consider a few other things.
+
+511
+00:20:41,610 --> 00:20:45,050
+For instance, how to integrate
+the number of systems
+
+512
+00:20:45,050 --> 00:20:46,410
+that we now get
+
+513
+00:20:46,410 --> 00:20:50,760
+out of that first strangling
+the monolith migration,
+
+514
+00:20:50,760 --> 00:20:53,520
+and then apparently we
+also need to understand:
+
+515
+00:20:53,520 --> 00:20:56,160
+How can we actually manage the interaction
+
+516
+00:20:56,160 --> 00:20:57,423
+between those systems?
+
+517
+00:20:58,560 --> 00:21:00,750
+For that, we have a pattern at hand
+
+518
+00:21:00,750 --> 00:21:03,330
+that is widely known and used.
+
+519
+00:21:03,330 --> 00:21:04,757
+It is called the Saga pattern,
+
+520
+00:21:04,757 --> 00:21:07,143
+and it actually comes with two flavors:
+
+521
+00:21:08,040 --> 00:21:11,010
+choreography and orchestration.
+
+522
+00:21:11,010 --> 00:21:13,110
+Both of them, however,
+
+523
+00:21:13,110 --> 00:21:16,920
+built on a workflow and the
+execution of that workflow
+
+524
+00:21:16,920 --> 00:21:19,923
+that manages the interaction
+between those systems.
+
+525
+00:21:21,150 --> 00:21:22,680
+Now, a few months back,
+
+526
+00:21:22,680 --> 00:21:25,320
+when we showed this to our product team,
+
+527
+00:21:25,320 --> 00:21:27,780
+they actually liked this a lot
+
+528
+00:21:27,780 --> 00:21:30,570
+that we gain a lot of flexibility
+
+529
+00:21:30,570 --> 00:21:34,110
+when we cut our monolith
+into several pieces,
+
+530
+00:21:34,110 --> 00:21:36,630
+and they think, "Okay, guys, from now on,
+
+531
+00:21:36,630 --> 00:21:40,830
+we can build all those cool
+products that we can think of."
+
+532
+00:21:40,830 --> 00:21:42,960
+Of course, they didn't
+look at their price point
+
+533
+00:21:42,960 --> 00:21:46,020
+on the lower right end
+that we can see here
+
+534
+00:21:46,020 --> 00:21:47,853
+and thought they can leave it to us.
+
+535
+00:21:48,990 --> 00:21:52,860
+Well, for next case, our product
+team for next year, sorry,
+
+536
+00:21:52,860 --> 00:21:55,110
+our product team has decided
+
+537
+00:21:55,110 --> 00:21:58,350
+that a new feature of a Premium Tier
+
+538
+00:21:58,350 --> 00:22:00,480
+is to be the most important feature
+
+539
+00:22:00,480 --> 00:22:03,570
+of our new science service,
+
+540
+00:22:03,570 --> 00:22:06,870
+and customers can onboard
+to that new feature
+
+541
+00:22:06,870 --> 00:22:10,410
+and then consume premium content
+
+542
+00:22:10,410 --> 00:22:12,723
+because they are premium subscribers.
+
+543
+00:22:13,590 --> 00:22:17,400
+We will have a look at
+the onboarding process
+
+544
+00:22:17,400 --> 00:22:19,470
+for such a premium customer
+
+545
+00:22:19,470 --> 00:22:21,960
+to discuss the interaction between systems
+
+546
+00:22:21,960 --> 00:22:24,240
+in our microservices landscape.
+
+547
+00:22:24,240 --> 00:22:26,850
+As you can think, there
+is a number of steps
+
+548
+00:22:26,850 --> 00:22:30,210
+that needs to be fulfilled to
+do that onboarding process.
+
+549
+00:22:30,210 --> 00:22:31,560
+Don't look at that in detail
+
+550
+00:22:31,560 --> 00:22:34,590
+just to illustrate there's
+a ton of work to be done,
+
+551
+00:22:34,590 --> 00:22:36,390
+and then of course the product team
+
+552
+00:22:36,390 --> 00:22:38,670
+cannot get away for free from this.
+
+553
+00:22:38,670 --> 00:22:40,050
+They need to make up their mind
+
+554
+00:22:40,050 --> 00:22:43,200
+about a few business decisions.
+
+555
+00:22:43,200 --> 00:22:45,450
+But to understand that flow
+
+556
+00:22:45,450 --> 00:22:47,010
+and use case a little bit better,
+
+557
+00:22:47,010 --> 00:22:49,680
+let's pour it into a diagram.
+
+558
+00:22:49,680 --> 00:22:51,690
+So what we intend to do
+
+559
+00:22:51,690 --> 00:22:56,690
+is that our end user clients
+can be used by our customers
+
+560
+00:22:56,850 --> 00:23:00,750
+to submit that request to
+subscribe to a Premium Tier,
+
+561
+00:23:00,750 --> 00:23:04,440
+and it'll land in the
+subscription management service.
+
+562
+00:23:04,440 --> 00:23:05,820
+We will make it asynchronous
+
+563
+00:23:05,820 --> 00:23:10,820
+so that the user directly
+receives a response.
+
+564
+00:23:11,340 --> 00:23:12,300
+And we take care
+
+565
+00:23:12,300 --> 00:23:15,000
+about the actual subscription
+onboarding process
+
+566
+00:23:15,000 --> 00:23:16,200
+under the hood.
+
+567
+00:23:16,200 --> 00:23:19,770
+Now, since we now have
+a landscape of systems
+
+568
+00:23:19,770 --> 00:23:21,270
+under the hood,
+
+569
+00:23:21,270 --> 00:23:23,070
+the subscription management service
+
+570
+00:23:23,070 --> 00:23:25,590
+is not gonna do everything on its own.
+
+571
+00:23:25,590 --> 00:23:28,800
+It's gonna employ a lot
+of downstream systems
+
+572
+00:23:28,800 --> 00:23:32,220
+that contribute to the overall workflow.
+
+573
+00:23:32,220 --> 00:23:34,110
+And one of the most important ones for us
+
+574
+00:23:34,110 --> 00:23:35,520
+because we want to earn money
+
+575
+00:23:35,520 --> 00:23:37,620
+is that we try to get some money
+
+576
+00:23:37,620 --> 00:23:39,810
+from our onboarding customer,
+
+577
+00:23:39,810 --> 00:23:42,720
+but then we also need to
+enable that premium content,
+
+578
+00:23:42,720 --> 00:23:45,630
+make it available for the new customer.
+
+579
+00:23:45,630 --> 00:23:47,130
+And last but not least,
+
+580
+00:23:47,130 --> 00:23:50,010
+we want to add some customer
+relationship goodies,
+
+581
+00:23:50,010 --> 00:23:52,740
+like subscribe them to
+a premium newsletter
+
+582
+00:23:52,740 --> 00:23:57,000
+and onboard them also
+to a loyalty service.
+
+583
+00:23:57,000 --> 00:23:59,340
+And maybe you can also already think of
+
+584
+00:23:59,340 --> 00:24:02,820
+that we want to have a
+certain order of this in place
+
+585
+00:24:02,820 --> 00:24:05,280
+so that we can make sure
+we first get the money
+
+586
+00:24:05,280 --> 00:24:07,653
+before we do everything else.
+
+587
+00:24:09,150 --> 00:24:12,150
+Now, the fundamental question
+before we even think about:
+
+588
+00:24:12,150 --> 00:24:15,720
+How can we manage the
+interaction between systems?
+
+589
+00:24:15,720 --> 00:24:18,030
+Is that we need to make up our minds
+
+590
+00:24:18,030 --> 00:24:21,510
+how we do the integration
+between the systems.
+
+591
+00:24:21,510 --> 00:24:22,920
+And even one step back,
+
+592
+00:24:22,920 --> 00:24:25,500
+we also need to make up our mind about:
+
+593
+00:24:25,500 --> 00:24:28,080
+What do we actually
+want to build ourselves,
+
+594
+00:24:28,080 --> 00:24:31,830
+and what do we leave to others
+that maybe do it better?
+
+595
+00:24:31,830 --> 00:24:34,140
+For instance, a payment service.
+
+596
+00:24:34,140 --> 00:24:35,820
+I don't want to build this on my own,
+
+597
+00:24:35,820 --> 00:24:38,700
+I don't wanna undergo
+through a PCI certification.
+
+598
+00:24:38,700 --> 00:24:42,480
+I would leave that to somebody
+who does this for a living.
+
+599
+00:24:42,480 --> 00:24:46,590
+And the loyalty service and
+also a newsletter service
+
+600
+00:24:46,590 --> 00:24:48,720
+that are assets that we have to have,
+
+601
+00:24:48,720 --> 00:24:52,410
+but they don't really distinguish
+us from our competitors,
+
+602
+00:24:52,410 --> 00:24:56,460
+so we also make use of a third
+party SaaS service for that.
+
+603
+00:24:56,460 --> 00:25:00,037
+All right, so with that
+upfront, we can now discuss,
+
+604
+00:25:00,037 --> 00:25:03,600
+"Hey, how do we actually want
+to integrate our systems?"
+
+605
+00:25:03,600 --> 00:25:06,060
+Our goal should be, in that context,
+
+606
+00:25:06,060 --> 00:25:08,580
+to make the integration as loosely coupled
+
+607
+00:25:08,580 --> 00:25:12,300
+and simple as possible
+for added flexibility
+
+608
+00:25:12,300 --> 00:25:17,300
+and also to make the overall
+app as resilient as possible.
+
+609
+00:25:17,700 --> 00:25:19,320
+How could we do that?
+
+610
+00:25:19,320 --> 00:25:22,740
+Well, probably most of
+you would, by default,
+
+611
+00:25:22,740 --> 00:25:25,320
+when it comes to integrating systems,
+
+612
+00:25:25,320 --> 00:25:28,210
+think about the synchronous
+request response model
+
+613
+00:25:29,370 --> 00:25:30,870
+to use with APIs.
+
+614
+00:25:30,870 --> 00:25:31,703
+Why is that so?
+
+615
+00:25:31,703 --> 00:25:33,390
+Because probably most of us
+
+616
+00:25:33,390 --> 00:25:35,910
+have used synchronous request response
+
+617
+00:25:35,910 --> 00:25:38,130
+all of their professional life,
+
+618
+00:25:38,130 --> 00:25:40,380
+with programming languages
+
+619
+00:25:40,380 --> 00:25:42,780
+when we call procedures or functions,
+
+620
+00:25:42,780 --> 00:25:44,130
+and we also do the same
+
+621
+00:25:44,130 --> 00:25:47,070
+when we consume a
+website with our browser.
+
+622
+00:25:47,070 --> 00:25:50,880
+So that seems quite
+natural, unfortunately.
+
+623
+00:25:50,880 --> 00:25:55,830
+It introduces a lot of coupling
+to our overall architecture,
+
+624
+00:25:55,830 --> 00:25:58,080
+and particularly runtime coupling.
+
+625
+00:25:58,080 --> 00:26:00,030
+So temporal coupling.
+
+626
+00:26:00,030 --> 00:26:02,310
+Because when a request is running
+
+627
+00:26:02,310 --> 00:26:04,740
+through this entire network here,
+
+628
+00:26:04,740 --> 00:26:08,070
+you will bind resources on all stages,
+
+629
+00:26:08,070 --> 00:26:11,280
+and it can unfortunately then violate
+
+630
+00:26:11,280 --> 00:26:16,140
+one of the major promises
+of microservices.
+
+631
+00:26:16,140 --> 00:26:18,948
+One of those promises is
+that you can scale out
+
+632
+00:26:18,948 --> 00:26:21,930
+and scale in every service individually.
+
+633
+00:26:21,930 --> 00:26:23,280
+Well, you can still do this,
+
+634
+00:26:23,280 --> 00:26:27,090
+but you might be forced to
+scale out an upstream system
+
+635
+00:26:27,090 --> 00:26:28,920
+because just...
+
+636
+00:26:28,920 --> 00:26:31,860
+Just because a downstream
+system is in a struggle,
+
+637
+00:26:31,860 --> 00:26:35,163
+and this is not what we
+want to do, obviously.
+
+638
+00:26:36,240 --> 00:26:39,600
+So, and even if it happens,
+
+639
+00:26:39,600 --> 00:26:43,500
+that one of those downstream
+systems comes into a struggle,
+
+640
+00:26:43,500 --> 00:26:46,860
+it may also jeopardize upstream systems
+
+641
+00:26:46,860 --> 00:26:50,040
+and bring the stability
+of your overall app
+
+642
+00:26:50,040 --> 00:26:52,470
+into not the best shape.
+
+643
+00:26:52,470 --> 00:26:54,750
+So, the natural next step for that
+
+644
+00:26:54,750 --> 00:26:58,140
+would be to transform this integration
+
+645
+00:26:58,140 --> 00:27:02,580
+from synchronous into
+asynchronous request response.
+
+646
+00:27:02,580 --> 00:27:05,550
+This reduces a lot of
+our temporal coupling
+
+647
+00:27:05,550 --> 00:27:06,990
+or runtime coupling,
+
+648
+00:27:06,990 --> 00:27:09,030
+because now an upstream system
+
+649
+00:27:09,030 --> 00:27:11,970
+just sends down a POST request
+to a downstream system,
+
+650
+00:27:11,970 --> 00:27:13,290
+and that downstream system
+
+651
+00:27:13,290 --> 00:27:16,050
+immediately responds with 202 accepted,
+
+652
+00:27:16,050 --> 00:27:18,810
+as we have seen in the communication
+
+653
+00:27:18,810 --> 00:27:20,310
+with the end user client,
+
+654
+00:27:20,310 --> 00:27:23,793
+and then you don't have that
+runtime coupling anymore.
+
+655
+00:27:25,080 --> 00:27:29,070
+There's still a very important
+dependency left, however,
+
+656
+00:27:29,070 --> 00:27:31,320
+which is the availability dependency.
+
+657
+00:27:31,320 --> 00:27:33,090
+You cannot send a request
+
+658
+00:27:33,090 --> 00:27:37,080
+to a downstream system using an API
+
+659
+00:27:37,080 --> 00:27:38,490
+if that downstream system
+
+660
+00:27:38,490 --> 00:27:40,830
+is not ready to receive that request.
+
+661
+00:27:40,830 --> 00:27:43,890
+If it's not online or if
+it's currently in a struggle,
+
+662
+00:27:43,890 --> 00:27:46,113
+if it responds with increased error rates.
+
+663
+00:27:46,950 --> 00:27:49,270
+And this is where message queues help you
+
+664
+00:27:50,220 --> 00:27:54,180
+because message queues have
+the very helpful ability
+
+665
+00:27:54,180 --> 00:27:55,470
+to buffer messages,
+
+666
+00:27:55,470 --> 00:27:58,290
+and that means even if one
+of those downstream systems
+
+667
+00:27:58,290 --> 00:28:00,210
+is currently in a struggle
+
+668
+00:28:00,210 --> 00:28:04,860
+and might not be able to directly
+respond to an API request,
+
+669
+00:28:04,860 --> 00:28:06,750
+the message queue buffers it
+
+670
+00:28:06,750 --> 00:28:10,410
+and the downstream system
+can consume those messages
+
+671
+00:28:10,410 --> 00:28:13,200
+when it is ready again.
+
+672
+00:28:13,200 --> 00:28:18,200
+Also, it's quite handy
+for a scale-out scenario
+
+673
+00:28:18,990 --> 00:28:22,860
+because it has the
+point-to-point characteristic
+
+674
+00:28:22,860 --> 00:28:24,690
+that means every message in the queue
+
+675
+00:28:24,690 --> 00:28:28,860
+is delivered to one process
+on the consumer side.
+
+676
+00:28:28,860 --> 00:28:30,990
+You can just add more processes
+
+677
+00:28:30,990 --> 00:28:33,180
+to handle more load on those messages.
+
+678
+00:28:33,180 --> 00:28:34,920
+This is why you can call a message
+
+679
+00:28:34,920 --> 00:28:38,250
+also a buffering load balancer balancer.
+
+680
+00:28:38,250 --> 00:28:40,440
+So that's quite helpful.
+
+681
+00:28:40,440 --> 00:28:41,273
+Apparently,
+
+682
+00:28:41,273 --> 00:28:44,190
+you shift a lot of
+operational responsibility now
+
+683
+00:28:44,190 --> 00:28:45,990
+to your messaging system.
+
+684
+00:28:45,990 --> 00:28:48,810
+That means you should
+probably want to have one
+
+685
+00:28:48,810 --> 00:28:52,170
+that is highly available,
+scalable, and reliable.
+
+686
+00:28:52,170 --> 00:28:54,180
+And this is why I typically recommend
+
+687
+00:28:54,180 --> 00:28:56,550
+to go with Amazon SQS, in this case,
+
+688
+00:28:56,550 --> 00:29:00,600
+as a cloud native
+serverless messaging system.
+
+689
+00:29:00,600 --> 00:29:04,500
+Fun fact here, in Prime Day 2025,
+
+690
+00:29:04,500 --> 00:29:06,690
+at peak times Amazon SQS
+
+691
+00:29:06,690 --> 00:29:11,460
+has managed 166 million
+messages per second.
+
+692
+00:29:11,460 --> 00:29:14,160
+So, it's quite scalable, for sure.
+
+693
+00:29:14,160 --> 00:29:16,620
+If you're bound to
+industry-standard protocols,
+
+694
+00:29:16,620 --> 00:29:21,000
+like JMS or MQP, you can
+fall back to Amazon MQ,
+
+695
+00:29:21,000 --> 00:29:26,000
+which provides managed
+Apache ActiveMQ or RabbitMQ.
+
+696
+00:29:26,340 --> 00:29:28,290
+So that's quite good already.
+
+697
+00:29:28,290 --> 00:29:31,560
+However, our diagram is
+a bit busy still, right?
+
+698
+00:29:31,560 --> 00:29:33,510
+We have a lot of channels here.
+
+699
+00:29:33,510 --> 00:29:35,670
+Maybe we can reduce that a little bit,
+
+700
+00:29:35,670 --> 00:29:37,260
+and in fact we can.
+
+701
+00:29:37,260 --> 00:29:42,260
+We can add now published
+subscribe channels in some places,
+
+702
+00:29:42,900 --> 00:29:45,030
+instead of the queues.
+
+703
+00:29:45,030 --> 00:29:46,560
+What does that help us?
+
+704
+00:29:46,560 --> 00:29:50,190
+So the characteristic with
+publish subscribe channels,
+
+705
+00:29:50,190 --> 00:29:51,450
+also known as topics,
+
+706
+00:29:51,450 --> 00:29:54,600
+is that every subscriber
+on the right-hand side
+
+707
+00:29:54,600 --> 00:29:57,330
+receives every of those messages
+
+708
+00:29:57,330 --> 00:30:00,270
+that a producer on the
+left-hand side sense.
+
+709
+00:30:00,270 --> 00:30:03,900
+So, in this case, the
+subscription management service
+
+710
+00:30:03,900 --> 00:30:06,190
+only needs to send one downstream message
+
+711
+00:30:07,320 --> 00:30:09,570
+compared to three previously.
+
+712
+00:30:09,570 --> 00:30:11,670
+That simplifies it a little bit,
+
+713
+00:30:11,670 --> 00:30:12,930
+and since we're at it,
+
+714
+00:30:12,930 --> 00:30:15,670
+we can also replace the return channel
+
+715
+00:30:16,650 --> 00:30:19,500
+from a queue with a topic.
+
+716
+00:30:19,500 --> 00:30:22,920
+So, that's also a good simplification
+
+717
+00:30:22,920 --> 00:30:25,890
+and the other positive
+aspect that it brings to us
+
+718
+00:30:25,890 --> 00:30:30,890
+is that if an additional service
+should eventually push up,
+
+719
+00:30:32,280 --> 00:30:35,070
+it can just subscribe to that topic, too,
+
+720
+00:30:35,070 --> 00:30:37,200
+and can start receiving the messages.
+
+721
+00:30:37,200 --> 00:30:39,600
+The subscription management
+service, for instance,
+
+722
+00:30:39,600 --> 00:30:41,220
+doesn't have to be changed at all
+
+723
+00:30:41,220 --> 00:30:45,513
+because it's all in the
+responsibility of the subscribers.
+
+724
+00:30:46,650 --> 00:30:49,080
+Again, the operational responsibility
+
+725
+00:30:49,080 --> 00:30:51,810
+is something you shift
+on the messaging system,
+
+726
+00:30:51,810 --> 00:30:53,790
+and I would again recommend
+
+727
+00:30:53,790 --> 00:30:56,970
+to go with Amazon Simple
+Notification Service
+
+728
+00:30:56,970 --> 00:30:59,490
+as a cloud native serverless service
+
+729
+00:30:59,490 --> 00:31:01,920
+or you can also fall back to Amazon MQ
+
+730
+00:31:01,920 --> 00:31:04,680
+because Apache ActiveMQ and RabbitMQ
+
+731
+00:31:04,680 --> 00:31:08,370
+also support subchannels.
+
+732
+00:31:08,370 --> 00:31:11,790
+Now, you might ask, "Hey, Dirk,
+you have introduced queues
+
+733
+00:31:11,790 --> 00:31:14,550
+for additional resilience and reliability.
+
+734
+00:31:14,550 --> 00:31:16,440
+Now, you have cut out those queues.
+
+735
+00:31:16,440 --> 00:31:19,350
+Again, why are you doing
+this in the first place?"
+
+736
+00:31:19,350 --> 00:31:24,240
+Well, I wouldn't cut out the
+queues just conceptually.
+
+737
+00:31:24,240 --> 00:31:28,410
+We have now focused on
+publish subscribe channels,
+
+738
+00:31:28,410 --> 00:31:31,710
+but I always recommend to
+use the best of both worlds
+
+739
+00:31:31,710 --> 00:31:34,140
+and apply the
+topic-queue-chaining pattern.
+
+740
+00:31:34,140 --> 00:31:36,420
+So you can still add a queue
+
+741
+00:31:36,420 --> 00:31:39,480
+in front of that subscriber system
+
+742
+00:31:39,480 --> 00:31:44,480
+to have that characteristic
+of queues to buffer messages
+
+743
+00:31:44,530 --> 00:31:48,783
+and also to be able to scale
+out on the consumer side.
+
+744
+00:31:49,860 --> 00:31:52,800
+Okay, so it gets simpler and simpler,
+
+745
+00:31:52,800 --> 00:31:56,490
+and now maybe we can
+even make it more simple,
+
+746
+00:31:56,490 --> 00:31:58,650
+and maybe we can also forget
+
+747
+00:31:58,650 --> 00:32:02,310
+about our beloved request response model.
+
+748
+00:32:02,310 --> 00:32:05,970
+Maybe we can start thinking in events
+
+749
+00:32:05,970 --> 00:32:09,540
+and we see introduction of our topics,
+
+750
+00:32:09,540 --> 00:32:11,340
+publish subscribe channels,
+
+751
+00:32:11,340 --> 00:32:15,360
+we actually provided the precondition
+
+752
+00:32:15,360 --> 00:32:18,990
+to stop sending requests
+or commands downstream.
+
+753
+00:32:18,990 --> 00:32:22,380
+Now, we can send events downstream
+
+754
+00:32:22,380 --> 00:32:26,010
+and we can make the messaging
+infrastructure also simpler
+
+755
+00:32:26,010 --> 00:32:29,730
+when we just replace all
+those messaging channels
+
+756
+00:32:29,730 --> 00:32:32,550
+with one message bus.
+
+757
+00:32:32,550 --> 00:32:36,660
+You will see two icons
+that are labeled with bus,
+
+758
+00:32:36,660 --> 00:32:39,330
+but it's actually the same instance.
+
+759
+00:32:39,330 --> 00:32:40,800
+It just appears like that
+
+760
+00:32:40,800 --> 00:32:44,880
+to keep the visualization of
+the different layers up here.
+
+761
+00:32:44,880 --> 00:32:48,360
+And if we want to drive it to the extreme,
+
+762
+00:32:48,360 --> 00:32:53,360
+we can also put a little
+tiny piece of proxy component
+
+763
+00:32:53,850 --> 00:32:58,020
+in front of our third-party
+service providers
+
+764
+00:32:58,020 --> 00:33:02,520
+to make the event-driven experience
+
+765
+00:33:02,520 --> 00:33:07,110
+to put it down to the lowest
+level of our architecture here.
+
+766
+00:33:07,110 --> 00:33:10,020
+And those proxies can be
+simple lambda functions
+
+767
+00:33:10,020 --> 00:33:13,320
+that just handle the HTTP traffic
+
+768
+00:33:13,320 --> 00:33:18,150
+between us and those
+third-party service providers.
+
+769
+00:33:18,150 --> 00:33:20,910
+Again, you wanna have a reliable
+
+770
+00:33:20,910 --> 00:33:23,880
+and available service for that.
+
+771
+00:33:23,880 --> 00:33:26,580
+The recommendation would
+be Amazon EventBridge
+
+772
+00:33:26,580 --> 00:33:31,443
+as a serverless cloud native
+message bus implementation.
+
+773
+00:33:32,790 --> 00:33:35,940
+So, that's a quite simplification
+
+774
+00:33:35,940 --> 00:33:38,430
+of our integration architecture.
+
+775
+00:33:38,430 --> 00:33:39,930
+And guess what, with that,
+
+776
+00:33:39,930 --> 00:33:43,680
+we have naturally
+provided the preconditions
+
+777
+00:33:43,680 --> 00:33:47,310
+to now think about Saga choreography
+
+778
+00:33:47,310 --> 00:33:50,280
+because everything we
+need is now in place.
+
+779
+00:33:50,280 --> 00:33:54,550
+The idea of Saga choreography
+is that that workflow
+
+780
+00:33:56,559 --> 00:33:59,040
+that we talked about in the beginning
+
+781
+00:33:59,040 --> 00:34:03,420
+is distributed over all
+those involved parties,
+
+782
+00:34:03,420 --> 00:34:06,570
+and each of those parties
+is listening to an event
+
+783
+00:34:06,570 --> 00:34:09,330
+that is relevant to do some processing,
+
+784
+00:34:09,330 --> 00:34:13,020
+and then each party does some processing
+
+785
+00:34:13,020 --> 00:34:15,030
+and sends out another event,
+
+786
+00:34:15,030 --> 00:34:19,950
+publishes a notification that
+certain things have happened.
+
+787
+00:34:19,950 --> 00:34:24,390
+How can that look in concrete
+details with our use case?
+
+788
+00:34:24,390 --> 00:34:27,150
+So, we have the subscription
+management service
+
+789
+00:34:27,150 --> 00:34:29,880
+that is being touched
+by the end user client,
+
+790
+00:34:29,880 --> 00:34:32,610
+it receives the subscription request.
+
+791
+00:34:32,610 --> 00:34:35,400
+What it can do now is to publish an event,
+
+792
+00:34:35,400 --> 00:34:37,740
+type is tier upgrade requested.
+
+793
+00:34:37,740 --> 00:34:39,510
+It goes into the bus,
+
+794
+00:34:39,510 --> 00:34:43,560
+and what we have as the next
+level of downstream systems
+
+795
+00:34:43,560 --> 00:34:46,680
+are probably the systems that
+are interested in this event,
+
+796
+00:34:46,680 --> 00:34:49,563
+and they can now do some work,
+
+797
+00:34:51,150 --> 00:34:53,940
+some sanity checks, some
+pre-work, and so on,
+
+798
+00:34:53,940 --> 00:34:58,830
+and they will probably emit
+and publish events on their own
+
+799
+00:34:58,830 --> 00:35:01,590
+and other downstream
+systems are interested.
+
+800
+00:35:01,590 --> 00:35:03,570
+For instance, the payment
+management service
+
+801
+00:35:03,570 --> 00:35:06,930
+can prepare everything
+internally for the payment,
+
+802
+00:35:06,930 --> 00:35:09,120
+maybe add some database
+records, and so on,
+
+803
+00:35:09,120 --> 00:35:12,480
+and then send out a
+customer-payment-requested event.
+
+804
+00:35:12,480 --> 00:35:15,480
+Similarly to the customer
+relationship service
+
+805
+00:35:15,480 --> 00:35:17,610
+that can prepare everything
+
+806
+00:35:17,610 --> 00:35:21,270
+for the status update of the customer
+
+807
+00:35:21,270 --> 00:35:25,260
+and then send out an event that
+the status has been updated,
+
+808
+00:35:25,260 --> 00:35:27,180
+and maybe some downstream systems
+
+809
+00:35:27,180 --> 00:35:31,500
+are interested in doing
+more work in that respect.
+
+810
+00:35:31,500 --> 00:35:33,570
+As we can see here, for instance,
+
+811
+00:35:33,570 --> 00:35:37,020
+the customer-payment-requested
+event seems to be interesting
+
+812
+00:35:37,020 --> 00:35:39,090
+for the fraud detection service
+
+813
+00:35:39,090 --> 00:35:42,060
+and the proxy for our
+payment service provider.
+
+814
+00:35:42,060 --> 00:35:44,400
+And in the same way,
+
+815
+00:35:44,400 --> 00:35:47,220
+the proxies for the
+loyalty service provider
+
+816
+00:35:47,220 --> 00:35:48,990
+and the newsletter service provider
+
+817
+00:35:48,990 --> 00:35:53,220
+are interested in that
+customer status update event.
+
+818
+00:35:53,220 --> 00:35:55,800
+Now, those downstream
+systems do their work,
+
+819
+00:35:55,800 --> 00:36:00,150
+and they come back with a
+past or failed event, maybe.
+
+820
+00:36:00,150 --> 00:36:02,040
+And what you can see here already
+
+821
+00:36:02,040 --> 00:36:06,240
+is that we would actually
+want to have a timing
+
+822
+00:36:06,240 --> 00:36:08,220
+or a condition between those two.
+
+823
+00:36:08,220 --> 00:36:10,530
+We would want to do the fraud detection
+
+824
+00:36:10,530 --> 00:36:14,370
+before we actually trigger
+the payment collection.
+
+825
+00:36:14,370 --> 00:36:16,620
+So, you can already keep that in mind.
+
+826
+00:36:16,620 --> 00:36:19,050
+This is something that
+is not out-of-the-box
+
+827
+00:36:19,050 --> 00:36:22,773
+conceptually supported by
+the choreography pattern.
+
+828
+00:36:23,700 --> 00:36:27,480
+And the other systems
+downstream also do their work
+
+829
+00:36:27,480 --> 00:36:32,480
+and publish afterwards
+status update events alike.
+
+830
+00:36:32,850 --> 00:36:34,970
+Now, one of those downstream services,
+
+831
+00:36:34,970 --> 00:36:37,860
+in this case the payment
+management service,
+
+832
+00:36:37,860 --> 00:36:40,410
+is certainly interested in those events
+
+833
+00:36:40,410 --> 00:36:43,830
+that stem from those
+detailed service downstream
+
+834
+00:36:43,830 --> 00:36:46,470
+in the same way as the
+customer relationship service
+
+835
+00:36:46,470 --> 00:36:49,560
+interested in learning about those events
+
+836
+00:36:49,560 --> 00:36:51,810
+that come from the loyalty service
+
+837
+00:36:51,810 --> 00:36:54,120
+and the newsletter service.
+
+838
+00:36:54,120 --> 00:36:57,600
+That will certainly trigger
+some status updates also
+
+839
+00:36:57,600 --> 00:36:59,820
+in their systems of records,
+
+840
+00:36:59,820 --> 00:37:03,390
+and then they provide
+updates again into the bus
+
+841
+00:37:03,390 --> 00:37:07,140
+about the overall progress of the status,
+
+842
+00:37:07,140 --> 00:37:09,540
+and the subscription management service
+
+843
+00:37:09,540 --> 00:37:11,700
+will be interested in those events,
+
+844
+00:37:11,700 --> 00:37:12,750
+because after all,
+
+845
+00:37:12,750 --> 00:37:15,450
+it needs to be able to
+provide a status update
+
+846
+00:37:15,450 --> 00:37:16,743
+to the customer.
+
+847
+00:37:17,850 --> 00:37:21,300
+Now, while it might look, at first glance,
+
+848
+00:37:21,300 --> 00:37:23,040
+still like request response
+
+849
+00:37:23,040 --> 00:37:26,370
+because things in this
+visualization went down
+
+850
+00:37:26,370 --> 00:37:29,340
+and other things went back again,
+
+851
+00:37:29,340 --> 00:37:32,040
+it is an important difference here
+
+852
+00:37:32,040 --> 00:37:34,260
+that we are only sending events.
+
+853
+00:37:34,260 --> 00:37:36,360
+So, we are not sending commands.
+
+854
+00:37:36,360 --> 00:37:39,060
+An upstream service is
+not sending a command
+
+855
+00:37:39,060 --> 00:37:40,410
+with the expectation
+
+856
+00:37:40,410 --> 00:37:44,640
+that a certain downstream
+system is doing a certain thing.
+
+857
+00:37:44,640 --> 00:37:46,680
+It just notifies about it.
+
+858
+00:37:46,680 --> 00:37:49,830
+There is obviously the
+expectation that eventually,
+
+859
+00:37:49,830 --> 00:37:54,120
+it can see that something
+has changed here or there
+
+860
+00:37:54,120 --> 00:37:56,250
+to provide a status update,
+
+861
+00:37:56,250 --> 00:38:00,990
+but there is no obvious
+command to an obvious target
+
+862
+00:38:00,990 --> 00:38:03,420
+because that would again, by its own,
+
+863
+00:38:03,420 --> 00:38:06,993
+apply tight coupling into our
+overall architecture again.
+
+864
+00:38:08,460 --> 00:38:10,950
+With that in mind, we
+can have a quick look
+
+865
+00:38:10,950 --> 00:38:14,370
+at the benefits and challenges
+
+866
+00:38:14,370 --> 00:38:18,450
+that we see in the Saga
+choreography pattern,
+
+867
+00:38:18,450 --> 00:38:21,780
+and obviously it is quite easy to start.
+
+868
+00:38:21,780 --> 00:38:24,660
+We came to the conclusion quite naturally
+
+869
+00:38:24,660 --> 00:38:27,660
+or to our integration architecture setup.
+
+870
+00:38:27,660 --> 00:38:29,160
+It's really...
+
+871
+00:38:29,160 --> 00:38:32,430
+It really supports also autonomous teams
+
+872
+00:38:32,430 --> 00:38:35,220
+that every service that is involved here
+
+873
+00:38:35,220 --> 00:38:36,940
+can still work individually
+
+874
+00:38:37,890 --> 00:38:41,013
+and it also provides you with high scale.
+
+875
+00:38:42,780 --> 00:38:43,980
+The challenges, however,
+
+876
+00:38:43,980 --> 00:38:47,640
+is the fact that the
+workflow is distributed
+
+877
+00:38:47,640 --> 00:38:50,760
+across all those parties
+and encode it there
+
+878
+00:38:50,760 --> 00:38:54,930
+makes it really tough to grasp it.
+
+879
+00:38:54,930 --> 00:38:58,020
+And it might be well-documented
+in the very beginning,
+
+880
+00:38:58,020 --> 00:38:59,520
+but everybody knows it.
+
+881
+00:38:59,520 --> 00:39:00,353
+Over time,
+
+882
+00:39:00,353 --> 00:39:03,870
+people will inject more
+event types into the system,
+
+883
+00:39:03,870 --> 00:39:08,760
+and then you might end up
+with that big ball of mud.
+
+884
+00:39:08,760 --> 00:39:12,120
+Also, if you want to change the workflow,
+
+885
+00:39:12,120 --> 00:39:15,330
+you will always have to touch
+either code, or configuration,
+
+886
+00:39:15,330 --> 00:39:17,523
+or both of the involved systems.
+
+887
+00:39:18,780 --> 00:39:20,940
+Now, maybe there's an opportunity
+
+888
+00:39:20,940 --> 00:39:25,530
+to externalize that workflow
+and make it better visible.
+
+889
+00:39:25,530 --> 00:39:26,850
+Yes, there is,
+
+890
+00:39:26,850 --> 00:39:30,990
+and this is where Saga
+orchestration comes into action
+
+891
+00:39:30,990 --> 00:39:33,750
+because the idea of Saga orchestration
+
+892
+00:39:33,750 --> 00:39:38,613
+is to make that workflow
+externally available and explicit.
+
+893
+00:39:39,900 --> 00:39:43,350
+To illustrate this, let's
+only look at the first half
+
+894
+00:39:43,350 --> 00:39:46,050
+or the first 2/3 of this diagram now,
+
+895
+00:39:46,050 --> 00:39:47,880
+the subscription management service
+
+896
+00:39:47,880 --> 00:39:50,880
+and the first downstream services.
+
+897
+00:39:50,880 --> 00:39:55,560
+How can we externalize that
+using an orchestrator now?
+
+898
+00:39:55,560 --> 00:39:57,480
+Now, we can think about the workflow,
+
+899
+00:39:57,480 --> 00:39:59,073
+how we would want to have it.
+
+900
+00:40:00,240 --> 00:40:01,860
+The subscription management service
+
+901
+00:40:01,860 --> 00:40:04,020
+would actually launch such a workflow.
+
+902
+00:40:04,020 --> 00:40:08,100
+It would call the payment
+management services API
+
+903
+00:40:08,100 --> 00:40:09,870
+called initiate a payment,
+
+904
+00:40:09,870 --> 00:40:11,670
+and then there's a condition check.
+
+905
+00:40:11,670 --> 00:40:13,920
+Was that actually successful?
+
+906
+00:40:13,920 --> 00:40:15,990
+If no, then we go back
+
+907
+00:40:15,990 --> 00:40:18,300
+to the subscription management service
+
+908
+00:40:18,300 --> 00:40:21,600
+and let it send a
+notification about a failure
+
+909
+00:40:21,600 --> 00:40:22,500
+to the end user.
+
+910
+00:40:22,500 --> 00:40:26,040
+But maybe it was successful,
+
+911
+00:40:26,040 --> 00:40:28,830
+and hopefully that is the
+case most of the time.
+
+912
+00:40:28,830 --> 00:40:31,860
+Then, we can continue, we
+can unblock the content.
+
+913
+00:40:31,860 --> 00:40:33,810
+If that was not successful,
+
+914
+00:40:33,810 --> 00:40:36,300
+we would provide a refund to the customer
+
+915
+00:40:36,300 --> 00:40:37,620
+for the time being.
+
+916
+00:40:37,620 --> 00:40:41,340
+In the future, maybe we will
+make it more comprehensive,
+
+917
+00:40:41,340 --> 00:40:44,013
+but for now, that is
+how we are gonna start.
+
+918
+00:40:45,000 --> 00:40:47,580
+If the unblocking of the
+content was successful,
+
+919
+00:40:47,580 --> 00:40:52,580
+we can also use the customer
+relationship management service
+
+920
+00:40:52,950 --> 00:40:56,820
+to initiate the provisioning
+of the newsletter subscription
+
+921
+00:40:56,820 --> 00:40:59,340
+and the loyalty program onboarding.
+
+922
+00:40:59,340 --> 00:41:00,720
+If that wasn't successful,
+
+923
+00:41:00,720 --> 00:41:04,440
+currently our agreement
+with those service providers
+
+924
+00:41:04,440 --> 00:41:07,050
+is that we do a manual intervention,
+
+925
+00:41:07,050 --> 00:41:10,230
+and then we can notify the
+customer of partial success.
+
+926
+00:41:10,230 --> 00:41:11,820
+If that was successful,
+
+927
+00:41:11,820 --> 00:41:15,780
+we can notify full
+success to our customers.
+
+928
+00:41:15,780 --> 00:41:19,770
+Okay, so while it might be
+fun to draw this on a slide,
+
+929
+00:41:19,770 --> 00:41:23,340
+you need to implement and
+actually execute this, right?
+
+930
+00:41:23,340 --> 00:41:26,553
+So this is where AWS Step
+Functions comes into action,
+
+931
+00:41:27,450 --> 00:41:29,820
+which is, again, a
+managed serverless service
+
+932
+00:41:29,820 --> 00:41:32,730
+that is made exactly for such things:
+
+933
+00:41:32,730 --> 00:41:36,090
+to execute workflows at scale.
+
+934
+00:41:36,090 --> 00:41:39,720
+And you can redraw literally
+the same thing also
+
+935
+00:41:39,720 --> 00:41:43,260
+in the AWS Step Functions
+management console,
+
+936
+00:41:43,260 --> 00:41:44,760
+where it would look like that.
+
+937
+00:41:47,639 --> 00:41:50,089
+If you want to take a
+picture, you can do it now.
+
+938
+00:41:53,370 --> 00:41:54,203
+Right.
+
+939
+00:41:54,203 --> 00:41:57,273
+So, what are the benefits and
+challenges of orchestration?
+
+940
+00:41:58,320 --> 00:42:00,270
+So the main benefit, obviously,
+
+941
+00:42:00,270 --> 00:42:03,390
+is that you make this workflow explicit,
+
+942
+00:42:03,390 --> 00:42:07,350
+and that also makes it
+easier to evolve the workflow
+
+943
+00:42:07,350 --> 00:42:12,350
+and also to find error solutions
+or uncover error situations
+
+944
+00:42:14,280 --> 00:42:16,710
+and make sure that
+everything is consistent
+
+945
+00:42:16,710 --> 00:42:20,283
+because the executor
+also keeps state of it.
+
+946
+00:42:21,480 --> 00:42:24,327
+Apparently, you introduce
+a new component here,
+
+947
+00:42:24,327 --> 00:42:27,660
+and that should be highly
+available and highly scalable.
+
+948
+00:42:27,660 --> 00:42:31,110
+And I also want to stress the last point
+
+949
+00:42:31,110 --> 00:42:32,940
+on the challenges aside,
+
+950
+00:42:32,940 --> 00:42:36,870
+that you actually need
+to couple this workflow
+
+951
+00:42:36,870 --> 00:42:38,619
+a little bit to the implementation details
+
+952
+00:42:38,619 --> 00:42:41,520
+of the involved parties.
+
+953
+00:42:41,520 --> 00:42:43,710
+So that brings us to the conclusion
+
+954
+00:42:43,710 --> 00:42:46,020
+of when to use what.
+
+955
+00:42:46,020 --> 00:42:48,000
+In the end, it's quite simple.
+
+956
+00:42:48,000 --> 00:42:53,000
+You use choreography when
+the benefits of choreography
+
+957
+00:42:53,100 --> 00:42:56,460
+outweigh the challenges
+for you personally,
+
+958
+00:42:56,460 --> 00:42:58,500
+or you use orchestration
+
+959
+00:42:58,500 --> 00:43:00,720
+when the benefits of orchestration
+
+960
+00:43:00,720 --> 00:43:04,560
+have more importance for you
+than the challenges to have.
+
+961
+00:43:04,560 --> 00:43:08,760
+My personal recommendation,
+however, is you use both.
+
+962
+00:43:08,760 --> 00:43:11,550
+You can actually combine both approaches
+
+963
+00:43:11,550 --> 00:43:13,200
+in the same architecture.
+
+964
+00:43:13,200 --> 00:43:14,970
+In our example use case,
+
+965
+00:43:14,970 --> 00:43:18,150
+I would use orchestration
+
+966
+00:43:18,150 --> 00:43:20,760
+for everything that is related to payment
+
+967
+00:43:20,760 --> 00:43:22,380
+and content unblocking,
+
+968
+00:43:22,380 --> 00:43:26,820
+and I would use choreography
+for everything that is related
+
+969
+00:43:26,820 --> 00:43:29,493
+to customer relationship management.
+
+970
+00:43:30,840 --> 00:43:32,040
+So, that's all good.
+
+971
+00:43:32,040 --> 00:43:36,270
+I have one problem left, Robert,
+and I hope you can help me.
+
+972
+00:43:36,270 --> 00:43:38,943
+So with those third
+party downstream systems,
+
+973
+00:43:39,780 --> 00:43:41,730
+they give us often a hard time,
+
+974
+00:43:41,730 --> 00:43:44,430
+like they are moody on Monday mornings,
+
+975
+00:43:44,430 --> 00:43:46,860
+particularly the payment service provider,
+
+976
+00:43:46,860 --> 00:43:49,020
+and we don't seem to
+treat them well either.
+
+977
+00:43:49,020 --> 00:43:51,363
+So, maybe you have a solution for that.
+
+978
+00:43:52,260 --> 00:43:54,750
+- Let's have a look at that, Dirk, gladly.
+
+979
+00:43:54,750 --> 00:43:56,760
+So looking at our current situation,
+
+980
+00:43:56,760 --> 00:43:58,890
+we should have every reason to celebrate.
+
+981
+00:43:58,890 --> 00:44:01,410
+We have this very nice
+new subscription workflow
+
+982
+00:44:01,410 --> 00:44:02,700
+with a Saga pattern,
+
+983
+00:44:02,700 --> 00:44:05,220
+and our customers love
+our premium content.
+
+984
+00:44:05,220 --> 00:44:08,790
+They are practically lining
+up to become paid subscribers.
+
+985
+00:44:08,790 --> 00:44:10,890
+The issue is our subscription team
+
+986
+00:44:10,890 --> 00:44:12,960
+is not having a good time, regardless.
+
+987
+00:44:12,960 --> 00:44:14,040
+How come?
+
+988
+00:44:14,040 --> 00:44:15,600
+Well, as Dirk already mentioned,
+
+989
+00:44:15,600 --> 00:44:18,690
+we have some downstream APIs
+that can be a little bit moody.
+
+990
+00:44:18,690 --> 00:44:19,523
+Some of them,
+
+991
+00:44:19,523 --> 00:44:22,440
+maybe we are at fault because
+we are also overloading them.
+
+992
+00:44:22,440 --> 00:44:26,220
+And when that is happening,
+the Saga pattern is kicking in,
+
+993
+00:44:26,220 --> 00:44:29,070
+and it rolls back the whole
+distributed transaction
+
+994
+00:44:29,070 --> 00:44:32,070
+with all of the involved
+parties that have set up,
+
+995
+00:44:32,070 --> 00:44:33,120
+and that is good.
+
+996
+00:44:33,120 --> 00:44:36,510
+And after some time, we can
+retry this whole operation,
+
+997
+00:44:36,510 --> 00:44:38,400
+and if it succeeds, that's fine,
+
+998
+00:44:38,400 --> 00:44:41,130
+but if it fails again, we
+have to roll back again.
+
+999
+00:44:41,130 --> 00:44:44,340
+And if we do that multiple
+times, if we retry and fall back,
+
+1000
+00:44:44,340 --> 00:44:45,810
+and retry and fall back,
+
+1001
+00:44:45,810 --> 00:44:49,500
+we are adding so many
+remediating API calls
+
+1002
+00:44:49,500 --> 00:44:51,330
+that undo any state changes
+
+1003
+00:44:51,330 --> 00:44:53,460
+that have happened in
+the downstream systems
+
+1004
+00:44:53,460 --> 00:44:55,650
+that we are also overloading APIs
+
+1005
+00:44:55,650 --> 00:44:58,200
+that used to work perfectly fine for us.
+
+1006
+00:44:58,200 --> 00:44:59,760
+So, we are cascading the issue
+
+1007
+00:44:59,760 --> 00:45:02,493
+and making everything worse for ourselves.
+
+1008
+00:45:03,690 --> 00:45:05,070
+How do we handle this?
+
+1009
+00:45:05,070 --> 00:45:07,560
+Let's compare it to a real-world example.
+
+1010
+00:45:07,560 --> 00:45:10,800
+Where do you have an overload
+situation in your home?
+
+1011
+00:45:10,800 --> 00:45:13,050
+For example, in your electrical system,
+
+1012
+00:45:13,050 --> 00:45:16,230
+if your electrical system
+at home is overloaded,
+
+1013
+00:45:16,230 --> 00:45:18,300
+you have a circuit breaker that trips,
+
+1014
+00:45:18,300 --> 00:45:21,330
+and this is saving your
+appliances from being damaged.
+
+1015
+00:45:21,330 --> 00:45:23,220
+It also protects your wiring.
+
+1016
+00:45:23,220 --> 00:45:27,060
+It might even protect your
+home from fire breaking out.
+
+1017
+00:45:27,060 --> 00:45:27,893
+And the cool thing
+
+1018
+00:45:27,893 --> 00:45:29,700
+about the circuit breaker
+system at your home
+
+1019
+00:45:29,700 --> 00:45:32,130
+is if this is happening in the kitchen,
+
+1020
+00:45:32,130 --> 00:45:34,890
+most likely all of your
+appliances in your bedroom,
+
+1021
+00:45:34,890 --> 00:45:36,180
+in your bathroom, et cetera,
+
+1022
+00:45:36,180 --> 00:45:39,510
+still run fine because only
+the circuit of the kitchen
+
+1023
+00:45:39,510 --> 00:45:41,550
+is affected in this moment.
+
+1024
+00:45:41,550 --> 00:45:44,970
+So the issue at hand
+is isolated, contained,
+
+1025
+00:45:44,970 --> 00:45:47,670
+and can be safely dealt with.
+
+1026
+00:45:47,670 --> 00:45:50,190
+Wouldn't it be nice if
+we had a similar thing
+
+1027
+00:45:50,190 --> 00:45:52,950
+for our distributed systems
+that we are handling?
+
+1028
+00:45:52,950 --> 00:45:55,650
+And as luck would have it,
+we have a pattern for this,
+
+1029
+00:45:55,650 --> 00:45:58,803
+and aptly it is also named
+the circuit breaker pattern.
+
+1030
+00:46:00,810 --> 00:46:03,755
+A circuit breaker is operating
+in two primary states,
+
+1031
+00:46:03,755 --> 00:46:07,920
+that is the good closed
+state and the bad open state.
+
+1032
+00:46:07,920 --> 00:46:08,970
+Please do remember that
+
+1033
+00:46:08,970 --> 00:46:11,220
+because it is a little
+bit counterintuitive.
+
+1034
+00:46:11,220 --> 00:46:13,867
+Normally, we associate
+something being closed with,
+
+1035
+00:46:13,867 --> 00:46:15,720
+"Oh, this is blocking our progress.
+
+1036
+00:46:15,720 --> 00:46:17,910
+We cannot continue doing what we want."
+
+1037
+00:46:17,910 --> 00:46:19,650
+However, for a circuit,
+
+1038
+00:46:19,650 --> 00:46:21,540
+the closed state is the only one
+
+1039
+00:46:21,540 --> 00:46:23,910
+where current can successfully flow.
+
+1040
+00:46:23,910 --> 00:46:26,910
+An open circuit is a broken circuit.
+
+1041
+00:46:26,910 --> 00:46:29,430
+So, our normal state is a closed circuit
+
+1042
+00:46:29,430 --> 00:46:30,990
+with normal operation.
+
+1043
+00:46:30,990 --> 00:46:33,420
+If we get too many errors here, however,
+
+1044
+00:46:33,420 --> 00:46:36,960
+this flips over and
+trips into the open state
+
+1045
+00:46:36,960 --> 00:46:38,880
+and we stop operations.
+
+1046
+00:46:38,880 --> 00:46:40,320
+In our physical example,
+
+1047
+00:46:40,320 --> 00:46:42,570
+now somebody would need
+to go to the kitchen,
+
+1048
+00:46:42,570 --> 00:46:43,950
+check the different appliances,
+
+1049
+00:46:43,950 --> 00:46:47,220
+find the culprit, disconnect
+it, remediate the situation,
+
+1050
+00:46:47,220 --> 00:46:50,220
+a very binary and manual process.
+
+1051
+00:46:50,220 --> 00:46:51,840
+In our integration pattern, however,
+
+1052
+00:46:51,840 --> 00:46:53,670
+we can do something more clever.
+
+1053
+00:46:53,670 --> 00:46:57,240
+We introduce a third
+state, the half open state.
+
+1054
+00:46:57,240 --> 00:46:59,280
+This half open state kicks in
+
+1055
+00:46:59,280 --> 00:47:02,190
+after a little bit of time has
+elapsed that you configure,
+
+1056
+00:47:02,190 --> 00:47:03,589
+and we just try a few operations,
+
+1057
+00:47:03,589 --> 00:47:07,800
+and we see if they succeed
+or if they continue failing.
+
+1058
+00:47:07,800 --> 00:47:10,170
+If they fail, we know the
+system isn't ready yet.
+
+1059
+00:47:10,170 --> 00:47:11,130
+We can't continue,
+
+1060
+00:47:11,130 --> 00:47:12,930
+we go back to the open state,
+
+1061
+00:47:12,930 --> 00:47:15,300
+and we wait for another time to pass,
+
+1062
+00:47:15,300 --> 00:47:18,840
+and we try the half open processing again.
+
+1063
+00:47:18,840 --> 00:47:22,200
+However, if our executions are successful,
+
+1064
+00:47:22,200 --> 00:47:24,090
+we hit the success threshold,
+
+1065
+00:47:24,090 --> 00:47:25,680
+and we go to the closed state
+
+1066
+00:47:25,680 --> 00:47:28,143
+and continue our normal operation.
+
+1067
+00:47:29,580 --> 00:47:32,400
+How would it look like to
+protect a single execution
+
+1068
+00:47:32,400 --> 00:47:33,660
+with this circuit breaker pattern?
+
+1069
+00:47:33,660 --> 00:47:34,980
+Let's have a look here.
+
+1070
+00:47:34,980 --> 00:47:38,340
+First of all, I need to know
+at the start of my execution,
+
+1071
+00:47:38,340 --> 00:47:39,720
+what is the state of the circuit?
+
+1072
+00:47:39,720 --> 00:47:41,400
+Is it open or is it closed?
+
+1073
+00:47:41,400 --> 00:47:43,560
+So I need to have that
+information stored somewhere,
+
+1074
+00:47:43,560 --> 00:47:46,560
+have a circuit status
+store that I'm checking.
+
+1075
+00:47:46,560 --> 00:47:48,360
+Then, I decide very binary.
+
+1076
+00:47:48,360 --> 00:47:50,820
+Is my circuit closed, yes or no?
+
+1077
+00:47:50,820 --> 00:47:52,830
+If it is not closed, so if it's open,
+
+1078
+00:47:52,830 --> 00:47:55,230
+the bad state, I don't continue.
+
+1079
+00:47:55,230 --> 00:47:57,450
+I don't want to overwhelm
+the system even more.
+
+1080
+00:47:57,450 --> 00:48:00,690
+I stop at that point
+and I might retry later.
+
+1081
+00:48:00,690 --> 00:48:02,670
+However, if the circuit is closed,
+
+1082
+00:48:02,670 --> 00:48:04,260
+I execute my business logic
+
+1083
+00:48:04,260 --> 00:48:06,570
+and I hope that it now is successful.
+
+1084
+00:48:06,570 --> 00:48:09,513
+If it is, all is done,
+all is fine, we end here.
+
+1085
+00:48:10,530 --> 00:48:13,260
+If the business logic fails at this point,
+
+1086
+00:48:13,260 --> 00:48:14,850
+I will record the failing,
+
+1087
+00:48:14,850 --> 00:48:17,610
+I will increase a failure counter
+
+1088
+00:48:17,610 --> 00:48:20,190
+that if it reaches my
+configured threshold,
+
+1089
+00:48:20,190 --> 00:48:21,390
+opens the circuit,
+
+1090
+00:48:21,390 --> 00:48:25,020
+and stops further
+operations from happening.
+
+1091
+00:48:25,020 --> 00:48:28,050
+A key message here is that this
+is not a theoretical process
+
+1092
+00:48:28,050 --> 00:48:29,250
+that I'm showing you here.
+
+1093
+00:48:29,250 --> 00:48:32,130
+Exactly, this process is something
+
+1094
+00:48:32,130 --> 00:48:34,920
+that our customers are
+implementing, again,
+
+1095
+00:48:34,920 --> 00:48:38,790
+with AWS Step Functions to
+protect their executions
+
+1096
+00:48:38,790 --> 00:48:40,413
+with a circuit breaker pattern.
+
+1097
+00:48:41,490 --> 00:48:44,790
+Right, knowing this now,
+let's get back to our story.
+
+1098
+00:48:44,790 --> 00:48:46,290
+We have a lot of business success,
+
+1099
+00:48:46,290 --> 00:48:48,870
+we have a lot of customer
+interest coming in,
+
+1100
+00:48:48,870 --> 00:48:51,840
+but it is all at risk because
+of the technical failures
+
+1101
+00:48:51,840 --> 00:48:53,400
+that are happening downstream.
+
+1102
+00:48:53,400 --> 00:48:56,910
+What do we do in this
+situation as a proper company?
+
+1103
+00:48:56,910 --> 00:48:58,440
+We have a crisis meeting, of course.
+
+1104
+00:48:58,440 --> 00:49:00,570
+We have the subscription crisis meeting,
+
+1105
+00:49:00,570 --> 00:49:03,997
+and here, our obsolete is
+kicking it off and is saying,
+
+1106
+00:49:03,997 --> 00:49:05,580
+"Well, the thing keeps failing
+
+1107
+00:49:05,580 --> 00:49:07,680
+at different points under high load.
+
+1108
+00:49:07,680 --> 00:49:08,970
+Sometimes, it's this API.
+
+1109
+00:49:08,970 --> 00:49:10,170
+Sometimes, it's that.
+
+1110
+00:49:10,170 --> 00:49:12,780
+Sometimes, it's a timeout
+or it fails outright.
+
+1111
+00:49:12,780 --> 00:49:14,457
+Things are not working properly."
+
+1112
+00:49:15,300 --> 00:49:17,917
+Immediately, our CFO is
+leaning forward and is saying,
+
+1113
+00:49:17,917 --> 00:49:20,610
+"In our current growth phase
+with this customer interest,
+
+1114
+00:49:20,610 --> 00:49:21,690
+this is not acceptable.
+
+1115
+00:49:21,690 --> 00:49:23,670
+We need these subscriptions to come in,
+
+1116
+00:49:23,670 --> 00:49:25,827
+we need the payments to continue growing."
+
+1117
+00:49:27,390 --> 00:49:29,107
+The always helpful architects are saying,
+
+1118
+00:49:29,107 --> 00:49:32,970
+"Well, what about we store
+the subscription intent,
+
+1119
+00:49:32,970 --> 00:49:35,820
+but we do not process them
+if the system is overloaded.
+
+1120
+00:49:35,820 --> 00:49:37,890
+What if we do just that?"
+
+1121
+00:49:37,890 --> 00:49:39,937
+To which the user
+experience leaders saying,
+
+1122
+00:49:39,937 --> 00:49:42,030
+"Well, we cannot do that silently
+
+1123
+00:49:42,030 --> 00:49:43,830
+because our customers will
+just continue retrying,
+
+1124
+00:49:43,830 --> 00:49:45,060
+and retrying,
+
+1125
+00:49:45,060 --> 00:49:47,640
+and maybe their credit card
+gets charged multiple times,
+
+1126
+00:49:47,640 --> 00:49:51,300
+they will hate that our
+support will be overloaded."
+
+1127
+00:49:51,300 --> 00:49:53,220
+And finally, the poor on-call guy
+
+1128
+00:49:53,220 --> 00:49:56,190
+who has been dealing with
+this the whole weekend already
+
+1129
+00:49:56,190 --> 00:49:58,350
+is just tired of hitting F5
+
+1130
+00:49:58,350 --> 00:50:00,240
+in the monitoring system all the time
+
+1131
+00:50:00,240 --> 00:50:03,000
+and trying, five minutes
+after five minutes,
+
+1132
+00:50:03,000 --> 00:50:05,790
+new executions until
+everything works again.
+
+1133
+00:50:05,790 --> 00:50:08,250
+So, he just wants to be done with this.
+
+1134
+00:50:08,250 --> 00:50:10,440
+As you see, the situation
+is quite chaotic,
+
+1135
+00:50:10,440 --> 00:50:12,780
+like the speech bubbles
+on this slide here,
+
+1136
+00:50:12,780 --> 00:50:16,320
+but let's have a look how we
+can step by step resolve this
+
+1137
+00:50:16,320 --> 00:50:19,233
+with an event-driven pattern on AWS.
+
+1138
+00:50:20,220 --> 00:50:21,990
+First of all, the concern of the obsolete.
+
+1139
+00:50:21,990 --> 00:50:23,370
+The thing keeps failing,
+
+1140
+00:50:23,370 --> 00:50:25,590
+and here you see the
+subscription state machine
+
+1141
+00:50:25,590 --> 00:50:26,730
+that we have set up,
+
+1142
+00:50:26,730 --> 00:50:30,240
+and what we can do is to
+configure a CloudWatch alarm
+
+1143
+00:50:30,240 --> 00:50:32,430
+that triggers after a certain threshold
+
+1144
+00:50:32,430 --> 00:50:34,770
+of failed executions is being triggered.
+
+1145
+00:50:34,770 --> 00:50:37,533
+That is our detection mechanism here.
+
+1146
+00:50:39,090 --> 00:50:41,700
+Next, the CFO wants the business running.
+
+1147
+00:50:41,700 --> 00:50:44,310
+So this, in the middle, is our happy path.
+
+1148
+00:50:44,310 --> 00:50:46,110
+What usually happens in our application,
+
+1149
+00:50:46,110 --> 00:50:48,780
+we get a subscription
+intent from a customer
+
+1150
+00:50:48,780 --> 00:50:51,990
+via an HTTP POST request from API gateway.
+
+1151
+00:50:51,990 --> 00:50:55,500
+This is being persisted
+in an Amazon SQS queue,
+
+1152
+00:50:55,500 --> 00:50:57,240
+and when we have a closed circuit,
+
+1153
+00:50:57,240 --> 00:50:59,130
+there is an EventBridge pipe
+
+1154
+00:50:59,130 --> 00:51:02,730
+that is forwarding the
+intent into the step function
+
+1155
+00:51:02,730 --> 00:51:05,070
+that is processing the subscription for us
+
+1156
+00:51:05,070 --> 00:51:06,630
+with all of the downstream systems.
+
+1157
+00:51:06,630 --> 00:51:07,950
+So, this is the good path
+
+1158
+00:51:07,950 --> 00:51:10,740
+that the CFO wants to have happening.
+
+1159
+00:51:10,740 --> 00:51:13,567
+However, if we do have errors,
+the architect was saying,
+
+1160
+00:51:13,567 --> 00:51:15,840
+"Well, let's just pause the execution."
+
+1161
+00:51:15,840 --> 00:51:19,200
+And the good thing is a CloudWatch alarm
+
+1162
+00:51:19,200 --> 00:51:21,330
+is always publishing state changes
+
+1163
+00:51:21,330 --> 00:51:23,010
+to an EventBridge event bus.
+
+1164
+00:51:23,010 --> 00:51:24,870
+So, when it goes into the alarm state,
+
+1165
+00:51:24,870 --> 00:51:27,540
+when it reaches the failure threshold,
+
+1166
+00:51:27,540 --> 00:51:29,250
+it publishes an event there,
+
+1167
+00:51:29,250 --> 00:51:31,860
+to which we can subscribe with a rule,
+
+1168
+00:51:31,860 --> 00:51:34,860
+and that rule could trigger
+a different step function
+
+1169
+00:51:34,860 --> 00:51:37,410
+that could stop the EventBridge pipe
+
+1170
+00:51:37,410 --> 00:51:40,020
+between the subscription intent queue
+
+1171
+00:51:40,020 --> 00:51:43,020
+and the actual subscription
+execution step function.
+
+1172
+00:51:43,020 --> 00:51:45,840
+So at this point, we
+have opened the circuit,
+
+1173
+00:51:45,840 --> 00:51:46,830
+nothing is going on,
+
+1174
+00:51:46,830 --> 00:51:49,980
+but we are not losing subscription intents
+
+1175
+00:51:49,980 --> 00:51:51,870
+because they are stored and persisted
+
+1176
+00:51:51,870 --> 00:51:54,450
+in the SQS queue coming in.
+
+1177
+00:51:54,450 --> 00:51:55,890
+The concern of user experience
+
+1178
+00:51:55,890 --> 00:51:58,470
+was we need to inform
+our users about this.
+
+1179
+00:51:58,470 --> 00:52:01,320
+So, we could also add this purpose
+
+1180
+00:52:01,320 --> 00:52:04,117
+to the step function that
+we just introduced and say,
+
+1181
+00:52:04,117 --> 00:52:07,140
+"This step function can
+additionally change a parameter
+
+1182
+00:52:07,140 --> 00:52:08,403
+in parameter store,
+
+1183
+00:52:09,540 --> 00:52:12,540
+which is signaling that we
+have a processing delay,"
+
+1184
+00:52:12,540 --> 00:52:14,430
+and this information we make available
+
+1185
+00:52:14,430 --> 00:52:16,680
+via the API gateway as an endpoint,
+
+1186
+00:52:16,680 --> 00:52:19,650
+which gives our front and
+team the possibility now
+
+1187
+00:52:19,650 --> 00:52:21,037
+to have a warning box there.
+
+1188
+00:52:21,037 --> 00:52:22,650
+"Hey, we are under heavy load,
+
+1189
+00:52:22,650 --> 00:52:24,840
+we have received your subscription intent,
+
+1190
+00:52:24,840 --> 00:52:27,480
+but it might take a while
+until we get to process it.
+
+1191
+00:52:27,480 --> 00:52:29,850
+Don't retry all the time."
+
+1192
+00:52:29,850 --> 00:52:32,370
+And the on-call guy, finally really tired,
+
+1193
+00:52:32,370 --> 00:52:33,540
+he just wants to sleep,
+
+1194
+00:52:33,540 --> 00:52:35,910
+he doesn't want to do
+something every five minutes,
+
+1195
+00:52:35,910 --> 00:52:38,130
+so let's automate that for him.
+
+1196
+00:52:38,130 --> 00:52:40,380
+We can have an EventBridge schedule
+
+1197
+00:52:40,380 --> 00:52:42,900
+that is executing every five minutes
+
+1198
+00:52:42,900 --> 00:52:44,550
+a lambda function, for example,
+
+1199
+00:52:44,550 --> 00:52:47,820
+and that lambda function
+gets some test messages
+
+1200
+00:52:47,820 --> 00:52:50,550
+out of the subscription intent queue.
+
+1201
+00:52:50,550 --> 00:52:53,310
+And these test messages for itself,
+
+1202
+00:52:53,310 --> 00:52:57,420
+it is executing against our
+subscription state machine.
+
+1203
+00:52:57,420 --> 00:53:00,810
+And if all of these
+executions are successful,
+
+1204
+00:53:00,810 --> 00:53:03,480
+we can start the pipe again
+
+1205
+00:53:03,480 --> 00:53:05,640
+between the subscription intent queue
+
+1206
+00:53:05,640 --> 00:53:09,330
+and the subscription
+execution state machine.
+
+1207
+00:53:09,330 --> 00:53:13,230
+So, you might not say, "Robert,
+this is all fine and well,
+
+1208
+00:53:13,230 --> 00:53:16,590
+but you have painted so many
+icons here and so many errors.
+
+1209
+00:53:16,590 --> 00:53:20,160
+Isn't this extremely complicated
+and a mess to maintain?"
+
+1210
+00:53:20,160 --> 00:53:21,247
+To which personally I would say,
+
+1211
+00:53:21,247 --> 00:53:23,370
+"It's rather structured, actually."
+
+1212
+00:53:23,370 --> 00:53:26,820
+Because if we layer on
+top the different states
+
+1213
+00:53:26,820 --> 00:53:29,520
+of our circuit breaker
+that we discussed about,
+
+1214
+00:53:29,520 --> 00:53:32,700
+then you see on the very top
+you have this half open state
+
+1215
+00:53:32,700 --> 00:53:34,080
+that is just testing
+
+1216
+00:53:34,080 --> 00:53:36,660
+whether something works
+again and executing it.
+
+1217
+00:53:36,660 --> 00:53:39,390
+In the middle you have the
+happy path, the closed state,
+
+1218
+00:53:39,390 --> 00:53:41,520
+and on the bottom are the components
+
+1219
+00:53:41,520 --> 00:53:44,790
+that are acting when we have
+an error and an open state.
+
+1220
+00:53:44,790 --> 00:53:47,790
+So, this is rather structured
+and maintainable still
+
+1221
+00:53:47,790 --> 00:53:50,103
+for the parts that they represent.
+
+1222
+00:53:51,870 --> 00:53:54,360
+Now, this can solve our challenge at hand,
+
+1223
+00:53:54,360 --> 00:53:55,980
+but it might be a little bit drastic,
+
+1224
+00:53:55,980 --> 00:53:58,110
+especially if our main problem
+
+1225
+00:53:58,110 --> 00:54:02,130
+is that we are overloading some
+third-party APIs downstream
+
+1226
+00:54:02,130 --> 00:54:04,639
+just stopping our subscription
+workflow completely,
+
+1227
+00:54:04,639 --> 00:54:07,710
+and have some
+not-that-nice-looking error message
+
+1228
+00:54:07,710 --> 00:54:10,500
+towards our customers is
+not the best signal, maybe.
+
+1229
+00:54:10,500 --> 00:54:12,390
+So, can we do something differently,
+
+1230
+00:54:12,390 --> 00:54:14,700
+something more targeted for this situation
+
+1231
+00:54:14,700 --> 00:54:16,203
+of overloading APIs?
+
+1232
+00:54:17,550 --> 00:54:19,200
+And of course, we can.
+
+1233
+00:54:19,200 --> 00:54:21,300
+This is where rate limiting comes in
+
+1234
+00:54:21,300 --> 00:54:23,971
+and it's all about
+consuming APIs responsibly,
+
+1235
+00:54:23,971 --> 00:54:26,910
+being a good API citizen.
+
+1236
+00:54:26,910 --> 00:54:29,700
+Usually, you have a
+relationship and a contract
+
+1237
+00:54:29,700 --> 00:54:32,437
+with your third-party
+API provider that says,
+
+1238
+00:54:32,437 --> 00:54:35,910
+"You are allowed to
+execute X many API calls
+
+1239
+00:54:35,910 --> 00:54:37,410
+per minute, for example,
+
+1240
+00:54:37,410 --> 00:54:38,580
+and anything more,
+
+1241
+00:54:38,580 --> 00:54:41,397
+we will either block you
+or they will just fail."
+
+1242
+00:54:42,390 --> 00:54:43,980
+You can handle the situation
+
+1243
+00:54:43,980 --> 00:54:45,960
+in two different scenarios differently.
+
+1244
+00:54:45,960 --> 00:54:48,000
+First of all, you might have APIs,
+
+1245
+00:54:48,000 --> 00:54:49,650
+where you do not really care
+
+1246
+00:54:49,650 --> 00:54:51,807
+what the return body is of the API.
+
+1247
+00:54:51,807 --> 00:54:53,970
+You just sent messages somewhere
+
+1248
+00:54:53,970 --> 00:54:56,850
+and you need to know that
+the HTTP call was successful,
+
+1249
+00:54:56,850 --> 00:54:58,980
+but you don't need the body
+
+1250
+00:54:58,980 --> 00:55:01,680
+of the request response coming back.
+
+1251
+00:55:01,680 --> 00:55:04,200
+For this, the pattern would
+be rather straightforward.
+
+1252
+00:55:04,200 --> 00:55:07,410
+You could just have an API
+execution intent, again,
+
+1253
+00:55:07,410 --> 00:55:09,780
+being persisted in an SQS queue,
+
+1254
+00:55:09,780 --> 00:55:12,690
+which has an EventBridge pipe
+that we talked about before.
+
+1255
+00:55:12,690 --> 00:55:13,950
+And this EventBridge pipe
+
+1256
+00:55:13,950 --> 00:55:16,470
+is configured with an API destination,
+
+1257
+00:55:16,470 --> 00:55:18,180
+which is a feature of EventBridge,
+
+1258
+00:55:18,180 --> 00:55:20,631
+which conveniently has max invocations
+
+1259
+00:55:20,631 --> 00:55:22,500
+per seconds parameter.
+
+1260
+00:55:22,500 --> 00:55:24,720
+So, this is doing the throttling for you
+
+1261
+00:55:24,720 --> 00:55:27,360
+and you do not violate
+any of your agreements,
+
+1262
+00:55:27,360 --> 00:55:29,970
+but it is more for a
+fire-and-forget situation
+
+1263
+00:55:29,970 --> 00:55:32,790
+where you're not
+interested in the results.
+
+1264
+00:55:32,790 --> 00:55:35,190
+The other situation that
+might even be more common
+
+1265
+00:55:35,190 --> 00:55:38,340
+is that you do need the
+response of a request
+
+1266
+00:55:38,340 --> 00:55:41,130
+because you need to decide how to react,
+
+1267
+00:55:41,130 --> 00:55:43,710
+depending on what you
+get back as a response,
+
+1268
+00:55:43,710 --> 00:55:45,360
+there might be a decision to be made.
+
+1269
+00:55:45,360 --> 00:55:47,310
+For example, the fraud
+check that we have seen.
+
+1270
+00:55:47,310 --> 00:55:49,122
+If a customer is known to be a fraudster,
+
+1271
+00:55:49,122 --> 00:55:50,880
+you probably don't want to continue
+
+1272
+00:55:50,880 --> 00:55:53,400
+your subscription process with them.
+
+1273
+00:55:53,400 --> 00:55:55,170
+For that, we have a different pattern
+
+1274
+00:55:55,170 --> 00:55:56,437
+that is not too dissimilar
+
+1275
+00:55:56,437 --> 00:55:58,500
+to the general circuit breaker pattern
+
+1276
+00:55:58,500 --> 00:56:00,240
+that we talked about before.
+
+1277
+00:56:00,240 --> 00:56:02,490
+But instead of having a counter
+
+1278
+00:56:02,490 --> 00:56:03,990
+where you have the error threshold
+
+1279
+00:56:03,990 --> 00:56:06,180
+that is going up if something is failing,
+
+1280
+00:56:06,180 --> 00:56:09,360
+you maintain a bucket of request tokens
+
+1281
+00:56:09,360 --> 00:56:10,830
+that are available to you.
+
+1282
+00:56:10,830 --> 00:56:12,480
+You need to define a little bit of logic.
+
+1283
+00:56:12,480 --> 00:56:15,990
+How often am I allowed to
+execute that API in what time?
+
+1284
+00:56:15,990 --> 00:56:17,520
+But if you have the logic for that,
+
+1285
+00:56:17,520 --> 00:56:20,442
+you could use DynamoDB
+to protocol your requests
+
+1286
+00:56:20,442 --> 00:56:21,607
+and calculate,
+
+1287
+00:56:21,607 --> 00:56:24,480
+"At this moment, where I
+want execute something,
+
+1288
+00:56:24,480 --> 00:56:26,520
+do I still have capacity left?"
+
+1289
+00:56:26,520 --> 00:56:28,710
+If you do not have capacity left,
+
+1290
+00:56:28,710 --> 00:56:31,620
+then you can just go into a wait task,
+
+1291
+00:56:31,620 --> 00:56:33,360
+and let's say, after five minutes,
+
+1292
+00:56:33,360 --> 00:56:34,890
+retry again and check again.
+
+1293
+00:56:34,890 --> 00:56:37,740
+Do I have any tokens available to me?
+
+1294
+00:56:37,740 --> 00:56:39,960
+If you do have a token available, however,
+
+1295
+00:56:39,960 --> 00:56:41,940
+you reserve one of these tokens.
+
+1296
+00:56:41,940 --> 00:56:45,180
+So your protocol that you
+are executing this API now
+
+1297
+00:56:45,180 --> 00:56:47,580
+to adhere to your contract,
+
+1298
+00:56:47,580 --> 00:56:50,520
+and then you are executing an HTTP task
+
+1299
+00:56:50,520 --> 00:56:52,230
+in AWS Step Functions,
+
+1300
+00:56:52,230 --> 00:56:54,840
+which will give you back the response body
+
+1301
+00:56:54,840 --> 00:56:57,450
+that you can then make decisions upon.
+
+1302
+00:56:57,450 --> 00:57:00,360
+So very similar to the
+circuit breaker pattern itself
+
+1303
+00:57:00,360 --> 00:57:02,343
+and can help you in this situation.
+
+1304
+00:57:03,630 --> 00:57:07,020
+Knowing how we can be a
+responsible API citizen
+
+1305
+00:57:07,020 --> 00:57:09,420
+and not overwhelm downstream APIs,
+
+1306
+00:57:09,420 --> 00:57:10,736
+can we rely on everybody
+
+1307
+00:57:10,736 --> 00:57:14,880
+also respecting our boundaries
+out in the internet?
+
+1308
+00:57:14,880 --> 00:57:16,740
+Well, of course, we cannot.
+
+1309
+00:57:16,740 --> 00:57:19,140
+And this is why you also need
+to protect your own APIs.
+
+1310
+00:57:19,140 --> 00:57:21,900
+This is something that
+we also want to go into.
+
+1311
+00:57:21,900 --> 00:57:24,060
+If I mention protecting APIs,
+
+1312
+00:57:24,060 --> 00:57:26,400
+the first service that many
+people will think about
+
+1313
+00:57:26,400 --> 00:57:29,520
+is AWS Web Application Firewall, the WAF.
+
+1314
+00:57:29,520 --> 00:57:32,310
+And indeed, you can, of
+course, protect your APIs
+
+1315
+00:57:32,310 --> 00:57:35,070
+with the Web Application
+Firewall from overloading.
+
+1316
+00:57:35,070 --> 00:57:37,650
+And here, you can react
+with counting the requests
+
+1317
+00:57:37,650 --> 00:57:40,410
+to just get a picture of
+what is happening currently,
+
+1318
+00:57:40,410 --> 00:57:43,350
+blocking any requests
+that are being too much,
+
+1319
+00:57:43,350 --> 00:57:46,590
+or challenging them with
+a capture, for example.
+
+1320
+00:57:46,590 --> 00:57:48,990
+And you can do that on a
+five-minute sliding window.
+
+1321
+00:57:48,990 --> 00:57:50,790
+This is very important to remember.
+
+1322
+00:57:50,790 --> 00:57:52,950
+You're not very flexible
+with the timing here.
+
+1323
+00:57:52,950 --> 00:57:55,680
+It's always the five-minute
+window that you are going.
+
+1324
+00:57:55,680 --> 00:57:57,570
+But you can scope it very flexibly.
+
+1325
+00:57:57,570 --> 00:58:00,240
+You can look at the IP,
+the path, the header,
+
+1326
+00:58:00,240 --> 00:58:02,677
+and a combination of
+all of these to decide,
+
+1327
+00:58:02,677 --> 00:58:06,330
+"This is now too many requests
+coming from that source."
+
+1328
+00:58:06,330 --> 00:58:07,163
+In many cases,
+
+1329
+00:58:07,163 --> 00:58:09,180
+you will, however, know
+who your counterpart is
+
+1330
+00:58:09,180 --> 00:58:10,710
+or you will want to know.
+
+1331
+00:58:10,710 --> 00:58:13,440
+And here, you can use
+the Amazon API Gateway
+
+1332
+00:58:13,440 --> 00:58:15,900
+with its usage plans and API keys.
+
+1333
+00:58:15,900 --> 00:58:18,708
+This is exclusive to the
+REST flavor of API gateway,
+
+1334
+00:58:18,708 --> 00:58:20,850
+not available for HTTP.
+
+1335
+00:58:20,850 --> 00:58:23,220
+And here, you hand out API keys.
+
+1336
+00:58:23,220 --> 00:58:25,650
+Important to never use API keys
+
+1337
+00:58:25,650 --> 00:58:27,630
+for authentication and security.
+
+1338
+00:58:27,630 --> 00:58:30,120
+This is just for
+identification and tracking,
+
+1339
+00:58:30,120 --> 00:58:32,970
+so you still need a proper
+authentication mechanism.
+
+1340
+00:58:32,970 --> 00:58:36,480
+But you can associate usage
+plans to your API keys
+
+1341
+00:58:36,480 --> 00:58:41,220
+that define how often may your
+customer execute your APIs
+
+1342
+00:58:41,220 --> 00:58:42,960
+in what timeframe.
+
+1343
+00:58:42,960 --> 00:58:44,760
+This is one possibility.
+
+1344
+00:58:44,760 --> 00:58:47,250
+The other thing is you can
+also configure throttling
+
+1345
+00:58:47,250 --> 00:58:49,410
+on the API gateway in general.
+
+1346
+00:58:49,410 --> 00:58:52,290
+You can do that on all APIs
+in the region or per route.
+
+1347
+00:58:52,290 --> 00:58:53,700
+And if you want to be more granular,
+
+1348
+00:58:53,700 --> 00:58:56,190
+you can do it on the API
+stage and method level,
+
+1349
+00:58:56,190 --> 00:58:57,940
+but only for the REST flavor again.
+
+1350
+00:58:59,910 --> 00:59:01,830
+Coming back to this very important message
+
+1351
+00:59:01,830 --> 00:59:04,170
+that we also started the talk with,
+
+1352
+00:59:04,170 --> 00:59:05,760
+you have to do some decisions.
+
+1353
+00:59:05,760 --> 00:59:07,470
+We gave you some options,
+
+1354
+00:59:07,470 --> 00:59:10,140
+some patterns that you can work with here.
+
+1355
+00:59:10,140 --> 00:59:11,820
+It's not a full list at all,
+
+1356
+00:59:11,820 --> 00:59:14,490
+but we hope that you have
+more tools in your belt now
+
+1357
+00:59:14,490 --> 00:59:16,233
+to handle these situations.
+
+1358
+00:59:17,310 --> 00:59:19,410
+Coming to the actions part,
+
+1359
+00:59:19,410 --> 00:59:20,970
+the first action that I want you to do
+
+1360
+00:59:20,970 --> 00:59:22,260
+is to take your phones out
+
+1361
+00:59:22,260 --> 00:59:24,360
+because there will be a
+little bit of information
+
+1362
+00:59:24,360 --> 00:59:25,740
+for you to retain.
+
+1363
+00:59:25,740 --> 00:59:29,040
+First is we have curated
+a list of other sessions
+
+1364
+00:59:29,040 --> 00:59:31,920
+that you might be interested
+in that go into similar topics
+
+1365
+00:59:31,920 --> 00:59:36,330
+or do deep dive on ones that
+we brought up right now.
+
+1366
+00:59:36,330 --> 00:59:39,090
+So, please take a picture
+if you're interested.
+
+1367
+00:59:39,090 --> 00:59:41,070
+And the next picture opportunity
+
+1368
+00:59:41,070 --> 00:59:43,800
+is on the next slide
+that I'm going now to,
+
+1369
+00:59:43,800 --> 00:59:45,480
+which is this QR code,
+
+1370
+00:59:45,480 --> 00:59:46,890
+which will lead you to a website,
+
+1371
+00:59:46,890 --> 00:59:48,930
+where we have curated further resources
+
+1372
+00:59:48,930 --> 00:59:50,520
+where you will find slides
+
+1373
+00:59:50,520 --> 00:59:52,530
+and also our contact information
+
+1374
+00:59:52,530 --> 00:59:54,600
+if you want to discuss further.
+
+1375
+00:59:54,600 --> 00:59:56,070
+Talking about discussing further,
+
+1376
+00:59:56,070 --> 00:59:57,360
+this is a silent session,
+
+1377
+00:59:57,360 --> 00:59:59,280
+so we cannot be too loudy in the room,
+
+1378
+00:59:59,280 --> 01:00:01,770
+but the three of us will
+be outside of the room
+
+1379
+01:00:01,770 --> 01:00:04,110
+and happy to take any questions.
+
+1380
+01:00:04,110 --> 01:00:06,240
+With that, thank you
+all so much for coming,
+
+1381
+01:00:06,240 --> 01:00:07,650
+especially during lunchtime.
+
+1382
+01:00:07,650 --> 01:00:08,700
+It's been a pleasure.
+

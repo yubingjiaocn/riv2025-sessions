@@ -1,0 +1,4258 @@
+1
+00:00:04,440 --> 00:00:05,880
+- All right.
+
+2
+00:00:05,880 --> 00:00:09,390
+Welcome, everyone. Welcome to NET217.
+
+3
+00:00:09,390 --> 00:00:11,730
+Hope you're having a
+fine re:Invent so far.
+
+4
+00:00:11,730 --> 00:00:13,780
+Hope you caught the keynote this morning.
+
+5
+00:00:14,880 --> 00:00:18,150
+My name is Adhish Bhobe. I'm
+a product manager with AWS.
+
+6
+00:00:18,150 --> 00:00:20,130
+I have with me, Matt Engskow.
+
+7
+00:00:20,130 --> 00:00:21,180
+He's a principal engineer
+
+8
+00:00:21,180 --> 00:00:23,417
+and we are both from the
+Amazon Route 53 team.
+
+9
+00:00:23,417 --> 00:00:26,160
+We are gonna talk about a new launch
+
+10
+00:00:26,160 --> 00:00:27,450
+that we just released a couple
+
+11
+00:00:27,450 --> 00:00:30,663
+of days back called Amazon
+Route 53 Global Resolver.
+
+12
+00:00:31,680 --> 00:00:35,880
+But before we begin, just a
+quick show of hands in the room.
+
+13
+00:00:35,880 --> 00:00:38,700
+How many of you are network
+administrators who dabble
+
+14
+00:00:38,700 --> 00:00:41,493
+with DNS security?
+
+15
+00:00:44,128 --> 00:00:46,380
+I see quite a few hands raised. Great.
+
+16
+00:00:46,380 --> 00:00:48,240
+Well, you're in the right
+session because we are gonna talk
+
+17
+00:00:48,240 --> 00:00:51,630
+about how you can achieve secure
+
+18
+00:00:51,630 --> 00:00:55,110
+and also anycast DNS
+resolution for your clients
+
+19
+00:00:55,110 --> 00:00:56,163
+with Global Resolver.
+
+20
+00:00:59,040 --> 00:01:01,380
+So this is what we're
+gonna talk about today.
+
+21
+00:01:01,380 --> 00:01:03,540
+We're gonna talk about what
+are some of the key challenges
+
+22
+00:01:03,540 --> 00:01:04,980
+that got us here,
+
+23
+00:01:04,980 --> 00:01:06,900
+what are some of the things
+that we heard from you,
+
+24
+00:01:06,900 --> 00:01:09,840
+our customers that led us
+to building Global Resolver.
+
+25
+00:01:09,840 --> 00:01:12,747
+We are gonna talk about why
+you should use Global Resolver
+
+26
+00:01:12,747 --> 00:01:14,280
+and what are some of the key benefits
+
+27
+00:01:14,280 --> 00:01:16,430
+that you're gaining
+from using the service.
+
+28
+00:01:17,610 --> 00:01:20,100
+Then I'm gonna turn it over
+to Matt who's gonna walk you
+
+29
+00:01:20,100 --> 00:01:21,570
+through how you can get started
+
+30
+00:01:21,570 --> 00:01:24,453
+and how you can use this
+service in optimal fashion.
+
+31
+00:01:25,380 --> 00:01:27,570
+There's also going to be a cool demo,
+
+32
+00:01:27,570 --> 00:01:29,623
+so stick around for that.
+
+33
+00:01:29,623 --> 00:01:31,710
+We are also gonna have a case study
+
+34
+00:01:31,710 --> 00:01:32,670
+where we are gonna talk about
+
+35
+00:01:32,670 --> 00:01:36,030
+how Just Walk Out stores
+uses Global Resolver
+
+36
+00:01:36,030 --> 00:01:39,450
+and how they plan to scale
+it across all of the stores.
+
+37
+00:01:39,450 --> 00:01:40,440
+For those of you who don't know,
+
+38
+00:01:40,440 --> 00:01:44,670
+Just Walk Out stores is a
+technology built by Amazon
+
+39
+00:01:44,670 --> 00:01:45,810
+for all of its stores,
+
+40
+00:01:45,810 --> 00:01:49,530
+including Amazon Go and
+Amazon Fresh that allows
+
+41
+00:01:49,530 --> 00:01:52,443
+for cashless and
+touchless user experience.
+
+42
+00:01:54,060 --> 00:01:56,280
+And then I'm gonna end it by talking about
+
+43
+00:01:56,280 --> 00:01:57,360
+where you can use this service
+
+44
+00:01:57,360 --> 00:01:59,130
+and which regions it's available,
+
+45
+00:01:59,130 --> 00:02:01,430
+and also give you a
+glimpse about the pricing.
+
+46
+00:02:04,920 --> 00:02:05,970
+So at the outset,
+
+47
+00:02:05,970 --> 00:02:08,670
+I wanna talk about the three
+key challenges that we heard
+
+48
+00:02:08,670 --> 00:02:11,620
+from our customers that led us
+to building Global Resolver.
+
+49
+00:02:13,770 --> 00:02:16,830
+First was split-DNS management.
+
+50
+00:02:16,830 --> 00:02:19,680
+What we heard from our customers
+was they were maintaining
+
+51
+00:02:19,680 --> 00:02:22,710
+forwarding rules for
+different customer locations,
+
+52
+00:02:22,710 --> 00:02:25,410
+for different data centers,
+for different branch offices,
+
+53
+00:02:25,410 --> 00:02:27,420
+and even for the remote clients,
+
+54
+00:02:27,420 --> 00:02:30,630
+especially to allow split
+DNS between private domains
+
+55
+00:02:30,630 --> 00:02:32,580
+and for public domains on the internet.
+
+56
+00:02:33,870 --> 00:02:35,430
+In case of AWS specifically,
+
+57
+00:02:35,430 --> 00:02:38,070
+this meant doing split-DNS management
+
+58
+00:02:38,070 --> 00:02:39,720
+for private hosted zones,
+
+59
+00:02:39,720 --> 00:02:42,660
+which is nothing but a container
+of domains and subdomains
+
+60
+00:02:42,660 --> 00:02:44,700
+that you can use for your
+private domains hosted
+
+61
+00:02:44,700 --> 00:02:49,260
+on Amazon VPCs and also to split traffic
+
+62
+00:02:49,260 --> 00:02:52,203
+to an internet domains
+for internet applications.
+
+63
+00:02:53,700 --> 00:02:55,050
+At the same time,
+
+64
+00:02:55,050 --> 00:02:55,890
+there were requirements
+
+65
+00:02:55,890 --> 00:02:58,170
+to have different DNS resolution views
+
+66
+00:02:58,170 --> 00:03:00,330
+for different sets of clients,
+
+67
+00:03:00,330 --> 00:03:02,190
+and this added a lot of operational pain
+
+68
+00:03:02,190 --> 00:03:05,040
+for a lot of our customers
+who had to maintain these
+
+69
+00:03:05,040 --> 00:03:06,420
+and make sure that those are consistent
+
+70
+00:03:06,420 --> 00:03:08,193
+across all of their locations.
+
+71
+00:03:11,670 --> 00:03:15,690
+What we also heard from our
+customers was the ability
+
+72
+00:03:15,690 --> 00:03:18,387
+to prevent DNS exfiltration.
+
+73
+00:03:18,387 --> 00:03:20,850
+DNS exfiltration is a
+mechanism that's used
+
+74
+00:03:20,850 --> 00:03:24,843
+by attackers today to
+exfiltrate data over DNS,
+
+75
+00:03:25,680 --> 00:03:28,440
+and this is a key requirement
+for a lot of our customers
+
+76
+00:03:28,440 --> 00:03:31,140
+who today are using appliances on premises
+
+77
+00:03:31,140 --> 00:03:33,030
+or setting up their own custom rules
+
+78
+00:03:33,030 --> 00:03:36,300
+to ensure that clients are not
+talking or resolving traffic
+
+79
+00:03:36,300 --> 00:03:38,350
+to any malicious domains on the internet.
+
+80
+00:03:39,600 --> 00:03:40,620
+At the same time,
+
+81
+00:03:40,620 --> 00:03:43,080
+there are requirements
+to meet compliance needs
+
+82
+00:03:43,080 --> 00:03:46,740
+and audit needs to have all of
+the logs in a single location
+
+83
+00:03:46,740 --> 00:03:48,693
+for easy auditing and compliance.
+
+84
+00:03:52,380 --> 00:03:55,650
+Now let's take this setup
+of split-DNS management
+
+85
+00:03:55,650 --> 00:03:58,380
+and also maintenance of all of your rules
+
+86
+00:03:58,380 --> 00:04:01,443
+across multiple regions and
+multiple customer locations.
+
+87
+00:04:02,280 --> 00:04:03,990
+This can get very tedious
+
+88
+00:04:03,990 --> 00:04:06,420
+and it can get very
+cumbersome for your teams,
+
+89
+00:04:06,420 --> 00:04:08,850
+especially when you have
+to replicate the same rules
+
+90
+00:04:08,850 --> 00:04:11,190
+across multiple different locations,
+
+91
+00:04:11,190 --> 00:04:13,530
+ensure that they're
+consistent, up to date,
+
+92
+00:04:13,530 --> 00:04:17,160
+and that all your clients
+are resolving the same set
+
+93
+00:04:17,160 --> 00:04:19,610
+of domain rules or domains
+that you want them to.
+
+94
+00:04:21,570 --> 00:04:23,280
+At the same time,
+
+95
+00:04:23,280 --> 00:04:25,440
+ensuring failover between all
+
+96
+00:04:25,440 --> 00:04:27,540
+of these regions was
+another key requirement
+
+97
+00:04:27,540 --> 00:04:29,460
+that we heard from our customers,
+
+98
+00:04:29,460 --> 00:04:31,983
+especially for continued DNS resolution.
+
+99
+00:04:32,970 --> 00:04:36,270
+You may have clients or
+you may have applications
+
+100
+00:04:36,270 --> 00:04:41,160
+that need high availability
+DNS resolution resilience
+
+101
+00:04:41,160 --> 00:04:42,063
+at all times.
+
+102
+00:04:46,890 --> 00:04:48,630
+And so with that,
+
+103
+00:04:48,630 --> 00:04:51,870
+we are launching Amazon
+Route 53 Global Resolver.
+
+104
+00:04:51,870 --> 00:04:54,887
+This is available in preview
+today for you to use.
+
+105
+00:04:54,887 --> 00:04:58,410
+Global Resolver is an anycast DNS resolver
+
+106
+00:04:58,410 --> 00:04:59,790
+that provides you a way
+
+107
+00:04:59,790 --> 00:05:02,980
+to resolve both private
+domains hosted on AWS
+
+108
+00:05:04,530 --> 00:05:07,893
+as well as public domains
+hosted anywhere on the internet.
+
+109
+00:05:10,770 --> 00:05:11,603
+At the same time,
+
+110
+00:05:11,603 --> 00:05:15,720
+it allows you to filter traffic
+to any malicious domains,
+
+111
+00:05:15,720 --> 00:05:18,000
+encrypt traffic in transit,
+
+112
+00:05:18,000 --> 00:05:20,700
+and also log all your queries
+across all your locations
+
+113
+00:05:20,700 --> 00:05:23,970
+in a single region in a
+single place of your choice,
+
+114
+00:05:23,970 --> 00:05:26,170
+making it easy for you
+to access those logs.
+
+115
+00:05:28,020 --> 00:05:30,810
+Global Resolver is optimized for latency,
+
+116
+00:05:30,810 --> 00:05:32,190
+so it'll always route your traffic
+
+117
+00:05:32,190 --> 00:05:34,593
+to the closest available
+region that you pick.
+
+118
+00:05:35,460 --> 00:05:38,370
+It's also optimized for resilience,
+
+119
+00:05:38,370 --> 00:05:40,590
+so in case your clients are not able
+
+120
+00:05:40,590 --> 00:05:42,690
+to reach a specific region,
+
+121
+00:05:42,690 --> 00:05:45,590
+it'll automatically failover
+to the next available region.
+
+122
+00:05:47,370 --> 00:05:50,490
+And it's also built for
+data residency needs.
+
+123
+00:05:50,490 --> 00:05:54,150
+We'll talk all about this in
+the next couple of slides,
+
+124
+00:05:54,150 --> 00:05:56,940
+but I want to give you a
+glimpse of how it all looks
+
+125
+00:05:56,940 --> 00:05:58,090
+when it comes together.
+
+126
+00:06:00,630 --> 00:06:01,530
+Here, you can see
+
+127
+00:06:01,530 --> 00:06:04,140
+that you may have multiple
+corporate data centers,
+
+128
+00:06:04,140 --> 00:06:07,090
+you may have remote locations,
+you may have branch offices.
+
+129
+00:06:08,190 --> 00:06:09,930
+With Global Resolver now,
+
+130
+00:06:09,930 --> 00:06:13,060
+they can all point that
+traffic to a single anycast IP
+
+131
+00:06:14,580 --> 00:06:16,890
+without you having to maintain
+separate forwarding rules
+
+132
+00:06:16,890 --> 00:06:17,790
+in every location.
+
+133
+00:06:19,357 --> 00:06:21,330
+Global Resolver will be
+available in the regions
+
+134
+00:06:21,330 --> 00:06:24,570
+that you pick and will be
+able to process your queries
+
+135
+00:06:24,570 --> 00:06:25,950
+for both private hosted zones
+
+136
+00:06:25,950 --> 00:06:28,890
+as well as any queries going
+out with the internet based
+
+137
+00:06:28,890 --> 00:06:30,690
+on the filtering rules that you set.
+
+138
+00:06:36,000 --> 00:06:38,850
+Next, I wanna talk about what
+are some of the key reasons
+
+139
+00:06:38,850 --> 00:06:40,850
+why you should be using Global Resolver.
+
+140
+00:06:42,870 --> 00:06:44,340
+And this goes back to the challenges
+
+141
+00:06:44,340 --> 00:06:45,640
+that we just talked about.
+
+142
+00:06:48,870 --> 00:06:50,640
+With Global Resolver,
+
+143
+00:06:50,640 --> 00:06:52,490
+you can achieve split-DNS management.
+
+144
+00:06:54,660 --> 00:06:56,520
+You can resolve both public domains
+
+145
+00:06:56,520 --> 00:06:59,010
+as well as private hosted
+zones from anywhere
+
+146
+00:06:59,010 --> 00:07:01,610
+from all your customer
+locations, wherever they are.
+
+147
+00:07:03,540 --> 00:07:05,580
+This provides you an easy way
+
+148
+00:07:05,580 --> 00:07:07,800
+to quickly resolve all your traffic
+
+149
+00:07:07,800 --> 00:07:09,570
+and simplify all your rule management
+
+150
+00:07:09,570 --> 00:07:12,600
+across all your customer
+locations without you having
+
+151
+00:07:12,600 --> 00:07:15,273
+to manage forwarding rules
+in every single location.
+
+152
+00:07:19,200 --> 00:07:20,433
+It's internet reachable.
+
+153
+00:07:21,450 --> 00:07:24,270
+Global Resolver anycast
+IPs are internet reachable
+
+154
+00:07:24,270 --> 00:07:25,890
+so you can reach them over anywhere
+
+155
+00:07:25,890 --> 00:07:27,723
+from all your authenticated clients.
+
+156
+00:07:29,340 --> 00:07:31,053
+Which brings me to the next slide.
+
+157
+00:07:34,500 --> 00:07:38,940
+Global Resolver is not open DNS resolver.
+
+158
+00:07:38,940 --> 00:07:41,760
+This is only accessible by clients
+
+159
+00:07:41,760 --> 00:07:45,630
+that you authenticate to
+use with Global Resolver,
+
+160
+00:07:45,630 --> 00:07:46,463
+and there are two ways
+
+161
+00:07:46,463 --> 00:07:48,333
+that you can authenticate your clients.
+
+162
+00:07:49,440 --> 00:07:51,210
+One is using IPs.
+
+163
+00:07:51,210 --> 00:07:54,510
+These are IPs that are
+associated with your clients,
+
+164
+00:07:54,510 --> 00:07:59,100
+maybe your on-premise destinations
+or your branch offices
+
+165
+00:07:59,100 --> 00:08:00,513
+or even your remote clients.
+
+166
+00:08:02,400 --> 00:08:06,330
+You may also have clients
+that may have dynamic IPs
+
+167
+00:08:06,330 --> 00:08:09,750
+or the IPS may change over
+time, and in that situation,
+
+168
+00:08:09,750 --> 00:08:12,120
+we recommend that you
+use access token secrets
+
+169
+00:08:12,120 --> 00:08:13,650
+that we will wind down
+
+170
+00:08:13,650 --> 00:08:16,380
+and that you can deploy in your clients.
+
+171
+00:08:16,380 --> 00:08:17,460
+These will be more permanent
+
+172
+00:08:17,460 --> 00:08:20,550
+so that even if your clients
+are roaming or changing IPs,
+
+173
+00:08:20,550 --> 00:08:24,153
+they will stay or, and
+authenticate with Global Resolver.
+
+174
+00:08:28,020 --> 00:08:29,373
+Once they're authenticated,
+
+175
+00:08:30,960 --> 00:08:33,900
+all queries from your clients
+will be processed based
+
+176
+00:08:33,900 --> 00:08:35,500
+on the rules that you'll create.
+
+177
+00:08:41,580 --> 00:08:43,740
+I wanna talk about another
+key notable feature
+
+178
+00:08:43,740 --> 00:08:46,650
+of Global Resolver, which
+is the ability for you
+
+179
+00:08:46,650 --> 00:08:50,820
+to have more flexibility in
+how you group your clients
+
+180
+00:08:50,820 --> 00:08:52,410
+and your locations.
+
+181
+00:08:52,410 --> 00:08:55,620
+So you may have different
+DNS resolution requirements
+
+182
+00:08:55,620 --> 00:08:57,183
+for different sets of clients.
+
+183
+00:08:58,320 --> 00:09:00,990
+For example, for your roaming clients,
+
+184
+00:09:00,990 --> 00:09:03,480
+you may want to have DNS filtering rules.
+
+185
+00:09:03,480 --> 00:09:05,490
+You may also want to have the ability
+
+186
+00:09:05,490 --> 00:09:07,953
+for them to resolve private hosted zones.
+
+187
+00:09:08,940 --> 00:09:12,180
+You can create a separate
+DNS resolution view,
+
+188
+00:09:12,180 --> 00:09:14,880
+which is a logical grouping
+of all your clients,
+
+189
+00:09:14,880 --> 00:09:17,763
+identify access tokens or IP groups,
+
+190
+00:09:18,690 --> 00:09:20,520
+and then ensure that any traffic coming
+
+191
+00:09:20,520 --> 00:09:22,650
+from those clients is treated based
+
+192
+00:09:22,650 --> 00:09:24,100
+on the rules that you create.
+
+193
+00:09:26,820 --> 00:09:29,370
+You may also have a different DNS view
+
+194
+00:09:29,370 --> 00:09:30,903
+for different sets of clients.
+
+195
+00:09:33,420 --> 00:09:36,660
+So with DNS views used
+with Global Resolver,
+
+196
+00:09:36,660 --> 00:09:38,850
+this gives you that easy,
+
+197
+00:09:38,850 --> 00:09:41,730
+flexible way of managing all your clients
+
+198
+00:09:41,730 --> 00:09:43,500
+across different locations
+
+199
+00:09:43,500 --> 00:09:45,630
+without you having to
+create different rules
+
+200
+00:09:45,630 --> 00:09:47,380
+for each of them and managing them.
+
+201
+00:09:53,970 --> 00:09:57,000
+Let's talk about how we
+can improve DNS security
+
+202
+00:09:57,000 --> 00:09:58,323
+with Global Resolver.
+
+203
+00:10:01,770 --> 00:10:05,613
+You will have access to multiple
+managed domain categories.
+
+204
+00:10:06,810 --> 00:10:09,270
+These are pre-configured
+categories that are classified
+
+205
+00:10:09,270 --> 00:10:11,460
+by both the type of DNS threats,
+
+206
+00:10:11,460 --> 00:10:15,660
+which could be malware, command
+and control, spam, phishing,
+
+207
+00:10:15,660 --> 00:10:20,130
+or even based on the type of
+web content that domain hosts.
+
+208
+00:10:20,130 --> 00:10:22,410
+You can choose to block, alert,
+
+209
+00:10:22,410 --> 00:10:24,210
+or even allow some of these depending
+
+210
+00:10:24,210 --> 00:10:26,060
+on your requirements of your clients.
+
+211
+00:10:26,910 --> 00:10:30,000
+These are pre-configured, so
+there's no management from you.
+
+212
+00:10:30,000 --> 00:10:32,070
+They're automatically updated
+
+213
+00:10:32,070 --> 00:10:36,090
+and even as you wind down the
+rules to different clients,
+
+214
+00:10:36,090 --> 00:10:41,090
+the (coughs) automatic updates
+are automatically moved
+
+215
+00:10:41,460 --> 00:10:43,710
+and propagated to all
+your rules and clients.
+
+216
+00:10:48,030 --> 00:10:51,600
+I also wanna talk about a
+key aspect of DNS protection,
+
+217
+00:10:51,600 --> 00:10:54,840
+which is how you can improve DNS security
+
+218
+00:10:54,840 --> 00:10:56,523
+for advanced DNS threats.
+
+219
+00:10:58,920 --> 00:11:01,620
+There are two specific DNS
+threats I wanna talk about.
+
+220
+00:11:02,460 --> 00:11:03,783
+One is DNS tunneling,
+
+221
+00:11:05,130 --> 00:11:08,250
+which is a way where an attacker can set
+
+222
+00:11:08,250 --> 00:11:12,030
+up a DNS tunnel using a malware
+
+223
+00:11:12,030 --> 00:11:15,600
+that's already pre-propagated
+to the client's device
+
+224
+00:11:15,600 --> 00:11:18,480
+and that malware is sending
+malicious DNS queries
+
+225
+00:11:18,480 --> 00:11:20,180
+to the command and control server.
+
+226
+00:11:23,450 --> 00:11:25,980
+Using a pattern of request and response,
+
+227
+00:11:25,980 --> 00:11:29,820
+the DNS tunnel that is
+established allows the attacker
+
+228
+00:11:29,820 --> 00:11:34,080
+to then exfiltrate data
+over this DNS request
+
+229
+00:11:34,080 --> 00:11:34,923
+from the client.
+
+230
+00:11:39,540 --> 00:11:42,240
+Another DNS advanced threat that we hear
+
+231
+00:11:42,240 --> 00:11:45,210
+from customers is domain
+generation algorithms,
+
+232
+00:11:45,210 --> 00:11:46,863
+also known as DGAs.
+
+233
+00:11:47,970 --> 00:11:52,260
+This is where an attacker
+can create multiple domains,
+
+234
+00:11:52,260 --> 00:11:54,840
+multiple bad domains, which
+could be in hundreds, thousands,
+
+235
+00:11:54,840 --> 00:11:56,170
+sometimes even in millions
+
+236
+00:11:57,480 --> 00:12:02,310
+with the objective of evading
+detection so that over time,
+
+237
+00:12:02,310 --> 00:12:05,210
+even if threat intelligence
+feeds are able to catch these,
+
+238
+00:12:06,120 --> 00:12:10,440
+the attackers moved to
+the next possible domain
+
+239
+00:12:10,440 --> 00:12:12,123
+and carrying out their attack.
+
+240
+00:12:16,020 --> 00:12:18,390
+Again with Global Resolver,
+
+241
+00:12:18,390 --> 00:12:23,040
+you can create DNS rules for
+these advanced DNS threats.
+
+242
+00:12:23,040 --> 00:12:25,320
+This look at anomalies in your DNS query,
+
+243
+00:12:25,320 --> 00:12:28,320
+such as length, the type of query,
+
+244
+00:12:28,320 --> 00:12:32,490
+query name to make a
+probabilistic determination
+
+245
+00:12:32,490 --> 00:12:36,843
+of whether the query's associated
+with DNS tunneling or DGA.
+
+246
+00:12:39,180 --> 00:12:41,460
+These rules are also customizable,
+
+247
+00:12:41,460 --> 00:12:43,920
+so you can set rules, for example,
+
+248
+00:12:43,920 --> 00:12:46,860
+to block the most highly
+probabilistic DNS tunneling
+
+249
+00:12:46,860 --> 00:12:47,793
+or DGA threat,
+
+250
+00:12:49,500 --> 00:12:53,110
+or you can set a rule at a low confidence
+
+251
+00:12:54,210 --> 00:12:55,890
+to only alert on these threats
+
+252
+00:12:55,890 --> 00:12:58,590
+so that your security
+teams can then investigate
+
+253
+00:12:58,590 --> 00:13:01,090
+and make a determination
+of whether to block them.
+
+254
+00:13:03,720 --> 00:13:05,220
+They're all real time,
+
+255
+00:13:05,220 --> 00:13:06,900
+so all the monitoring is done real time
+
+256
+00:13:06,900 --> 00:13:08,943
+and in line for all your queries.
+
+257
+00:13:13,350 --> 00:13:15,810
+Besides DNS exfiltration,
+
+258
+00:13:15,810 --> 00:13:18,300
+you can also improve your DNS security
+
+259
+00:13:18,300 --> 00:13:20,703
+by enhancing privacy of your queries,
+
+260
+00:13:21,900 --> 00:13:24,030
+and with Global Resolver,
+
+261
+00:13:24,030 --> 00:13:26,178
+you have the ability to use DoH
+
+262
+00:13:26,178 --> 00:13:29,670
+or DNS over HTTPS,
+
+263
+00:13:29,670 --> 00:13:32,550
+or DoT, which is DNS over TLS,
+
+264
+00:13:32,550 --> 00:13:36,540
+both known DNS protocols to
+encrypt traffic in transit
+
+265
+00:13:36,540 --> 00:13:39,093
+between your client and Global Resolver.
+
+266
+00:13:40,800 --> 00:13:44,730
+This ensures that any
+traffic cannot be sniffed
+
+267
+00:13:44,730 --> 00:13:46,803
+by an attacker in transit.
+
+268
+00:13:50,340 --> 00:13:52,680
+And then a key requirement for a lot
+
+269
+00:13:52,680 --> 00:13:56,250
+of our security operations team
+is to have all their logging
+
+270
+00:13:56,250 --> 00:13:58,290
+for all the queries in a single place,
+
+271
+00:13:58,290 --> 00:14:01,230
+which is also possible
+with Global Resolver,
+
+272
+00:14:01,230 --> 00:14:04,020
+where you can pick the
+region of your choice,
+
+273
+00:14:04,020 --> 00:14:07,173
+an S3 bucket of your choice
+to store all those logs.
+
+274
+00:14:10,710 --> 00:14:14,220
+All right, so we talked about
+simplifying DNS resolution,
+
+275
+00:14:14,220 --> 00:14:16,833
+we talked about DNS
+security access controls.
+
+276
+00:14:17,850 --> 00:14:20,220
+Now let's talk about
+another notable feature
+
+277
+00:14:20,220 --> 00:14:21,783
+of Global Resolver.
+
+278
+00:14:24,090 --> 00:14:27,450
+Global Resolver is optimized for latency
+
+279
+00:14:27,450 --> 00:14:29,223
+and also for region failover.
+
+280
+00:14:31,260 --> 00:14:33,840
+Queries from your clients
+are automatically routed
+
+281
+00:14:33,840 --> 00:14:35,370
+to the closest available location
+
+282
+00:14:35,370 --> 00:14:38,193
+that you pick with Global Resolver.
+
+283
+00:14:39,570 --> 00:14:42,270
+We ask that you pick at least two regions
+
+284
+00:14:42,270 --> 00:14:45,090
+so that whenever a
+region is not accessible
+
+285
+00:14:45,090 --> 00:14:47,250
+from one of your clients
+will automatically failover
+
+286
+00:14:47,250 --> 00:14:49,890
+to the next available region
+
+287
+00:14:49,890 --> 00:14:52,090
+so that all your queries
+are always answered
+
+288
+00:14:53,160 --> 00:14:54,243
+with high resiliency.
+
+289
+00:14:59,460 --> 00:15:02,250
+You also have the flexibility
+to use Global Resolver
+
+290
+00:15:02,250 --> 00:15:03,843
+for your data residency needs.
+
+291
+00:15:05,310 --> 00:15:06,450
+So for example, you may want
+
+292
+00:15:06,450 --> 00:15:09,000
+to create a different anycast IP
+
+293
+00:15:09,000 --> 00:15:11,100
+for a different set of regions
+
+294
+00:15:11,100 --> 00:15:14,970
+or a country depending
+on your security mandates
+
+295
+00:15:14,970 --> 00:15:16,443
+or organizational mandates.
+
+296
+00:15:18,690 --> 00:15:21,060
+And based on anycast IPs that you create,
+
+297
+00:15:21,060 --> 00:15:24,180
+your clients will be directed
+to the ones that are mandated
+
+298
+00:15:24,180 --> 00:15:25,863
+by your organization.
+
+299
+00:15:31,680 --> 00:15:34,170
+So we talked about the key challenges,
+
+300
+00:15:34,170 --> 00:15:36,570
+we talked about the key benefits.
+
+301
+00:15:36,570 --> 00:15:38,730
+Let's talk about the key scenarios
+
+302
+00:15:38,730 --> 00:15:42,120
+when it makes sense for
+you to use Global Resolver,
+
+303
+00:15:42,120 --> 00:15:43,520
+and there are three of them.
+
+304
+00:15:45,900 --> 00:15:49,490
+First, Global Resolver is
+most optimal when you want
+
+305
+00:15:49,490 --> 00:15:53,670
+to have consistent DNS resolution
+across multiple locations.
+
+306
+00:15:53,670 --> 00:15:55,620
+So you may have multiple data centers,
+
+307
+00:15:55,620 --> 00:15:58,200
+you may have multiple branch offices,
+
+308
+00:15:58,200 --> 00:16:01,050
+you may have remote clients
+distributed across the world.
+
+309
+00:16:02,010 --> 00:16:04,650
+If you wanna have
+consistent DNS resolution
+
+310
+00:16:04,650 --> 00:16:06,660
+and security for all of them,
+
+311
+00:16:06,660 --> 00:16:09,750
+Global Resolver will
+provide you necessary rules
+
+312
+00:16:09,750 --> 00:16:12,480
+and the flexibility to use
+them without you having
+
+313
+00:16:12,480 --> 00:16:14,630
+to spend the time to
+create your own rules.
+
+314
+00:16:16,770 --> 00:16:18,870
+You may also have disconnected sites.
+
+315
+00:16:18,870 --> 00:16:21,960
+For example, you may have clients
+
+316
+00:16:21,960 --> 00:16:24,490
+that are directly accessing the internet
+
+317
+00:16:25,620 --> 00:16:27,900
+that may not be under the
+purview of your security teams
+
+318
+00:16:27,900 --> 00:16:29,073
+or networking teams.
+
+319
+00:16:30,390 --> 00:16:33,870
+Again, bringing them
+under a single anycast IP
+
+320
+00:16:33,870 --> 00:16:36,210
+with the rules that your team creates,
+
+321
+00:16:36,210 --> 00:16:38,820
+they're always bound to
+resolve to the same domains
+
+322
+00:16:38,820 --> 00:16:43,050
+that your team has set
+without them having to egress
+
+323
+00:16:43,050 --> 00:16:45,723
+to any TNS location that
+is outside the bounds.
+
+324
+00:16:48,900 --> 00:16:53,070
+And lastly, you may have
+critical clients or applications
+
+325
+00:16:53,070 --> 00:16:56,103
+that need DNS resolution at all times.
+
+326
+00:16:57,330 --> 00:16:58,950
+With Global Resolver,
+
+327
+00:16:58,950 --> 00:17:00,690
+you have the ability to easily failover
+
+328
+00:17:00,690 --> 00:17:03,120
+between different regions
+without you having
+
+329
+00:17:03,120 --> 00:17:05,553
+to manage those failover options yourself.
+
+330
+00:17:10,050 --> 00:17:13,413
+All right, I've talked about
+Global Resolver so far.
+
+331
+00:17:14,880 --> 00:17:16,630
+I wanna switch topics a little bit.
+
+332
+00:17:18,540 --> 00:17:19,680
+I wanna ask everyone in the room,
+
+333
+00:17:19,680 --> 00:17:22,953
+how many of you are familiar
+with Route 53 Resolver today?
+
+334
+00:17:25,590 --> 00:17:26,940
+A lot of you. Yeah.
+
+335
+00:17:26,940 --> 00:17:29,460
+So as you all know,
+Amazon Route 53 Resolver,
+
+336
+00:17:29,460 --> 00:17:32,410
+this is the default resolver
+that comes with all your VPCs,
+
+337
+00:17:33,524 --> 00:17:36,480
+it allows you to resolve queries
+for your private domains,
+
+338
+00:17:36,480 --> 00:17:39,780
+hosted zones, and any internet domains.
+
+339
+00:17:39,780 --> 00:17:43,140
+You can also forward
+traffic between your VPCs
+
+340
+00:17:43,140 --> 00:17:44,760
+and your hybrid clients that are connected
+
+341
+00:17:44,760 --> 00:17:47,073
+to the VPC using Resolver endpoints.
+
+342
+00:17:48,480 --> 00:17:50,100
+With the Launch Global Resolver,
+
+343
+00:17:50,100 --> 00:17:52,439
+we are now renaming
+Amazon Route 53 Resolver
+
+344
+00:17:52,439 --> 00:17:55,500
+to be Amazon Route 53 VPC Resolver
+
+345
+00:17:55,500 --> 00:17:57,810
+for better architectural distinction
+
+346
+00:17:57,810 --> 00:18:00,993
+and for naming perspective consistency.
+
+347
+00:18:02,370 --> 00:18:04,890
+I do wanna highlight though
+that this changes nothing
+
+348
+00:18:04,890 --> 00:18:06,780
+in terms of the API operations.
+
+349
+00:18:06,780 --> 00:18:09,600
+You can continue using Route
+53 Resolver the way it is.
+
+350
+00:18:09,600 --> 00:18:11,250
+There'll be no change over there.
+
+351
+00:18:16,410 --> 00:18:18,450
+But I do want to highlight
+the key differences
+
+352
+00:18:18,450 --> 00:18:20,670
+and similarities between
+these two products
+
+353
+00:18:20,670 --> 00:18:23,070
+and also talk about when
+you should use Global
+
+354
+00:18:23,070 --> 00:18:24,663
+versus VPC Resolver.
+
+355
+00:18:26,910 --> 00:18:29,270
+Global Resolver is multi-regional.
+
+356
+00:18:29,270 --> 00:18:32,700
+It is reachable over the
+internet from anywhere
+
+357
+00:18:32,700 --> 00:18:34,893
+as long as it's authenticated to use.
+
+358
+00:18:36,240 --> 00:18:38,310
+VPC Resolver, this is the default resolver
+
+359
+00:18:38,310 --> 00:18:41,010
+for your Amazon VPCs and
+for any clients connected
+
+360
+00:18:41,010 --> 00:18:44,523
+to those VPCs using Resolver endpoints.
+
+361
+00:18:46,290 --> 00:18:49,860
+Both Global and VPC
+Resolvers support encryption,
+
+362
+00:18:49,860 --> 00:18:53,460
+Global Resolver supports
+DoH and DoT protocols.
+
+363
+00:18:53,460 --> 00:18:58,260
+VPC Resolver supports DoH
+protocol today for any traffic
+
+364
+00:18:58,260 --> 00:19:00,993
+between your VPCs and your hybrid clients.
+
+365
+00:19:03,810 --> 00:19:07,050
+A key similarity of both
+these services is both
+
+366
+00:19:07,050 --> 00:19:09,090
+of them use DNS firewall.
+
+367
+00:19:09,090 --> 00:19:12,240
+This is a feature of Route 53
+
+368
+00:19:12,240 --> 00:19:15,900
+that is in use today
+for blocking any traffic
+
+369
+00:19:15,900 --> 00:19:17,950
+to any malicious domains on the internet.
+
+370
+00:19:20,190 --> 00:19:21,453
+In terms of positioning,
+
+371
+00:19:22,380 --> 00:19:24,630
+we expect that you'll use Global Resolver
+
+372
+00:19:24,630 --> 00:19:27,480
+for any remote networks,
+any remote clients,
+
+373
+00:19:27,480 --> 00:19:30,573
+hybrid networks with a
+multi-region footprint.
+
+374
+00:19:31,530 --> 00:19:33,090
+So you may have multiple regions,
+
+375
+00:19:33,090 --> 00:19:35,880
+you have multiple locations that you want
+
+376
+00:19:35,880 --> 00:19:37,290
+without having to spend the time
+
+377
+00:19:37,290 --> 00:19:39,640
+in creating forwarding
+rules for each of those.
+
+378
+00:19:40,770 --> 00:19:43,530
+VPC Resolver will continue
+serving all your clients
+
+379
+00:19:43,530 --> 00:19:46,950
+within your VPCs and also any
+clients that may be connected
+
+380
+00:19:46,950 --> 00:19:49,473
+to those VPCs using Resolver endpoints.
+
+381
+00:19:53,070 --> 00:19:55,920
+All right, we have
+covered a lot of ground.
+
+382
+00:19:55,920 --> 00:19:57,900
+I'm gonna turn it over
+to my colleague Matt,
+
+383
+00:19:57,900 --> 00:20:00,390
+who's gonna talk you through
+about how you can get started
+
+384
+00:20:00,390 --> 00:20:02,853
+with this service and
+also the best practices.
+
+385
+00:20:05,370 --> 00:20:08,010
+- Thanks, Adhish. My name's Matt Engskow.
+
+386
+00:20:08,010 --> 00:20:10,650
+I'm a principal engineer at AWS Route 53,
+
+387
+00:20:10,650 --> 00:20:12,240
+and I'm incredibly excited to talk to you
+
+388
+00:20:12,240 --> 00:20:13,640
+about Global Resolver today.
+
+389
+00:20:15,060 --> 00:20:16,620
+The key takeaways that I want you to have
+
+390
+00:20:16,620 --> 00:20:18,390
+for this section are, first,
+
+391
+00:20:18,390 --> 00:20:19,530
+I wanna give you a leg up
+
+392
+00:20:19,530 --> 00:20:21,360
+such that if you want to use this product,
+
+393
+00:20:21,360 --> 00:20:23,460
+you can quickly go back
+to your organization
+
+394
+00:20:23,460 --> 00:20:24,900
+and put it into use.
+
+395
+00:20:24,900 --> 00:20:26,610
+I wanna get you familiar
+with the constructs
+
+396
+00:20:26,610 --> 00:20:28,890
+that you'll be using
+under the hood to do that,
+
+397
+00:20:28,890 --> 00:20:30,960
+and I want you to understand
+which you should use
+
+398
+00:20:30,960 --> 00:20:32,940
+and which scenarios and
+how you might apply them
+
+399
+00:20:32,940 --> 00:20:35,553
+for your network's very specific needs.
+
+400
+00:20:37,800 --> 00:20:39,870
+To get started, we're gonna talk through
+
+401
+00:20:39,870 --> 00:20:42,990
+how we might set up Global
+Resolver using the CLI.
+
+402
+00:20:42,990 --> 00:20:45,000
+If you're more interested
+in the console flow,
+
+403
+00:20:45,000 --> 00:20:47,220
+we'll be going over that
+too in just a little bit
+
+404
+00:20:47,220 --> 00:20:48,220
+as part of our demo.
+
+405
+00:20:49,350 --> 00:20:51,210
+The first thing that I
+want to do when I want
+
+406
+00:20:51,210 --> 00:20:55,560
+to create my Global Resolver
+is define the regional scope.
+
+407
+00:20:55,560 --> 00:20:58,740
+So as we mentioned, when you
+make this create resolver call,
+
+408
+00:20:58,740 --> 00:21:02,610
+you're going to be passing
+in at least two AWS regions
+
+409
+00:21:02,610 --> 00:21:05,343
+that are going to be used
+to serve your DNS traffic.
+
+410
+00:21:06,270 --> 00:21:10,020
+Optionally, you can also
+configure an observability region
+
+411
+00:21:10,020 --> 00:21:12,030
+where that observability
+region will be used
+
+412
+00:21:12,030 --> 00:21:15,060
+to aggregate your logs such
+that you can review them later
+
+413
+00:21:15,060 --> 00:21:16,590
+if you have compliance needs
+
+414
+00:21:16,590 --> 00:21:17,970
+or you'd like to do some investigation
+
+415
+00:21:17,970 --> 00:21:20,553
+about why DNS is working
+the way that it is.
+
+416
+00:21:22,110 --> 00:21:24,450
+Once I've created my Global Resolver,
+
+417
+00:21:24,450 --> 00:21:27,240
+I'm going to be given
+back a set of IP addresses
+
+418
+00:21:27,240 --> 00:21:29,700
+and a DNS name for my Global Resolver.
+
+419
+00:21:29,700 --> 00:21:32,250
+These are gonna be static for
+the lifetime of your resolver,
+
+420
+00:21:32,250 --> 00:21:34,830
+regardless of what other
+configuration you take,
+
+421
+00:21:34,830 --> 00:21:35,700
+and they'll be useful
+
+422
+00:21:35,700 --> 00:21:37,743
+when you start configuring your clients.
+
+423
+00:21:39,870 --> 00:21:42,000
+Following the creation
+of my Global Resolver,
+
+424
+00:21:42,000 --> 00:21:45,240
+I can start to define my DNS views.
+
+425
+00:21:45,240 --> 00:21:48,270
+These DNS views are logical containers
+
+426
+00:21:48,270 --> 00:21:50,910
+for all of my configuration policies
+
+427
+00:21:50,910 --> 00:21:53,463
+and allow clients to
+access my Global Resolver.
+
+428
+00:21:54,540 --> 00:21:57,060
+Now by default, the Global
+Resolver has no access,
+
+429
+00:21:57,060 --> 00:21:58,980
+regardless of how I try to throw packets
+
+430
+00:21:58,980 --> 00:22:00,810
+at those IP addresses or that DNS name,
+
+431
+00:22:00,810 --> 00:22:01,950
+they're not going to work.
+
+432
+00:22:01,950 --> 00:22:05,460
+So the next thing that I
+need to do is create a way
+
+433
+00:22:05,460 --> 00:22:07,950
+for my clients to become authenticated.
+
+434
+00:22:07,950 --> 00:22:10,950
+As Adhish mentioned, I
+can do that in two ways.
+
+435
+00:22:10,950 --> 00:22:12,630
+I can use access sources
+
+436
+00:22:12,630 --> 00:22:16,710
+to take my known public IP
+addresses for my clients
+
+437
+00:22:16,710 --> 00:22:18,690
+and configure them simply.
+
+438
+00:22:18,690 --> 00:22:20,370
+If I have roaming clients,
+
+439
+00:22:20,370 --> 00:22:22,800
+I might like to use access tokens
+
+440
+00:22:22,800 --> 00:22:26,610
+and instead create these
+pre-shared kind of secret keys
+
+441
+00:22:26,610 --> 00:22:29,850
+that I'll then distribute
+to my clients later on.
+
+442
+00:22:29,850 --> 00:22:31,440
+Now once I've created these,
+
+443
+00:22:31,440 --> 00:22:35,130
+my clients can then start
+to use the individual views
+
+444
+00:22:35,130 --> 00:22:38,970
+that have been mapped to these
+access tokens or sources,
+
+445
+00:22:38,970 --> 00:22:41,790
+and it's gonna be kind of vanilla DNS,
+
+446
+00:22:41,790 --> 00:22:43,920
+just a public DNS resolver.
+
+447
+00:22:43,920 --> 00:22:45,270
+But I might want to do more than that,
+
+448
+00:22:45,270 --> 00:22:48,423
+so optionally, I can also
+start customizing these views.
+
+449
+00:22:49,350 --> 00:22:51,870
+I can create things like firewall rules.
+
+450
+00:22:51,870 --> 00:22:53,820
+An example that we have on
+the screen here is something
+
+451
+00:22:53,820 --> 00:22:55,950
+that maybe your spouses or
+your managers might like to do
+
+452
+00:22:55,950 --> 00:22:57,630
+to do while you're here at re:Invent.
+
+453
+00:22:57,630 --> 00:23:00,540
+I can block gambling
+for all of my clients.
+
+454
+00:23:00,540 --> 00:23:03,300
+Additionally, I can associate
+things like hosted zones
+
+455
+00:23:03,300 --> 00:23:05,640
+that allow me to customize DNS resolution
+
+456
+00:23:05,640 --> 00:23:08,463
+for my own internal
+applications as I see fit.
+
+457
+00:23:09,660 --> 00:23:12,120
+I can continue to layer
+these things on as needed
+
+458
+00:23:12,120 --> 00:23:16,140
+and update DNS views later
+on as my policies change
+
+459
+00:23:16,140 --> 00:23:18,840
+or additional private hosted
+zones become provisioned.
+
+460
+00:23:20,880 --> 00:23:22,650
+Now I've walked you through
+
+461
+00:23:22,650 --> 00:23:25,110
+how to create your Global Resolver.
+
+462
+00:23:25,110 --> 00:23:26,730
+I want to give you some best practices
+
+463
+00:23:26,730 --> 00:23:30,033
+for those key focus areas
+that Adhish mentioned earlier.
+
+464
+00:23:30,900 --> 00:23:33,540
+So we're gonna talk through
+some of the best practices
+
+465
+00:23:33,540 --> 00:23:35,490
+for achieving split-DNS resolution,
+
+466
+00:23:35,490 --> 00:23:39,270
+securing your global access,
+improving your security,
+
+467
+00:23:39,270 --> 00:23:41,913
+and failover and multi-region resilience.
+
+468
+00:23:43,290 --> 00:23:46,040
+First, let's start with
+achieving split-DNS resolution.
+
+469
+00:23:48,090 --> 00:23:49,350
+So as called out,
+
+470
+00:23:49,350 --> 00:23:53,070
+a single Global Resolver
+can be responsible
+
+471
+00:23:53,070 --> 00:23:55,320
+for many, many views.
+
+472
+00:23:55,320 --> 00:23:56,670
+You can think of the Global Resolver
+
+473
+00:23:56,670 --> 00:24:00,750
+as just those IP addresses and
+kind of the networking setup,
+
+474
+00:24:00,750 --> 00:24:04,710
+but how my clients
+actually get a DNS answer
+
+475
+00:24:04,710 --> 00:24:08,430
+is a logical construct
+held by those views.
+
+476
+00:24:08,430 --> 00:24:11,070
+Those views can take many different forms
+
+477
+00:24:11,070 --> 00:24:13,110
+and can be customized to fit your needs.
+
+478
+00:24:13,110 --> 00:24:16,920
+So I may have some networks
+that are very open, right?
+
+479
+00:24:16,920 --> 00:24:19,500
+Clients that don't have
+very many restrictions,
+
+480
+00:24:19,500 --> 00:24:20,850
+and I may have some clients
+
+481
+00:24:20,850 --> 00:24:23,340
+that are maybe highly-sensitive workloads
+
+482
+00:24:23,340 --> 00:24:25,410
+where I need to lock down
+DNS and only allow them
+
+483
+00:24:25,410 --> 00:24:28,320
+to resolve a very small
+set of domain names.
+
+484
+00:24:28,320 --> 00:24:30,870
+I can put both of those
+into two different views
+
+485
+00:24:30,870 --> 00:24:33,780
+and associate them to a
+single Global Resolver,
+
+486
+00:24:33,780 --> 00:24:36,090
+and then map the clients
+through the sources
+
+487
+00:24:36,090 --> 00:24:38,253
+or tokens appropriately to those views.
+
+488
+00:24:41,130 --> 00:24:43,440
+How this might look under the hood?
+
+489
+00:24:43,440 --> 00:24:47,580
+So maybe I start with DNS
+View A here on the left
+
+490
+00:24:47,580 --> 00:24:49,530
+and I might add in a
+couple of hosted zones.
+
+491
+00:24:49,530 --> 00:24:51,450
+These can be the same private hosted zones
+
+492
+00:24:51,450 --> 00:24:55,200
+that you already have for
+your VPCs or brand new ones.
+
+493
+00:24:55,200 --> 00:24:56,973
+I may also create a firewall rule,
+
+494
+00:24:57,930 --> 00:24:59,610
+and then layer in my access source
+
+495
+00:24:59,610 --> 00:25:01,593
+with the IPs as appropriate.
+
+496
+00:25:02,490 --> 00:25:04,560
+Now if I wanna spin up a new view,
+
+497
+00:25:04,560 --> 00:25:07,710
+maybe I have new resources
+or maybe I wanna reuse some.
+
+498
+00:25:07,710 --> 00:25:10,380
+So you'll see in the example
+here, I'm reusing this.
+
+499
+00:25:10,380 --> 00:25:12,390
+Top hosted zone has the same ID,
+
+500
+00:25:12,390 --> 00:25:16,410
+but every other resource below
+it is a completely new one.
+
+501
+00:25:16,410 --> 00:25:20,520
+This allows us to quickly get
+to consistent DNS resolution
+
+502
+00:25:20,520 --> 00:25:23,220
+without needing to provision
+new networking infrastructure
+
+503
+00:25:23,220 --> 00:25:24,300
+where I want it,
+
+504
+00:25:24,300 --> 00:25:27,513
+but to specialize those views
+where I want it as well.
+
+505
+00:25:31,320 --> 00:25:33,453
+Next up, let's talk about authentication.
+
+506
+00:25:35,640 --> 00:25:38,940
+At a high level, we have
+those two same constructs.
+
+507
+00:25:38,940 --> 00:25:42,540
+We have access tokens and access
+sources, but beneath those,
+
+508
+00:25:42,540 --> 00:25:45,060
+there are individual
+kind of protocol supports
+
+509
+00:25:45,060 --> 00:25:47,730
+and some nuances that
+I want to talk through.
+
+510
+00:25:47,730 --> 00:25:49,680
+When it comes to access tokens,
+
+511
+00:25:49,680 --> 00:25:53,373
+you can use first DNS over HTTPS or DoH.
+
+512
+00:25:54,420 --> 00:25:57,240
+When you're configuring
+DoH on your clients,
+
+513
+00:25:57,240 --> 00:26:02,100
+you're going to be specifying
+a very specific DoH URI or URL
+
+514
+00:26:02,100 --> 00:26:05,280
+that includes the access
+token to be passed upstream
+
+515
+00:26:05,280 --> 00:26:07,020
+to Global Resolver.
+
+516
+00:26:07,020 --> 00:26:08,880
+One of the nice things
+about this option is
+
+517
+00:26:08,880 --> 00:26:11,460
+that it's supported by
+common operating system
+
+518
+00:26:11,460 --> 00:26:13,290
+like Windows and macOS today.
+
+519
+00:26:13,290 --> 00:26:15,240
+So you can go and configure those clients
+
+520
+00:26:15,240 --> 00:26:17,940
+without ever installing
+a new client software
+
+521
+00:26:17,940 --> 00:26:20,283
+or having to do much
+configuration on those.
+
+522
+00:26:22,110 --> 00:26:25,923
+Another option for access
+tokens is DNS over TLS or DoT.
+
+523
+00:26:27,240 --> 00:26:30,780
+This is often supported by
+common DNS server softwares
+
+524
+00:26:30,780 --> 00:26:33,360
+like Unbound, CoreDNS and others,
+
+525
+00:26:33,360 --> 00:26:34,710
+and is a really good option
+
+526
+00:26:34,710 --> 00:26:37,170
+if you have a centralized DNS forwarder
+
+527
+00:26:37,170 --> 00:26:39,660
+for an environment that your
+clients are forwarding to first
+
+528
+00:26:39,660 --> 00:26:42,243
+before you want to egress
+into Global Resolver.
+
+529
+00:26:43,080 --> 00:26:47,340
+For DoT, we will be
+configuring that DoT client
+
+530
+00:26:47,340 --> 00:26:50,820
+to inject an EDNS0
+option or a DNS extension
+
+531
+00:26:50,820 --> 00:26:54,210
+that specifies a very
+specific DNS operation code
+
+532
+00:26:54,210 --> 00:26:55,770
+and your access token,
+
+533
+00:26:55,770 --> 00:26:58,370
+and can, again, pass it
+upstream to Global Resolver.
+
+534
+00:27:00,780 --> 00:27:02,280
+On the access sources side,
+
+535
+00:27:02,280 --> 00:27:05,010
+we support all three of these protocols,
+
+536
+00:27:05,010 --> 00:27:07,350
+but in a bit of a simpler way.
+
+537
+00:27:07,350 --> 00:27:09,480
+You can choose to use DoH, DoT,
+
+538
+00:27:09,480 --> 00:27:13,680
+or the more vanilla Do53, UDP, TCP, DNS,
+
+539
+00:27:13,680 --> 00:27:17,190
+so long as you're willing to
+configure those source IPs.
+
+540
+00:27:17,190 --> 00:27:20,670
+This is a really simple option
+if you have fixed IP sites
+
+541
+00:27:20,670 --> 00:27:22,830
+where you've got that list
+of IPS readily available
+
+542
+00:27:22,830 --> 00:27:25,890
+and you don't want to go
+and configure client devices
+
+543
+00:27:25,890 --> 00:27:26,883
+in any way at all.
+
+544
+00:27:33,210 --> 00:27:35,310
+One important note here,
+
+545
+00:27:35,310 --> 00:27:39,360
+your DNS views can use multiple
+access types as needed.
+
+546
+00:27:39,360 --> 00:27:40,500
+So in the example here,
+
+547
+00:27:40,500 --> 00:27:43,620
+you can see that View A
+has both an access source
+
+548
+00:27:43,620 --> 00:27:46,470
+and an access token
+configured at the same time,
+
+549
+00:27:46,470 --> 00:27:48,720
+and View B has only an access source.
+
+550
+00:27:48,720 --> 00:27:49,920
+That's absolutely okay,
+
+551
+00:27:49,920 --> 00:27:52,710
+you can mix and match these as needed.
+
+552
+00:27:52,710 --> 00:27:55,170
+Additionally, each view is meant to scale
+
+553
+00:27:55,170 --> 00:27:58,710
+to handle thousands of
+potential tokens and sources.
+
+554
+00:27:58,710 --> 00:28:00,360
+So if you have many,
+
+555
+00:28:00,360 --> 00:28:03,420
+many roaming clients or many
+sites that you wanna configure,
+
+556
+00:28:03,420 --> 00:28:06,663
+you can do that all behind one
+view or many views as needed.
+
+557
+00:28:09,840 --> 00:28:12,873
+Next up, let's talk about
+improving your DNS security.
+
+558
+00:28:14,460 --> 00:28:17,070
+Now because we've had DNS firewall,
+
+559
+00:28:17,070 --> 00:28:20,010
+the same service that's
+used on your VPC DNS today,
+
+560
+00:28:20,010 --> 00:28:22,500
+we've seen a lot of learnings
+from customers over time
+
+561
+00:28:22,500 --> 00:28:25,410
+in the ways that they
+configure this service.
+
+562
+00:28:25,410 --> 00:28:28,500
+There's a lot of
+configuration that you can do
+
+563
+00:28:28,500 --> 00:28:29,850
+and a lot of customization.
+
+564
+00:28:29,850 --> 00:28:31,320
+As Adhish mentioned earlier,
+
+565
+00:28:31,320 --> 00:28:33,690
+you can build exemptions
+for your trusted domains,
+
+566
+00:28:33,690 --> 00:28:35,670
+enable those advanced protections.
+
+567
+00:28:35,670 --> 00:28:38,730
+We can support both
+fail open and fail close
+
+568
+00:28:38,730 --> 00:28:41,970
+if you're more concerned with
+availability or security,
+
+569
+00:28:41,970 --> 00:28:44,070
+and you can do both allow
+and deny by default,
+
+570
+00:28:44,070 --> 00:28:46,290
+in case you wanna operate
+in that walled garden mode
+
+571
+00:28:46,290 --> 00:28:48,570
+where perhaps you only
+allow a very small set
+
+572
+00:28:48,570 --> 00:28:49,923
+of names to be resolved.
+
+573
+00:28:50,760 --> 00:28:51,930
+I want to talk through
+
+574
+00:28:51,930 --> 00:28:54,870
+how we've seen customers
+adopt DNS filtering
+
+575
+00:28:54,870 --> 00:28:56,570
+and kind of the safe way to do it.
+
+576
+00:29:00,120 --> 00:29:03,150
+So first, one of the
+things that we see many
+
+577
+00:29:03,150 --> 00:29:05,280
+of our customers do that we recommend is
+
+578
+00:29:05,280 --> 00:29:06,960
+to start with an allowlist
+
+579
+00:29:06,960 --> 00:29:09,690
+for your organization's
+highly trusted domains.
+
+580
+00:29:09,690 --> 00:29:12,030
+These are the things that
+you know should never,
+
+581
+00:29:12,030 --> 00:29:13,623
+ever, ever be blocked.
+
+582
+00:29:14,580 --> 00:29:16,860
+If you're going to be using
+the advanced protections
+
+583
+00:29:16,860 --> 00:29:18,450
+that we have that are backed
+
+584
+00:29:18,450 --> 00:29:20,670
+by some very smart
+machine learning models,
+
+585
+00:29:20,670 --> 00:29:23,820
+we still recommend that you
+allowlist your trusted domains,
+
+586
+00:29:23,820 --> 00:29:25,950
+just in case you happen to be
+doing anything that happens
+
+587
+00:29:25,950 --> 00:29:29,130
+to look like tunneling or DGA
+traffic for those domains,
+
+588
+00:29:29,130 --> 00:29:30,280
+it'll still be allowed.
+
+589
+00:29:31,200 --> 00:29:35,430
+We often also see customers
+who are willing to block
+
+590
+00:29:35,430 --> 00:29:37,590
+for our most high confidence thresholds
+
+591
+00:29:37,590 --> 00:29:39,000
+on those advanced protections,
+
+592
+00:29:39,000 --> 00:29:41,160
+but maybe they still
+want to receive alerts
+
+593
+00:29:41,160 --> 00:29:42,030
+for the lower thresholds.
+
+594
+00:29:42,030 --> 00:29:44,790
+And so you'll see our
+priority values here allow us
+
+595
+00:29:44,790 --> 00:29:47,370
+to do that, we can layer
+in our high confidence,
+
+596
+00:29:47,370 --> 00:29:49,260
+and then below that put our low confidence
+
+597
+00:29:49,260 --> 00:29:51,480
+where maybe our security
+teams are gonna be sifting
+
+598
+00:29:51,480 --> 00:29:53,550
+through our logs and
+looking at those findings
+
+599
+00:29:53,550 --> 00:29:56,000
+rather than blocking
+production traffic outright.
+
+600
+00:29:57,660 --> 00:30:00,330
+Now as customers adopt these features,
+
+601
+00:30:00,330 --> 00:30:03,360
+we see them work through
+kind of a phased approach.
+
+602
+00:30:03,360 --> 00:30:06,570
+It often starts where
+customers are starting
+
+603
+00:30:06,570 --> 00:30:08,760
+with log analysis on their DNS traffic.
+
+604
+00:30:08,760 --> 00:30:12,270
+They're looking for those
+highly safe, trusted domains.
+
+605
+00:30:12,270 --> 00:30:14,070
+They're looking for things
+that might be spurious,
+
+606
+00:30:14,070 --> 00:30:14,903
+and they're coming up
+
+607
+00:30:14,903 --> 00:30:17,370
+with what they think
+might be reasonable rules.
+
+608
+00:30:17,370 --> 00:30:19,230
+We highly recommend the customers start
+
+609
+00:30:19,230 --> 00:30:22,170
+with alert rules where in phase two,
+
+610
+00:30:22,170 --> 00:30:23,250
+you go ahead and start building
+
+611
+00:30:23,250 --> 00:30:26,310
+out what may eventually become
+your production rule set,
+
+612
+00:30:26,310 --> 00:30:28,230
+but you enable it only in an alert mode
+
+613
+00:30:28,230 --> 00:30:30,000
+where you can then go
+back to your DNS logs
+
+614
+00:30:30,000 --> 00:30:31,230
+and see what would've been blocked
+
+615
+00:30:31,230 --> 00:30:32,780
+had you turned these things on.
+
+616
+00:30:33,840 --> 00:30:36,120
+For many customers, they
+cycle back and forth
+
+617
+00:30:36,120 --> 00:30:38,790
+between kind of phase one of
+log analysis and phase two
+
+618
+00:30:38,790 --> 00:30:41,580
+where they fine-tune
+their policies over time
+
+619
+00:30:41,580 --> 00:30:43,680
+and they adjust them
+until the number of alerts
+
+620
+00:30:43,680 --> 00:30:45,510
+that they're seeing
+becomes very, very small,
+
+621
+00:30:45,510 --> 00:30:46,860
+and they're confident now
+
+622
+00:30:46,860 --> 00:30:49,410
+that they can move on to phase three.
+
+623
+00:30:49,410 --> 00:30:52,080
+In phase three, you take
+a simple rule update
+
+624
+00:30:52,080 --> 00:30:53,280
+and you change your alert rules
+
+625
+00:30:53,280 --> 00:30:55,140
+into actual block rules,
+and at this point,
+
+626
+00:30:55,140 --> 00:30:58,770
+your traffic starts to receive
+those DNS filtering policies
+
+627
+00:30:58,770 --> 00:31:00,780
+and they become enforced.
+
+628
+00:31:00,780 --> 00:31:02,520
+We still recommend that customers continue
+
+629
+00:31:02,520 --> 00:31:05,310
+to monitor their metrics and their logs
+
+630
+00:31:05,310 --> 00:31:07,170
+to look out for a new, you know,
+
+631
+00:31:07,170 --> 00:31:10,200
+spike in blocks or kind
+of new spurious traffic
+
+632
+00:31:10,200 --> 00:31:13,020
+that might be being
+identified by the service.
+
+633
+00:31:13,020 --> 00:31:15,090
+Your workloads are going to change,
+
+634
+00:31:15,090 --> 00:31:16,320
+you're gonna take new dependencies
+
+635
+00:31:16,320 --> 00:31:18,000
+and update your software over time,
+
+636
+00:31:18,000 --> 00:31:20,500
+and there will be some
+maintenance required there.
+
+637
+00:31:24,240 --> 00:31:26,280
+All right, that's all
+I have on DNS security.
+
+638
+00:31:26,280 --> 00:31:28,020
+Finally, let's talk about failover
+
+639
+00:31:28,020 --> 00:31:29,420
+and multi-region resilience.
+
+640
+00:31:32,310 --> 00:31:35,160
+Global Resolver is designed
+to offload the complexity
+
+641
+00:31:35,160 --> 00:31:37,770
+of multi-region DNS deployments.
+
+642
+00:31:37,770 --> 00:31:39,990
+The service works to protect your network
+
+643
+00:31:39,990 --> 00:31:44,490
+from both internet, routing
+and service impairments,
+
+644
+00:31:44,490 --> 00:31:45,990
+and automatically redirect traffic
+
+645
+00:31:45,990 --> 00:31:47,740
+to maintain that high availability.
+
+646
+00:31:49,080 --> 00:31:52,050
+As called out, when you
+provision your Global Resolver,
+
+647
+00:31:52,050 --> 00:31:54,450
+you get two IP addresses back.
+
+648
+00:31:54,450 --> 00:31:56,970
+Behind the scenes,
+those two IPs are backed
+
+649
+00:31:56,970 --> 00:31:59,580
+by separate redundant capacity,
+
+650
+00:31:59,580 --> 00:32:01,500
+and we always recommend
+that clients are configured
+
+651
+00:32:01,500 --> 00:32:04,230
+with both those IPs such
+that should there be an issue
+
+652
+00:32:04,230 --> 00:32:06,720
+with one part, one of those IPs,
+
+653
+00:32:06,720 --> 00:32:10,380
+they can quickly retry and
+distribute traffic to the other.
+
+654
+00:32:10,380 --> 00:32:11,820
+Now that's pretty standard in DNS
+
+655
+00:32:11,820 --> 00:32:13,290
+to have your primary and secondary.
+
+656
+00:32:13,290 --> 00:32:15,810
+Let's talk about how the
+service works behind the scenes
+
+657
+00:32:15,810 --> 00:32:18,410
+to maintain availability
+at an even higher standard.
+
+658
+00:32:20,820 --> 00:32:23,100
+When routing into regions
+that you've configured
+
+659
+00:32:23,100 --> 00:32:24,570
+for your Global Resolver,
+
+660
+00:32:24,570 --> 00:32:27,390
+your traffic is first routed
+through AWS edge locations
+
+661
+00:32:27,390 --> 00:32:29,190
+that are close to your client.
+
+662
+00:32:29,190 --> 00:32:32,130
+There's more than 400 of these
+edge locations worldwide,
+
+663
+00:32:32,130 --> 00:32:34,640
+and that ensures that
+they're always close by
+
+664
+00:32:34,640 --> 00:32:37,860
+to your clients regardless
+of where they reside.
+
+665
+00:32:37,860 --> 00:32:39,150
+Now what happens if one
+
+666
+00:32:39,150 --> 00:32:42,300
+of those edge locations has a
+network or service impairment?
+
+667
+00:32:42,300 --> 00:32:45,840
+Global Resolver's anycast
+route announcements ensure
+
+668
+00:32:45,840 --> 00:32:47,910
+that we are able to quickly fail away
+
+669
+00:32:47,910 --> 00:32:50,790
+from an impaired edge location
+
+670
+00:32:50,790 --> 00:32:53,590
+and onto one that can
+successfully process your traffic.
+
+671
+00:32:55,350 --> 00:32:57,390
+Now this same concept applies
+
+672
+00:32:57,390 --> 00:33:00,240
+when it comes to our
+multi-region resilience story.
+
+673
+00:33:00,240 --> 00:33:01,740
+So should AWS,
+
+674
+00:33:01,740 --> 00:33:05,880
+in the rare case be having
+an AWS service impairment
+
+675
+00:33:05,880 --> 00:33:08,130
+in a given region, that secondary region
+
+676
+00:33:08,130 --> 00:33:11,190
+that you've selected or if
+you've selected more than two,
+
+677
+00:33:11,190 --> 00:33:13,290
+your clients will again be rerouted
+
+678
+00:33:13,290 --> 00:33:15,393
+to the next available region.
+
+679
+00:33:16,320 --> 00:33:18,510
+We think this provides
+a really robust story
+
+680
+00:33:18,510 --> 00:33:21,780
+and helps automatically solve
+for your disaster recovery
+
+681
+00:33:21,780 --> 00:33:24,060
+and multi-region resilience requirements
+
+682
+00:33:24,060 --> 00:33:25,960
+that you might have for your services.
+
+683
+00:33:28,680 --> 00:33:30,990
+All right, that's all I
+have for best practices.
+
+684
+00:33:30,990 --> 00:33:33,210
+I now wanna talk about a case study
+
+685
+00:33:33,210 --> 00:33:36,033
+that we have covering
+Just Walk Out stores.
+
+686
+00:33:36,960 --> 00:33:38,940
+As Adhish mentioned earlier,
+
+687
+00:33:38,940 --> 00:33:42,480
+Just Walk Out is a technology
+that simplifies shopping
+
+688
+00:33:42,480 --> 00:33:44,670
+that's been delivered by Amazon
+
+689
+00:33:44,670 --> 00:33:47,190
+and helps customers get in
+and out of stores quickly
+
+690
+00:33:47,190 --> 00:33:48,780
+where they can enter a store,
+
+691
+00:33:48,780 --> 00:33:50,730
+grab what they want off the shelf,
+
+692
+00:33:50,730 --> 00:33:53,790
+and get back to their day
+without ever having to queue
+
+693
+00:33:53,790 --> 00:33:55,203
+or stop at a cashier.
+
+694
+00:33:56,160 --> 00:33:58,200
+You might have used one of these locations
+
+695
+00:33:58,200 --> 00:34:01,320
+at a sporting event, maybe at the airport,
+
+696
+00:34:01,320 --> 00:34:02,940
+or even here in the conference center
+
+697
+00:34:02,940 --> 00:34:06,150
+where our merch store over
+in the Venetian has one
+
+698
+00:34:06,150 --> 00:34:06,983
+of these today.
+
+699
+00:34:08,400 --> 00:34:13,380
+The technology backing these
+uses a combination of cameras,
+
+700
+00:34:13,380 --> 00:34:16,683
+RFID, sensor fusion
+between those two things,
+
+701
+00:34:17,700 --> 00:34:19,020
+fast checkout registers
+
+702
+00:34:19,020 --> 00:34:22,020
+that scan your phone quickly for payment,
+
+703
+00:34:22,020 --> 00:34:26,250
+and all of those things
+require a very robust network.
+
+704
+00:34:26,250 --> 00:34:28,750
+All of those network devices
+need DNS to function.
+
+705
+00:34:30,450 --> 00:34:32,340
+Behind the scenes today,
+
+706
+00:34:32,340 --> 00:34:35,880
+Just Walk Out has a very large
+distributed DNS footprint.
+
+707
+00:34:35,880 --> 00:34:38,910
+They have over 300 of these
+stores across Australia,
+
+708
+00:34:38,910 --> 00:34:41,400
+Canada, Europe and the US,
+
+709
+00:34:41,400 --> 00:34:45,573
+and these result in over 550
+million DNS requests per day.
+
+710
+00:34:46,410 --> 00:34:48,390
+To handle these, they
+provision infrastructure
+
+711
+00:34:48,390 --> 00:34:50,163
+in four AWS regions.
+
+712
+00:34:52,620 --> 00:34:55,080
+Now pre-migration to Global Resolver,
+
+713
+00:34:55,080 --> 00:34:57,720
+their footprint looks something like this,
+
+714
+00:34:57,720 --> 00:34:59,370
+albeit a little bit simplified.
+
+715
+00:34:59,370 --> 00:35:00,540
+On the left-hand side of the screen,
+
+716
+00:35:00,540 --> 00:35:03,540
+you can see that they have
+a centralized DNS forwarder
+
+717
+00:35:03,540 --> 00:35:06,210
+that's the first hop for all
+of those cameras and servers
+
+718
+00:35:06,210 --> 00:35:08,493
+and processing devices.
+
+719
+00:35:09,480 --> 00:35:12,600
+Those DNS forwarders are then
+sending into AWS regions,
+
+720
+00:35:12,600 --> 00:35:14,010
+there's four AWS regions
+
+721
+00:35:14,010 --> 00:35:16,350
+where they have a custom
+DNS server software
+
+722
+00:35:16,350 --> 00:35:18,750
+that's doing a couple of things.
+
+723
+00:35:18,750 --> 00:35:20,640
+For one, it's doing the IP allowlisting.
+
+724
+00:35:20,640 --> 00:35:23,670
+They're sending this over plain Do53
+
+725
+00:35:23,670 --> 00:35:25,530
+and they're IP allowlisting each store
+
+726
+00:35:25,530 --> 00:35:27,480
+that they build out with that fixed IP.
+
+727
+00:35:28,440 --> 00:35:31,110
+They are applying some conditional,
+
+728
+00:35:31,110 --> 00:35:34,350
+both DNS zones where they
+have per store DNS records
+
+729
+00:35:34,350 --> 00:35:35,400
+that they need to serve up
+
+730
+00:35:35,400 --> 00:35:38,040
+and conditional DNS filtering
+rules where they have a front
+
+731
+00:35:38,040 --> 00:35:40,020
+of house and back of house network
+
+732
+00:35:40,020 --> 00:35:42,120
+that have different security requirements.
+
+733
+00:35:43,320 --> 00:35:44,760
+Once those rules have been applied,
+
+734
+00:35:44,760 --> 00:35:45,593
+they were then forwarding
+
+735
+00:35:45,593 --> 00:35:47,910
+into Route 53 Resolver inbound endpoints
+
+736
+00:35:47,910 --> 00:35:49,410
+to help them get their internet
+
+737
+00:35:49,410 --> 00:35:51,273
+DNS resolution as appropriate.
+
+738
+00:35:53,280 --> 00:35:55,620
+Now this is a robust DNS infrastructure,
+
+739
+00:35:55,620 --> 00:35:58,890
+but it had a few things
+that they wanted to fix.
+
+740
+00:35:58,890 --> 00:36:01,257
+They wanted to be able to
+stand up stores quickly,
+
+741
+00:36:01,257 --> 00:36:03,720
+and they wanna be able to do that
+
+742
+00:36:03,720 --> 00:36:05,820
+without knowing the fixed IP
+
+743
+00:36:05,820 --> 00:36:08,670
+that they're gonna be
+using for those stores.
+
+744
+00:36:08,670 --> 00:36:10,680
+They also wanted to be able
+to reduce the effort required
+
+745
+00:36:10,680 --> 00:36:11,730
+to maintain this.
+
+746
+00:36:11,730 --> 00:36:12,563
+You can imagine that
+
+747
+00:36:12,563 --> 00:36:15,870
+that DNS service software
+requires developers to go
+
+748
+00:36:15,870 --> 00:36:17,550
+and patch and reconfigure.
+
+749
+00:36:17,550 --> 00:36:20,070
+All of that new IP data
+has to get loaded in,
+
+750
+00:36:20,070 --> 00:36:21,510
+those conditional filtering rules have
+
+751
+00:36:21,510 --> 00:36:22,710
+to be updated over time.
+
+752
+00:36:25,650 --> 00:36:29,373
+So post-migration, we
+see something like this.
+
+753
+00:36:31,800 --> 00:36:34,920
+Just Walk Out has instead
+moved to using access tokens
+
+754
+00:36:34,920 --> 00:36:37,650
+where they can pre-provision
+these access tokens way ahead
+
+755
+00:36:37,650 --> 00:36:39,720
+of store buildout and
+assign them to stores
+
+756
+00:36:39,720 --> 00:36:41,670
+as they come online.
+
+757
+00:36:41,670 --> 00:36:45,120
+They're able to use
+encrypted DNS to communicate
+
+758
+00:36:45,120 --> 00:36:47,010
+between those stores and Global Resolver
+
+759
+00:36:47,010 --> 00:36:48,213
+via their access token,
+
+760
+00:36:49,050 --> 00:36:53,760
+and that access token maps
+them to store specific views
+
+761
+00:36:53,760 --> 00:36:55,950
+for both front of house
+and back of house networks,
+
+762
+00:36:55,950 --> 00:36:57,540
+applying the policies automatically
+
+763
+00:36:57,540 --> 00:37:00,753
+with no DNS server software
+requirement on their end.
+
+764
+00:37:01,920 --> 00:37:05,070
+This is able to deploy
+to the same four regions
+
+765
+00:37:05,070 --> 00:37:06,870
+that Just Walk Out has today,
+
+766
+00:37:06,870 --> 00:37:08,490
+but should they choose to go to five
+
+767
+00:37:08,490 --> 00:37:10,170
+or more regions tomorrow,
+
+768
+00:37:10,170 --> 00:37:12,960
+they can do that at the flip
+of a switch on Global Resolver,
+
+769
+00:37:12,960 --> 00:37:17,250
+getting lower latency for clients
+close to those new regions
+
+770
+00:37:17,250 --> 00:37:18,450
+and additional failover.
+
+771
+00:37:20,430 --> 00:37:23,430
+They saw a lot of really great
+migration benefits from this.
+
+772
+00:37:24,600 --> 00:37:26,670
+They got enhanced security
+from the DNS encryption,
+
+773
+00:37:26,670 --> 00:37:30,540
+as we mentioned, a greatly
+simplified network architecture,
+
+774
+00:37:30,540 --> 00:37:32,610
+support for those dynamic IP addresses
+
+775
+00:37:32,610 --> 00:37:34,866
+where they may not know
+them ahead of time,
+
+776
+00:37:34,866 --> 00:37:37,500
+and a greatly reduced operational overhead
+
+777
+00:37:37,500 --> 00:37:39,833
+where they don't need to
+maintain that server software.
+
+778
+00:37:43,860 --> 00:37:46,290
+Next up, I'd like to
+walk you through a demo.
+
+779
+00:37:46,290 --> 00:37:48,360
+I'm gonna caveat that this is a live demo
+
+780
+00:37:48,360 --> 00:37:50,520
+and we just launched a couple
+days ago, so bear with me.
+
+781
+00:37:50,520 --> 00:37:52,583
+Hopefully, we don't have
+any problems with the wifi.
+
+782
+00:38:00,840 --> 00:38:01,890
+So for this demo,
+
+783
+00:38:01,890 --> 00:38:03,690
+I'm gonna be walking
+through a Global Resolver
+
+784
+00:38:03,690 --> 00:38:05,760
+that I provisioned ahead of time
+
+785
+00:38:05,760 --> 00:38:09,180
+and showing you how this
+works behind the scenes.
+
+786
+00:38:09,180 --> 00:38:11,310
+I've got some DNS commands
+over on the right-hand side
+
+787
+00:38:11,310 --> 00:38:14,223
+of the screen that I'll be
+using throughout the demo.
+
+788
+00:38:15,090 --> 00:38:18,570
+So you can see here our
+Global Resolver console
+
+789
+00:38:18,570 --> 00:38:21,750
+where I've created this
+demo-global-resolver.
+
+790
+00:38:21,750 --> 00:38:23,610
+It's currently backed by two regions,
+
+791
+00:38:23,610 --> 00:38:27,363
+one in us-east-1 and
+the second in us-west-2.
+
+792
+00:38:31,680 --> 00:38:35,670
+Behind my Global Resolver,
+I have two DNS views.
+
+793
+00:38:35,670 --> 00:38:39,130
+I have an open-access-view
+and a restricted-access-view
+
+794
+00:38:40,350 --> 00:38:42,060
+that kind of configured the
+way that you would expect
+
+795
+00:38:42,060 --> 00:38:44,070
+where our open view is able to query
+
+796
+00:38:44,070 --> 00:38:45,450
+and resolve kind of whatever,
+
+797
+00:38:45,450 --> 00:38:48,030
+and our restricted-access-view
+has some restrictions
+
+798
+00:38:48,030 --> 00:38:48,863
+on top of it.
+
+799
+00:38:50,700 --> 00:38:53,100
+Now for our restricted-access-view,
+
+800
+00:38:53,100 --> 00:38:54,900
+let's talk about this one first.
+
+801
+00:38:54,900 --> 00:38:58,530
+I've enabled DNS firewall
+rules to block two categories,
+
+802
+00:38:58,530 --> 00:39:00,183
+both travel and shopping.
+
+803
+00:39:01,260 --> 00:39:03,390
+I have one private hosted zone
+
+804
+00:39:03,390 --> 00:39:05,160
+that's doing some custom DNS resolution
+
+805
+00:39:05,160 --> 00:39:08,010
+for globalresolver.com that'll
+show off in just a minute.
+
+806
+00:39:09,210 --> 00:39:11,550
+And I have two access sources configured,
+
+807
+00:39:11,550 --> 00:39:14,070
+no access tokens, but two access sources.
+
+808
+00:39:14,070 --> 00:39:15,150
+One of them is
+
+809
+00:39:15,150 --> 00:39:20,150
+for my very specific EC2 instance IP,
+
+810
+00:39:20,490 --> 00:39:22,530
+and the second one is for the IP range
+
+811
+00:39:22,530 --> 00:39:24,570
+that we're using here at re:Invent today.
+
+812
+00:39:24,570 --> 00:39:27,000
+So if you happen to be
+sitting in the audience
+
+813
+00:39:27,000 --> 00:39:28,740
+and you have a laptop open,
+
+814
+00:39:28,740 --> 00:39:31,500
+you can try a DNS query like this today,
+
+815
+00:39:31,500 --> 00:39:33,809
+and it should go ahead
+and get resolved for you.
+
+816
+00:39:33,809 --> 00:39:35,100
+Please feel free to try that out
+
+817
+00:39:35,100 --> 00:39:36,750
+as I'm talking if you would like.
+
+818
+00:39:37,650 --> 00:39:38,850
+I'll leave this here for just one second
+
+819
+00:39:38,850 --> 00:39:41,103
+if anybody wants to take a screenshot.
+
+820
+00:39:43,290 --> 00:39:44,340
+All right, fantastic.
+
+821
+00:39:46,170 --> 00:39:48,780
+Now I'm gonna be showing a DNS resolution
+
+822
+00:39:48,780 --> 00:39:50,313
+from two specific instances.
+
+823
+00:39:51,180 --> 00:39:53,670
+The first that I've
+called IP-Demo-Instance
+
+824
+00:39:53,670 --> 00:39:56,670
+has this public IP you can see here,
+
+825
+00:39:56,670 --> 00:39:59,940
+which corresponds to
+this same access source
+
+826
+00:39:59,940 --> 00:40:00,990
+that I've configured.
+
+827
+00:40:02,640 --> 00:40:03,990
+Let's go to that one first,
+
+828
+00:40:05,370 --> 00:40:07,620
+and I'm gonna have to
+reload here real quick.
+
+829
+00:40:12,660 --> 00:40:15,210
+Cool, so for this EC2 instance,
+
+830
+00:40:15,210 --> 00:40:18,783
+I should be able to grab one
+of my sample queries here.
+
+831
+00:40:19,740 --> 00:40:22,200
+And what you can see that I'm
+doing here is a simple dig
+
+832
+00:40:22,200 --> 00:40:24,570
+or DNS lookup command towards the IPs
+
+833
+00:40:24,570 --> 00:40:28,060
+that were allocated for my
+Global Resolver for amazonaws.com
+
+834
+00:40:28,920 --> 00:40:30,330
+and I'm quickly giving back those IPs.
+
+835
+00:40:30,330 --> 00:40:31,200
+Hooray!
+
+836
+00:40:31,200 --> 00:40:34,043
+I know you're all very excited
+to see a standard DNS query.
+
+837
+00:40:35,340 --> 00:40:38,010
+Now I can also do some more cool things.
+
+838
+00:40:38,010 --> 00:40:39,720
+So let's go ahead
+
+839
+00:40:39,720 --> 00:40:41,550
+and use that private hosted zone
+
+840
+00:40:41,550 --> 00:40:43,450
+that I mentioned I configured earlier.
+
+841
+00:40:44,730 --> 00:40:46,530
+So here, I'm doing a lookup
+
+842
+00:40:46,530 --> 00:40:49,653
+for a TXT record called
+view-name.globalresolver.com.
+
+843
+00:40:50,580 --> 00:40:53,390
+And you can see when I
+do this, I get back...
+
+844
+00:40:54,300 --> 00:40:55,410
+I'll zoom in for you.
+
+845
+00:40:55,410 --> 00:40:59,250
+I get back a
+restricted-access-view TXT record
+
+846
+00:40:59,250 --> 00:41:01,583
+so I can prove to you that
+I'm using the right view.
+
+847
+00:41:02,850 --> 00:41:05,130
+Now because this is a
+restricted access view,
+
+848
+00:41:05,130 --> 00:41:07,280
+I have some DNS policies
+that I've applied.
+
+849
+00:41:08,310 --> 00:41:09,990
+So for example, we're all here
+
+850
+00:41:09,990 --> 00:41:13,440
+in the lovely Wynn
+hotel here in Las Vegas,
+
+851
+00:41:13,440 --> 00:41:16,680
+but because I've
+restricted access to travel
+
+852
+00:41:16,680 --> 00:41:19,890
+as a domain category, that hotel
+domain is gonna be blocked.
+
+853
+00:41:19,890 --> 00:41:21,090
+I'll show you that here.
+
+854
+00:41:25,740 --> 00:41:28,620
+So as I looked up wynnlasvegas.com,
+
+855
+00:41:28,620 --> 00:41:31,260
+you can see that I got back this NXDOMAIN,
+
+856
+00:41:31,260 --> 00:41:32,730
+which is the response that I configured
+
+857
+00:41:32,730 --> 00:41:34,380
+when I configured my block rules.
+
+858
+00:41:37,410 --> 00:41:38,550
+Pretty cool stuff.
+
+859
+00:41:38,550 --> 00:41:40,620
+So next up, let's talk
+about our open-access-view
+
+860
+00:41:40,620 --> 00:41:42,930
+and show off access tokens a little bit.
+
+861
+00:41:42,930 --> 00:41:44,760
+These are gonna be a little more advanced
+
+862
+00:41:44,760 --> 00:41:46,590
+because we have to
+embed the right metadata
+
+863
+00:41:46,590 --> 00:41:48,300
+for the request to be resolved,
+
+864
+00:41:48,300 --> 00:41:49,320
+but we'll show you that here.
+
+865
+00:41:49,320 --> 00:41:52,440
+So no firewall rules on this view.
+
+866
+00:41:52,440 --> 00:41:55,020
+Similarly, I have yet
+another private hosted zone,
+
+867
+00:41:55,020 --> 00:41:58,023
+no access sources, but one access token.
+
+868
+00:41:59,820 --> 00:42:03,123
+Now for this instance, and I'll reload.
+
+869
+00:42:08,040 --> 00:42:12,970
+For this instance, I have
+already shared my access token
+
+870
+00:42:13,890 --> 00:42:16,080
+to this host and some
+environment variables
+
+871
+00:42:16,080 --> 00:42:17,130
+and I'll show you those here.
+
+872
+00:42:17,130 --> 00:42:19,800
+You can use them while
+they're active if you like,
+
+873
+00:42:19,800 --> 00:42:22,320
+if you're quick on the screen.
+
+874
+00:42:22,320 --> 00:42:23,850
+But here's my access tokens.
+
+875
+00:42:23,850 --> 00:42:25,650
+So I'm gonna ahead and source these,
+
+876
+00:42:28,525 --> 00:42:30,210
+and so that they're loaded in,
+
+877
+00:42:30,210 --> 00:42:33,693
+and let's do some more
+fun DoH and DoT queries.
+
+878
+00:42:34,830 --> 00:42:36,000
+So to start,
+
+879
+00:42:36,000 --> 00:42:40,533
+I will do a DoH query for amazonaws.com.
+
+880
+00:42:42,750 --> 00:42:44,190
+I'm gonna use kdig
+
+881
+00:42:44,190 --> 00:42:46,500
+or the Knot version of dig,
+
+882
+00:42:46,500 --> 00:42:48,270
+which is a little bit more advanced
+
+883
+00:42:48,270 --> 00:42:52,263
+and lets me do things like
+inject EDS0 and do DoH on demand.
+
+884
+00:42:53,670 --> 00:42:55,070
+And so you'll see that here,
+
+885
+00:42:56,430 --> 00:43:00,100
+And hooray, I'm able
+to issue this DoH query
+
+886
+00:43:00,960 --> 00:43:02,581
+with the very specific,
+as you can see here,
+
+887
+00:43:02,581 --> 00:43:06,420
+URL or URI that passes in
+token equals my access token
+
+888
+00:43:06,420 --> 00:43:07,980
+that I configured,
+
+889
+00:43:07,980 --> 00:43:10,863
+and I'm able to get a response
+back for amazonaws.com.
+
+890
+00:43:12,570 --> 00:43:16,353
+If I check kind of the same
+thing for my view name,
+
+891
+00:43:17,970 --> 00:43:19,000
+you will see
+
+892
+00:43:22,440 --> 00:43:24,570
+that I'm now using the open-access-view,
+
+893
+00:43:24,570 --> 00:43:26,730
+which I configured in
+a separate hosted zone
+
+894
+00:43:26,730 --> 00:43:28,590
+for that same DNS name.
+
+895
+00:43:28,590 --> 00:43:30,480
+I'm giving you that split-DNS resolution
+
+896
+00:43:30,480 --> 00:43:31,630
+between your two views.
+
+897
+00:43:33,270 --> 00:43:36,150
+The last thing I wanna
+show is a DoT query,
+
+898
+00:43:36,150 --> 00:43:37,893
+which is again very similar,
+
+899
+00:43:39,750 --> 00:43:41,340
+but instead of +https,
+
+900
+00:43:41,340 --> 00:43:43,650
+it's using the +tls flag that you can see,
+
+901
+00:43:43,650 --> 00:43:45,930
+and it's adding this EDNS0 option.
+
+902
+00:43:45,930 --> 00:43:50,700
+65440 is our predefined access token
+
+903
+00:43:50,700 --> 00:43:52,770
+op code, and then the open access token
+
+904
+00:43:52,770 --> 00:43:55,110
+in string encoded format here
+
+905
+00:43:55,110 --> 00:43:58,380
+so that I can do my lookup
+for amazonaws.com again
+
+906
+00:43:58,380 --> 00:43:59,930
+and get back my DNS resolution.
+
+907
+00:44:03,270 --> 00:44:06,060
+So there you have it, we
+have a Global Resolver,
+
+908
+00:44:06,060 --> 00:44:08,250
+we've configured a couple of views,
+
+909
+00:44:08,250 --> 00:44:11,490
+and I've shown you how we
+can use our client side bits
+
+910
+00:44:11,490 --> 00:44:12,660
+to go and configure those.
+
+911
+00:44:12,660 --> 00:44:14,970
+We do have good examples
+in our documentation
+
+912
+00:44:14,970 --> 00:44:17,340
+of how you might configure your clients,
+
+913
+00:44:17,340 --> 00:44:20,930
+be that Windows or macOS
+devices to do those DoH lookups,
+
+914
+00:44:20,930 --> 00:44:23,480
+if you're interested in
+that kind of configuration.
+
+915
+00:44:24,420 --> 00:44:26,250
+I'd now like to hand it back to Adhish,
+
+916
+00:44:26,250 --> 00:44:30,210
+who's gonna talk through
+some of our closing steps.
+
+917
+00:44:30,210 --> 00:44:32,274
+- Thanks. (faintly speaking)
+
+918
+00:44:32,274 --> 00:44:33,573
+- Yeah, thanks.
+
+919
+00:44:35,850 --> 00:44:38,730
+- Thanks, Matt. Hopefully,
+there was a fun demo.
+
+920
+00:44:38,730 --> 00:44:42,000
+I don't know if you got to
+try it, but once you're out,
+
+921
+00:44:42,000 --> 00:44:43,170
+you can definitely try it out
+
+922
+00:44:43,170 --> 00:44:44,870
+and let us know what do you think.
+
+923
+00:44:46,140 --> 00:44:49,140
+I'd like to also talk
+about the next steps here.
+
+924
+00:44:49,140 --> 00:44:51,810
+What are the key regions that
+we are available in today?
+
+925
+00:44:51,810 --> 00:44:54,110
+And also give you a
+glimpse about the pricing.
+
+926
+00:44:55,200 --> 00:44:59,400
+During preview, we will be
+available in 11 different regions
+
+927
+00:44:59,400 --> 00:45:03,753
+across North America, Europe,
+Asia Pacific, and Australia.
+
+928
+00:45:04,740 --> 00:45:07,740
+You can try out the new
+service in these regions
+
+929
+00:45:07,740 --> 00:45:09,543
+and let us know what you think.
+
+930
+00:45:12,300 --> 00:45:14,220
+In terms of pricing,
+
+931
+00:45:14,220 --> 00:45:17,520
+we'll be charging you based
+on two key dimensions.
+
+932
+00:45:17,520 --> 00:45:20,430
+One is the number of
+regions that you create
+
+933
+00:45:20,430 --> 00:45:23,430
+and two is the number of queries
+or the query volume coming
+
+934
+00:45:23,430 --> 00:45:24,393
+from your clients.
+
+935
+00:45:26,250 --> 00:45:27,660
+We'll be charging you on a base rate
+
+936
+00:45:27,660 --> 00:45:29,910
+for the first two regions combined,
+
+937
+00:45:29,910 --> 00:45:31,500
+and then for every additional region,
+
+938
+00:45:31,500 --> 00:45:33,150
+there'll be an additional charge.
+
+939
+00:45:34,140 --> 00:45:36,480
+For query-based pricing, again,
+
+940
+00:45:36,480 --> 00:45:39,690
+for the first billion queries,
+there'll be no charge.
+
+941
+00:45:39,690 --> 00:45:43,170
+Everything above 1 billion
+is gonna be charged.
+
+942
+00:45:43,170 --> 00:45:44,970
+The good news is that
+you'll not be charged
+
+943
+00:45:44,970 --> 00:45:46,320
+for price during preview,
+
+944
+00:45:46,320 --> 00:45:48,510
+so you are free to use this service
+
+945
+00:45:48,510 --> 00:45:51,573
+with no additional financial
+constraints that you may have.
+
+946
+00:45:56,520 --> 00:45:58,680
+And with that, we have come
+to the end of the session.
+
+947
+00:45:58,680 --> 00:45:59,793
+Hope you enjoyed it.
+
+948
+00:46:01,470 --> 00:46:05,790
+Do feel free to provide your
+feedback through your app,
+
+949
+00:46:05,790 --> 00:46:08,583
+and hope you have a
+great rest of re:Invent.
+
+950
+00:46:08,583 --> 00:46:10,050
+(coughs) Thank you.
+
+951
+00:46:10,050 --> 00:46:13,050
+(audience clapping)
+

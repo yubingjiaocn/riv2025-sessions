@@ -1,0 +1,2276 @@
+1
+00:00:02,189 --> 00:00:02,910
+Morning, morning.
+
+2
+00:00:03,189 --> 00:00:04,009
+how's everyone going?
+
+3
+00:00:05,030 --> 00:00:07,589
+So my name's Craig Johnson. I am a principal
+
+4
+00:00:07,589 --> 00:00:09,528
+solution architect at Forward Networks.
+
+5
+00:00:09,788 --> 00:00:11,829
+Um, so quick show of hands, who here
+
+6
+00:00:11,829 --> 00:00:13,880
+would consider themselves a network
+
+7
+00:00:13,880 --> 00:00:16,350
+engineer, network guy, something like that.
+
+8
+00:00:17,068 --> 00:00:19,289
+OK. Who here has
+
+9
+00:00:19,350 --> 00:00:21,690
+taken down a production network before?
+
+10
+00:00:22,228 --> 00:00:23,350
+Awesome, awesome.
+
+11
+00:00:24,039 --> 00:00:26,239
+Everyone has, um, so what I wanna
+
+12
+00:00:26,239 --> 00:00:28,429
+talk today about is introducing
+
+13
+00:00:28,429 --> 00:00:30,548
+a little bit of chaos into your
+
+14
+00:00:30,548 --> 00:00:31,100
+networks
+
+15
+00:00:31,399 --> 00:00:33,520
+in an effort to build more resiliency, an
+
+16
+00:00:33,520 --> 00:00:35,560
+idea that we've taken from on-prem
+
+17
+00:00:35,560 --> 00:00:37,598
+data center networks. I wanna apply the
+
+18
+00:00:37,598 --> 00:00:39,740
+same kind of logic into our
+
+19
+00:00:39,740 --> 00:00:41,000
+AWS networks.
+
+20
+00:00:41,770 --> 00:00:43,810
+So a little bit about me. Most of my career
+
+21
+00:00:43,810 --> 00:00:46,009
+has actually been on the data center
+
+22
+00:00:46,009 --> 00:00:48,168
+side. I spent many, many years at Cisco's got the
+
+23
+00:00:48,168 --> 00:00:50,289
+CCIEs. They're, they're all expired these
+
+24
+00:00:50,289 --> 00:00:50,829
+days.
+
+25
+00:00:51,408 --> 00:00:54,009
+Most of what I do is on the CLI.
+
+26
+00:00:54,329 --> 00:00:56,490
+I'm gonna apply a lot of those same principles
+
+27
+00:00:56,490 --> 00:00:58,509
+here. Um, also, if you're interested in a
+
+28
+00:00:58,509 --> 00:01:00,289
+community builder program, uh, definitely,
+
+29
+00:01:00,590 --> 00:01:02,950
+um, you know, reach me afterwards. It's a great
+
+30
+00:01:02,950 --> 00:01:05,168
+program. It's probably the best thing I've done in my career in the last 5
+
+31
+00:01:05,168 --> 00:01:07,308
+years. Um, and I also run a
+
+32
+00:01:07,308 --> 00:01:09,349
+local networking group. If you're, uh, anyone in the
+
+33
+00:01:09,349 --> 00:01:11,388
+Dallas area, feel free to come, uh, talk to me
+
+34
+00:01:11,388 --> 00:01:11,909
+about that.
+
+35
+00:01:12,849 --> 00:01:15,000
+So, let's call a little ground
+
+36
+00:01:15,000 --> 00:01:17,069
+rules. Like I said, I'm a CLI junkie.
+
+37
+00:01:17,198 --> 00:01:19,198
+Most of what we're gonna do is going to be
+
+38
+00:01:19,198 --> 00:01:21,680
+using the CLI and actually
+
+39
+00:01:21,680 --> 00:01:23,519
+putting these ideas into practice.
+
+40
+00:01:24,198 --> 00:01:26,579
+So. Being an engineer,
+
+41
+00:01:26,799 --> 00:01:28,409
+network engineer is hard.
+
+42
+00:01:28,730 --> 00:01:30,808
+It's always the network. That's what the shirt is.
+
+43
+00:01:30,849 --> 00:01:33,040
+It's always and everyone always blames the
+
+44
+00:01:33,040 --> 00:01:35,129
+network, and that's the mindset we're going to go
+
+45
+00:01:35,129 --> 00:01:37,168
+into. It's natural that they blame the
+
+46
+00:01:37,168 --> 00:01:39,448
+network. The network is the glue of
+
+47
+00:01:39,448 --> 00:01:41,569
+everything inside your, your environment.
+
+48
+00:01:41,689 --> 00:01:43,790
+So when something doesn't work, you know,
+
+49
+00:01:44,000 --> 00:01:46,355
+I can't say it's the database. Can't say it's the
+
+50
+00:01:46,355 --> 00:01:48,525
+application. The network is the thing that connects all of
+
+51
+00:01:48,525 --> 00:01:49,605
+those things together,
+
+52
+00:01:49,974 --> 00:01:52,125
+so that's the kind of mindset you have to take. You're always
+
+53
+00:01:52,125 --> 00:01:54,433
+having to disprove it's the
+
+54
+00:01:54,433 --> 00:01:56,525
+network, and I'm gonna show you how to do
+
+55
+00:01:56,525 --> 00:01:58,924
+a little bit of that to give you some of that confidence
+
+56
+00:01:58,924 --> 00:02:00,924
+and to give you the way to say, hey, I
+
+57
+00:02:00,924 --> 00:02:03,105
+definitely can show management and everyone else
+
+58
+00:02:03,204 --> 00:02:05,105
+the network is not the problem here.
+
+59
+00:02:06,388 --> 00:02:08,419
+Like I mentioned, we're not gonna do, I'm gonna show you
+
+60
+00:02:08,419 --> 00:02:10,469
+some screenshots, and that'll be some useful, but I'm going
+
+61
+00:02:10,469 --> 00:02:13,149
+to show you mostly what we do either via pipelines,
+
+62
+00:02:13,308 --> 00:02:15,508
+CLI infrastructure is code.
+
+63
+00:02:15,830 --> 00:02:17,868
+Um, this is gonna come from a repo that I
+
+64
+00:02:17,868 --> 00:02:20,229
+have that I've created that'll actually, you'll be able to
+
+65
+00:02:20,229 --> 00:02:22,308
+download. At the end, you'll have a QR code for
+
+66
+00:02:22,308 --> 00:02:24,550
+it. You can see the code that I've done to create
+
+67
+00:02:24,550 --> 00:02:26,580
+this and actually run some of the scripts
+
+68
+00:02:26,580 --> 00:02:28,588
+that I've done to be able to actually
+
+69
+00:02:28,588 --> 00:02:30,929
+introduce some of this chaos into your environment.
+
+70
+00:02:32,189 --> 00:02:33,080
+And of course,
+
+71
+00:02:33,639 --> 00:02:35,868
+What I don't like about doing things,
+
+72
+00:02:36,000 --> 00:02:38,508
+you know, in the cloud is a lot of my traditional
+
+73
+00:02:38,508 --> 00:02:40,758
+network engineer tools don't really work
+
+74
+00:02:40,758 --> 00:02:42,899
+anymore, you know, I used to be able to,
+
+75
+00:02:43,038 --> 00:02:45,118
+you know, log into a router. I SSH into
+
+76
+00:02:45,118 --> 00:02:47,349
+my Cisco router, run a few show commands,
+
+77
+00:02:47,639 --> 00:02:49,319
+show some routes, do some pings.
+
+78
+00:02:49,679 --> 00:02:52,159
+I can't really SSH into a transit gateway
+
+79
+00:02:52,159 --> 00:02:54,278
+to look at its routes. I can go to that screen
+
+80
+00:02:54,278 --> 00:02:56,319
+and kind of see it, but I can't really look
+
+81
+00:02:56,319 --> 00:02:58,344
+at a routing table. The time there really isn't
+
+82
+00:02:58,344 --> 00:02:59,653
+a routing table to look at.
+
+83
+00:02:59,993 --> 00:03:02,115
+I don't have access to the same level
+
+84
+00:03:02,115 --> 00:03:03,213
+of functionality.
+
+85
+00:03:03,514 --> 00:03:05,594
+Now. Some people will say, well, just turn on things like
+
+86
+00:03:05,594 --> 00:03:07,594
+flow logs, and you get that. I'll explain why
+
+87
+00:03:07,594 --> 00:03:09,335
+that's not a great idea in a second.
+
+88
+00:03:09,875 --> 00:03:12,183
+But as I said, all of the code that I'm gonna use
+
+89
+00:03:12,183 --> 00:03:14,544
+today and what is available at the end of this presentation.
+
+90
+00:03:14,554 --> 00:03:16,675
+You'll be able to go to my repo, download it, play
+
+91
+00:03:16,675 --> 00:03:18,713
+with it. It's an environment you can set up, but
+
+92
+00:03:18,713 --> 00:03:20,713
+you can also take the concepts into your own
+
+93
+00:03:20,713 --> 00:03:22,719
+environment. OK.
+
+94
+00:03:23,118 --> 00:03:25,129
+So today, the game plan, what we're going to do.
+
+95
+00:03:25,520 --> 00:03:27,520
+I'm gonna talk about breaking your network for fun
+
+96
+00:03:27,520 --> 00:03:29,588
+and profit. This is going to be showing how I'm going
+
+97
+00:03:29,588 --> 00:03:31,879
+to introduce some of this controlled chaos
+
+98
+00:03:31,879 --> 00:03:32,939
+into your environment.
+
+99
+00:03:34,008 --> 00:03:36,659
+But first we have to gather a baseline. So
+
+100
+00:03:36,659 --> 00:03:38,659
+before you make your change, you know, if
+
+101
+00:03:38,659 --> 00:03:40,669
+you've ever done any network changes, before you
+
+102
+00:03:40,669 --> 00:03:42,088
+go to your change control board,
+
+103
+00:03:42,379 --> 00:03:44,460
+you have to have a baseline of what your environment
+
+104
+00:03:44,460 --> 00:03:46,500
+looks like and to verify everything
+
+105
+00:03:46,500 --> 00:03:47,699
+works before that.
+
+106
+00:03:47,979 --> 00:03:50,319
+How do we do that and how do we prove that out?
+
+107
+00:03:51,338 --> 00:03:52,240
+Do I actually
+
+108
+00:03:52,500 --> 00:03:54,604
+trust. What my applications are saying,
+
+109
+00:03:54,653 --> 00:03:56,955
+and this is always the disconnect
+
+110
+00:03:56,955 --> 00:03:59,615
+between the network team and the rest of
+
+111
+00:03:59,615 --> 00:04:01,854
+the IT crowd is that, well, the
+
+112
+00:04:01,854 --> 00:04:03,895
+network sees the flows, but you know you
+
+113
+00:04:03,895 --> 00:04:06,094
+don't always really know if the application is actually
+
+114
+00:04:06,375 --> 00:04:08,774
+working as it is. I'm going to show you why we don't
+
+115
+00:04:08,774 --> 00:04:10,933
+necessarily need to trust those, but we can get our own
+
+116
+00:04:10,933 --> 00:04:11,993
+metrics on this.
+
+117
+00:04:13,080 --> 00:04:15,199
+I want to introduce you to the idea
+
+118
+00:04:15,199 --> 00:04:17,278
+of verifying my network based on
+
+119
+00:04:17,278 --> 00:04:18,100
+intent.
+
+120
+00:04:18,528 --> 00:04:20,689
+So when I do a change, I've got, I've got a mop,
+
+121
+00:04:20,759 --> 00:04:22,798
+and I'm like, OK, I'm going to make these route
+
+122
+00:04:22,798 --> 00:04:25,119
+changes, these attachment changes, these changes
+
+123
+00:04:25,119 --> 00:04:26,119
+to an ALB.
+
+124
+00:04:26,629 --> 00:04:28,709
+I don't want you to think about it that way. I want you to
+
+125
+00:04:28,709 --> 00:04:30,829
+think about what is the intent of
+
+126
+00:04:30,829 --> 00:04:32,829
+my change, like what flows do
+
+127
+00:04:32,829 --> 00:04:34,988
+I want? Where's my source, my destination,
+
+128
+00:04:35,059 --> 00:04:36,309
+ports and protocols?
+
+129
+00:04:36,629 --> 00:04:38,670
+Is that actually working? Whatever
+
+130
+00:04:38,670 --> 00:04:40,869
+I change in the middle doesn't matter so much
+
+131
+00:04:40,869 --> 00:04:42,910
+because oftentimes I'm not the only one making the
+
+132
+00:04:42,910 --> 00:04:44,949
+change. I can verify that my change
+
+133
+00:04:44,949 --> 00:04:46,980
+was done correctly. I implemented it
+
+134
+00:04:46,980 --> 00:04:47,899
+the way I meant to.
+
+135
+00:04:48,230 --> 00:04:50,309
+That doesn't mean the intent was right. So I
+
+136
+00:04:50,309 --> 00:04:51,259
+want to give you a, a,
+
+137
+00:04:51,588 --> 00:04:52,569
+a view on that.
+
+138
+00:04:53,709 --> 00:04:55,750
+We're going to iterate on this a little bit, so I want
+
+139
+00:04:55,750 --> 00:04:58,149
+to show you how we can take this and actually
+
+140
+00:04:58,149 --> 00:05:00,470
+iterate through your environment, so you're not just
+
+141
+00:05:00,790 --> 00:05:02,869
+saying, OK, do this one time, do it for one
+
+142
+00:05:02,869 --> 00:05:05,048
+flow. We can do this in a more automated
+
+143
+00:05:05,048 --> 00:05:07,059
+way so that we're not doing this manually. Now, a lot of
+
+144
+00:05:07,059 --> 00:05:08,939
+people still do the click-offs manually,
+
+145
+00:05:09,309 --> 00:05:11,389
+but this will let you integrate it into
+
+146
+00:05:11,389 --> 00:05:13,588
+your pipelines. My code has examples of that too.
+
+147
+00:05:15,358 --> 00:05:17,600
+So it turns out there's actually quite a
+
+148
+00:05:17,600 --> 00:05:19,639
+few network engineer tools
+
+149
+00:05:19,639 --> 00:05:21,838
+um in AWS that a lot of people don't know
+
+150
+00:05:21,838 --> 00:05:23,920
+about, and I'm, it, it kind of makes me sad that people
+
+151
+00:05:23,920 --> 00:05:26,079
+don't really understand some of these tools that
+
+152
+00:05:26,079 --> 00:05:26,798
+we can use
+
+153
+00:05:27,278 --> 00:05:29,358
+are in lieu of me SSHing into
+
+154
+00:05:29,358 --> 00:05:32,045
+a device. I can use AWS
+
+155
+00:05:32,045 --> 00:05:34,213
+Network Manager to get a good view
+
+156
+00:05:34,213 --> 00:05:36,303
+of my entire environment. If you are in one
+
+157
+00:05:36,303 --> 00:05:37,095
+or more VPCs,
+
+158
+00:05:37,903 --> 00:05:40,184
+you've got transit gateways, you've got uh
+
+159
+00:05:40,184 --> 00:05:42,225
+transit gateway connects, you've got direct
+
+160
+00:05:42,225 --> 00:05:44,303
+connects, VPNs, lots of tools that
+
+161
+00:05:44,303 --> 00:05:45,605
+I wanna show you here.
+
+162
+00:05:46,290 --> 00:05:48,569
+The main thrust I want to really focus on
+
+163
+00:05:48,569 --> 00:05:50,769
+is using the reachability analyzers. This
+
+164
+00:05:50,769 --> 00:05:52,970
+will help me look at the intent of my
+
+165
+00:05:52,970 --> 00:05:55,129
+environment and help me figure out what's
+
+166
+00:05:55,129 --> 00:05:56,079
+going on here.
+
+167
+00:05:56,528 --> 00:05:58,528
+So it turns out you can actually have
+
+168
+00:05:58,528 --> 00:06:00,730
+quite a bit here that honestly, I don't
+
+169
+00:06:00,730 --> 00:06:02,769
+see many people using because you just
+
+170
+00:06:02,769 --> 00:06:05,119
+kind of assume the network works, but when it doesn't,
+
+171
+00:06:05,290 --> 00:06:07,410
+you kind of, you know, rush to some of these
+
+172
+00:06:07,410 --> 00:06:08,309
+to figure things out.
+
+173
+00:06:08,608 --> 00:06:10,649
+I want to give you an idea of how to use this today
+
+174
+00:06:10,649 --> 00:06:11,970
+to figure these things out.
+
+175
+00:06:13,449 --> 00:06:15,588
+So. The first thing you
+
+176
+00:06:15,588 --> 00:06:17,670
+want to do, and I rarely see people do
+
+177
+00:06:17,670 --> 00:06:19,709
+this, is get a good visualization of
+
+178
+00:06:19,709 --> 00:06:20,309
+your network.
+
+179
+00:06:20,629 --> 00:06:22,629
+Now if this was a data center network, this
+
+180
+00:06:22,629 --> 00:06:24,829
+would be me either, you know, opening
+
+181
+00:06:24,829 --> 00:06:26,869
+up Visio or Dryo, connecting
+
+182
+00:06:26,869 --> 00:06:28,980
+my routers together. Maybe I've got an
+
+183
+00:06:28,980 --> 00:06:30,420
+automated tool to do this,
+
+184
+00:06:30,750 --> 00:06:32,250
+but generally it's just
+
+185
+00:06:32,750 --> 00:06:34,988
+doing those things and connecting them. Way back in the day, getting
+
+186
+00:06:34,988 --> 00:06:36,988
+one of those really big plotters and making my
+
+187
+00:06:36,988 --> 00:06:38,689
+nice network map with all of my
+
+188
+00:06:39,269 --> 00:06:41,410
+top of rack switches and everything together.
+
+189
+00:06:41,790 --> 00:06:44,040
+I fortunately don't have to do that on. AWS.
+
+190
+00:06:44,199 --> 00:06:46,358
+I can use AWS Network
+
+191
+00:06:46,358 --> 00:06:47,009
+Manager
+
+192
+00:06:47,278 --> 00:06:49,838
+to visualize all of my AWS
+
+193
+00:06:49,838 --> 00:06:52,019
+components, my transit gateways,
+
+194
+00:06:52,119 --> 00:06:54,149
+my direct connects, my VPNs,
+
+195
+00:06:54,399 --> 00:06:56,399
+my transit gateway connects just
+
+196
+00:06:56,399 --> 00:06:58,759
+by registering in Network Man doesn't
+
+197
+00:06:58,759 --> 00:07:00,759
+cost you anything, and it's a way
+
+198
+00:07:00,759 --> 00:07:02,899
+for you to pull up all of this environment
+
+199
+00:07:02,899 --> 00:07:05,000
+together. So it's super, super easy to
+
+200
+00:07:05,000 --> 00:07:07,079
+do. All you really need to do, and of course you
+
+201
+00:07:07,079 --> 00:07:09,319
+can do this via the GUI, but like I said, CLI,
+
+202
+00:07:09,759 --> 00:07:12,298
+you create a global network and network manager.
+
+203
+00:07:13,199 --> 00:07:15,278
+You create the sites that you're going to
+
+204
+00:07:15,278 --> 00:07:17,559
+do. So it's not even just your AWS components.
+
+205
+00:07:17,639 --> 00:07:19,988
+Obviously, you're gonna have direct connects, VPNs,
+
+206
+00:07:20,040 --> 00:07:22,199
+things that are gonna connect to external. I
+
+207
+00:07:22,199 --> 00:07:24,238
+can create sites and actually show you where
+
+208
+00:07:24,238 --> 00:07:25,470
+those things are connected to,
+
+209
+00:07:25,759 --> 00:07:28,500
+to create this kind of picture of your environment.
+
+210
+00:07:29,319 --> 00:07:31,439
+Reference the same ID. You could even
+
+211
+00:07:31,439 --> 00:07:33,600
+put locations because this will give you a global
+
+212
+00:07:33,600 --> 00:07:35,720
+map to show you where these things are at, so
+
+213
+00:07:35,720 --> 00:07:37,769
+I can say, hey, here's all of my
+
+214
+00:07:37,769 --> 00:07:40,000
+end to end network, not just AWS
+
+215
+00:07:40,000 --> 00:07:41,420
+but everything else with it.
+
+216
+00:07:42,100 --> 00:07:44,259
+I can create devices, so obviously I don't
+
+217
+00:07:44,259 --> 00:07:46,488
+manage those devices, but I can add like my Cisco
+
+218
+00:07:46,488 --> 00:07:48,540
+routers, my on-prem firewalls into
+
+219
+00:07:48,540 --> 00:07:49,059
+this,
+
+220
+00:07:49,459 --> 00:07:50,230
+same thing there,
+
+221
+00:07:50,579 --> 00:07:52,660
+and then create links to show how they connect
+
+222
+00:07:52,660 --> 00:07:54,920
+them and even put bandwidth on those links.
+
+223
+00:07:55,338 --> 00:07:56,528
+Now, once I've done that,
+
+224
+00:07:56,819 --> 00:07:59,410
+I can actually even do this across accounts
+
+225
+00:07:59,410 --> 00:08:01,500
+too. So many people don't have only one account. You
+
+226
+00:08:01,500 --> 00:08:03,540
+can do this across multiple accounts as long as
+
+227
+00:08:03,540 --> 00:08:05,298
+you give the right level of IAM access,
+
+228
+00:08:05,579 --> 00:08:06,798
+you can create the entire
+
+229
+00:08:07,519 --> 00:08:09,738
+environment no matter how big or small this
+
+230
+00:08:09,738 --> 00:08:10,439
+has to look like.
+
+231
+00:08:11,709 --> 00:08:14,028
+So once I have created this, this
+
+232
+00:08:14,028 --> 00:08:16,028
+creates a dynamic map of
+
+233
+00:08:16,028 --> 00:08:18,199
+my environment. So I can show, and it also
+
+234
+00:08:18,199 --> 00:08:20,358
+updates whether things are up or down.
+
+235
+00:08:20,670 --> 00:08:22,949
+So you see the purple links are my transit gateway
+
+236
+00:08:22,949 --> 00:08:25,108
+connection, the green links are my
+
+237
+00:08:25,108 --> 00:08:27,149
+VPN connectivity or direct connection.
+
+238
+00:08:27,548 --> 00:08:29,670
+Everything, including my VPCs, transit
+
+239
+00:08:29,670 --> 00:08:30,488
+gateway connects,
+
+240
+00:08:30,829 --> 00:08:32,830
+everything that I have in this environment is
+
+241
+00:08:32,830 --> 00:08:34,832
+gonna show up in this environment. As things
+
+242
+00:08:34,832 --> 00:08:36,874
+get updated, as you add new VPC
+
+243
+00:08:36,874 --> 00:08:39,273
+attachments, as you add firewalls, as you add
+
+244
+00:08:39,273 --> 00:08:40,072
+anything to this,
+
+245
+00:08:40,423 --> 00:08:42,472
+it's going to update. So you can always say, hey, I
+
+246
+00:08:42,472 --> 00:08:44,663
+know before I make any of my changes,
+
+247
+00:08:45,023 --> 00:08:47,153
+this is a visual representation of my
+
+248
+00:08:47,153 --> 00:08:49,254
+network so that you can go to your change control board and
+
+249
+00:08:49,254 --> 00:08:51,332
+say, the network is in a good state,
+
+250
+00:08:51,393 --> 00:08:53,572
+at least from a high macro level,
+
+251
+00:08:53,793 --> 00:08:55,832
+to show me how my entire global
+
+252
+00:08:55,832 --> 00:08:56,722
+network is set up.
+
+253
+00:08:57,033 --> 00:08:58,773
+OK, now that you've done that,
+
+254
+00:08:59,153 --> 00:09:01,183
+let's move on to actually doing a
+
+255
+00:09:01,183 --> 00:09:02,494
+couple of guardrails here.
+
+256
+00:09:03,320 --> 00:09:05,389
+So a lot of people say, well, I
+
+257
+00:09:05,389 --> 00:09:07,440
+can just turn on flow logs, or I can use
+
+258
+00:09:07,440 --> 00:09:09,479
+synthetic transactions. There's a lot of
+
+259
+00:09:09,479 --> 00:09:11,820
+good observability tools to do that.
+
+260
+00:09:12,200 --> 00:09:14,200
+It doesn't really help on a network site.
+
+261
+00:09:14,279 --> 00:09:15,820
+They are super useful though.
+
+262
+00:09:16,599 --> 00:09:18,940
+The giddiest steady state of what the traffic
+
+263
+00:09:18,940 --> 00:09:21,080
+of my network looks like. So before I've made
+
+264
+00:09:21,080 --> 00:09:23,080
+the change, I can get an idea of, OK, here are
+
+265
+00:09:23,080 --> 00:09:25,190
+the traffic that's going on in my environment.
+
+266
+00:09:25,440 --> 00:09:26,668
+Here's what it looks like.
+
+267
+00:09:27,158 --> 00:09:29,418
+What does that mean for the rest of the environment though?
+
+268
+00:09:30,190 --> 00:09:32,320
+Now, if I have no idea, now as a network
+
+269
+00:09:32,320 --> 00:09:34,320
+guy, I often don't know what my applications are
+
+270
+00:09:34,320 --> 00:09:36,548
+doing. Things are deploying, spinning up, spinning
+
+271
+00:09:36,548 --> 00:09:37,308
+down all the time.
+
+272
+00:09:37,590 --> 00:09:39,599
+This gives me a really great, great way to
+
+273
+00:09:39,599 --> 00:09:41,969
+say, OK, here's the traffic in my environment.
+
+274
+00:09:42,678 --> 00:09:44,798
+They are kind of pricey to leave on all the time. Turning
+
+275
+00:09:44,798 --> 00:09:46,960
+on flow logs, if you have a lot of traffic
+
+276
+00:09:46,960 --> 00:09:49,080
+that generates synthetic data, tells
+
+277
+00:09:49,080 --> 00:09:51,149
+me source, destination, 5 tuple
+
+278
+00:09:51,149 --> 00:09:51,798
+data for all that.
+
+279
+00:09:52,239 --> 00:09:54,279
+Kind of expensive to leave on all the time, so
+
+280
+00:09:54,279 --> 00:09:55,788
+not something you may not want to do
+
+281
+00:09:56,639 --> 00:09:58,979
+if you don't need that level of data analysis.
+
+282
+00:09:59,788 --> 00:10:02,019
+For outages, and we are actually trying
+
+283
+00:10:02,019 --> 00:10:03,619
+to figure out what's wrong,
+
+284
+00:10:03,960 --> 00:10:06,158
+they're not so useful. And the reason is, is
+
+285
+00:10:06,158 --> 00:10:08,279
+these are things that are looking at the
+
+286
+00:10:08,279 --> 00:10:09,918
+state of the network, looking at the traffic.
+
+287
+00:10:10,239 --> 00:10:11,899
+If I've broken something and it's down,
+
+288
+00:10:12,158 --> 00:10:14,190
+the traffic's not flowing. It doesn't tell me
+
+289
+00:10:14,190 --> 00:10:15,288
+where something's going on.
+
+290
+00:10:15,558 --> 00:10:17,239
+And it also has a lot of different places to look.
+
+291
+00:10:17,519 --> 00:10:19,519
+I've got more than a few VPCs. I've
+
+292
+00:10:19,519 --> 00:10:21,599
+got to look at flow logs in multiple places.
+
+293
+00:10:21,840 --> 00:10:23,879
+There's some good AI tools that'll help you figure this
+
+294
+00:10:23,879 --> 00:10:26,000
+out, but kind of not very useful here.
+
+295
+00:10:26,889 --> 00:10:28,969
+But definitely have them when you need
+
+296
+00:10:28,969 --> 00:10:31,019
+them, turn them on. You've got a good monitor of
+
+297
+00:10:31,019 --> 00:10:33,139
+what the network looks like if you have transactions
+
+298
+00:10:33,139 --> 00:10:35,000
+down, ALDs, things like that.
+
+299
+00:10:36,090 --> 00:10:38,168
+OK, so let's talk about intent
+
+300
+00:10:38,168 --> 00:10:40,250
+checks. So intent checks are how we're going
+
+301
+00:10:40,250 --> 00:10:42,668
+to build this model of the environment.
+
+302
+00:10:43,399 --> 00:10:45,609
+Provides a way to ensure changes I
+
+303
+00:10:45,609 --> 00:10:47,690
+make never break the network. The
+
+304
+00:10:47,690 --> 00:10:49,849
+idea is that whenever I make a change,
+
+305
+00:10:49,928 --> 00:10:52,168
+I want to make sure I exit that change window,
+
+306
+00:10:52,519 --> 00:10:54,609
+never having had a broken network. And I
+
+307
+00:10:54,609 --> 00:10:56,750
+need a way to prove it not just to myself,
+
+308
+00:10:57,210 --> 00:10:58,869
+but to all the other stakeholders.
+
+309
+00:10:59,570 --> 00:11:01,570
+So network changes are by far the
+
+310
+00:11:01,570 --> 00:11:03,649
+largest source of outages that you will
+
+311
+00:11:03,649 --> 00:11:04,788
+see in an environment. Now,
+
+312
+00:11:05,090 --> 00:11:07,239
+network changes can encompass a lot of different things,
+
+313
+00:11:07,570 --> 00:11:09,570
+but the reason that is, is back to my original
+
+314
+00:11:09,570 --> 00:11:11,759
+point, the network touches everything,
+
+315
+00:11:12,019 --> 00:11:14,048
+so they're going to cause the most outages. We need
+
+316
+00:11:14,048 --> 00:11:15,548
+to provide a way to prevent that.
+
+317
+00:11:16,529 --> 00:11:18,808
+I should know all my critical flows. This
+
+318
+00:11:18,808 --> 00:11:19,369
+gives me
+
+319
+00:11:19,649 --> 00:11:21,690
+back to the previous slide. It gives me an idea of what
+
+320
+00:11:21,690 --> 00:11:23,690
+my critical flows are, or at least I
+
+321
+00:11:23,690 --> 00:11:25,849
+know what my applications care about, you know, this
+
+322
+00:11:25,849 --> 00:11:28,129
+source goes to this destination through
+
+323
+00:11:28,129 --> 00:11:30,129
+this load balancer, whatever it happens to
+
+324
+00:11:30,129 --> 00:11:32,168
+be. Like I said, flow logs only check
+
+325
+00:11:32,168 --> 00:11:34,269
+for actual traffic. They don't help me when things
+
+326
+00:11:34,269 --> 00:11:34,849
+are down.
+
+327
+00:11:35,288 --> 00:11:37,509
+I need a way to make sure the network
+
+328
+00:11:37,509 --> 00:11:39,729
+is performing like I expect it
+
+329
+00:11:39,729 --> 00:11:41,729
+to pre and post change, and
+
+330
+00:11:41,729 --> 00:11:43,489
+that's really the key, pre and post.
+
+331
+00:11:44,599 --> 00:11:47,139
+How can I do that though without relying
+
+332
+00:11:47,139 --> 00:11:49,359
+on a bunch of application verifiers
+
+333
+00:11:49,359 --> 00:11:51,440
+on the phone and say, yep, my app looks good, my app
+
+334
+00:11:51,440 --> 00:11:53,759
+looks good, you know, any size environment
+
+335
+00:11:53,759 --> 00:11:55,879
+that could be 100 people on a call checking
+
+336
+00:11:55,879 --> 00:11:58,000
+for these things. I need to be able to do this
+
+337
+00:11:58,000 --> 00:12:00,210
+myself and as a network guy, I don't
+
+338
+00:12:00,210 --> 00:12:02,298
+necessarily have visibility in those applications.
+
+339
+00:12:03,918 --> 00:12:05,960
+This is where Reachability Analyzer comes in. It
+
+340
+00:12:05,960 --> 00:12:08,320
+is absolutely your best friend in making
+
+341
+00:12:08,320 --> 00:12:10,320
+network changes, and I highly recommend you
+
+342
+00:12:10,320 --> 00:12:11,090
+start using it.
+
+343
+00:12:11,519 --> 00:12:13,558
+What this means is we're going to introduce a
+
+344
+00:12:13,558 --> 00:12:15,678
+little bit of chaos into our environment, but
+
+345
+00:12:15,678 --> 00:12:18,259
+we're going to use Reachability Analyzer
+
+346
+00:12:18,509 --> 00:12:19,739
+to help me figure out
+
+347
+00:12:20,320 --> 00:12:22,558
+if the, the what I've done actually
+
+348
+00:12:22,558 --> 00:12:23,820
+breaks the environment.
+
+349
+00:12:24,320 --> 00:12:26,519
+Now, the simulated change we're going to make here,
+
+350
+00:12:26,678 --> 00:12:28,259
+we can make an actual real change.
+
+351
+00:12:28,639 --> 00:12:30,734
+My. Environment here is actually going to show more
+
+352
+00:12:30,734 --> 00:12:32,173
+of a simulated level change.
+
+353
+00:12:32,543 --> 00:12:34,654
+I want to make sure any change that I
+
+354
+00:12:34,654 --> 00:12:35,955
+make doesn't infect
+
+355
+00:12:36,293 --> 00:12:37,774
+the intent of the network though.
+
+356
+00:12:38,173 --> 00:12:40,413
+Now what kind of change could it? Could be a messed up route.
+
+357
+00:12:40,575 --> 00:12:42,043
+I could mess up a security group,
+
+358
+00:12:42,394 --> 00:12:44,413
+network ACL. Maybe I screwed up a
+
+359
+00:12:44,413 --> 00:12:45,274
+whole attachment.
+
+360
+00:12:45,533 --> 00:12:46,594
+It doesn't really matter.
+
+361
+00:12:47,094 --> 00:12:49,375
+You can use this for a macro viewed
+
+362
+00:12:49,375 --> 00:12:51,455
+transit gateway analyzer if I want to go across
+
+363
+00:12:51,455 --> 00:12:53,494
+regions or even more of a micro view.
+
+364
+00:12:53,575 --> 00:12:55,695
+Look at, you know, connectivity between instances
+
+365
+00:12:55,695 --> 00:12:57,774
+in a VPC or a lambda or whatever.
+
+366
+00:12:59,599 --> 00:13:01,210
+So let's go ahead and break something.
+
+367
+00:13:01,869 --> 00:13:04,509
+We're gonna go ahead and create some chaos
+
+368
+00:13:04,509 --> 00:13:06,548
+inside our network. So there's lots of fun things we
+
+369
+00:13:06,548 --> 00:13:08,739
+could do. I could block something in a security
+
+370
+00:13:08,739 --> 00:13:10,869
+group, misconfigure an attachment
+
+371
+00:13:10,869 --> 00:13:12,950
+somewhere, maybe create a black hole route,
+
+372
+00:13:13,340 --> 00:13:15,509
+change ALB targets, really,
+
+373
+00:13:15,629 --> 00:13:17,960
+you know, or even just kind of ruin my entire network fireball
+
+374
+00:13:17,960 --> 00:13:19,629
+policy. Lots of things I could do
+
+375
+00:13:19,908 --> 00:13:22,070
+that in just in the course of making changes
+
+376
+00:13:22,070 --> 00:13:24,389
+is pretty common and super
+
+377
+00:13:24,389 --> 00:13:25,849
+normal that you'll see in an environment.
+
+378
+00:13:27,019 --> 00:13:29,048
+Now, before you start doing this, you might not want to
+
+379
+00:13:29,048 --> 00:13:31,168
+do this on your production network. It's, it's your career, you,
+
+380
+00:13:31,259 --> 00:13:33,259
+you handle it how you want to, but you might want to do
+
+381
+00:13:33,259 --> 00:13:35,298
+this in a twin of environment or use
+
+382
+00:13:35,298 --> 00:13:37,340
+my repo to actually practice some of
+
+383
+00:13:37,340 --> 00:13:39,500
+this. Once you get a little better at this, you can
+
+384
+00:13:39,500 --> 00:13:41,500
+start to introduce some of this control
+
+385
+00:13:41,500 --> 00:13:43,658
+chaos, but maybe not just yet.
+
+386
+00:13:44,428 --> 00:13:46,450
+So let's go ahead and run our pre pre-flight
+
+387
+00:13:46,580 --> 00:13:47,729
+uh intent checks.
+
+388
+00:13:48,099 --> 00:13:50,090
+OK, so this is reachability analyzer.
+
+389
+00:13:50,609 --> 00:13:52,649
+Notice what I've done here is I have a
+
+390
+00:13:52,649 --> 00:13:54,308
+series of checks that are here.
+
+391
+00:13:54,808 --> 00:13:56,808
+These are all point in time checks
+
+392
+00:13:56,808 --> 00:13:58,969
+though. So every time that I, I
+
+393
+00:13:58,969 --> 00:14:00,969
+do this on a baseline, I do this before and
+
+394
+00:14:00,969 --> 00:14:02,149
+after my change,
+
+395
+00:14:02,489 --> 00:14:04,889
+I get a point in time that says, yes, the
+
+396
+00:14:04,889 --> 00:14:06,590
+network is functioning correctly.
+
+397
+00:14:06,849 --> 00:14:09,080
+And when I say the network is functioning correctly,
+
+398
+00:14:09,330 --> 00:14:11,529
+what that means is I've specified a
+
+399
+00:14:11,529 --> 00:14:13,969
+source interface, source port, source IP
+
+400
+00:14:13,969 --> 00:14:15,330
+address, destination,
+
+401
+00:14:15,609 --> 00:14:17,928
+ports and protocols that I'm trying to get to,
+
+402
+00:14:18,090 --> 00:14:20,149
+and. Going to tell me the exact path
+
+403
+00:14:20,149 --> 00:14:22,149
+it takes through my AWS environment.
+
+404
+00:14:22,389 --> 00:14:24,808
+It goes from the instance I'm going from, the ENI
+
+405
+00:14:24,808 --> 00:14:26,830
+that it's attached to, any security groups
+
+406
+00:14:26,830 --> 00:14:28,590
+and network ACLs you pass through,
+
+407
+00:14:28,869 --> 00:14:30,779
+the routing table that it's configured with,
+
+408
+00:14:31,070 --> 00:14:33,469
+all the way till it finally gets to its destination.
+
+409
+00:14:33,700 --> 00:14:35,750
+This is what I mean by intent. I have
+
+410
+00:14:35,750 --> 00:14:37,210
+source, destination,
+
+411
+00:14:37,788 --> 00:14:39,989
+everything in between, and really all I care
+
+412
+00:14:39,989 --> 00:14:42,070
+about is a yes no. Does this pass? Does
+
+413
+00:14:42,070 --> 00:14:42,629
+this fail?
+
+414
+00:14:42,908 --> 00:14:45,149
+From the previous slide, you saw that all of those
+
+415
+00:14:45,149 --> 00:14:46,038
+were successful.
+
+416
+00:14:46,639 --> 00:14:48,678
+So I run these checks. I
+
+417
+00:14:48,678 --> 00:14:49,899
+give this to my change
+
+418
+00:14:50,279 --> 00:14:52,279
+review board and say, yes, every one of my
+
+419
+00:14:52,279 --> 00:14:54,320
+intent checks are passing before I make
+
+420
+00:14:54,320 --> 00:14:54,979
+the change.
+
+421
+00:14:55,479 --> 00:14:58,038
+I make my change, and then I run them again afterwards
+
+422
+00:14:58,038 --> 00:14:59,259
+and see what happens.
+
+423
+00:15:00,599 --> 00:15:01,940
+So let's do that.
+
+424
+00:15:02,200 --> 00:15:04,239
+We'll go ahead and make our change that
+
+425
+00:15:04,239 --> 00:15:06,099
+breaks something in the environment.
+
+426
+00:15:06,599 --> 00:15:08,719
+The reason this is useful is if I'm
+
+427
+00:15:08,719 --> 00:15:10,908
+making a change and I don't know the effect of it,
+
+428
+00:15:11,279 --> 00:15:13,440
+trying to get all of my applications
+
+429
+00:15:13,440 --> 00:15:15,428
+to check, that could take a long time.
+
+430
+00:15:15,759 --> 00:15:16,340
+I only
+
+431
+00:15:16,678 --> 00:15:18,908
+So much time in my maintenance window
+
+432
+00:15:18,908 --> 00:15:19,830
+to do this though.
+
+433
+00:15:20,149 --> 00:15:22,349
+Like I said, I can, and I could run my pings
+
+434
+00:15:22,349 --> 00:15:23,989
+and trace routes and things like that.
+
+435
+00:15:24,259 --> 00:15:26,349
+That's only going to give me basic connectivity. That's
+
+436
+00:15:26,349 --> 00:15:27,340
+not going to tell me,
+
+437
+00:15:27,599 --> 00:15:29,820
+you know, going through a firewall or going
+
+438
+00:15:29,820 --> 00:15:31,899
+through a security group, am I actually hitting the right
+
+439
+00:15:31,899 --> 00:15:32,570
+ports.
+
+440
+00:15:33,500 --> 00:15:35,500
+And it's extremely limited in time, you know, if I
+
+441
+00:15:35,500 --> 00:15:37,859
+have a change window and I have 4 hours to do it,
+
+442
+00:15:38,178 --> 00:15:40,178
+if I mess up something and I
+
+443
+00:15:40,178 --> 00:15:42,259
+don't know necessarily what it was or
+
+444
+00:15:42,259 --> 00:15:43,440
+where I need to pinpoint,
+
+445
+00:15:43,700 --> 00:15:45,769
+getting all my application people to tell me,
+
+446
+00:15:45,859 --> 00:15:47,859
+oh, this app works, this app doesn't work, but
+
+447
+00:15:47,859 --> 00:15:49,859
+it works in this region but not in this region, this
+
+448
+00:15:49,859 --> 00:15:51,940
+is a way that you can use this to
+
+449
+00:15:51,940 --> 00:15:54,219
+tell you right away what things work, what
+
+450
+00:15:54,219 --> 00:15:55,058
+things don't work.
+
+451
+00:15:55,840 --> 00:15:57,960
+OK, so I've made my bed
+
+452
+00:15:57,960 --> 00:16:00,500
+change. I've run my analyzer afterwards.
+
+453
+00:16:00,840 --> 00:16:03,210
+You can see it shows up as not reachable.
+
+454
+00:16:03,519 --> 00:16:05,658
+Now I quickly can say, OK, not reachable.
+
+455
+00:16:05,750 --> 00:16:08,119
+Well, I need to troubleshoot what's going on with this.
+
+456
+00:16:08,369 --> 00:16:10,399
+Or if it's near the end of the change window,
+
+457
+00:16:10,558 --> 00:16:11,719
+I back out of the change.
+
+458
+00:16:12,080 --> 00:16:14,229
+Going inside, you can see exactly
+
+459
+00:16:14,239 --> 00:16:15,279
+what's going on here.
+
+460
+00:16:15,629 --> 00:16:17,960
+Fourth line down, it says you've got an attachment
+
+461
+00:16:17,960 --> 00:16:19,960
+misconfigured on this
+
+462
+00:16:19,960 --> 00:16:20,879
+particular VPC.
+
+463
+00:16:21,200 --> 00:16:23,200
+That's the issue you need to go to. It may not
+
+464
+00:16:23,200 --> 00:16:25,509
+be that simple to tell you. Exactly what the
+
+465
+00:16:25,509 --> 00:16:27,788
+issue is, but you at least have that past
+
+466
+00:16:27,788 --> 00:16:28,950
+fail to know
+
+467
+00:16:29,269 --> 00:16:30,690
+that change that you made.
+
+468
+00:16:31,269 --> 00:16:33,428
+Here is the pinpoint, and you can
+
+469
+00:16:33,428 --> 00:16:35,428
+know, you know, you're not guessing what the state
+
+470
+00:16:35,428 --> 00:16:37,548
+of the network is. You have a good intent because
+
+471
+00:16:37,548 --> 00:16:39,548
+you've run this before and after you've made the
+
+472
+00:16:39,548 --> 00:16:41,469
+change. You've got actionable data.
+
+473
+00:16:41,869 --> 00:16:44,070
+If the change goes bad, you know exactly
+
+474
+00:16:44,070 --> 00:16:46,109
+what to do for next time, and you're not saying,
+
+475
+00:16:46,149 --> 00:16:48,229
+I'll back out the change, revert everything, and you're
+
+476
+00:16:48,229 --> 00:16:50,340
+still blind because you don't exactly know what happened.
+
+477
+00:16:50,590 --> 00:16:52,960
+You've got the forensic data to figure this out.
+
+478
+00:16:55,129 --> 00:16:57,330
+Now, I want you to think about setting this up in a pipeline. This
+
+479
+00:16:57,330 --> 00:16:59,369
+is what my, so this manual changes are
+
+480
+00:16:59,369 --> 00:17:00,029
+just fine.
+
+481
+00:17:01,119 --> 00:17:03,168
+And you can use this for all sorts of things,
+
+482
+00:17:03,210 --> 00:17:05,769
+attachments, transit gateways, VPC
+
+483
+00:17:05,769 --> 00:17:07,848
+endpoints, even VPN connectivity all the
+
+484
+00:17:07,848 --> 00:17:09,150
+way to your on-prem side.
+
+485
+00:17:09,729 --> 00:17:11,809
+Set this up in a pipeline. The idea is, is
+
+486
+00:17:11,809 --> 00:17:14,009
+the tagline I want you to walk away with is exit,
+
+487
+00:17:14,209 --> 00:17:16,279
+never exit a change with the broken
+
+488
+00:17:16,279 --> 00:17:18,568
+network. This is great for point in time
+
+489
+00:17:18,568 --> 00:17:20,568
+stuff, but you can automate this a little bit too.
+
+490
+00:17:20,650 --> 00:17:23,000
+The code that I have does this via terraform.
+
+491
+00:17:23,209 --> 00:17:25,243
+You can do this via cloud formation, where I
+
+492
+00:17:25,243 --> 00:17:27,894
+actually have a pre and post to say
+
+493
+00:17:27,904 --> 00:17:30,233
+before I make the change, run my reachability
+
+494
+00:17:30,233 --> 00:17:31,584
+checks, give me a pass,
+
+495
+00:17:31,875 --> 00:17:33,894
+execute the change via the same pipeline,
+
+496
+00:17:34,154 --> 00:17:36,314
+run those same checks again gives me a
+
+497
+00:17:36,314 --> 00:17:38,594
+pass fail. If I get any fails, I
+
+498
+00:17:38,594 --> 00:17:40,814
+can have a human intervention or I can
+
+499
+00:17:40,814 --> 00:17:43,193
+optionally back out of the change entirely. You've
+
+500
+00:17:43,193 --> 00:17:45,394
+created some chaos to give you an idea, but
+
+501
+00:17:45,394 --> 00:17:47,473
+to give you a way to really narrow down to
+
+502
+00:17:47,473 --> 00:17:48,953
+figure out what's going on.
+
+503
+00:17:50,459 --> 00:17:51,078
+Now,
+
+504
+00:17:51,539 --> 00:17:53,660
+what a lot of people say is my network is super,
+
+505
+00:17:53,779 --> 00:17:55,818
+super complex. You've shown me just a few
+
+506
+00:17:55,818 --> 00:17:56,660
+flows here.
+
+507
+00:17:57,059 --> 00:17:59,180
+I have thousands of applications
+
+508
+00:17:59,180 --> 00:18:01,299
+that are going on. I don't really know what
+
+509
+00:18:01,299 --> 00:18:02,199
+they look like.
+
+510
+00:18:03,180 --> 00:18:05,680
+How do I create all of those intent checks?
+
+511
+00:18:06,180 --> 00:18:08,299
+That's where those observability tools I had
+
+512
+00:18:08,299 --> 00:18:10,380
+before come in. Those flow logs that
+
+513
+00:18:10,380 --> 00:18:12,890
+you had, those synthetic transactions.
+
+514
+00:18:13,189 --> 00:18:15,380
+This is where you can look at all of the top
+
+515
+00:18:15,380 --> 00:18:17,443
+talkers. On your network you get obviously you gather
+
+516
+00:18:17,443 --> 00:18:18,884
+this data from your applications,
+
+517
+00:18:19,164 --> 00:18:21,243
+but I look at the top talkers and I
+
+518
+00:18:21,243 --> 00:18:23,604
+say, OK, here is my critical application. Just
+
+519
+00:18:23,604 --> 00:18:25,604
+because they're sending this much traffic gives
+
+520
+00:18:25,604 --> 00:18:27,834
+me source, destination, IP address,
+
+521
+00:18:28,084 --> 00:18:30,434
+all things I can easily plug into
+
+522
+00:18:30,434 --> 00:18:31,924
+reachability analyzer.
+
+523
+00:18:32,324 --> 00:18:34,404
+Firewall rules either from a physical or
+
+524
+00:18:34,404 --> 00:18:36,443
+virtual or AWS network firewall
+
+525
+00:18:36,443 --> 00:18:38,525
+will tell you which ones are getting the most hits,
+
+526
+00:18:38,535 --> 00:18:40,305
+so you can also see that data too.
+
+527
+00:18:40,939 --> 00:18:42,979
+You can update these intent checks over
+
+528
+00:18:42,979 --> 00:18:45,219
+time in an automated way. This is a super
+
+529
+00:18:45,219 --> 00:18:47,449
+easy thing to do. In my code, I
+
+530
+00:18:47,449 --> 00:18:49,559
+actually have these flow logs running
+
+531
+00:18:49,699 --> 00:18:51,818
+and Sagemaker dashboards, so you can
+
+532
+00:18:51,818 --> 00:18:54,180
+actually start to pull them out and queries
+
+533
+00:18:54,180 --> 00:18:56,219
+it, so you'll be able to see that kind of data too.
+
+534
+00:18:56,500 --> 00:18:58,779
+It's a very, very good use case for AI
+
+535
+00:18:58,779 --> 00:19:01,400
+to keep this in a continually updated pipeline.
+
+536
+00:19:03,209 --> 00:19:05,209
+So that's the code. That's the link that I have
+
+537
+00:19:05,209 --> 00:19:07,209
+there. It'll be a QR code pop up. But what
+
+538
+00:19:07,209 --> 00:19:08,250
+I want you to think about,
+
+539
+00:19:08,689 --> 00:19:10,930
+schedule your first sort of chaos
+
+540
+00:19:10,930 --> 00:19:12,969
+hour. This is something you should do, kind of
+
+541
+00:19:12,969 --> 00:19:15,029
+like a DAA, something that you do
+
+542
+00:19:15,289 --> 00:19:17,529
+monthly, quarterly. Do something
+
+543
+00:19:17,529 --> 00:19:20,068
+that, you know, is going to, you don't
+
+544
+00:19:20,068 --> 00:19:21,368
+necessarily know what the change is.
+
+545
+00:19:21,650 --> 00:19:24,088
+Different person breaking the network is
+
+546
+00:19:24,088 --> 00:19:26,170
+one that's fixing it. Now my code does
+
+547
+00:19:26,170 --> 00:19:28,289
+this too. It has a randomized break on there
+
+548
+00:19:28,289 --> 00:19:29,949
+so you can practice this on your own.
+
+549
+00:19:31,180 --> 00:19:33,250
+But you want to blend these kind of tools together,
+
+550
+00:19:33,348 --> 00:19:35,390
+you know, the observability tools are great for
+
+551
+00:19:35,390 --> 00:19:36,439
+pulling the data in.
+
+552
+00:19:36,828 --> 00:19:39,309
+This kind of, you know, thought
+
+553
+00:19:39,309 --> 00:19:41,588
+process that people have, getting people to really
+
+554
+00:19:41,588 --> 00:19:42,108
+think about,
+
+555
+00:19:42,390 --> 00:19:44,390
+hey, when I make my change, I need to have
+
+556
+00:19:44,390 --> 00:19:46,630
+these checks, not because they're going to make, you
+
+557
+00:19:46,630 --> 00:19:48,680
+know, they'll take a little more time, sure,
+
+558
+00:19:48,779 --> 00:19:50,910
+but it really saves me because I can
+
+559
+00:19:50,910 --> 00:19:51,969
+prove out to people
+
+560
+00:19:52,390 --> 00:19:53,299
+network is the problem,
+
+561
+00:19:53,699 --> 00:19:54,910
+network is not the problem.
+
+562
+00:19:55,348 --> 00:19:57,400
+Use the repo and the run book to go for it.
+
+563
+00:19:57,670 --> 00:20:00,059
+And if you'd like, submit some PR improvements,
+
+564
+00:20:00,108 --> 00:20:02,229
+and I'll be here in the, in the
+
+565
+00:20:02,239 --> 00:20:02,848
+theater expo.
+
+566
+00:20:03,229 --> 00:20:05,509
+There's the QR code for it as well if you'd like to
+
+567
+00:20:05,509 --> 00:20:06,568
+link to the repo for it.
+
+568
+00:20:06,920 --> 00:20:09,029
+So feel free to come up with the, ask any questions,
+
+569
+00:20:09,068 --> 00:20:09,910
+and uh I appreciate everyone.
+

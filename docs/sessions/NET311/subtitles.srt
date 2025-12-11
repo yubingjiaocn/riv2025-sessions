@@ -1,0 +1,6010 @@
+1
+00:00:00,270 --> 00:00:02,010
+- Welcome to Global Resilient Apps,
+
+2
+00:00:02,010 --> 00:00:04,620
+Guide to Multi AZ and
+Multi-Region Resiliency
+
+3
+00:00:04,620 --> 00:00:06,480
+with using ELB.
+
+4
+00:00:06,480 --> 00:00:09,177
+I'm Jon Zobrist, I lead
+customer success for ELB,
+
+5
+00:00:09,177 --> 00:00:11,190
+and with me is Felipe da Silva,
+
+6
+00:00:11,190 --> 00:00:13,240
+Principal Solutions Architect on my team.
+
+7
+00:00:14,820 --> 00:00:16,860
+Thank you guys all so much
+for coming out so early
+
+8
+00:00:16,860 --> 00:00:19,500
+and during a keynote,
+we really appreciate it.
+
+9
+00:00:19,500 --> 00:00:22,140
+And for those of you who are
+here from Felipe's chalk talk
+
+10
+00:00:22,140 --> 00:00:23,793
+the other day, good to see you.
+
+11
+00:00:24,960 --> 00:00:27,300
+So we're gonna go over
+some guiding principles
+
+12
+00:00:27,300 --> 00:00:30,420
+and then we're gonna talk
+about multi-AZ resiliency
+
+13
+00:00:30,420 --> 00:00:31,860
+and then multi-region resiliency,
+
+14
+00:00:31,860 --> 00:00:34,050
+and then we'll wrap up with some Q&A.
+
+15
+00:00:34,050 --> 00:00:36,690
+If we run out of time,
+which we probably will,
+
+16
+00:00:36,690 --> 00:00:38,640
+we will be outside in the hall afterwards
+
+17
+00:00:38,640 --> 00:00:39,690
+when we have free time,
+
+18
+00:00:39,690 --> 00:00:40,980
+so if you guys have any other questions,
+
+19
+00:00:40,980 --> 00:00:44,283
+we're happy to chat about your
+specifics or architecture.
+
+20
+00:00:45,210 --> 00:00:46,980
+Well, let's jump right in
+with everyone's favorite quote
+
+21
+00:00:46,980 --> 00:00:49,800
+from AWS of all time,
+"Everything fails all the time."
+
+22
+00:00:49,800 --> 00:00:52,980
+Our faithful leader and CTO Werner Vogels
+
+23
+00:00:52,980 --> 00:00:56,910
+has said this repeatedly and
+I think we all know it's true.
+
+24
+00:00:56,910 --> 00:00:58,916
+Things fail and when failures happen,
+
+25
+00:00:58,916 --> 00:01:00,480
+we have to deal with them.
+
+26
+00:01:00,480 --> 00:01:02,330
+We can't just hope they never happen.
+
+27
+00:01:03,750 --> 00:01:05,790
+And to mitigate failures, what do we use?
+
+28
+00:01:05,790 --> 00:01:09,300
+So we think of how do we become
+more resilient to failures?
+
+29
+00:01:09,300 --> 00:01:12,660
+And from our resiliency hub,
+which you all should check out,
+
+30
+00:01:12,660 --> 00:01:15,450
+we've got this definition,
+it's the ability of a workload
+
+31
+00:01:15,450 --> 00:01:18,480
+to recover from infrastructure
+or service disruptions,
+
+32
+00:01:18,480 --> 00:01:19,830
+and that's sort of the main area
+
+33
+00:01:19,830 --> 00:01:22,230
+we're gonna be talking about today.
+
+34
+00:01:22,230 --> 00:01:24,810
+Under the hood, there's a
+couple drivers for resilience,
+
+35
+00:01:24,810 --> 00:01:26,490
+so it's important to understand
+
+36
+00:01:26,490 --> 00:01:28,050
+that both of these are important
+
+37
+00:01:28,050 --> 00:01:31,110
+when you're planning or
+building your architecture.
+
+38
+00:01:31,110 --> 00:01:32,580
+The technical drivers are gonna be things
+
+39
+00:01:32,580 --> 00:01:34,260
+like having less downtime,
+
+40
+00:01:34,260 --> 00:01:36,150
+being more available for your customers,
+
+41
+00:01:36,150 --> 00:01:38,340
+making sure things are lower latency.
+
+42
+00:01:38,340 --> 00:01:40,350
+On the business side, you're
+gonna have concerns like,
+
+43
+00:01:40,350 --> 00:01:41,790
+you know, we've gotta
+keep our revenue going,
+
+44
+00:01:41,790 --> 00:01:43,830
+we've gotta keep our customer trust high,
+
+45
+00:01:43,830 --> 00:01:45,600
+make sure that we look
+good in the public image,
+
+46
+00:01:45,600 --> 00:01:48,633
+and our applications are up and available.
+
+47
+00:01:49,470 --> 00:01:51,600
+We're mostly gonna focus
+on the technical one,
+
+48
+00:01:51,600 --> 00:01:53,490
+but what are we actually mitigating for?
+
+49
+00:01:53,490 --> 00:01:55,470
+Like what is the problem
+we're trying to prevent?
+
+50
+00:01:55,470 --> 00:01:57,540
+Or why are we being resilient?
+
+51
+00:01:57,540 --> 00:02:00,390
+There's a lot of things that you think of,
+
+52
+00:02:00,390 --> 00:02:02,100
+or I think of, the first
+place as long these,
+
+53
+00:02:02,100 --> 00:02:04,560
+and they're oftentimes the
+highly unlikely scenarios,
+
+54
+00:02:04,560 --> 00:02:07,290
+so you've got earthquakes,
+floods, tsunamis,
+
+55
+00:02:07,290 --> 00:02:09,180
+all of these things which do happen
+
+56
+00:02:09,180 --> 00:02:10,830
+and we need to be prepared for them,
+
+57
+00:02:10,830 --> 00:02:12,930
+but they're by far the least common.
+
+58
+00:02:12,930 --> 00:02:14,370
+And moving towards the more common,
+
+59
+00:02:14,370 --> 00:02:15,570
+you've got data in state
+
+60
+00:02:15,570 --> 00:02:17,250
+where you could have
+corruption of your data,
+
+61
+00:02:17,250 --> 00:02:19,590
+or you could have an invalid stored data,
+
+62
+00:02:19,590 --> 00:02:21,630
+or you didn't fully replicate the data,
+
+63
+00:02:21,630 --> 00:02:25,069
+and you can have issues
+where failures in that area
+
+64
+00:02:25,069 --> 00:02:27,690
+lead to application impairments.
+
+65
+00:02:27,690 --> 00:02:28,860
+Then there's the core infrastructure,
+
+66
+00:02:28,860 --> 00:02:30,840
+the things we often think
+about where it's the, you know,
+
+67
+00:02:30,840 --> 00:02:33,780
+racks, servers, power, air conditioning,
+
+68
+00:02:33,780 --> 00:02:36,690
+all within the data center
+where the servers are running.
+
+69
+00:02:36,690 --> 00:02:39,847
+And then by far the biggest one we see
+
+70
+00:02:39,847 --> 00:02:42,420
+is this configuration and deployment.
+
+71
+00:02:42,420 --> 00:02:44,250
+Humans touching things in production
+
+72
+00:02:44,250 --> 00:02:46,680
+is by far the number one cause of issues
+
+73
+00:02:46,680 --> 00:02:50,010
+and outages for both customers
+and for AWS service teams
+
+74
+00:02:50,010 --> 00:02:52,733
+and that's what we're gonna
+dive into a little bit more too.
+
+75
+00:02:53,850 --> 00:02:56,280
+We aren't gonna go as deep or really cover
+
+76
+00:02:56,280 --> 00:02:59,550
+disaster recovery, which is
+sort of the twin of resilience.
+
+77
+00:02:59,550 --> 00:03:03,720
+Disaster recovery oftentimes
+focuses on having a process,
+
+78
+00:03:03,720 --> 00:03:06,840
+a procedure with backups
+in a secure location,
+
+79
+00:03:06,840 --> 00:03:08,520
+oftentimes multi-region.
+
+80
+00:03:08,520 --> 00:03:10,080
+If you're just getting
+started on your journey,
+
+81
+00:03:10,080 --> 00:03:12,150
+the multi-region disaster recovery
+
+82
+00:03:12,150 --> 00:03:15,450
+may be a good first step
+into going multi-region,
+
+83
+00:03:15,450 --> 00:03:17,940
+but the difference here is your recovery
+
+84
+00:03:17,940 --> 00:03:19,410
+is going to be a lot slower,
+
+85
+00:03:19,410 --> 00:03:21,270
+you're gonna have hours to days,
+
+86
+00:03:21,270 --> 00:03:23,040
+you're gonna be doing
+things like restoring
+
+87
+00:03:23,040 --> 00:03:26,280
+from a database backup
+or relaunching servers,
+
+88
+00:03:26,280 --> 00:03:28,020
+whereas high availability,
+
+89
+00:03:28,020 --> 00:03:30,330
+you may have a primary
+site and a secondary site,
+
+90
+00:03:30,330 --> 00:03:32,100
+but they're both live and running
+
+91
+00:03:32,100 --> 00:03:33,210
+and you want things to be able
+
+92
+00:03:33,210 --> 00:03:35,130
+to keep running in both of them,
+
+93
+00:03:35,130 --> 00:03:36,150
+and if the primary fails,
+
+94
+00:03:36,150 --> 00:03:37,620
+you fail over the secondary,
+
+95
+00:03:37,620 --> 00:03:38,550
+have higher availability,
+
+96
+00:03:38,550 --> 00:03:40,380
+or you go something like active-active
+
+97
+00:03:40,380 --> 00:03:42,300
+and have multiple primary sites.
+
+98
+00:03:42,300 --> 00:03:44,820
+And then we're always trying
+to in turn improve these.
+
+99
+00:03:44,820 --> 00:03:46,830
+We wanna make sure that we're reviewing
+
+100
+00:03:46,830 --> 00:03:48,510
+what happens operationally,
+
+101
+00:03:48,510 --> 00:03:50,790
+taking the lessons and
+building them into our plans
+
+102
+00:03:50,790 --> 00:03:52,710
+so that we minimize the fact that,
+
+103
+00:03:52,710 --> 00:03:54,420
+or the chance that we have impact
+
+104
+00:03:54,420 --> 00:03:56,373
+from a similar failure in the future.
+
+105
+00:03:57,900 --> 00:04:00,420
+So when we talk about
+resilience on the cloud,
+
+106
+00:04:00,420 --> 00:04:02,430
+so we love the shared
+responsibility model.
+
+107
+00:04:02,430 --> 00:04:03,510
+Resilience, like everything,
+
+108
+00:04:03,510 --> 00:04:06,750
+is a shared responsibility
+between AWS and you folks.
+
+109
+00:04:06,750 --> 00:04:08,940
+The primitives we give you,
+
+110
+00:04:08,940 --> 00:04:11,490
+so we have multiple regions
+all around the world
+
+111
+00:04:11,490 --> 00:04:13,710
+and we've got things I'm sure
+you've all heard of before.
+
+112
+00:04:13,710 --> 00:04:16,350
+Within the region, we've got
+multiple availability zones.
+
+113
+00:04:16,350 --> 00:04:18,000
+These are gonna be completely independent
+
+114
+00:04:18,000 --> 00:04:19,770
+infrastructure pieces.
+
+115
+00:04:19,770 --> 00:04:20,880
+One or more buildings,
+
+116
+00:04:20,880 --> 00:04:22,860
+can be many buildings in bigger regions
+
+117
+00:04:22,860 --> 00:04:25,770
+and this would be geographically isolated
+
+118
+00:04:25,770 --> 00:04:27,210
+from other availability zones,
+
+119
+00:04:27,210 --> 00:04:29,430
+but still close enough to
+keep the latency reasonable
+
+120
+00:04:29,430 --> 00:04:31,590
+in the single digit milliseconds.
+
+121
+00:04:31,590 --> 00:04:33,060
+But these are sort of the
+primitives we give you
+
+122
+00:04:33,060 --> 00:04:36,060
+in terms of where you put things
+and how you structure them.
+
+123
+00:04:37,530 --> 00:04:39,780
+And let's hand over to Felipe.
+
+124
+00:04:39,780 --> 00:04:41,220
+Welcome to re:Invent, Felipe.
+
+125
+00:04:41,220 --> 00:04:43,680
+- Thank you. Thank you,
+Jon, appreciate that.
+
+126
+00:04:43,680 --> 00:04:46,410
+So let's talk about muti-resiliency then,
+
+127
+00:04:46,410 --> 00:04:48,600
+and we are going to be
+focused on ELB here,
+
+128
+00:04:48,600 --> 00:04:51,930
+but essentially, the tips
+that we're going to give
+
+129
+00:04:51,930 --> 00:04:53,553
+applies to any workload here.
+
+130
+00:04:54,630 --> 00:04:58,020
+And let's start first with
+a very simple application.
+
+131
+00:04:58,020 --> 00:04:58,853
+As you can see in this application,
+
+132
+00:04:58,853 --> 00:05:00,540
+we're not using ELB here.
+
+133
+00:05:00,540 --> 00:05:02,460
+There are multiple EC2 instances
+
+134
+00:05:02,460 --> 00:05:04,290
+running across different
+availability zones,
+
+135
+00:05:04,290 --> 00:05:06,960
+then you have your database,
+your primary database,
+
+136
+00:05:06,960 --> 00:05:08,490
+and everything is working fine
+
+137
+00:05:08,490 --> 00:05:11,160
+until you have a some dependency issue.
+
+138
+00:05:11,160 --> 00:05:13,660
+The primary database fails
+or something like that.
+
+139
+00:05:14,880 --> 00:05:18,480
+And what you have to do here?
+
+140
+00:05:18,480 --> 00:05:21,380
+You have to failover from
+that primary database
+
+141
+00:05:21,380 --> 00:05:23,820
+to your secondary or something like that.
+
+142
+00:05:23,820 --> 00:05:25,680
+And your service
+availability looks like this.
+
+143
+00:05:25,680 --> 00:05:29,463
+It drops until the failover
+initiates and then you recover.
+
+144
+00:05:31,530 --> 00:05:33,960
+Now let's talk about a different problem,
+
+145
+00:05:33,960 --> 00:05:35,433
+which is also very common.
+
+146
+00:05:36,270 --> 00:05:38,520
+You have hosts in one availability zone
+
+147
+00:05:38,520 --> 00:05:40,890
+that are unable to
+connect to the database,
+
+148
+00:05:40,890 --> 00:05:42,240
+but the other hosts are not.
+
+149
+00:05:42,240 --> 00:05:44,610
+In this case, you don't want
+to failover from the database
+
+150
+00:05:44,610 --> 00:05:46,680
+because everything is working,
+
+151
+00:05:46,680 --> 00:05:49,560
+but you need to failover
+from the front door.
+
+152
+00:05:49,560 --> 00:05:53,430
+So this action to failover is
+a failover on the front door,
+
+153
+00:05:53,430 --> 00:05:55,500
+and until you do that,
+
+154
+00:05:55,500 --> 00:05:58,980
+these users are going to face
+degradation of performance
+
+155
+00:05:58,980 --> 00:05:59,963
+or they cannot connect
+or something like that
+
+156
+00:05:59,963 --> 00:06:02,880
+and the availability
+looks sort of like this.
+
+157
+00:06:02,880 --> 00:06:06,423
+It's not down, but while you
+haven't applied the mitigation,
+
+158
+00:06:07,950 --> 00:06:12,873
+you see availability
+slightly down, put that way.
+
+159
+00:06:13,710 --> 00:06:15,240
+And this could be due to host failure,
+
+160
+00:06:15,240 --> 00:06:16,740
+connectivity flapping,
+
+161
+00:06:16,740 --> 00:06:18,900
+or something that between
+the availability zones
+
+162
+00:06:18,900 --> 00:06:22,050
+that cause the connectivity to stop,
+
+163
+00:06:22,050 --> 00:06:24,210
+and how can we actually improve this
+
+164
+00:06:24,210 --> 00:06:25,680
+and improve our service availability,
+
+165
+00:06:25,680 --> 00:06:27,573
+ensure that this is smoother?
+
+166
+00:06:28,587 --> 00:06:31,567
+And so let's talk about how ELB can help.
+
+167
+00:06:31,567 --> 00:06:34,350
+And ELB improves your availability
+
+168
+00:06:34,350 --> 00:06:36,450
+and by scaling transparently,
+
+169
+00:06:36,450 --> 00:06:37,860
+distributing the traffic to targets.
+
+170
+00:06:37,860 --> 00:06:40,920
+So you have multiple targets,
+you don't have to manage DNS,
+
+171
+00:06:40,920 --> 00:06:42,000
+it performs health check,
+
+172
+00:06:42,000 --> 00:06:44,340
+and it manage the traffic
+routing using DNS as well,
+
+173
+00:06:44,340 --> 00:06:45,930
+and that's the key part
+
+174
+00:06:45,930 --> 00:06:48,450
+that we're going to be
+focusing here today.
+
+175
+00:06:48,450 --> 00:06:51,333
+A lot of the talk is going
+to be related to DNS,
+
+176
+00:06:52,770 --> 00:06:55,440
+and essentially, that's one
+of the mitigation points
+
+177
+00:06:55,440 --> 00:06:58,650
+that we use in ELB is
+failing over using DNS.
+
+178
+00:06:58,650 --> 00:07:01,230
+And this is a typical
+architecture for the ELB.
+
+179
+00:07:01,230 --> 00:07:03,600
+You see on the top part
+there is the DNS part,
+
+180
+00:07:03,600 --> 00:07:05,970
+and that is we're going
+to talk a lot about.
+
+181
+00:07:05,970 --> 00:07:07,350
+Then you have the load balancer,
+
+182
+00:07:07,350 --> 00:07:09,990
+then you have the target
+group with your EC2 instances
+
+183
+00:07:09,990 --> 00:07:13,053
+or whatever you have, and you
+have your dependencies there.
+
+184
+00:07:15,120 --> 00:07:17,430
+So the ELB distributes traffic to healthy
+
+185
+00:07:17,430 --> 00:07:20,010
+and appropriate scaled nodes
+based on your workload.
+
+186
+00:07:20,010 --> 00:07:23,160
+And you'll see here, put a
+screenshot of DNS resolution
+
+187
+00:07:23,160 --> 00:07:25,680
+using the D command and the DNS responses
+
+188
+00:07:25,680 --> 00:07:27,840
+actually returns it
+being in a random marker
+
+189
+00:07:27,840 --> 00:07:31,530
+to distribute the traffic
+evenly across all zone IPs.
+
+190
+00:07:31,530 --> 00:07:34,560
+So each IP here belongs to one
+different availability zone,
+
+191
+00:07:34,560 --> 00:07:39,210
+and TTL of the record
+is always 60 seconds.
+
+192
+00:07:39,210 --> 00:07:42,240
+That ensures that each
+time the client resolves,
+
+193
+00:07:42,240 --> 00:07:45,303
+they get the newest healthy
+hosts that are available.
+
+194
+00:07:47,340 --> 00:07:50,790
+So first of all, I wanted to talk about
+
+195
+00:07:50,790 --> 00:07:54,750
+from ELB perspective, which
+piece we publish in DNS,
+
+196
+00:07:54,750 --> 00:07:58,440
+and the answer for that is
+all healthy zones are in DNS.
+
+197
+00:07:58,440 --> 00:07:59,577
+So when you configure load balancer,
+
+198
+00:07:59,577 --> 00:08:01,380
+you can pick how many availability zones
+
+199
+00:08:01,380 --> 00:08:03,450
+you want to have available,
+
+200
+00:08:03,450 --> 00:08:07,189
+and as long as the availability
+zone is considered healthy,
+
+201
+00:08:07,189 --> 00:08:10,020
+that availability zone IP will be in DNS.
+
+202
+00:08:10,020 --> 00:08:14,250
+And then let's understand
+what healthy zone definition
+
+203
+00:08:14,250 --> 00:08:16,860
+is that contains at
+least one healthy target
+
+204
+00:08:16,860 --> 00:08:18,810
+and the node and the zone is healthy
+
+205
+00:08:18,810 --> 00:08:20,850
+from the Route53 health checks,
+
+206
+00:08:20,850 --> 00:08:22,320
+and we're going to see more in a bit
+
+207
+00:08:22,320 --> 00:08:25,110
+'cause I need to explain how
+the Route53 health checks
+
+208
+00:08:25,110 --> 00:08:27,300
+actually works and we are
+going to cover that in a bit,
+
+209
+00:08:27,300 --> 00:08:30,750
+but stick with that
+definition because that would,
+
+210
+00:08:30,750 --> 00:08:33,753
+we are going to use that
+in our presentation here.
+
+211
+00:08:35,460 --> 00:08:38,370
+Let's do a quick walkthrough
+on the DNS resolution.
+
+212
+00:08:38,370 --> 00:08:41,070
+So the users are connected,
+
+213
+00:08:41,070 --> 00:08:42,990
+they're performing a DNS resolution,
+
+214
+00:08:42,990 --> 00:08:46,740
+they're acquiring DNS servers,
+they receive a DNS response
+
+215
+00:08:46,740 --> 00:08:49,920
+with the IPs of the healthy IPs.
+
+216
+00:08:49,920 --> 00:08:52,950
+They connect and
+everything is working fine.
+
+217
+00:08:52,950 --> 00:08:55,740
+And then if there is a
+failure or something like,
+
+218
+00:08:55,740 --> 00:09:00,517
+users go, they perform another DNS lookup,
+
+219
+00:09:00,517 --> 00:09:04,470
+receive the response of
+the current healthy host
+
+220
+00:09:04,470 --> 00:09:06,000
+and they connect and they're back online
+
+221
+00:09:06,000 --> 00:09:07,124
+and that's basically the way
+
+222
+00:09:07,124 --> 00:09:09,800
+that the mitigation actually works.
+
+223
+00:09:09,800 --> 00:09:13,140
+In this scenario I put like
+the load balancer node failing,
+
+224
+00:09:13,140 --> 00:09:14,792
+but it could be two different reasons
+
+225
+00:09:14,792 --> 00:09:17,583
+and that's what we are going
+to dive deep into today.
+
+226
+00:09:19,770 --> 00:09:22,050
+So let's go back to our previous example
+
+227
+00:09:22,050 --> 00:09:24,060
+that I talked that there
+was a dependency failure,
+
+228
+00:09:24,060 --> 00:09:26,820
+but the dependency that
+was actually failing
+
+229
+00:09:26,820 --> 00:09:28,620
+is from one of the availabilities zones
+
+230
+00:09:28,620 --> 00:09:31,200
+to connect to our
+database, so in this case,
+
+231
+00:09:31,200 --> 00:09:33,210
+you don't want to failover
+your primary database
+
+232
+00:09:33,210 --> 00:09:35,400
+or something like that,
+you just want to make sure
+
+233
+00:09:35,400 --> 00:09:38,550
+that you don't route
+traffic to those targets.
+
+234
+00:09:38,550 --> 00:09:41,040
+And how to detect and
+route the traffic around?
+
+235
+00:09:41,040 --> 00:09:42,300
+That's the question.
+
+236
+00:09:42,300 --> 00:09:44,463
+And the answer for that is health checks.
+
+237
+00:09:45,300 --> 00:09:47,010
+And before I start talking
+about health checks,
+
+238
+00:09:47,010 --> 00:09:48,510
+I need to explain how we design
+
+239
+00:09:48,510 --> 00:09:50,013
+health checks systems of ELB.
+
+240
+00:09:50,910 --> 00:09:53,100
+We think about the two-tier
+health check system
+
+241
+00:09:53,100 --> 00:09:55,860
+and that means we do two
+types of health checks.
+
+242
+00:09:55,860 --> 00:09:58,800
+One, Route53 is constantly
+performing health checks
+
+243
+00:09:58,800 --> 00:10:00,510
+against the load balancer
+nodes that are running,
+
+244
+00:10:00,510 --> 00:10:01,653
+and when I say nodes,
+
+245
+00:10:02,820 --> 00:10:05,484
+is the IPs that that we publish in DNS,
+
+246
+00:10:05,484 --> 00:10:08,280
+the subset of nodes that are
+a part of the load balancer
+
+247
+00:10:08,280 --> 00:10:10,170
+and could be ALB or NLB here,
+
+248
+00:10:10,170 --> 00:10:11,733
+and even classic load balancer.
+
+249
+00:10:13,350 --> 00:10:15,144
+So that's the first tier
+
+250
+00:10:15,144 --> 00:10:18,153
+and that ensures that we only
+publish healthy IPs in DNS.
+
+251
+00:10:18,990 --> 00:10:21,180
+That's the first part, then
+we have the second tier,
+
+252
+00:10:21,180 --> 00:10:23,850
+which is each node is
+performing health checks
+
+253
+00:10:23,850 --> 00:10:25,080
+against your targets.
+
+254
+00:10:25,080 --> 00:10:27,300
+And you probably have seen
+that in your access logs
+
+255
+00:10:27,300 --> 00:10:30,030
+of your targets that you see
+health checks being performed
+
+256
+00:10:30,030 --> 00:10:32,090
+by different IPs if you have
+cross-zone load balancing node
+
+257
+00:10:32,090 --> 00:10:36,540
+or something like that and
+that's essentially each node
+
+258
+00:10:36,540 --> 00:10:39,140
+will have its view of the
+which targets are healthy.
+
+259
+00:10:41,220 --> 00:10:43,410
+And, yeah, that distributes essentially,
+
+260
+00:10:43,410 --> 00:10:46,538
+we only send traffic to
+targets that are healthy
+
+261
+00:10:46,538 --> 00:10:49,710
+and clients will only
+see availability zones
+
+262
+00:10:49,710 --> 00:10:51,723
+that are healthy in DNS, just to recap.
+
+263
+00:10:53,100 --> 00:10:54,210
+And from the health check,
+
+264
+00:10:54,210 --> 00:10:58,053
+what are the actions during
+gray failures or hard failures.
+
+265
+00:10:59,040 --> 00:11:01,140
+First thing is you want
+to reroute the traffic
+
+266
+00:11:01,140 --> 00:11:03,420
+from the affected targets
+or availability zones,
+
+267
+00:11:03,420 --> 00:11:05,920
+and then you want to
+initiate target replacements.
+
+268
+00:11:07,650 --> 00:11:09,390
+Let's just recap real quick
+
+269
+00:11:09,390 --> 00:11:13,350
+on these target health check options,
+
+270
+00:11:13,350 --> 00:11:15,180
+what actually mean about
+target health check options,
+
+271
+00:11:15,180 --> 00:11:16,500
+the response that your backends
+
+272
+00:11:16,500 --> 00:11:18,780
+are providing to the load balancer.
+
+273
+00:11:18,780 --> 00:11:20,520
+And often we see shallow health checks
+
+274
+00:11:20,520 --> 00:11:21,900
+and deep health checks,
+
+275
+00:11:21,900 --> 00:11:23,790
+and shallow health check is essentially
+
+276
+00:11:23,790 --> 00:11:24,960
+the load balancer is sending a request.
+
+277
+00:11:24,960 --> 00:11:27,268
+Your load balancer always sends a request
+
+278
+00:11:27,268 --> 00:11:30,000
+to your load balancer,
+HTTP request, HTTPS,
+
+279
+00:11:30,000 --> 00:11:31,650
+and is expecting a response.
+
+280
+00:11:31,650 --> 00:11:33,180
+You configure the response code,
+
+281
+00:11:33,180 --> 00:11:35,370
+you configure the interval and so on.
+
+282
+00:11:35,370 --> 00:11:36,600
+So the load balancer
+is sending a requesting
+
+283
+00:11:36,600 --> 00:11:37,500
+and is expecting a response
+
+284
+00:11:37,500 --> 00:11:39,510
+and you can provide
+either a shallow response
+
+285
+00:11:39,510 --> 00:11:42,360
+or you can provide a
+response that actually
+
+286
+00:11:42,360 --> 00:11:45,570
+you perform a program at
+something extra that connects
+
+287
+00:11:45,570 --> 00:11:48,180
+to the dependency, make sure
+that everything is working,
+
+288
+00:11:48,180 --> 00:11:51,090
+and so the shallow one is
+basically you connecting
+
+289
+00:11:51,090 --> 00:11:53,730
+to the web server, retrieving a response.
+
+290
+00:11:53,730 --> 00:11:56,490
+The web server connectivity
+is working fine, that's it.
+
+291
+00:11:56,490 --> 00:11:58,410
+That doesn't perform any
+extra dependency check.
+
+292
+00:11:58,410 --> 00:12:00,180
+The deep one will do that,
+
+293
+00:12:00,180 --> 00:12:01,470
+but one thing that I want you to think
+
+294
+00:12:01,470 --> 00:12:03,600
+is that this would have
+a high resource usage
+
+295
+00:12:03,600 --> 00:12:05,460
+because if each health check approach
+
+296
+00:12:05,460 --> 00:12:07,380
+would have to check if
+whether you can connect
+
+297
+00:12:07,380 --> 00:12:08,370
+with the dependency,
+
+298
+00:12:08,370 --> 00:12:12,270
+whether you can do some extra operation.
+
+299
+00:12:12,270 --> 00:12:13,950
+That may be expensive,
+
+300
+00:12:13,950 --> 00:12:17,670
+so we don't have only these two options.
+
+301
+00:12:17,670 --> 00:12:19,410
+We actually have a third option
+
+302
+00:12:19,410 --> 00:12:23,610
+that we talk a lot about when
+discussing with customers.
+
+303
+00:12:23,610 --> 00:12:25,530
+We have a hybrid health check approach.
+
+304
+00:12:25,530 --> 00:12:27,990
+It essentially combines
+the best of both worlds.
+
+305
+00:12:27,990 --> 00:12:31,140
+You perform a synchronous dependency check
+
+306
+00:12:31,140 --> 00:12:32,760
+across your dependencies,
+
+307
+00:12:32,760 --> 00:12:35,010
+and then you populate a file or a cache
+
+308
+00:12:35,010 --> 00:12:37,871
+and then that you provide
+as a shallow health check
+
+309
+00:12:37,871 --> 00:12:38,970
+to the load balancer,
+
+310
+00:12:38,970 --> 00:12:41,640
+and then essentially
+you have the same thing.
+
+311
+00:12:41,640 --> 00:12:43,470
+Each health check approach
+that the load balance
+
+312
+00:12:43,470 --> 00:12:46,590
+is taking reflects on the dependency state
+
+313
+00:12:46,590 --> 00:12:49,050
+and that allows you to,
+if you have a gray failure
+
+314
+00:12:49,050 --> 00:12:50,760
+or something that you're unable to connect
+
+315
+00:12:50,760 --> 00:12:52,197
+or perform some action,
+
+316
+00:12:52,197 --> 00:12:55,140
+they ALB or NLB would route the traffic
+
+317
+00:12:55,140 --> 00:12:57,940
+around to a dif to other
+targets that are still healthy.
+
+318
+00:13:01,110 --> 00:13:03,180
+Now let's talk about the static stability
+
+319
+00:13:03,180 --> 00:13:06,390
+and one of the codes that we have
+
+320
+00:13:06,390 --> 00:13:09,000
+for static stability is
+when impairments occur,
+
+321
+00:13:09,000 --> 00:13:10,740
+this can cause resources
+to be unavailable.
+
+322
+00:13:10,740 --> 00:13:12,990
+And in this case, if you
+lose a third of the fleet,
+
+323
+00:13:12,990 --> 00:13:14,673
+let's say one AZ out of three,
+
+324
+00:13:16,800 --> 00:13:18,810
+this could lead to overload.
+
+325
+00:13:18,810 --> 00:13:21,420
+And then what is the answer for that
+
+326
+00:13:21,420 --> 00:13:23,460
+is you have to be statically stable
+
+327
+00:13:23,460 --> 00:13:26,940
+and you have to have that
+redundancy pre-deployed,
+
+328
+00:13:26,940 --> 00:13:30,870
+and essentially you want
+to have the redundancy
+
+329
+00:13:30,870 --> 00:13:33,393
+available across multiple
+availabilities zones.
+
+330
+00:13:35,220 --> 00:13:38,580
+And that's what we actually do with ELB.
+
+331
+00:13:38,580 --> 00:13:41,220
+We always over-provision the load balancer
+
+332
+00:13:41,220 --> 00:13:44,700
+by at least one availability
+zones to tolerate that failure
+
+333
+00:13:44,700 --> 00:13:48,030
+and that enables us to do
+actually do two things,
+
+334
+00:13:48,030 --> 00:13:49,830
+a seamless DNS fail-away,
+
+335
+00:13:49,830 --> 00:13:53,550
+and also it gives us buffer
+capacity for a traffic spike.
+
+336
+00:13:53,550 --> 00:13:56,280
+That's another thing that happens
+
+337
+00:13:56,280 --> 00:13:58,413
+because we also have that extra capacity.
+
+338
+00:13:59,850 --> 00:14:01,380
+And for your targets,
+
+339
+00:14:01,380 --> 00:14:04,080
+how you should think about
+it is exactly the same.
+
+340
+00:14:04,080 --> 00:14:05,790
+You should pre-provision the capacity
+
+341
+00:14:05,790 --> 00:14:07,950
+to tolerate one AZ failures
+if you want to be resilient,
+
+342
+00:14:07,950 --> 00:14:11,520
+of course, and scale up out quickly,
+
+343
+00:14:11,520 --> 00:14:13,290
+scale down and slowly
+
+344
+00:14:13,290 --> 00:14:16,410
+so you keep that capacity
+while you're scaling down
+
+345
+00:14:16,410 --> 00:14:18,846
+and conservatively so you can sustain
+
+346
+00:14:18,846 --> 00:14:22,470
+if there is a traffic spike
+that occurs in the middle.
+
+347
+00:14:22,470 --> 00:14:23,850
+And essentially, in this example here,
+
+348
+00:14:23,850 --> 00:14:26,970
+we have everything healthy
+and everything is green,
+
+349
+00:14:26,970 --> 00:14:29,580
+but then if one is availability
+zone has all targets
+
+350
+00:14:29,580 --> 00:14:31,740
+that are failing all of a sudden,
+
+351
+00:14:31,740 --> 00:14:34,680
+the other two AZ should
+still remain healthy.
+
+352
+00:14:34,680 --> 00:14:37,680
+And essentially, that is only
+possible if you pre-provision.
+
+353
+00:14:40,590 --> 00:14:42,330
+Now let's talk about
+cross-zone load balancing
+
+354
+00:14:42,330 --> 00:14:43,770
+and what I want to talk about
+
+355
+00:14:43,770 --> 00:14:45,120
+the cross-zone load
+balancing example here,
+
+356
+00:14:45,120 --> 00:14:46,920
+everyone knows what
+cross-zone load balancing is
+
+357
+00:14:46,920 --> 00:14:48,540
+when if you have cross-zone off,
+
+358
+00:14:48,540 --> 00:14:50,820
+the load balancer, each
+IP of the load balancer
+
+359
+00:14:50,820 --> 00:14:53,400
+can only talk to targets in
+the same availability zone,
+
+360
+00:14:53,400 --> 00:14:57,613
+and cross-zone, it talks
+to all targets in all AZs.
+
+361
+00:14:57,613 --> 00:15:00,690
+But what I want to talk about here is,
+
+362
+00:15:00,690 --> 00:15:02,940
+let's imagine the traffic
+distribution is the same,
+
+363
+00:15:02,940 --> 00:15:04,713
+whether cross-zone on or off,
+
+364
+00:15:06,420 --> 00:15:08,760
+and you have the traffic
+distribution to your targets,
+
+365
+00:15:08,760 --> 00:15:10,410
+and one thing that you're noticing here,
+
+366
+00:15:10,410 --> 00:15:12,570
+it's on purpose I put one
+of the availability zones
+
+367
+00:15:12,570 --> 00:15:13,740
+to contain less targets,
+
+368
+00:15:13,740 --> 00:15:16,740
+and you see that the targets
+in these availability zone
+
+369
+00:15:16,740 --> 00:15:18,600
+receive a disproportionate
+amount of traffic
+
+370
+00:15:18,600 --> 00:15:20,970
+because the load balancer
+can only send traffic
+
+371
+00:15:20,970 --> 00:15:23,010
+to those targets and you have less targets
+
+372
+00:15:23,010 --> 00:15:26,670
+so they will perform more work,
+
+373
+00:15:26,670 --> 00:15:29,760
+while in the cross-zone on,
+that will be distributed
+
+374
+00:15:29,760 --> 00:15:32,550
+and compensates for the
+disproportionate amount of targets.
+
+375
+00:15:32,550 --> 00:15:34,800
+But I don't want you
+folks to think that this,
+
+376
+00:15:34,800 --> 00:15:36,000
+either if cross-zone on,
+
+377
+00:15:36,000 --> 00:15:38,400
+although the traffic distribution is fine,
+
+378
+00:15:38,400 --> 00:15:39,510
+I don't want to think about that
+
+379
+00:15:39,510 --> 00:15:43,620
+because that will not enable
+you to be statically stable,
+
+380
+00:15:43,620 --> 00:15:46,860
+so my recommendation is
+keep a proportional number
+
+381
+00:15:46,860 --> 00:15:49,590
+of healthy targets per availability zones
+
+382
+00:15:49,590 --> 00:15:51,240
+and make sure that your backend capacity
+
+383
+00:15:51,240 --> 00:15:52,980
+can handle an AZ failover,
+
+384
+00:15:52,980 --> 00:15:55,350
+and that is essentially
+going to enable you
+
+385
+00:15:55,350 --> 00:15:56,763
+for static stability.
+
+386
+00:16:01,500 --> 00:16:03,270
+Now I talk about DNS,
+
+387
+00:16:03,270 --> 00:16:06,543
+so let's dive deep into the
+DNS failover mechanisms.
+
+388
+00:16:09,450 --> 00:16:12,510
+The first thing is let's
+imagine hypothetically
+
+389
+00:16:12,510 --> 00:16:14,310
+that we have one availability zones
+
+390
+00:16:14,310 --> 00:16:15,570
+that all targets are failing
+
+391
+00:16:15,570 --> 00:16:17,070
+and the question that I want to ask
+
+392
+00:16:17,070 --> 00:16:18,870
+is what happens in this case?
+
+393
+00:16:18,870 --> 00:16:21,450
+And the answer is it depends,
+
+394
+00:16:21,450 --> 00:16:24,510
+and that's why I explain what
+cross-zone is and how it works
+
+395
+00:16:24,510 --> 00:16:26,220
+because if you have cross-zone off
+
+396
+00:16:26,220 --> 00:16:27,690
+and all targets in that availability zone
+
+397
+00:16:27,690 --> 00:16:30,990
+are failing health checks, the
+IP is also removed from DNS,
+
+398
+00:16:30,990 --> 00:16:32,700
+even though the load
+balancer is not unhealthy
+
+399
+00:16:32,700 --> 00:16:35,906
+from its perspective, because
+it cannot send traffic,
+
+400
+00:16:35,906 --> 00:16:39,123
+it doesn't have any healthy targets,
+
+401
+00:16:40,080 --> 00:16:42,120
+then essentially the IP is
+going to be removed from DNS
+
+402
+00:16:42,120 --> 00:16:43,410
+and that distributes the traffic
+
+403
+00:16:43,410 --> 00:16:46,350
+to only the availability zones
+that contain healthy targets.
+
+404
+00:16:46,350 --> 00:16:47,650
+And if cross-zone is on
+
+405
+00:16:48,960 --> 00:16:50,970
+and the load balancer in
+that availability zone
+
+406
+00:16:50,970 --> 00:16:53,640
+can still send traffic to
+other targets in other AZs,
+
+407
+00:16:53,640 --> 00:16:55,623
+the IP is not removed from DNS.
+
+408
+00:16:57,030 --> 00:16:58,800
+One thing that is very
+important to think about
+
+409
+00:16:58,800 --> 00:17:01,590
+that this failover occurs
+on the data plane level.
+
+410
+00:17:01,590 --> 00:17:03,570
+There is no control plane involved
+
+411
+00:17:03,570 --> 00:17:05,920
+and this happen for
+
+412
+00:17:07,980 --> 00:17:09,990
+application load balancers
+and network load balancers.
+
+413
+00:17:09,990 --> 00:17:11,940
+Let's dive deep a little bit more here.
+
+414
+00:17:15,347 --> 00:17:18,030
+So let's talk about the
+one important aspect
+
+415
+00:17:18,030 --> 00:17:20,850
+of the load balancer as well
+is that we don't fail close,
+
+416
+00:17:20,850 --> 00:17:22,648
+we always fail open.
+
+417
+00:17:22,648 --> 00:17:26,130
+And you can see in this diagram
+all targets are failing,
+
+418
+00:17:26,130 --> 00:17:29,310
+so all IPs should be removed from DNS,
+
+419
+00:17:29,310 --> 00:17:31,440
+but that would essentially
+return a no record
+
+420
+00:17:31,440 --> 00:17:33,360
+and then clients will not connect.
+
+421
+00:17:33,360 --> 00:17:36,300
+We don't do that, so what we
+do is that at the DNS level,
+
+422
+00:17:36,300 --> 00:17:38,730
+we fail open and then
+all IPs are returned,
+
+423
+00:17:38,730 --> 00:17:40,530
+regardless of being unhealthy.
+
+424
+00:17:40,530 --> 00:17:42,420
+But one thing that happens as well
+
+425
+00:17:42,420 --> 00:17:44,640
+is we flag that on the Route53
+
+426
+00:17:44,640 --> 00:17:46,860
+and we evaluate target health also fails,
+
+427
+00:17:46,860 --> 00:17:48,930
+so if you have a failover
+policy configured
+
+428
+00:17:48,930 --> 00:17:51,390
+that would failover to another
+load balancer that is healthy
+
+429
+00:17:51,390 --> 00:17:52,920
+or another resource that is still healthy
+
+430
+00:17:52,920 --> 00:17:55,440
+from the Route53 perspective.
+
+431
+00:17:55,440 --> 00:17:59,130
+And on the target side, if
+all targets are unhealthy,
+
+432
+00:17:59,130 --> 00:18:01,740
+then we send all traffic
+to any of the targets,
+
+433
+00:18:01,740 --> 00:18:03,630
+as if they were healthy.
+
+434
+00:18:03,630 --> 00:18:05,880
+It's better to send
+somewhere than just fail.
+
+435
+00:18:07,560 --> 00:18:08,970
+I want you to think as well
+
+436
+00:18:08,970 --> 00:18:10,680
+like that these mask other failures
+
+437
+00:18:10,680 --> 00:18:12,360
+and prevent additional failover decisions
+
+438
+00:18:12,360 --> 00:18:14,250
+if you are always in fail-open mode,
+
+439
+00:18:14,250 --> 00:18:16,320
+and essentially, you
+can be in fail-open mode
+
+440
+00:18:16,320 --> 00:18:17,760
+and still operating just fine
+
+441
+00:18:17,760 --> 00:18:19,890
+'cause you have a bad
+health check, for example,
+
+442
+00:18:19,890 --> 00:18:23,250
+but you lose the ability
+to failover the traffic
+
+443
+00:18:23,250 --> 00:18:24,660
+when a real failure occurs here,
+
+444
+00:18:24,660 --> 00:18:27,600
+so I don't want you to
+think that fail-open mode
+
+445
+00:18:27,600 --> 00:18:29,340
+is the right mode for you to operate.
+
+446
+00:18:29,340 --> 00:18:32,790
+It's just that we like to offer that
+
+447
+00:18:32,790 --> 00:18:36,120
+because it works even in
+case that you are unhealthy
+
+448
+00:18:36,120 --> 00:18:38,223
+and application is still returning data.
+
+449
+00:18:39,570 --> 00:18:41,460
+And one thing that I wanted to mention
+
+450
+00:18:41,460 --> 00:18:43,140
+is that this is 100% configurable
+
+451
+00:18:43,140 --> 00:18:45,390
+using load balancer target
+group health thresholds,
+
+452
+00:18:45,390 --> 00:18:47,613
+and we are going to see that in advance.
+
+453
+00:18:50,520 --> 00:18:52,537
+Sometimes we hear customers asking,
+
+454
+00:18:52,537 --> 00:18:53,830
+"How do we monitor if my load balancer
+
+455
+00:18:53,830 --> 00:18:54,840
+is in fail-open mode?
+
+456
+00:18:54,840 --> 00:18:56,460
+I just want to monitor, for example,
+
+457
+00:18:56,460 --> 00:18:57,450
+and I don't want to see,
+
+458
+00:18:57,450 --> 00:19:00,030
+like basically if there
+is a failover occurring,
+
+459
+00:19:00,030 --> 00:19:02,640
+I want to see can I create an
+alert or something like that."
+
+460
+00:19:02,640 --> 00:19:04,950
+And a way that you can
+monitor if your load balancer
+
+461
+00:19:04,950 --> 00:19:08,134
+is failing open, you can
+create a same thing record,
+
+462
+00:19:08,134 --> 00:19:09,573
+a failover policy record,
+
+463
+00:19:11,336 --> 00:19:13,080
+so in a monitor record, for example,
+
+464
+00:19:13,080 --> 00:19:14,700
+that you don't use for production,
+
+465
+00:19:14,700 --> 00:19:16,470
+and you configure failover policy
+
+466
+00:19:16,470 --> 00:19:19,650
+and if, as you can see here,
+the primary is pointing
+
+467
+00:19:19,650 --> 00:19:22,650
+to the ELB and it has a
+evaluate target health enabled,
+
+468
+00:19:22,650 --> 00:19:24,570
+and the secondary returns a no record,
+
+469
+00:19:24,570 --> 00:19:27,480
+so if you detect, we put in
+this example a no record,
+
+470
+00:19:27,480 --> 00:19:30,540
+but you can actually point
+to anything that you want,
+
+471
+00:19:30,540 --> 00:19:32,160
+and when you capture that is not pointed
+
+472
+00:19:32,160 --> 00:19:33,630
+to your main load balancer is pointing
+
+473
+00:19:33,630 --> 00:19:36,450
+to the static resource
+that you appointed before,
+
+474
+00:19:36,450 --> 00:19:38,670
+that is configured for, sorry,
+
+475
+00:19:38,670 --> 00:19:41,400
+then you know that the load
+balancer in fail-open mode.
+
+476
+00:19:41,400 --> 00:19:42,357
+So don't use that record,
+
+477
+00:19:42,357 --> 00:19:44,190
+the monitor record for client traffic
+
+478
+00:19:44,190 --> 00:19:46,790
+because otherwise your
+clients will fail to connect.
+
+479
+00:19:48,690 --> 00:19:51,630
+So let's dive deep in the
+target health thresholds.
+
+480
+00:19:51,630 --> 00:19:53,580
+Remember that I mentioned that fail open
+
+481
+00:19:53,580 --> 00:19:56,180
+and failover in the previous slides
+
+482
+00:19:56,180 --> 00:19:58,710
+can only occur if all targets are failing,
+
+483
+00:19:58,710 --> 00:20:01,260
+and that is the default.
+
+484
+00:20:01,260 --> 00:20:04,440
+All targets must fail health
+check in order to trigger that.
+
+485
+00:20:04,440 --> 00:20:06,540
+And again, just recap is the DNS failover
+
+486
+00:20:06,540 --> 00:20:09,720
+and the target fail open as well.
+
+487
+00:20:09,720 --> 00:20:13,050
+And these thresholds are configurable
+
+488
+00:20:13,050 --> 00:20:17,850
+and what we want to talk
+about in this section here
+
+489
+00:20:17,850 --> 00:20:21,210
+is that you should configure
+earlier intervention points
+
+490
+00:20:21,210 --> 00:20:23,520
+'cause if 100% of this is failing,
+
+491
+00:20:23,520 --> 00:20:25,140
+maybe it's too late so you can configure
+
+492
+00:20:25,140 --> 00:20:27,483
+to fail away before that.
+
+493
+00:20:30,060 --> 00:20:33,060
+And in this example, so
+you have unified threshold
+
+494
+00:20:33,060 --> 00:20:34,463
+and detail thresholds where
+you can separate the DNS
+
+495
+00:20:34,463 --> 00:20:36,327
+failover and the target failover.
+
+496
+00:20:36,327 --> 00:20:39,090
+The DNS failover has to occur first,
+
+497
+00:20:39,090 --> 00:20:42,660
+but in this example I just put
+a unified one and I said 30%.
+
+498
+00:20:42,660 --> 00:20:46,200
+So if a target group contain less than 30%
+
+499
+00:20:46,200 --> 00:20:49,890
+of the targets healthy, it
+would trigger a failover.
+
+500
+00:20:49,890 --> 00:20:51,780
+And you can see here not
+all the targets are failing.
+
+501
+00:20:51,780 --> 00:20:53,190
+I still have two healthy targets
+
+502
+00:20:53,190 --> 00:20:55,530
+but they could be, that
+could lead to an overload
+
+503
+00:20:55,530 --> 00:20:58,110
+or a bad customer experience,
+so it's better for you
+
+504
+00:20:58,110 --> 00:21:01,113
+to fail away from that
+availability zone if that occurs.
+
+505
+00:21:03,840 --> 00:21:05,970
+If you have multiple target groups
+
+506
+00:21:05,970 --> 00:21:07,110
+associated with the load balancer,
+
+507
+00:21:07,110 --> 00:21:09,150
+that's a very common configuration.
+
+508
+00:21:09,150 --> 00:21:10,800
+And the reason why I'm bringing that up
+
+509
+00:21:10,800 --> 00:21:14,280
+is we see sometimes
+customer in fail-open mode
+
+510
+00:21:14,280 --> 00:21:16,530
+or failover scenarios,
+
+511
+00:21:16,530 --> 00:21:18,570
+but they have healthy targets
+in the same availability zone
+
+512
+00:21:18,570 --> 00:21:19,890
+in the different target group.
+
+513
+00:21:19,890 --> 00:21:21,300
+And in this example I
+put two target groups,
+
+514
+00:21:21,300 --> 00:21:22,650
+target one and two,
+
+515
+00:21:22,650 --> 00:21:24,660
+and the target group one
+is a test target group,
+
+516
+00:21:24,660 --> 00:21:27,510
+for example, and a two is
+serving the production traffic.
+
+517
+00:21:28,470 --> 00:21:30,630
+One thing that this feature allows you
+
+518
+00:21:30,630 --> 00:21:32,640
+actually to do is you
+can go to that setting
+
+519
+00:21:32,640 --> 00:21:35,790
+and disable that for
+one of the target groups
+
+520
+00:21:35,790 --> 00:21:38,280
+that's not serving the main
+portion of your traffic,
+
+521
+00:21:38,280 --> 00:21:41,610
+and that essentially, as
+you can see in this example,
+
+522
+00:21:41,610 --> 00:21:43,620
+the AZ is not returning DNS,
+
+523
+00:21:43,620 --> 00:21:45,690
+but if you disable that
+for that target group,
+
+524
+00:21:45,690 --> 00:21:50,370
+it will still resolving,
+still returning the DNS,
+
+525
+00:21:50,370 --> 00:21:52,677
+and if the load balancer
+receives traffic on that AZ
+
+526
+00:21:52,677 --> 00:21:55,110
+and that points to that target group,
+
+527
+00:21:55,110 --> 00:21:58,080
+that target group is in
+fail-open mode, essentially.
+
+528
+00:21:58,080 --> 00:22:00,060
+But yeah, at least the IP is not removed,
+
+529
+00:22:00,060 --> 00:22:01,910
+capacity is not removed from that AZ.
+
+530
+00:22:05,100 --> 00:22:08,057
+Let's talk about another
+mechanism to failover traffic
+
+531
+00:22:10,830 --> 00:22:13,890
+is using Route53 Application
+Recovery Controller.
+
+532
+00:22:13,890 --> 00:22:16,500
+So let's assume here that
+you have this scenario
+
+533
+00:22:16,500 --> 00:22:19,650
+where you have canaries and
+you're probing the load balancer
+
+534
+00:22:19,650 --> 00:22:23,250
+and detect the degradation or something
+
+535
+00:22:23,250 --> 00:22:26,250
+where your targets are not
+considered unhealthy yet
+
+536
+00:22:26,250 --> 00:22:27,960
+due to some other reason,
+
+537
+00:22:27,960 --> 00:22:32,960
+you can actually go and
+request a zonal shift,
+
+538
+00:22:33,210 --> 00:22:36,150
+and by request a zonal shift
+application recovery controller
+
+539
+00:22:36,150 --> 00:22:38,190
+will remove that IP from the DNS as well,
+
+540
+00:22:38,190 --> 00:22:40,690
+and that's a mechanism
+that you have control over.
+
+541
+00:22:42,720 --> 00:22:44,700
+And you also have a zonal auto shift.
+
+542
+00:22:44,700 --> 00:22:47,521
+If this is for us, if we detect an issue,
+
+543
+00:22:47,521 --> 00:22:50,100
+we can also perform the zonal shift
+
+544
+00:22:50,100 --> 00:22:51,930
+for you on your behalf.
+
+545
+00:22:51,930 --> 00:22:54,194
+You can use that as well for testing
+
+546
+00:22:54,194 --> 00:22:57,210
+if you can actually
+tolerate that AZ failure
+
+547
+00:22:57,210 --> 00:22:59,640
+that I mentioned and ensure
+that you are statically stable
+
+548
+00:22:59,640 --> 00:23:02,480
+so you perform exercises and so on.
+
+549
+00:23:02,480 --> 00:23:04,470
+In this example it shows
+for cross-zone off,
+
+550
+00:23:04,470 --> 00:23:06,520
+but it can also be used in cross-zone on.
+
+551
+00:23:07,560 --> 00:23:10,470
+And please check on the QR code.
+
+552
+00:23:10,470 --> 00:23:13,800
+There are a lot of
+information in the article
+
+553
+00:23:13,800 --> 00:23:16,563
+that this QR code is going to return.
+
+554
+00:23:19,410 --> 00:23:20,850
+Now let's talk about observability,
+
+555
+00:23:20,850 --> 00:23:23,280
+and I wanted to make a disclaimer
+on the observability side.
+
+556
+00:23:23,280 --> 00:23:25,080
+Observability is a huge topic
+
+557
+00:23:25,080 --> 00:23:27,240
+and I'm not going to dive
+deep on observability.
+
+558
+00:23:27,240 --> 00:23:29,790
+We won't have time to cover everything.
+
+559
+00:23:29,790 --> 00:23:32,700
+But, let's imagine here this scenario
+
+560
+00:23:32,700 --> 00:23:35,040
+where you have your users,
+you have your load balancers,
+
+561
+00:23:35,040 --> 00:23:38,280
+you have your targets, and
+you have your dependencies,
+
+562
+00:23:38,280 --> 00:23:40,950
+or a stack of multiple load balancers,
+
+563
+00:23:40,950 --> 00:23:43,560
+and the question that I want to ask here
+
+564
+00:23:43,560 --> 00:23:46,500
+is like where are you measuring
+when things are wrong,
+
+565
+00:23:46,500 --> 00:23:47,910
+or things are doing well?
+
+566
+00:23:47,910 --> 00:23:51,750
+And the answer here is you
+should measure everything.
+
+567
+00:23:51,750 --> 00:23:54,000
+So you measure from the
+load balancer metrics,
+
+568
+00:23:54,000 --> 00:23:58,200
+but you also should emit
+metrics from your targets,
+
+569
+00:23:58,200 --> 00:24:01,800
+collect metrics from
+dependencies, and understand,
+
+570
+00:24:01,800 --> 00:24:03,600
+in case there is a failure or something,
+
+571
+00:24:03,600 --> 00:24:06,030
+you want to understand
+what is the component
+
+572
+00:24:06,030 --> 00:24:06,870
+that is actually failing,
+
+573
+00:24:06,870 --> 00:24:10,230
+because you may see the front
+door failing with something,
+
+574
+00:24:10,230 --> 00:24:13,590
+but the problem, actually,
+it's on a database
+
+575
+00:24:13,590 --> 00:24:16,200
+that is down under on the stack, right,
+
+576
+00:24:16,200 --> 00:24:19,080
+so you want to make
+sure that you know that,
+
+577
+00:24:19,080 --> 00:24:22,590
+so an indication of error
+can mean something external
+
+578
+00:24:22,590 --> 00:24:24,090
+to the load balancer itself.
+
+579
+00:24:24,090 --> 00:24:27,540
+And the question when we
+are troubleshooting things
+
+580
+00:24:27,540 --> 00:24:30,420
+is like for the failure is
+occurring at a single zone
+
+581
+00:24:30,420 --> 00:24:33,862
+or it's occurring at multiple
+zones at the same time.
+
+582
+00:24:33,862 --> 00:24:36,210
+And the reason why we ask this
+question is if it's happening
+
+583
+00:24:36,210 --> 00:24:39,750
+from multiple zones and each load balancer
+
+584
+00:24:39,750 --> 00:24:40,901
+is seeing the same thing,
+
+585
+00:24:40,901 --> 00:24:42,900
+you can pinpoint that the issue
+
+586
+00:24:42,900 --> 00:24:43,800
+is not at the load balancer
+
+587
+00:24:43,800 --> 00:24:47,250
+because we provisional zonal resources,
+
+588
+00:24:47,250 --> 00:24:51,570
+and if we are seeing the same
+event across all your targets,
+
+589
+00:24:51,570 --> 00:24:53,760
+for example, you may indicate
+you have a dependency issue
+
+590
+00:24:53,760 --> 00:24:56,730
+but if the issue and you have
+cross-zone off, for example,
+
+591
+00:24:56,730 --> 00:24:59,100
+is happening with a
+single availability zone,
+
+592
+00:24:59,100 --> 00:25:02,460
+you can then verify like if
+there are any specific targets
+
+593
+00:25:02,460 --> 00:25:04,700
+that are returning errors
+in that availability zone
+
+594
+00:25:04,700 --> 00:25:05,970
+and so on and that's only possible
+
+595
+00:25:05,970 --> 00:25:07,980
+if you have those metrics available,
+
+596
+00:25:07,980 --> 00:25:10,230
+or you have to process
+access logs and so on.
+
+597
+00:25:13,440 --> 00:25:16,440
+One thing that we do at
+AWS is, in our services,
+
+598
+00:25:16,440 --> 00:25:17,790
+we do have, we monitor,
+
+599
+00:25:17,790 --> 00:25:19,780
+we don't only monitor
+for negative metrics,
+
+600
+00:25:19,780 --> 00:25:22,860
+or in other words like errors,
+
+601
+00:25:22,860 --> 00:25:25,680
+we also monitor on the positive metrics,
+
+602
+00:25:25,680 --> 00:25:28,890
+meaning that your request
+within the boundaries
+
+603
+00:25:28,890 --> 00:25:32,880
+that we expect, what is the 2xx rate,
+
+604
+00:25:32,880 --> 00:25:36,567
+canary are successfully probing the nodes
+
+605
+00:25:36,567 --> 00:25:37,890
+and the load balancers.
+
+606
+00:25:37,890 --> 00:25:39,420
+What is our health host count?
+
+607
+00:25:39,420 --> 00:25:41,670
+So if you see a sudden drop
+in the health host count
+
+608
+00:25:41,670 --> 00:25:42,853
+and not an increase in
+the unhealthy host count,
+
+609
+00:25:42,853 --> 00:25:44,340
+it's still a problem, right,
+
+610
+00:25:44,340 --> 00:25:47,220
+even though the unhealthy
+host count did an alarm.
+
+611
+00:25:47,220 --> 00:25:49,320
+So these are things that
+I want you to think about
+
+612
+00:25:49,320 --> 00:25:50,871
+when you're creating alarms.
+
+613
+00:25:50,871 --> 00:25:54,303
+You should also think about
+your positive metrics here.
+
+614
+00:25:56,070 --> 00:25:59,850
+And one cool feature that
+we have with CloudWatch
+
+615
+00:25:59,850 --> 00:26:00,870
+is the composite alarm,
+
+616
+00:26:00,870 --> 00:26:03,690
+so you can combine multiple
+alarms into a single alarm
+
+617
+00:26:03,690 --> 00:26:06,150
+and that will enhance your visibility
+
+618
+00:26:06,150 --> 00:26:07,710
+when you're alerting your own call
+
+619
+00:26:07,710 --> 00:26:10,230
+'cause now you can see
+which alarm is firing.
+
+620
+00:26:10,230 --> 00:26:12,900
+Maybe it's firing the 5xx
+alarm on the load balancer,
+
+621
+00:26:12,900 --> 00:26:15,840
+but it's also firing
+something elevated latency
+
+622
+00:26:15,840 --> 00:26:17,970
+on the target because
+the dependency's failing
+
+623
+00:26:17,970 --> 00:26:18,900
+or something like that
+
+624
+00:26:18,900 --> 00:26:21,300
+and that will give you better visibility.
+
+625
+00:26:21,300 --> 00:26:24,120
+But again, as I mentioned
+earlier, there are other talks
+
+626
+00:26:24,120 --> 00:26:25,640
+that talk a lot about observability,
+
+627
+00:26:25,640 --> 00:26:27,900
+I just wanted to give my thoughts
+
+628
+00:26:27,900 --> 00:26:30,573
+about how you should think
+about observability here.
+
+629
+00:26:33,330 --> 00:26:34,740
+And client best practices,
+
+630
+00:26:34,740 --> 00:26:37,290
+and I want to start here on the client.
+
+631
+00:26:37,290 --> 00:26:41,938
+One important aspect of
+resiliency is the client.
+
+632
+00:26:41,938 --> 00:26:44,250
+You can have a very good architecture,
+
+633
+00:26:44,250 --> 00:26:45,930
+well-architected, everything works fine,
+
+634
+00:26:45,930 --> 00:26:50,130
+but you have a client
+that stick with a connect,
+
+635
+00:26:50,130 --> 00:26:52,350
+with a specific IP because they're caching
+
+636
+00:26:52,350 --> 00:26:53,400
+or something like that
+
+637
+00:26:53,400 --> 00:26:55,400
+and they don't recover when things fail,
+
+638
+00:26:56,670 --> 00:26:57,810
+or they don't detect,
+
+639
+00:26:57,810 --> 00:26:59,490
+or they detect that there
+is a connection failure
+
+640
+00:26:59,490 --> 00:27:02,730
+and they keep retry on the
+same same IP all the time,
+
+641
+00:27:02,730 --> 00:27:06,780
+that's bad, so one thing
+that I want to mention here
+
+642
+00:27:06,780 --> 00:27:08,190
+is like are your clients ready?
+
+643
+00:27:08,190 --> 00:27:10,471
+Because it's not only DNS.
+
+644
+00:27:10,471 --> 00:27:12,420
+When you're setting up clients,
+
+645
+00:27:12,420 --> 00:27:14,940
+most web browsers will do
+what we are explaining here
+
+646
+00:27:14,940 --> 00:27:16,857
+in this slide, but when you're creating
+
+647
+00:27:16,857 --> 00:27:19,743
+your client for your APIs,
+
+648
+00:27:22,290 --> 00:27:24,210
+your clients are ready
+for connection management.
+
+649
+00:27:24,210 --> 00:27:27,510
+Do they have a maximum
+connection persistent time?
+
+650
+00:27:27,510 --> 00:27:29,190
+Do you have connection pooling enabled
+
+651
+00:27:29,190 --> 00:27:30,930
+that can accelerate things
+
+652
+00:27:30,930 --> 00:27:33,430
+because you can pre-open
+connections, essentially.
+
+653
+00:27:34,620 --> 00:27:36,720
+Clients are honoring DNS TTL,
+
+654
+00:27:36,720 --> 00:27:38,373
+and when errors are occurring,
+
+655
+00:27:39,300 --> 00:27:42,270
+do you retry on responsive
+IPs and skip failed ones?
+
+656
+00:27:42,270 --> 00:27:45,120
+Do you implement exponential
+back-off with Jitter?
+
+657
+00:27:45,120 --> 00:27:48,660
+And if you do that, then
+you have loads of benefits,
+
+658
+00:27:48,660 --> 00:27:50,640
+you have a balanced
+connection distribution,
+
+659
+00:27:50,640 --> 00:27:52,620
+you have graceful failure handling,
+
+660
+00:27:52,620 --> 00:27:54,750
+faster recovery times,
+and reduced latency.
+
+661
+00:27:54,750 --> 00:27:58,470
+And this are just a basic, you know,
+
+662
+00:27:58,470 --> 00:27:59,303
+you're going to see
+
+663
+00:27:59,303 --> 00:28:00,387
+that only connection pulley example here.
+
+664
+00:28:00,387 --> 00:28:03,180
+You have connections, you're
+connected to multiple nodes,
+
+665
+00:28:03,180 --> 00:28:05,070
+the client is aware that one node
+
+666
+00:28:05,070 --> 00:28:06,600
+is not producing the expected response,
+
+667
+00:28:06,600 --> 00:28:08,700
+it just ignores that node temporarily,
+
+668
+00:28:08,700 --> 00:28:10,290
+and then when that node recovers,
+
+669
+00:28:10,290 --> 00:28:12,630
+it reconnects to it and that's it.
+
+670
+00:28:12,630 --> 00:28:15,330
+And yeah, and that's it from my end.
+
+671
+00:28:15,330 --> 00:28:17,130
+Actually, going to hand over to Jon.
+
+672
+00:28:17,130 --> 00:28:19,503
+- Awesome, thanks Felipe, appreciate it.
+
+673
+00:28:20,790 --> 00:28:24,120
+So now that Felipe has gone
+into multi-AZ resilience,
+
+674
+00:28:24,120 --> 00:28:27,150
+let's talk a little bit about
+multi-region resiliency.
+
+675
+00:28:27,150 --> 00:28:29,070
+The first thing to talk about is
+
+676
+00:28:29,070 --> 00:28:30,180
+why would you wanna do this?
+
+677
+00:28:30,180 --> 00:28:32,730
+So why go be multi-region?
+
+678
+00:28:32,730 --> 00:28:35,520
+And the biggest thing, in my opinion,
+
+679
+00:28:35,520 --> 00:28:36,950
+that you get from going multi-region
+
+680
+00:28:36,950 --> 00:28:39,990
+is you get another level
+of blast radius isolation.
+
+681
+00:28:39,990 --> 00:28:41,640
+So we talk a lot about blast radius
+
+682
+00:28:41,640 --> 00:28:44,310
+and how we minimize
+impact during a failure.
+
+683
+00:28:44,310 --> 00:28:47,190
+The blast radius isolation
+that you get will help you
+
+684
+00:28:47,190 --> 00:28:50,583
+with other things like
+configuration issues or deployments.
+
+685
+00:28:51,960 --> 00:28:53,400
+It will help with region-wide catastrophes
+
+686
+00:28:53,400 --> 00:28:54,233
+if you're in a different region
+
+687
+00:28:54,233 --> 00:28:56,460
+where there isn't a catastrophe happening,
+
+688
+00:28:56,460 --> 00:28:59,130
+and it may help you with
+legal or compliance reasons.
+
+689
+00:28:59,130 --> 00:29:00,630
+We are seeing more customer,
+
+690
+00:29:00,630 --> 00:29:03,750
+or more countries put
+data sovereignty laws
+
+691
+00:29:03,750 --> 00:29:05,670
+where certain kinds of
+data needs to be stored
+
+692
+00:29:05,670 --> 00:29:08,370
+within certain geopolitical boundaries,
+
+693
+00:29:08,370 --> 00:29:10,410
+and these are countries
+that have them so far,
+
+694
+00:29:10,410 --> 00:29:13,320
+but it's a new trend and
+we expect it to continue,
+
+695
+00:29:13,320 --> 00:29:16,170
+definitely an important
+thing to think about.
+
+696
+00:29:16,170 --> 00:29:18,900
+So before you go multi-region,
+
+697
+00:29:18,900 --> 00:29:21,600
+the biggest thing, the
+hardest thing about this,
+
+698
+00:29:21,600 --> 00:29:24,630
+you have to realize, I'm
+sure many of you know this,
+
+699
+00:29:24,630 --> 00:29:26,670
+it's a very hard problem we're solving.
+
+700
+00:29:26,670 --> 00:29:29,040
+We're taking complex distributed systems,
+
+701
+00:29:29,040 --> 00:29:31,170
+building other systems on top of those,
+
+702
+00:29:31,170 --> 00:29:33,930
+merging them together and
+then we wanna take that
+
+703
+00:29:33,930 --> 00:29:35,400
+and start moving it to other regions
+
+704
+00:29:35,400 --> 00:29:38,250
+in a way that synchronizes
+with the original.
+
+705
+00:29:38,250 --> 00:29:42,120
+So the two biggest points
+that I think we to do
+
+706
+00:29:42,120 --> 00:29:44,550
+when we're thinking a lot
+about going multi-region
+
+707
+00:29:44,550 --> 00:29:46,950
+are one, align everybody.
+
+708
+00:29:46,950 --> 00:29:48,150
+Now this doesn't necessarily mean
+
+709
+00:29:48,150 --> 00:29:51,090
+you have to have your
+customers aligned beforehand,
+
+710
+00:29:51,090 --> 00:29:52,800
+but during an event,
+
+711
+00:29:52,800 --> 00:29:54,660
+you need to be giving them the information
+
+712
+00:29:54,660 --> 00:29:55,890
+that you're all aligned on,
+
+713
+00:29:55,890 --> 00:29:59,070
+like what's the failure mode,
+how we're recovering from it,
+
+714
+00:29:59,070 --> 00:30:01,170
+what are our expected recovery times
+
+715
+00:30:01,170 --> 00:30:04,080
+or expected behaviors during an outage,
+
+716
+00:30:04,080 --> 00:30:07,110
+and really keep that alignment going
+
+717
+00:30:07,110 --> 00:30:10,440
+throughout the lifecycle
+of the entire project.
+
+718
+00:30:10,440 --> 00:30:12,450
+The other big thing is
+simple, right, simplicity.
+
+719
+00:30:12,450 --> 00:30:14,820
+I mean, we've all heard keep it simple.
+
+720
+00:30:14,820 --> 00:30:18,570
+Simplicity scales, like
+we see systems at AWS.
+
+721
+00:30:18,570 --> 00:30:22,650
+All of the big systems
+have simple core principles
+
+722
+00:30:22,650 --> 00:30:25,710
+that they're built on and that's
+the reason they can scale.
+
+723
+00:30:25,710 --> 00:30:27,840
+But keeping it simple
+also gives you the ability
+
+724
+00:30:27,840 --> 00:30:31,230
+to reason about what's
+going on during a failure.
+
+725
+00:30:31,230 --> 00:30:34,260
+So your new on-call at 3:00 AM gets paged.
+
+726
+00:30:34,260 --> 00:30:36,540
+If the system is simple
+and he's learned those
+
+727
+00:30:36,540 --> 00:30:37,380
+and can take care of it,
+
+728
+00:30:37,380 --> 00:30:39,900
+like understands how it should behave,
+
+729
+00:30:39,900 --> 00:30:41,430
+they'll be much further ahead
+
+730
+00:30:41,430 --> 00:30:43,230
+and able to find out what's going on,
+
+731
+00:30:43,230 --> 00:30:45,123
+initiate any required actions.
+
+732
+00:30:46,530 --> 00:30:48,510
+So before you go multi-region,
+
+733
+00:30:48,510 --> 00:30:49,830
+there's a few things you should do
+
+734
+00:30:49,830 --> 00:30:53,370
+and you really should have
+this multi AZ nailed down.
+
+735
+00:30:53,370 --> 00:30:56,220
+We do have customers who go
+multi-region in single AZs
+
+736
+00:30:56,220 --> 00:30:58,170
+and when I see those architectures,
+
+737
+00:30:58,170 --> 00:31:00,150
+other than you get the
+blast radius isolation,
+
+738
+00:31:00,150 --> 00:31:01,410
+you're really doing the same thing
+
+739
+00:31:01,410 --> 00:31:03,963
+as multi AZ in terms of failure.
+
+740
+00:31:04,950 --> 00:31:08,130
+You should have highly automation
+for your architectures,
+
+741
+00:31:08,130 --> 00:31:11,250
+your infrastructure should be
+defined in code if you can.
+
+742
+00:31:11,250 --> 00:31:14,250
+You want these things to
+be fast, reproducible,
+
+743
+00:31:14,250 --> 00:31:15,600
+but the more important thing
+
+744
+00:31:15,600 --> 00:31:18,180
+with having it in code is it's consistent.
+
+745
+00:31:18,180 --> 00:31:20,400
+There's nothing worse
+than setting up a region
+
+746
+00:31:20,400 --> 00:31:21,900
+and manually setting up another region
+
+747
+00:31:21,900 --> 00:31:23,850
+and you forgot to set some options
+
+748
+00:31:23,850 --> 00:31:26,100
+and now you've got a
+difference that you don't know
+
+749
+00:31:26,100 --> 00:31:27,850
+until you actually are failed-over.
+
+750
+00:31:28,920 --> 00:31:30,660
+Your data authority and
+replication strategy
+
+751
+00:31:30,660 --> 00:31:31,950
+should be well-defined,
+
+752
+00:31:31,950 --> 00:31:33,570
+and this is another thing to align on.
+
+753
+00:31:33,570 --> 00:31:36,180
+The people who are writing
+the database queries
+
+754
+00:31:36,180 --> 00:31:38,850
+or using the database,
+the backend engineers,
+
+755
+00:31:38,850 --> 00:31:40,980
+the front end engineers,
+everyone needs to know
+
+756
+00:31:40,980 --> 00:31:44,100
+this is how we will know that
+these values are correct,
+
+757
+00:31:44,100 --> 00:31:46,200
+this is our replication strategy,
+
+758
+00:31:46,200 --> 00:31:48,333
+this is how it will behave when we fail.
+
+759
+00:31:50,010 --> 00:31:51,690
+So one of the big failures
+
+760
+00:31:51,690 --> 00:31:54,180
+that can happen is core infrastructure,
+
+761
+00:31:54,180 --> 00:31:58,020
+and to mitigate these
+failures we are responsible
+
+762
+00:31:58,020 --> 00:32:00,390
+for the resilience of the cloud.
+
+763
+00:32:00,390 --> 00:32:03,270
+And to do that, we actually
+define our services
+
+764
+00:32:03,270 --> 00:32:04,920
+in three different groups.
+
+765
+00:32:04,920 --> 00:32:05,790
+And you'll notice up here
+
+766
+00:32:05,790 --> 00:32:08,130
+there's zonal, regional and global,
+
+767
+00:32:08,130 --> 00:32:10,320
+and global services
+actually are control plane
+
+768
+00:32:10,320 --> 00:32:13,080
+in one region, data plane in all regions.
+
+769
+00:32:13,080 --> 00:32:14,400
+It's kind of multi-region,
+
+770
+00:32:14,400 --> 00:32:17,640
+but we don't have one up here
+that's actually multi-region.
+
+771
+00:32:17,640 --> 00:32:20,340
+Like we don't build services multi-region.
+
+772
+00:32:20,340 --> 00:32:23,400
+As a service team, when we
+deploy ELB to a new region,
+
+773
+00:32:23,400 --> 00:32:26,460
+it's essentially a completely
+isolated incarnation
+
+774
+00:32:26,460 --> 00:32:27,873
+of the entire service.
+
+775
+00:32:29,040 --> 00:32:31,560
+So under the hood, when we're
+building these services,
+
+776
+00:32:31,560 --> 00:32:34,290
+and when you're building them,
+we can have a zonal service,
+
+777
+00:32:34,290 --> 00:32:36,187
+and the big difference here when you say,
+
+778
+00:32:36,187 --> 00:32:38,700
+"Should I be zonal or
+should I be regional?"
+
+779
+00:32:38,700 --> 00:32:41,280
+Is am I building a core service
+
+780
+00:32:41,280 --> 00:32:43,830
+that other services are
+gonna build on top of?
+
+781
+00:32:43,830 --> 00:32:45,990
+And if the answer is yes,
+then you probably need to be
+
+782
+00:32:45,990 --> 00:32:48,420
+building a zone-only isolated service.
+
+783
+00:32:48,420 --> 00:32:51,090
+Hyperplane, which is what
+NLB and Gateway Load Balancer
+
+784
+00:32:51,090 --> 00:32:54,030
+are used under the hood is
+a completely zonal service.
+
+785
+00:32:54,030 --> 00:32:55,770
+Hyperplane in a zone has no idea
+
+786
+00:32:55,770 --> 00:32:57,750
+that other zones even exist,
+
+787
+00:32:57,750 --> 00:32:59,820
+and the way we do
+cross-zone is we register
+
+788
+00:32:59,820 --> 00:33:02,733
+all of the targets to that
+target group in every zone.
+
+789
+00:33:04,020 --> 00:33:05,520
+But these zone services,
+when we build them,
+
+790
+00:33:05,520 --> 00:33:07,200
+will have a regional control plane
+
+791
+00:33:07,200 --> 00:33:08,370
+that has a common endpoint,
+
+792
+00:33:08,370 --> 00:33:10,140
+then they'll have zonal control planes
+
+793
+00:33:10,140 --> 00:33:13,413
+and data planes are always zonal as well.
+
+794
+00:33:14,640 --> 00:33:17,940
+Regional services is more
+commonly what we actually build.
+
+795
+00:33:17,940 --> 00:33:19,740
+Most of our services are regional.
+
+796
+00:33:19,740 --> 00:33:23,370
+We have more of a big logic incarnation
+
+797
+00:33:23,370 --> 00:33:26,100
+of the service is in one, or sorry,
+
+798
+00:33:26,100 --> 00:33:28,890
+the whole region is one
+logical incarnation,
+
+799
+00:33:28,890 --> 00:33:31,140
+and sometimes these will have
+a control plane in the zone,
+
+800
+00:33:31,140 --> 00:33:34,020
+but they may not and they'll
+have a regional control plane.
+
+801
+00:33:34,020 --> 00:33:35,370
+It's the endpoint you talk to.
+
+802
+00:33:35,370 --> 00:33:37,920
+It'll propagate to the zonal data planes.
+
+803
+00:33:37,920 --> 00:33:39,810
+Now under the hood, everything
+is always going to be
+
+804
+00:33:39,810 --> 00:33:41,640
+physically in one zone or another,
+
+805
+00:33:41,640 --> 00:33:43,500
+so the data planes are still isolated,
+
+806
+00:33:43,500 --> 00:33:46,920
+even if they're aware of the
+other zones and/or using them.
+
+807
+00:33:46,920 --> 00:33:48,720
+And then finally, we
+have a very small number
+
+808
+00:33:48,720 --> 00:33:50,160
+of global services.
+
+809
+00:33:50,160 --> 00:33:53,520
+These are generally the edge
+services like CloudFront,
+
+810
+00:33:53,520 --> 00:33:57,030
+but they're also services
+like IAM and Route53.
+
+811
+00:33:57,030 --> 00:33:59,160
+And it's important to realize these mean
+
+812
+00:33:59,160 --> 00:34:01,830
+they're running in one
+region, their control plane,
+
+813
+00:34:01,830 --> 00:34:03,330
+and if that region is impacted,
+
+814
+00:34:03,330 --> 00:34:05,130
+their control plane may not be available
+
+815
+00:34:05,130 --> 00:34:06,960
+in any of the other regions,
+
+816
+00:34:06,960 --> 00:34:08,940
+and this is why Felipe was mentioning
+
+817
+00:34:08,940 --> 00:34:11,220
+you wanna to keep your
+mitigations in data plane
+
+818
+00:34:11,220 --> 00:34:12,750
+as much as you can.
+
+819
+00:34:12,750 --> 00:34:14,250
+Nobody likes to have an issue
+
+820
+00:34:14,250 --> 00:34:16,170
+that they need to run
+something to react from
+
+821
+00:34:16,170 --> 00:34:18,570
+and then the API is actually down.
+
+822
+00:34:18,570 --> 00:34:20,610
+We build our control
+planes to be resilient
+
+823
+00:34:20,610 --> 00:34:22,020
+and highly available,
+
+824
+00:34:22,020 --> 00:34:24,630
+but nowhere near the same
+level of effort is spent
+
+825
+00:34:24,630 --> 00:34:26,223
+as compared to data planes.
+
+826
+00:34:27,810 --> 00:34:29,430
+So the other category of errors
+
+827
+00:34:29,430 --> 00:34:32,040
+that we can run into is
+really data and state,
+
+828
+00:34:32,040 --> 00:34:33,870
+and when you're planning for this,
+
+829
+00:34:33,870 --> 00:34:36,810
+you need to consider and
+keep in mind the CAP theorem.
+
+830
+00:34:36,810 --> 00:34:39,120
+So I'm sure everyone has seen
+this in some form or another.
+
+831
+00:34:39,120 --> 00:34:41,550
+We'll just do a quick refresher.
+
+832
+00:34:41,550 --> 00:34:43,380
+Partition tolerance is the ability
+
+833
+00:34:43,380 --> 00:34:45,420
+to survive a network segmentation
+
+834
+00:34:45,420 --> 00:34:47,760
+where one component of your application
+
+835
+00:34:47,760 --> 00:34:50,721
+cannot work with or talk
+to the other components.
+
+836
+00:34:50,721 --> 00:34:54,360
+In network apps, everything's networking.
+
+837
+00:34:54,360 --> 00:34:57,840
+You're at ELB talk, so you guys
+are dealing with networking,
+
+838
+00:34:57,840 --> 00:34:59,010
+you have to choose this, right?
+
+839
+00:34:59,010 --> 00:35:00,990
+You can't not have partition tolerance.
+
+840
+00:35:00,990 --> 00:35:03,210
+If a user's on their desktop at home
+
+841
+00:35:03,210 --> 00:35:04,980
+and your application is
+there working locally
+
+842
+00:35:04,980 --> 00:35:07,260
+and the data is consistent and available,
+
+843
+00:35:07,260 --> 00:35:09,030
+it's probably not the same, right?
+
+844
+00:35:09,030 --> 00:35:10,740
+They need to be able to
+connect to something.
+
+845
+00:35:10,740 --> 00:35:12,630
+So we have to choose partition tolerance
+
+846
+00:35:12,630 --> 00:35:14,550
+and that means that we have to tug of war
+
+847
+00:35:14,550 --> 00:35:17,100
+between consistency or availability.
+
+848
+00:35:17,100 --> 00:35:18,210
+Now what are these, actually?
+
+849
+00:35:18,210 --> 00:35:20,970
+Consistency is the ability,
+or not the ability,
+
+850
+00:35:20,970 --> 00:35:24,780
+but the requirement to always
+return the correct answer.
+
+851
+00:35:24,780 --> 00:35:26,580
+So the correct answer could
+mean the latest version
+
+852
+00:35:26,580 --> 00:35:30,180
+of a file, it could mean the
+current balance of a ledger,
+
+853
+00:35:30,180 --> 00:35:31,860
+or it could mean something else
+
+854
+00:35:31,860 --> 00:35:34,560
+that requires additional state syncing
+
+855
+00:35:34,560 --> 00:35:37,380
+before returning and
+saying, "Yes, we have this."
+
+856
+00:35:37,380 --> 00:35:40,800
+It does not mean that it will
+always return a response.
+
+857
+00:35:40,800 --> 00:35:44,010
+Availability means it will
+always return a response,
+
+858
+00:35:44,010 --> 00:35:47,460
+even if it's wrong, and wrong
+here could be out of date,
+
+859
+00:35:47,460 --> 00:35:49,410
+it could be again like the ledger,
+
+860
+00:35:49,410 --> 00:35:52,170
+you could have a time from earlier
+
+861
+00:35:52,170 --> 00:35:55,260
+when you have the latest
+value that you're now showing.
+
+862
+00:35:55,260 --> 00:35:56,820
+Most people pick availability
+
+863
+00:35:56,820 --> 00:35:59,160
+and then want consistency anyways,
+
+864
+00:35:59,160 --> 00:36:00,660
+and this is something
+that when you're planning,
+
+865
+00:36:00,660 --> 00:36:02,197
+you need to be honest and say like,
+
+866
+00:36:02,197 --> 00:36:04,470
+"We need to be clear that we can't have
+
+867
+00:36:04,470 --> 00:36:06,720
+all of these things all of the time."
+
+868
+00:36:06,720 --> 00:36:08,880
+Now there's strategies you
+could do to mitigate problems,
+
+869
+00:36:08,880 --> 00:36:10,380
+and we'll talk through some of those.
+
+870
+00:36:10,380 --> 00:36:13,950
+We just wanted to kind of
+cover CAP theorem again.
+
+871
+00:36:13,950 --> 00:36:17,490
+Now, I mentioned earlier the
+disaster recovery planning.
+
+872
+00:36:17,490 --> 00:36:19,560
+This is an important part of resiliency,
+
+873
+00:36:19,560 --> 00:36:21,630
+or an important part of availability,
+
+874
+00:36:21,630 --> 00:36:24,210
+but it's not really what
+we're focusing right now.
+
+875
+00:36:24,210 --> 00:36:27,660
+If you're not having any
+multi-region for your applications
+
+876
+00:36:27,660 --> 00:36:30,547
+or data and you wanna start,
+this is a good place to say,
+
+877
+00:36:30,547 --> 00:36:32,820
+"Let's just ship our data
+somewhere, our backups,
+
+878
+00:36:32,820 --> 00:36:36,630
+into S3 in another region,
+and then it's less effort,
+
+879
+00:36:36,630 --> 00:36:38,130
+it'll be less cost overall,
+
+880
+00:36:38,130 --> 00:36:42,480
+and the downside is the
+recovery could be hours to days
+
+881
+00:36:42,480 --> 00:36:45,000
+instead of hopefully seconds
+
+882
+00:36:45,000 --> 00:36:47,200
+in a more highly available
+resilient system.
+
+883
+00:36:48,270 --> 00:36:52,380
+So data replication is
+something that is a challenge
+
+884
+00:36:52,380 --> 00:36:55,080
+and it will vary a lot based on how,
+
+885
+00:36:55,080 --> 00:36:59,100
+or what your data is and what
+your user's expectations are.
+
+886
+00:36:59,100 --> 00:37:02,100
+You can have multiple options
+in terms of maybe you need
+
+887
+00:37:02,100 --> 00:37:04,860
+to write your changes to one region,
+
+888
+00:37:04,860 --> 00:37:07,140
+and maybe you need to
+replicate to another region
+
+889
+00:37:07,140 --> 00:37:09,630
+before returning that write as a success.
+
+890
+00:37:09,630 --> 00:37:12,210
+You may have that kind of
+consistency requirement.
+
+891
+00:37:12,210 --> 00:37:13,380
+You may just write to the region
+
+892
+00:37:13,380 --> 00:37:14,970
+and then have it lazy replicate
+
+893
+00:37:14,970 --> 00:37:16,980
+or use another system to replicate,
+
+894
+00:37:16,980 --> 00:37:18,840
+but this will help
+determine whether you need
+
+895
+00:37:18,840 --> 00:37:22,170
+to have active-active in
+multiple regions active
+
+896
+00:37:22,170 --> 00:37:23,370
+at the same time,
+
+897
+00:37:23,370 --> 00:37:25,920
+or active passive where
+you have write regions
+
+898
+00:37:25,920 --> 00:37:26,973
+and read regions.
+
+899
+00:37:28,320 --> 00:37:29,400
+We have a handful of services
+
+900
+00:37:29,400 --> 00:37:31,412
+that actually give you global features.
+
+901
+00:37:31,412 --> 00:37:34,440
+DynamoDB, DocumentDB, and
+Aurora global database
+
+902
+00:37:34,440 --> 00:37:35,790
+are all good options.
+
+903
+00:37:35,790 --> 00:37:38,400
+These will let you determine or configure
+
+904
+00:37:38,400 --> 00:37:40,740
+how your data will
+replicate between regions,
+
+905
+00:37:40,740 --> 00:37:43,230
+as well as monitor it and
+have metrics and views
+
+906
+00:37:43,230 --> 00:37:45,430
+and insights into what's
+actually happening.
+
+907
+00:37:46,560 --> 00:37:49,170
+So when we are talking about a failure
+
+908
+00:37:49,170 --> 00:37:51,090
+and it's a regional size failure,
+
+909
+00:37:51,090 --> 00:37:53,070
+we need to failover somehow.
+
+910
+00:37:53,070 --> 00:37:55,590
+You've heard Felipe mention
+that we're doing DNS a lot.
+
+911
+00:37:55,590 --> 00:37:57,690
+We actually use DNS for everything.
+
+912
+00:37:57,690 --> 00:38:01,690
+I think everyone knows, you
+know, it's always DNS, but
+
+913
+00:38:04,805 --> 00:38:06,361
+when you're actually shifting traffic,
+
+914
+00:38:06,361 --> 00:38:08,850
+we're gonna be actually
+changing DNS records
+
+915
+00:38:08,850 --> 00:38:10,890
+or updating them or
+letting the health checks
+
+916
+00:38:10,890 --> 00:38:12,930
+dynamically change them.
+
+917
+00:38:12,930 --> 00:38:14,250
+And when you fail between regions
+
+918
+00:38:14,250 --> 00:38:15,720
+or you're sending traffic between region,
+
+919
+00:38:15,720 --> 00:38:18,270
+you're gonna be using the AWS backbone.
+
+920
+00:38:18,270 --> 00:38:21,060
+The backbone has multiple
+layers of encryption.
+
+921
+00:38:21,060 --> 00:38:24,000
+It's DDoS resilient, a lot
+of the hardware we designed
+
+922
+00:38:24,000 --> 00:38:27,450
+and built ourself, a lot of
+the fiber we laid ourselves,
+
+923
+00:38:27,450 --> 00:38:30,960
+and it is highly scalable and
+has a lot of good features
+
+924
+00:38:30,960 --> 00:38:32,280
+and you'll be shipping traffic
+
+925
+00:38:32,280 --> 00:38:34,203
+between regions using this backbone.
+
+926
+00:38:36,540 --> 00:38:39,180
+So when you're getting
+your traffic into the ELB,
+
+927
+00:38:39,180 --> 00:38:40,830
+you have a few different options,
+
+928
+00:38:44,340 --> 00:38:46,560
+and Route 53 being the first one.
+
+929
+00:38:46,560 --> 00:38:48,480
+So you always have Route 53 with ELB.
+
+930
+00:38:48,480 --> 00:38:51,300
+It's because we're a Route53 customer.
+
+931
+00:38:51,300 --> 00:38:52,650
+We pay them for help checks.
+
+932
+00:38:52,650 --> 00:38:54,720
+They help check every single IP we have
+
+933
+00:38:54,720 --> 00:38:58,050
+globally all the time
+and that carries over
+
+934
+00:38:58,050 --> 00:39:01,593
+to your DNS records when
+you have an ELB DNS record.
+
+935
+00:39:02,640 --> 00:39:03,690
+You can also use CloudFront,
+
+936
+00:39:03,690 --> 00:39:05,010
+which will give you
+things like edge caching,
+
+937
+00:39:05,010 --> 00:39:07,500
+WAF at the edge, Lambda at the edge,
+
+938
+00:39:07,500 --> 00:39:11,220
+other features that can help
+get you into your load balancer
+
+939
+00:39:11,220 --> 00:39:12,570
+or global accelerator.
+
+940
+00:39:12,570 --> 00:39:16,080
+Global accelerator's real
+advantages are it has static IPs.
+
+941
+00:39:16,080 --> 00:39:17,370
+You get two IPs.
+
+942
+00:39:17,370 --> 00:39:19,710
+They are in completely
+different infrastructure
+
+943
+00:39:19,710 --> 00:39:21,780
+under the hood so there's no overlap.
+
+944
+00:39:21,780 --> 00:39:24,510
+It's another good level
+of blast radius isolation.
+
+945
+00:39:24,510 --> 00:39:26,970
+They're any cast so you can
+configure multiple regions
+
+946
+00:39:26,970 --> 00:39:29,970
+as targets and let AGA
+or global accelerator
+
+947
+00:39:29,970 --> 00:39:32,100
+figure out how to route the traffic,
+
+948
+00:39:32,100 --> 00:39:35,700
+as well as the static IPs
+
+949
+00:39:35,700 --> 00:39:37,900
+that you don't have to
+worry about changing.
+
+950
+00:39:39,420 --> 00:39:41,700
+So when you're actually having a failure
+
+951
+00:39:41,700 --> 00:39:43,650
+and you need to shift traffic over,
+
+952
+00:39:43,650 --> 00:39:45,330
+you want this again in the data plane,
+
+953
+00:39:45,330 --> 00:39:47,640
+and you can do this with Route53 records
+
+954
+00:39:47,640 --> 00:39:49,950
+if you choose the failover type record.
+
+955
+00:39:49,950 --> 00:39:52,047
+And in this example,
+we've got a primary region
+
+956
+00:39:52,047 --> 00:39:54,930
+and a backup region,
+and our primary region,
+
+957
+00:39:54,930 --> 00:39:56,460
+as long as it's healthy,
+
+958
+00:39:56,460 --> 00:39:59,760
+we will have traffic routing 100% to it.
+
+959
+00:39:59,760 --> 00:40:02,130
+But if the primary
+region becomes unhealthy,
+
+960
+00:40:02,130 --> 00:40:06,000
+Route53 will detect that, flip
+the DNS record to unhealthy,
+
+961
+00:40:06,000 --> 00:40:08,700
+and that will cause the
+traffic to start failing over
+
+962
+00:40:08,700 --> 00:40:09,933
+to the failover region.
+
+963
+00:40:12,600 --> 00:40:14,490
+If you have an active-active workload,
+
+964
+00:40:14,490 --> 00:40:16,080
+you can use a weighted record,
+
+965
+00:40:16,080 --> 00:40:18,180
+which will actually let you
+put in different numbers
+
+966
+00:40:18,180 --> 00:40:19,680
+for weights for each region,
+
+967
+00:40:19,680 --> 00:40:23,067
+and you could send, in this
+case, 50% to the first region,
+
+968
+00:40:23,067 --> 00:40:25,263
+and 50% to the second region.
+
+969
+00:40:26,370 --> 00:40:28,050
+It does the same thing when things fail,
+
+970
+00:40:28,050 --> 00:40:30,540
+so if the first region goes unhealthy,
+
+971
+00:40:30,540 --> 00:40:31,920
+it's still gonna fail traffic over,
+
+972
+00:40:31,920 --> 00:40:34,080
+so it's 100% to the other region,
+
+973
+00:40:34,080 --> 00:40:35,970
+even though they're both primaries.
+
+974
+00:40:35,970 --> 00:40:39,960
+Now, I put 45% of impact
+here because this setting
+
+975
+00:40:39,960 --> 00:40:43,110
+is what Felipe was talking
+about on your target group
+
+976
+00:40:43,110 --> 00:40:44,970
+where you can change the threshold.
+
+977
+00:40:44,970 --> 00:40:48,810
+So you could say 50% of the
+hosts need to be healthy
+
+978
+00:40:48,810 --> 00:40:51,510
+and this failover would
+trigger exactly like this.
+
+979
+00:40:51,510 --> 00:40:54,510
+The default again is 100%
+need to be unhealthy,
+
+980
+00:40:54,510 --> 00:40:57,510
+and we don't think that's what
+most folks should configure,
+
+981
+00:40:57,510 --> 00:40:59,040
+but we hate changing defaults,
+
+982
+00:40:59,040 --> 00:41:00,720
+so definitely go spend some time
+
+983
+00:41:00,720 --> 00:41:02,520
+and look at changing that setting.
+
+984
+00:41:02,520 --> 00:41:04,410
+The simple version is use the unified one
+
+985
+00:41:04,410 --> 00:41:06,360
+and decide on what level of failure
+
+986
+00:41:06,360 --> 00:41:09,603
+you're willing to tolerate in
+your application and set that.
+
+987
+00:41:12,570 --> 00:41:14,850
+But what happens if when
+you shift this traffic over,
+
+988
+00:41:14,850 --> 00:41:16,530
+your new region gets overloaded?
+
+989
+00:41:16,530 --> 00:41:18,510
+We all know that when errors happen,
+
+990
+00:41:18,510 --> 00:41:21,210
+clients sometimes go
+into connection storms,
+
+991
+00:41:21,210 --> 00:41:23,850
+reconnecting rapidly, sending
+more and more connections,
+
+992
+00:41:23,850 --> 00:41:26,880
+increasing load and
+making the outage worse.
+
+993
+00:41:26,880 --> 00:41:28,620
+If you're having an
+outage and you failed over
+
+994
+00:41:28,620 --> 00:41:30,810
+a bunch of traffic from
+one region to another,
+
+995
+00:41:30,810 --> 00:41:32,550
+or even if you're just
+getting too much traffic
+
+996
+00:41:32,550 --> 00:41:35,940
+that you might be entering a
+state of congestive collapse
+
+997
+00:41:35,940 --> 00:41:39,030
+where the problem creates
+more of the same problem,
+
+998
+00:41:39,030 --> 00:41:41,640
+in this case, our backup
+region is still healthy
+
+999
+00:41:41,640 --> 00:41:46,020
+but it's not 100% healthy and
+we know it's because of load,
+
+1000
+00:41:46,020 --> 00:41:48,510
+so we need to shift some traffic away.
+
+1001
+00:41:48,510 --> 00:41:50,520
+You can use DNS load shedding.
+
+1002
+00:41:50,520 --> 00:41:52,710
+So if you use a weighted record,
+
+1003
+00:41:52,710 --> 00:41:53,840
+you still get those health checks
+
+1004
+00:41:53,840 --> 00:41:56,130
+if you check evaluate target health,
+
+1005
+00:41:56,130 --> 00:41:59,250
+and in this case we've got ELB one record,
+
+1006
+00:41:59,250 --> 00:42:00,083
+it's showing ELB one,
+
+1007
+00:42:00,083 --> 00:42:01,650
+but you would replace
+that with the same thing.
+
+1008
+00:42:01,650 --> 00:42:04,920
+The ELB two record is now
+a new load-shedding record.
+
+1009
+00:42:04,920 --> 00:42:07,260
+It's essentially going
+to have its own weights
+
+1010
+00:42:07,260 --> 00:42:09,180
+and it's going to say somewhere,
+
+1011
+00:42:09,180 --> 00:42:14,180
+in this case a null route
+to zero zero is weight zero,
+
+1012
+00:42:14,220 --> 00:42:16,770
+and the main site weight 100.
+
+1013
+00:42:16,770 --> 00:42:19,830
+And then if that main site
+crosses its unhealthy threshold,
+
+1014
+00:42:19,830 --> 00:42:22,380
+or if you wanna go change it so that it is
+
+1015
+00:42:22,380 --> 00:42:24,510
+going to happen sooner, you're
+gonna manually configure it
+
+1016
+00:42:24,510 --> 00:42:26,060
+and say shift traffic to this.
+
+1017
+00:42:26,060 --> 00:42:28,590
+In this example, we're
+gonna send 20% of traffic
+
+1018
+00:42:28,590 --> 00:42:29,760
+to a null route.
+
+1019
+00:42:29,760 --> 00:42:31,620
+Clients get this, they
+won't be able to connect
+
+1020
+00:42:31,620 --> 00:42:34,590
+to your site, but your site
+can then have a reduced load
+
+1021
+00:42:34,590 --> 00:42:38,010
+and preserve the experience
+for some of your customers.
+
+1022
+00:42:38,010 --> 00:42:39,090
+It's not always the best option,
+
+1023
+00:42:39,090 --> 00:42:41,527
+but in a lot of cases this is
+what we can get you out of,
+
+1024
+00:42:41,527 --> 00:42:44,070
+"Okay, we're having a problem,
+we're in congestive collapse,
+
+1025
+00:42:44,070 --> 00:42:46,377
+we need back pressure or load shedding."
+
+1026
+00:42:47,280 --> 00:42:49,590
+And after your region goes healthy again,
+
+1027
+00:42:49,590 --> 00:42:51,450
+you can update the record
+and change it back,
+
+1028
+00:42:51,450 --> 00:42:53,820
+so you're at 0%, and in this case,
+
+1029
+00:42:53,820 --> 00:42:55,770
+we're still shifted over
+to the back of a region
+
+1030
+00:42:55,770 --> 00:42:58,590
+because their primary
+region is still unhealthy.
+
+1031
+00:42:58,590 --> 00:43:00,810
+These are all Route53 records
+that you can configure
+
+1032
+00:43:00,810 --> 00:43:03,120
+and there's more of them including latency
+
+1033
+00:43:03,120 --> 00:43:06,240
+or geo records to say that
+people from this geography
+
+1034
+00:43:06,240 --> 00:43:07,860
+will go to this place.
+
+1035
+00:43:07,860 --> 00:43:10,020
+These records are very
+useful when you're creating
+
+1036
+00:43:10,020 --> 00:43:11,730
+your global infrastructure
+
+1037
+00:43:11,730 --> 00:43:12,870
+'cause you're doing multi-region,
+
+1038
+00:43:12,870 --> 00:43:14,310
+your clients are gonna be closer
+
+1039
+00:43:14,310 --> 00:43:15,930
+to some regions than others.
+
+1040
+00:43:15,930 --> 00:43:17,220
+You'll want to configure your records
+
+1041
+00:43:17,220 --> 00:43:19,920
+to ensure they're sending
+traffic to the right region.
+
+1042
+00:43:21,150 --> 00:43:24,090
+So let's go to the big thing
+that we've talked about.
+
+1043
+00:43:24,090 --> 00:43:26,340
+Most failures are caused by humans
+
+1044
+00:43:26,340 --> 00:43:27,870
+changing things in production,
+
+1045
+00:43:27,870 --> 00:43:30,870
+so we need to try to be
+as careful as we can.
+
+1046
+00:43:30,870 --> 00:43:31,703
+What does that mean?
+
+1047
+00:43:31,703 --> 00:43:32,700
+What are the things we can actually do
+
+1048
+00:43:32,700 --> 00:43:36,660
+to mitigate these configuration
+changes and deployments?
+
+1049
+00:43:36,660 --> 00:43:38,340
+The biggest thing is testing.
+
+1050
+00:43:38,340 --> 00:43:40,890
+Now I'm sure everybody has
+good testing, hopefully,
+
+1051
+00:43:40,890 --> 00:43:43,110
+but this includes integration tests,
+
+1052
+00:43:43,110 --> 00:43:46,590
+it includes the unit tests that
+run when you check things in
+
+1053
+00:43:46,590 --> 00:43:49,170
+and it includes automatically
+running this test
+
+1054
+00:43:49,170 --> 00:43:52,203
+at each stage of your deployment
+or of your environment.
+
+1055
+00:43:53,100 --> 00:43:54,780
+The other big thing is change management.
+
+1056
+00:43:54,780 --> 00:43:56,010
+So we do a lot of automation
+
+1057
+00:43:56,010 --> 00:43:58,290
+and I'm sure you guys do a lot
+of infrastructure automation.
+
+1058
+00:43:58,290 --> 00:44:01,350
+Those kinds of things are
+allowed to continue on their own
+
+1059
+00:44:01,350 --> 00:44:03,510
+'cause they have their own
+systems for detecting failures
+
+1060
+00:44:03,510 --> 00:44:05,010
+and mitigating things,
+
+1061
+00:44:05,010 --> 00:44:07,230
+but when a human's
+gonna change production,
+
+1062
+00:44:07,230 --> 00:44:10,020
+we require to go through a
+strict change management process.
+
+1063
+00:44:10,020 --> 00:44:12,120
+You're gonna document everything
+that you're going to do
+
+1064
+00:44:12,120 --> 00:44:14,190
+and then you're going
+to run it step by step.
+
+1065
+00:44:14,190 --> 00:44:15,870
+And that increases visibility
+
+1066
+00:44:15,870 --> 00:44:17,707
+and that increases the ability to say,
+
+1067
+00:44:17,707 --> 00:44:19,710
+"When we're manually changing things,
+
+1068
+00:44:19,710 --> 00:44:22,320
+we're not doing it without
+asking a bunch of people
+
+1069
+00:44:22,320 --> 00:44:24,990
+to review what we're going
+to do and getting more people
+
+1070
+00:44:24,990 --> 00:44:26,670
+so we're not in the heat of the moment
+
+1071
+00:44:26,670 --> 00:44:28,167
+trying to change production."
+
+1072
+00:44:29,220 --> 00:44:31,170
+What does that actually look
+like when you're deploying?
+
+1073
+00:44:31,170 --> 00:44:36,170
+So you've got code pipeline
+is basically the thing we use.
+
+1074
+00:44:37,560 --> 00:44:38,940
+You've got a pipeline of deployments
+
+1075
+00:44:38,940 --> 00:44:39,773
+where you're gonna start
+
+1076
+00:44:39,773 --> 00:44:41,460
+with some pre-production environments,
+
+1077
+00:44:41,460 --> 00:44:43,740
+so someone's gonna write
+the code and check it in.
+
+1078
+00:44:43,740 --> 00:44:45,090
+It's going to get built by a system
+
+1079
+00:44:45,090 --> 00:44:46,980
+and pushed to the first stage.
+
+1080
+00:44:46,980 --> 00:44:48,570
+At each stage as it deploys,
+
+1081
+00:44:48,570 --> 00:44:50,790
+you wanna have multiple
+things that are checking
+
+1082
+00:44:50,790 --> 00:44:53,310
+and allowing you to
+forward that deployment
+
+1083
+00:44:53,310 --> 00:44:56,520
+to the next stage or do
+the deployment itself.
+
+1084
+00:44:56,520 --> 00:44:57,630
+That includes all your testing,
+
+1085
+00:44:57,630 --> 00:45:00,300
+so we run integration
+tests in every environment,
+
+1086
+00:45:00,300 --> 00:45:02,580
+in every region before any deployment
+
+1087
+00:45:02,580 --> 00:45:04,830
+separately from the previous runs
+
+1088
+00:45:04,830 --> 00:45:07,500
+and that'll detect things
+like somebody change the value
+
+1089
+00:45:07,500 --> 00:45:09,000
+in that region or
+there's a different thing
+
+1090
+00:45:09,000 --> 00:45:11,160
+that was built differently when the region
+
+1091
+00:45:11,160 --> 00:45:12,840
+was originally built.
+
+1092
+00:45:12,840 --> 00:45:14,730
+You wanna make sure that
+you have a rollback alarm
+
+1093
+00:45:14,730 --> 00:45:15,900
+that's going to, if that triggers,
+
+1094
+00:45:15,900 --> 00:45:17,730
+you'll automatically roll things back.
+
+1095
+00:45:17,730 --> 00:45:19,860
+You wanna make sure that's
+green before you deploy.
+
+1096
+00:45:19,860 --> 00:45:22,320
+You wanna make sure your
+dependencies are all green
+
+1097
+00:45:22,320 --> 00:45:24,660
+and you wanna make sure that
+the time of the deployment
+
+1098
+00:45:24,660 --> 00:45:26,610
+is okay within a schedule.
+
+1099
+00:45:26,610 --> 00:45:30,540
+So a lot of folks schedule that
+
+1100
+00:45:30,540 --> 00:45:32,940
+so they have deployments
+in the middle of the night
+
+1101
+00:45:32,940 --> 00:45:33,873
+or on the weekend,
+
+1102
+00:45:36,720 --> 00:45:37,980
+but we don't really have a weekend
+
+1103
+00:45:37,980 --> 00:45:39,750
+or a middle of the
+night when our customers
+
+1104
+00:45:39,750 --> 00:45:41,370
+aren't using our services,
+
+1105
+00:45:41,370 --> 00:45:45,510
+so what we actually do is
+we say we want you to deploy
+
+1106
+00:45:45,510 --> 00:45:48,090
+in the region during the daylight hours.
+
+1107
+00:45:48,090 --> 00:45:51,000
+We want the people who get
+paged when the human change
+
+1108
+00:45:51,000 --> 00:45:54,540
+breaks something to be
+awake, alert at their desks,
+
+1109
+00:45:54,540 --> 00:45:58,080
+maybe already ready to go and
+able to start investigating
+
+1110
+00:45:58,080 --> 00:46:00,540
+and not paid somebody at
+3:00 AM to wake them up
+
+1111
+00:46:00,540 --> 00:46:03,750
+and then they have to wake
+up and figure out what to do
+
+1112
+00:46:03,750 --> 00:46:07,530
+and we wanna make sure that
+they're prepared for that.
+
+1113
+00:46:07,530 --> 00:46:10,140
+So at each of these phases,
+we're gonna run those tests
+
+1114
+00:46:10,140 --> 00:46:11,730
+and then propagate to the next phase
+
+1115
+00:46:11,730 --> 00:46:13,710
+after the deployment completes.
+
+1116
+00:46:13,710 --> 00:46:15,390
+Alpha and Gamma, we generally think of
+
+1117
+00:46:15,390 --> 00:46:18,240
+as like an Alpha is usually
+just the teams changes
+
+1118
+00:46:18,240 --> 00:46:21,300
+with production from every
+other service that you use.
+
+1119
+00:46:21,300 --> 00:46:23,790
+And then Gamma is usually
+the services integration
+
+1120
+00:46:23,790 --> 00:46:25,260
+where you've got all the changes
+
+1121
+00:46:25,260 --> 00:46:27,120
+that your whole service is making.
+
+1122
+00:46:27,120 --> 00:46:29,386
+Sometimes there's more
+pre-production stages
+
+1123
+00:46:29,386 --> 00:46:31,620
+once you get to your onebox stage
+
+1124
+00:46:31,620 --> 00:46:33,120
+and onebox is just the name,
+
+1125
+00:46:33,120 --> 00:46:35,460
+it doesn't always mean one box.
+
+1126
+00:46:35,460 --> 00:46:37,320
+If you have a fleet of tens of thousands,
+
+1127
+00:46:37,320 --> 00:46:39,240
+onebox may be dozens to hundreds
+
+1128
+00:46:39,240 --> 00:46:41,340
+of actual application instances
+
+1129
+00:46:41,340 --> 00:46:43,140
+that get updated as part of this.
+
+1130
+00:46:43,140 --> 00:46:46,440
+It needs to be statistically
+significant enough
+
+1131
+00:46:46,440 --> 00:46:49,320
+that you can detect the
+vast majority of problems
+
+1132
+00:46:49,320 --> 00:46:51,780
+with the majority of your users
+
+1133
+00:46:51,780 --> 00:46:54,900
+so look at how much traffic
+your application sends
+
+1134
+00:46:54,900 --> 00:46:57,900
+and pick a number here to
+say, "That's our onebox."
+
+1135
+00:46:57,900 --> 00:47:00,180
+A good answer is one if you wanna know.
+
+1136
+00:47:00,180 --> 00:47:02,790
+And then when you go to the
+production, we start zonally,
+
+1137
+00:47:02,790 --> 00:47:05,490
+so we'll do one AZ and
+we'll go to the next zone,
+
+1138
+00:47:05,490 --> 00:47:08,460
+and then as we grow this
+out, it just scales.
+
+1139
+00:47:08,460 --> 00:47:10,890
+We can start touching multiple zones
+
+1140
+00:47:10,890 --> 00:47:12,690
+or multiple regions in the same day,
+
+1141
+00:47:12,690 --> 00:47:13,770
+but this is another place
+
+1142
+00:47:13,770 --> 00:47:16,260
+where having alignment is a big deal,
+
+1143
+00:47:16,260 --> 00:47:19,410
+like having a rule that
+says you will not deploy
+
+1144
+00:47:19,410 --> 00:47:22,860
+to two AZs in the same
+region in the same day
+
+1145
+00:47:22,860 --> 00:47:25,230
+means that you can look at this,
+
+1146
+00:47:25,230 --> 00:47:27,990
+or it's even more crazy version, this,
+
+1147
+00:47:27,990 --> 00:47:31,680
+which is not the smallest
+pipeline I've seen at AWS,
+
+1148
+00:47:31,680 --> 00:47:35,790
+but you get a simple understanding of,
+
+1149
+00:47:35,790 --> 00:47:37,410
+okay, I know that none of those columns,
+
+1150
+00:47:37,410 --> 00:47:39,210
+even though the labels
+will actually say wrong
+
+1151
+00:47:39,210 --> 00:47:40,650
+because I didn't edit every one of them,
+
+1152
+00:47:40,650 --> 00:47:43,880
+but the labels will actually,
+or so not the labels,
+
+1153
+00:47:43,880 --> 00:47:46,440
+you know that each of
+those deployment stages
+
+1154
+00:47:46,440 --> 00:47:48,840
+won't be the same region twice in a day,
+
+1155
+00:47:48,840 --> 00:47:50,910
+and if you see that, you wouldn't,
+
+1156
+00:47:50,910 --> 00:47:52,590
+hopefully nobody would
+put it into the pipeline,
+
+1157
+00:47:52,590 --> 00:47:54,480
+but if you see it, you know
+immediately that's a problem
+
+1158
+00:47:54,480 --> 00:47:57,270
+with my configuration
+and plan deployments.
+
+1159
+00:47:57,270 --> 00:47:59,970
+But this scales and we do
+deployments where we fan out
+
+1160
+00:47:59,970 --> 00:48:02,820
+after we get more and more
+confidence that we're detecting
+
+1161
+00:48:02,820 --> 00:48:04,980
+or we would be detecting any issues
+
+1162
+00:48:04,980 --> 00:48:06,980
+that are occurring from our deployments.
+
+1163
+00:48:09,180 --> 00:48:10,380
+So another concept
+
+1164
+00:48:10,380 --> 00:48:13,290
+that's very useful is
+graceful degradation.
+
+1165
+00:48:13,290 --> 00:48:16,950
+When you've got a failure
+and you're mitigating it
+
+1166
+00:48:16,950 --> 00:48:18,930
+or you're reacting to it,
+
+1167
+00:48:18,930 --> 00:48:21,000
+you want your application
+components to continue
+
+1168
+00:48:21,000 --> 00:48:24,360
+to perform a subset of the core functions,
+
+1169
+00:48:24,360 --> 00:48:27,000
+even if the dependencies become available.
+
+1170
+00:48:27,000 --> 00:48:30,240
+A good example of this is
+the dogs of Amazon page.
+
+1171
+00:48:30,240 --> 00:48:32,520
+I'm sure if you guys have
+heard there's this website,
+
+1172
+00:48:32,520 --> 00:48:35,103
+Amazon.com, you can go
+buy things on there,
+
+1173
+00:48:36,090 --> 00:48:39,240
+and if you run into an error,
+the graceful degradation
+
+1174
+00:48:39,240 --> 00:48:42,420
+that the application sometimes
+does is returns you a picture
+
+1175
+00:48:42,420 --> 00:48:44,970
+of somebody's dog who brings it to work.
+
+1176
+00:48:44,970 --> 00:48:47,760
+And first of all, you
+get a cute dog usually,
+
+1177
+00:48:47,760 --> 00:48:50,700
+and say, you know this is,
+"Aren't they adorable?"
+
+1178
+00:48:50,700 --> 00:48:52,620
+You also get instructions.
+
+1179
+00:48:52,620 --> 00:48:53,550
+What do you do next?
+
+1180
+00:48:53,550 --> 00:48:55,080
+Go back and try again.
+
+1181
+00:48:55,080 --> 00:48:57,810
+You also get clarification
+that this is on our side,
+
+1182
+00:48:57,810 --> 00:48:59,850
+we had a problem, we got a 5xx.
+
+1183
+00:48:59,850 --> 00:49:02,070
+Instead of just giving you a generic error
+
+1184
+00:49:02,070 --> 00:49:03,270
+where you don't know what to do,
+
+1185
+00:49:03,270 --> 00:49:05,910
+we've given you some
+instructions what to do.
+
+1186
+00:49:05,910 --> 00:49:07,230
+There are many other kinds
+
+1187
+00:49:07,230 --> 00:49:09,810
+of graceful degradations you can use,
+
+1188
+00:49:09,810 --> 00:49:12,000
+but the key concept is you wanna have part
+
+1189
+00:49:12,000 --> 00:49:13,320
+of your functionality
+
+1190
+00:49:13,320 --> 00:49:16,110
+or some level of information
+to help the users
+
+1191
+00:49:16,110 --> 00:49:18,810
+or whoever's interacting
+with what's failing
+
+1192
+00:49:18,810 --> 00:49:21,990
+to have a way out of it
+without having to panic
+
+1193
+00:49:21,990 --> 00:49:24,450
+or open a support case or complain.
+
+1194
+00:49:24,450 --> 00:49:25,860
+Maybe they just retry.
+
+1195
+00:49:25,860 --> 00:49:28,920
+Every time I've seen a dog of Amazon,
+
+1196
+00:49:28,920 --> 00:49:31,920
+a retry has fixed it, but if it doesn't,
+
+1197
+00:49:31,920 --> 00:49:33,330
+you'll still keep getting the same error,
+
+1198
+00:49:33,330 --> 00:49:35,340
+and that error is a big part
+
+1199
+00:49:35,340 --> 00:49:36,960
+of what's gracefully degrading, right?
+
+1200
+00:49:36,960 --> 00:49:38,880
+The website didn't just return nothing,
+
+1201
+00:49:38,880 --> 00:49:40,380
+it returns something,
+
+1202
+00:49:40,380 --> 00:49:42,630
+even if it's not what you
+were actually looking for,
+
+1203
+00:49:42,630 --> 00:49:45,960
+but you have a step or you have an action
+
+1204
+00:49:45,960 --> 00:49:47,670
+that you can do something.
+
+1205
+00:49:47,670 --> 00:49:48,765
+Another example of this
+
+1206
+00:49:48,765 --> 00:49:51,720
+is you actually scale in the
+services you are running.
+
+1207
+00:49:51,720 --> 00:49:54,450
+So there are customers
+who have multi-region,
+
+1208
+00:49:54,450 --> 00:49:57,690
+but the backup region is not
+running the full application
+
+1209
+00:49:57,690 --> 00:49:59,280
+and it's not expected to.
+
+1210
+00:49:59,280 --> 00:50:01,170
+They're expecting that
+when they fail over,
+
+1211
+00:50:01,170 --> 00:50:04,350
+they're going to have a
+subset of functions available.
+
+1212
+00:50:04,350 --> 00:50:06,060
+So if you're a bank and that's the ledger
+
+1213
+00:50:06,060 --> 00:50:08,670
+and you wanna say, "We always
+wanna have the right version
+
+1214
+00:50:08,670 --> 00:50:10,920
+or the right balancer for it,"
+
+1215
+00:50:10,920 --> 00:50:11,970
+you're gonna make that right.
+
+1216
+00:50:11,970 --> 00:50:14,370
+Go to the first region and
+then to the second region
+
+1217
+00:50:14,370 --> 00:50:16,680
+before saying, "Yes, we accept the right."
+
+1218
+00:50:16,680 --> 00:50:18,780
+That way, if you fail
+over to the second region,
+
+1219
+00:50:18,780 --> 00:50:22,230
+you can have strong consistency
+knowing we have the value
+
+1220
+00:50:22,230 --> 00:50:23,450
+because we wouldn't have accepted it
+
+1221
+00:50:23,450 --> 00:50:25,443
+if it wasn't already replicated.
+
+1222
+00:50:26,940 --> 00:50:29,190
+But other features may not be there
+
+1223
+00:50:29,190 --> 00:50:30,780
+in the second region, right?
+
+1224
+00:50:30,780 --> 00:50:33,060
+Maybe I can't go make a
+payment or maybe I can't go
+
+1225
+00:50:33,060 --> 00:50:35,280
+and you know, file a something else,
+
+1226
+00:50:35,280 --> 00:50:37,260
+like there's a bunch of
+things you can not have
+
+1227
+00:50:37,260 --> 00:50:38,520
+in your backup region.
+
+1228
+00:50:38,520 --> 00:50:40,800
+As you build into this more and more,
+
+1229
+00:50:40,800 --> 00:50:42,750
+now of course, you can
+replicate everything,
+
+1230
+00:50:42,750 --> 00:50:45,030
+run it in the other region
+and have everything fail over
+
+1231
+00:50:45,030 --> 00:50:46,890
+smoothly and have all of the features.
+
+1232
+00:50:46,890 --> 00:50:50,040
+It's just this saves you some
+money, as well as complexity.
+
+1233
+00:50:50,040 --> 00:50:51,960
+If you know that during a failure,
+
+1234
+00:50:51,960 --> 00:50:53,610
+this is how the system's going to behave
+
+1235
+00:50:53,610 --> 00:50:55,320
+and everyone's aligned and agrees
+
+1236
+00:50:55,320 --> 00:50:56,880
+that's the right thing to do,
+
+1237
+00:50:56,880 --> 00:51:00,360
+it's gonna help you out a
+lot and save some money.
+
+1238
+00:51:00,360 --> 00:51:02,010
+But when you're thinking about this,
+
+1239
+00:51:02,010 --> 00:51:03,697
+you're gonna be prioritizing,
+
+1240
+00:51:03,697 --> 00:51:05,400
+"What do our users really care about?
+
+1241
+00:51:05,400 --> 00:51:07,110
+What's the critical service?"
+
+1242
+00:51:07,110 --> 00:51:09,690
+And make sure that they're informed.
+
+1243
+00:51:09,690 --> 00:51:14,220
+So an example for our
+availability in our CAP theorem,
+
+1244
+00:51:14,220 --> 00:51:18,060
+if you have a ledger and
+you have the latest value,
+
+1245
+00:51:18,060 --> 00:51:20,940
+you could show the time where
+you have that value from
+
+1246
+00:51:20,940 --> 00:51:23,130
+and you could have that
+cached on the client.
+
+1247
+00:51:23,130 --> 00:51:24,300
+You could have that in the target
+
+1248
+00:51:24,300 --> 00:51:26,100
+that gets it from the database,
+
+1249
+00:51:26,100 --> 00:51:28,500
+but doesn't have it in
+the failover database,
+
+1250
+00:51:28,500 --> 00:51:30,690
+and giving that information to your users
+
+1251
+00:51:30,690 --> 00:51:31,740
+can help them understand,
+
+1252
+00:51:31,740 --> 00:51:34,920
+okay, I know that that
+transaction isn't there yet
+
+1253
+00:51:34,920 --> 00:51:38,880
+and the time shows me, oh, we
+don't have the latest version.
+
+1254
+00:51:38,880 --> 00:51:40,320
+And you probably also wanna say something
+
+1255
+00:51:40,320 --> 00:51:42,000
+about we're experiencing a failure
+
+1256
+00:51:42,000 --> 00:51:43,920
+or we're running in a degraded state,
+
+1257
+00:51:43,920 --> 00:51:47,100
+but it's something that
+gracefully you can help your users
+
+1258
+00:51:47,100 --> 00:51:48,570
+have a better experience
+
+1259
+00:51:48,570 --> 00:51:51,513
+or continue to maintain
+function during a failure.
+
+1260
+00:51:52,440 --> 00:51:54,480
+One thing that a lot of customers do,
+
+1261
+00:51:54,480 --> 00:51:56,250
+but honestly the majority don't,
+
+1262
+00:51:56,250 --> 00:51:57,870
+and I think it's undervalued,
+
+1263
+00:51:57,870 --> 00:52:00,480
+is toggles and circuit breakers.
+
+1264
+00:52:00,480 --> 00:52:02,820
+So toggles in your features would be,
+
+1265
+00:52:02,820 --> 00:52:04,260
+we're deploying a new feature,
+
+1266
+00:52:04,260 --> 00:52:06,450
+we deploy the things that make it work,
+
+1267
+00:52:06,450 --> 00:52:07,710
+and then we watch to make sure
+
+1268
+00:52:07,710 --> 00:52:09,690
+it's going to work the way we want,
+
+1269
+00:52:09,690 --> 00:52:12,450
+but we can turn it on and
+off without having to go
+
+1270
+00:52:12,450 --> 00:52:14,070
+and do a full deployment.
+
+1271
+00:52:14,070 --> 00:52:17,010
+Toggles can help you disable a feature
+
+1272
+00:52:17,010 --> 00:52:19,310
+that maybe it's dependency
+is having an issue.
+
+1273
+00:52:21,060 --> 00:52:23,160
+Again, prioritize business functions,
+
+1274
+00:52:23,160 --> 00:52:24,870
+resource-intensive features under load.
+
+1275
+00:52:24,870 --> 00:52:27,030
+Maybe you don't wanna do that extra widget
+
+1276
+00:52:27,030 --> 00:52:28,740
+that costs a whole bunch of CPU
+
+1277
+00:52:28,740 --> 00:52:30,540
+when you're running in your other region.
+
+1278
+00:52:30,540 --> 00:52:32,490
+Those are the kinds of
+things you wanna think about
+
+1279
+00:52:32,490 --> 00:52:35,430
+and remove from part of your failover.
+
+1280
+00:52:35,430 --> 00:52:38,820
+Queuing also works well
+serving cache content.
+
+1281
+00:52:38,820 --> 00:52:42,540
+So if you are in a standard application
+
+1282
+00:52:42,540 --> 00:52:45,750
+and your client has code that you own,
+
+1283
+00:52:45,750 --> 00:52:48,240
+you can go change this and add things.
+
+1284
+00:52:48,240 --> 00:52:49,200
+You wanna make sure you're following
+
+1285
+00:52:49,200 --> 00:52:51,960
+all the TCB best practice
+Felipe talked about,
+
+1286
+00:52:51,960 --> 00:52:55,080
+but you could also have
+local versions of say,
+
+1287
+00:52:55,080 --> 00:52:58,200
+an error page, something
+like the dogs of Amazon page,
+
+1288
+00:52:58,200 --> 00:53:00,690
+or the latest version of the values
+
+1289
+00:53:00,690 --> 00:53:02,850
+that you're going to request just cached
+
+1290
+00:53:02,850 --> 00:53:04,190
+and then display them,
+
+1291
+00:53:04,190 --> 00:53:05,490
+so you can gracefully degrade
+
+1292
+00:53:05,490 --> 00:53:08,010
+right there on the client if you own it.
+
+1293
+00:53:08,010 --> 00:53:08,970
+At the target group,
+
+1294
+00:53:08,970 --> 00:53:10,680
+the health check
+configuration we talked about,
+
+1295
+00:53:10,680 --> 00:53:12,990
+you can use that to fail-away sooner
+
+1296
+00:53:12,990 --> 00:53:15,240
+and make sure that your target,
+
+1297
+00:53:15,240 --> 00:53:17,520
+your experience is
+preserved for your users,
+
+1298
+00:53:17,520 --> 00:53:19,020
+whether that's failing open
+
+1299
+00:53:19,020 --> 00:53:21,870
+and sending traffic at the
+target group, or failing away.
+
+1300
+00:53:24,060 --> 00:53:25,890
+Load shedding is a useful thing
+
+1301
+00:53:25,890 --> 00:53:28,613
+that gets you out of congestive collab,
+
+1302
+00:53:28,613 --> 00:53:31,710
+something that definitely
+is a very useful thing
+
+1303
+00:53:31,710 --> 00:53:34,740
+to have happen or to be ready for in case
+
+1304
+00:53:34,740 --> 00:53:36,570
+you get a surge in traffic.
+
+1305
+00:53:36,570 --> 00:53:39,060
+And then rerouting traffic
+to alternate regions
+
+1306
+00:53:39,060 --> 00:53:40,650
+is another way you can gracefully degrade
+
+1307
+00:53:40,650 --> 00:53:42,600
+and have your lower experience
+
+1308
+00:53:42,600 --> 00:53:44,790
+or your reduced experience application
+
+1309
+00:53:44,790 --> 00:53:46,263
+or your full application.
+
+1310
+00:53:47,580 --> 00:53:51,450
+So let's go back over our
+checklist, multi-AZ resiliency.
+
+1311
+00:53:51,450 --> 00:53:55,680
+So use multiple availability
+zones pre-provision
+
+1312
+00:53:55,680 --> 00:53:57,393
+so you can have static stability.
+
+1313
+00:53:58,350 --> 00:54:01,773
+Maintain headroom, at least
+one AZ worth of capacity.
+
+1314
+00:54:03,180 --> 00:54:05,460
+Use DNS everywhere at your client.
+
+1315
+00:54:05,460 --> 00:54:07,500
+Make sure you're honoring DNS TTLs.
+
+1316
+00:54:07,500 --> 00:54:09,270
+Make sure when your
+clients are having errors,
+
+1317
+00:54:09,270 --> 00:54:12,420
+they're reconnecting to an IP
+that didn't have the error.
+
+1318
+00:54:12,420 --> 00:54:14,490
+And think deeply about your health checks.
+
+1319
+00:54:14,490 --> 00:54:16,440
+Configure them so that you'll fail-away
+
+1320
+00:54:16,440 --> 00:54:17,760
+when you don't wanna send,
+
+1321
+00:54:17,760 --> 00:54:19,950
+when the resource that's
+in the health check
+
+1322
+00:54:19,950 --> 00:54:22,740
+would have you do it, sorry.
+
+1323
+00:54:22,740 --> 00:54:23,790
+The resource in the health check
+
+1324
+00:54:23,790 --> 00:54:24,840
+that you're actually health checking
+
+1325
+00:54:24,840 --> 00:54:25,980
+should it be in there or not,
+
+1326
+00:54:25,980 --> 00:54:27,517
+you determine that by saying,
+
+1327
+00:54:27,517 --> 00:54:30,990
+"If it's failed and I cannot respond,
+
+1328
+00:54:30,990 --> 00:54:33,690
+would I want that response
+to go to the customer?"
+
+1329
+00:54:33,690 --> 00:54:35,250
+And if the answer is, "No, I wouldn't,"
+
+1330
+00:54:35,250 --> 00:54:37,140
+then that should be in the health check.
+
+1331
+00:54:37,140 --> 00:54:38,700
+And as that gets more expensive,
+
+1332
+00:54:38,700 --> 00:54:41,700
+you're gonna want to use
+strategies like the health check,
+
+1333
+00:54:41,700 --> 00:54:44,385
+separate asynchronous leave from it
+
+1334
+00:54:44,385 --> 00:54:46,013
+getting served directly
+to the health checker.
+
+1335
+00:54:47,364 --> 00:54:49,683
+On the multi-region side,
+
+1336
+00:54:51,180 --> 00:54:52,290
+again, the biggest things,
+
+1337
+00:54:52,290 --> 00:54:54,750
+keep it simple and align everyone
+
+1338
+00:54:54,750 --> 00:54:55,650
+are the two main things
+
+1339
+00:54:55,650 --> 00:54:57,510
+that really want people to think about.
+
+1340
+00:54:57,510 --> 00:54:58,830
+When you're doing these things
+
+1341
+00:54:58,830 --> 00:55:00,450
+and you're making these decisions,
+
+1342
+00:55:00,450 --> 00:55:02,310
+you should not be doing it isolated.
+
+1343
+00:55:02,310 --> 00:55:03,510
+You should be doing it as a group
+
+1344
+00:55:03,510 --> 00:55:05,190
+so that everyone understands
+
+1345
+00:55:05,190 --> 00:55:07,623
+this is the expectation during a failure.
+
+1346
+00:55:09,630 --> 00:55:11,850
+That's it. Thank you
+all so much for coming.
+
+1347
+00:55:11,850 --> 00:55:14,310
+Really appreciate the early morning rally
+
+1348
+00:55:14,310 --> 00:55:16,860
+and don't forget to fill
+out the survey in the app.
+

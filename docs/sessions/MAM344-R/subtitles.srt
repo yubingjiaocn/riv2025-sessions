@@ -1,0 +1,5919 @@
+1
+00:00:00,900 --> 00:00:02,340
+- [Morgan] Hey, everyone,
+thanks for coming.
+
+2
+00:00:02,340 --> 00:00:04,140
+Welcome to Best Practices for Performing
+
+3
+00:00:04,140 --> 00:00:06,720
+Custom Code Transformations
+with Agentic AI.
+
+4
+00:00:06,720 --> 00:00:07,800
+My name is Morgan Lunt.
+
+5
+00:00:07,800 --> 00:00:10,860
+I'm a senior product manager
+on the AWS Transform Team,
+
+6
+00:00:10,860 --> 00:00:12,025
+and I'm here with Venu.
+
+7
+00:00:12,025 --> 00:00:13,437
+- [Venu] Hey, I'm Venu Vasudevan.
+
+8
+00:00:13,437 --> 00:00:15,990
+I'm a senior specialist
+solutions architect
+
+9
+00:00:15,990 --> 00:00:17,943
+with NextGen Developer Experience Team.
+
+10
+00:00:19,740 --> 00:00:20,687
+- [Morgan] This would be helpful.
+
+11
+00:00:20,687 --> 00:00:22,470
+(Venu chuckles)
+
+12
+00:00:22,470 --> 00:00:24,000
+So what we're gonna talk about today
+
+13
+00:00:24,000 --> 00:00:25,560
+is the challenge of technical debt,
+
+14
+00:00:25,560 --> 00:00:26,910
+which I'm sure you're
+all very familiar with.
+
+15
+00:00:26,910 --> 00:00:29,130
+I'm not gonna spend too much time on that.
+
+16
+00:00:29,130 --> 00:00:30,930
+Some scaled remediation options,
+
+17
+00:00:30,930 --> 00:00:32,040
+things that you may be aware of
+
+18
+00:00:32,040 --> 00:00:34,740
+and some things that may be new to you.
+
+19
+00:00:34,740 --> 00:00:37,500
+Some best practices that we've
+discovered internally in AWS
+
+20
+00:00:37,500 --> 00:00:39,960
+when managing tech debt
+at significant scale.
+
+21
+00:00:39,960 --> 00:00:41,400
+And then the thing you're all here for
+
+22
+00:00:41,400 --> 00:00:42,660
+is the live code demo.
+
+23
+00:00:42,660 --> 00:00:44,960
+We'll actually show you
+the tools that we use.
+
+24
+00:00:46,170 --> 00:00:48,000
+So the problem with tech debt,
+
+25
+00:00:48,000 --> 00:00:50,640
+it's big, it costs a lot of
+money, it takes a lot of time,
+
+26
+00:00:50,640 --> 00:00:52,290
+it slows down your innovation
+
+27
+00:00:52,290 --> 00:00:54,990
+It prevents you from being able to deliver
+
+28
+00:00:54,990 --> 00:00:56,820
+new features to customers.
+
+29
+00:00:56,820 --> 00:00:58,710
+It prevents you from being
+able to hire developers
+
+30
+00:00:58,710 --> 00:00:59,940
+that really understand your stack
+
+31
+00:00:59,940 --> 00:01:01,920
+and can contribute to it properly.
+
+32
+00:01:01,920 --> 00:01:03,840
+And it may bring security vulnerabilities
+
+33
+00:01:03,840 --> 00:01:04,950
+and all sorts of bad things.
+
+34
+00:01:04,950 --> 00:01:07,293
+So generally speaking, tech debt, bad.
+
+35
+00:01:08,310 --> 00:01:09,990
+Different kinds of technical debt.
+
+36
+00:01:09,990 --> 00:01:11,760
+You can have security
+and compliance risks,
+
+37
+00:01:11,760 --> 00:01:14,280
+especially if you're in a
+compliance-oriented industry
+
+38
+00:01:14,280 --> 00:01:16,050
+like healthcare or finance.
+
+39
+00:01:16,050 --> 00:01:18,150
+But even for any company,
+a security vulnerability
+
+40
+00:01:18,150 --> 00:01:21,150
+can cause massive PR
+issues, monetary loss,
+
+41
+00:01:21,150 --> 00:01:23,790
+all sorts of things that you
+probably don't want to happen.
+
+42
+00:01:23,790 --> 00:01:25,380
+Maintenance burden.
+
+43
+00:01:25,380 --> 00:01:27,450
+Sometimes it can get to a
+point where you're just doing,
+
+44
+00:01:27,450 --> 00:01:28,620
+feels like you're doing patching
+
+45
+00:01:28,620 --> 00:01:31,020
+and addressing vulnerabilities and CVEs,
+
+46
+00:01:31,020 --> 00:01:32,580
+and you're not actually spending time
+
+47
+00:01:32,580 --> 00:01:35,010
+developing things that
+your customers want.
+
+48
+00:01:35,010 --> 00:01:36,750
+Performance limitations.
+
+49
+00:01:36,750 --> 00:01:38,670
+So your things can get slow.
+
+50
+00:01:38,670 --> 00:01:39,750
+They can get crufty.
+
+51
+00:01:39,750 --> 00:01:41,820
+You can have large applications built up
+
+52
+00:01:41,820 --> 00:01:43,830
+over 10, 20, 30, 40 years
+
+53
+00:01:43,830 --> 00:01:46,140
+that when they were initially
+built were well designed,
+
+54
+00:01:46,140 --> 00:01:51,140
+but after caking mud on the
+ball for many, many years,
+
+55
+00:01:51,570 --> 00:01:52,560
+it becomes unwieldy.
+
+56
+00:01:52,560 --> 00:01:54,030
+And this can also cost you money
+
+57
+00:01:54,030 --> 00:01:57,780
+in terms of being more
+expensive to run on bigger VMs.
+
+58
+00:01:57,780 --> 00:01:59,760
+And finally, strategic misalignment.
+
+59
+00:01:59,760 --> 00:02:02,040
+So a lot of customers
+that I've spoken with
+
+60
+00:02:02,040 --> 00:02:04,830
+work at companies that were
+acquired by other companies,
+
+61
+00:02:04,830 --> 00:02:07,080
+and companies that are
+acquired by other companies
+
+62
+00:02:07,080 --> 00:02:08,850
+may use a different tech stack
+
+63
+00:02:08,850 --> 00:02:10,830
+than the rest of the
+companies in the portfolio.
+
+64
+00:02:10,830 --> 00:02:13,020
+So there's often a desire
+within corporations
+
+65
+00:02:13,020 --> 00:02:16,500
+to have some sort of standardization
+and internal alignment
+
+66
+00:02:16,500 --> 00:02:18,090
+for the tech stacks they use,
+
+67
+00:02:18,090 --> 00:02:20,160
+the libraries they use, the APIs they use,
+
+68
+00:02:20,160 --> 00:02:21,540
+the vendors they use, which are gonna have
+
+69
+00:02:21,540 --> 00:02:24,093
+their own different APIs,
+and all that fun stuff.
+
+70
+00:02:26,160 --> 00:02:28,260
+So these are some customers
+that I've worked with
+
+71
+00:02:28,260 --> 00:02:30,480
+pretty closely over this last year.
+
+72
+00:02:30,480 --> 00:02:34,020
+Air Canada has a big issue
+with thousands and thousands,
+
+73
+00:02:34,020 --> 00:02:36,720
+I think tens of thousands
+of Lambda functions
+
+74
+00:02:36,720 --> 00:02:38,520
+running on deprecated versions of Node
+
+75
+00:02:38,520 --> 00:02:40,470
+and deprecated versions of Python.
+
+76
+00:02:40,470 --> 00:02:43,470
+And due to compliance
+and internal standards,
+
+77
+00:02:43,470 --> 00:02:45,210
+they desperately need to upgrade these,
+
+78
+00:02:45,210 --> 00:02:47,880
+and it takes a lot of
+time and a lot of manpower
+
+79
+00:02:47,880 --> 00:02:50,220
+to go through every
+single Lambda individually
+
+80
+00:02:50,220 --> 00:02:51,060
+and try to upgrade it
+
+81
+00:02:51,060 --> 00:02:53,670
+to the latest version of Node or Python.
+
+82
+00:02:53,670 --> 00:02:56,520
+Twitch, our friends inside of Amazon,
+
+83
+00:02:56,520 --> 00:02:58,080
+have a lot of Golang code.
+
+84
+00:02:58,080 --> 00:02:59,550
+They're kind of unique in Amazon.
+
+85
+00:02:59,550 --> 00:03:02,580
+Not a lot of people use
+Go, but Twitch does.
+
+86
+00:03:02,580 --> 00:03:05,760
+And a lot of it's
+written using AWS SDK v1.
+
+87
+00:03:05,760 --> 00:03:08,100
+They wanna migrate to AWS SDK v2.
+
+88
+00:03:08,100 --> 00:03:09,600
+They have over 900 applications.
+
+89
+00:03:09,600 --> 00:03:11,040
+I think they projected, originally,
+
+90
+00:03:11,040 --> 00:03:14,370
+11 developer years of
+manual effort to do that.
+
+91
+00:03:14,370 --> 00:03:16,500
+QAD is a major ERP vendor.
+
+92
+00:03:16,500 --> 00:03:18,870
+They make software for manufacturers
+
+93
+00:03:18,870 --> 00:03:21,900
+that make products that
+we all probably use.
+
+94
+00:03:21,900 --> 00:03:24,270
+They have a piece of software
+
+95
+00:03:24,270 --> 00:03:27,240
+that's evolved over 20-plus years,
+
+96
+00:03:27,240 --> 00:03:29,580
+and their customers have
+built customizations
+
+97
+00:03:29,580 --> 00:03:31,080
+on top of this ERP software
+
+98
+00:03:31,080 --> 00:03:34,440
+to do things particular to that customer.
+
+99
+00:03:34,440 --> 00:03:37,050
+Super useful if you're a
+customer and wanna augment
+
+100
+00:03:37,050 --> 00:03:39,330
+this off the shelf ERP with
+your own functionality,
+
+101
+00:03:39,330 --> 00:03:41,730
+but over time this builds up cruft
+
+102
+00:03:41,730 --> 00:03:44,160
+and makes it very challenging for QAD,
+
+103
+00:03:44,160 --> 00:03:45,660
+for the vendor themself
+
+104
+00:03:45,660 --> 00:03:48,540
+to publish new versions of
+their ERP 'cause everyone's got
+
+105
+00:03:48,540 --> 00:03:50,460
+kind of a one-off special little thing.
+
+106
+00:03:50,460 --> 00:03:52,410
+And so they have this challenge
+
+107
+00:03:52,410 --> 00:03:54,690
+of moving these
+customer-done customizations
+
+108
+00:03:54,690 --> 00:03:57,150
+onto their common customization framework
+
+109
+00:03:57,150 --> 00:03:58,980
+on their newer platform versions.
+
+110
+00:03:58,980 --> 00:04:00,870
+And then MongoDB.
+
+111
+00:04:00,870 --> 00:04:04,110
+They and their customers
+have a lot of Java code.
+
+112
+00:04:04,110 --> 00:04:06,933
+A lot of this Java code
+is on Java 8, Java 11.
+
+113
+00:04:07,890 --> 00:04:11,310
+They really wanna get it up
+to Java 21 or later versions,
+
+114
+00:04:11,310 --> 00:04:13,083
+and that's easier said than done.
+
+115
+00:04:14,970 --> 00:04:17,250
+So there's a lot of existing approaches
+
+116
+00:04:17,250 --> 00:04:20,250
+for doing code modernization at scale
+
+117
+00:04:20,250 --> 00:04:21,930
+in an automated fashion.
+
+118
+00:04:21,930 --> 00:04:23,760
+There's good old rule-based automation.
+
+119
+00:04:23,760 --> 00:04:26,370
+So this is stuff like ast-grep,
+
+120
+00:04:26,370 --> 00:04:28,350
+managing abstract syntax trees,
+
+121
+00:04:28,350 --> 00:04:30,000
+using something like OpenRewrite.
+
+122
+00:04:30,000 --> 00:04:31,530
+And these are good tools
+
+123
+00:04:31,530 --> 00:04:33,570
+if you can get them to do what you want.
+
+124
+00:04:33,570 --> 00:04:36,270
+They'll do it deterministically,
+and they'll do it reliably,
+
+125
+00:04:36,270 --> 00:04:39,150
+but they can be kind of
+brittle and kind of inflexible.
+
+126
+00:04:39,150 --> 00:04:42,060
+If you introduce a new piece of code
+
+127
+00:04:42,060 --> 00:04:44,130
+that isn't exactly following
+the same conventions
+
+128
+00:04:44,130 --> 00:04:47,220
+as the ones that you wrote your
+transformation recipe with,
+
+129
+00:04:47,220 --> 00:04:48,900
+it's probably not gonna work.
+
+130
+00:04:48,900 --> 00:04:52,020
+And it takes kind of some
+specialized expertise
+
+131
+00:04:52,020 --> 00:04:54,060
+to write these sorts of recipes.
+
+132
+00:04:54,060 --> 00:04:56,550
+You have to know how to navigate
+an abstract syntax tree.
+
+133
+00:04:56,550 --> 00:04:59,400
+You're kind of like writing
+code to manipulate code
+
+134
+00:04:59,400 --> 00:05:01,440
+and dealing in this kind
+of conceptual higher level,
+
+135
+00:05:01,440 --> 00:05:03,930
+and so it's a little tricky
+if you haven't done it before.
+
+136
+00:05:03,930 --> 00:05:06,510
+And because of that, there's
+a bit of a higher startup cost
+
+137
+00:05:06,510 --> 00:05:08,580
+in using approaches like that.
+
+138
+00:05:08,580 --> 00:05:11,640
+General purpose coding AI
+has gotten really good.
+
+139
+00:05:11,640 --> 00:05:13,890
+The Kiros and the Cloud Codes
+of the world are awesome.
+
+140
+00:05:13,890 --> 00:05:14,723
+You should all use them.
+
+141
+00:05:14,723 --> 00:05:15,556
+I love them.
+
+142
+00:05:15,556 --> 00:05:16,389
+I use them a lot.
+
+143
+00:05:17,490 --> 00:05:18,480
+But one tricky part
+
+144
+00:05:18,480 --> 00:05:20,940
+about doing large scale code
+modernization efforts with them
+
+145
+00:05:20,940 --> 00:05:23,550
+is that there's no easy way right now
+
+146
+00:05:23,550 --> 00:05:27,750
+to enforce consistency
+across a bunch of developers
+
+147
+00:05:27,750 --> 00:05:31,140
+trying to do the same task
+using those same tools.
+
+148
+00:05:31,140 --> 00:05:35,670
+I might ask a Kiro to do,
+upgrade a Java runtime,
+
+149
+00:05:35,670 --> 00:05:36,960
+and it'll probably do it,
+
+150
+00:05:36,960 --> 00:05:38,550
+but it may follow different conventions
+
+151
+00:05:38,550 --> 00:05:40,230
+and different patterns
+than if Venu does it.
+
+152
+00:05:40,230 --> 00:05:41,640
+And we're gonna end up with disparate code
+
+153
+00:05:41,640 --> 00:05:42,810
+that may not follow the standards
+
+154
+00:05:42,810 --> 00:05:43,920
+and use the right libraries
+
+155
+00:05:43,920 --> 00:05:46,083
+that my organization wants to use.
+
+156
+00:05:47,640 --> 00:05:49,560
+These tools tend to be designed
+
+157
+00:05:49,560 --> 00:05:51,900
+to be run with a human in the loop,
+
+158
+00:05:51,900 --> 00:05:54,210
+with a human sitting at
+the keyboard, driving it,
+
+159
+00:05:54,210 --> 00:05:56,010
+watching what the agent does,
+
+160
+00:05:56,010 --> 00:05:58,110
+poking it this direction or that
+
+161
+00:05:58,110 --> 00:06:00,630
+which, again, fantastic if
+you're doing something once,
+
+162
+00:06:00,630 --> 00:06:03,210
+not so fantastic if you're
+doing it a hundred times,
+
+163
+00:06:03,210 --> 00:06:04,260
+a thousand times.
+
+164
+00:06:04,260 --> 00:06:07,080
+That human cost, even though
+it's a significant acceleration
+
+165
+00:06:07,080 --> 00:06:09,690
+from someone sitting out
+and doing this work themself
+
+166
+00:06:09,690 --> 00:06:11,790
+with no assistance, is still real.
+
+167
+00:06:11,790 --> 00:06:14,490
+There's still significant
+cost to clicky-clacky,
+
+168
+00:06:14,490 --> 00:06:16,503
+driving a coding agent on the keyboard.
+
+169
+00:06:17,610 --> 00:06:19,560
+And another issue with doing it this way
+
+170
+00:06:19,560 --> 00:06:22,140
+is that teams' learnings remain siloed.
+
+171
+00:06:22,140 --> 00:06:25,680
+So if over the course of an
+API migration, you discover,
+
+172
+00:06:25,680 --> 00:06:26,790
+oh, there's an incompatibility
+
+173
+00:06:26,790 --> 00:06:28,560
+between these two particular versions,
+
+174
+00:06:28,560 --> 00:06:30,000
+I had to do this workaround,
+
+175
+00:06:30,000 --> 00:06:32,250
+you learn that, you discover that,
+
+176
+00:06:32,250 --> 00:06:34,500
+but some other team on the
+other side of the country,
+
+177
+00:06:34,500 --> 00:06:35,430
+on the other side of the world
+
+178
+00:06:35,430 --> 00:06:38,220
+that's doing the same
+migration in your organization,
+
+179
+00:06:38,220 --> 00:06:39,960
+they're gonna go have to
+discover that themself.
+
+180
+00:06:39,960 --> 00:06:41,370
+They're gonna run into the same issue,
+
+181
+00:06:41,370 --> 00:06:43,350
+and unless you're really
+good about updating wikis
+
+182
+00:06:43,350 --> 00:06:46,710
+and looking at those wikis,
+that that learning is lost.
+
+183
+00:06:46,710 --> 00:06:48,690
+You're gonna run into the
+same problems several times,
+
+184
+00:06:48,690 --> 00:06:51,390
+and that's not as efficient as can be.
+
+185
+00:06:51,390 --> 00:06:52,590
+So what do we need?
+
+186
+00:06:52,590 --> 00:06:54,870
+We need a code transformation,
+
+187
+00:06:54,870 --> 00:06:56,970
+a scalable code transformation mechanism
+
+188
+00:06:56,970 --> 00:06:58,800
+that has a low barrier to entry.
+
+189
+00:06:58,800 --> 00:07:00,150
+It's easy to get started with,
+
+190
+00:07:00,150 --> 00:07:02,430
+doesn't take a lot of
+specialized knowledge.
+
+191
+00:07:02,430 --> 00:07:03,960
+It's designed for automation.
+
+192
+00:07:03,960 --> 00:07:06,720
+It can be scripted together
+and just kind of set up
+
+193
+00:07:06,720 --> 00:07:10,053
+to run in a headless, without
+human interaction fashion,
+
+194
+00:07:10,920 --> 00:07:12,120
+something that you can teach once
+
+195
+00:07:12,120 --> 00:07:13,560
+and you can run it everywhere,
+
+196
+00:07:13,560 --> 00:07:15,120
+and that gets better every time
+
+197
+00:07:15,120 --> 00:07:17,130
+so you don't lose these learnings
+
+198
+00:07:17,130 --> 00:07:20,223
+that individual developers
+are coming across.
+
+199
+00:07:21,540 --> 00:07:24,780
+Enter AWS Transform custom.
+
+200
+00:07:24,780 --> 00:07:25,890
+This is my baby.
+
+201
+00:07:25,890 --> 00:07:27,030
+I'm the PM on this product.
+
+202
+00:07:27,030 --> 00:07:28,380
+We've been working on
+it for the last year.
+
+203
+00:07:28,380 --> 00:07:30,390
+This was released GA on Monday.
+
+204
+00:07:30,390 --> 00:07:31,620
+We're all very excited and proud of it,
+
+205
+00:07:31,620 --> 00:07:33,570
+and that's what we're gonna
+be showing you in a minute.
+
+206
+00:07:33,570 --> 00:07:37,590
+So AWS Transform custom
+is intended to discover,
+
+207
+00:07:37,590 --> 00:07:40,170
+to learn from you any
+sort of code pattern,
+
+208
+00:07:40,170 --> 00:07:44,190
+API upgrade, runtime
+upgrade, framework upgrade.
+
+209
+00:07:44,190 --> 00:07:47,250
+I have people doing things as
+wild as converting VBA script
+
+210
+00:07:47,250 --> 00:07:51,360
+embedded in a Excel spreadsheet
+to maintainable Python code,
+
+211
+00:07:51,360 --> 00:07:52,500
+and it's working okay for that.
+
+212
+00:07:52,500 --> 00:07:54,810
+Or rewriting bash scripts to Rye,
+
+213
+00:07:54,810 --> 00:07:56,640
+which is a Rust-based scripting language.
+
+214
+00:07:56,640 --> 00:08:01,380
+Like, the more I learn about
+how customers are using this,
+
+215
+00:08:01,380 --> 00:08:02,700
+the more scared I become
+
+216
+00:08:02,700 --> 00:08:04,853
+because there are some
+weird stuff out there.
+
+217
+00:08:06,180 --> 00:08:07,020
+Because you can teach it
+
+218
+00:08:07,020 --> 00:08:08,310
+your own custom code transformation,
+
+219
+00:08:08,310 --> 00:08:10,680
+you can do your weird stuff
+with it, which is cool.
+
+220
+00:08:10,680 --> 00:08:12,750
+And because you are teaching the agent,
+
+221
+00:08:12,750 --> 00:08:15,330
+if it's doing it wrong, you
+can tell it to do it different
+
+222
+00:08:15,330 --> 00:08:18,090
+and to do it better until
+it does do the right thing,
+
+223
+00:08:18,090 --> 00:08:19,740
+and it does it consistently enough
+
+224
+00:08:19,740 --> 00:08:23,010
+that you feel comfortable to
+start running it at scale.
+
+225
+00:08:23,010 --> 00:08:24,090
+It continuously learns.
+
+226
+00:08:24,090 --> 00:08:25,110
+It gets better every time.
+
+227
+00:08:25,110 --> 00:08:27,480
+We'll show you how that works in a moment.
+
+228
+00:08:27,480 --> 00:08:29,940
+And it's easy to run at scale.
+
+229
+00:08:29,940 --> 00:08:32,830
+So the main components
+of AWS Transform custom
+
+230
+00:08:33,870 --> 00:08:35,970
+is our CLI, that you'll see in a moment,
+
+231
+00:08:35,970 --> 00:08:37,920
+which you interact with
+using natural language.
+
+232
+00:08:37,920 --> 00:08:38,753
+So you tell it,
+
+233
+00:08:38,753 --> 00:08:41,730
+hey, I wanna blah the
+blah from blah to blah,
+
+234
+00:08:41,730 --> 00:08:43,470
+and it's gonna say, okay, cool.
+
+235
+00:08:43,470 --> 00:08:44,310
+What the heck is a blah?
+
+236
+00:08:44,310 --> 00:08:45,870
+Do you have some documentation on blah?
+
+237
+00:08:45,870 --> 00:08:48,030
+How do I go from blah to blah?
+
+238
+00:08:48,030 --> 00:08:49,830
+And we've encoded all these best practices
+
+239
+00:08:49,830 --> 00:08:51,840
+that we've discovered internally at AWS
+
+240
+00:08:51,840 --> 00:08:54,960
+for doing scaled code
+modernization into the agent,
+
+241
+00:08:54,960 --> 00:08:57,240
+so it's gonna know the right
+kinds of questions to ask you.
+
+242
+00:08:57,240 --> 00:08:59,460
+If you say, I wanna do an API upgrade,
+
+243
+00:08:59,460 --> 00:09:01,830
+it's gonna say, cool, do
+you have the swaggers?
+
+244
+00:09:01,830 --> 00:09:04,410
+Do you have the the API documentation?
+
+245
+00:09:04,410 --> 00:09:06,870
+If you say you want to add
+a whole bunch of test cases,
+
+246
+00:09:06,870 --> 00:09:09,300
+it's gonna say, okay, can
+you give me an example
+
+247
+00:09:09,300 --> 00:09:10,560
+of, like, the kinds of style
+
+248
+00:09:10,560 --> 00:09:12,210
+you like your test cases to be written in?
+
+249
+00:09:12,210 --> 00:09:14,640
+Or if you want to emit
+metrics in a different way,
+
+250
+00:09:14,640 --> 00:09:16,470
+it'll ask you for the schema.
+
+251
+00:09:16,470 --> 00:09:18,990
+So it shouldn't take, like, a
+whole lot of domain expertise
+
+252
+00:09:18,990 --> 00:09:20,430
+to build this transformation
+
+253
+00:09:20,430 --> 00:09:23,010
+that you're gonna want to apply at scale.
+
+254
+00:09:23,010 --> 00:09:25,080
+Once you've built something
+that you're comfortable with,
+
+255
+00:09:25,080 --> 00:09:26,370
+you're pretty happy with the performance,
+
+256
+00:09:26,370 --> 00:09:28,350
+you've tested it on a few repos,
+
+257
+00:09:28,350 --> 00:09:30,810
+executing it at scale is
+really straightforward
+
+258
+00:09:30,810 --> 00:09:32,023
+because it is ACLI.
+
+259
+00:09:32,023 --> 00:09:34,710
+It's a CLI that can be driven by a human,
+
+260
+00:09:34,710 --> 00:09:35,580
+talking to an agent,
+
+261
+00:09:35,580 --> 00:09:38,310
+like you're all used to
+doing these days, I imagine.
+
+262
+00:09:38,310 --> 00:09:40,020
+Or it can be driven by a machine.
+
+263
+00:09:40,020 --> 00:09:43,290
+So our syntax is totally
+deterministic and machine drivable.
+
+264
+00:09:43,290 --> 00:09:44,490
+You put a bunch of commands,
+
+265
+00:09:44,490 --> 00:09:46,860
+a bunch of arguments in
+a command telling it,
+
+266
+00:09:46,860 --> 00:09:49,230
+run this transformation on this repo
+
+267
+00:09:49,230 --> 00:09:52,530
+following these conditions
+and blah, blah, blah,
+
+268
+00:09:52,530 --> 00:09:53,400
+and it'll just do it.
+
+269
+00:09:53,400 --> 00:09:55,380
+So it's really easy to
+write a shell script,
+
+270
+00:09:55,380 --> 00:09:57,120
+to pull down your code
+from wherever it is,
+
+271
+00:09:57,120 --> 00:10:00,757
+GitLab, GitHub, Bitbucket...
+
+272
+00:10:02,040 --> 00:10:03,740
+I don't know, what other places...
+
+273
+00:10:04,920 --> 00:10:07,080
+And transform it and push
+it where it needs to go,
+
+274
+00:10:07,080 --> 00:10:09,480
+send it for code review,
+send it straight to prod.
+
+275
+00:10:09,480 --> 00:10:11,873
+I probably wouldn't recommend
+that, but you do you.
+
+276
+00:10:13,500 --> 00:10:15,210
+Continual learning.
+
+277
+00:10:15,210 --> 00:10:17,850
+Both during execution of a transformation,
+
+278
+00:10:17,850 --> 00:10:19,920
+an agent is just gonna record notes
+
+279
+00:10:19,920 --> 00:10:21,240
+about what it encountered.
+
+280
+00:10:21,240 --> 00:10:24,510
+So if it goes down like a
+really deep self-debug path,
+
+281
+00:10:24,510 --> 00:10:26,520
+trying to deal with some
+weird incompatibility
+
+282
+00:10:26,520 --> 00:10:28,350
+it discovered during execution
+
+283
+00:10:28,350 --> 00:10:30,390
+and then I had to backtrack
+and try something else,
+
+284
+00:10:30,390 --> 00:10:31,830
+it's gonna remember that next time
+
+285
+00:10:31,830 --> 00:10:33,720
+and try the shorter path.
+
+286
+00:10:33,720 --> 00:10:36,330
+Likewise, if you do an
+interactive transformation
+
+287
+00:10:36,330 --> 00:10:37,530
+sitting there and watching the agent,
+
+288
+00:10:37,530 --> 00:10:39,000
+which is an option you can do,
+
+289
+00:10:39,000 --> 00:10:40,860
+and you see it going off
+the rails, you can tell it,
+
+290
+00:10:40,860 --> 00:10:43,140
+hey, don't do that, do
+this, it'll remember that
+
+291
+00:10:43,140 --> 00:10:44,840
+and hopefully not do it next time.
+
+292
+00:10:46,500 --> 00:10:48,330
+So how's the process work?
+
+293
+00:10:48,330 --> 00:10:51,390
+The first thing you do is
+you have some sort of expert.
+
+294
+00:10:51,390 --> 00:10:52,710
+They could be on a centralized team.
+
+295
+00:10:52,710 --> 00:10:54,660
+They can be someone that
+owns a particular service
+
+296
+00:10:54,660 --> 00:10:56,640
+that a lot of other teams are consuming,
+
+297
+00:10:56,640 --> 00:10:58,620
+someone who kind of
+knows what they're doing
+
+298
+00:10:58,620 --> 00:11:00,090
+about this transformation.
+
+299
+00:11:00,090 --> 00:11:01,410
+They're gonna sit down with our agent,
+
+300
+00:11:01,410 --> 00:11:03,600
+and they're gonna describe what
+they wanna do and go through
+
+301
+00:11:03,600 --> 00:11:06,090
+that transformation
+definition building phase.
+
+302
+00:11:06,090 --> 00:11:09,390
+A transformation definition
+is this term we invented
+
+303
+00:11:09,390 --> 00:11:12,060
+to represent the agent's understanding
+
+304
+00:11:12,060 --> 00:11:13,650
+of a particular transformation.
+
+305
+00:11:13,650 --> 00:11:16,923
+So it's a combination of
+some markdown files, a RAG,
+
+306
+00:11:18,003 --> 00:11:18,870
+and a database of learnings
+
+307
+00:11:18,870 --> 00:11:21,480
+that the agents encountered
+during its executions.
+
+308
+00:11:21,480 --> 00:11:24,780
+And this is something that
+we consider to be your IP.
+
+309
+00:11:24,780 --> 00:11:26,520
+We don't look at it,
+we don't learn from it.
+
+310
+00:11:26,520 --> 00:11:28,200
+If you wanna sell it, if
+you wanna keep it secret,
+
+311
+00:11:28,200 --> 00:11:31,200
+if you wanna open source it,
+that's none of my business.
+
+312
+00:11:31,200 --> 00:11:33,540
+The transformation that
+you built is yours.
+
+313
+00:11:33,540 --> 00:11:34,380
+So someone's gonna create
+
+314
+00:11:34,380 --> 00:11:36,570
+an initial transformation definition.
+
+315
+00:11:36,570 --> 00:11:38,250
+They're gonna execute it a few times
+
+316
+00:11:38,250 --> 00:11:40,680
+on some local repos, and they're
+gonna look at the output.
+
+317
+00:11:40,680 --> 00:11:42,060
+And they're gonna tell the agent,
+
+318
+00:11:42,060 --> 00:11:44,190
+you screwed this up, you
+missed this edge case,
+
+319
+00:11:44,190 --> 00:11:45,570
+you should do this differently,
+
+320
+00:11:45,570 --> 00:11:47,640
+and it's gonna update that
+transformation definition,
+
+321
+00:11:47,640 --> 00:11:50,310
+and then you run it again,
+and then you run it again.
+
+322
+00:11:50,310 --> 00:11:52,020
+And hopefully, after three or four times
+
+323
+00:11:52,020 --> 00:11:54,570
+and not 30 or 40 times, it's
+starting to get to the point
+
+324
+00:11:54,570 --> 00:11:56,580
+where you're like, okay, this
+is, like, doing what I want
+
+325
+00:11:56,580 --> 00:11:57,780
+for the most part, cool.
+
+326
+00:11:58,890 --> 00:12:01,680
+At that point, you're ready
+to share your transformation.
+
+327
+00:12:01,680 --> 00:12:04,080
+So we make that really easy
+because we have this notion
+
+328
+00:12:04,080 --> 00:12:06,780
+of a transformation definition registry,
+
+329
+00:12:06,780 --> 00:12:09,273
+which is just something
+within an AWS account.
+
+330
+00:12:10,320 --> 00:12:12,510
+If you give someone the
+right IM permissions
+
+331
+00:12:12,510 --> 00:12:14,820
+and the transformation
+definition is just a,
+
+332
+00:12:14,820 --> 00:12:16,530
+it's an honorable AWS resource.
+
+333
+00:12:16,530 --> 00:12:17,760
+We're not reinventing the wheel here
+
+334
+00:12:17,760 --> 00:12:19,230
+with permissioning and resources.
+
+335
+00:12:19,230 --> 00:12:22,620
+It's the concepts you already
+know and you're used to.
+
+336
+00:12:22,620 --> 00:12:24,600
+You can make the transformation definition
+
+337
+00:12:24,600 --> 00:12:27,150
+available to other users
+in your organization.
+
+338
+00:12:27,150 --> 00:12:28,140
+They can pull it down.
+
+339
+00:12:28,140 --> 00:12:29,700
+They can execute it on their code.
+
+340
+00:12:29,700 --> 00:12:33,093
+They can propose changes back
+to it, and everybody is happy.
+
+341
+00:12:34,500 --> 00:12:37,080
+And once you have the
+application owning team
+
+342
+00:12:37,080 --> 00:12:39,240
+somewhat happy with the quality,
+
+343
+00:12:39,240 --> 00:12:40,590
+you can start running it at scale.
+
+344
+00:12:40,590 --> 00:12:42,630
+And you can do that in the
+form of a push campaign
+
+345
+00:12:42,630 --> 00:12:45,360
+if you like, where some central team
+
+346
+00:12:45,360 --> 00:12:46,530
+pulls down a whole bunch of code
+
+347
+00:12:46,530 --> 00:12:49,260
+from a whole bunch of teams,
+executes a transformation,
+
+348
+00:12:49,260 --> 00:12:51,420
+and sends the resultant
+code out to be reviewed
+
+349
+00:12:51,420 --> 00:12:53,070
+by the application owning team.
+
+350
+00:12:53,070 --> 00:12:54,630
+Or you can do it pull campaign style,
+
+351
+00:12:54,630 --> 00:12:56,490
+where you tell the application teams,
+
+352
+00:12:56,490 --> 00:12:58,860
+hey, you must blah the blah.
+
+353
+00:12:58,860 --> 00:13:02,490
+There's a top down mandate
+that you must blah the blah,
+
+354
+00:13:02,490 --> 00:13:04,230
+but I'm gonna give you this thing.
+
+355
+00:13:04,230 --> 00:13:05,100
+You could try running it.
+
+356
+00:13:05,100 --> 00:13:06,540
+Hopefully, it does most of the job for you
+
+357
+00:13:06,540 --> 00:13:08,340
+and makes your life a little easier.
+
+358
+00:13:10,470 --> 00:13:12,630
+And humans verify, and
+the continual learning
+
+359
+00:13:12,630 --> 00:13:15,540
+goes back into the
+transformation definition.
+
+360
+00:13:15,540 --> 00:13:17,670
+Super cool, right?
+
+361
+00:13:17,670 --> 00:13:20,580
+We have been eating our own
+dog food, as we do at Amazon.
+
+362
+00:13:20,580 --> 00:13:22,410
+We've built a whole
+bunch of transformations
+
+363
+00:13:22,410 --> 00:13:25,380
+that we thought were useful
+using this, and we have done
+
+364
+00:13:25,380 --> 00:13:27,330
+some pretty comprehensive
+benchmarking on them
+
+365
+00:13:27,330 --> 00:13:31,260
+using internal AWS code
+and some open source code.
+
+366
+00:13:31,260 --> 00:13:34,380
+And so we have this little
+menu of transformations here,
+
+367
+00:13:34,380 --> 00:13:38,277
+notably, Java, Python, and
+Node runtime version upgrades,
+
+368
+00:13:38,277 --> 00:13:42,360
+AWS SDK version upgrades
+for those languages as well
+
+369
+00:13:42,360 --> 00:13:45,510
+that we are confident in,
+that I'm putting my name on,
+
+370
+00:13:45,510 --> 00:13:47,340
+that we believe are pretty
+good, and we give to you.
+
+371
+00:13:47,340 --> 00:13:48,180
+And you can just run them.
+
+372
+00:13:48,180 --> 00:13:50,250
+You don't have to create a
+new transformation at all.
+
+373
+00:13:50,250 --> 00:13:51,750
+If you're trying to do Java, Python,
+
+374
+00:13:51,750 --> 00:13:55,170
+or Node runtime upgrades,
+or AWS SDK upgrades,
+
+375
+00:13:55,170 --> 00:13:56,003
+just use these
+
+376
+00:13:56,003 --> 00:13:57,720
+and they should get you
+most of the way there.
+
+377
+00:13:57,720 --> 00:14:00,170
+And if they don't, tell
+me, and I need to fix it.
+
+378
+00:14:01,080 --> 00:14:03,030
+Beyond that, we have a
+couple of early access things
+
+379
+00:14:03,030 --> 00:14:04,470
+that we've also released.
+
+380
+00:14:04,470 --> 00:14:08,160
+So a tech debt analysis/documentation
+transformation.
+
+381
+00:14:08,160 --> 00:14:10,050
+This one's pretty cool.
+
+382
+00:14:10,050 --> 00:14:11,490
+It'll go through all of your code
+
+383
+00:14:11,490 --> 00:14:14,070
+if you've got something really
+old and poorly documented
+
+384
+00:14:14,070 --> 00:14:15,840
+and generate what Venu and I think
+
+385
+00:14:15,840 --> 00:14:18,930
+is like a pretty comprehensive
+documentation set of it,
+
+386
+00:14:18,930 --> 00:14:21,480
+including entity relationships,
+sequence diagrams,
+
+387
+00:14:21,480 --> 00:14:25,350
+lots of pretty images, full
+dependency trees and stuff.
+
+388
+00:14:25,350 --> 00:14:28,200
+It's like every way you could
+think of to represent code
+
+389
+00:14:28,200 --> 00:14:29,520
+without having the code itself,
+
+390
+00:14:29,520 --> 00:14:31,230
+we try to to capture in here.
+
+391
+00:14:31,230 --> 00:14:33,300
+And as a bonus, it gives
+you a little report in there
+
+392
+00:14:33,300 --> 00:14:35,940
+that says, hey, you're using
+a super outdated version
+
+393
+00:14:35,940 --> 00:14:38,010
+of this and that and this,
+and this is vulnerable,
+
+394
+00:14:38,010 --> 00:14:40,680
+and like, you might wanna
+check these things out.
+
+395
+00:14:40,680 --> 00:14:42,150
+And then we also have an
+upgrade that we're working on
+
+396
+00:14:42,150 --> 00:14:44,010
+with the Graviton team in AWS
+
+397
+00:14:44,010 --> 00:14:47,280
+to convert Java code that uses x86,
+
+398
+00:14:47,280 --> 00:14:50,430
+that has dependencies on
+x86 libraries to Graviton.
+
+399
+00:14:50,430 --> 00:14:52,800
+That's early access, doing
+pretty well in benchmarks.
+
+400
+00:14:52,800 --> 00:14:55,440
+We'll probably mainline
+that one pretty soon.
+
+401
+00:14:55,440 --> 00:14:56,610
+These are no setup for you.
+
+402
+00:14:56,610 --> 00:14:57,660
+They're validated by us.
+
+403
+00:14:57,660 --> 00:14:59,790
+We have a pretty comprehensive
+benchmarking infrastructure
+
+404
+00:14:59,790 --> 00:15:02,970
+to try to get the quality
+on these really good.
+
+405
+00:15:02,970 --> 00:15:04,950
+Beyond that, you can build custom things.
+
+406
+00:15:04,950 --> 00:15:06,690
+You can build VBA to Python.
+
+407
+00:15:06,690 --> 00:15:10,530
+You can build something crazy and unholy
+
+408
+00:15:10,530 --> 00:15:11,940
+if you really want to.
+
+409
+00:15:11,940 --> 00:15:14,610
+I would recommend using
+it for API upgrades,
+
+410
+00:15:14,610 --> 00:15:15,960
+language version upgrades.
+
+411
+00:15:15,960 --> 00:15:18,150
+You can use it for
+language-to-language conversions,
+
+412
+00:15:18,150 --> 00:15:21,090
+but I would caveat, like,
+in a localized context.
+
+413
+00:15:21,090 --> 00:15:24,720
+If you have like a 500,000
+million line of code,
+
+414
+00:15:24,720 --> 00:15:27,600
+old dot net app and you
+wanna reimplement it in Java,
+
+415
+00:15:27,600 --> 00:15:29,100
+you're probably not
+gonna have a great time.
+
+416
+00:15:29,100 --> 00:15:30,540
+The models aren't quite that good yet.
+
+417
+00:15:30,540 --> 00:15:32,160
+But if you've got like
+a whole bunch of scripts
+
+418
+00:15:32,160 --> 00:15:33,960
+that you wanna convert from
+one language to another
+
+419
+00:15:33,960 --> 00:15:35,400
+that are relatively self-contained,
+
+420
+00:15:35,400 --> 00:15:37,583
+it'll work pretty well
+for something like that.
+
+421
+00:15:39,150 --> 00:15:41,220
+Best practices, 'cause
+that's what we're here for.
+
+422
+00:15:41,220 --> 00:15:43,530
+That's like the title
+of this thing, I think.
+
+423
+00:15:43,530 --> 00:15:45,060
+Pilots.
+
+424
+00:15:45,060 --> 00:15:47,190
+Start building a transformation
+that's not very hard
+
+425
+00:15:47,190 --> 00:15:49,290
+and then just run it on a
+few things at small scale.
+
+426
+00:15:49,290 --> 00:15:51,270
+And that's how you get
+a feel for the efficacy.
+
+427
+00:15:51,270 --> 00:15:53,550
+That's how you get a feel
+for what it's going to cost.
+
+428
+00:15:53,550 --> 00:15:56,250
+So pricing for this is
+entirely usage based.
+
+429
+00:15:56,250 --> 00:15:57,930
+It's based on agent minutes,
+
+430
+00:15:57,930 --> 00:15:59,310
+which is just kind of an abstraction
+
+431
+00:15:59,310 --> 00:16:02,460
+on top of our cost for
+providing the service.
+
+432
+00:16:02,460 --> 00:16:05,910
+It's 0.035 cents per agent minute.
+
+433
+00:16:05,910 --> 00:16:09,240
+A typical thousand-line
+Lambda costs about a buck.
+
+434
+00:16:09,240 --> 00:16:12,060
+I think a 5,000-line Java runtime upgrade
+
+435
+00:16:12,060 --> 00:16:13,920
+costs like four or five bucks.
+
+436
+00:16:13,920 --> 00:16:17,550
+We really intentionally
+priced this thing very low
+
+437
+00:16:17,550 --> 00:16:18,960
+to make it up on scale.
+
+438
+00:16:18,960 --> 00:16:21,810
+So we want to incentivize
+y'all to create transformations
+
+439
+00:16:21,810 --> 00:16:24,450
+that do what you wanna do and unleash them
+
+440
+00:16:24,450 --> 00:16:26,073
+and just build a lot of scale.
+
+441
+00:16:28,620 --> 00:16:32,553
+Plan, refine, pilot, I think
+you all get the picture there.
+
+442
+00:16:33,630 --> 00:16:36,120
+And another best practice is
+use your current workflow.
+
+443
+00:16:36,120 --> 00:16:38,130
+There's a lot of code
+transformation products out there
+
+444
+00:16:38,130 --> 00:16:39,570
+that I've seen that kind of ask you
+
+445
+00:16:39,570 --> 00:16:41,550
+to onboard to a totally
+new way of doing things,
+
+446
+00:16:41,550 --> 00:16:43,260
+and I think that's lame.
+
+447
+00:16:43,260 --> 00:16:44,790
+So we have intentionally built this
+
+448
+00:16:44,790 --> 00:16:48,270
+to be a CLI that has very
+minimal dependencies,
+
+449
+00:16:48,270 --> 00:16:51,030
+that has a dependency on
+Node, a dependency on Git,
+
+450
+00:16:51,030 --> 00:16:53,160
+and a dependency to have
+an external connection
+
+451
+00:16:53,160 --> 00:16:55,953
+to our servers, to our AWS servers.
+
+452
+00:16:57,000 --> 00:17:00,510
+If you have a machine that
+has a Linux environment...
+
+453
+00:17:00,510 --> 00:17:02,730
+MacOS also works, WSL also works.
+
+454
+00:17:02,730 --> 00:17:05,310
+Venu is gonna demo this on WSL.
+
+455
+00:17:05,310 --> 00:17:08,400
+Has those dependencies, you
+can run your transformation.
+
+456
+00:17:08,400 --> 00:17:10,440
+So people stick it in pipelines.
+
+457
+00:17:10,440 --> 00:17:12,360
+People stick it in Docker containers.
+
+458
+00:17:12,360 --> 00:17:14,670
+People stick it in AWS Batch jobs.
+
+459
+00:17:14,670 --> 00:17:16,590
+People stick it on
+laptops in their basement.
+
+460
+00:17:16,590 --> 00:17:18,630
+Like, I don't care how you run it.
+
+461
+00:17:18,630 --> 00:17:20,520
+Whatever works with your current way
+
+462
+00:17:20,520 --> 00:17:23,430
+of doing code modernization and
+doing deployments and stuff,
+
+463
+00:17:23,430 --> 00:17:25,680
+it's designed to be
+minimal and just slot in.
+
+464
+00:17:28,500 --> 00:17:30,270
+And I would be remiss if I did not plug
+
+465
+00:17:30,270 --> 00:17:32,340
+our AWS Transform web application.
+
+466
+00:17:32,340 --> 00:17:35,820
+So if you heard about
+AWS Transform last year,
+
+467
+00:17:35,820 --> 00:17:36,750
+this is all there was to it.
+
+468
+00:17:36,750 --> 00:17:37,830
+We didn't have the CLI.
+
+469
+00:17:37,830 --> 00:17:40,410
+The CLI and custom is the
+brand new thing this year.
+
+470
+00:17:40,410 --> 00:17:43,140
+But there is integration
+between the CLI and the web app.
+
+471
+00:17:43,140 --> 00:17:45,780
+So if you are a program
+manager, a campaign manager,
+
+472
+00:17:45,780 --> 00:17:48,540
+you're responsible for doing
+a bunch of code transformation
+
+473
+00:17:48,540 --> 00:17:50,010
+at scale and you want a place
+
+474
+00:17:50,010 --> 00:17:53,100
+to get pretty charts and graphs
+to show your boss and stuff,
+
+475
+00:17:53,100 --> 00:17:55,710
+all of the status of the
+campaign that you're running
+
+476
+00:17:55,710 --> 00:17:58,290
+in the CLI is automatically populated
+
+477
+00:17:58,290 --> 00:18:01,680
+in the AWS Transform web app
+where you have pretty charts,
+
+478
+00:18:01,680 --> 00:18:04,500
+pretty graphs, you can see what
+repos have been transformed,
+
+479
+00:18:04,500 --> 00:18:06,330
+which ones have been validated.
+
+480
+00:18:06,330 --> 00:18:07,970
+And of course, you've got
+the agentic chat there,
+
+481
+00:18:07,970 --> 00:18:09,600
+so you can ask questions about the data.
+
+482
+00:18:09,600 --> 00:18:12,540
+You can say, what proportion
+of them fit these criteria,
+
+483
+00:18:12,540 --> 00:18:14,880
+how many got done in the last
+week, which ones had failures,
+
+484
+00:18:14,880 --> 00:18:16,180
+whatever you wanna ask it.
+
+485
+00:18:17,730 --> 00:18:19,350
+All right, now the fun part.
+
+486
+00:18:19,350 --> 00:18:20,460
+- [Venu] Cool, yeah, thank you.
+
+487
+00:18:20,460 --> 00:18:21,960
+Thank you so much, Morgan.
+
+488
+00:18:21,960 --> 00:18:24,210
+I have a question for
+you before I get started.
+
+489
+00:18:24,210 --> 00:18:25,400
+- [Morgan] Yeah.
+
+490
+00:18:25,400 --> 00:18:27,330
+- [Venu] Customer asked,
+"Can I do Fortran to Python?"
+
+491
+00:18:27,330 --> 00:18:28,730
+What's your answer for that?
+
+492
+00:18:30,930 --> 00:18:32,680
+- [Morgan] How big is your Fortran?
+
+493
+00:18:34,620 --> 00:18:35,640
+That's the question, right?
+
+494
+00:18:35,640 --> 00:18:37,230
+If you have, like,
+
+495
+00:18:37,230 --> 00:18:39,840
+you can do hello, world, any
+language to any language,
+
+496
+00:18:39,840 --> 00:18:42,120
+and beyond that, the
+complexity, it varies.
+
+497
+00:18:42,120 --> 00:18:45,000
+I don't want to, like,
+over-promise to anybody.
+
+498
+00:18:45,000 --> 00:18:48,720
+We have a customer using some
+weird esoteric old language
+
+499
+00:18:48,720 --> 00:18:50,880
+called Progress that I
+had never heard of before,
+
+500
+00:18:50,880 --> 00:18:51,810
+that we didn't know if the model
+
+501
+00:18:51,810 --> 00:18:54,420
+was even going to understand,
+and it totally groks it.
+
+502
+00:18:54,420 --> 00:18:56,130
+And they're putting, like, 100,000 lines
+
+503
+00:18:56,130 --> 00:18:58,290
+of code repos in there
+effectively and making changes.
+
+504
+00:18:58,290 --> 00:19:02,730
+So again, I said best
+practice, pilot, before.
+
+505
+00:19:02,730 --> 00:19:03,563
+Just try it.
+
+506
+00:19:03,563 --> 00:19:05,580
+It's cheap and easy to start and try.
+
+507
+00:19:05,580 --> 00:19:07,440
+We made the installation
+as easy as possible.
+
+508
+00:19:07,440 --> 00:19:10,890
+It's one curl command to pull down our CLI
+
+509
+00:19:10,890 --> 00:19:12,660
+and start trying it out.
+
+510
+00:19:12,660 --> 00:19:13,493
+- [Venu] Cool, thanks.
+
+511
+00:19:13,493 --> 00:19:14,670
+Thanks for that.
+
+512
+00:19:14,670 --> 00:19:18,093
+Okay, let's now do some
+coding, live coding, right?
+
+513
+00:19:19,110 --> 00:19:22,320
+So the way that I've set up is,
+
+514
+00:19:22,320 --> 00:19:24,780
+so Morgan talked about the
+built-in transformations,
+
+515
+00:19:24,780 --> 00:19:28,110
+as well as the custom transformation
+and doing it at scale.
+
+516
+00:19:28,110 --> 00:19:31,410
+So let's see if we can
+do all of them, right?
+
+517
+00:19:31,410 --> 00:19:33,900
+So let's start with the out
+of the box transformations,
+
+518
+00:19:33,900 --> 00:19:37,170
+and let's see how it works, right?
+
+519
+00:19:37,170 --> 00:19:38,160
+So the first thing is,
+
+520
+00:19:38,160 --> 00:19:41,220
+I mean, this is a command
+line interface, CLI.
+
+521
+00:19:41,220 --> 00:19:43,200
+You can install it on your laptop.
+
+522
+00:19:43,200 --> 00:19:46,020
+So I'm gonna use a WSL
+environment on Windows.
+
+523
+00:19:46,020 --> 00:19:47,970
+Mac and Linux is supported.
+
+524
+00:19:47,970 --> 00:19:49,890
+So I've already installed it,
+
+525
+00:19:49,890 --> 00:19:53,910
+and I'm just gonna start
+with my first command.
+
+526
+00:19:53,910 --> 00:19:56,760
+So like Morgan mentioned, this can be run
+
+527
+00:19:56,760 --> 00:20:00,150
+as a interactive mode, as
+well as non-interactive mode.
+
+528
+00:20:00,150 --> 00:20:02,250
+Non-interactive is basically
+a bunch of commands.
+
+529
+00:20:02,250 --> 00:20:06,270
+You say, hey, ATX, run my
+transformation on this repo.
+
+530
+00:20:06,270 --> 00:20:07,590
+They'll just go do it for you.
+
+531
+00:20:07,590 --> 00:20:10,560
+Or you can interact with
+this, give some feedback
+
+532
+00:20:10,560 --> 00:20:12,510
+and do it interactively as well.
+
+533
+00:20:12,510 --> 00:20:15,420
+So we'll show both of
+these modes right now.
+
+534
+00:20:15,420 --> 00:20:18,690
+So first thing, I'm gonna list...
+
+535
+00:20:18,690 --> 00:20:21,210
+Let's say, hey, atx custom,
+
+536
+00:20:21,210 --> 00:20:25,590
+that's AWS Transform custom,
+definitions list, okay?
+
+537
+00:20:25,590 --> 00:20:27,543
+List all my definitions, right?
+
+538
+00:20:30,270 --> 00:20:31,410
+Okay.
+
+539
+00:20:31,410 --> 00:20:33,960
+Okay, so I have a bunch which I built,
+
+540
+00:20:33,960 --> 00:20:37,560
+but let's go through the
+AWS managed ones, right?
+
+541
+00:20:37,560 --> 00:20:40,440
+So we have eight AWS
+managed transformation,
+
+542
+00:20:40,440 --> 00:20:42,420
+which are out of the box, zero setup.
+
+543
+00:20:42,420 --> 00:20:44,100
+You can just get started.
+
+544
+00:20:44,100 --> 00:20:47,760
+There is AWS SDK v1 to v2, Node.js,
+
+545
+00:20:47,760 --> 00:20:50,850
+Python upgrades Boto2 to Boto3,
+
+546
+00:20:50,850 --> 00:20:53,910
+Python version upgrades,
+Lambdas and non-Lambdas as well,
+
+547
+00:20:53,910 --> 00:20:56,010
+same thing with Node.js.
+
+548
+00:20:56,010 --> 00:20:57,030
+In early access,
+
+549
+00:20:57,030 --> 00:20:59,310
+we have the comprehensive
+code base analysis,
+
+550
+00:20:59,310 --> 00:21:02,430
+which Morgan talked about,
+and Java version upgrade,
+
+551
+00:21:02,430 --> 00:21:05,940
+again, it's both Maven,
+Gradle build systems,
+
+552
+00:21:05,940 --> 00:21:07,887
+and x86 to Graviton.
+
+553
+00:21:07,887 --> 00:21:11,460
+And these are some of the user
+transformation that I built
+
+554
+00:21:11,460 --> 00:21:16,050
+for demoing to customers and
+for my personal use as well,
+
+555
+00:21:16,050 --> 00:21:18,750
+and this is the registry that you see.
+
+556
+00:21:18,750 --> 00:21:21,180
+So it's basically
+published to the registry.
+
+557
+00:21:21,180 --> 00:21:24,750
+So once you publish it, any
+user in your AWS account
+
+558
+00:21:24,750 --> 00:21:29,750
+who has access to this CLI
+and proper IAM permission
+
+559
+00:21:29,760 --> 00:21:31,170
+should be able to view it.
+
+560
+00:21:31,170 --> 00:21:34,320
+Just download it and
+run with their project.
+
+561
+00:21:34,320 --> 00:21:35,153
+- [Morgan] You're better than me.
+
+562
+00:21:35,153 --> 00:21:37,380
+When I demo it, I just use
+the AWS internal registry,
+
+563
+00:21:37,380 --> 00:21:40,080
+and it shows, like, 350 transformations,
+
+564
+00:21:40,080 --> 00:21:40,913
+(Venu laughs)
+
+565
+00:21:40,913 --> 00:21:41,929
+which is good.
+
+566
+00:21:41,929 --> 00:21:42,762
+A lot of people internally are using it.
+
+567
+00:21:42,762 --> 00:21:43,830
+- [Venu] Yeah.
+
+568
+00:21:43,830 --> 00:21:44,663
+Awesome.
+
+569
+00:21:44,663 --> 00:21:46,410
+So let's start with the first one, right?
+
+570
+00:21:46,410 --> 00:21:48,870
+So I have a Lambda function here.
+
+571
+00:21:48,870 --> 00:21:51,180
+It's basically a to-do application.
+
+572
+00:21:51,180 --> 00:21:53,970
+So let's start by running
+this transformation
+
+573
+00:21:53,970 --> 00:21:56,640
+on this Lambda function, right?
+
+574
+00:21:56,640 --> 00:21:58,080
+So...
+
+575
+00:21:58,080 --> 00:22:00,300
+And this is the command
+that I'm gonna use, right?
+
+576
+00:22:00,300 --> 00:22:02,970
+Let's put this and then probably explain
+
+577
+00:22:02,970 --> 00:22:05,970
+what exactly I'm gonna do, right?
+
+578
+00:22:05,970 --> 00:22:07,560
+So this use case is basically,
+
+579
+00:22:07,560 --> 00:22:10,260
+hey, you're just going
+to use out of the box.
+
+580
+00:22:10,260 --> 00:22:12,090
+You know what you're doing.
+
+581
+00:22:12,090 --> 00:22:14,730
+You have a bunch of Lambda
+function, go run it, right?
+
+582
+00:22:14,730 --> 00:22:16,470
+Again, zero setup, just go run it
+
+583
+00:22:16,470 --> 00:22:19,200
+without creating your own
+transformation, right?
+
+584
+00:22:19,200 --> 00:22:22,260
+So I'm gonna say, hey, atx custom exec.
+
+585
+00:22:22,260 --> 00:22:23,880
+Exec is execute.
+
+586
+00:22:23,880 --> 00:22:28,380
+And this is, -p is where is
+my lambda function located.
+
+587
+00:22:28,380 --> 00:22:30,030
+- [Morgan] The file path on local disc.
+
+588
+00:22:30,030 --> 00:22:31,590
+- [Venu] Yeah, local disc.
+
+589
+00:22:31,590 --> 00:22:35,280
+And -n is the Python version upgrade
+
+590
+00:22:35,280 --> 00:22:37,860
+that you saw from the out of the box list.
+
+591
+00:22:37,860 --> 00:22:40,920
+C is, I mean, the bill
+command that needs to be used.
+
+592
+00:22:40,920 --> 00:22:42,540
+So in case of this Python,
+
+593
+00:22:42,540 --> 00:22:44,670
+I'm just going to use no operations.
+
+594
+00:22:44,670 --> 00:22:47,460
+But for Java, you'd
+use a mvn clean install
+
+595
+00:22:47,460 --> 00:22:48,810
+or something like that, right?
+
+596
+00:22:48,810 --> 00:22:51,690
+And the configuration is
+basically additional context
+
+597
+00:22:51,690 --> 00:22:53,340
+that you could give, right?
+
+598
+00:22:53,340 --> 00:22:56,700
+That's the, basically,
+what validation command
+
+599
+00:22:56,700 --> 00:22:58,500
+I need to use, right?
+
+600
+00:22:58,500 --> 00:23:00,810
+You can say, hey, I'm
+gonna just run pytest
+
+601
+00:23:00,810 --> 00:23:02,520
+to make sure all unit tests pass.
+
+602
+00:23:02,520 --> 00:23:03,540
+And you can also give,
+
+603
+00:23:03,540 --> 00:23:04,680
+it's basically freeform.
+
+604
+00:23:04,680 --> 00:23:06,990
+You can give additional context here
+
+605
+00:23:06,990 --> 00:23:08,730
+of running this execution, right?
+
+606
+00:23:08,730 --> 00:23:10,680
+And I'm gonna say, hey...
+
+607
+00:23:10,680 --> 00:23:12,660
+Since this is very generic,
+
+608
+00:23:12,660 --> 00:23:15,600
+it can go from any Python
+version to any Python version.
+
+609
+00:23:15,600 --> 00:23:17,913
+So I'm gonna say, hey, go to Python 3.3.
+
+610
+00:23:18,930 --> 00:23:21,180
+- x is basically non-interactive,
+
+611
+00:23:21,180 --> 00:23:23,250
+which means, hey, go run it.
+
+612
+00:23:23,250 --> 00:23:26,160
+And then -t is trust all tools.
+
+613
+00:23:26,160 --> 00:23:28,740
+So in case of interactive mode,
+
+614
+00:23:28,740 --> 00:23:30,290
+you might need to trust tools
+
+615
+00:23:30,290 --> 00:23:32,640
+to write files, read
+files, all those things.
+
+616
+00:23:32,640 --> 00:23:34,800
+So I'm gonna say, hey, trust all my tools,
+
+617
+00:23:34,800 --> 00:23:37,110
+go and execute it, okay?
+
+618
+00:23:37,110 --> 00:23:39,093
+So let's execute this.
+
+619
+00:23:42,720 --> 00:23:45,513
+All right, so it started the
+transformation right now.
+
+620
+00:23:53,220 --> 00:23:54,990
+Let's see what it does right now.
+
+621
+00:23:54,990 --> 00:23:56,070
+So basically, the first step,
+
+622
+00:23:56,070 --> 00:23:58,170
+it's going to create a conversation log
+
+623
+00:23:58,170 --> 00:24:00,120
+where you can track all the progress
+
+624
+00:24:00,120 --> 00:24:02,640
+and monitor all the progress
+on the conversation log.
+
+625
+00:24:02,640 --> 00:24:04,950
+And you can resume these
+conversations as well.
+
+626
+00:24:04,950 --> 00:24:07,320
+Accidentally, your
+network got disconnected
+
+627
+00:24:07,320 --> 00:24:10,830
+and you control c-ed it,
+there is a conversation id.
+
+628
+00:24:10,830 --> 00:24:12,510
+You can just resume this conversation.
+
+629
+00:24:12,510 --> 00:24:13,470
+That's a neat feature
+
+630
+00:24:13,470 --> 00:24:16,890
+because, I mean, sometimes
+things happen, right?
+
+631
+00:24:16,890 --> 00:24:21,030
+Internet breaks down and
+you have to reconnect,
+
+632
+00:24:21,030 --> 00:24:22,743
+you can do that here, right?
+
+633
+00:24:23,610 --> 00:24:27,600
+Okay, so let us do this job, right?
+
+634
+00:24:27,600 --> 00:24:29,670
+And I'm gonna show you an output,
+
+635
+00:24:29,670 --> 00:24:33,574
+what I did earlier in the day
+for the same transformation,
+
+636
+00:24:33,574 --> 00:24:35,820
+how this is gonna look like, right?
+
+637
+00:24:35,820 --> 00:24:37,200
+So I have a dryrun folder here.
+
+638
+00:24:37,200 --> 00:24:40,260
+I just ran the same
+transformation earlier in the day.
+
+639
+00:24:40,260 --> 00:24:42,430
+So basically, it ran
+
+640
+00:24:44,776 --> 00:24:45,990
+and it created the plan,
+
+641
+00:24:45,990 --> 00:24:48,540
+it created the, completed the changes,
+
+642
+00:24:48,540 --> 00:24:51,720
+and it basically converted
+my Python function
+
+643
+00:24:51,720 --> 00:24:53,913
+from 3.8 to 3.13.
+
+644
+00:24:54,960 --> 00:24:57,153
+And let's see some of
+these changes, right?
+
+645
+00:25:00,270 --> 00:25:02,220
+Because this transformation
+might take anywhere
+
+646
+00:25:02,220 --> 00:25:03,540
+between 10 to 15 minutes,
+
+647
+00:25:03,540 --> 00:25:07,380
+I don't want you to just stare
+at my screen, so we just-
+
+648
+00:25:07,380 --> 00:25:08,910
+- [Morgan] We are working
+to make it a little quicker,
+
+649
+00:25:08,910 --> 00:25:11,190
+but we figured it's better
+to be slow and right
+
+650
+00:25:11,190 --> 00:25:12,540
+than fast and wrong.
+
+651
+00:25:12,540 --> 00:25:13,830
+So we optimized for right.
+
+652
+00:25:13,830 --> 00:25:15,150
+Now, we're gonna optimize for fast.
+
+653
+00:25:15,150 --> 00:25:16,410
+- [Venu] Yeah.
+
+654
+00:25:16,410 --> 00:25:17,243
+Cool, yeah.
+
+655
+00:25:17,243 --> 00:25:19,440
+So this is the same project.
+
+656
+00:25:19,440 --> 00:25:22,500
+So it did a 3.8 to 3.13 migration.
+
+657
+00:25:22,500 --> 00:25:25,920
+And so it basically did a runtime upgrade,
+
+658
+00:25:25,920 --> 00:25:30,920
+and datetime was modernized
+in this new versions,
+
+659
+00:25:31,407 --> 00:25:36,330
+and it also added 17 to
+32 passing test cases.
+
+660
+00:25:36,330 --> 00:25:39,723
+And again, it documented what it did.
+
+661
+00:25:41,220 --> 00:25:44,820
+It also did improve
+interpreter performance.
+
+662
+00:25:44,820 --> 00:25:46,110
+And this is all built in.
+
+663
+00:25:46,110 --> 00:25:47,490
+I didn't give any instruction.
+
+664
+00:25:47,490 --> 00:25:49,472
+It is all built in, right?
+
+665
+00:25:49,472 --> 00:25:51,990
+And it did not change any business logic,
+
+666
+00:25:51,990 --> 00:25:53,100
+no braking changes.
+
+667
+00:25:53,100 --> 00:25:56,823
+All those things are kept.
+
+668
+00:25:57,810 --> 00:25:59,670
+Okay, so it updated the readme.
+
+669
+00:25:59,670 --> 00:26:01,770
+These are the files changed.
+
+670
+00:26:01,770 --> 00:26:03,000
+I just did a git diff.
+
+671
+00:26:03,000 --> 00:26:05,670
+So what it does is once
+it makes the changes,
+
+672
+00:26:05,670 --> 00:26:08,040
+it actually creates a local branch for you
+
+673
+00:26:08,040 --> 00:26:09,570
+and commits all these changes,
+
+674
+00:26:09,570 --> 00:26:11,910
+so which means at any point in time,
+
+675
+00:26:11,910 --> 00:26:13,470
+you can go to the comment ID, roll back,
+
+676
+00:26:13,470 --> 00:26:16,710
+or you can just compare and then review it
+
+677
+00:26:16,710 --> 00:26:19,440
+and then check it in or
+push your code changes.
+
+678
+00:26:19,440 --> 00:26:20,460
+- [Morgan] It's especially useful
+
+679
+00:26:20,460 --> 00:26:22,080
+if the agent, like, does the right thing
+
+680
+00:26:22,080 --> 00:26:24,000
+for, like, the first three
+quarters of the transformation
+
+681
+00:26:24,000 --> 00:26:25,020
+and then goes off the rails.
+
+682
+00:26:25,020 --> 00:26:26,820
+And you're like, I don't want
+all that work to be wasted.
+
+683
+00:26:26,820 --> 00:26:28,659
+Like, you could just
+revert to the previous-
+
+684
+00:26:28,659 --> 00:26:29,520
+- [Venu] Exactly.
+
+685
+00:26:29,520 --> 00:26:31,980
+Okay, so some of these
+files had basically changed.
+
+686
+00:26:31,980 --> 00:26:34,770
+All the time zone things and
+the main Lambda function,
+
+687
+00:26:34,770 --> 00:26:37,350
+it changed a few of the functions,
+
+688
+00:26:37,350 --> 00:26:39,300
+and also, requirements.text.
+
+689
+00:26:39,300 --> 00:26:41,605
+And it also changed the template.yaml.
+
+690
+00:26:41,605 --> 00:26:44,790
+I think this is a cloud
+formation template I had.
+
+691
+00:26:44,790 --> 00:26:48,390
+So it changed from 3.8
+to 3.13 for deployment.
+
+692
+00:26:48,390 --> 00:26:52,920
+And it also, it changed deprecated APIs,
+
+693
+00:26:52,920 --> 00:26:54,900
+documentation updates, all those things.
+
+694
+00:26:54,900 --> 00:26:58,473
+So again, just to summarize this,
+
+695
+00:26:59,310 --> 00:27:01,740
+just go run this out of
+the box transformation
+
+696
+00:27:01,740 --> 00:27:05,850
+if you have a very similar use
+case for your project, right?
+
+697
+00:27:05,850 --> 00:27:09,420
+So yeah, that's the first
+thing that I wanna show, right?
+
+698
+00:27:09,420 --> 00:27:11,493
+Anything you wanna add in out of the box?
+
+699
+00:27:12,540 --> 00:27:13,860
+- [Morgan] No, I think that's good.
+
+700
+00:27:13,860 --> 00:27:14,940
+- [Venu] Cool.
+
+701
+00:27:14,940 --> 00:27:18,090
+Okay, let's now come to
+the fun part where...
+
+702
+00:27:18,090 --> 00:27:21,090
+How do you wanna create your
+custom transformation, right?
+
+703
+00:27:21,090 --> 00:27:25,710
+So here, I wanna show an internal library
+
+704
+00:27:25,710 --> 00:27:28,650
+that our internal team
+used the same product
+
+705
+00:27:28,650 --> 00:27:32,310
+for migrating a internal ticketing system.
+
+706
+00:27:32,310 --> 00:27:34,140
+So we had something called Fluxo,
+
+707
+00:27:34,140 --> 00:27:36,930
+which Amazon's internal
+ticketing system uses,
+
+708
+00:27:36,930 --> 00:27:38,073
+that's very old,
+
+709
+00:27:39,720 --> 00:27:40,770
+very hard to maintain,
+
+710
+00:27:40,770 --> 00:27:43,290
+so we wanted to change to
+something called Tickety.
+
+711
+00:27:43,290 --> 00:27:44,910
+That's also an internal system,
+
+712
+00:27:44,910 --> 00:27:49,910
+but that's more API driven
+and more performance oriented.
+
+713
+00:27:50,970 --> 00:27:54,330
+So that's why we wanted to
+change all of our projects
+
+714
+00:27:54,330 --> 00:27:57,330
+which uses Fluxo to
+Tickety library, right?
+
+715
+00:27:57,330 --> 00:27:58,980
+So that's, again, Java based,
+
+716
+00:27:58,980 --> 00:28:01,323
+but this is very specific to Amazon.
+
+717
+00:28:03,832 --> 00:28:05,250
+The large language models does not have
+
+718
+00:28:05,250 --> 00:28:06,990
+pre-trained data on these things.
+
+719
+00:28:06,990 --> 00:28:08,310
+So that's where the power comes in,
+
+720
+00:28:08,310 --> 00:28:12,810
+where you can feed in data or
+context from your organization
+
+721
+00:28:12,810 --> 00:28:15,960
+to teach the agent how to do these stuff,
+
+722
+00:28:15,960 --> 00:28:19,320
+and then so it can do
+that migration at scale.
+
+723
+00:28:19,320 --> 00:28:21,180
+- [Morgan] If you've got some
+weird proprietary library
+
+724
+00:28:21,180 --> 00:28:23,010
+that no one else in the world uses,
+
+725
+00:28:23,010 --> 00:28:24,840
+that's what we're trying to show here.
+
+726
+00:28:24,840 --> 00:28:26,130
+- [Venu] Yeah.
+
+727
+00:28:26,130 --> 00:28:28,083
+So let's go do this one.
+
+728
+00:28:30,960 --> 00:28:32,703
+Okay, so,
+
+729
+00:28:35,460 --> 00:28:36,293
+let's go here.
+
+730
+00:28:38,220 --> 00:28:41,520
+Okay, the other thing I
+want to also mention here
+
+731
+00:28:41,520 --> 00:28:43,740
+is this connects to MCP servers,
+
+732
+00:28:43,740 --> 00:28:45,900
+which means that you can pull in data
+
+733
+00:28:45,900 --> 00:28:47,820
+pretty much from anything, right?
+
+734
+00:28:47,820 --> 00:28:52,820
+So I have this Fluxo
+ticketing migration guide,
+
+735
+00:28:53,040 --> 00:28:54,190
+which we have prepared,
+
+736
+00:28:55,800 --> 00:28:57,900
+and then I've just put
+it into my GitHub repo.
+
+737
+00:28:57,900 --> 00:28:58,830
+It's a private repo.
+
+738
+00:28:58,830 --> 00:29:00,280
+So I'm asking
+
+739
+00:29:02,100 --> 00:29:04,710
+ATX custom to pull in doc information
+
+740
+00:29:04,710 --> 00:29:07,290
+from my internal repositories
+
+741
+00:29:07,290 --> 00:29:09,600
+and then use it as part of your creation
+
+742
+00:29:09,600 --> 00:29:12,810
+of the transformation definition, right?
+
+743
+00:29:12,810 --> 00:29:15,000
+So I'm gonna do this
+in an interactive mode.
+
+744
+00:29:15,000 --> 00:29:16,920
+I'm just gonna say ATX.
+
+745
+00:29:16,920 --> 00:29:18,690
+That will open an interactive shell
+
+746
+00:29:18,690 --> 00:29:20,100
+where you can interact with it.
+
+747
+00:29:20,100 --> 00:29:21,990
+So I'm gonna create a definition
+
+748
+00:29:21,990 --> 00:29:24,660
+based on the migration guide that I have,
+
+749
+00:29:24,660 --> 00:29:28,170
+and then review it, give feedback,
+
+750
+00:29:28,170 --> 00:29:30,297
+then execute the transformation on that.
+
+751
+00:29:30,297 --> 00:29:32,474
+- [Morgan] And the cool thing
+about this guide, by the way,
+
+752
+00:29:32,474 --> 00:29:34,114
+if this is that guide I sent you-
+
+753
+00:29:34,114 --> 00:29:34,947
+- [Venu] Yes.
+- [Morgan] This is a guide
+
+754
+00:29:34,947 --> 00:29:36,360
+that was written for human users in Amazon
+
+755
+00:29:36,360 --> 00:29:38,460
+published to a wiki to
+go and do this work.
+
+756
+00:29:38,460 --> 00:29:39,960
+Like, someone already wrote this guide
+
+757
+00:29:39,960 --> 00:29:41,730
+assuming developers were
+gonna have to do it,
+
+758
+00:29:41,730 --> 00:29:45,210
+so we're just giving that to
+the agent, no extra effort.
+
+759
+00:29:45,210 --> 00:29:46,350
+- [Venu] Yeah.
+
+760
+00:29:46,350 --> 00:29:50,613
+So I'm just gonna say, hey,
+create a new transformation.
+
+761
+00:29:51,660 --> 00:29:53,610
+Okay, and this is the interactive mode.
+
+762
+00:29:58,350 --> 00:29:59,640
+Okay, so it's gonna ask you,
+
+763
+00:29:59,640 --> 00:30:00,960
+hey, what do you wanna do, right?
+
+764
+00:30:00,960 --> 00:30:02,820
+Language upgrades, framework migration,
+
+765
+00:30:02,820 --> 00:30:05,067
+library upgrades, all those things.
+
+766
+00:30:05,067 --> 00:30:10,067
+I'm just gonna say
+internal library migration
+
+767
+00:30:11,880 --> 00:30:13,060
+from Fluxo to Tickety.
+
+768
+00:30:16,740 --> 00:30:19,090
+Again, the large language
+model does not know
+
+769
+00:30:20,040 --> 00:30:22,530
+what the hell is Fluxo or Tickety, right?
+
+770
+00:30:22,530 --> 00:30:25,230
+That's where I'm gonna give
+more information, right?
+
+771
+00:30:25,230 --> 00:30:27,240
+First, it searches in the registry
+
+772
+00:30:27,240 --> 00:30:31,590
+if somebody already created
+this definition or not.
+
+773
+00:30:31,590 --> 00:30:33,857
+If not, it's gonna
+create a new one, right?
+
+774
+00:30:38,721 --> 00:30:39,900
+Okay, so it's asking me,
+
+775
+00:30:39,900 --> 00:30:41,880
+hey, what kind of
+application libraries it has?
+
+776
+00:30:41,880 --> 00:30:43,110
+What are the main functionalities?
+
+777
+00:30:43,110 --> 00:30:44,910
+What programming language it uses?
+
+778
+00:30:44,910 --> 00:30:47,370
+Hey, do you have any
+migration guide documentation,
+
+779
+00:30:47,370 --> 00:30:48,990
+example code that you can give me,
+
+780
+00:30:48,990 --> 00:30:51,150
+that I can learn from it, right?
+
+781
+00:30:51,150 --> 00:30:52,263
+I'm gonna just say,
+
+782
+00:30:54,620 --> 00:30:55,453
+okay...
+
+783
+00:30:58,110 --> 00:31:03,110
+It referred to this dot md file
+using my GitHub MCP server.
+
+784
+00:31:08,220 --> 00:31:09,840
+It takes a bit for connecting
+
+785
+00:31:09,840 --> 00:31:11,940
+and getting the right information,
+
+786
+00:31:11,940 --> 00:31:15,333
+basically started using the MCP tool.
+
+787
+00:31:16,530 --> 00:31:18,393
+Again, trusting this tool.
+
+788
+00:31:21,240 --> 00:31:22,920
+- [Morgan] You can also just
+give it a local file path
+
+789
+00:31:22,920 --> 00:31:23,968
+to a file on disc.
+
+790
+00:31:23,968 --> 00:31:24,840
+- [Venu] Yeah, you can
+download it and give...
+
+791
+00:31:24,840 --> 00:31:26,160
+But I just wanted to show the-
+
+792
+00:31:26,160 --> 00:31:27,390
+- [Morgan] Yeah.
+
+793
+00:31:27,390 --> 00:31:28,223
+- [Venu] Power of, hey, you can connect
+
+794
+00:31:28,223 --> 00:31:29,763
+to your existing environments.
+
+795
+00:31:30,660 --> 00:31:31,760
+Okay, so...
+
+796
+00:31:33,720 --> 00:31:34,553
+Okay.
+
+797
+00:31:37,307 --> 00:31:41,883
+Always fun with a live demo,
+but yeah, it's doing it.
+
+798
+00:31:49,300 --> 00:31:51,270
+Okay, while this is running,
+
+799
+00:31:51,270 --> 00:31:53,700
+I think I was talking to
+one of the customers here,
+
+800
+00:31:53,700 --> 00:31:55,520
+they had a use case for...
+
+801
+00:31:56,852 --> 00:31:58,530
+I have a prompt already written
+
+802
+00:31:58,530 --> 00:32:02,910
+using Kiro for increasing my
+unit test coverage, right?
+
+803
+00:32:02,910 --> 00:32:05,460
+Can I do it on thousands
+of my repositories?
+
+804
+00:32:05,460 --> 00:32:06,990
+Yeah, absolutely.
+
+805
+00:32:06,990 --> 00:32:08,370
+That's where the power comes in.
+
+806
+00:32:08,370 --> 00:32:10,020
+Hey, you already solved this problem,
+
+807
+00:32:10,020 --> 00:32:13,230
+automation problem once
+with your existing AI tools.
+
+808
+00:32:13,230 --> 00:32:16,560
+Now you want to expand it or
+scale it to all other teams,
+
+809
+00:32:16,560 --> 00:32:17,910
+you could definitely do that
+
+810
+00:32:17,910 --> 00:32:20,970
+with creating your own
+custom transformation.
+
+811
+00:32:20,970 --> 00:32:22,800
+- [Morgan] Another scenario
+I've heard of from customers
+
+812
+00:32:22,800 --> 00:32:23,790
+that I thought was pretty cool
+
+813
+00:32:23,790 --> 00:32:25,830
+is if you wanna make your code AI ready,
+
+814
+00:32:25,830 --> 00:32:28,980
+like you wanna write a
+claude.md, a kiro.md file
+
+815
+00:32:28,980 --> 00:32:30,900
+for every repo under your ownership
+
+816
+00:32:30,900 --> 00:32:32,520
+and you wanna follow certain conventions
+
+817
+00:32:32,520 --> 00:32:35,040
+but incorporate aspects of the code there,
+
+818
+00:32:35,040 --> 00:32:39,180
+you can define how you want
+those agent guide files to look
+
+819
+00:32:39,180 --> 00:32:40,920
+in Transform custom and have it go
+
+820
+00:32:40,920 --> 00:32:43,470
+just write all of those
+files for all of your code.
+
+821
+00:32:44,423 --> 00:32:46,239
+- [Participant] So one thing is
+
+822
+00:32:46,239 --> 00:32:48,164
+when you have multiple problems
+
+823
+00:32:48,164 --> 00:32:51,601
+and you can see it sequentially
+one after the another,
+
+824
+00:32:51,601 --> 00:32:55,268
+and one from the file
+and the other from...
+
+825
+00:33:00,933 --> 00:33:05,142
+One prompt without an output,
+and then another prompt
+
+826
+00:33:05,142 --> 00:33:08,809
+which rather than an
+output, has an input...
+
+827
+00:33:10,250 --> 00:33:14,000
+So the sequential exhibition
+of multiple count,
+
+828
+00:33:16,039 --> 00:33:17,456
+it's kind of a...
+
+829
+00:33:21,960 --> 00:33:23,910
+- [Morgan] So it's not exactly
+
+830
+00:33:23,910 --> 00:33:25,830
+a sequential execution of prompts.
+
+831
+00:33:25,830 --> 00:33:28,380
+There's several agents under the hood.
+
+832
+00:33:28,380 --> 00:33:30,320
+There's a planning agent,
+and an orchestration agent,
+
+833
+00:33:30,320 --> 00:33:32,130
+an execution agent.
+
+834
+00:33:32,130 --> 00:33:34,230
+So the first thing it does when
+you execute a transformation
+
+835
+00:33:34,230 --> 00:33:36,210
+is it's gonna look at the
+transformation definition,
+
+836
+00:33:36,210 --> 00:33:38,280
+which itself has some steps and guidance.
+
+837
+00:33:38,280 --> 00:33:41,010
+It's gonna look at the code
+you're asking it to operate on,
+
+838
+00:33:41,010 --> 00:33:43,590
+and it's gonna say, okay,
+given these instructions
+
+839
+00:33:43,590 --> 00:33:45,180
+and this code, let me develop a plan
+
+840
+00:33:45,180 --> 00:33:48,750
+for doing this execution on
+this particular piece of code.
+
+841
+00:33:48,750 --> 00:33:50,250
+And it will show that to you if you like,
+
+842
+00:33:50,250 --> 00:33:52,200
+and you can approve it or
+tell it to make changes,
+
+843
+00:33:52,200 --> 00:33:53,940
+and then it's gonna go
+through those steps.
+
+844
+00:33:53,940 --> 00:33:57,900
+And each of those is kind
+of sort of like a prompt,
+
+845
+00:33:57,900 --> 00:33:59,700
+but there's sub...
+
+846
+00:33:59,700 --> 00:34:01,110
+It's not just a single one shot.
+
+847
+00:34:01,110 --> 00:34:03,210
+There's sub-steps in between
+it because after each step,
+
+848
+00:34:03,210 --> 00:34:05,190
+the agent is going to
+call a validation agent.
+
+849
+00:34:05,190 --> 00:34:07,320
+It's gonna make sure, hey,
+does this code still build?
+
+850
+00:34:07,320 --> 00:34:08,520
+Does what I,
+
+851
+00:34:08,520 --> 00:34:11,310
+the action I performed in
+this step actually fulfill
+
+852
+00:34:11,310 --> 00:34:14,788
+the original intent of this
+step based on the plan?
+
+853
+00:34:14,788 --> 00:34:16,543
+- [Participant] Those things
+are there in the prompt
+
+854
+00:34:16,543 --> 00:34:19,671
+I have the validation steps
+as part of the prompt.
+
+855
+00:34:19,671 --> 00:34:21,421
+Everything's covered.
+
+856
+00:34:23,970 --> 00:34:26,852
+So do I need to remove it?
+
+857
+00:34:26,852 --> 00:34:28,269
+- [Morgan] I see.
+
+858
+00:34:33,375 --> 00:34:37,429
+- [Participant] And the
+reason why validation...
+
+859
+00:34:37,429 --> 00:34:39,512
+Validates what it does...
+
+860
+00:34:53,580 --> 00:34:55,710
+- So what I would do is
+I would take that prompt,
+
+861
+00:34:55,710 --> 00:34:57,570
+I would give it to AWS Transform
+
+862
+00:34:57,570 --> 00:35:00,270
+during the transformation
+creation process and just tell it,
+
+863
+00:35:00,270 --> 00:35:02,640
+here's a prompt I wrote
+for Kiro to do blah.
+
+864
+00:35:02,640 --> 00:35:06,030
+And it's gonna say, cool,
+let me look at this prompt,
+
+865
+00:35:06,030 --> 00:35:07,140
+and there should be aspects of it
+
+866
+00:35:07,140 --> 00:35:08,460
+that are directly applicable,
+
+867
+00:35:08,460 --> 00:35:09,600
+and I'm just gonna incorporate that
+
+868
+00:35:09,600 --> 00:35:12,330
+into my transformation definition.
+
+869
+00:35:12,330 --> 00:35:15,030
+There's aspects I may ask
+for your clarification on.
+
+870
+00:35:15,030 --> 00:35:18,390
+But it's gonna take that
+kind of raw information
+
+871
+00:35:18,390 --> 00:35:20,850
+and put it in the
+structured way that it knows
+
+872
+00:35:20,850 --> 00:35:24,090
+effectively executes
+transformations with this thing.
+
+873
+00:35:24,090 --> 00:35:26,020
+- [Venu] That's where the
+refined part also comes in
+
+874
+00:35:26,020 --> 00:35:27,570
+where you saw, right?
+
+875
+00:35:27,570 --> 00:35:30,780
+Once it generates, basically
+converted your prompt
+
+876
+00:35:30,780 --> 00:35:34,950
+into its own, what we
+call as the definition.
+
+877
+00:35:34,950 --> 00:35:37,260
+That's where you can
+review it, you can edit it,
+
+878
+00:35:37,260 --> 00:35:39,030
+or you can just give feedback saying that,
+
+879
+00:35:39,030 --> 00:35:41,310
+hey, I really don't like
+this validation step.
+
+880
+00:35:41,310 --> 00:35:43,920
+Can you add more, right, to this phase?
+
+881
+00:35:43,920 --> 00:35:46,877
+It should be able to accommodate that.
+
+882
+00:35:46,877 --> 00:35:48,627
+- [Participant] And then it would be...
+
+883
+00:35:48,627 --> 00:35:50,794
+If I have three prompts...
+
+884
+00:35:55,794 --> 00:35:57,690
+- [Venu] I mean, that's something
+
+885
+00:35:57,690 --> 00:35:59,550
+you need to experiment, right?
+
+886
+00:35:59,550 --> 00:36:03,180
+First, I would start with
+one, how it creates it.
+
+887
+00:36:03,180 --> 00:36:05,610
+If that's not what you wanted,
+
+888
+00:36:05,610 --> 00:36:07,680
+maybe split it into multiple parts.
+
+889
+00:36:07,680 --> 00:36:12,300
+If everything can be contained,
+yes, multiple prompts.
+
+890
+00:36:12,300 --> 00:36:15,180
+But again, as Morgan told,
+it's basically a CLI.
+
+891
+00:36:15,180 --> 00:36:18,810
+So you create three transformation,
+execute this in a batch,
+
+892
+00:36:18,810 --> 00:36:21,000
+should be able to do that as well.
+
+893
+00:36:21,000 --> 00:36:22,290
+- [Morgan] When in doubt,
+I like to tell people
+
+894
+00:36:22,290 --> 00:36:24,090
+to break down problems
+as small as possible,
+
+895
+00:36:24,090 --> 00:36:25,320
+as atomically as possible
+
+896
+00:36:25,320 --> 00:36:27,120
+'cause you'll get better results there.
+
+897
+00:36:27,120 --> 00:36:29,580
+But for really simple things,
+you can mash them together,
+
+898
+00:36:29,580 --> 00:36:32,850
+and it'll probably work and
+might save you a little effort.
+
+899
+00:36:32,850 --> 00:36:33,683
+- [Venu] Yeah.
+
+900
+00:36:34,869 --> 00:36:35,702
+Okay, cool.
+
+901
+00:36:35,702 --> 00:36:37,470
+It actually created a
+transformation definition,
+
+902
+00:36:37,470 --> 00:36:40,353
+so let's look at the
+transformation definition.
+
+903
+00:36:41,970 --> 00:36:42,803
+Okay.
+
+904
+00:36:43,710 --> 00:36:46,983
+Wow, it really is very comprehensive.
+
+905
+00:36:48,180 --> 00:36:50,730
+Okay, so this is the
+transformation definition
+
+906
+00:36:50,730 --> 00:36:54,720
+that it created, right, for
+the Fluxo to Tickety migration.
+
+907
+00:36:54,720 --> 00:36:56,673
+So let me, oops.
+
+908
+00:36:59,687 --> 00:37:02,100
+Okay, so it has a clear objective.
+
+909
+00:37:02,100 --> 00:37:05,670
+Hey, migrate code from my
+deprecated Fluxo ticketing library
+
+910
+00:37:05,670 --> 00:37:09,210
+to modern Tickety SDK.
+
+911
+00:37:09,210 --> 00:37:12,270
+And what is the summary,
+what exactly it's gonna do?
+
+912
+00:37:12,270 --> 00:37:14,004
+What is the entry criteria?
+
+913
+00:37:14,004 --> 00:37:14,837
+Entry criteria is basically,
+
+914
+00:37:14,837 --> 00:37:17,700
+hey, how do you wanna
+take this code in, right?
+
+915
+00:37:17,700 --> 00:37:22,700
+So here, it says code imports
+uses the Fluxo Java client.
+
+916
+00:37:22,950 --> 00:37:25,140
+That's the entry criteria, right?
+
+917
+00:37:25,140 --> 00:37:26,640
+- [Morgan] Entry criteria
+is really cool, by the way,
+
+918
+00:37:26,640 --> 00:37:27,810
+because that's how the agent knows
+
+919
+00:37:27,810 --> 00:37:29,610
+does this transformation
+apply to this code.
+
+920
+00:37:29,610 --> 00:37:32,940
+So if you point the agent at
+a whole bunch of random code
+
+921
+00:37:32,940 --> 00:37:35,790
+that does not use Fluxo, it's
+gonna read it a little bit
+
+922
+00:37:35,790 --> 00:37:38,550
+and be like, this doesn't apply, skipping.
+
+923
+00:37:38,550 --> 00:37:41,010
+So in the near future, we'll
+have an assessment capability
+
+924
+00:37:41,010 --> 00:37:43,620
+where you can point the agent
+at a whole bunch of code
+
+925
+00:37:43,620 --> 00:37:46,320
+and it'll tell you before
+even transforming anything,
+
+926
+00:37:46,320 --> 00:37:48,150
+these transformations apply to this code,
+
+927
+00:37:48,150 --> 00:37:50,483
+and you can kinda stage it
+out how you wanna do it.
+
+928
+00:37:51,750 --> 00:37:53,220
+- And implementation step
+
+929
+00:37:53,220 --> 00:37:55,293
+is basically step by step instruction.
+
+930
+00:37:56,160 --> 00:37:59,280
+It basically got information
+from the migration guide
+
+931
+00:37:59,280 --> 00:38:01,050
+how to do this transformation.
+
+932
+00:38:01,050 --> 00:38:03,780
+First, hey, step one, update
+the build dependencies,
+
+933
+00:38:03,780 --> 00:38:08,780
+and it basically broke it
+down into these projects.
+
+934
+00:38:09,000 --> 00:38:11,010
+and client initialization,
+
+935
+00:38:11,010 --> 00:38:14,073
+hey, basically, how to
+initialize the new client,
+
+936
+00:38:14,970 --> 00:38:18,720
+and basically covered
+for Python type script,
+
+937
+00:38:18,720 --> 00:38:23,070
+all those things as well,
+and get ticket operation.
+
+938
+00:38:23,070 --> 00:38:25,293
+All the APIs are also covered, right?
+
+939
+00:38:26,190 --> 00:38:30,060
+So these are the
+implementation steps, right?
+
+940
+00:38:30,060 --> 00:38:34,620
+This is where as a domain
+expert, you can come in and say,
+
+941
+00:38:34,620 --> 00:38:37,320
+hey, it looks good, it doesn't look good,
+
+942
+00:38:37,320 --> 00:38:40,860
+do we wanna change it or, or not, okay?
+
+943
+00:38:40,860 --> 00:38:44,883
+Okay, the last thing is the
+validation criteria, right?
+
+944
+00:38:47,910 --> 00:38:50,640
+Yep, so the validation or exit criteria.
+
+945
+00:38:50,640 --> 00:38:53,700
+What is the goal that it want to,
+
+946
+00:38:53,700 --> 00:38:55,230
+the agent wants to achieve?
+
+947
+00:38:55,230 --> 00:38:56,760
+How am I going to satisfy?
+
+948
+00:38:56,760 --> 00:39:00,570
+So this is where, again,
+we need to be very cautious
+
+949
+00:39:00,570 --> 00:39:02,970
+on how do we define this
+validation criteria.
+
+950
+00:39:02,970 --> 00:39:04,830
+It could be just simple as,
+
+951
+00:39:04,830 --> 00:39:07,430
+hey, my build and unit test pass, right?
+
+952
+00:39:07,430 --> 00:39:09,870
+Or it could be very complex as...
+
+953
+00:39:09,870 --> 00:39:11,760
+So one of the customer's actually doing
+
+954
+00:39:11,760 --> 00:39:13,410
+an Angular to React migration.
+
+955
+00:39:13,410 --> 00:39:15,840
+They actually use a Playwright MCP server
+
+956
+00:39:15,840 --> 00:39:20,040
+to compare visually, hey,
+my Angular and React,
+
+957
+00:39:20,040 --> 00:39:21,150
+does it look the same?
+
+958
+00:39:21,150 --> 00:39:23,223
+So it could be complex as that, right?
+
+959
+00:39:24,913 --> 00:39:26,790
+Or it could be deploying
+it to an AWS environment,
+
+960
+00:39:26,790 --> 00:39:28,080
+checking if it works or not.
+
+961
+00:39:28,080 --> 00:39:32,071
+So that's where your expertise comes in.
+
+962
+00:39:32,071 --> 00:39:32,910
+How do you wanna validate
+
+963
+00:39:32,910 --> 00:39:34,957
+if this migration is successful or not?
+
+964
+00:39:37,470 --> 00:39:41,520
+All right, so this created a
+good transformation definition.
+
+965
+00:39:41,520 --> 00:39:44,310
+And as a human in the
+loop, you can view it.
+
+966
+00:39:44,310 --> 00:39:48,150
+You can modify it based on
+the feedback, or apply it,
+
+967
+00:39:48,150 --> 00:39:50,040
+or publish to the registry, okay?
+
+968
+00:39:50,040 --> 00:39:53,703
+So let's apply it first
+for a sample project.
+
+969
+00:40:02,170 --> 00:40:03,750
+Okay, so now it's asking me,
+
+970
+00:40:03,750 --> 00:40:06,393
+hey, where is your code repository?
+
+971
+00:40:06,393 --> 00:40:08,400
+And I'm gonna give this.
+
+972
+00:40:09,782 --> 00:40:12,299
+This is, again, one of the
+sample projects that I have
+
+973
+00:40:12,299 --> 00:40:15,330
+which is in Fluxo that I
+wanna migrate to Tickety.
+
+974
+00:40:15,330 --> 00:40:18,753
+Okay, so I'm gonna say,
+okay, go ahead with this.
+
+975
+00:40:21,660 --> 00:40:23,550
+Now, again, it's gonna do the same thing.
+
+976
+00:40:23,550 --> 00:40:26,940
+It's gonna go analyze the entry criteria,
+
+977
+00:40:26,940 --> 00:40:31,940
+all the project files, and start
+the transformation project.
+
+978
+00:40:32,100 --> 00:40:36,060
+So as Morgan described,
+first, it does a planning,
+
+979
+00:40:36,060 --> 00:40:38,520
+so where it plans, hey,
+how am I going to apply
+
+980
+00:40:38,520 --> 00:40:41,100
+this definition on this
+current project, right?
+
+981
+00:40:41,100 --> 00:40:43,380
+What are the file changes
+that needs to be done?
+
+982
+00:40:43,380 --> 00:40:47,670
+Again, here, you have an
+option to modify the plan,
+
+983
+00:40:47,670 --> 00:40:48,570
+give some input.
+
+984
+00:40:48,570 --> 00:40:51,840
+Hey, this step does not
+apply to this project,
+
+985
+00:40:51,840 --> 00:40:53,250
+so skip it, right?
+
+986
+00:40:53,250 --> 00:40:54,780
+You can do those things.
+
+987
+00:40:54,780 --> 00:40:56,430
+And then once the plan is approved,
+
+988
+00:40:56,430 --> 00:40:59,760
+it goes onto the execution mode, okay?
+
+989
+00:40:59,760 --> 00:41:01,323
+So let's see the plan creation.
+
+990
+00:41:11,760 --> 00:41:15,510
+Anything you wanna add to
+the planning or the steps
+
+991
+00:41:15,510 --> 00:41:16,473
+while it plans?
+
+992
+00:41:19,530 --> 00:41:21,210
+- [Morgan] The important
+thing to know is that
+
+993
+00:41:21,210 --> 00:41:23,400
+it's totally optional to review the plan.
+
+994
+00:41:23,400 --> 00:41:25,443
+You can tell the agent, just go for it.
+
+995
+00:41:26,880 --> 00:41:28,980
+It just depends on how
+hands on you wanna be.
+
+996
+00:41:28,980 --> 00:41:30,750
+That's why, I mean, as
+we've mentioned before,
+
+997
+00:41:30,750 --> 00:41:32,820
+this thing can run and very human driven,
+
+998
+00:41:32,820 --> 00:41:34,620
+like you're watching every
+operation that it does,
+
+999
+00:41:34,620 --> 00:41:36,630
+approving every tool use that it does,
+
+1000
+00:41:36,630 --> 00:41:38,460
+watching every file
+manipulation that it does.
+
+1001
+00:41:38,460 --> 00:41:40,740
+And you can always
+control C it and pause it
+
+1002
+00:41:40,740 --> 00:41:43,200
+and tell it, don't do that, do this.
+
+1003
+00:41:43,200 --> 00:41:45,450
+So if you've got something
+really complex or a piece of code
+
+1004
+00:41:45,450 --> 00:41:48,330
+that you're very sensitive
+about or whatever,
+
+1005
+00:41:48,330 --> 00:41:49,920
+you can watch it every step of the way
+
+1006
+00:41:49,920 --> 00:41:52,410
+and very carefully guide it.
+
+1007
+00:41:52,410 --> 00:41:55,020
+Or you can YOLO mode it and just tell it,
+
+1008
+00:41:55,020 --> 00:41:56,610
+do your best at everything.
+
+1009
+00:41:56,610 --> 00:41:58,320
+It depends on how confident you are
+
+1010
+00:41:58,320 --> 00:42:00,000
+in the quality of your transformation,
+
+1011
+00:42:00,000 --> 00:42:03,090
+how risky this transformation
+is to you and all that.
+
+1012
+00:42:03,090 --> 00:42:05,090
+So you can be anywhere on that spectrum.
+
+1013
+00:42:06,180 --> 00:42:07,013
+- [Venu] Yeah.
+
+1014
+00:42:08,580 --> 00:42:12,510
+Another thing is, and
+while, during the execution,
+
+1015
+00:42:12,510 --> 00:42:14,130
+it also, the validation, right?
+
+1016
+00:42:14,130 --> 00:42:15,150
+It validates it.
+
+1017
+00:42:15,150 --> 00:42:18,600
+And if there are any errors,
+it self-debugs the errors
+
+1018
+00:42:18,600 --> 00:42:20,130
+and fixes as well, right?
+
+1019
+00:42:20,130 --> 00:42:23,550
+We do have a self-debug
+and validation agent,
+
+1020
+00:42:23,550 --> 00:42:25,617
+which does that automatically for you.
+
+1021
+00:42:25,617 --> 00:42:28,620
+- [Morgan] And if it can't
+fix them, we try very hard.
+
+1022
+00:42:28,620 --> 00:42:31,110
+So LLMs like to do this
+fun stuff where they really
+
+1023
+00:42:31,110 --> 00:42:33,870
+so badly want to say
+that they did the job.
+
+1024
+00:42:33,870 --> 00:42:35,790
+I mean, we've tried to
+beat that out of the agent
+
+1025
+00:42:35,790 --> 00:42:38,250
+as much as we possibly can.
+
+1026
+00:42:38,250 --> 00:42:39,990
+Early iterations of
+this would delete tests
+
+1027
+00:42:39,990 --> 00:42:42,570
+to say all the tests passed,
+like, all sorts of crazy stuff.
+
+1028
+00:42:42,570 --> 00:42:43,800
+It's awful.
+(Venu chuckles)
+
+1029
+00:42:43,800 --> 00:42:46,350
+So we've built as many
+guardrails as we could think of
+
+1030
+00:42:46,350 --> 00:42:48,000
+to prevent this sort of behavior
+
+1031
+00:42:48,000 --> 00:42:49,560
+and try to enforce some honesty here.
+
+1032
+00:42:49,560 --> 00:42:53,307
+So if the agent is like, I
+did five out of seven steps,
+
+1033
+00:42:53,307 --> 00:42:54,810
+and I had trouble with these two,
+
+1034
+00:42:54,810 --> 00:42:56,100
+and here's the trouble that I had,
+
+1035
+00:42:56,100 --> 00:42:58,590
+like, we really try to make it honest,
+
+1036
+00:42:58,590 --> 00:43:01,200
+because if you just go pop
+this into Claude or something,
+
+1037
+00:43:01,200 --> 00:43:03,960
+there's a good chance, like,
+everything will look rosy
+
+1038
+00:43:03,960 --> 00:43:05,670
+until you dig into it.
+
+1039
+00:43:05,670 --> 00:43:08,430
+That's something that we've
+encountered previously.
+
+1040
+00:43:08,430 --> 00:43:10,590
+- [Participant] You guys
+seem to be very focused
+
+1041
+00:43:10,590 --> 00:43:13,920
+on code itself, like language code.
+
+1042
+00:43:13,920 --> 00:43:16,200
+We have a challenge with cloud formation
+
+1043
+00:43:16,200 --> 00:43:18,030
+and modernizing the CDK.
+
+1044
+00:43:18,030 --> 00:43:18,863
+- [Morgan] Mm-hmm.
+
+1045
+00:43:18,863 --> 00:43:19,696
+- [Participant] Is that the kind of thing
+
+1046
+00:43:19,696 --> 00:43:20,529
+that this tool could do?
+
+1047
+00:43:20,529 --> 00:43:21,630
+- [Morgan] There's people
+doing Terraform to CDK
+
+1048
+00:43:21,630 --> 00:43:22,800
+right now with this.
+
+1049
+00:43:22,800 --> 00:43:25,500
+The way I think of it is if
+you've got any structured text
+
+1050
+00:43:25,500 --> 00:43:27,120
+and you want to turn
+it into structured text
+
+1051
+00:43:27,120 --> 00:43:29,520
+that looks different, yeah,
+we could do that, yeah.
+
+1052
+00:43:29,520 --> 00:43:30,990
+- [Participant] And then
+you spoke a little bit
+
+1053
+00:43:30,990 --> 00:43:32,970
+about deployables, right?
+
+1054
+00:43:32,970 --> 00:43:35,220
+So like, actually deploying into accounts
+
+1055
+00:43:35,220 --> 00:43:37,440
+and validating the deployments worked,
+
+1056
+00:43:37,440 --> 00:43:40,740
+being able to blue to
+green, or compare A to B
+
+1057
+00:43:40,740 --> 00:43:43,355
+between what was there and
+what could be there, right?
+
+1058
+00:43:43,355 --> 00:43:44,955
+It's all capable?
+
+1059
+00:43:44,955 --> 00:43:46,893
+I know to some degree, right?
+
+1060
+00:43:46,893 --> 00:43:47,726
+- [Morgan] It's possible
+
+1061
+00:43:47,726 --> 00:43:49,440
+if you build the scaffolding
+around it, right?
+
+1062
+00:43:49,440 --> 00:43:50,850
+Like, we're giving you,
+
+1063
+00:43:50,850 --> 00:43:54,090
+put in text files and have
+different text files come out,
+
+1064
+00:43:54,090 --> 00:43:55,590
+and you can build the
+scaffolding around it
+
+1065
+00:43:55,590 --> 00:43:57,180
+to deploy it and return to the agent
+
+1066
+00:43:57,180 --> 00:44:00,030
+information about validation
+results and stuff.
+
+1067
+00:44:00,030 --> 00:44:00,877
+- [Participant] With the CLI tool
+
+1068
+00:44:00,877 --> 00:44:03,420
+being the sort of
+mechanism for interaction.
+
+1069
+00:44:03,420 --> 00:44:05,191
+So you're scripting around that tool-
+
+1070
+00:44:05,191 --> 00:44:06,024
+- [Venu] Correct.
+
+1071
+00:44:06,024 --> 00:44:06,857
+- [Participant] To get it to do
+
+1072
+00:44:06,857 --> 00:44:07,770
+the other things that you want it to do,
+
+1073
+00:44:07,770 --> 00:44:09,420
+but then turning to that client
+
+1074
+00:44:09,420 --> 00:44:11,070
+to do the transformations
+that are necessary.
+
+1075
+00:44:11,070 --> 00:44:11,903
+- [Morgan] Exactly.
+
+1076
+00:44:11,903 --> 00:44:13,320
+And honestly, like, I've seen
+
+1077
+00:44:13,320 --> 00:44:14,850
+two extensibility approaches taken,
+
+1078
+00:44:14,850 --> 00:44:16,860
+and it kind of depends on
+what's working better for you.
+
+1079
+00:44:16,860 --> 00:44:21,450
+So you can wrap our CLI
+tool in your own stuff,
+
+1080
+00:44:21,450 --> 00:44:24,300
+or you can tell our tool to
+call external shell scripts,
+
+1081
+00:44:24,300 --> 00:44:27,960
+external MCP tools, and
+both approaches work.
+
+1082
+00:44:27,960 --> 00:44:30,713
+It just kind of is, it's what's
+better for your scenario.
+
+1083
+00:44:32,194 --> 00:44:33,714
+- [Participant] Are the transformations
+
+1084
+00:44:33,714 --> 00:44:34,547
+importable, exportable?
+
+1085
+00:44:34,547 --> 00:44:36,828
+Can you run them to multiple...
+
+1086
+00:44:36,828 --> 00:44:38,460
+(Morgan laughs)
+
+1087
+00:44:38,460 --> 00:44:39,420
+- [Morgan] One of my core tenets
+
+1088
+00:44:39,420 --> 00:44:40,890
+when we wrote the product
+requirements for this
+
+1089
+00:44:40,890 --> 00:44:42,930
+was that they would be
+importable and exportable
+
+1090
+00:44:42,930 --> 00:44:44,970
+because as far as I'm
+concerned, this is your IP.
+
+1091
+00:44:44,970 --> 00:44:46,200
+I don't want anything to do with it.
+
+1092
+00:44:46,200 --> 00:44:48,000
+Keep it secret, open source, it, whatever.
+
+1093
+00:44:48,000 --> 00:44:49,353
+That's the customer's.
+
+1094
+00:44:50,670 --> 00:44:52,620
+They are fully exportable right now,
+
+1095
+00:44:52,620 --> 00:44:55,200
+and they are 90% re-importable.
+
+1096
+00:44:55,200 --> 00:44:58,620
+And the reason I have that
+asterisk is because the RAG
+
+1097
+00:44:58,620 --> 00:45:00,630
+or the knowledge items that it discovers
+
+1098
+00:45:00,630 --> 00:45:02,130
+during an execution,
+
+1099
+00:45:02,130 --> 00:45:04,810
+rehydrating the RAG database
+where we store those
+
+1100
+00:45:05,700 --> 00:45:07,920
+is not something that
+we have gotten around
+
+1101
+00:45:07,920 --> 00:45:10,860
+to being able to do on the import side.
+
+1102
+00:45:10,860 --> 00:45:12,510
+So you can absolutely export it,
+
+1103
+00:45:12,510 --> 00:45:14,520
+and you can mostly reimport it,
+
+1104
+00:45:14,520 --> 00:45:17,596
+and we're getting that too to 100%.
+
+1105
+00:45:17,596 --> 00:45:18,840
+- [Participant] Can you distribute this
+
+1106
+00:45:18,840 --> 00:45:19,980
+around an organization?
+
+1107
+00:45:19,980 --> 00:45:22,680
+Like, I know you guys were
+talking about within an account.
+
+1108
+00:45:22,680 --> 00:45:25,092
+But I mean, we're running this,
+
+1109
+00:45:25,092 --> 00:45:26,329
+we're running an organization,
+
+1110
+00:45:26,329 --> 00:45:28,170
+so could we have a central
+account where this stuff lives
+
+1111
+00:45:28,170 --> 00:45:29,913
+and then be able to distribute that out
+
+1112
+00:45:29,913 --> 00:45:30,820
+across the organization?
+
+1113
+00:45:30,820 --> 00:45:31,860
+- [Morgan] Cross account sharing
+
+1114
+00:45:31,860 --> 00:45:33,150
+is something that is on our list.
+
+1115
+00:45:33,150 --> 00:45:34,800
+It is not there yet.
+
+1116
+00:45:34,800 --> 00:45:37,140
+But in the interim, you can export it.
+
+1117
+00:45:37,140 --> 00:45:38,070
+Literally, when you export it,
+
+1118
+00:45:38,070 --> 00:45:39,840
+it comes out as a zip file
+with a bunch of stuff.
+
+1119
+00:45:39,840 --> 00:45:42,210
+And then reimport it, and
+you're not going to lose much.
+
+1120
+00:45:42,210 --> 00:45:43,710
+And I can talk through what you'll lose
+
+1121
+00:45:43,710 --> 00:45:45,600
+and how to get around it.
+
+1122
+00:45:45,600 --> 00:45:47,010
+Yeah.
+
+1123
+00:45:47,010 --> 00:45:49,760
+- [Participant] Can I review
+the code that it generates
+
+1124
+00:45:53,047 --> 00:45:58,047
+for the simple, like, transformation...
+
+1125
+00:45:59,220 --> 00:46:03,420
+So can I explore the code that it used?
+
+1126
+00:46:03,420 --> 00:46:05,670
+- [Morgan] So you can view
+the plan that it generates
+
+1127
+00:46:05,670 --> 00:46:08,700
+for upgrading your code,
+
+1128
+00:46:08,700 --> 00:46:11,130
+for doing that particular
+upgrade on your code.
+
+1129
+00:46:11,130 --> 00:46:14,730
+The actual transformation
+definition that we provide you,
+
+1130
+00:46:14,730 --> 00:46:17,190
+we had lots of fights
+with legal about this,
+
+1131
+00:46:17,190 --> 00:46:19,950
+we do not share with
+customers at this time.
+
+1132
+00:46:19,950 --> 00:46:21,270
+That may change if I get my way,
+
+1133
+00:46:21,270 --> 00:46:23,753
+but we don't share that right now.
+
+1134
+00:46:23,753 --> 00:46:25,170
+- [Venu] But you can extend this.
+
+1135
+00:46:25,170 --> 00:46:28,800
+You can extend it with
+additional planned context
+
+1136
+00:46:28,800 --> 00:46:31,560
+and other things, but
+you can't really view it
+
+1137
+00:46:31,560 --> 00:46:33,063
+and modify it right now.
+
+1138
+00:46:34,620 --> 00:46:35,453
+- [Morgan] It's a black box
+
+1139
+00:46:35,453 --> 00:46:36,870
+that you can tack things
+on the outside of.
+
+1140
+00:46:36,870 --> 00:46:38,820
+And I would like to have
+it not be a black box
+
+1141
+00:46:38,820 --> 00:46:41,463
+that you can modify, but we'll get there.
+
+1142
+00:46:42,570 --> 00:46:44,460
+- [Venu] Okay, so this
+is the plan it generated.
+
+1143
+00:46:44,460 --> 00:46:47,250
+Plan, again, as I told, it's
+basically how do I apply
+
+1144
+00:46:47,250 --> 00:46:49,890
+my definition to this project, right?
+
+1145
+00:46:49,890 --> 00:46:52,860
+Hey, first update the build dependencies,
+
+1146
+00:46:52,860 --> 00:46:55,710
+then do the client initialization
+
+1147
+00:46:55,710 --> 00:46:57,990
+and what files are gonna be changed,
+
+1148
+00:46:57,990 --> 00:47:02,040
+what is the validation criteria
+here, all those things.
+
+1149
+00:47:02,040 --> 00:47:04,050
+Again, here, as a human in the loop,
+
+1150
+00:47:04,050 --> 00:47:08,220
+you can basically review
+the plan and provide input.
+
+1151
+00:47:08,220 --> 00:47:10,953
+Here, I'm going to just
+say, hey, looks good.
+
+1152
+00:47:12,510 --> 00:47:13,740
+Proceed.
+
+1153
+00:47:13,740 --> 00:47:17,070
+So this will be able to do that.
+
+1154
+00:47:17,070 --> 00:47:18,690
+Again, in the interest of time,
+
+1155
+00:47:18,690 --> 00:47:21,180
+I'm gonna go to my completed one.
+
+1156
+00:47:21,180 --> 00:47:24,360
+I'm gonna show how exactly it did it
+
+1157
+00:47:24,360 --> 00:47:27,750
+and how it created a summary, right?
+
+1158
+00:47:27,750 --> 00:47:30,870
+So this is one of the things
+that I did in the morning.
+
+1159
+00:47:30,870 --> 00:47:35,870
+And so this is the migration
+summary it created.
+
+1160
+00:47:36,270 --> 00:47:41,140
+So what has been migrated
+to Fluxo from Tickety?
+
+1161
+00:47:42,210 --> 00:47:43,440
+So the dependencies,
+
+1162
+00:47:43,440 --> 00:47:45,930
+this Fluxo Java client has been removed.
+
+1163
+00:47:45,930 --> 00:47:48,630
+it added the Tickety
+client authentication,
+
+1164
+00:47:48,630 --> 00:47:52,203
+client initialization, what
+it did, what are the changes.
+
+1165
+00:47:53,100 --> 00:47:56,520
+Again, get ticket operation
+before and after code snippet.
+
+1166
+00:47:56,520 --> 00:47:58,650
+Basically, it completed all the changes
+
+1167
+00:47:58,650 --> 00:48:01,320
+that is required for documentation updates
+
+1168
+00:48:01,320 --> 00:48:04,440
+and other things for migrating,
+
+1169
+00:48:04,440 --> 00:48:08,700
+so my proprietary internal
+library to another version
+
+1170
+00:48:08,700 --> 00:48:10,773
+or to a different system.
+
+1171
+00:48:12,240 --> 00:48:13,170
+Cool.
+
+1172
+00:48:13,170 --> 00:48:15,390
+So just quickly going through,
+
+1173
+00:48:15,390 --> 00:48:17,730
+I have two more things
+that I wanna quickly show.
+
+1174
+00:48:17,730 --> 00:48:20,520
+One is the docs that I talked about.
+
+1175
+00:48:20,520 --> 00:48:25,520
+Again, you saw in my list,
+
+1176
+00:48:26,070 --> 00:48:29,283
+there is a comprehensive
+documentation analysis.
+
+1177
+00:48:30,300 --> 00:48:32,043
+Like, I'm just gonna do again.
+
+1178
+00:48:36,510 --> 00:48:40,830
+So that's basically going
+through your code documentation,
+
+1179
+00:48:40,830 --> 00:48:42,360
+documenting all the code,
+
+1180
+00:48:42,360 --> 00:48:46,560
+as well as creating the tech
+debt analysis for your code.
+
+1181
+00:48:46,560 --> 00:48:50,519
+So this is an early
+access, so it basically,
+
+1182
+00:48:50,519 --> 00:48:53,160
+it does a deep static
+analysis of code base
+
+1183
+00:48:53,160 --> 00:48:55,590
+and then generating it, right?
+
+1184
+00:48:55,590 --> 00:48:59,040
+So I actually did this
+for one of the projects.
+
+1185
+00:48:59,040 --> 00:49:00,960
+I don't know how many of
+you are familiar with Doom.
+
+1186
+00:49:00,960 --> 00:49:05,960
+Doom is a gaming engine
+that we all loved to play.
+
+1187
+00:49:07,410 --> 00:49:09,660
+And that basically was...
+
+1188
+00:49:09,660 --> 00:49:12,660
+I think it's 1990 it was created.
+
+1189
+00:49:12,660 --> 00:49:16,320
+And this is pretty much
+the documentation it had.
+
+1190
+00:49:16,320 --> 00:49:18,300
+This is the original documentation.
+
+1191
+00:49:18,300 --> 00:49:20,580
+Hey, go use Doom.
+
+1192
+00:49:20,580 --> 00:49:22,620
+That's about it, nothing else, right?
+
+1193
+00:49:22,620 --> 00:49:27,000
+So I ran my documentation
+code base analysis on that,
+
+1194
+00:49:27,000 --> 00:49:30,300
+and it actually created this
+documentation folder, right?
+
+1195
+00:49:30,300 --> 00:49:33,990
+Basically, it created a complete read me,
+
+1196
+00:49:33,990 --> 00:49:38,730
+what exactly this code does,
+what are the quick stats,
+
+1197
+00:49:38,730 --> 00:49:40,620
+what is the documentation structure.
+
+1198
+00:49:40,620 --> 00:49:42,840
+Basically, it created subcomponents.
+
+1199
+00:49:42,840 --> 00:49:44,220
+- [Morgan] One thing I
+really like is it creates
+
+1200
+00:49:44,220 --> 00:49:46,650
+kind of this navigable structure
+where the markdown files,
+
+1201
+00:49:46,650 --> 00:49:47,640
+you can click between them
+
+1202
+00:49:47,640 --> 00:49:49,050
+and it'll, like, navigate through them.
+
+1203
+00:49:49,050 --> 00:49:52,650
+It's, like, kind of a
+pseudo webpage, if you will.
+
+1204
+00:49:52,650 --> 00:49:53,483
+- [Venu] Yep.
+
+1205
+00:49:53,483 --> 00:49:55,830
+So, okay, so project overview,
+
+1206
+00:49:55,830 --> 00:49:57,363
+it created a project overview,
+
+1207
+00:49:58,260 --> 00:50:00,780
+and the file inventory,
+
+1208
+00:50:00,780 --> 00:50:03,813
+how many total lines of
+code, what all things.
+
+1209
+00:50:04,740 --> 00:50:07,710
+And from architecture, it
+basically created a component,
+
+1210
+00:50:07,710 --> 00:50:10,110
+what are the components are available,
+
+1211
+00:50:10,110 --> 00:50:13,680
+and basically created a
+dependency mapping tree as well,
+
+1212
+00:50:13,680 --> 00:50:17,220
+hey, main program, game
+systems, core subsystems,
+
+1213
+00:50:17,220 --> 00:50:18,513
+and then the utilities.
+
+1214
+00:50:19,830 --> 00:50:23,910
+Okay, and what are the patterns this has?
+
+1215
+00:50:23,910 --> 00:50:27,330
+Basically, analysis,
+architecture, system overview.
+
+1216
+00:50:27,330 --> 00:50:29,490
+And behavior is basically
+the business logic,
+
+1217
+00:50:29,490 --> 00:50:30,630
+like the use cases
+
+1218
+00:50:30,630 --> 00:50:34,143
+and behavioral documentation
+as well, right?
+
+1219
+00:50:35,370 --> 00:50:37,770
+What are the weapon
+properties, weapon mechanics,
+
+1220
+00:50:37,770 --> 00:50:39,480
+which is used in the game?
+
+1221
+00:50:39,480 --> 00:50:40,593
+Decision logic,
+
+1222
+00:50:41,640 --> 00:50:44,670
+basically how the decisions
+are being made in the code.
+
+1223
+00:50:44,670 --> 00:50:45,503
+Error handling.
+
+1224
+00:50:45,503 --> 00:50:47,310
+Workflows, what are the workflows?
+
+1225
+00:50:47,310 --> 00:50:50,373
+So basically, it created
+all the workflows for me.
+
+1226
+00:50:52,620 --> 00:50:54,000
+- [Morgan] Make sure you
+see the diagrams folder too.
+
+1227
+00:50:54,000 --> 00:50:55,290
+I like the pictures.
+
+1228
+00:50:55,290 --> 00:50:56,910
+- [Venu] Okay. I don't know...
+
+1229
+00:50:56,910 --> 00:50:58,830
+Okay, maybe it didn't. (chuckles)
+
+1230
+00:50:58,830 --> 00:50:59,910
+Oh, yeah, okay.
+
+1231
+00:50:59,910 --> 00:51:00,743
+Maybe it created...
+
+1232
+00:51:00,743 --> 00:51:02,280
+Yeah, there you go.
+
+1233
+00:51:02,280 --> 00:51:03,600
+So this is the component diagram.
+
+1234
+00:51:03,600 --> 00:51:06,780
+It has a main engine,
+main program, game render,
+
+1235
+00:51:06,780 --> 00:51:09,543
+sound, network, play simulation.
+
+1236
+00:51:10,380 --> 00:51:15,380
+Okay, and abstraction,
+foundation, external dependencies.
+
+1237
+00:51:16,920 --> 00:51:17,753
+Cool.
+
+1238
+00:51:17,753 --> 00:51:20,340
+And also, the main thing
+is the technical debt.
+
+1239
+00:51:20,340 --> 00:51:23,040
+Okay, so basically it's-
+
+1240
+00:51:23,040 --> 00:51:24,120
+- [Morgan] Some code from 1990.
+
+1241
+00:51:24,120 --> 00:51:26,223
+It found a few things.
+
+1242
+00:51:28,710 --> 00:51:31,470
+- [Venu] Security order, the
+security vulnerabilities,
+
+1243
+00:51:31,470 --> 00:51:33,501
+outdated platform dependencies, of course.
+
+1244
+00:51:33,501 --> 00:51:35,263
+- [Morgan] John Carmack probably
+knows better than us but...
+
+1245
+00:51:35,263 --> 00:51:36,510
+(Venu laughs)
+
+1246
+00:51:36,510 --> 00:51:38,070
+- [Venu] So, okay.
+
+1247
+00:51:38,070 --> 00:51:41,130
+1990 C coding practices. (laughs)
+
+1248
+00:51:41,130 --> 00:51:42,243
+So, yeah.
+
+1249
+00:51:43,590 --> 00:51:44,423
+Okay, cool.
+
+1250
+00:51:44,423 --> 00:51:47,790
+So the last one I wanna quickly show,
+
+1251
+00:51:47,790 --> 00:51:49,950
+I know we have 10 more minutes,
+
+1252
+00:51:49,950 --> 00:51:51,573
+is the batch, right?
+
+1253
+00:51:52,465 --> 00:51:57,465
+So how do you wrap this CLI into a batch
+
+1254
+00:51:57,810 --> 00:52:00,960
+and run it across multiple
+repositories, right?
+
+1255
+00:52:00,960 --> 00:52:04,410
+Again, I used Kiro to create a batch,
+
+1256
+00:52:04,410 --> 00:52:08,580
+and then basically an ATX batch launcher.
+
+1257
+00:52:08,580 --> 00:52:12,000
+It basically takes a input of a CSV file,
+
+1258
+00:52:12,000 --> 00:52:14,610
+which has my GitHub repositories,
+
+1259
+00:52:14,610 --> 00:52:16,620
+and I'm gonna actually
+run this documentation
+
+1260
+00:52:16,620 --> 00:52:18,780
+on multiple GitHub repositories
+
+1261
+00:52:18,780 --> 00:52:20,757
+and then go, hey, go run it, right?
+
+1262
+00:52:20,757 --> 00:52:23,610
+And you can also provide
+additional context.
+
+1263
+00:52:23,610 --> 00:52:26,040
+What is the transformation name, right?
+
+1264
+00:52:26,040 --> 00:52:28,000
+So basically, this is the CSV file,
+
+1265
+00:52:28,000 --> 00:52:31,410
+and I just wrap my CLI
+into a batch script,
+
+1266
+00:52:31,410 --> 00:52:34,230
+and I thought, let's run this, right?
+
+1267
+00:52:34,230 --> 00:52:35,220
+And I'm gonna run this script.
+
+1268
+00:52:35,220 --> 00:52:39,060
+I'm gonna say, hey,
+launch this batch script
+
+1269
+00:52:39,060 --> 00:52:43,050
+with this CSV file in a
+parallel mode, maximum 10 jobs.
+
+1270
+00:52:43,050 --> 00:52:44,427
+You could increase it.
+
+1271
+00:52:44,427 --> 00:52:47,310
+And this is the output directory to...
+
+1272
+00:52:47,310 --> 00:52:48,180
+This is the clone directory
+
+1273
+00:52:48,180 --> 00:52:50,400
+to download the clones from GitHub,
+
+1274
+00:52:50,400 --> 00:52:52,050
+and then what is the output directory
+
+1275
+00:52:52,050 --> 00:52:54,827
+where you need to do this.
+
+1276
+00:52:56,504 --> 00:52:57,921
+So let's do this.
+
+1277
+00:53:04,620 --> 00:53:05,453
+Oops.
+
+1278
+00:53:07,969 --> 00:53:08,802
+Okay.
+
+1279
+00:53:14,244 --> 00:53:16,650
+Okay, so I'm in a different
+directory right now.
+
+1280
+00:53:16,650 --> 00:53:17,643
+Give me one second.
+
+1281
+00:53:40,140 --> 00:53:44,670
+Okay, so it's basically
+checking the version
+
+1282
+00:53:44,670 --> 00:53:47,790
+and running these commands,
+
+1283
+00:53:47,790 --> 00:53:51,243
+starting, like, cutting
+parallel jobs, right?
+
+1284
+00:53:52,230 --> 00:53:53,510
+So let's...
+
+1285
+00:53:54,720 --> 00:53:59,720
+Okay, so it basically downloaded
+all the repositories for me
+
+1286
+00:53:59,910 --> 00:54:01,410
+and then started running this.
+
+1287
+00:54:03,090 --> 00:54:06,150
+And you can basically
+monitor the execution locks.
+
+1288
+00:54:06,150 --> 00:54:07,650
+It started creating it,
+
+1289
+00:54:07,650 --> 00:54:10,083
+and you should be able to see the results.
+
+1290
+00:54:13,290 --> 00:54:16,710
+Okay, yeah, so that's the batch mode.
+
+1291
+00:54:16,710 --> 00:54:19,240
+Basically, wrap up the SEG execution
+
+1292
+00:54:20,746 --> 00:54:24,840
+or the ATX execution
+command, and then go run it.
+
+1293
+00:54:24,840 --> 00:54:26,640
+- [Morgan] Our code name
+was Super Elastic Gumby.
+
+1294
+00:54:26,640 --> 00:54:29,002
+So sometimes, we slip
+and say Gumby or SEG.
+
+1295
+00:54:29,002 --> 00:54:30,181
+(Venu laughs)
+
+1296
+00:54:30,181 --> 00:54:32,370
+I was really sad marketing
+gave us a real name.
+
+1297
+00:54:32,370 --> 00:54:33,203
+- [Venu] Yeah.
+
+1298
+00:54:34,144 --> 00:54:37,773
+And the final thing is probably, let's...
+
+1299
+00:54:39,150 --> 00:54:40,650
+And we talked about knowledge items,
+
+1300
+00:54:40,650 --> 00:54:44,550
+so I wanna quickly show how
+the knowledge items look, okay?
+
+1301
+00:54:44,550 --> 00:54:45,750
+So I ran a bunch...
+
+1302
+00:54:45,750 --> 00:54:47,550
+So I have created a transformation
+
+1303
+00:54:47,550 --> 00:54:50,550
+called Java 21 modernization
+
+1304
+00:54:50,550 --> 00:54:53,460
+for my bunch of Java projects that I had.
+
+1305
+00:54:53,460 --> 00:54:54,630
+So I'm gonna say,
+
+1306
+00:54:54,630 --> 00:54:58,200
+hey, I've run this multiple
+times on multiple projects.
+
+1307
+00:54:58,200 --> 00:55:01,440
+So I'm gonna say list-ki,
+which is the knowledge items,
+
+1308
+00:55:01,440 --> 00:55:03,780
+which is the continual learning aspect
+
+1309
+00:55:03,780 --> 00:55:06,423
+where it learns from the agent execution.
+
+1310
+00:55:07,530 --> 00:55:09,573
+Let's see how that looks.
+
+1311
+00:55:13,050 --> 00:55:16,140
+So how we have designed
+this is by default,
+
+1312
+00:55:16,140 --> 00:55:19,350
+it will run with knowledge items,
+
+1313
+00:55:19,350 --> 00:55:21,930
+which means it will
+learn from the execution.
+
+1314
+00:55:21,930 --> 00:55:22,890
+That's by default.
+
+1315
+00:55:22,890 --> 00:55:26,160
+You can say do not learn as
+well if you don't wanna learn.
+
+1316
+00:55:26,160 --> 00:55:28,440
+And these knowledge items,
+when they're created,
+
+1317
+00:55:28,440 --> 00:55:29,790
+they're disabled by default,
+
+1318
+00:55:29,790 --> 00:55:32,340
+which means a human in
+the loop can review it.
+
+1319
+00:55:32,340 --> 00:55:34,500
+And if they wanna apply
+it for the next time,
+
+1320
+00:55:34,500 --> 00:55:35,880
+they can enable it.
+
+1321
+00:55:35,880 --> 00:55:39,150
+So here, if you see some of them, right?
+
+1322
+00:55:39,150 --> 00:55:41,430
+Like, this is a Java 21
+transformation, right?
+
+1323
+00:55:41,430 --> 00:55:44,580
+Hey, it's found, hey, sealed
+classes are incompatible
+
+1324
+00:55:44,580 --> 00:55:48,180
+with JPA/Hibernate Lazy Loading, right?
+
+1325
+00:55:48,180 --> 00:55:50,700
+And some of them are very specific.
+
+1326
+00:55:50,700 --> 00:55:53,250
+Hey, SolarWinds, that's
+one of the project I run.
+
+1327
+00:55:53,250 --> 00:55:54,660
+It's very project specific.
+
+1328
+00:55:54,660 --> 00:55:56,370
+It's not very generic.
+
+1329
+00:55:56,370 --> 00:56:01,370
+And again, Spring Boot Virtual
+Threads needs this, right?
+
+1330
+00:56:01,590 --> 00:56:04,860
+So again, I can go and enable it.
+
+1331
+00:56:04,860 --> 00:56:07,125
+So next time, it runs
+the same transformation,
+
+1332
+00:56:07,125 --> 00:56:10,260
+it finds that, and it basically
+applies this knowledge item.
+
+1333
+00:56:10,260 --> 00:56:12,003
+That memory is already there, so.
+
+1334
+00:56:13,950 --> 00:56:17,550
+Okay, I'll give it to you for a wrap-up.
+
+1335
+00:56:17,550 --> 00:56:18,960
+- [Morgan] Yeah, thank you for your time.
+
+1336
+00:56:18,960 --> 00:56:20,260
+I think that's all we got.
+

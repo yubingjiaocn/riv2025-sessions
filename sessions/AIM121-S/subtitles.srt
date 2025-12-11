@@ -1,0 +1,2020 @@
+1
+00:00:00,238 --> 00:00:02,559
+Uh, welcome everybody. Thanks for attending
+
+2
+00:00:02,559 --> 00:00:03,240
+our talk.
+
+3
+00:00:03,599 --> 00:00:05,788
+I'm Ryan. I'm a sales engineer at
+
+4
+00:00:05,788 --> 00:00:06,669
+Chronosphere,
+
+5
+00:00:07,000 --> 00:00:09,038
+and if you don't know, Chronosphere is an
+
+6
+00:00:09,038 --> 00:00:10,220
+observability company.
+
+7
+00:00:10,560 --> 00:00:12,880
+Uh, we're focused on open source data
+
+8
+00:00:12,880 --> 00:00:14,880
+collection, performance and reliability at
+
+9
+00:00:14,880 --> 00:00:15,579
+scale,
+
+10
+00:00:15,880 --> 00:00:18,239
+uh, and control over your telemetry, only
+
+11
+00:00:18,239 --> 00:00:19,260
+paying for what you need.
+
+12
+00:00:19,679 --> 00:00:21,879
+And recently we've had a lot of success at
+
+13
+00:00:21,879 --> 00:00:24,260
+AI companies and in AI use cases.
+
+14
+00:00:26,250 --> 00:00:28,329
+What we're gonna talk about in this short talk,
+
+15
+00:00:28,440 --> 00:00:30,530
+uh, is an intro to AI observability,
+
+16
+00:00:30,850 --> 00:00:33,009
+the different patterns, um, use
+
+17
+00:00:33,009 --> 00:00:34,098
+cases we're seeing,
+
+18
+00:00:34,490 --> 00:00:36,569
+um, and kind of how to use observability to
+
+19
+00:00:36,569 --> 00:00:37,750
+prevent some pitfalls.
+
+20
+00:00:38,310 --> 00:00:40,368
+Not going to be able to go super deep into product
+
+21
+00:00:40,368 --> 00:00:42,490
+demonstration, unfortunately, but definitely encourage
+
+22
+00:00:42,490 --> 00:00:44,649
+you guys to check out the Chronosphere booth, where
+
+23
+00:00:44,649 --> 00:00:46,668
+we're demoing our AI guided capabilities,
+
+24
+00:00:47,048 --> 00:00:49,090
+um, and some of our other new features there as well.
+
+25
+00:00:51,048 --> 00:00:53,529
+So first, before we get into the use cases
+
+26
+00:00:53,529 --> 00:00:55,380
+themselves, we're gonna kind of overview
+
+27
+00:00:55,639 --> 00:00:57,929
+what we're seeing from a market perspective.
+
+28
+00:00:58,399 --> 00:01:00,598
+So from our perspective, we've broken the market
+
+29
+00:01:00,598 --> 00:01:03,039
+down into 4 core buckets. We're seeing
+
+30
+00:01:03,039 --> 00:01:03,868
+model builders.
+
+31
+00:01:04,198 --> 00:01:06,439
+These are people who are building foundation models
+
+32
+00:01:06,439 --> 00:01:08,948
+that everyone else is building on top of and consuming,
+
+33
+00:01:09,400 --> 00:01:11,659
+GPU providers who are tailoring
+
+34
+00:01:11,659 --> 00:01:13,879
+GPU infrastructure, uh, around AI
+
+35
+00:01:13,879 --> 00:01:16,159
+inference, model training, and fine tuning
+
+36
+00:01:16,159 --> 00:01:16,879
+use cases.
+
+37
+00:01:17,379 --> 00:01:19,540
+AI natives who are building products from the ground
+
+38
+00:01:19,540 --> 00:01:21,099
+up around AI technology,
+
+39
+00:01:21,459 --> 00:01:23,659
+uh, and then our feature builders who have
+
+40
+00:01:23,659 --> 00:01:25,778
+existing products and capabilities, where
+
+41
+00:01:25,778 --> 00:01:27,838
+they're adding AI functionality,
+
+42
+00:01:27,859 --> 00:01:29,680
+um, into those existing product lines.
+
+43
+00:01:31,948 --> 00:01:34,668
+And across the board, one thing to highlight, observability
+
+44
+00:01:34,668 --> 00:01:35,778
+has always been hard,
+
+45
+00:01:36,069 --> 00:01:37,609
+uh, continues to be a struggle,
+
+46
+00:01:37,948 --> 00:01:40,010
+and AI is just adding complexity,
+
+47
+00:01:40,189 --> 00:01:41,668
+adding a layer on top of that.
+
+48
+00:01:41,948 --> 00:01:43,989
+All of your existing large scale cloud
+
+49
+00:01:43,989 --> 00:01:45,329
+native problem patterns
+
+50
+00:01:45,629 --> 00:01:47,629
+definitely still exist and are at the core of
+
+51
+00:01:47,629 --> 00:01:49,329
+AI observability use cases.
+
+52
+00:01:53,278 --> 00:01:55,299
+Going into a little bit more depth, um,
+
+53
+00:01:55,400 --> 00:01:56,459
+on those challenges,
+
+54
+00:01:56,799 --> 00:01:58,930
+what we're seeing in existing large cloud
+
+55
+00:01:58,930 --> 00:02:00,439
+native, uh, workloads,
+
+56
+00:02:00,879 --> 00:02:02,019
+massive scale,
+
+57
+00:02:02,558 --> 00:02:04,198
+really mission critical reliability,
+
+58
+00:02:04,558 --> 00:02:05,599
+high performance,
+
+59
+00:02:05,879 --> 00:02:08,159
+uh, a lot of troubleshooting complexity
+
+60
+00:02:08,159 --> 00:02:09,659
+across distributed systems,
+
+61
+00:02:10,000 --> 00:02:12,000
+observability costs and data volume
+
+62
+00:02:12,000 --> 00:02:14,240
+control, and then managing cardinality
+
+63
+00:02:14,240 --> 00:02:15,659
+as your infrastructure changes.
+
+64
+00:02:16,460 --> 00:02:18,580
+Some of the new AI specific challenges we're
+
+65
+00:02:18,580 --> 00:02:20,618
+talking about are actually around model
+
+66
+00:02:20,618 --> 00:02:22,939
+behavior, making sure the model's accurate, doing
+
+67
+00:02:22,939 --> 00:02:24,169
+what you expect it to do,
+
+68
+00:02:24,659 --> 00:02:26,689
+managing the token economics to actually get an
+
+69
+00:02:26,689 --> 00:02:28,599
+ROI on the use case you're attacking,
+
+70
+00:02:28,868 --> 00:02:31,219
+um, and then understanding complex dependencies,
+
+71
+00:02:31,379 --> 00:02:32,860
+especially if you're using MCP,
+
+72
+00:02:33,139 --> 00:02:35,038
+RAG, energenic architectures.
+
+73
+00:02:35,419 --> 00:02:37,528
+And then lastly, if you're managing your own GPU
+
+74
+00:02:37,528 --> 00:02:39,699
+infrastructure, um, that's largely a new
+
+75
+00:02:39,699 --> 00:02:41,520
+component for many organizations.
+
+76
+00:02:43,740 --> 00:02:45,939
+So we're gonna dive into our first use case, which
+
+77
+00:02:45,939 --> 00:02:47,080
+is model training.
+
+78
+00:02:47,419 --> 00:02:49,719
+Um, everything in this use case also applies
+
+79
+00:02:49,719 --> 00:02:51,159
+if you're doing fine tuning.
+
+80
+00:02:51,580 --> 00:02:53,939
+But what really matters here is training efficiency,
+
+81
+00:02:54,258 --> 00:02:56,599
+model performance as far as the end result.
+
+82
+00:02:56,770 --> 00:02:58,838
+Um, the model is the product of the training.
+
+83
+00:02:59,219 --> 00:03:00,399
+And then GPU utilization,
+
+84
+00:03:00,899 --> 00:03:03,099
+these resources are extremely costly.
+
+85
+00:03:03,300 --> 00:03:05,338
+Um, so it's critical you're actually getting the
+
+86
+00:03:05,338 --> 00:03:06,868
+right utilization from your investment.
+
+87
+00:03:09,469 --> 00:03:11,210
+Uh, a build here, let me click through.
+
+88
+00:03:12,409 --> 00:03:14,808
+So, a quick overview before we get into the observability
+
+89
+00:03:14,808 --> 00:03:17,159
+side, um, of the standard model development
+
+90
+00:03:17,159 --> 00:03:17,889
+life cycle.
+
+91
+00:03:18,750 --> 00:03:20,740
+I'm definitely trivializing it a little bit here,
+
+92
+00:03:21,028 --> 00:03:23,189
+but we're taking large data sets, putting that
+
+93
+00:03:23,189 --> 00:03:24,929
+into a large compute infrastructure
+
+94
+00:03:25,189 --> 00:03:27,229
+with GPU accelerators, and running
+
+95
+00:03:27,229 --> 00:03:29,649
+distributed training jobs in that infrastructure,
+
+96
+00:03:29,909 --> 00:03:32,129
+with the goal of producing a trained model,
+
+97
+00:03:32,229 --> 00:03:34,469
+uh, that we can then put out into the wild and get value
+
+98
+00:03:34,469 --> 00:03:36,740
+from. Once
+
+99
+00:03:36,740 --> 00:03:38,929
+the model's complete, the next step is actually hosting
+
+100
+00:03:38,929 --> 00:03:41,139
+your inference service, whether that's externally
+
+101
+00:03:41,139 --> 00:03:43,080
+or internally, more as like a platform team.
+
+102
+00:03:43,580 --> 00:03:45,740
+Um, but this is where as a user, I can say, hey,
+
+103
+00:03:46,058 --> 00:03:48,159
+here's my description or image of a cat,
+
+104
+00:03:48,500 --> 00:03:50,659
+and my model can infer or predict, yes,
+
+105
+00:03:50,758 --> 00:03:51,899
+this is indeed a cat.
+
+106
+00:03:52,300 --> 00:03:55,288
+Simple. And
+
+107
+00:03:55,288 --> 00:03:57,849
+if we look at, um, you know, a basic architecture
+
+108
+00:03:57,849 --> 00:03:59,129
+of how you might go about this,
+
+109
+00:03:59,409 --> 00:04:01,750
+this is all about scale, reliability, and performance.
+
+110
+00:04:02,008 --> 00:04:03,830
+Um, and what we're seeing in the market is,
+
+111
+00:04:04,129 --> 00:04:06,330
+uh, the more training cycles, the more compute
+
+112
+00:04:06,330 --> 00:04:06,889
+you have,
+
+113
+00:04:07,210 --> 00:04:08,758
+the bigger and better model you get.
+
+114
+00:04:09,088 --> 00:04:11,439
+And efficient training becomes a competitive advantage,
+
+115
+00:04:11,808 --> 00:04:14,258
+especially when everybody has access to roughly equal
+
+116
+00:04:14,258 --> 00:04:15,250
+compute infrastructure.
+
+117
+00:04:17,069 --> 00:04:19,189
+Looking a little bit at where the problem patterns
+
+118
+00:04:19,189 --> 00:04:21,269
+start to occur, and where we can start thinking
+
+119
+00:04:21,269 --> 00:04:23,738
+about observability to prevent them, um,
+
+120
+00:04:23,750 --> 00:04:25,040
+starts with our data sets.
+
+121
+00:04:25,309 --> 00:04:27,358
+So understanding that a small amount
+
+122
+00:04:27,358 --> 00:04:29,509
+of inaccurate or invalid data
+
+123
+00:04:29,720 --> 00:04:31,829
+can poison your entitled, uh, entire
+
+124
+00:04:31,829 --> 00:04:32,608
+training cycle.
+
+125
+00:04:33,108 --> 00:04:35,329
+Uh, so understanding the metadata around your data
+
+126
+00:04:35,329 --> 00:04:37,470
+sets, measuring how one data set versus
+
+127
+00:04:37,470 --> 00:04:39,569
+another impacts the results you get, super
+
+128
+00:04:39,569 --> 00:04:40,088
+critical.
+
+129
+00:04:40,569 --> 00:04:42,720
+And then similarly, we have data ingestion
+
+130
+00:04:42,720 --> 00:04:43,410
+services.
+
+131
+00:04:43,689 --> 00:04:45,889
+Um, and if these are slow or have spikes
+
+132
+00:04:45,889 --> 00:04:48,048
+and errors, it's going to bottleneck, again, your
+
+133
+00:04:48,048 --> 00:04:49,170
+entire training pipeline.
+
+134
+00:04:50,088 --> 00:04:52,189
+And then we have the model training jobs themselves.
+
+135
+00:04:52,369 --> 00:04:54,730
+Um, this is very similar to a traditional
+
+136
+00:04:54,730 --> 00:04:57,170
+service or any other job you might be monitoring.
+
+137
+00:04:57,399 --> 00:04:59,629
+Uh, need to correlate infrastructure issues
+
+138
+00:04:59,790 --> 00:05:01,069
+with the outcome of training.
+
+139
+00:05:01,449 --> 00:05:02,750
+And then on the far right-hand side,
+
+140
+00:05:03,009 --> 00:05:05,139
+we see the GPUs, the dollar sign on fire.
+
+141
+00:05:05,509 --> 00:05:07,678
+Again, continuing to highlight, if you have
+
+142
+00:05:07,678 --> 00:05:09,838
+downtime or low utilization, not
+
+143
+00:05:09,838 --> 00:05:10,769
+only wasting money,
+
+144
+00:05:11,048 --> 00:05:13,129
+uh, but you're slowing down your time to market and
+
+145
+00:05:13,129 --> 00:05:14,970
+getting the value from what you're investing in.
+
+146
+00:05:15,420 --> 00:05:17,319
+So at the end of the day, kind of asking yourself,
+
+147
+00:05:17,699 --> 00:05:19,959
+are we maximizing our training efficiency
+
+148
+00:05:19,959 --> 00:05:22,178
+to stay competitive in every way that we can?
+
+149
+00:05:24,619 --> 00:05:26,619
+Uh, now jumping to Chronosphere and tying
+
+150
+00:05:26,619 --> 00:05:28,949
+this a little bit more closely to observability,
+
+151
+00:05:29,298 --> 00:05:31,579
+uh, what we're looking at here is a Chronosphere
+
+152
+00:05:31,579 --> 00:05:33,040
+lens service page.
+
+153
+00:05:33,420 --> 00:05:35,899
+This is interesting to us because what Chronosphere
+
+154
+00:05:35,899 --> 00:05:37,369
+is doing is saying, hey,
+
+155
+00:05:37,660 --> 00:05:39,738
+I'm detecting GPU metrics
+
+156
+00:05:39,738 --> 00:05:41,939
+from the Nvidia DCGM, uh, Prometheus
+
+157
+00:05:41,939 --> 00:05:42,660
+exporter.
+
+158
+00:05:43,100 --> 00:05:44,160
+We're getting utilization,
+
+159
+00:05:44,420 --> 00:05:45,079
+temperature,
+
+160
+00:05:45,410 --> 00:05:47,500
+error stats. Um, but
+
+161
+00:05:47,500 --> 00:05:49,220
+we know from our labeling strategy,
+
+162
+00:05:49,540 --> 00:05:51,660
+this is supporting a specific training
+
+163
+00:05:51,660 --> 00:05:53,678
+job. We're also getting the
+
+164
+00:05:53,678 --> 00:05:56,250
+training metrics from our Hotel Python SDKs.
+
+165
+00:05:56,470 --> 00:05:58,720
+That's giving us training accuracy, gradient
+
+166
+00:05:58,720 --> 00:06:00,410
+norms, samples per second.
+
+167
+00:06:00,879 --> 00:06:02,920
+And having all the information here lets
+
+168
+00:06:02,920 --> 00:06:05,079
+us quickly understand kind of end to end
+
+169
+00:06:05,079 --> 00:06:06,338
+what's happening in our training job.
+
+170
+00:06:07,149 --> 00:06:09,309
+We're looking at this from the perspective of a human
+
+171
+00:06:09,309 --> 00:06:11,298
+looking at dashboards and service pages,
+
+172
+00:06:11,629 --> 00:06:13,949
+but all the same value grouping and analysis
+
+173
+00:06:13,949 --> 00:06:16,290
+applies to our AI troubleshooting tooling,
+
+174
+00:06:16,548 --> 00:06:19,410
+um, our MCP and Agentic integrations.
+
+175
+00:06:19,709 --> 00:06:21,649
+Uh, so that's super critical to think about.
+
+176
+00:06:22,069 --> 00:06:22,689
+And throughout,
+
+177
+00:06:22,949 --> 00:06:25,428
+low latency alerting. If you have XID
+
+178
+00:06:25,428 --> 00:06:27,980
+errors, and you have GPUs that are malfunctioning,
+
+179
+00:06:28,230 --> 00:06:30,269
+the time from that malfunctioning GPU,
+
+180
+00:06:30,670 --> 00:06:32,709
+um, to getting an alert in front of an operator who
+
+181
+00:06:32,709 --> 00:06:34,988
+can remediate is absolutely critical.
+
+182
+00:06:35,769 --> 00:06:36,750
+And then again, throughout,
+
+183
+00:06:37,290 --> 00:06:39,528
+only keeping the data that we actually need
+
+184
+00:06:39,528 --> 00:06:41,449
+to accomplish the use case we're pursuing.
+
+185
+00:06:44,000 --> 00:06:46,040
+All right, and again, this is a scroll down of
+
+186
+00:06:46,040 --> 00:06:47,259
+the same service page.
+
+187
+00:06:47,559 --> 00:06:49,709
+And I'm highlighting because we have distributed
+
+188
+00:06:49,709 --> 00:06:50,829
+tracing with Otel,
+
+189
+00:06:51,209 --> 00:06:53,459
+we get out of the box this dependency map,
+
+190
+00:06:53,678 --> 00:06:55,838
+and we can see right away if there's a spike
+
+191
+00:06:55,838 --> 00:06:57,988
+in errors, a slowdown. Um,
+
+192
+00:06:58,108 --> 00:06:59,608
+with a data ingestion service.
+
+193
+00:07:00,069 --> 00:07:02,149
+And we have all of our telemetry in one place. So
+
+194
+00:07:02,149 --> 00:07:03,410
+not only do we know there's an issue,
+
+195
+00:07:03,790 --> 00:07:05,910
+but we have all the logs, the events, the metrics, the
+
+196
+00:07:05,910 --> 00:07:07,088
+traces to dig into,
+
+197
+00:07:07,470 --> 00:07:09,629
+um, and really correlate, identify the root
+
+198
+00:07:09,629 --> 00:07:12,449
+cause, um, ultimately maximize
+
+199
+00:07:12,629 --> 00:07:14,889
+the, uh, minimize, sorry, the training downtime
+
+200
+00:07:14,889 --> 00:07:17,069
+and maximize your GPU utilization.
+
+201
+00:07:19,548 --> 00:07:21,548
+Cool. So we have a trained or fine-tuned
+
+202
+00:07:21,548 --> 00:07:23,100
+model. That's awesome,
+
+203
+00:07:23,410 --> 00:07:25,428
+doesn't provide a ton of value, unless we
+
+204
+00:07:25,428 --> 00:07:27,699
+can put it in front of users, uh, by
+
+205
+00:07:27,699 --> 00:07:29,790
+hosting our model with an inference hosting
+
+206
+00:07:29,790 --> 00:07:30,449
+use case.
+
+207
+00:07:31,028 --> 00:07:33,410
+So what matters here, Service reliability.
+
+208
+00:07:33,790 --> 00:07:35,910
+People are going to be building on top of this, they
+
+209
+00:07:35,910 --> 00:07:38,730
+need it to work, or they're going to pursue other alternatives.
+
+210
+00:07:39,189 --> 00:07:40,769
+Uh, on the same note, it has to be fast.
+
+211
+00:07:41,108 --> 00:07:43,238
+If it's not fast, they're waiting around, they're going to use
+
+212
+00:07:43,238 --> 00:07:44,009
+the next tool.
+
+213
+00:07:44,569 --> 00:07:46,889
+And ultimately, we need this to be scalable. We're investing
+
+214
+00:07:46,889 --> 00:07:49,108
+all this time and energy into training and hosting.
+
+215
+00:07:49,329 --> 00:07:51,608
+Uh, we don't want to support small scale use cases.
+
+216
+00:07:51,809 --> 00:07:53,470
+We want this to scale to many users.
+
+217
+00:07:55,829 --> 00:07:57,809
+So another architecture diagram here,
+
+218
+00:07:58,149 --> 00:08:00,309
+this one will feel very familiar to a traditional
+
+219
+00:08:00,309 --> 00:08:01,379
+cloud native service.
+
+220
+00:08:01,670 --> 00:08:03,709
+We just kind of have inference plugged in at the back end
+
+221
+00:08:03,709 --> 00:08:05,869
+there. But users need fast and accurate
+
+222
+00:08:05,869 --> 00:08:08,358
+responses across multiple client devices.
+
+223
+00:08:08,579 --> 00:08:10,588
+Um, the services are relying on this, so
+
+224
+00:08:10,588 --> 00:08:12,209
+uptime, performance is critical.
+
+225
+00:08:12,738 --> 00:08:14,738
+Uh, and namely, this last bullet point,
+
+226
+00:08:15,069 --> 00:08:17,309
+incidents and outages can be very high
+
+227
+00:08:17,309 --> 00:08:19,369
+impact, high visibility when we're talking
+
+228
+00:08:19,369 --> 00:08:20,170
+about inference.
+
+229
+00:08:20,428 --> 00:08:22,588
+You don't want to be in the news because your AI is giving
+
+230
+00:08:22,588 --> 00:08:24,548
+incorrect or harmful information.
+
+231
+00:08:27,259 --> 00:08:28,939
+So again, looking at our problem patterns,
+
+232
+00:08:29,220 --> 00:08:31,048
+front-end issues in our different UIs,
+
+233
+00:08:31,338 --> 00:08:32,808
+uh, upstream dependencies,
+
+234
+00:08:33,090 --> 00:08:35,729
+all of these supporting services can impact our reliability,
+
+235
+00:08:36,340 --> 00:08:38,649
+network issues, and then again, keeping GPUs
+
+236
+00:08:38,649 --> 00:08:40,658
+kind of always in sight when we're talking about AI use
+
+237
+00:08:40,658 --> 00:08:41,219
+cases,
+
+238
+00:08:41,690 --> 00:08:44,038
+a little bit less critical for inference, might
+
+239
+00:08:44,038 --> 00:08:46,440
+impact only, uh, you know, a smaller set of users,
+
+240
+00:08:46,690 --> 00:08:48,879
+uh, but still ultimately important to keep track of.
+
+241
+00:08:50,649 --> 00:08:52,690
+So jumping back into Chronosphere, now we're
+
+242
+00:08:52,690 --> 00:08:53,428
+in the perspective
+
+243
+00:08:53,769 --> 00:08:54,750
+of a platform team,
+
+244
+00:08:55,129 --> 00:08:56,489
+self-hosting some inference.
+
+245
+00:08:57,009 --> 00:08:59,349
+We still care about all of our red metrics
+
+246
+00:08:59,349 --> 00:09:01,009
+like we would with any other service,
+
+247
+00:09:01,288 --> 00:09:02,558
+request, errors, duration.
+
+248
+00:09:03,009 --> 00:09:05,168
+But we also want some way to evaluate
+
+249
+00:09:05,168 --> 00:09:07,288
+and benchmark, uh, the accuracy
+
+250
+00:09:07,288 --> 00:09:08,788
+and health of inference itself.
+
+251
+00:09:09,288 --> 00:09:11,369
+And that's what you see here with our hallucination rate,
+
+252
+00:09:11,649 --> 00:09:14,029
+biased response rate, and toxic response rates.
+
+253
+00:09:14,500 --> 00:09:16,619
+So again, we have all the telemetry in one place, we're
+
+254
+00:09:16,619 --> 00:09:18,139
+kind of correlating these different things.
+
+255
+00:09:18,460 --> 00:09:20,759
+And one, piece of feedback, positive
+
+256
+00:09:20,759 --> 00:09:22,349
+feedback we get from our customers
+
+257
+00:09:22,658 --> 00:09:24,700
+is any graph in chronosphere, you
+
+258
+00:09:24,700 --> 00:09:26,700
+can click into and access
+
+259
+00:09:26,700 --> 00:09:28,859
+our anomaly detection feature called differential
+
+260
+00:09:28,859 --> 00:09:29,558
+diagnosis.
+
+261
+00:09:30,219 --> 00:09:32,058
+And for example, that spike down there,
+
+262
+00:09:32,340 --> 00:09:34,658
+um, you're able to quickly identify which
+
+263
+00:09:34,658 --> 00:09:37,058
+label is most uniquely associated
+
+264
+00:09:37,058 --> 00:09:37,979
+with that anomaly.
+
+265
+00:09:38,279 --> 00:09:40,428
+Uh, is that a build version, a cluster
+
+266
+00:09:40,428 --> 00:09:42,519
+version, um, container or something
+
+267
+00:09:42,519 --> 00:09:44,599
+else? That's the actionable piece
+
+268
+00:09:44,599 --> 00:09:46,599
+of information that often gets lost in
+
+269
+00:09:46,599 --> 00:09:49,239
+the noise, um, of a large observability implementation.
+
+270
+00:09:52,009 --> 00:09:54,038
+So we're gonna start shifting gears. We've talked about
+
+271
+00:09:54,038 --> 00:09:55,389
+training and fine tuning models.
+
+272
+00:09:55,678 --> 00:09:58,070
+Uh, that's in our view, a smaller set of
+
+273
+00:09:58,070 --> 00:10:00,080
+organizations. What most organizations are
+
+274
+00:10:00,080 --> 00:10:02,158
+actually doing is consuming and
+
+275
+00:10:02,158 --> 00:10:03,779
+building on top of inference.
+
+276
+00:10:04,158 --> 00:10:06,389
+Um, so first, let's define this term AI
+
+277
+00:10:06,389 --> 00:10:06,908
+native.
+
+278
+00:10:07,279 --> 00:10:09,460
+Uh, I think it's definitely subjective at this point.
+
+279
+00:10:09,639 --> 00:10:11,519
+But our view when we say AI native,
+
+280
+00:10:11,788 --> 00:10:13,869
+is people who are building from day one,
+
+281
+00:10:14,158 --> 00:10:16,219
+designing around the AI technologies.
+
+282
+00:10:16,840 --> 00:10:18,960
+One fun way to think about this and kind of test it.
+
+283
+00:10:19,298 --> 00:10:21,538
+Uh, is if you think of a product person
+
+284
+00:10:21,538 --> 00:10:23,538
+or a founder, and they say, hey, what if
+
+285
+00:10:23,538 --> 00:10:24,500
+we built a,
+
+286
+00:10:24,899 --> 00:10:26,918
+and then you put any product category in there,
+
+287
+00:10:27,019 --> 00:10:29,019
+it could be an IDE, an HR tool,
+
+288
+00:10:29,298 --> 00:10:30,000
+um, anything,
+
+289
+00:10:30,460 --> 00:10:31,859
+and you say, but with AI,
+
+290
+00:10:32,700 --> 00:10:35,080
+most likely, that's going to be an AI native product.
+
+291
+00:10:35,619 --> 00:10:38,250
+So we can see up top here our traditional architecture,
+
+292
+00:10:38,619 --> 00:10:40,649
+we have strict schemas and data models,
+
+293
+00:10:40,979 --> 00:10:43,038
+using CRD rest architectures.
+
+294
+00:10:43,450 --> 00:10:45,690
+Implementing these capabilities one by one
+
+295
+00:10:45,690 --> 00:10:47,729
+behind endpoints and then accessing them through our
+
+296
+00:10:47,729 --> 00:10:49,590
+different uh client devices.
+
+297
+00:10:50,500 --> 00:10:52,739
+But with AI right on the bottom here,
+
+298
+00:10:53,129 --> 00:10:55,149
+we don't need to be as concerned or as
+
+299
+00:10:55,149 --> 00:10:56,580
+strict with our data models,
+
+300
+00:10:56,950 --> 00:10:59,428
+and we don't need to implement every single capability
+
+301
+00:10:59,428 --> 00:10:59,989
+individually,
+
+302
+00:11:00,269 --> 00:11:02,489
+because the LLM has the ability to reason,
+
+303
+00:11:02,989 --> 00:11:05,609
+take requests dynamically that aren't pre-implemented,
+
+304
+00:11:05,830 --> 00:11:07,869
+um, and use data that might not
+
+305
+00:11:07,869 --> 00:11:08,590
+be structured.
+
+306
+00:11:09,330 --> 00:11:11,489
+So what we're seeing now is functionality built
+
+307
+00:11:11,489 --> 00:11:12,750
+around inference and tokens,
+
+308
+00:11:13,080 --> 00:11:15,379
+uh, reasoning and rag capabilities, and
+
+309
+00:11:15,379 --> 00:11:17,408
+then really optimizing around your prompt
+
+310
+00:11:17,408 --> 00:11:18,820
+and context engineering.
+
+311
+00:11:19,288 --> 00:11:21,678
+Uh, and then another thing you might notice, startup URLs
+
+312
+00:11:21,678 --> 00:11:24,469
+are now maybe innovativeguy.AI
+
+313
+00:11:24,529 --> 00:11:26,830
+instead of disruptiveproduct.io, right?
+
+314
+00:11:29,750 --> 00:11:31,908
+Um, some other terms, we've talked about these a lot
+
+315
+00:11:31,908 --> 00:11:34,139
+already. But just to make sure we're kind of level setting,
+
+316
+00:11:34,349 --> 00:11:36,389
+when we say tokens, we mean essentially the word
+
+317
+00:11:36,389 --> 00:11:38,009
+count going in and out of the LLM.
+
+318
+00:11:38,389 --> 00:11:40,788
+This is used to gauge throughput, um, also
+
+319
+00:11:40,788 --> 00:11:42,219
+to calculate pricing.
+
+320
+00:11:42,668 --> 00:11:45,190
+Uh, some other key concepts are evaluations.
+
+321
+00:11:45,500 --> 00:11:47,808
+This is taking the inputs into an LLM,
+
+322
+00:11:48,109 --> 00:11:49,408
+looking at the output you got,
+
+323
+00:11:49,750 --> 00:11:51,750
+and evaluating if it's what you expect, if
+
+324
+00:11:51,750 --> 00:11:53,070
+it's healthy, um,
+
+325
+00:11:53,830 --> 00:11:55,239
+And doing what you needed to do.
+
+326
+00:11:55,629 --> 00:11:57,788
+And then lastly, rag or retrieval
+
+327
+00:11:57,788 --> 00:11:59,038
+augmented generation,
+
+328
+00:11:59,469 --> 00:12:01,629
+extending the knowledge or data
+
+329
+00:12:01,629 --> 00:12:03,779
+available to a foundational, uh, excuse me, a
+
+330
+00:12:03,779 --> 00:12:04,769
+foundation model,
+
+331
+00:12:05,029 --> 00:12:07,009
+um, through external data sets.
+
+332
+00:12:09,779 --> 00:12:11,820
+So, finally getting to the inference health
+
+333
+00:12:11,820 --> 00:12:13,359
+use case, home stretch here.
+
+334
+00:12:13,899 --> 00:12:15,070
+Uh, what matters?
+
+335
+00:12:15,340 --> 00:12:16,399
+Typically, you're looking at
+
+336
+00:12:16,739 --> 00:12:18,759
+my model accuracy or performance,
+
+337
+00:12:19,019 --> 00:12:21,219
+and you're comparing that directly against
+
+338
+00:12:21,340 --> 00:12:23,359
+the token economics and the cost,
+
+339
+00:12:23,418 --> 00:12:25,719
+uh, that's required to achieve those outcomes.
+
+340
+00:12:26,139 --> 00:12:28,500
+And ultimately, what we're seeing AI natives really strive
+
+341
+00:12:28,500 --> 00:12:30,519
+for is product differentiation
+
+342
+00:12:30,519 --> 00:12:31,570
+through the use of AI.
+
+343
+00:12:32,019 --> 00:12:34,178
+Otherwise, AI might not be the tool to solve
+
+344
+00:12:34,178 --> 00:12:34,719
+that problem.
+
+345
+00:12:37,080 --> 00:12:39,239
+So we're gonna go through some examples, um, of
+
+346
+00:12:39,239 --> 00:12:41,840
+some concrete inference health issues that observability
+
+347
+00:12:41,840 --> 00:12:42,700
+can help solve.
+
+348
+00:12:43,399 --> 00:12:45,399
+So the first one is probably the most common we all hear
+
+349
+00:12:45,399 --> 00:12:46,859
+about, which is hallucinations.
+
+350
+00:12:47,200 --> 00:12:49,298
+I think a great example of this, straightforward,
+
+351
+00:12:49,678 --> 00:12:50,788
+asking it what is OTE?
+
+352
+00:12:51,479 --> 00:12:53,479
+And the LLM tells me OTE is a 3D
+
+353
+00:12:53,479 --> 00:12:54,538
+printed telescope.
+
+354
+00:12:54,918 --> 00:12:57,229
+Wholeheartedly incorrect, but the LLM
+
+355
+00:12:57,229 --> 00:12:58,979
+is confidently stating this as a fact.
+
+356
+00:12:59,479 --> 00:13:01,558
+If you don't have a way to measure and evaluate
+
+357
+00:13:01,558 --> 00:13:03,710
+this, um, you have no idea how
+
+358
+00:13:03,710 --> 00:13:05,359
+often your users are experiencing that.
+
+359
+00:13:06,190 --> 00:13:08,229
+Another one that can be, uh, even potentially
+
+360
+00:13:08,229 --> 00:13:09,090
+more dangerous
+
+361
+00:13:09,428 --> 00:13:11,609
+is if you have bias, and you're starting to use
+
+362
+00:13:11,609 --> 00:13:13,690
+inference in things like hiring workflows,
+
+363
+00:13:13,869 --> 00:13:15,700
+um, agentic, HR, right?
+
+364
+00:13:15,989 --> 00:13:18,190
+Uh, and there's bias you're not aware of,
+
+365
+00:13:18,538 --> 00:13:19,928
+which candidate should I hire?
+
+366
+00:13:20,229 --> 00:13:22,509
+And it says you should only hire hockey fans.
+
+367
+00:13:23,070 --> 00:13:25,070
+Maybe if you're hiring for a hockey coach or something
+
+368
+00:13:25,070 --> 00:13:27,308
+like that, it makes sense. Um, otherwise,
+
+369
+00:13:27,349 --> 00:13:28,570
+this could be really harmful.
+
+370
+00:13:29,200 --> 00:13:31,279
+And then at the end here, less about the behavior
+
+371
+00:13:31,279 --> 00:13:31,950
+of the inference,
+
+372
+00:13:32,279 --> 00:13:34,479
+more about those token economics, um,
+
+373
+00:13:34,639 --> 00:13:36,019
+but excess token consumption.
+
+374
+00:13:36,440 --> 00:13:38,190
+So if I'm asking a simple question,
+
+375
+00:13:38,639 --> 00:13:40,279
+what letter comes after A?
+
+376
+00:13:40,629 --> 00:13:42,700
+And the model tells me the letter A
+
+377
+00:13:42,700 --> 00:13:44,840
+is, the letter after A is B followed
+
+378
+00:13:44,840 --> 00:13:45,500
+by C,
+
+379
+00:13:45,759 --> 00:13:48,369
+you can count the number of excess words and characters,
+
+380
+00:13:48,590 --> 00:13:50,788
+and at scale, that adds up to just wasted
+
+381
+00:13:50,788 --> 00:13:51,719
+money and cost.
+
+382
+00:13:54,759 --> 00:13:56,820
+So, kind of double clicking one level further,
+
+383
+00:13:57,158 --> 00:13:59,239
+um, why do these things happen? If we
+
+384
+00:13:59,239 --> 00:14:00,639
+start with hallucinations again,
+
+385
+00:14:01,119 --> 00:14:03,479
+largely this is something that's related to your own prompting,
+
+386
+00:14:03,558 --> 00:14:05,798
+um, and your own usage of the model.
+
+387
+00:14:06,279 --> 00:14:08,178
+Could be inaccuracies in training data,
+
+388
+00:14:08,678 --> 00:14:10,798
+and then the lack of tools for a rag,
+
+389
+00:14:11,000 --> 00:14:11,558
+um,
+
+390
+00:14:12,399 --> 00:14:14,440
+Lack of update information. It doesn't have the
+
+391
+00:14:14,440 --> 00:14:16,340
+knowledge, so it tries to invent an answer,
+
+392
+00:14:16,668 --> 00:14:17,879
+um, that's not available to it.
+
+393
+00:14:19,269 --> 00:14:21,428
+For bias, if you have bias in your training data,
+
+394
+00:14:21,590 --> 00:14:23,168
+they're going to have bias in your inference.
+
+395
+00:14:23,830 --> 00:14:26,090
+You might not have evaluations or guardrails at all,
+
+396
+00:14:26,389 --> 00:14:28,418
+or you might just have ambiguous prompts that's
+
+397
+00:14:28,418 --> 00:14:30,428
+not protecting against any, um,
+
+398
+00:14:30,750 --> 00:14:31,808
+uh, bias that does exist.
+
+399
+00:14:32,879 --> 00:14:34,879
+Excess token consumption, if you've use an
+
+400
+00:14:34,879 --> 00:14:36,908
+MCP server, you've probably seen a
+
+401
+00:14:36,908 --> 00:14:38,918
+model spin its wheels and infinitely
+
+402
+00:14:38,918 --> 00:14:41,038
+make requests, um, and just burn
+
+403
+00:14:41,038 --> 00:14:42,000
+a ton of tokens.
+
+404
+00:14:42,359 --> 00:14:44,359
+If you have that type of thing happening inside
+
+405
+00:14:44,359 --> 00:14:45,428
+an agentic workflow,
+
+406
+00:14:45,719 --> 00:14:47,719
+again, you can scale it. Um, that's a
+
+407
+00:14:47,719 --> 00:14:49,960
+lot of wasted costs. You could be spending on GPUs
+
+408
+00:14:49,960 --> 00:14:50,859
+or elsewhere.
+
+409
+00:14:51,399 --> 00:14:53,428
+You also just might not have output filtering.
+
+410
+00:14:53,639 --> 00:14:55,639
+You might not be specifying a response format.
+
+411
+00:14:55,798 --> 00:14:57,918
+So the LLM doesn't know what you want it to do.
+
+412
+00:14:58,119 --> 00:15:00,219
+So it's guessing, uh, and producing some waste.
+
+413
+00:15:01,288 --> 00:15:03,489
+And then if we think back to our example where you might also
+
+414
+00:15:03,489 --> 00:15:05,000
+be hosting the inference yourself,
+
+415
+00:15:05,450 --> 00:15:07,489
+you can look at your temperature settings, um,
+
+416
+00:15:07,609 --> 00:15:09,509
+inference and model configurations,
+
+417
+00:15:09,769 --> 00:15:11,889
+um, always keep an eye on the quality of training
+
+418
+00:15:11,889 --> 00:15:14,090
+data, and your GPU performance
+
+419
+00:15:14,090 --> 00:15:16,158
+actually can affect how the model behaves.
+
+420
+00:15:16,330 --> 00:15:18,330
+It can restrict tool calls, it can change the
+
+421
+00:15:18,330 --> 00:15:20,529
+behavior, uh, and impact the accuracy of
+
+422
+00:15:20,529 --> 00:15:21,070
+responses.
+
+423
+00:15:23,548 --> 00:15:25,840
+All right, back to chronosphere one more time. How
+
+424
+00:15:25,840 --> 00:15:27,918
+can we use observability, um, to kind of help
+
+425
+00:15:27,918 --> 00:15:29,500
+us protect against these pitfalls?
+
+426
+00:15:30,538 --> 00:15:32,950
+What we're looking at here is an OTel trace.
+
+427
+00:15:33,340 --> 00:15:34,599
+Uh, this is instrumented,
+
+428
+00:15:34,889 --> 00:15:36,678
+um, with a library called
+
+429
+00:15:37,259 --> 00:15:38,879
+Open Inference by RS AI.
+
+430
+00:15:39,359 --> 00:15:41,599
+What that does is give us everything we get in a standard
+
+431
+00:15:41,599 --> 00:15:44,099
+OTel trace, but it also grabs LLM
+
+432
+00:15:44,099 --> 00:15:46,099
+specific attributes that we can do a lot
+
+433
+00:15:46,099 --> 00:15:47,599
+of additional analysis on.
+
+434
+00:15:48,178 --> 00:15:50,489
+So anywhere in this trace, if there's a traditional
+
+435
+00:15:50,489 --> 00:15:52,849
+service error or a hallucination, bias,
+
+436
+00:15:52,928 --> 00:15:53,558
+etc.
+
+437
+00:15:53,940 --> 00:15:56,320
+this whole line will go red, and you'll know right away
+
+438
+00:15:56,320 --> 00:15:57,119
+where in your agent,
+
+439
+00:15:57,418 --> 00:15:59,479
+uh, reasoning or request the issue is.
+
+440
+00:16:00,009 --> 00:16:01,129
+And then we can jump in,
+
+441
+00:16:01,399 --> 00:16:03,649
+create trends, use our anomaly detection
+
+442
+00:16:03,649 --> 00:16:04,769
+again, um.
+
+443
+00:16:05,479 --> 00:16:07,548
+But on the right hand side, we see the span details.
+
+444
+00:16:07,759 --> 00:16:09,879
+When I talk about these LLM specific
+
+445
+00:16:09,879 --> 00:16:11,109
+attributes, what do I mean?
+
+446
+00:16:11,519 --> 00:16:13,719
+Uh, I mean stuff like this, we can see which model,
+
+447
+00:16:13,808 --> 00:16:14,658
+which model version,
+
+448
+00:16:15,158 --> 00:16:17,158
+the actual prompts, uh, inputs
+
+449
+00:16:17,158 --> 00:16:17,918
+and outputs.
+
+450
+00:16:18,320 --> 00:16:20,440
+We can feed those into evaluation systems
+
+451
+00:16:20,440 --> 00:16:22,298
+like Phoenix, you can create your own,
+
+452
+00:16:22,678 --> 00:16:24,979
+uh, you can even run evaluations at the code level.
+
+453
+00:16:26,080 --> 00:16:27,889
+We also get all of our token counts,
+
+454
+00:16:28,239 --> 00:16:30,239
+uh, and we get these assessment attributes for
+
+455
+00:16:30,239 --> 00:16:30,820
+hallucination,
+
+456
+00:16:31,149 --> 00:16:32,500
+bias, or toxicity.
+
+457
+00:16:32,960 --> 00:16:35,200
+What this lets me do is drive all these useful
+
+458
+00:16:35,200 --> 00:16:37,269
+trends, uh, and start analyzing the
+
+459
+00:16:37,269 --> 00:16:39,298
+data. So if I'm an AI native product,
+
+460
+00:16:40,168 --> 00:16:42,399
+What do I care about, right? You might care about choosing
+
+461
+00:16:42,399 --> 00:16:43,619
+the right model for the job,
+
+462
+00:16:43,960 --> 00:16:46,048
+so we can see what's the average cost per
+
+463
+00:16:46,048 --> 00:16:47,899
+request broken down by model.
+
+464
+00:16:48,558 --> 00:16:50,038
+We can compare that over time.
+
+465
+00:16:50,320 --> 00:16:52,418
+So maybe one new release actually switches
+
+466
+00:16:52,418 --> 00:16:54,658
+this up. And the way you're doing your prompting
+
+467
+00:16:55,038 --> 00:16:57,219
+makes it so that Grok's cheaper, um,
+
+468
+00:16:57,239 --> 00:16:58,700
+than an alternative, for example.
+
+469
+00:16:59,038 --> 00:17:01,090
+These are the type of things you always want to keep an eye on,
+
+470
+00:17:01,158 --> 00:17:03,279
+so you can make data-driven decisions and always
+
+471
+00:17:03,279 --> 00:17:04,759
+improve your product and your implementation.
+
+472
+00:17:05,499 --> 00:17:08,229
+Then at the bottom here, we've talked a lot about the hallucinations
+
+473
+00:17:08,229 --> 00:17:09,388
+already. Um,
+
+474
+00:17:09,667 --> 00:17:11,827
+but again, maybe you make a change, maybe the model
+
+475
+00:17:11,827 --> 00:17:13,827
+provider makes a change, and all of a sudden you
+
+476
+00:17:13,827 --> 00:17:15,337
+see a spike in hallucinations.
+
+477
+00:17:15,628 --> 00:17:17,788
+You need to action that and pull it out of prod right
+
+478
+00:17:17,788 --> 00:17:19,499
+away. This is something that
+
+479
+00:17:19,817 --> 00:17:21,909
+I think traditionally AI and ML teams were
+
+480
+00:17:21,909 --> 00:17:22,577
+focused on.
+
+481
+00:17:22,868 --> 00:17:24,948
+But now if you're an SRE if you're a,
+
+482
+00:17:24,989 --> 00:17:27,067
+um, support operator, and
+
+483
+00:17:27,067 --> 00:17:28,409
+you see this happening in production,
+
+484
+00:17:29,428 --> 00:17:31,468
+speed of actioning that becomes critical to
+
+485
+00:17:31,468 --> 00:17:32,528
+stay out of the news stories.
+
+486
+00:17:34,809 --> 00:17:37,049
+OK. And in closing, we talked about
+
+487
+00:17:37,049 --> 00:17:37,868
+a lot of different data.
+
+488
+00:17:38,318 --> 00:17:40,358
+Um, one thing to highlight, Chronosphere does
+
+489
+00:17:40,358 --> 00:17:41,959
+not have a proprietary agent.
+
+490
+00:17:42,318 --> 00:17:44,328
+All the data we used, uh, in this
+
+491
+00:17:44,328 --> 00:17:45,809
+talk was open source
+
+492
+00:17:46,130 --> 00:17:48,449
+from open telemetry, SDKs and collectors,
+
+493
+00:17:48,809 --> 00:17:51,269
+Nvidia, DCGM Prometheus exporter,
+
+494
+00:17:51,568 --> 00:17:53,689
+Cube State metrics, Prometheus node
+
+495
+00:17:53,689 --> 00:17:54,400
+exporters,
+
+496
+00:17:54,739 --> 00:17:56,989
+the Open inference SDK. Again, that's from,
+
+497
+00:17:57,000 --> 00:17:58,068
+uh, Arise AI,
+
+498
+00:17:58,449 --> 00:18:00,279
+uh, they're open-source products, Phoenix AI
+
+499
+00:18:00,838 --> 00:18:02,348
+and then fluent Bit for our logs.
+
+500
+00:18:04,439 --> 00:18:06,479
+That's it. That's everything I wanted to cover. Hopefully, it was
+
+501
+00:18:06,479 --> 00:18:08,729
+valuable. Uh, really appreciate you guys listening
+
+502
+00:18:08,729 --> 00:18:10,809
+to the talk and hope you have a great rest
+
+503
+00:18:10,809 --> 00:18:11,568
+of your reinvent.
+
+504
+00:18:13,098 --> 00:18:13,608
+Thank you.
+
+505
+00:18:13,900 --> 00:18:15,439
+All right, thank you, Ryan.
+

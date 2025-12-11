@@ -1,0 +1,6212 @@
+1
+00:00:00,599 --> 00:00:01,889
+Uh, my name is Ela.
+
+2
+00:00:02,559 --> 00:00:04,559
+With me is Kevin. We're both principal
+
+3
+00:00:04,559 --> 00:00:06,459
+engineers working on Elasticash,
+
+4
+00:00:07,129 --> 00:00:09,239
+and in a minute, Kevin is going to walk us through
+
+5
+00:00:09,239 --> 00:00:09,880
+some code,
+
+6
+00:00:10,239 --> 00:00:11,800
+building a video sampling and search application.
+
+7
+00:00:13,300 --> 00:00:15,608
+But first I'd like to dive
+
+8
+00:00:15,608 --> 00:00:16,519
+a little bit into
+
+9
+00:00:17,059 --> 00:00:19,219
+how uh uh vectors similarity
+
+10
+00:00:19,219 --> 00:00:20,780
+search works with ValLKI.
+
+11
+00:00:22,609 --> 00:00:24,690
+So, uh, VSS works
+
+12
+00:00:24,690 --> 00:00:26,048
+on two data types with VALKy
+
+13
+00:00:26,638 --> 00:00:28,760
+on hash maps and on JSON
+
+14
+00:00:29,269 --> 00:00:30,068
+documents,
+
+15
+00:00:30,568 --> 00:00:32,990
+and you start by defining,
+
+16
+00:00:33,000 --> 00:00:35,829
+um, an index and defining schema.
+
+17
+00:00:36,219 --> 00:00:38,029
+And whenever you go and change,
+
+18
+00:00:38,709 --> 00:00:39,950
+uh, one of these objects,
+
+19
+00:00:40,609 --> 00:00:41,389
+that change
+
+20
+00:00:41,649 --> 00:00:44,389
+immediately happens on the main key database,
+
+21
+00:00:45,048 --> 00:00:46,868
+and then the search model
+
+22
+00:00:47,810 --> 00:00:49,329
+receives a keynote space notification.
+
+23
+00:00:50,048 --> 00:00:52,228
+And start asynchronously
+
+24
+00:00:52,969 --> 00:00:55,228
+indexing those uh those changes
+
+25
+00:00:55,569 --> 00:00:57,889
+using a set of uh dedicated
+
+26
+00:00:57,889 --> 00:00:58,709
+worker threads.
+
+27
+00:00:59,529 --> 00:01:01,789
+Now that means that the Valky main
+
+28
+00:01:01,929 --> 00:01:02,630
+thread
+
+29
+00:01:03,048 --> 00:01:05,290
+can continue serving other requests by other
+
+30
+00:01:05,290 --> 00:01:05,909
+users.
+
+31
+00:01:06,778 --> 00:01:08,989
+But that particular user that
+
+32
+00:01:08,989 --> 00:01:11,569
+sent the the the the the modification,
+
+33
+00:01:12,439 --> 00:01:14,219
+that waits, that user waits
+
+34
+00:01:14,829 --> 00:01:16,370
+because we have a synchronous
+
+35
+00:01:17,069 --> 00:01:17,769
+API
+
+36
+00:01:18,308 --> 00:01:20,308
+and a synchronous API is really, really useful
+
+37
+00:01:20,308 --> 00:01:22,599
+here because you can read your own rights,
+
+38
+00:01:23,028 --> 00:01:25,349
+right, versus other databases where it's
+
+39
+00:01:25,349 --> 00:01:26,569
+asynchronous, it will happen
+
+40
+00:01:27,150 --> 00:01:28,069
+sometime in the future.
+
+41
+00:01:29,040 --> 00:01:30,790
+So, once indexing complete,
+
+42
+00:01:31,198 --> 00:01:33,198
+uh, the, the user will get uh
+
+43
+00:01:33,198 --> 00:01:35,099
+an OK response and can continue.
+
+44
+00:01:38,409 --> 00:01:39,778
+Now queries
+
+45
+00:01:40,120 --> 00:01:42,239
+get handled immediately by
+
+46
+00:01:42,239 --> 00:01:43,040
+the query engine.
+
+47
+00:01:44,739 --> 00:01:45,769
+Those uh
+
+48
+00:01:46,819 --> 00:01:48,900
+the the work also happens on
+
+49
+00:01:48,900 --> 00:01:50,180
+dedicated worker threads.
+
+50
+00:01:51,069 --> 00:01:53,888
+So the queries get sent both to local indices,
+
+51
+00:01:54,230 --> 00:01:55,838
+but also to remote charts.
+
+52
+00:01:56,150 --> 00:01:57,088
+And that's because
+
+53
+00:01:57,469 --> 00:01:59,150
+when we search for nearest neighbors,
+
+54
+00:01:59,629 --> 00:02:00,969
+we don't necessarily know
+
+55
+00:02:01,400 --> 00:02:03,430
+at which chart the nearest neighbors are going to be.
+
+56
+00:02:03,790 --> 00:02:04,808
+So we fan out
+
+57
+00:02:05,088 --> 00:02:05,650
+and
+
+58
+00:02:06,109 --> 00:02:08,368
+the the query gets applied everywhere.
+
+59
+00:02:08,990 --> 00:02:10,169
+When the results come in,
+
+60
+00:02:10,830 --> 00:02:11,479
+optionally,
+
+61
+00:02:11,758 --> 00:02:14,008
+Valy will actually enrich them back
+
+62
+00:02:14,189 --> 00:02:15,729
+with data from the main database
+
+63
+00:02:16,429 --> 00:02:18,689
+and and send them of course back to the user.
+
+64
+00:02:21,159 --> 00:02:22,689
+Let's talk a bit about scaling
+
+65
+00:02:23,008 --> 00:02:25,050
+because it's a little bit different than
+
+66
+00:02:25,050 --> 00:02:27,080
+what you're used to with VALKy, if you're a VALy
+
+67
+00:02:27,080 --> 00:02:29,288
+user. So,
+
+68
+00:02:29,429 --> 00:02:31,469
+um, when you ingest
+
+69
+00:02:31,469 --> 00:02:33,588
+information, you send modification
+
+70
+00:02:33,588 --> 00:02:36,149
+to a particular primary in a particular shard.
+
+71
+00:02:36,979 --> 00:02:39,419
+That primary does the work of ingesting
+
+72
+00:02:39,419 --> 00:02:41,288
+and building, uh updating the index
+
+73
+00:02:41,699 --> 00:02:43,118
+and as synchronously
+
+74
+00:02:43,618 --> 00:02:46,008
+updates the replica, which also indexes the
+
+75
+00:02:46,008 --> 00:02:47,819
+information. Now,
+
+76
+00:02:48,179 --> 00:02:49,520
+this architecture means
+
+77
+00:02:49,860 --> 00:02:52,038
+that the more shards you add, like the,
+
+78
+00:02:52,139 --> 00:02:53,399
+the bigger you scale out,
+
+79
+00:02:53,860 --> 00:02:55,240
+the more data you can store.
+
+80
+00:02:55,979 --> 00:02:58,399
+And also it increases your ingestion
+
+81
+00:02:58,399 --> 00:03:00,520
+rate. So you can just billions
+
+82
+00:03:00,520 --> 00:03:02,558
+and billions of items
+
+83
+00:03:02,558 --> 00:03:03,159
+per second.
+
+84
+00:03:05,028 --> 00:03:07,490
+Well, maybe not billions per second, but,
+
+85
+00:03:07,788 --> 00:03:09,250
+uh, sport is very high,
+
+86
+00:03:09,669 --> 00:03:11,110
+the more you increase the shards.
+
+87
+00:03:12,899 --> 00:03:15,278
+Uh, search works differently.
+
+88
+00:03:17,929 --> 00:03:19,429
+When you send out the query,
+
+89
+00:03:20,050 --> 00:03:22,349
+the node that you send to has to fan out
+
+90
+00:03:22,528 --> 00:03:23,469
+to all the shards
+
+91
+00:03:23,800 --> 00:03:24,490
+like we
+
+92
+00:03:24,770 --> 00:03:26,088
+uh just mentioned.
+
+93
+00:03:26,778 --> 00:03:27,808
+And that means
+
+94
+00:03:28,110 --> 00:03:28,719
+that
+
+95
+00:03:29,629 --> 00:03:32,169
+as you as you add more shards,
+
+96
+00:03:32,508 --> 00:03:34,250
+it doesn't increase your throughput,
+
+97
+00:03:34,580 --> 00:03:36,569
+it doesn't increase your queries per second,
+
+98
+00:03:37,110 --> 00:03:39,308
+right, because all the work has to be done
+
+99
+00:03:39,308 --> 00:03:40,689
+by all the shards.
+
+100
+00:03:41,349 --> 00:03:42,969
+So what can you do if you need more
+
+101
+00:03:43,429 --> 00:03:45,389
+uh throughput, more queries per second?
+
+102
+00:03:45,710 --> 00:03:47,929
+You can add more replicas,
+
+103
+00:03:48,338 --> 00:03:49,909
+right, because as you can see.
+
+104
+00:03:50,399 --> 00:03:52,270
+Uh, decrease fan out to all the shards,
+
+105
+00:03:52,599 --> 00:03:54,679
+but they pick either a replica or
+
+106
+00:03:54,679 --> 00:03:56,719
+primary. So if you have a lot of replicas,
+
+107
+00:03:56,919 --> 00:03:58,800
+you can actually do more work concurrently.
+
+108
+00:04:00,129 --> 00:04:02,338
+Another good option is to scale up the
+
+109
+00:04:02,338 --> 00:04:03,000
+instance type,
+
+110
+00:04:03,460 --> 00:04:04,558
+right? If you have
+
+111
+00:04:04,819 --> 00:04:05,919
+more cores,
+
+112
+00:04:06,618 --> 00:04:08,899
+those dedicated worker threads can actually
+
+113
+00:04:08,899 --> 00:04:09,719
+do more work
+
+114
+00:04:09,979 --> 00:04:12,240
+and those actually are very, very efficient
+
+115
+00:04:12,649 --> 00:04:14,379
+at utilizing as a course.
+
+116
+00:04:19,350 --> 00:04:21,350
+Uh, let's talk about what Kevin is going to
+
+117
+00:04:21,350 --> 00:04:23,470
+build. So we'll
+
+118
+00:04:23,470 --> 00:04:25,500
+have a web application. It's going to
+
+119
+00:04:25,500 --> 00:04:26,509
+have two parts.
+
+120
+00:04:26,790 --> 00:04:29,170
+It's going to have an ingestion
+
+121
+00:04:29,170 --> 00:04:31,588
+part, which is where we upload
+
+122
+00:04:31,588 --> 00:04:32,220
+videos,
+
+123
+00:04:32,548 --> 00:04:34,129
+and it's going to have a query part
+
+124
+00:04:34,410 --> 00:04:36,629
+where we can query by either
+
+125
+00:04:36,629 --> 00:04:37,579
+text or image.
+
+126
+00:04:37,910 --> 00:04:38,420
+Now
+
+127
+00:04:39,069 --> 00:04:41,588
+what holds them together is actually Valy,
+
+128
+00:04:41,928 --> 00:04:43,608
+right? When we ingest,
+
+129
+00:04:43,869 --> 00:04:45,980
+we take images, we analyze them,
+
+130
+00:04:46,149 --> 00:04:48,309
+we turn them into embeddings using foundation
+
+131
+00:04:48,309 --> 00:04:48,869
+models,
+
+132
+00:04:49,149 --> 00:04:51,410
+right? So basically embeddings are vectors.
+
+133
+00:04:52,019 --> 00:04:53,278
+We insert
+
+134
+00:04:53,619 --> 00:04:54,699
+and when we query,
+
+135
+00:04:54,980 --> 00:04:57,100
+we take the query, it could be either a text
+
+136
+00:04:57,100 --> 00:04:57,949
+or an image,
+
+137
+00:04:58,298 --> 00:05:00,879
+right? We turn that also into an embedding,
+
+138
+00:05:01,220 --> 00:05:03,509
+transformed to vector using a foundation model,
+
+139
+00:05:03,858 --> 00:05:05,528
+and then we look for similar ones,
+
+140
+00:05:05,819 --> 00:05:07,959
+similar vectors or similar images
+
+141
+00:05:08,259 --> 00:05:09,019
+in bulky.
+
+142
+00:05:09,379 --> 00:05:11,459
+When we find something, we can
+
+143
+00:05:11,459 --> 00:05:13,619
+go and grab it off S3,
+
+144
+00:05:13,949 --> 00:05:14,959
+display to the user.
+
+145
+00:05:18,108 --> 00:05:20,189
+So the ingestion pipelines means that
+
+146
+00:05:20,189 --> 00:05:20,699
+we
+
+147
+00:05:21,000 --> 00:05:23,000
+take the video, we break it apart to
+
+148
+00:05:23,000 --> 00:05:23,759
+frames.
+
+149
+00:05:24,488 --> 00:05:25,250
+And
+
+150
+00:05:25,738 --> 00:05:27,100
+then we perform deduplication.
+
+151
+00:05:28,238 --> 00:05:30,569
+After we found images that are unique
+
+152
+00:05:30,569 --> 00:05:32,988
+enough, we run through multimodal analysis.
+
+153
+00:05:34,819 --> 00:05:37,019
+Diving deeper into the duplicate deduplication
+
+154
+00:05:37,019 --> 00:05:39,189
+and what it means on the application that
+
+155
+00:05:39,189 --> 00:05:41,428
+Tegain is going to build, it's going to be triggered
+
+156
+00:05:41,428 --> 00:05:42,519
+from an S3
+
+157
+00:05:42,939 --> 00:05:43,759
+insertion,
+
+158
+00:05:44,298 --> 00:05:45,338
+creation of object.
+
+159
+00:05:45,819 --> 00:05:47,899
+Then we're going to take the image, transform it
+
+160
+00:05:47,899 --> 00:05:49,939
+into an embedding, and we'll start
+
+161
+00:05:49,939 --> 00:05:50,559
+by looking
+
+162
+00:05:51,040 --> 00:05:52,019
+for similar,
+
+163
+00:05:52,379 --> 00:05:54,619
+similar images on Elasticash
+
+164
+00:05:54,619 --> 00:05:55,278
+on bulky.
+
+165
+00:05:56,500 --> 00:05:58,858
+If we find something that's similar
+
+166
+00:05:58,858 --> 00:06:00,899
+enough, like neighbors that are
+
+167
+00:06:00,899 --> 00:06:01,600
+close enough,
+
+168
+00:06:02,259 --> 00:06:04,500
+then that, that uh that image
+
+169
+00:06:04,500 --> 00:06:06,819
+is probably not unique enough, doesn't add
+
+170
+00:06:06,819 --> 00:06:08,949
+additional value or additional content,
+
+171
+00:06:09,420 --> 00:06:10,879
+right? So we can just throw it away,
+
+172
+00:06:11,259 --> 00:06:13,319
+we can save all the extra
+
+173
+00:06:13,488 --> 00:06:14,298
+analysis,
+
+174
+00:06:14,579 --> 00:06:15,519
+but if it's unique enough,
+
+175
+00:06:15,939 --> 00:06:17,119
+we'll continue our pipeline
+
+176
+00:06:17,500 --> 00:06:20,040
+and we'll run uh additional analysis
+
+177
+00:06:20,459 --> 00:06:21,559
+and eventually store it.
+
+178
+00:06:25,709 --> 00:06:27,988
+Now, the multi-modal analysis is
+
+179
+00:06:27,988 --> 00:06:30,230
+going to work by taking our image and
+
+180
+00:06:30,230 --> 00:06:32,660
+we're going to uh run it through, uh,
+
+181
+00:06:32,670 --> 00:06:34,829
+several, several, uh, analysis
+
+182
+00:06:34,829 --> 00:06:36,889
+models, right? We're going to use
+
+183
+00:06:36,889 --> 00:06:37,928
+uh categorization,
+
+184
+00:06:38,189 --> 00:06:40,209
+libelization, and summarization.
+
+185
+00:06:40,939 --> 00:06:43,129
+And we're going to take the output of all of these,
+
+186
+00:06:43,350 --> 00:06:45,059
+that's basically text, right?
+
+187
+00:06:45,500 --> 00:06:47,160
+That's the output. We're taking text
+
+188
+00:06:47,459 --> 00:06:48,500
+and we're taking the image,
+
+189
+00:06:48,819 --> 00:06:51,048
+we're putting them all into the foundation
+
+190
+00:06:51,048 --> 00:06:53,319
+model because we want to generate what?
+
+191
+00:06:56,278 --> 00:06:58,389
+Embeddings, right. That's what we're doing, right?
+
+192
+00:06:58,470 --> 00:07:00,028
+Embedding vectors. This is what
+
+193
+00:07:00,309 --> 00:07:01,350
+uh it's all about.
+
+194
+00:07:01,670 --> 00:07:03,738
+And then we're taking the text
+
+195
+00:07:03,738 --> 00:07:05,910
+transforming into embeddings, but we're also
+
+196
+00:07:05,910 --> 00:07:07,410
+inserting the text itself
+
+197
+00:07:08,189 --> 00:07:09,988
+along with the generated embeddings
+
+198
+00:07:10,389 --> 00:07:11,889
+into elastic cash. So,
+
+199
+00:07:12,309 --> 00:07:14,494
+you'll have this JSON
+
+200
+00:07:14,494 --> 00:07:16,494
+object that contains multiple
+
+201
+00:07:16,494 --> 00:07:19,074
+fields, right? It will have text
+
+202
+00:07:19,375 --> 00:07:21,613
+for all the things that we analyzed, and it will
+
+203
+00:07:21,613 --> 00:07:22,795
+have the vectors
+
+204
+00:07:23,173 --> 00:07:25,494
+that we that we got from the foundation
+
+205
+00:07:25,494 --> 00:07:27,574
+model, and then we'll we'll be
+
+206
+00:07:27,574 --> 00:07:29,113
+able to search for all of it.
+
+207
+00:07:30,910 --> 00:07:32,209
+Now, searching means
+
+208
+00:07:32,629 --> 00:07:34,720
+that the user is going to input either
+
+209
+00:07:34,720 --> 00:07:35,369
+text
+
+210
+00:07:35,670 --> 00:07:37,088
+or an image.
+
+211
+00:07:37,959 --> 00:07:40,160
+Uh, either way, we take that, we
+
+212
+00:07:40,160 --> 00:07:42,220
+also transform it into embedding
+
+213
+00:07:42,829 --> 00:07:44,319
+and we look for nearest neighbors.
+
+214
+00:07:44,720 --> 00:07:45,379
+Found something,
+
+215
+00:07:45,720 --> 00:07:46,920
+grab it off a tree,
+
+216
+00:07:47,278 --> 00:07:47,920
+display it.
+
+217
+00:07:51,670 --> 00:07:53,790
+Cool. So, uh, let me hand it over
+
+218
+00:07:53,790 --> 00:07:54,428
+to Kevin.
+
+219
+00:07:54,949 --> 00:07:56,470
+Yeah, thank you, lad.
+
+220
+00:07:57,778 --> 00:07:59,879
+Switch over to my demo machine.
+
+221
+00:08:02,738 --> 00:08:03,790
+So we'll start out by
+
+222
+00:08:04,088 --> 00:08:06,250
+just showing you what uh the completed
+
+223
+00:08:06,250 --> 00:08:08,410
+application looks like before we actually go in and, and, and
+
+224
+00:08:08,410 --> 00:08:10,428
+write some code here. So this is
+
+225
+00:08:10,730 --> 00:08:12,790
+the web UI that Ala was talking
+
+226
+00:08:12,790 --> 00:08:14,850
+about and I have one video here
+
+227
+00:08:14,850 --> 00:08:15,920
+that's ingested,
+
+228
+00:08:16,250 --> 00:08:18,048
+uh, which is an AWS ad,
+
+229
+00:08:18,338 --> 00:08:20,528
+uh, and what the system does, I can show you what if
+
+230
+00:08:20,528 --> 00:08:21,869
+I were to click into it.
+
+231
+00:08:22,790 --> 00:08:24,928
+It does all of the analysis on
+
+232
+00:08:25,028 --> 00:08:27,069
+these frames and provides some insights
+
+233
+00:08:27,069 --> 00:08:27,730
+into the video,
+
+234
+00:08:28,230 --> 00:08:30,309
+uh, including different labels that are,
+
+235
+00:08:30,350 --> 00:08:32,950
+uh, identified from, uh, recognition,
+
+236
+00:08:33,029 --> 00:08:35,389
+text from, uh, from
+
+237
+00:08:35,389 --> 00:08:37,729
+transcribe and, and, uh,
+
+238
+00:08:37,830 --> 00:08:38,889
+other things that are,
+
+239
+00:08:39,889 --> 00:08:41,330
+uh, identified through,
+
+240
+00:08:41,899 --> 00:08:43,379
+uh, the individual frames.
+
+241
+00:08:43,788 --> 00:08:46,070
+This is all derived from a set of frames.
+
+242
+00:08:46,149 --> 00:08:47,849
+So this is set at a 1 2nd
+
+243
+00:08:48,308 --> 00:08:49,210
+sampling,
+
+244
+00:08:50,590 --> 00:08:53,048
+yeah. On
+
+245
+00:08:53,048 --> 00:08:53,950
+the insights, yeah.
+
+246
+00:08:59,239 --> 00:08:59,879
+category.
+
+247
+00:09:02,279 --> 00:09:03,649
+That's OK. I can, I can
+
+248
+00:09:04,070 --> 00:09:04,908
+repeat it too, but.
+
+249
+00:09:06,158 --> 00:09:07,298
+Yeah, so I,
+
+250
+00:09:07,639 --> 00:09:09,739
+yeah, uh, on the
+
+251
+00:09:09,739 --> 00:09:10,979
+insights,
+
+252
+00:09:11,558 --> 00:09:12,658
+how do you
+
+253
+00:09:13,119 --> 00:09:15,320
+determine the label
+
+254
+00:09:15,320 --> 00:09:16,080
+category,
+
+255
+00:09:16,359 --> 00:09:16,940
+label,
+
+256
+00:09:17,639 --> 00:09:18,599
+and text,
+
+257
+00:09:18,918 --> 00:09:21,080
+please. Yeah, so these
+
+258
+00:09:21,080 --> 00:09:23,190
+are from the, uh,
+
+259
+00:09:23,200 --> 00:09:25,739
+the, the services that uh
+
+260
+00:09:25,739 --> 00:09:28,200
+that uh a lot talked about. So we feed
+
+261
+00:09:28,639 --> 00:09:29,859
+individual frames
+
+262
+00:09:30,190 --> 00:09:32,298
+to, uh, for example, like recognition
+
+263
+00:09:32,678 --> 00:09:34,719
+can identify labels. So let's say home and
+
+264
+00:09:34,719 --> 00:09:36,719
+indoors. Uh, so this may
+
+265
+00:09:36,719 --> 00:09:39,080
+not be the best, but so I see, uh, uh, hits
+
+266
+00:09:39,080 --> 00:09:41,779
+on, on, uh, home and indoors on frame
+
+267
+00:09:41,960 --> 00:09:43,960
+at the one interval, the 8, 18, and
+
+268
+00:09:43,960 --> 00:09:45,899
+27. I may, I can click through to those
+
+269
+00:09:46,320 --> 00:09:48,779
+and actually seek to those frames,
+
+270
+00:09:49,119 --> 00:09:50,399
+um, and see what,
+
+271
+00:09:50,690 --> 00:09:52,798
+uh, it doesn't tell me what is identified,
+
+272
+00:09:52,879 --> 00:09:55,519
+but these are just some of the machine learning services
+
+273
+00:09:55,519 --> 00:09:57,259
+that AOS provides,
+
+274
+00:09:57,599 --> 00:10:00,058
+taking, taking in, in, uh, the images input.
+
+275
+00:10:04,058 --> 00:10:06,139
+So these frames are, uh, I can
+
+276
+00:10:06,139 --> 00:10:08,500
+go in and see the, uh, the extraction
+
+277
+00:10:08,500 --> 00:10:10,038
+of the frames and so it goes,
+
+278
+00:10:10,418 --> 00:10:12,590
+uh, frame by frame here, uh,
+
+279
+00:10:12,739 --> 00:10:14,859
+in, in a one second sampling interval.
+
+280
+00:10:15,058 --> 00:10:17,379
+Each of these frames is then fed to Claude
+
+281
+00:10:17,379 --> 00:10:19,399
+in this, uh, uh, demo
+
+282
+00:10:19,500 --> 00:10:20,639
+to generate a summary,
+
+283
+00:10:21,080 --> 00:10:23,219
+uh, and these are, you can see the label, another view of seeing
+
+284
+00:10:23,219 --> 00:10:24,599
+labels and,
+
+285
+00:10:24,859 --> 00:10:27,019
+uh, text as well as subtitles
+
+286
+00:10:27,019 --> 00:10:27,759
+for each of them.
+
+287
+00:10:28,158 --> 00:10:29,308
+Uh, that
+
+288
+00:10:29,570 --> 00:10:31,739
+as it goes and you see it's 1 2nd intervals,
+
+289
+00:10:31,769 --> 00:10:34,019
+but there's also a similarity score here
+
+290
+00:10:34,019 --> 00:10:36,229
+that, uh, it can be observed,
+
+291
+00:10:36,570 --> 00:10:39,369
+uh, and this is derived from the deduplication
+
+292
+00:10:39,369 --> 00:10:41,590
+process, uh, and so we can see that,
+
+293
+00:10:41,658 --> 00:10:43,690
+uh, these frames are, I think we have a set a
+
+294
+00:10:43,690 --> 00:10:45,229
+threshold of 0.24,
+
+295
+00:10:46,690 --> 00:10:48,969
+uh, frames that are below that will be dropped
+
+296
+00:10:48,969 --> 00:10:49,668
+because they are
+
+297
+00:10:50,048 --> 00:10:51,989
+similar enough to another frame.
+
+298
+00:10:53,298 --> 00:10:55,979
+And so all of this, uh, is the, the
+
+299
+00:10:55,979 --> 00:10:58,269
+information that is, uh, derived
+
+300
+00:10:58,269 --> 00:10:59,808
+from those individual frames.
+
+301
+00:11:00,178 --> 00:11:02,190
+So let me walk through the, the pieces
+
+302
+00:11:02,190 --> 00:11:04,428
+of where Valy fits into this. That's
+
+303
+00:11:04,428 --> 00:11:06,658
+what we'll be, uh, uh, walking
+
+304
+00:11:06,658 --> 00:11:07,330
+through today.
+
+305
+00:11:07,840 --> 00:11:09,869
+And to start out with, I wanted to start
+
+306
+00:11:09,869 --> 00:11:10,989
+by clearing out
+
+307
+00:11:11,269 --> 00:11:12,889
+the code that is already written,
+
+308
+00:11:13,349 --> 00:11:15,590
+uh, and to do that, I'm just gonna do a quick
+
+309
+00:11:15,590 --> 00:11:17,158
+CDK deploy,
+
+310
+00:11:17,548 --> 00:11:18,849
+uh, to.
+
+311
+00:11:20,330 --> 00:11:21,320
+Remove
+
+312
+00:11:22,269 --> 00:11:24,210
+The information on here and
+
+313
+00:11:25,389 --> 00:11:27,989
+so this is all a uh
+
+314
+00:11:27,989 --> 00:11:30,529
+driven by uh a CDK package.
+
+315
+00:11:31,489 --> 00:11:33,710
+That should clear things out. Uh,
+
+316
+00:11:33,788 --> 00:11:35,149
+let me go over here.
+
+317
+00:11:35,830 --> 00:11:37,950
+From the lambdas that we're gonna be implementing
+
+318
+00:11:37,950 --> 00:11:39,649
+with and I'm also gonna delete this video.
+
+319
+00:11:41,200 --> 00:11:42,330
+We'll clear everything out.
+
+320
+00:11:43,080 --> 00:11:45,668
+So the, the actual frames are stored in S3
+
+321
+00:11:45,668 --> 00:11:48,099
+metadata, in this case, durable metadata
+
+322
+00:11:48,099 --> 00:11:50,330
+stored in Dynamo DB
+
+323
+00:11:50,950 --> 00:11:53,149
+and then the vectors themselves are
+
+324
+00:11:53,149 --> 00:11:55,259
+stored inside VALKy. So I'm
+
+325
+00:11:55,259 --> 00:11:57,649
+gonna pull up a, a, a VALKy CLI
+
+326
+00:11:57,649 --> 00:12:00,048
+here and clear out all of the
+
+327
+00:12:00,869 --> 00:12:02,889
+information that's in VALKy just so we start out fresh.
+
+328
+00:12:03,668 --> 00:12:06,288
+Uh, my VALKy, I can show you first.
+
+329
+00:12:07,519 --> 00:12:09,649
+Here, so, uh, Elastic Ash
+
+330
+00:12:10,119 --> 00:12:12,119
+has a number of different configurations, and this one
+
+331
+00:12:12,119 --> 00:12:13,869
+we're using, uh, a,
+
+332
+00:12:14,200 --> 00:12:16,479
+uh, provisioned, uh, Valky cluster
+
+333
+00:12:16,479 --> 00:12:18,629
+running, uh, version 8.2,
+
+334
+00:12:18,678 --> 00:12:21,099
+which is, uh, uh, the version that supports vector
+
+335
+00:12:21,279 --> 00:12:21,798
+search.
+
+336
+00:12:22,158 --> 00:12:24,308
+Uh, I'm, I have 3 shards, each of
+
+337
+00:12:24,308 --> 00:12:25,158
+which has,
+
+338
+00:12:25,440 --> 00:12:27,759
+uh, 3 replicas, so it has 9 nodes
+
+339
+00:12:27,759 --> 00:12:29,899
+total. In my cluster
+
+340
+00:12:29,899 --> 00:12:31,719
+and they're running on a
+
+341
+00:12:31,979 --> 00:12:33,840
+R7,
+
+342
+00:12:34,099 --> 00:12:36,210
+where does it show the R7GX
+
+343
+00:12:36,210 --> 00:12:37,678
+large node type,
+
+344
+00:12:38,099 --> 00:12:40,418
+uh, but it's supported on a variety of different
+
+345
+00:12:40,418 --> 00:12:41,979
+instance types that you can configure.
+
+346
+00:12:42,460 --> 00:12:44,029
+Uh, so I'm going to
+
+347
+00:12:44,379 --> 00:12:45,379
+do this.
+
+348
+00:12:45,899 --> 00:12:48,019
+There's 3 different shards. I will flush
+
+349
+00:12:48,019 --> 00:12:50,479
+all on all of them.
+
+350
+00:12:51,219 --> 00:12:53,460
+And I'm just doing this by uh
+
+351
+00:12:53,460 --> 00:12:56,178
+using get to move
+
+352
+00:12:56,178 --> 00:12:57,379
+to the different shards here.
+
+353
+00:12:57,859 --> 00:13:00,090
+Uh, if you don't, aren't familiar with Valy, I'm
+
+354
+00:13:00,090 --> 00:13:02,658
+just basically, uh, flushing
+
+355
+00:13:02,658 --> 00:13:04,940
+everything out. Uh, the indexes are defined
+
+356
+00:13:04,940 --> 00:13:07,139
+a little bit differently, so I'm
+
+357
+00:13:07,139 --> 00:13:09,200
+going to, um,
+
+358
+00:13:09,899 --> 00:13:11,259
+call drop index.
+
+359
+00:13:11,940 --> 00:13:13,580
+So, let me do this.
+
+360
+00:13:15,038 --> 00:13:17,129
+And this will start over from scratch, so we have
+
+361
+00:13:17,129 --> 00:13:18,509
+a clean slate to
+
+362
+00:13:18,889 --> 00:13:19,619
+build off of.
+
+363
+00:13:19,889 --> 00:13:22,019
+Cool. So now,
+
+364
+00:13:22,058 --> 00:13:24,440
+the first thing we need to do in that uh
+
+365
+00:13:24,440 --> 00:13:26,960
+is to get in that um
+
+366
+00:13:27,139 --> 00:13:29,379
+pipeline that we talked about is getting d-duping working
+
+367
+00:13:29,379 --> 00:13:30,269
+and, and storage.
+
+368
+00:13:30,918 --> 00:13:33,119
+Uh, and so all of this is derived from
+
+369
+00:13:33,658 --> 00:13:35,859
+all the embeddings that we're using today are, are, are
+
+370
+00:13:35,859 --> 00:13:37,298
+derived from Amazon Titan.
+
+371
+00:13:37,690 --> 00:13:39,940
+So we're using two different embedding models.
+
+372
+00:13:40,070 --> 00:13:42,259
+One is the, the V2 for
+
+373
+00:13:42,259 --> 00:13:42,879
+text,
+
+374
+00:13:43,139 --> 00:13:45,479
+which is slightly better on, uh, text information.
+
+375
+00:13:45,840 --> 00:13:48,250
+And then we're using this multimodal embedding
+
+376
+00:13:48,250 --> 00:13:50,330
+model and that can generate embeddings
+
+377
+00:13:50,330 --> 00:13:51,928
+on both text and
+
+378
+00:13:52,210 --> 00:13:54,609
+on images so we can feed in those frames
+
+379
+00:13:54,609 --> 00:13:56,489
+and get back vectors,
+
+380
+00:13:56,889 --> 00:13:59,129
+uh, so we're gonna be, uh, implementing
+
+381
+00:13:59,129 --> 00:13:59,869
+that through
+
+382
+00:14:00,250 --> 00:14:02,320
+Bedrock. Let me go ahead and refresh these.
+
+383
+00:14:05,149 --> 00:14:06,009
+Any questions
+
+384
+00:14:06,750 --> 00:14:07,369
+so far?
+
+385
+00:14:10,908 --> 00:14:12,048
+Cool. OK.
+
+386
+00:14:12,629 --> 00:14:13,330
+So,
+
+387
+00:14:13,830 --> 00:14:15,178
+uh, I can walk through this
+
+388
+00:14:16,190 --> 00:14:18,190
+lambda. So this is, uh, this application
+
+389
+00:14:18,190 --> 00:14:20,308
+is, uh, broken up into a bunch of different
+
+390
+00:14:20,308 --> 00:14:21,979
+lambdas, each of which are purpose-built.
+
+391
+00:14:22,308 --> 00:14:24,619
+A lot of them are connected via, uh,
+
+392
+00:14:24,629 --> 00:14:26,788
+step functions which we can, we can look at in
+
+393
+00:14:26,788 --> 00:14:27,460
+a little bit.
+
+394
+00:14:27,950 --> 00:14:29,989
+So, one of the, uh, the core ones
+
+395
+00:14:29,989 --> 00:14:32,058
+is actually the, the function to generate embedding is
+
+396
+00:14:32,058 --> 00:14:34,460
+because we use that everywhere on search, we use that on,
+
+397
+00:14:34,710 --> 00:14:37,469
+um, ingestion, we use that on deduplication.
+
+398
+00:14:37,908 --> 00:14:39,979
+So, right now, uh, the lambda
+
+399
+00:14:39,979 --> 00:14:42,109
+doesn't do, uh, that much. Let me
+
+400
+00:14:42,109 --> 00:14:42,928
+see.
+
+401
+00:14:44,019 --> 00:14:45,279
+If I can get it to
+
+402
+00:14:47,960 --> 00:14:49,298
+It shouldn't be doing much.
+
+403
+00:14:51,250 --> 00:14:53,308
+Let's see what my CDK deploy
+
+404
+00:14:53,308 --> 00:14:53,889
+did.
+
+405
+00:14:56,690 --> 00:14:58,548
+Uh, it did work.
+
+406
+00:15:02,840 --> 00:15:05,149
+Let's go ahead and reopen
+
+407
+00:15:05,149 --> 00:15:07,048
+it, make sure it's not cached.
+
+408
+00:15:12,750 --> 00:15:14,288
+Let's see what this does.
+
+409
+00:15:20,500 --> 00:15:21,349
+Uh
+
+410
+00:15:22,950 --> 00:15:25,178
+Moss modified 6 hours ago.
+
+411
+00:15:27,798 --> 00:15:29,418
+Worst case I can clear it out myself.
+
+412
+00:15:34,119 --> 00:15:36,210
+If it isn't going to get updated
+
+413
+00:15:36,210 --> 00:15:36,869
+by the
+
+414
+00:15:37,330 --> 00:15:38,330
+deployment here.
+
+415
+00:15:45,158 --> 00:15:46,558
+One second.
+
+416
+00:15:47,570 --> 00:15:48,389
+Um,
+
+417
+00:15:50,090 --> 00:15:51,500
+Was it a regional issue?
+
+418
+00:15:52,779 --> 00:15:53,859
+Let's see.
+
+419
+00:15:57,889 --> 00:15:59,928
+The embedding one here, I'll just start
+
+420
+00:15:59,928 --> 00:16:03,320
+um. 1
+
+421
+00:16:03,320 --> 00:16:03,849
+2nd.
+
+422
+00:16:15,440 --> 00:16:17,529
+I flushed out all the data but not all of
+
+423
+00:16:17,529 --> 00:16:18,548
+the code.
+
+424
+00:16:21,570 --> 00:16:23,178
+OK, that's not wanting to.
+
+425
+00:16:24,259 --> 00:16:25,119
+Delete
+
+426
+00:16:25,928 --> 00:16:26,729
+So
+
+427
+00:16:28,580 --> 00:16:30,279
+I will
+
+428
+00:16:30,658 --> 00:16:31,580
+push it.
+
+429
+00:16:32,788 --> 00:16:34,029
+Manually.
+
+430
+00:16:35,899 --> 00:16:38,450
+Cool. Copy
+
+431
+00:16:38,450 --> 00:16:39,408
+and paste.
+
+432
+00:16:41,859 --> 00:16:42,538
+OK.
+
+433
+00:16:44,288 --> 00:16:45,440
+From my local to here,
+
+434
+00:16:45,808 --> 00:16:46,489
+deploy.
+
+435
+00:16:46,969 --> 00:16:48,558
+We'll see if that happens on the other ones too.
+
+436
+00:16:49,168 --> 00:16:51,529
+So the empty one is uh actually
+
+437
+00:16:51,529 --> 00:16:52,590
+empty here
+
+438
+00:16:53,250 --> 00:16:53,830
+now,
+
+439
+00:16:54,210 --> 00:16:56,529
+and it is a lambda handler
+
+440
+00:16:56,529 --> 00:16:58,690
+that, uh, does some validation and
+
+441
+00:16:58,690 --> 00:17:00,029
+currently just returns,
+
+442
+00:17:00,330 --> 00:17:02,609
+uh, nothing in it's, uh, response
+
+443
+00:17:02,609 --> 00:17:03,178
+here.
+
+444
+00:17:03,808 --> 00:17:06,239
+Uh, but what it's supposed to do is take the,
+
+445
+00:17:06,489 --> 00:17:07,949
+uh, text and image input,
+
+446
+00:17:08,348 --> 00:17:10,430
+both of which are optional, and then the embedding
+
+447
+00:17:10,430 --> 00:17:12,769
+type to call one of the models
+
+448
+00:17:12,769 --> 00:17:13,660
+or the other.
+
+449
+00:17:14,409 --> 00:17:16,528
+Uh, so, the first thing we wanna do, uh,
+
+450
+00:17:16,567 --> 00:17:18,769
+is to, uh, and, and create
+
+451
+00:17:18,769 --> 00:17:20,928
+Bedrock. Uh, it's, I got some help
+
+452
+00:17:20,928 --> 00:17:22,298
+here with from Amazon Que,
+
+453
+00:17:22,638 --> 00:17:24,648
+uh, but I'm just gonna do a, use the
+
+454
+00:17:24,648 --> 00:17:26,567
+Boto 3 clients. This is Python,
+
+455
+00:17:26,847 --> 00:17:29,409
+and, uh, connect to the Bedrock runtime.
+
+456
+00:17:30,689 --> 00:17:31,618
+And
+
+457
+00:17:31,930 --> 00:17:32,799
+we'll do, uh,
+
+458
+00:17:33,170 --> 00:17:34,588
+the autocomplete is nice here.
+
+459
+00:17:35,088 --> 00:17:35,910
+Um.
+
+460
+00:17:37,180 --> 00:17:39,219
+And if you see any typos, feel free
+
+461
+00:17:39,219 --> 00:17:41,479
+to call them out too as I'm doing this.
+
+462
+00:17:42,019 --> 00:17:44,299
+You'll, you, we can do some uh peer, uh, pair
+
+463
+00:17:44,299 --> 00:17:44,920
+programming,
+
+464
+00:17:45,199 --> 00:17:47,479
+uh, in this so that it actually works.
+
+465
+00:17:48,098 --> 00:17:50,338
+So, uh, we want to do,
+
+466
+00:17:50,368 --> 00:17:52,380
+uh, the different embedding models here. So
+
+467
+00:17:52,380 --> 00:17:54,630
+if the embedding model is, uh, that's correct,
+
+468
+00:17:54,969 --> 00:17:57,259
+MM then we wanna do the multimodal embedding
+
+469
+00:17:57,259 --> 00:17:57,880
+type,
+
+470
+00:17:58,380 --> 00:18:00,459
+um, else we'll do the text
+
+471
+00:18:00,459 --> 00:18:01,000
+model.
+
+472
+00:18:02,640 --> 00:18:03,699
+This is a little bit helpful.
+
+473
+00:18:06,469 --> 00:18:09,160
+And then we want to generate our
+
+474
+00:18:09,160 --> 00:18:10,670
+request, which is going to be a JSON.
+
+475
+00:18:11,608 --> 00:18:13,689
+Uh, we could do that or we
+
+476
+00:18:13,689 --> 00:18:15,630
+can do simpler just a text input
+
+477
+00:18:16,170 --> 00:18:17,189
+then do.
+
+478
+00:18:18,439 --> 00:18:20,519
+So if we want to look up the API, I don't have
+
+479
+00:18:20,519 --> 00:18:23,078
+it here for Bedrock, um, but
+
+480
+00:18:23,439 --> 00:18:25,858
+it takes in a JSON document and
+
+481
+00:18:26,000 --> 00:18:27,318
+it takes an input.
+
+482
+00:18:28,328 --> 00:18:28,949
+Or
+
+483
+00:18:29,289 --> 00:18:30,789
+uh if there's image.
+
+484
+00:18:31,930 --> 00:18:33,410
+Input then we'll do.
+
+485
+00:18:34,430 --> 00:18:35,170
+The image
+
+486
+00:18:37,049 --> 00:18:39,088
+And if you haven't worked with Bedrock before,
+
+487
+00:18:39,170 --> 00:18:40,828
+it's pretty easy to do it. In fact,
+
+488
+00:18:41,680 --> 00:18:43,348
+you can autocomplete it for me.
+
+489
+00:18:44,979 --> 00:18:46,400
+Uh, we will,
+
+490
+00:18:46,660 --> 00:18:48,890
+uh, dump the request as a JSON
+
+491
+00:18:48,890 --> 00:18:49,660
+document.
+
+492
+00:18:49,979 --> 00:18:51,519
+We'll call the correct model.
+
+493
+00:18:52,229 --> 00:18:54,539
+I don't even need necessarily the accept and the, the
+
+494
+00:18:54,539 --> 00:18:55,699
+content type, but
+
+495
+00:18:55,979 --> 00:18:58,400
+this will then return the vector
+
+496
+00:18:58,739 --> 00:18:59,539
+response to.
+
+497
+00:18:59,939 --> 00:19:02,118
+So I can get the body out of the, uh,
+
+498
+00:19:02,140 --> 00:19:03,739
+response by loading
+
+499
+00:19:04,219 --> 00:19:04,838
+the,
+
+500
+00:19:05,420 --> 00:19:07,039
+uh, response body here.
+
+501
+00:19:08,939 --> 00:19:09,920
+And
+
+502
+00:19:10,630 --> 00:19:11,239
+then
+
+503
+00:19:11,539 --> 00:19:13,660
+uh get the embedding out of it. So it's uh
+
+504
+00:19:13,660 --> 00:19:16,078
+a JSON with a, a, a single field here
+
+505
+00:19:16,539 --> 00:19:18,199
+that is get embedding or
+
+506
+00:19:18,559 --> 00:19:19,358
+called embedding.
+
+507
+00:19:19,818 --> 00:19:21,140
+And I'm just gonna return that
+
+508
+00:19:21,459 --> 00:19:23,578
+in the body here. I could return the actual JSON
+
+509
+00:19:23,578 --> 00:19:25,500
+blob, but I'm returning the vector embedding.
+
+510
+00:19:26,539 --> 00:19:28,660
+OK. I
+
+511
+00:19:28,660 --> 00:19:30,739
+think that looks all right. Let's see. So we'll go ahead and deploy
+
+512
+00:19:30,739 --> 00:19:31,559
+it and test it.
+
+513
+00:19:32,618 --> 00:19:34,818
+Is anyone spotting any obvious mistakes
+
+514
+00:19:34,818 --> 00:19:35,439
+in here?
+
+515
+00:19:39,118 --> 00:19:41,618
+This is just demonstrating that it's
+
+516
+00:19:42,059 --> 00:19:44,239
+pretty easy to interact with
+
+517
+00:19:44,239 --> 00:19:45,338
+uh bedrock.
+
+518
+00:19:47,630 --> 00:19:49,709
+So I'm going to just create
+
+519
+00:19:49,709 --> 00:19:52,189
+a simple test here. I need my embedding
+
+520
+00:19:52,189 --> 00:19:54,630
+type and text image.
+
+521
+00:19:54,750 --> 00:19:55,828
+Let's do that.
+
+522
+00:19:56,219 --> 00:19:58,309
+Create a tested via embedding type is
+
+523
+00:19:58,309 --> 00:19:58,890
+text,
+
+524
+00:19:59,469 --> 00:20:01,868
+and it was what? Text image,
+
+525
+00:20:02,098 --> 00:20:02,890
+no text
+
+526
+00:20:03,309 --> 00:20:04,068
+input image.
+
+527
+00:20:05,779 --> 00:20:06,449
+Text input
+
+528
+00:20:11,509 --> 00:20:13,789
+Input of Hello World
+
+529
+00:20:13,789 --> 00:20:15,719
+and what I'm expecting to get back.
+
+530
+00:20:16,500 --> 00:20:17,900
+Is a.
+
+531
+00:20:24,949 --> 00:20:25,729
+A vector,
+
+532
+00:20:26,509 --> 00:20:27,289
+which I do,
+
+533
+00:20:27,750 --> 00:20:29,828
+uh, get a large vector, it's a
+
+534
+00:20:29,828 --> 00:20:32,009
+1,024,
+
+535
+00:20:32,509 --> 00:20:33,568
+uh, in
+
+536
+00:20:34,019 --> 00:20:36,229
+vec in length, which we can find out
+
+537
+00:20:36,229 --> 00:20:38,368
+just from the output vector size here.
+
+538
+00:20:45,400 --> 00:20:49,559
+Now So
+
+539
+00:20:49,559 --> 00:20:51,959
+this is, oh, you what is
+
+540
+00:20:51,959 --> 00:20:53,689
+generating the vector is the question.
+
+541
+00:20:54,000 --> 00:20:56,108
+Uh, so yeah, the question is, is, uh,
+
+542
+00:20:56,118 --> 00:20:58,118
+the lambda the one generating the vector.
+
+543
+00:20:58,160 --> 00:20:58,719
+In this case,
+
+544
+00:20:59,029 --> 00:21:01,259
+the lambda is not doing the vector. The lambda is just, uh,
+
+545
+00:21:01,318 --> 00:21:03,328
+basically just calling the bedrock service,
+
+546
+00:21:03,598 --> 00:21:05,789
+and the bedrock service is the one that is,
+
+547
+00:21:05,799 --> 00:21:07,509
+um, interacting with the,
+
+548
+00:21:07,818 --> 00:21:09,939
+uh, the Titan model. There are local. Embedding models,
+
+549
+00:21:10,019 --> 00:21:12,140
+so you, the, the it is an option to generate
+
+550
+00:21:12,140 --> 00:21:12,920
+embeddings
+
+551
+00:21:13,358 --> 00:21:15,699
+within the lambda or an EC2 instance locally
+
+552
+00:21:15,699 --> 00:21:17,739
+here, uh, for, for this demo
+
+553
+00:21:17,739 --> 00:21:19,969
+we are just interacting with Bedrock
+
+554
+00:21:19,969 --> 00:21:20,769
+via the IOCLI
+
+555
+00:21:21,739 --> 00:21:23,939
+and it's getting the credentials just locally
+
+556
+00:21:23,939 --> 00:21:25,939
+through the, uh, through the lambda in order to
+
+557
+00:21:25,939 --> 00:21:27,979
+invoke, uh, that remote service
+
+558
+00:21:27,979 --> 00:21:28,939
+to get the embedding.
+
+559
+00:21:32,019 --> 00:21:34,209
+I Yeah, the question is, do
+
+560
+00:21:34,209 --> 00:21:36,469
+you need, uh, a token ID or or credentials,
+
+561
+00:21:36,489 --> 00:21:38,650
+and that is true. It's, uh, this is
+
+562
+00:21:38,650 --> 00:21:40,949
+set up so that, uh, the land uh has,
+
+563
+00:21:41,130 --> 00:21:43,390
+uh, the, the, the, the credentials
+
+564
+00:21:43,390 --> 00:21:45,489
+present and so the default SDK
+
+565
+00:21:45,489 --> 00:21:47,709
+picks it up just by instantiating
+
+566
+00:21:47,709 --> 00:21:48,469
+the, the client.
+
+567
+00:21:51,670 --> 00:21:53,699
+So this is the foundational one. It looks like it's
+
+568
+00:21:53,699 --> 00:21:55,868
+working, uh, but it's not gonna
+
+569
+00:21:55,868 --> 00:21:57,868
+do anything if we were to ingest a video because
+
+570
+00:21:57,868 --> 00:21:59,979
+we haven't hooked it up to ValLKy yet. And so the
+
+571
+00:21:59,979 --> 00:22:02,180
+next step is to go ahead
+
+572
+00:22:02,180 --> 00:22:04,309
+and, uh, uh, take
+
+573
+00:22:04,309 --> 00:22:06,509
+it when it, uh, has a vector
+
+574
+00:22:06,509 --> 00:22:08,828
+and has, uh, uh, decimated
+
+575
+00:22:08,828 --> 00:22:11,269
+the video to actually
+
+576
+00:22:11,269 --> 00:22:12,289
+store that information
+
+577
+00:22:12,949 --> 00:22:14,049
+inside Valy.
+
+578
+00:22:14,630 --> 00:22:16,930
+And in that we have this vector
+
+579
+00:22:16,930 --> 00:22:17,670
+save
+
+580
+00:22:18,019 --> 00:22:20,189
+functionality, which again has not, has not
+
+581
+00:22:20,189 --> 00:22:22,309
+been cleared out, it looks like. So I
+
+582
+00:22:22,309 --> 00:22:23,529
+can do my same
+
+583
+00:22:24,000 --> 00:22:26,150
+trick I did before of
+
+584
+00:22:26,150 --> 00:22:27,650
+taking the empty one
+
+585
+00:22:28,309 --> 00:22:30,549
+locally and overwriting
+
+586
+00:22:30,549 --> 00:22:31,088
+it.
+
+587
+00:22:32,920 --> 00:22:34,229
+And deploying it.
+
+588
+00:22:34,759 --> 00:22:36,500
+Cool. So, this one,
+
+589
+00:22:37,519 --> 00:22:39,880
+is later on in the,
+
+590
+00:22:40,098 --> 00:22:42,160
+uh, in the path where it has already, uh, taken,
+
+591
+00:22:42,269 --> 00:22:43,380
+has a keyframe
+
+592
+00:22:44,039 --> 00:22:46,118
+and all this information stored
+
+593
+00:22:46,118 --> 00:22:48,358
+inside, uh, Dynamo DB and it's
+
+594
+00:22:48,358 --> 00:22:50,959
+provided in this, uh, event context
+
+595
+00:22:50,959 --> 00:22:52,459
+that we have,
+
+596
+00:22:52,719 --> 00:22:54,799
+uh, the S3 image, we have
+
+597
+00:22:54,799 --> 00:22:56,739
+some task ID, we have the frame.
+
+598
+00:22:57,380 --> 00:22:59,500
+And some configuration items. So this
+
+599
+00:22:59,500 --> 00:23:00,759
+frame, uh,
+
+600
+00:23:01,140 --> 00:23:03,140
+is the, the JSON blob that
+
+601
+00:23:03,140 --> 00:23:04,920
+we're going to store inside
+
+602
+00:23:05,500 --> 00:23:06,309
+Elastic cash,
+
+603
+00:23:06,779 --> 00:23:08,818
+and it has a bunch of fields I can show you before. It
+
+604
+00:23:08,818 --> 00:23:11,299
+has things like, you know, the, the S3 URI
+
+605
+00:23:11,299 --> 00:23:12,420
+to be able to display in the UI
+
+606
+00:23:13,219 --> 00:23:14,019
+timestamp,
+
+607
+00:23:14,358 --> 00:23:15,930
+a, a lot of the metadata necessary to,
+
+608
+00:23:16,650 --> 00:23:18,818
+uh, perform the vector search as well as the actual
+
+609
+00:23:18,818 --> 00:23:20,739
+vectors, uh, themselves.
+
+610
+00:23:21,059 --> 00:23:23,000
+So those are already populated here.
+
+611
+00:23:23,519 --> 00:23:25,959
+Uh, so our job here is to, um, initialize
+
+612
+00:23:25,959 --> 00:23:27,608
+it. So we have create ValLKYClient,
+
+613
+00:23:28,189 --> 00:23:30,309
+which is not doing anything, um, right now,
+
+614
+00:23:30,598 --> 00:23:32,900
+uh, and so we want to be able to connect it into,
+
+615
+00:23:33,318 --> 00:23:34,078
+uh, ValLKy.
+
+616
+00:23:34,348 --> 00:23:36,358
+So to do that, we're going to use a client that's
+
+617
+00:23:36,358 --> 00:23:37,880
+called Valky Glide.
+
+618
+00:23:38,660 --> 00:23:40,199
+Which is one that our team
+
+619
+00:23:40,618 --> 00:23:41,269
+supports.
+
+620
+00:23:41,578 --> 00:23:43,930
+Uh, it is uh one of the official, uh,
+
+621
+00:23:43,939 --> 00:23:45,180
+clients for VALCI,
+
+622
+00:23:45,779 --> 00:23:48,059
+and it is a polyglot client, so it supports
+
+623
+00:23:48,059 --> 00:23:50,049
+multiple different languages.
+
+624
+00:23:50,380 --> 00:23:52,578
+We're going to be using the, the Python
+
+625
+00:23:52,578 --> 00:23:54,578
+one here since all of our lambdas are
+
+626
+00:23:54,578 --> 00:23:55,219
+in Python.
+
+627
+00:23:57,769 --> 00:23:59,828
+So, I'm going to import um
+
+628
+00:23:59,828 --> 00:24:01,910
+some things here and I'll see
+
+629
+00:24:01,910 --> 00:24:03,868
+if you can figure that out.
+
+630
+00:24:04,469 --> 00:24:05,009
+Probably not
+
+631
+00:24:05,469 --> 00:24:06,709
+from Glide sync.
+
+632
+00:24:07,000 --> 00:24:09,068
+I'm just importing star here since there's a bunch of different
+
+633
+00:24:09,068 --> 00:24:11,009
+ones that we're gonna be using for this.
+
+634
+00:24:11,949 --> 00:24:13,949
+Uh, so, actually, let's do
+
+635
+00:24:13,949 --> 00:24:16,059
+just the glide synca is sufficient
+
+636
+00:24:16,059 --> 00:24:17,229
+to be able to create the client.
+
+637
+00:24:17,588 --> 00:24:19,709
+So to initialize the client, we have
+
+638
+00:24:19,709 --> 00:24:21,769
+a, uh, domain endpoint
+
+639
+00:24:21,989 --> 00:24:22,750
+and a port.
+
+640
+00:24:23,108 --> 00:24:25,529
+So those are sourced just from our
+
+641
+00:24:25,789 --> 00:24:28,430
+Elastic Ashwan. We have a single configuration endpoint
+
+642
+00:24:28,868 --> 00:24:30,910
+and port here. So, uh, there's a
+
+643
+00:24:30,910 --> 00:24:33,269
+DNS name and a port 6379
+
+644
+00:24:33,269 --> 00:24:35,348
+that we're using in order to connect to our
+
+645
+00:24:35,348 --> 00:24:36,009
+cluster.
+
+646
+00:24:36,660 --> 00:24:39,059
+And the way that VALK works in cluster
+
+647
+00:24:39,059 --> 00:24:41,098
+mode is it, it, it discovers all of
+
+648
+00:24:41,098 --> 00:24:43,108
+the different nodes. We talked about there being 9 nodes
+
+649
+00:24:43,108 --> 00:24:44,809
+in our in our cluster. So it,
+
+650
+00:24:45,098 --> 00:24:47,420
+uh, from this configuration and point it queries
+
+651
+00:24:47,420 --> 00:24:49,660
+any node and is able to identify
+
+652
+00:24:49,660 --> 00:24:51,900
+which, uh, what the 9 nodes are and
+
+653
+00:24:52,108 --> 00:24:54,259
+uh talk to them for pieces of data. So it's a
+
+654
+00:24:54,259 --> 00:24:56,299
+direct communication from the client
+
+655
+00:24:56,299 --> 00:24:57,348
+into the,
+
+656
+00:24:57,618 --> 00:25:00,059
+uh, the nodes that have all of this data resident
+
+657
+00:25:00,059 --> 00:25:00,799
+in memory.
+
+658
+00:25:02,338 --> 00:25:04,130
+So, let's go ahead and
+
+659
+00:25:04,670 --> 00:25:06,509
+uh initialize our client.
+
+660
+00:25:07,130 --> 00:25:09,309
+Uh, so we'll do that, we'll do return, uh,
+
+661
+00:25:09,368 --> 00:25:11,759
+our glide cluster client. We're using the cluster
+
+662
+00:25:11,759 --> 00:25:13,969
+client because it is, uh, cluster
+
+663
+00:25:13,969 --> 00:25:14,949
+mode enabled,
+
+664
+00:25:15,318 --> 00:25:16,588
+uh, create.
+
+665
+00:25:17,449 --> 00:25:19,519
+And we'll pass it some cluster
+
+666
+00:25:19,519 --> 00:25:21,239
+client configuration.
+
+667
+00:25:22,848 --> 00:25:24,250
+Configuration.
+
+668
+00:25:25,920 --> 00:25:27,989
+Pass it the list of addresses. In
+
+669
+00:25:27,989 --> 00:25:30,170
+this case, we just have one address, which is
+
+670
+00:25:30,170 --> 00:25:32,289
+the, uh, domain endpoint,
+
+671
+00:25:32,880 --> 00:25:35,180
+and then we will, uh,
+
+672
+00:25:35,189 --> 00:25:36,828
+pass it to the port.
+
+673
+00:25:37,459 --> 00:25:38,529
+You see port.
+
+674
+00:25:41,000 --> 00:25:43,618
+In this case, we have enabled TLS,
+
+675
+00:25:44,009 --> 00:25:46,348
+uh, but not authentication. So if we look
+
+676
+00:25:46,608 --> 00:25:48,608
+under here, we have encryption and transit
+
+677
+00:25:48,608 --> 00:25:49,368
+enabled,
+
+678
+00:25:49,818 --> 00:25:51,930
+uh, and so that is an option that you're able
+
+679
+00:25:51,930 --> 00:25:52,949
+to, to toggle,
+
+680
+00:25:53,219 --> 00:25:54,390
+uh, but we don't have any
+
+681
+00:25:55,009 --> 00:25:57,088
+authentication which is also available,
+
+682
+00:25:57,098 --> 00:25:59,348
+but it'll make it a little bit easier. So with,
+
+683
+00:25:59,689 --> 00:26:01,769
+uh, just TLS we can set the use
+
+684
+00:26:01,769 --> 00:26:03,848
+TLS flag to be true and then the client will
+
+685
+00:26:03,848 --> 00:26:05,328
+do the TLS negotiation.
+
+686
+00:26:06,400 --> 00:26:08,650
+And we're going to set some configuration
+
+687
+00:26:08,650 --> 00:26:11,269
+here, uh, to, uh,
+
+688
+00:26:11,368 --> 00:26:12,430
+increase our time out here,
+
+689
+00:26:13,209 --> 00:26:16,189
+advanced, uh, glide client configuration.
+
+690
+00:26:18,180 --> 00:26:20,338
+And we're gonna set a, uh, 2-second timeout
+
+691
+00:26:20,338 --> 00:26:22,479
+here, which works best for this particular
+
+692
+00:26:22,479 --> 00:26:23,039
+demo.
+
+693
+00:26:23,779 --> 00:26:25,900
+So that should work to uh actually create
+
+694
+00:26:25,900 --> 00:26:26,578
+the client.
+
+695
+00:26:28,420 --> 00:26:30,430
+And to actually, we'll, next we'll, we'll skip
+
+696
+00:26:30,430 --> 00:26:32,729
+the index creation because that uh can happen
+
+697
+00:26:33,068 --> 00:26:35,229
+async here and we wanna be able to store
+
+698
+00:26:35,229 --> 00:26:37,309
+this frame. So the, the fundamental data
+
+699
+00:26:37,309 --> 00:26:39,289
+structure that we're working with here is the JSON
+
+700
+00:26:39,818 --> 00:26:41,608
+one inside uh Valy.
+
+701
+00:26:41,989 --> 00:26:44,170
+So that is uh one of the
+
+702
+00:26:44,170 --> 00:26:45,509
+uh modules that is available.
+
+703
+00:26:45,785 --> 00:26:47,275
+For, uh, for,
+
+704
+00:26:47,743 --> 00:26:48,255
+for Valky
+
+705
+00:26:48,703 --> 00:26:50,854
+that comes, comes with the, the bundle there
+
+706
+00:26:51,174 --> 00:26:51,844
+and
+
+707
+00:26:52,265 --> 00:26:54,844
+Glide supports it using this uh glide,
+
+708
+00:26:54,854 --> 00:26:57,144
+uh, JSON wrapper. So we're gonna have to import
+
+709
+00:26:57,144 --> 00:26:57,844
+that first,
+
+710
+00:26:58,463 --> 00:26:59,184
+uh,
+
+711
+00:27:00,505 --> 00:27:02,723
+and then we can use it. So from Glide sync,
+
+712
+00:27:03,525 --> 00:27:06,084
+we'll import, actually, uh,
+
+713
+00:27:06,094 --> 00:27:08,104
+actually I think it's there by default, it's the full text that
+
+714
+00:27:08,104 --> 00:27:09,094
+we don't have there.
+
+715
+00:27:12,775 --> 00:27:15,209
+Glidejson. uh set. And we'll pass at the
+
+716
+00:27:15,549 --> 00:27:16,650
+uh EC client.
+
+717
+00:27:19,289 --> 00:27:21,400
+At you can
+
+718
+00:27:21,400 --> 00:27:23,469
+slightly this
+
+719
+00:27:23,469 --> 00:27:24,250
+lambda function.
+
+720
+00:27:27,289 --> 00:27:29,318
+Uh, yeah, the question is, is there a way to,
+
+721
+00:27:29,400 --> 00:27:31,689
+uh, generate this code using an agentic
+
+722
+00:27:31,689 --> 00:27:33,689
+AI, and that is, that's a good question, and the answer
+
+723
+00:27:33,689 --> 00:27:35,989
+is yes. You see, Q is attempting
+
+724
+00:27:36,289 --> 00:27:38,410
+this here, but, uh, it,
+
+725
+00:27:38,489 --> 00:27:40,759
+it is not succeeding always.
+
+726
+00:27:41,088 --> 00:27:43,289
+Uh, I did play around with trying to do this
+
+727
+00:27:43,289 --> 00:27:44,489
+in, uh, using Quiro.
+
+728
+00:27:44,824 --> 00:27:47,104
+Uh, for, for this demo, and it, it,
+
+729
+00:27:47,384 --> 00:27:49,693
+it has a lot of background information on,
+
+730
+00:27:49,824 --> 00:27:52,025
+uh, you know, invoking Bedrock, a little bit less so
+
+731
+00:27:52,025 --> 00:27:52,584
+in it's,
+
+732
+00:27:52,864 --> 00:27:54,943
+uh, in its data set on,
+
+733
+00:27:54,973 --> 00:27:55,604
+uh, using,
+
+734
+00:27:55,943 --> 00:27:57,983
+uh, Valky Glide because that's a
+
+735
+00:27:57,983 --> 00:28:00,015
+little bit newer repo, but, uh,
+
+736
+00:28:00,025 --> 00:28:01,834
+I was able to get it to, to generate,
+
+737
+00:28:02,305 --> 00:28:04,463
+uh, the code there too. So that is an
+
+738
+00:28:04,463 --> 00:28:06,505
+option, uh, for you to use this
+
+739
+00:28:06,505 --> 00:28:08,243
+or anything else to, to try using,
+
+740
+00:28:08,525 --> 00:28:10,743
+um, a, uh,
+
+741
+00:28:10,755 --> 00:28:12,755
+a, a large language model to do this code generation.
+
+742
+00:28:15,818 --> 00:28:17,380
+It was the question is, is, uh,
+
+743
+00:28:17,779 --> 00:28:18,400
+Cairo is what?
+
+744
+00:28:19,828 --> 00:28:21,838
+Yeah. Uh, so,
+
+745
+00:28:21,930 --> 00:28:24,000
+oh, so not, it's, I'm not using it right here. Oh, so the one that's
+
+746
+00:28:24,000 --> 00:28:26,400
+being used here that's popping up, I think it's just Amazon
+
+747
+00:28:26,400 --> 00:28:26,959
+Que,
+
+748
+00:28:27,519 --> 00:28:29,750
+um, which I can, it's running, I could pause
+
+749
+00:28:29,750 --> 00:28:32,118
+it, but, uh, Que
+
+750
+00:28:32,400 --> 00:28:34,680
+is, uh, part of the lambda
+
+751
+00:28:34,680 --> 00:28:35,299
+console.
+
+752
+00:28:40,809 --> 00:28:42,828
+7 already
+
+753
+00:28:42,828 --> 00:28:45,818
+here. I
+
+754
+00:28:45,818 --> 00:28:47,818
+don't think that there's a, a code generator
+
+755
+00:28:47,818 --> 00:28:50,049
+within the lambda console.
+
+756
+00:28:50,098 --> 00:28:51,400
+I could be wrong on that.
+
+757
+00:28:51,699 --> 00:28:52,390
+Um,
+
+758
+00:28:52,779 --> 00:28:54,818
+uh, there is an Amazon Q tab
+
+759
+00:28:54,818 --> 00:28:57,519
+here, but I think it's just for asking
+
+760
+00:28:58,130 --> 00:28:58,660
+questions.
+
+761
+00:28:59,140 --> 00:29:01,410
+Uh, but you could use something like, uh, uh,
+
+762
+00:29:01,420 --> 00:29:03,459
+Quiro here that I have that allows you
+
+763
+00:29:03,459 --> 00:29:05,739
+to, um, to actually generate
+
+764
+00:29:05,739 --> 00:29:07,880
+code by, uh, chatting with it.
+
+765
+00:29:08,640 --> 00:29:11,059
+I'm not doing that today just to kind of illustrate
+
+766
+00:29:11,059 --> 00:29:13,459
+the, the actual points as opposed to
+
+767
+00:29:13,680 --> 00:29:16,019
+um having it generate something for us.
+
+768
+00:29:19,680 --> 00:29:21,799
+So, when I set the, uh, I'm passing on the client
+
+769
+00:29:21,799 --> 00:29:23,880
+and then I want to set it uh with a particular key
+
+770
+00:29:23,880 --> 00:29:26,118
+index. So everything in VALKy is indexed by
+
+771
+00:29:26,118 --> 00:29:26,949
+a key name,
+
+772
+00:29:27,279 --> 00:29:30,098
+and here I am putting a frame
+
+773
+00:29:30,338 --> 00:29:32,519
+uh as the prefix to the,
+
+774
+00:29:32,598 --> 00:29:34,719
+the frame and then the frame ID which is unique.
+
+775
+00:29:35,118 --> 00:29:37,430
+And that's a common pattern for interacting with,
+
+776
+00:29:37,439 --> 00:29:39,598
+uh, VALKy. And since this is working with
+
+777
+00:29:39,598 --> 00:29:41,900
+JSON, I'm gonna replace the entire JSON document,
+
+778
+00:29:42,559 --> 00:29:44,709
+um, so the, the dot, and
+
+779
+00:29:44,709 --> 00:29:46,209
+then I will dump the frame.
+
+780
+00:29:46,598 --> 00:29:48,880
+Uh, using JSON, and so this will take the,
+
+781
+00:29:49,039 --> 00:29:50,519
+take it and store it inside
+
+782
+00:29:50,838 --> 00:29:51,368
+Valy,
+
+783
+00:29:52,078 --> 00:29:54,279
+uh, and you can interact with JSON.
+
+784
+00:29:54,439 --> 00:29:56,439
+You don't need to have a vector index, that's just
+
+785
+00:29:56,439 --> 00:29:58,459
+one of the data structures that's supported, but here we want
+
+786
+00:29:58,459 --> 00:30:00,318
+to be actually able to create an index
+
+787
+00:30:00,640 --> 00:30:03,358
+so that when we do this set, it automatically ingests
+
+788
+00:30:03,358 --> 00:30:05,598
+it and makes it available for vector
+
+789
+00:30:05,598 --> 00:30:07,750
+search. And this is getting into now
+
+790
+00:30:07,750 --> 00:30:09,969
+some of the vector functionality, the VSS
+
+791
+00:30:09,969 --> 00:30:10,689
+capabilities
+
+792
+00:30:11,029 --> 00:30:12,880
+there. And so there's a lot of different options.
+
+793
+00:30:13,150 --> 00:30:15,689
+Uh, I will show the Valky command
+
+794
+00:30:15,910 --> 00:30:17,549
+for let's do FT create.
+
+795
+00:30:19,959 --> 00:30:22,309
+So Valki has a, uh, is pretty well documented,
+
+796
+00:30:22,420 --> 00:30:23,049
+um,
+
+797
+00:30:23,420 --> 00:30:25,439
+uh, in terms of what
+
+798
+00:30:25,439 --> 00:30:27,459
+the commands are, it's a little bit hard because it has
+
+799
+00:30:27,459 --> 00:30:29,029
+the command here on the side, but,
+
+800
+00:30:29,299 --> 00:30:31,299
+uh, so we have an FT create function. So
+
+801
+00:30:31,299 --> 00:30:33,568
+FT stands for full text, but,
+
+802
+00:30:33,578 --> 00:30:35,880
+uh, right now Valy supports just vector,
+
+803
+00:30:36,140 --> 00:30:38,400
+uh, search. Full text is coming soon.
+
+804
+00:30:38,739 --> 00:30:40,779
+Uh, and we can create a schema with a
+
+805
+00:30:40,779 --> 00:30:41,640
+bunch of different,
+
+806
+00:30:41,900 --> 00:30:43,930
+uh, field types and, and
+
+807
+00:30:43,930 --> 00:30:44,769
+attributes,
+
+808
+00:30:45,098 --> 00:30:47,209
+and so we'll do that just to index two
+
+809
+00:30:47,209 --> 00:30:49,299
+different vector fields, one of the text
+
+810
+00:30:49,299 --> 00:30:51,338
+and one of the, the image like we
+
+811
+00:30:51,618 --> 00:30:53,660
+had done, uh, talked about before. So let me
+
+812
+00:30:53,660 --> 00:30:54,479
+go back there.
+
+813
+00:30:55,180 --> 00:30:57,118
+So to actually create the index,
+
+814
+00:30:57,660 --> 00:30:59,699
+uh, we only have to create the index once and we could do this
+
+815
+00:30:59,699 --> 00:31:02,250
+manually, but we're gonna make it, uh, uh,
+
+816
+00:31:02,259 --> 00:31:04,219
+do it as part of the, the lambda.
+
+817
+00:31:04,539 --> 00:31:06,660
+So in order to do that, we can test to see if it
+
+818
+00:31:06,660 --> 00:31:07,400
+exists first.
+
+819
+00:31:08,209 --> 00:31:10,279
+Uh, I would need to actually import all
+
+820
+00:31:10,279 --> 00:31:12,449
+of my full text stuff, so that doesn't come in the glide
+
+821
+00:31:12,449 --> 00:31:14,608
+sync. Those are, uh, separate commands.
+
+822
+00:31:14,689 --> 00:31:15,949
+So from glide sync.
+
+823
+00:31:16,410 --> 00:31:19,049
+sync commands, we'll import FT
+
+824
+00:31:19,049 --> 00:31:20,088
+to interact with the,
+
+825
+00:31:20,529 --> 00:31:22,180
+the VSS module,
+
+826
+00:31:22,489 --> 00:31:23,430
+and then from
+
+827
+00:31:24,209 --> 00:31:26,410
+glide shared commands, server
+
+828
+00:31:26,410 --> 00:31:27,910
+modules is a little bit long.
+
+829
+00:31:28,289 --> 00:31:29,348
+This is where having,
+
+830
+00:31:29,630 --> 00:31:30,189
+uh,
+
+831
+00:31:30,930 --> 00:31:33,068
+Gen AI created would be helpful,
+
+832
+00:31:33,088 --> 00:31:34,459
+create options,
+
+833
+00:31:34,729 --> 00:31:35,568
+import star.
+
+834
+00:31:36,140 --> 00:31:36,660
+OK.
+
+835
+00:31:36,979 --> 00:31:39,160
+Uh, so now I should be able to call FT.info,
+
+836
+00:31:39,338 --> 00:31:40,318
+pass it to the
+
+837
+00:31:40,578 --> 00:31:41,299
+client,
+
+838
+00:31:41,660 --> 00:31:44,000
+and then check to see if our
+
+839
+00:31:44,219 --> 00:31:46,259
+index, we're gonna have one index here
+
+840
+00:31:46,259 --> 00:31:48,539
+if it, if it exists, uh, we'll call it the, the,
+
+841
+00:31:48,578 --> 00:31:50,479
+uh, index with the,
+
+842
+00:31:50,779 --> 00:31:51,818
+uh, video frames.
+
+843
+00:31:52,709 --> 00:31:54,838
+Uh, this will throw an exception if it doesn't
+
+844
+00:31:54,838 --> 00:31:56,059
+exist, except.
+
+845
+00:31:57,588 --> 00:31:59,630
+Exception is X. OK. And
+
+846
+00:31:59,630 --> 00:32:01,789
+so if it doesn't exist, then we'll go ahead and try and create
+
+847
+00:32:01,789 --> 00:32:02,449
+it here.
+
+848
+00:32:03,029 --> 00:32:05,068
+Uh, and so, to create it,
+
+849
+00:32:05,150 --> 00:32:07,209
+we have to create, um, a schema
+
+850
+00:32:07,209 --> 00:32:09,400
+first. And
+
+851
+00:32:09,400 --> 00:32:11,469
+so we have to define what exactly the fields are that
+
+852
+00:32:11,469 --> 00:32:13,640
+we want to index. So we'll
+
+853
+00:32:13,640 --> 00:32:15,539
+call, we'll say it's a vector field.
+
+854
+00:32:16,309 --> 00:32:18,469
+The name is gonna be where we find it in
+
+855
+00:32:18,469 --> 00:32:19,650
+the, well, we can
+
+856
+00:32:19,989 --> 00:32:22,469
+talk about uh where it's coming from
+
+857
+00:32:22,469 --> 00:32:24,660
+later, the data type, but within the JSON field,
+
+858
+00:32:24,670 --> 00:32:26,828
+it's gonna be called MM embedding for multimodal
+
+859
+00:32:26,828 --> 00:32:27,449
+embedding.
+
+860
+00:32:28,318 --> 00:32:30,519
+Uh, we'll alias this just to
+
+861
+00:32:30,519 --> 00:32:32,759
+MM embedding so we don't have to deal with the
+
+862
+00:32:33,160 --> 00:32:35,390
+dollar sign at the front. So when we actually query
+
+863
+00:32:35,390 --> 00:32:36,529
+it, we'll just have to, we'll,
+
+864
+00:32:36,799 --> 00:32:38,390
+we, we can drop the dollar sign.
+
+865
+00:32:38,880 --> 00:32:41,479
+We're gonna use the, uh, HNSW algorithm.
+
+866
+00:32:41,640 --> 00:32:42,318
+Oh, look, it is
+
+867
+00:32:42,680 --> 00:32:43,279
+helpfully.
+
+868
+00:32:44,529 --> 00:32:45,078
+Um
+
+869
+00:32:46,170 --> 00:32:48,209
+Doing it. Let's see if it's actually correct. It's a
+
+870
+00:32:48,209 --> 00:32:50,449
+little bit wrong. Vector vector
+
+871
+00:32:50,449 --> 00:32:51,739
+algorithm is the right one.
+
+872
+00:32:53,588 --> 00:32:54,289
+Uh,
+
+873
+00:32:54,709 --> 00:32:56,769
+so this is the, you know, the pitfalls of using
+
+874
+00:32:56,769 --> 00:32:57,289
+Gen AI
+
+875
+00:32:57,670 --> 00:33:00,170
+that it might get it mostly correct, but not 100%.
+
+876
+00:33:00,469 --> 00:33:01,578
+So, we'll do, uh, HNSW.
+
+877
+00:33:02,640 --> 00:33:05,170
+I'll go ahead and pause that so that it doesn't distract
+
+878
+00:33:05,170 --> 00:33:07,088
+from The
+
+879
+00:33:08,328 --> 00:33:09,250
+Let's see.
+
+880
+00:33:10,578 --> 00:33:11,410
+He was down at the bottom.
+
+881
+00:33:15,789 --> 00:33:16,459
+OK.
+
+882
+00:33:16,868 --> 00:33:17,809
+That should be a little bit better.
+
+883
+00:33:18,098 --> 00:33:19,449
+Uh, HNSW,
+
+884
+00:33:20,868 --> 00:33:21,719
+that did not work.
+
+885
+00:33:26,219 --> 00:33:28,500
+And we'll, we'll see if it works, uh, now,
+
+886
+00:33:28,739 --> 00:33:30,818
+uh, and we want to pass
+
+887
+00:33:30,818 --> 00:33:33,239
+at the attributes for HNSW. So HSW is,
+
+888
+00:33:33,539 --> 00:33:35,598
+um, uh, uh, the graph navigation
+
+889
+00:33:35,598 --> 00:33:36,199
+scheme,
+
+890
+00:33:36,539 --> 00:33:38,318
+and we have to pass at what the vector field,
+
+891
+00:33:38,739 --> 00:33:40,739
+uh, attributes are, what, what, how many dimensions
+
+892
+00:33:40,739 --> 00:33:42,920
+to expect, and, and sort of how we wanted to,
+
+893
+00:33:43,219 --> 00:33:44,858
+um, generate a score for that.
+
+894
+00:33:45,250 --> 00:33:47,489
+So, we, we can pass it and
+
+895
+00:33:47,489 --> 00:33:49,930
+tell it that there's 120, 1,024
+
+896
+00:33:49,930 --> 00:33:51,680
+dimensions in these vectors,
+
+897
+00:33:52,049 --> 00:33:54,279
+and we want to use the cosine metric
+
+898
+00:33:54,279 --> 00:33:56,410
+as opposed to, uh, the, the
+
+899
+00:33:56,410 --> 00:33:58,449
+metric L21. So, we'll do metric type.
+
+900
+00:33:58,719 --> 00:33:59,309
+cosine.
+
+901
+00:34:00,469 --> 00:34:02,578
+And we'll generate a, uh,
+
+902
+00:34:02,588 --> 00:34:04,789
+they're all float thirty-twos all of them in
+
+903
+00:34:04,789 --> 00:34:05,689
+the, the vector field.
+
+904
+00:34:06,229 --> 00:34:08,469
+So we can basically, uh, so this is the multimodal embedding,
+
+905
+00:34:08,550 --> 00:34:10,628
+we can kind of copy and paste this for the
+
+906
+00:34:10,628 --> 00:34:13,010
+text embedding because it is, uh.
+
+907
+00:34:14,679 --> 00:34:16,659
+Line 38 distance,
+
+908
+00:34:16,938 --> 00:34:17,579
+yep,
+
+909
+00:34:18,000 --> 00:34:18,639
+thank you.
+
+910
+00:34:19,590 --> 00:34:20,530
+Good eye.
+
+911
+00:34:22,628 --> 00:34:23,809
+We'll see
+
+912
+00:34:24,349 --> 00:34:26,389
+then if I'm able to copy and paste this
+
+913
+00:34:26,389 --> 00:34:27,949
+for the text embedding.
+
+914
+00:34:28,829 --> 00:34:30,889
+Uh, which is just in this text
+
+915
+00:34:30,889 --> 00:34:32,909
+embedding. OK, so this allows us to
+
+916
+00:34:32,909 --> 00:34:35,349
+index two different fields. Each of
+
+917
+00:34:35,349 --> 00:34:37,469
+there are different embeddings. One is just representing the
+
+918
+00:34:37,469 --> 00:34:40,050
+text and one is representing text and image.
+
+919
+00:34:40,840 --> 00:34:42,869
+Uh, so this is the, uh,
+
+920
+00:34:42,878 --> 00:34:45,039
+most of how we create the schema
+
+921
+00:34:45,039 --> 00:34:46,659
+here, and I just need to
+
+922
+00:34:47,269 --> 00:34:49,438
+finish, yeah, OK, defining
+
+923
+00:34:49,438 --> 00:34:51,619
+it. Uh, and then there's a couple
+
+924
+00:34:51,619 --> 00:34:53,719
+of options we need to tell it which fields to index. So but
+
+925
+00:34:53,719 --> 00:34:55,878
+we could look for everything that's stored into
+
+926
+00:34:55,878 --> 00:34:58,110
+Valy to try and index all, uh,
+
+927
+00:34:58,119 --> 00:35:00,269
+JSON, uh, uh, documents, but here we're just
+
+928
+00:35:00,269 --> 00:35:02,280
+gonna, uh, narrow it down
+
+929
+00:35:02,280 --> 00:35:02,860
+to,
+
+930
+00:35:03,389 --> 00:35:04,809
+uh, things that are JSON
+
+931
+00:35:05,530 --> 00:35:07,719
+and that start with this frame
+
+932
+00:35:07,719 --> 00:35:08,559
+prefix.
+
+933
+00:35:09,039 --> 00:35:11,079
+So we can, or we can say anything that
+
+934
+00:35:11,079 --> 00:35:12,110
+starts with frame,
+
+935
+00:35:12,438 --> 00:35:14,519
+uh, we'll, we'll inspect to see if
+
+936
+00:35:14,519 --> 00:35:16,059
+we can insert it into the
+
+937
+00:35:16,398 --> 00:35:18,398
+index, and this allows us to
+
+938
+00:35:18,398 --> 00:35:20,559
+store other things on the same balky server
+
+939
+00:35:20,559 --> 00:35:22,840
+without having to index them or to insert
+
+940
+00:35:22,840 --> 00:35:23,898
+them in different indexes.
+
+941
+00:35:24,820 --> 00:35:26,659
+Uh, and as a lot talked about earlier, we can have one,
+
+942
+00:35:28,360 --> 00:35:30,378
+object be in multiple indexes if we,
+
+943
+00:35:30,438 --> 00:35:31,659
+uh, so chose.
+
+944
+00:35:32,619 --> 00:35:34,699
+And then we can just do, I'm gonna do
+
+945
+00:35:34,699 --> 00:35:36,728
+a, uh, we could do FT.create
+
+946
+00:35:37,750 --> 00:35:38,530
+to create the thing,
+
+947
+00:35:39,079 --> 00:35:41,148
+um, pass it the video frame,
+
+948
+00:35:41,228 --> 00:35:43,500
+the index ID, and then schema and
+
+949
+00:35:43,500 --> 00:35:45,510
+options. So this will create the
+
+950
+00:35:45,510 --> 00:35:47,668
+index. Uh, I'm going to surround this
+
+951
+00:35:47,668 --> 00:35:49,668
+in a try catch just because,
+
+952
+00:35:50,070 --> 00:35:52,340
+uh, there might be a race here where we most,
+
+953
+00:35:52,469 --> 00:35:54,510
+um, several of them try and create at
+
+954
+00:35:54,510 --> 00:35:56,708
+the same time and one of them will throw an error.
+
+955
+00:35:56,789 --> 00:35:58,909
+So, uh, normally I
+
+956
+00:35:58,909 --> 00:36:00,208
+would handle this better, but.
+
+957
+00:36:00,619 --> 00:36:02,760
+Since we're just doing it for demo purposes, we'll
+
+958
+00:36:03,019 --> 00:36:05,360
+just ignore it errors that get thrown here
+
+959
+00:36:05,539 --> 00:36:06,878
+and validate manually.
+
+960
+00:36:08,179 --> 00:36:10,458
+So now we have the ability to
+
+961
+00:36:10,458 --> 00:36:11,418
+create the client.
+
+962
+00:36:11,780 --> 00:36:13,898
+We'll first try and see if the index
+
+963
+00:36:13,898 --> 00:36:16,219
+exists. If not, we'll go ahead and, and
+
+964
+00:36:16,219 --> 00:36:16,958
+create it,
+
+965
+00:36:17,458 --> 00:36:19,099
+and then we'll go ahead and store
+
+966
+00:36:19,500 --> 00:36:21,579
+this. We could do it the other way around. It's not
+
+967
+00:36:21,579 --> 00:36:23,780
+important to create the index before you store data.
+
+968
+00:36:23,938 --> 00:36:26,139
+Indexes are backfilled, so you can dynamically
+
+969
+00:36:26,139 --> 00:36:28,340
+drop them and recreate them, and it'll go and
+
+970
+00:36:28,340 --> 00:36:30,039
+search the, the key space and,
+
+971
+00:36:30,300 --> 00:36:32,639
+and reindex and everything as necessary,
+
+972
+00:36:32,938 --> 00:36:35,050
+uh, but this, uh, uh,
+
+973
+00:36:35,059 --> 00:36:35,840
+is the.
+
+974
+00:36:36,309 --> 00:36:38,300
+Uh, the way that we've chosen to do it here.
+
+975
+00:36:38,860 --> 00:36:40,949
+Uh, and if I got all of the,
+
+976
+00:36:41,228 --> 00:36:43,090
+no other typos, we'll go ahead and
+
+977
+00:36:43,429 --> 00:36:44,918
+try and deploy this.
+
+978
+00:36:48,250 --> 00:36:49,039
+There's another typo
+
+979
+00:36:52,050 --> 00:36:54,809
+Online 59 exception,
+
+980
+00:36:54,820 --> 00:36:55,639
+yeah.
+
+981
+00:36:56,978 --> 00:36:59,019
+Cool. I don't have a test for this, so I could
+
+982
+00:36:59,019 --> 00:37:00,039
+theoretically test it,
+
+983
+00:37:00,300 --> 00:37:02,860
+um, within the lambda, but I'd have to
+
+984
+00:37:02,860 --> 00:37:04,969
+generate the, uh,
+
+985
+00:37:04,978 --> 00:37:06,780
+the right context here, so we're just gonna,
+
+986
+00:37:07,179 --> 00:37:08,958
+uh, test this through the application.
+
+987
+00:37:11,090 --> 00:37:13,090
+And while that's running, I'm gonna go
+
+988
+00:37:13,090 --> 00:37:15,168
+ahead and clear out the one other lambda
+
+989
+00:37:15,168 --> 00:37:17,239
+function that we will uh be
+
+990
+00:37:17,570 --> 00:37:19,769
+creating since it didn't get cleared out before,
+
+991
+00:37:20,090 --> 00:37:22,090
+which is search, and I'll deploy an empty
+
+992
+00:37:22,090 --> 00:37:22,949
+version of that.
+
+993
+00:37:28,570 --> 00:37:31,010
+Yeah, I don't care. OK.
+
+994
+00:37:32,099 --> 00:37:33,449
+Deploy empty search.
+
+995
+00:37:42,829 --> 00:37:43,389
+OK,
+
+996
+00:37:43,800 --> 00:37:44,519
+now,
+
+997
+00:37:44,840 --> 00:37:46,610
+let's go ahead and.
+
+998
+00:37:47,820 --> 00:37:50,469
+Go back to our application and.
+
+999
+00:37:51,590 --> 00:37:52,860
+That's stuck and deleting.
+
+1000
+00:37:54,119 --> 00:37:56,250
+That might be why things are not working very well,
+
+1001
+00:37:56,329 --> 00:37:58,409
+OK. We're
+
+1002
+00:37:58,409 --> 00:38:00,409
+going to ignore the ones stuck in deleting.
+
+1003
+00:38:01,579 --> 00:38:03,978
+Uh, because we've already manually cleared out
+
+1004
+00:38:03,978 --> 00:38:05,699
+everything within the elastic cache.
+
+1005
+00:38:06,340 --> 00:38:08,478
+So, let's go ahead and check to see
+
+1006
+00:38:08,820 --> 00:38:09,458
+if
+
+1007
+00:38:09,938 --> 00:38:11,978
+this works. There should be nothing created
+
+1008
+00:38:11,978 --> 00:38:14,250
+yet. Yeah, cool, and
+
+1009
+00:38:14,250 --> 00:38:16,059
+there should be no, no keys.
+
+1010
+00:38:16,489 --> 00:38:17,849
+OK, and,
+
+1011
+00:38:18,208 --> 00:38:18,789
+um,
+
+1012
+00:38:19,228 --> 00:38:21,579
+so this is a multi-shard cluster,
+
+1013
+00:38:21,688 --> 00:38:23,929
+so the, the, the keys will be targeted at
+
+1014
+00:38:23,929 --> 00:38:25,929
+specific nodes. Each frame might land
+
+1015
+00:38:25,929 --> 00:38:27,010
+in a different shard.
+
+1016
+00:38:27,300 --> 00:38:29,809
+However, the index only needs to be created once
+
+1017
+00:38:29,809 --> 00:38:32,010
+in one shard and it automatically propagates
+
+1018
+00:38:32,010 --> 00:38:33,550
+to the other shard, so everyone,
+
+1019
+00:38:33,929 --> 00:38:35,409
+uh, gets that same index.
+
+1020
+00:38:35,849 --> 00:38:37,849
+So let's go ahead and try and adjust the
+
+1021
+00:38:37,849 --> 00:38:39,110
+video and see what happens.
+
+1022
+00:38:40,398 --> 00:38:42,628
+Uh, uh, the, I'm going to ingest
+
+1023
+00:38:42,628 --> 00:38:43,139
+the same
+
+1024
+00:38:43,599 --> 00:38:45,739
+ad that we played with earlier.
+
+1025
+00:38:47,840 --> 00:38:50,099
+And I got a bunch of settings here,
+
+1026
+00:38:50,269 --> 00:38:52,610
+uh, and this allows you to, uh,
+
+1027
+00:38:52,619 --> 00:38:54,619
+choose a sampling interval. Here we're just doing,
+
+1028
+00:38:54,809 --> 00:38:55,639
+uh, one,
+
+1029
+00:38:56,239 --> 00:38:57,500
+for every 1 2nd,
+
+1030
+00:38:57,958 --> 00:38:59,958
+and this is what we talked about before for each image
+
+1031
+00:38:59,958 --> 00:39:02,199
+frame we can run different detections here.
+
+1032
+00:39:02,280 --> 00:39:03,530
+So recognition
+
+1033
+00:39:03,989 --> 00:39:05,728
+picks up labels and text,
+
+1034
+00:39:06,000 --> 00:39:08,360
+um, as well as the moderation and celebrities,
+
+1035
+00:39:08,398 --> 00:39:10,530
+and then the summary is done from Haiku
+
+1036
+00:39:10,530 --> 00:39:11,699
+and then Transcribe,
+
+1037
+00:39:11,958 --> 00:39:13,659
+uh, does the subtitles.
+
+1038
+00:39:14,039 --> 00:39:16,039
+Uh, so we're gonna just keep the defaults
+
+1039
+00:39:16,039 --> 00:39:18,539
+here. And
+
+1040
+00:39:18,539 --> 00:39:19,228
+upload it
+
+1041
+00:39:23,300 --> 00:39:25,619
+And so then this runs a,
+
+1042
+00:39:25,869 --> 00:39:26,449
+uh,
+
+1043
+00:39:26,750 --> 00:39:28,750
+a step function which we'll go ahead and, and look
+
+1044
+00:39:28,750 --> 00:39:31,250
+at in a moment that runs through the transcription
+
+1045
+00:39:31,250 --> 00:39:32,849
+and then all of the different analysis.
+
+1046
+00:39:33,619 --> 00:39:35,809
+Uh, so, as a lot talked about earlier,
+
+1047
+00:39:35,978 --> 00:39:37,019
+the, um,
+
+1048
+00:39:37,289 --> 00:39:39,300
+Valy is, is best for, for real-time use
+
+1049
+00:39:39,300 --> 00:39:41,458
+cases that's ultra low latency. This isn't
+
+1050
+00:39:41,458 --> 00:39:43,728
+really a good showcase of the real-time
+
+1051
+00:39:43,728 --> 00:39:44,958
+capabilities because,
+
+1052
+00:39:45,260 --> 00:39:47,539
+uh, this is done at a, a little bit lower
+
+1053
+00:39:47,539 --> 00:39:49,769
+or is done sort of
+
+1054
+00:39:49,769 --> 00:39:51,478
+in an offline fashion, right? We're, we're running
+
+1055
+00:39:51,820 --> 00:39:54,019
+a workflow on this and then, um, showing
+
+1056
+00:39:54,019 --> 00:39:56,019
+a web UI that can do searching. So,
+
+1057
+00:39:56,300 --> 00:39:58,489
+uh, it's really just there as an, uh,
+
+1058
+00:39:58,500 --> 00:40:00,800
+to show an example application of,
+
+1059
+00:40:00,860 --> 00:40:02,570
+uh, how you would connect it, but.
+
+1060
+00:40:02,878 --> 00:40:04,199
+Uh, the,
+
+1061
+00:40:04,829 --> 00:40:07,239
+where Valy would shine is if you're doing sort of real-time streaming
+
+1062
+00:40:07,239 --> 00:40:09,280
+analysis or other things
+
+1063
+00:40:09,280 --> 00:40:11,559
+where, where the, uh, latency
+
+1064
+00:40:11,559 --> 00:40:12,599
+and throughput are,
+
+1065
+00:40:12,878 --> 00:40:15,010
+uh, much higher than in this example
+
+1066
+00:40:15,010 --> 00:40:17,769
+application. Let's
+
+1067
+00:40:17,769 --> 00:40:19,469
+go ahead and check on the.
+
+1068
+00:40:20,590 --> 00:40:21,128
+Uh,
+
+1069
+00:40:21,429 --> 00:40:23,289
+extraction flow here, so.
+
+1070
+00:40:24,559 --> 00:40:26,590
+We're running through a, let's see if I can
+
+1071
+00:40:26,590 --> 00:40:27,958
+make this bigger, yeah,
+
+1072
+00:40:28,280 --> 00:40:30,438
+running through a set of lambda functions,
+
+1073
+00:40:30,519 --> 00:40:32,099
+we'll get the video metadata,
+
+1074
+00:40:32,469 --> 00:40:34,478
+uh, can I make this
+
+1075
+00:40:34,478 --> 00:40:35,418
+maximize, yup.
+
+1076
+00:40:37,559 --> 00:40:38,780
+And zoom in.
+
+1077
+00:40:42,019 --> 00:40:44,579
+So we sam we go through the sampling and
+
+1078
+00:40:44,579 --> 00:40:46,679
+uh removing redundant frames
+
+1079
+00:40:46,679 --> 00:40:49,079
+through the sampled images to, to de-dupe them
+
+1080
+00:40:49,179 --> 00:40:50,659
+and then we iterate through them,
+
+1081
+00:40:50,969 --> 00:40:51,719
+extract
+
+1082
+00:40:52,059 --> 00:40:54,119
+metadata and actually store those
+
+1083
+00:40:54,719 --> 00:40:56,000
+uh vectors
+
+1084
+00:40:56,719 --> 00:40:58,119
+and it looks like
+
+1085
+00:40:58,458 --> 00:40:59,958
+something probably didn't work.
+
+1086
+00:41:00,849 --> 00:41:02,708
+So let's go ahead and dig into
+
+1087
+00:41:03,128 --> 00:41:03,909
+what else
+
+1088
+00:41:04,289 --> 00:41:05,300
+went wrong here.
+
+1089
+00:41:11,340 --> 00:41:13,340
+Vector is not defined. OK, so
+
+1090
+00:41:13,340 --> 00:41:15,809
+either I made a, a typo in
+
+1091
+00:41:15,809 --> 00:41:16,750
+the
+
+1092
+00:41:17,269 --> 00:41:18,369
+save.
+
+1093
+00:41:18,969 --> 00:41:20,809
+Where did I say vector?
+
+1094
+00:41:22,219 --> 00:41:24,789
+Vector dot, uh, it's vector type.
+
+1095
+00:41:27,079 --> 00:41:28,820
+There we go, let's try that.
+
+1096
+00:41:34,168 --> 00:41:34,829
+Cool,
+
+1097
+00:41:35,289 --> 00:41:36,769
+and we'll rerun.
+
+1098
+00:41:38,989 --> 00:41:39,969
+From failure
+
+1099
+00:41:44,489 --> 00:41:46,070
+See if it can complete successfully.
+
+1100
+00:41:52,648 --> 00:41:54,648
+Um, still
+
+1101
+00:41:54,648 --> 00:41:55,969
+not. Let's see if
+
+1102
+00:41:56,250 --> 00:41:57,590
+if I made other typos.
+
+1103
+00:42:05,719 --> 00:42:08,219
+Uh, create options doesn't have,
+
+1104
+00:42:08,269 --> 00:42:10,510
+uh, the, the ait and the create
+
+1105
+00:42:10,510 --> 00:42:12,260
+index. Let's go look at that.
+
+1106
+00:42:15,438 --> 00:42:18,030
+Have to create options has.
+
+1107
+00:42:18,829 --> 00:42:20,929
+A data type and
+
+1108
+00:42:21,208 --> 00:42:23,329
+ah it's prefixes there
+
+1109
+00:42:23,329 --> 00:42:23,849
+we go.
+
+1110
+00:42:24,860 --> 00:42:25,918
+This is where I wish
+
+1111
+00:42:27,010 --> 00:42:27,889
+Q would help me
+
+1112
+00:42:28,688 --> 00:42:30,869
+if only I could ingest the Jasons
+
+1113
+00:42:30,869 --> 00:42:31,918
+uh syntax here,
+
+1114
+00:42:32,739 --> 00:42:34,898
+which I have the, uh,
+
+1115
+00:42:34,909 --> 00:42:35,570
+this one.
+
+1116
+00:42:37,289 --> 00:42:38,878
+OK, let's go ahead and try it one more time.
+
+1117
+00:43:03,829 --> 00:43:05,989
+So this is iterating them, I think in a loop
+
+1118
+00:43:05,989 --> 00:43:08,199
+with a fairly low concurrency,
+
+1119
+00:43:08,269 --> 00:43:10,269
+so it takes a little bit longer again if you're doing something
+
+1120
+00:43:10,269 --> 00:43:12,579
+real time, it could ingest it as the
+
+1121
+00:43:12,929 --> 00:43:14,469
+the frames are being streamed in.
+
+1122
+00:43:14,949 --> 00:43:17,010
+So that uh completed successfully
+
+1123
+00:43:17,010 --> 00:43:19,110
+now after I fixed all those typers and we should
+
+1124
+00:43:19,110 --> 00:43:20,090
+be able to see
+
+1125
+00:43:20,550 --> 00:43:22,590
+on this non-deleting one the same UI that
+
+1126
+00:43:22,590 --> 00:43:23,610
+we saw before
+
+1127
+00:43:24,070 --> 00:43:26,110
+where we are, uh, see the, the different
+
+1128
+00:43:26,110 --> 00:43:27,208
+image frames.
+
+1129
+00:43:27,969 --> 00:43:30,199
+And I'll point out that there is one duplicate
+
+1130
+00:43:30,199 --> 00:43:32,369
+here, so this particular image I just pulled
+
+1131
+00:43:32,369 --> 00:43:34,648
+from, uh, from YouTube, but you see similarity
+
+1132
+00:43:34,648 --> 00:43:35,500
+scores.
+
+1133
+00:43:35,849 --> 00:43:37,929
+Uh, the frame 9
+
+1134
+00:43:37,969 --> 00:43:40,000
+often has, yeah, so it goes from, um,
+
+1135
+00:43:40,010 --> 00:43:41,829
+frame 8 here to frame
+
+1136
+00:43:42,199 --> 00:43:42,860
+10,
+
+1137
+00:43:43,250 --> 00:43:45,708
+and that's because if I were to look at
+
+1138
+00:43:46,010 --> 00:43:46,989
+what happens between
+
+1139
+00:43:47,840 --> 00:43:50,139
+8 and 9, it's sort of the same,
+
+1140
+00:43:50,289 --> 00:43:51,750
+uh, woman moving around,
+
+1141
+00:43:52,010 --> 00:43:53,668
+uh, before it gets to that
+
+1142
+00:43:53,929 --> 00:43:56,050
+point and so I was able to de-dupe a
+
+1143
+00:43:56,050 --> 00:43:56,829
+particular frame there.
+
+1144
+00:43:58,188 --> 00:44:00,628
+So let's go ahead and look at what that looks like
+
+1145
+00:44:00,628 --> 00:44:02,668
+inside uh Valy. So now if I
+
+1146
+00:44:02,668 --> 00:44:04,789
+run key star, it may have keys, it
+
+1147
+00:44:04,789 --> 00:44:07,168
+probably should because they're in different ones. So I see
+
+1148
+00:44:07,349 --> 00:44:09,539
+frame, prefix, and then a
+
+1149
+00:44:09,539 --> 00:44:10,489
+timestamp at the end.
+
+1150
+00:44:11,070 --> 00:44:13,349
+So this is a UUID followed by the timestamp
+
+1151
+00:44:13,349 --> 00:44:14,500
+here. I can do a
+
+1152
+00:44:14,938 --> 00:44:16,260
+uh JO.get
+
+1153
+00:44:16,789 --> 00:44:17,530
+on
+
+1154
+00:44:17,909 --> 00:44:20,110
+um mine and this is.
+
+1155
+00:44:20,668 --> 00:44:21,250
+Uh,
+
+1156
+00:44:21,610 --> 00:44:23,860
+lots of vectors, but we see it has some
+
+1157
+00:44:23,860 --> 00:44:26,128
+things other than vectors. It has task ID
+
+1158
+00:44:26,510 --> 00:44:28,769
+and then it has the embeddings that we generated
+
+1159
+00:44:28,769 --> 00:44:29,429
+two of them,
+
+1160
+00:44:29,789 --> 00:44:32,128
+and then it has the actual metadata itself text,
+
+1161
+00:44:32,559 --> 00:44:34,708
+uh, and labels. This is all the stuff
+
+1162
+00:44:34,708 --> 00:44:36,599
+that it's actually indexing in the vector,
+
+1163
+00:44:36,909 --> 00:44:38,949
+um, as well as then the, let
+
+1164
+00:44:38,949 --> 00:44:41,019
+me see if I can make this bigger, uh,
+
+1165
+00:44:41,070 --> 00:44:43,208
+I may not be able to readily.
+
+1166
+00:44:44,309 --> 00:44:46,070
+Uh, oh, I can, there we go.
+
+1167
+00:44:48,809 --> 00:44:50,989
+Uh, and then the S3 URI. So this is all,
+
+1168
+00:44:51,530 --> 00:44:53,840
+um, the, what is being indexed.
+
+1169
+00:44:54,090 --> 00:44:56,070
+If I list my,
+
+1170
+00:44:56,369 --> 00:44:58,409
+um, vector indexes, I
+
+1171
+00:44:58,409 --> 00:45:00,469
+have one that does the similarity checking,
+
+1172
+00:45:00,489 --> 00:45:02,769
+and then this video frame index is the one that we defined
+
+1173
+00:45:02,769 --> 00:45:05,208
+before, and I can run an FT info
+
+1174
+00:45:05,208 --> 00:45:07,208
+to get information, observability about the
+
+1175
+00:45:07,208 --> 00:45:08,360
+actual video frame.
+
+1176
+00:45:08,648 --> 00:45:11,110
+This gives a lot of input, but it, it gives the definition.
+
+1177
+00:45:11,728 --> 00:45:13,728
+We defined it with both the text
+
+1178
+00:45:13,728 --> 00:45:15,889
+embedding and the multimodal
+
+1179
+00:45:15,889 --> 00:45:16,570
+embedding.
+
+1180
+00:45:17,119 --> 00:45:19,530
+Uh, but the interesting part is also tells us how many documents
+
+1181
+00:45:19,530 --> 00:45:21,110
+have been indexed. So there's,
+
+1182
+00:45:21,369 --> 00:45:23,929
+um, 7 different documents, 14
+
+1183
+00:45:23,929 --> 00:45:24,668
+records
+
+1184
+00:45:25,070 --> 00:45:27,550
+within that index that we can, uh, search
+
+1185
+00:45:27,550 --> 00:45:30,010
+on this particular node which should correspond
+
+1186
+00:45:30,010 --> 00:45:30,909
+to the number of
+
+1187
+00:45:31,250 --> 00:45:32,469
+keys here, 7, yep,
+
+1188
+00:45:32,889 --> 00:45:34,969
+so each node has a portion of that index
+
+1189
+00:45:34,969 --> 00:45:37,010
+and so when search happens it fans out,
+
+1190
+00:45:37,128 --> 00:45:39,148
+but that is transparent to
+
+1191
+00:45:39,208 --> 00:45:40,179
+the application.
+
+1192
+00:45:40,728 --> 00:45:43,010
+So if it was cleared out successfully, search
+
+1193
+00:45:43,010 --> 00:45:44,269
+should be broken right now,
+
+1194
+00:45:44,849 --> 00:45:46,849
+um. If I were
+
+1195
+00:45:46,849 --> 00:45:49,070
+to try and do some semantic search
+
+1196
+00:45:49,398 --> 00:45:50,099
+here,
+
+1197
+00:45:50,610 --> 00:45:52,688
+it will return nothing, no videos
+
+1198
+00:45:52,688 --> 00:45:54,929
+are found because it is not hooked up. So the last
+
+1199
+00:45:54,929 --> 00:45:56,510
+part that we want to do is make this searchable
+
+1200
+00:45:57,099 --> 00:45:59,610
+and to do that, we will look at the search,
+
+1201
+00:45:59,889 --> 00:46:01,110
+um, function here.
+
+1202
+00:46:02,639 --> 00:46:04,789
+Uh, so we've created the index, we've populated it, and
+
+1203
+00:46:04,789 --> 00:46:07,239
+now we want to search it. So this is, uh,
+
+1204
+00:46:07,250 --> 00:46:09,289
+taking the information from that web UI
+
+1205
+00:46:09,289 --> 00:46:10,188
+when I do a search.
+
+1206
+00:46:10,530 --> 00:46:12,688
+I've pre-populated it with a Valky connection,
+
+1207
+00:46:12,769 --> 00:46:15,090
+but we just need to call, basically
+
+1208
+00:46:15,090 --> 00:46:17,090
+implement a function to do searching
+
+1209
+00:46:17,090 --> 00:46:18,070
+the text embedding.
+
+1210
+00:46:18,530 --> 00:46:20,889
+We'll do that first, this the text, which is semantic
+
+1211
+00:46:20,889 --> 00:46:22,938
+search. So we have the input text,
+
+1212
+00:46:23,300 --> 00:46:25,559
+uh, and the, uh,
+
+1213
+00:46:25,570 --> 00:46:27,659
+the score threshold which we'll use to
+
+1214
+00:46:27,659 --> 00:46:29,809
+um find just uh relevant
+
+1215
+00:46:29,809 --> 00:46:30,389
+results.
+
+1216
+00:46:30,849 --> 00:46:33,219
+Uh, so to do this we do this, uh, an FT
+
+1217
+00:46:33,219 --> 00:46:34,019
+search command.
+
+1218
+00:46:34,750 --> 00:46:36,949
+Uh, and that one I will walk through here,
+
+1219
+00:46:36,958 --> 00:46:39,019
+uh, kind of quickly. So, uh, to start with, we
+
+1220
+00:46:39,019 --> 00:46:41,059
+just have the text as input. So the first thing we need to do
+
+1221
+00:46:41,059 --> 00:46:43,119
+to generate is to generate the embedding
+
+1222
+00:46:43,369 --> 00:46:45,418
+from the text, and this, uh, get
+
+1223
+00:46:45,418 --> 00:46:47,418
+embedding function we'll call that lambda that we
+
+1224
+00:46:47,418 --> 00:46:48,119
+defined earlier
+
+1225
+00:46:48,619 --> 00:46:50,659
+and basically transform the input
+
+1226
+00:46:50,659 --> 00:46:53,199
+text into, uh, a
+
+1227
+00:46:53,409 --> 00:46:54,378
+vector embedding.
+
+1228
+00:46:54,648 --> 00:46:57,039
+We'll pass it the input text but no image.
+
+1229
+00:46:57,849 --> 00:46:58,989
+And then we need to query,
+
+1230
+00:46:59,329 --> 00:47:01,489
+uh, the, the given vector and so to,
+
+1231
+00:47:01,500 --> 00:47:03,648
+uh, index and to, to do that, we,
+
+1232
+00:47:03,829 --> 00:47:06,010
+we will use the syntax that is defined
+
+1233
+00:47:06,010 --> 00:47:06,599
+in
+
+1234
+00:47:06,889 --> 00:47:08,590
+uh Valy command FT search.
+
+1235
+00:47:09,728 --> 00:47:11,668
+It's a little bit of a, uh,
+
+1236
+00:47:12,050 --> 00:47:14,110
+uh, a syntactically
+
+1237
+00:47:14,489 --> 00:47:15,949
+difficult, um,
+
+1238
+00:47:16,369 --> 00:47:18,409
+uh, query, but I can, I'll walk
+
+1239
+00:47:18,409 --> 00:47:20,610
+through what it means. So, first, the star
+
+1240
+00:47:20,610 --> 00:47:22,889
+means that we're not gonna do any filtering on the vectors. We,
+
+1241
+00:47:23,128 --> 00:47:25,250
+we could filter by different tags. We're
+
+1242
+00:47:25,250 --> 00:47:26,429
+not gonna get into that today.
+
+1243
+00:47:26,889 --> 00:47:28,750
+We'll do a K nearest neighbor search
+
+1244
+00:47:29,050 --> 00:47:31,070
+and we'll pass in a default
+
+1245
+00:47:31,070 --> 00:47:33,168
+K, which is 20 in this example, but we
+
+1246
+00:47:33,168 --> 00:47:34,789
+could just hard code the number here.
+
+1247
+00:47:35,820 --> 00:47:37,869
+And we will query this text
+
+1248
+00:47:37,869 --> 00:47:39,090
+embedding field
+
+1249
+00:47:39,668 --> 00:47:41,878
+in the, in our one in our uh index,
+
+1250
+00:47:42,030 --> 00:47:42,789
+and
+
+1251
+00:47:43,188 --> 00:47:43,889
+we will then
+
+1252
+00:47:44,148 --> 00:47:46,820
+use this to say our, uh,
+
+1253
+00:47:47,349 --> 00:47:48,269
+we will
+
+1254
+00:47:48,550 --> 00:47:50,250
+uh pass in our query vector
+
+1255
+00:47:50,570 --> 00:47:51,648
+uh as a variable
+
+1256
+00:47:51,909 --> 00:47:53,949
+and we will, uh, return the
+
+1257
+00:47:53,949 --> 00:47:55,789
+actual score here.
+
+1258
+00:47:56,889 --> 00:47:58,969
+Uh, we want more than just the score. By
+
+1259
+00:47:58,969 --> 00:48:00,969
+default it'll just return the score, and that's
+
+1260
+00:48:00,969 --> 00:48:03,050
+not very useful because we want some metadata out
+
+1261
+00:48:03,050 --> 00:48:05,228
+of this rather than just the, the key name,
+
+1262
+00:48:05,409 --> 00:48:07,610
+which is just a UUID. So we can do that
+
+1263
+00:48:07,610 --> 00:48:09,550
+by doing vector search options.
+
+1264
+00:48:10,309 --> 00:48:12,458
+And we'll return some different
+
+1265
+00:48:12,458 --> 00:48:14,579
+fields that are also populated
+
+1266
+00:48:14,579 --> 00:48:15,208
+in that JSON,
+
+1267
+00:48:16,079 --> 00:48:17,438
+uh, so we'll do return field
+
+1268
+00:48:18,168 --> 00:48:20,530
+field identifier equals,
+
+1269
+00:48:20,539 --> 00:48:22,820
+so we want the score and then we went to other fields
+
+1270
+00:48:22,820 --> 00:48:24,429
+too. So let me copy and paste
+
+1271
+00:48:25,059 --> 00:48:25,760
+this.
+
+1272
+00:48:26,340 --> 00:48:28,340
+We want, uh, the task ID
+
+1273
+00:48:28,340 --> 00:48:30,679
+to be able to populate it. We want the.
+
+1274
+00:48:31,228 --> 00:48:32,429
+Image S3 URI,
+
+1275
+00:48:33,188 --> 00:48:34,320
+which is also in there.
+
+1276
+00:48:34,628 --> 00:48:36,050
+We want the time stamp
+
+1277
+00:48:36,550 --> 00:48:38,550
+and we want the text itself to
+
+1278
+00:48:38,550 --> 00:48:40,590
+be able to display what the, the matching text
+
+1279
+00:48:40,590 --> 00:48:43,519
+is. So
+
+1280
+00:48:43,519 --> 00:48:45,489
+those are our fields that we're returning.
+
+1281
+00:48:46,329 --> 00:48:48,458
+We're going to, uh, by default,
+
+1282
+00:48:48,489 --> 00:48:52,708
+it returns just 1010
+
+1283
+00:48:53,090 --> 00:48:55,168
+results no matter what the K is that you pass in, so
+
+1284
+00:48:55,168 --> 00:48:57,329
+we want to be able to change that
+
+1285
+00:48:57,570 --> 00:48:59,510
+and set it to return
+
+1286
+00:49:00,019 --> 00:49:01,219
+20 in this case.
+
+1287
+00:49:01,809 --> 00:49:02,780
+So we'll do.
+
+1288
+00:49:04,148 --> 00:49:05,409
+EC default K.
+
+1289
+00:49:07,639 --> 00:49:09,648
+And then lastly, we need to actually pass in the vector
+
+1290
+00:49:09,648 --> 00:49:11,699
+that we're searching and to do that,
+
+1291
+00:49:11,769 --> 00:49:14,010
+we will define this query vector
+
+1292
+00:49:14,010 --> 00:49:16,329
+parameter that is, uh, matches
+
+1293
+00:49:16,329 --> 00:49:17,708
+this string here.
+
+1294
+00:49:18,958 --> 00:49:21,099
+And we'll put it, uh,
+
+1295
+00:49:21,159 --> 00:49:23,300
+packet as a structure so that it can be,
+
+1296
+00:49:23,719 --> 00:49:24,398
+um,
+
+1297
+00:49:24,918 --> 00:49:26,219
+sent over the wire.
+
+1298
+00:49:27,128 --> 00:49:29,269
+And so we'll encode it in a way that is.
+
+1299
+00:49:30,119 --> 00:49:31,469
+Uh, recognizable by Valy.
+
+1300
+00:49:33,570 --> 00:49:34,449
+Um,
+
+1301
+00:49:34,938 --> 00:49:37,128
+we pack length of the embedding and
+
+1302
+00:49:37,128 --> 00:49:37,668
+then.
+
+1303
+00:49:38,619 --> 00:49:40,519
+Take the actual raw embedding itself.
+
+1304
+00:49:42,329 --> 00:49:43,050
+OK.
+
+1305
+00:49:44,340 --> 00:49:46,628
+I think that looks good for the query
+
+1306
+00:49:46,628 --> 00:49:48,750
+and then we just need to call the.
+
+1307
+00:49:49,579 --> 00:49:50,289
+The, the
+
+1308
+00:49:50,668 --> 00:49:52,929
+function itself, so we'll do FT.search,
+
+1309
+00:49:53,708 --> 00:49:54,648
+pass in the client,
+
+1310
+00:49:54,989 --> 00:49:55,610
+the.
+
+1311
+00:49:57,639 --> 00:49:58,668
+Uh, index name
+
+1312
+00:49:59,168 --> 00:50:00,110
+that we're searching
+
+1313
+00:50:00,369 --> 00:50:02,208
+and then the options that we just defined.
+
+1314
+00:50:04,550 --> 00:50:06,659
+And then we have a helper function here that
+
+1315
+00:50:06,659 --> 00:50:08,719
+will format those results
+
+1316
+00:50:08,918 --> 00:50:11,228
+and do filtering and return it in
+
+1317
+00:50:11,519 --> 00:50:13,878
+the way that we want it to be displayed in the UI.
+
+1318
+00:50:14,039 --> 00:50:16,079
+So we'll do format frame results of the
+
+1319
+00:50:16,079 --> 00:50:18,438
+response with our given score threshold.
+
+1320
+00:50:18,519 --> 00:50:19,599
+So this will do some filtering.
+
+1321
+00:50:20,679 --> 00:50:21,239
+OK,
+
+1322
+00:50:21,559 --> 00:50:22,280
+and
+
+1323
+00:50:22,599 --> 00:50:25,019
+this one's easier to test because we can just run the
+
+1324
+00:50:25,579 --> 00:50:27,639
+web UI as soon as the deploy happens. Let's see
+
+1325
+00:50:27,639 --> 00:50:29,719
+what if I made any mistakes
+
+1326
+00:50:29,719 --> 00:50:33,418
+here. So
+
+1327
+00:50:33,418 --> 00:50:35,418
+now if I were to do the same thing, search
+
+1328
+00:50:35,418 --> 00:50:36,269
+AWS.
+
+1329
+00:50:38,489 --> 00:50:42,070
+Aha I
+
+1330
+00:50:42,070 --> 00:50:44,090
+did not memorize this well enough. OK,
+
+1331
+00:50:44,389 --> 00:50:46,289
+let's go ahead and find the.
+
+1332
+00:50:48,309 --> 00:50:50,750
+Uh, FT search options.
+
+1333
+00:50:54,978 --> 00:50:57,059
+Um, can anyone find my
+
+1334
+00:50:57,059 --> 00:51:00,599
+mistake? If
+
+1335
+00:51:00,599 --> 00:51:02,699
+not, then we'll go into our.
+
+1336
+00:51:04,208 --> 00:51:06,208
+Cloud watch logs and find it out.
+
+1337
+00:51:07,128 --> 00:51:08,708
+What air is returning back.
+
+1338
+00:51:13,820 --> 00:51:16,639
+Set has no items.
+
+1339
+00:51:19,050 --> 00:51:21,208
+And this, did I
+
+1340
+00:51:21,208 --> 00:51:22,750
+pass in the wrong.
+
+1341
+00:51:24,019 --> 00:51:26,039
+Uh, query options. Do I pass in a
+
+1342
+00:51:26,050 --> 00:51:27,519
+a set instead of a list?
+
+1343
+00:51:28,699 --> 00:51:29,539
+Let's go back.
+
+1344
+00:51:36,119 --> 00:51:37,659
+Where am I doing a set?
+
+1345
+00:51:41,550 --> 00:51:43,090
+I have a return field list.
+
+1346
+00:51:47,159 --> 00:51:47,878
+FD search.
+
+1347
+00:51:52,789 --> 00:51:53,458
+Victor said.
+
+1348
+00:51:55,849 --> 00:51:58,010
+Prams is, yes, that's
+
+1349
+00:51:58,010 --> 00:51:58,590
+it.
+
+1350
+00:51:59,090 --> 00:51:59,668
+Colon,
+
+1351
+00:52:00,250 --> 00:52:02,579
+thank you. And this
+
+1352
+00:52:02,579 --> 00:52:04,579
+still is correct, yep.
+
+1353
+00:52:09,340 --> 00:52:10,179
+Let's try that.
+
+1354
+00:52:10,909 --> 00:52:16,699
+Thank you. Cool,
+
+1355
+00:52:16,840 --> 00:52:19,059
+so I get back 20 frames in the single
+
+1356
+00:52:19,059 --> 00:52:19,699
+video.
+
+1357
+00:52:19,958 --> 00:52:21,769
+I can expand this and see,
+
+1358
+00:52:22,159 --> 00:52:24,398
+uh, it ordered from most, uh, relevant
+
+1359
+00:52:24,398 --> 00:52:26,739
+to least relevant. So as you can see when we do a search,
+
+1360
+00:52:26,958 --> 00:52:29,110
+it pulls out things that are, uh,
+
+1361
+00:52:29,119 --> 00:52:31,239
+with the lowest score here, uh, that
+
+1362
+00:52:31,239 --> 00:52:33,239
+actually represent AWS. So the,
+
+1363
+00:52:33,360 --> 00:52:35,458
+the, uh, Claude was able to pull out,
+
+1364
+00:52:35,800 --> 00:52:37,300
+uh, the AWS text from here
+
+1365
+00:52:37,800 --> 00:52:40,030
+and if we look at some of these other ones we can see AWS
+
+1366
+00:52:40,030 --> 00:52:41,780
+is in the, the image here at the bottom.
+
+1367
+00:52:42,369 --> 00:52:44,769
+AWS is present here, so the most relevant
+
+1368
+00:52:44,769 --> 00:52:45,708
+results are,
+
+1369
+00:52:45,969 --> 00:52:46,590
+um,
+
+1370
+00:52:46,929 --> 00:52:48,050
+uh, come up first.
+
+1371
+00:52:48,750 --> 00:52:50,949
+We still haven't done the multimodal search,
+
+1372
+00:52:51,070 --> 00:52:53,389
+though that is, uh, basically the
+
+1373
+00:52:53,389 --> 00:52:55,429
+same thing, so we can
+
+1374
+00:52:55,429 --> 00:52:56,429
+copy and paste
+
+1375
+00:52:56,750 --> 00:52:58,829
+a lot of this except we're just going to
+
+1376
+00:52:58,829 --> 00:52:59,849
+be searching,
+
+1377
+00:53:00,429 --> 00:53:01,610
+uh, a different, and I could
+
+1378
+00:53:01,909 --> 00:53:04,148
+come up with a helper function here, but I'm not
+
+1379
+00:53:04,148 --> 00:53:05,110
+going to right now.
+
+1380
+00:53:05,590 --> 00:53:07,750
+So, uh, we will search the
+
+1381
+00:53:07,750 --> 00:53:10,429
+multimodal uh generate the multimodal embedding,
+
+1382
+00:53:11,110 --> 00:53:12,849
+pass in the image as well,
+
+1383
+00:53:13,668 --> 00:53:15,489
+change this to MM embedding.
+
+1384
+00:53:16,889 --> 00:53:17,809
+I think that's
+
+1385
+00:53:18,090 --> 00:53:20,168
+it. Um, we get the
+
+1386
+00:53:20,168 --> 00:53:22,489
+same details out, it's just a separate embedding.
+
+1387
+00:53:22,530 --> 00:53:24,418
+It's within the same index.
+
+1388
+00:53:26,409 --> 00:53:28,059
+Let's see what that does.
+
+1389
+00:53:30,550 --> 00:53:32,559
+And so now that opens up this
+
+1390
+00:53:32,559 --> 00:53:35,000
+other drop down search where I can do a multimodal
+
+1391
+00:53:35,000 --> 00:53:37,619
+search. This one I can pass in text or an image.
+
+1392
+00:53:38,079 --> 00:53:40,739
+Uh, I'm going to search now for an ogre
+
+1393
+00:53:40,958 --> 00:53:43,239
+because there is an ogre in this video or
+
+1394
+00:53:43,239 --> 00:53:44,300
+a monster of some sort.
+
+1395
+00:53:46,699 --> 00:53:48,769
+We can see if it shows up correctly. OK, we
+
+1396
+00:53:48,769 --> 00:53:50,199
+still got 20 frames
+
+1397
+00:53:50,539 --> 00:53:51,378
+and
+
+1398
+00:53:51,659 --> 00:53:53,800
+the top ones are of this.
+
+1399
+00:53:54,829 --> 00:53:56,949
+Monster that is uh in the AWS
+
+1400
+00:53:56,949 --> 00:53:59,128
+one and I could do a combination
+
+1401
+00:53:59,128 --> 00:54:01,780
+of that so I could, uh, you know, uh,
+
+1402
+00:54:01,789 --> 00:54:03,789
+search, let's let's see if I search AWS
+
+1403
+00:54:03,789 --> 00:54:04,329
+and
+
+1404
+00:54:04,869 --> 00:54:07,050
+Ogre it, it sort of interleaves them
+
+1405
+00:54:07,050 --> 00:54:09,329
+so because it's generating and embedding across both,
+
+1406
+00:54:09,349 --> 00:54:11,510
+uh, simultaneously so I can see things that
+
+1407
+00:54:11,510 --> 00:54:13,570
+are most relevant of the ogre and
+
+1408
+00:54:13,570 --> 00:54:14,769
+of AWS.
+
+1409
+00:54:17,750 --> 00:54:18,289
+Cool,
+
+1410
+00:54:18,739 --> 00:54:20,639
+uh, and
+
+1411
+00:54:20,949 --> 00:54:22,969
+I think that is everything that
+
+1412
+00:54:22,969 --> 00:54:25,750
+I wanted to demonstrate
+
+1413
+00:54:25,750 --> 00:54:27,750
+today. Uh, I wanted to talk, I
+
+1414
+00:54:27,750 --> 00:54:30,070
+say that this is an application that is,
+
+1415
+00:54:30,349 --> 00:54:32,809
+um, largely available online
+
+1416
+00:54:32,809 --> 00:54:35,168
+in the AWS Solutions library.
+
+1417
+00:54:35,539 --> 00:54:37,829
+Uh, the caveat being that this, uh, was originally
+
+1418
+00:54:37,829 --> 00:54:39,989
+developed for OpenSearch, so
+
+1419
+00:54:39,989 --> 00:54:41,869
+it doesn't work against Valy.
+
+1420
+00:54:42,188 --> 00:54:44,590
+Uh, the, the, the code that is
+
+1421
+00:54:44,590 --> 00:54:46,250
+running is against, um,
+
+1422
+00:54:46,590 --> 00:54:48,590
+uh, OpenSearch, but you can swap
+
+1423
+00:54:48,590 --> 00:54:49,550
+it out for,
+
+1424
+00:54:49,869 --> 00:54:52,054
+uh, for Valy, but it is a. And
+
+1425
+00:54:52,054 --> 00:54:54,083
+within AWS labs here you can
+
+1426
+00:54:54,083 --> 00:54:56,204
+do it's called guidance for media extraction
+
+1427
+00:54:56,204 --> 00:54:58,394
+and dynamic content policy framework.
+
+1428
+00:54:58,764 --> 00:55:01,003
+So it's a framework you can walk through, uh, in
+
+1429
+00:55:01,003 --> 00:55:03,054
+your own time as, uh,
+
+1430
+00:55:03,063 --> 00:55:04,905
+if you wanna understand more about how,
+
+1431
+00:55:05,405 --> 00:55:07,644
+uh, the entire ingestion pipeline works.
+
+1432
+00:55:08,590 --> 00:55:10,750
+Uh, and with that, I wanted
+
+1433
+00:55:10,750 --> 00:55:12,829
+to open it up to any questions that folks
+
+1434
+00:55:12,829 --> 00:55:14,918
+have. Uh,
+
+1435
+00:55:14,929 --> 00:55:16,628
+yes, so the services you ran.
+
+1436
+00:55:17,719 --> 00:55:18,789
+Expensive they bully you,
+
+1437
+00:55:19,519 --> 00:55:21,530
+um. You're putting it
+
+1438
+00:55:21,530 --> 00:55:22,349
+straight in the balcon.
+
+1439
+00:55:23,269 --> 00:55:25,389
+It makes sense to put it in the booking search and
+
+1440
+00:55:25,389 --> 00:55:26,510
+store the the weddings.
+
+1441
+00:55:30,340 --> 00:55:32,340
+Yeah, so the question is about cost like is this
+
+1442
+00:55:32,340 --> 00:55:34,260
+a cost efficient way to to do.
+
+1443
+00:55:35,398 --> 00:55:36,489
+But generally
+
+1444
+00:55:39,820 --> 00:55:41,820
+Uh, yeah, so that is a good point. So,
+
+1445
+00:55:41,898 --> 00:55:42,619
+uh, yeah,
+
+1446
+00:55:42,969 --> 00:55:45,019
+the elastic cash, the, the information there
+
+1447
+00:55:45,019 --> 00:55:47,179
+is ephemeral. So in this particular
+
+1448
+00:55:47,179 --> 00:55:49,300
+case where you want, uh, something
+
+1449
+00:55:49,300 --> 00:55:51,449
+long lasting, you're right, uh, I think
+
+1450
+00:55:51,449 --> 00:55:53,699
+a, a durable database would be a better
+
+1451
+00:55:53,699 --> 00:55:55,739
+fit for this
+
+1452
+00:55:55,739 --> 00:55:56,739
+particular use case,
+
+1453
+00:55:57,059 --> 00:55:59,369
+uh, which is why something that's real time where you're actually.
+
+1454
+00:55:59,503 --> 00:56:01,675
+Doing like say security analysis or something
+
+1455
+00:56:01,675 --> 00:56:03,784
+where the information is more ephemeral, you want to
+
+1456
+00:56:03,784 --> 00:56:04,603
+look for
+
+1457
+00:56:05,503 --> 00:56:06,445
+particular threats
+
+1458
+00:56:06,864 --> 00:56:08,985
+and then you don't really care that you
+
+1459
+00:56:08,985 --> 00:56:10,985
+age it out or set a TTL that would
+
+1460
+00:56:10,985 --> 00:56:13,925
+be a better use case for
+
+1461
+00:56:13,985 --> 00:56:16,625
+the vector search on elastic
+
+1462
+00:56:16,625 --> 00:56:17,485
+elastic ash.
+
+1463
+00:56:20,708 --> 00:56:23,010
+You support So
+
+1464
+00:56:23,010 --> 00:56:25,128
+you can store you could store the embeddings in
+
+1465
+00:56:25,128 --> 00:56:27,369
+something like Dynamo which doesn't
+
+1466
+00:56:27,369 --> 00:56:29,409
+have a, a vector search capability and
+
+1467
+00:56:29,409 --> 00:56:31,449
+then you could um do
+
+1468
+00:56:31,449 --> 00:56:33,570
+the uh transition it into
+
+1469
+00:56:33,570 --> 00:56:35,769
+Valy if it's just a uh you know, a core working
+
+1470
+00:56:35,769 --> 00:56:37,789
+set so that you could have it be, uh,
+
+1471
+00:56:37,800 --> 00:56:39,820
+easily searchable uh. Then age
+
+1472
+00:56:39,820 --> 00:56:41,978
+things out. That is uh one way to do it. Like
+
+1473
+00:56:41,978 --> 00:56:44,039
+we could set TTLs on all of these JSON
+
+1474
+00:56:44,039 --> 00:56:45,639
+documents and have them be
+
+1475
+00:56:45,898 --> 00:56:47,688
+removed after some period of time,
+
+1476
+00:56:48,030 --> 00:56:50,300
+uh, and so it just but still, uh, mastered
+
+1477
+00:56:50,300 --> 00:56:52,340
+in another durable database that,
+
+1478
+00:56:52,349 --> 00:56:54,478
+that is, um, a pattern that
+
+1479
+00:56:54,489 --> 00:56:55,599
+that we see customers use.
+
+1480
+00:56:58,789 --> 00:57:00,760
+This question in the back.
+
+1481
+00:57:01,289 --> 00:57:03,349
+Let's, yeah. Is it possible to get your
+
+1482
+00:57:03,349 --> 00:57:05,369
+code the way that you implemented this
+
+1483
+00:57:05,369 --> 00:57:07,438
+through GitHub? The content
+
+1484
+00:57:07,438 --> 00:57:08,978
+of of the uh the Valy,
+
+1485
+00:57:09,559 --> 00:57:10,668
+uh, for the Valky,
+
+1486
+00:57:10,958 --> 00:57:13,159
+uh, it, it, it's not currently available.
+
+1487
+00:57:13,199 --> 00:57:15,519
+I think we could look into making the, the Valky,
+
+1488
+00:57:15,559 --> 00:57:17,619
+um, parts itself, um,
+
+1489
+00:57:17,958 --> 00:57:19,958
+available if you wanna come. I, I can chat
+
+1490
+00:57:19,958 --> 00:57:22,110
+with you afterwards and, and, uh, work, work,
+
+1491
+00:57:22,159 --> 00:57:23,789
+work with you to get, get the information to you.
+
+1492
+00:57:24,079 --> 00:57:27,789
+Thank you. Another
+
+1493
+00:57:27,789 --> 00:57:29,119
+question over here in the.
+
+1494
+00:57:31,269 --> 00:57:31,869
+question, but I'm
+
+1495
+00:57:32,820 --> 00:57:35,269
+I'm like generally confused about um.
+
+1496
+00:57:35,978 --> 00:57:38,300
+Using embedding caches because
+
+1497
+00:57:38,300 --> 00:57:40,059
+you're gonna get cash hits all the time.
+
+1498
+00:57:40,699 --> 00:57:42,750
+Um, and then you won't end
+
+1499
+00:57:42,750 --> 00:57:44,648
+up searching your durable storage.
+
+1500
+00:57:46,320 --> 00:57:48,659
+So in this case we're using uh Elasticash
+
+1501
+00:57:48,659 --> 00:57:50,949
+as our uh our our primary
+
+1502
+00:57:50,949 --> 00:57:53,000
+vector database. So in, in this case, uh
+
+1503
+00:57:53,000 --> 00:57:55,239
+there is no other vector database in the picture.
+
+1504
+00:57:55,280 --> 00:57:57,559
+We've replaced OpenSearch or, you know,
+
+1505
+00:57:57,840 --> 00:57:59,090
+post uh
+
+1506
+00:57:59,418 --> 00:58:01,639
+Postress with uh Elastic Cash
+
+1507
+00:58:01,639 --> 00:58:02,219
+entirely.
+
+1508
+00:58:02,918 --> 00:58:04,369
+So you will get cash hits anytime,
+
+1509
+00:58:04,989 --> 00:58:06,119
+uh, there is a a relevant.
+
+1510
+00:58:06,445 --> 00:58:07,063
+Match
+
+1511
+00:58:07,684 --> 00:58:09,894
+is the question about how you would use Elastic cash
+
+1512
+00:58:09,894 --> 00:58:12,043
+as a vector database in front of like another vector database that's
+
+1513
+00:58:12,043 --> 00:58:12,914
+your durable store.
+
+1514
+00:58:13,244 --> 00:58:15,494
+Yeah, so you could do that as well, right? You can do a cert
+
+1515
+00:58:15,494 --> 00:58:17,603
+in this case we could just have, oh, you know, a
+
+1516
+00:58:17,603 --> 00:58:19,715
+hot working set here, uh, but it
+
+1517
+00:58:19,715 --> 00:58:21,724
+would require us to, you know, if
+
+1518
+00:58:21,724 --> 00:58:23,625
+there's a miss we might need to fall back
+
+1519
+00:58:24,083 --> 00:58:26,083
+to the database. So it, it would front.
+
+1520
+00:58:26,320 --> 00:58:27,079
+Um,
+
+1521
+00:58:27,639 --> 00:58:29,869
+the, the, uh, cash hits
+
+1522
+00:58:29,869 --> 00:58:31,909
+but not necessarily cash misses where
+
+1523
+00:58:31,909 --> 00:58:34,188
+you would then, uh, need to go fall back and
+
+1524
+00:58:34,188 --> 00:58:35,849
+perhaps bring that vector into,
+
+1525
+00:58:36,349 --> 00:58:38,590
+um, the, uh, Valy
+
+1526
+00:58:38,590 --> 00:58:40,789
+so you could do a similar pattern as like a look aside
+
+1527
+00:58:40,789 --> 00:58:41,349
+cash
+
+1528
+00:58:41,668 --> 00:58:43,989
+without vectors. Uh, you would just have
+
+1529
+00:58:43,989 --> 00:58:46,110
+that two layer cash for for the vector
+
+1530
+00:58:46,110 --> 00:58:48,449
+search, but there could be like a much.
+
+1531
+00:58:49,139 --> 00:58:51,519
+Close, uh, more similar vector in your durable
+
+1532
+00:58:51,519 --> 00:58:53,519
+storage that you just wouldn't hit because there's
+
+1533
+00:58:53,519 --> 00:58:54,398
+something in your cash.
+
+1534
+00:58:54,688 --> 00:58:56,760
+Yeah, so it, it depends on that's where like
+
+1535
+00:58:56,760 --> 00:58:59,239
+the score thresholding is important. You're right, you might not get the
+
+1536
+00:58:59,239 --> 00:59:01,320
+most relevant results, uh, if
+
+1537
+00:59:01,320 --> 00:59:03,610
+you have just a subset of the vectors in
+
+1538
+00:59:03,918 --> 00:59:05,280
+inside your, your Valy,
+
+1539
+00:59:05,550 --> 00:59:07,559
+uh, cash and the rest in the.
+
+1540
+00:59:07,695 --> 00:59:08,554
+Durable storage,
+
+1541
+00:59:09,014 --> 00:59:11,434
+uh, but they might be good enough, um,
+
+1542
+00:59:11,934 --> 00:59:13,934
+it works, I think, best if you have the
+
+1543
+00:59:13,934 --> 00:59:16,144
+entirety in here because then you can get the most relevant
+
+1544
+00:59:16,144 --> 00:59:18,175
+results and that's what we see a lot of customers
+
+1545
+00:59:18,175 --> 00:59:20,333
+doing is, um, storing all of their,
+
+1546
+00:59:20,445 --> 00:59:22,753
+their vector data in here. It's just that you have to handle
+
+1547
+00:59:22,753 --> 00:59:24,773
+the, the, the ephemeral nature of it when
+
+1548
+00:59:24,773 --> 00:59:25,333
+you do that.
+
+1549
+00:59:25,773 --> 00:59:26,494
+OK, thank you.
+
+1550
+00:59:30,869 --> 00:59:31,389
+Cool.
+
+1551
+00:59:32,458 --> 00:59:34,458
+Thank you, and I'll take other questions, uh,
+
+1552
+00:59:34,539 --> 00:59:36,820
+offline, uh,
+
+1553
+00:59:37,119 --> 00:59:38,840
+that will be around outside. Thank you so much.
+

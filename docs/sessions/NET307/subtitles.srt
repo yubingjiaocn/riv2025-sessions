@@ -1,0 +1,5495 @@
+1
+00:00:00,230 --> 00:00:01,380
+- So good morning everyone.
+
+2
+00:00:01,380 --> 00:00:02,780
+Thanks for joining us today.
+
+3
+00:00:05,040 --> 00:00:05,873
+For this session,
+
+4
+00:00:05,873 --> 00:00:07,680
+we're gonna be predominantly talking about
+
+5
+00:00:07,680 --> 00:00:08,853
+streaming at scale,
+
+6
+00:00:09,941 --> 00:00:12,390
+and focusing really on Amazon CloudFront
+
+7
+00:00:12,390 --> 00:00:14,070
+to do that delivery.
+
+8
+00:00:14,070 --> 00:00:15,270
+So my name's Jamie Mullan,
+
+9
+00:00:15,270 --> 00:00:17,667
+I'm a specialist solutions
+architect here at AWS.
+
+10
+00:00:17,667 --> 00:00:19,860
+And I'm joined buying my
+colleague John Councilman,
+
+11
+00:00:19,860 --> 00:00:22,811
+who is also another specialist
+solutions architect.
+
+12
+00:00:22,811 --> 00:00:26,190
+And with Jes Palmer, who is from NESN
+
+13
+00:00:26,190 --> 00:00:28,490
+to talk about what scale
+really means to them.
+
+14
+00:00:29,370 --> 00:00:31,140
+So we're gonna be
+thinking about, you know,
+
+15
+00:00:31,140 --> 00:00:32,310
+those live scale...
+
+16
+00:00:32,310 --> 00:00:33,810
+Large scale events, sorry.
+
+17
+00:00:33,810 --> 00:00:35,400
+Those critical events
+
+18
+00:00:35,400 --> 00:00:37,800
+that just must be delivered
+without any issues.
+
+19
+00:00:37,800 --> 00:00:42,360
+And also those events with
+many, many viewers globally.
+
+20
+00:00:42,360 --> 00:00:43,410
+But it's easy, right?
+
+21
+00:00:44,430 --> 00:00:45,880
+You have a contribution feed,
+
+22
+00:00:46,860 --> 00:00:48,180
+you do some processing on it,
+
+23
+00:00:48,180 --> 00:00:51,720
+and it just goes to a viewer.
+
+24
+00:00:51,720 --> 00:00:52,553
+That's it.
+
+25
+00:00:52,553 --> 00:00:54,690
+What else do you really need? (laughing)
+
+26
+00:00:54,690 --> 00:00:57,300
+Well, it is a little bit
+more complicated than that.
+
+27
+00:00:57,300 --> 00:00:58,590
+And we're gonna look at,
+
+28
+00:00:58,590 --> 00:01:00,360
+you know, some of those design decisions
+
+29
+00:01:00,360 --> 00:01:03,783
+that kind of help you
+influence that delivery.
+
+30
+00:01:04,890 --> 00:01:07,860
+But scale can mean different
+things to different customers.
+
+31
+00:01:07,860 --> 00:01:10,890
+For example, it could be
+millions of concurrent viewers
+
+32
+00:01:10,890 --> 00:01:14,130
+or it could be billions
+of minutes consumed.
+
+33
+00:01:14,130 --> 00:01:15,810
+But no matter the scale,
+
+34
+00:01:15,810 --> 00:01:18,360
+we frequently get asked by customers
+
+35
+00:01:18,360 --> 00:01:20,670
+like, how do I monitor my distribution?
+
+36
+00:01:20,670 --> 00:01:22,920
+How do I protect my content at the edge?
+
+37
+00:01:22,920 --> 00:01:25,050
+How do I scale to that global audience
+
+38
+00:01:25,050 --> 00:01:26,520
+with that high uptime?
+
+39
+00:01:26,520 --> 00:01:29,223
+And finally, can I
+monetize that live content?
+
+40
+00:01:30,090 --> 00:01:31,170
+You might be wondering,
+
+41
+00:01:31,170 --> 00:01:33,600
+like what architectural
+decisions do I need to make
+
+42
+00:01:33,600 --> 00:01:36,159
+to make sure an event is successful?
+
+43
+00:01:36,159 --> 00:01:39,600
+Glad to say you're in the
+right session this morning.
+
+44
+00:01:39,600 --> 00:01:42,045
+But what happens if we get our
+job wrong as video architects
+
+45
+00:01:42,045 --> 00:01:46,170
+or solutions architects
+and video engineers?
+
+46
+00:01:46,170 --> 00:01:48,780
+Well, viewers might get pixelation,
+
+47
+00:01:48,780 --> 00:01:50,340
+degraded viewer experience,
+
+48
+00:01:50,340 --> 00:01:54,886
+and/or arguably, my personal
+most frustrating experience
+
+49
+00:01:54,886 --> 00:01:56,523
+is that spinning buffer wheel.
+
+50
+00:01:58,830 --> 00:02:00,060
+So we're gonna be focused predominantly
+
+51
+00:02:00,060 --> 00:02:02,730
+on delivering content through
+Amazon CloudFront today.
+
+52
+00:02:02,730 --> 00:02:03,563
+If you don't know,
+
+53
+00:02:03,563 --> 00:02:06,540
+CloudFront is our content
+delivery network, or CDN.
+
+54
+00:02:06,540 --> 00:02:08,460
+CloudFront is a large global network
+
+55
+00:02:08,460 --> 00:02:11,400
+with over 750 edge locations.
+
+56
+00:02:11,400 --> 00:02:12,420
+All the edge locations
+
+57
+00:02:12,420 --> 00:02:15,480
+are connected over a
+redundant and private backbone
+
+58
+00:02:15,480 --> 00:02:17,970
+back to AWS regions.
+
+59
+00:02:17,970 --> 00:02:20,640
+And CloudFront can be used to accelerate
+
+60
+00:02:20,640 --> 00:02:22,470
+applications of all types,
+
+61
+00:02:22,470 --> 00:02:26,133
+whether that's static assets
+like video files, image files,
+
+62
+00:02:26,970 --> 00:02:28,890
+CSS, JavaScript.
+
+63
+00:02:28,890 --> 00:02:31,050
+And they can be cached in edge locations,
+
+64
+00:02:31,050 --> 00:02:33,993
+and delivered really
+closer to those end users.
+
+65
+00:02:36,300 --> 00:02:37,260
+CloudFront could also be used
+
+66
+00:02:37,260 --> 00:02:39,243
+for dynamic traffic requests too.
+
+67
+00:02:41,730 --> 00:02:43,260
+So the talk is gonna kind of revolve
+
+68
+00:02:43,260 --> 00:02:45,720
+around this steel thread
+architecture today.
+
+69
+00:02:45,720 --> 00:02:47,930
+And we're gonna look at
+different design decisions
+
+70
+00:02:47,930 --> 00:02:49,980
+throughout the workflow.
+
+71
+00:02:49,980 --> 00:02:52,242
+Advanced warnings toward the
+video folk in the audience,
+
+72
+00:02:52,242 --> 00:02:54,633
+we're gonna start downstream this time.
+
+73
+00:02:55,590 --> 00:02:58,680
+So first off, we're
+gonna look at delivery.
+
+74
+00:02:58,680 --> 00:03:01,110
+You know, some OTT providers
+
+75
+00:03:01,110 --> 00:03:02,460
+deliver these streams for a cost,
+
+76
+00:03:02,460 --> 00:03:04,710
+whether that's subscription
+or pay-per-view.
+
+77
+00:03:04,710 --> 00:03:07,098
+So you naturally care
+about, you know, security,
+
+78
+00:03:07,098 --> 00:03:08,763
+protecting their content.
+
+79
+00:03:10,440 --> 00:03:13,230
+Next we're gonna look
+at encode origination.
+
+80
+00:03:13,230 --> 00:03:16,980
+So for big events or big
+sporting events in particular,
+
+81
+00:03:16,980 --> 00:03:19,560
+this is really, really
+critical and important.
+
+82
+00:03:19,560 --> 00:03:20,970
+You want to design your workflow
+
+83
+00:03:20,970 --> 00:03:24,060
+to ensure the event is
+successfully delivered...
+
+84
+00:03:24,060 --> 00:03:25,560
+Delivered successfully, sorry.
+
+85
+00:03:26,850 --> 00:03:29,070
+And then finally, we're
+gonna look at ingest.
+
+86
+00:03:29,070 --> 00:03:32,592
+Simply put, if you have no
+feed, you have no event, right?
+
+87
+00:03:32,592 --> 00:03:35,130
+So we'll explore different ways
+
+88
+00:03:35,130 --> 00:03:37,173
+to make ingest more reliable.
+
+89
+00:03:38,130 --> 00:03:39,780
+But the first thing that
+we're gonna kick off with
+
+90
+00:03:39,780 --> 00:03:40,800
+is monitoring.
+
+91
+00:03:40,800 --> 00:03:42,600
+And I ask that question,
+
+92
+00:03:42,600 --> 00:03:43,560
+how do we know
+
+93
+00:03:43,560 --> 00:03:46,623
+we're actually delivering
+that event successfully?
+
+94
+00:03:49,230 --> 00:03:50,280
+- Okay, thanks Jamie.
+
+95
+00:03:51,916 --> 00:03:54,147
+My name is John Councilman.
+
+96
+00:03:54,147 --> 00:03:55,897
+I'm a solutions architect with AWS.
+
+97
+00:03:56,910 --> 00:04:00,150
+And we wanna look at how can we gauge
+
+98
+00:04:00,150 --> 00:04:02,720
+whether our live event was successful.
+
+99
+00:04:02,720 --> 00:04:03,810
+As you can see here,
+
+100
+00:04:03,810 --> 00:04:07,200
+there's a lot of data available
+to us from our platform.
+
+101
+00:04:07,200 --> 00:04:09,990
+Things like exit errors, video
+start failures, rebuffering.
+
+102
+00:04:09,990 --> 00:04:12,330
+A lot of this stuff either
+comes from the client itself,
+
+103
+00:04:12,330 --> 00:04:13,530
+the video player,
+
+104
+00:04:13,530 --> 00:04:15,690
+or it's coming from CloudFront.
+
+105
+00:04:15,690 --> 00:04:19,451
+So this might be presented as logs,
+
+106
+00:04:19,451 --> 00:04:21,150
+it might be beacons.
+
+107
+00:04:21,150 --> 00:04:22,500
+It's coming from a lot
+of different directions.
+
+108
+00:04:22,500 --> 00:04:25,680
+We have a lot of data, which
+is good, but it's also bad.
+
+109
+00:04:25,680 --> 00:04:28,170
+We have a lot of data, how
+do we deal with it all?
+
+110
+00:04:28,170 --> 00:04:31,170
+So we're gonna look into
+some features on CloudFront
+
+111
+00:04:31,170 --> 00:04:33,420
+and some other AWS services
+
+112
+00:04:33,420 --> 00:04:36,263
+to see how we can actually
+make sense of everything here.
+
+113
+00:04:38,070 --> 00:04:41,550
+So first off, every event needs good data.
+
+114
+00:04:41,550 --> 00:04:42,900
+We need a dashboard,
+
+115
+00:04:42,900 --> 00:04:45,060
+we need real time access to logs,
+
+116
+00:04:45,060 --> 00:04:49,470
+and we need to be able to
+analyze the event after the fact.
+
+117
+00:04:49,470 --> 00:04:51,351
+So first off, with metrics,
+
+118
+00:04:51,351 --> 00:04:56,351
+CloudFront actually uses
+CloudWatch to deliver metrics.
+
+119
+00:04:56,940 --> 00:04:59,943
+So I like to use CloudWatch dashboards,
+
+120
+00:05:01,500 --> 00:05:04,530
+kind of I compare it to an
+actual dashboard like on my car.
+
+121
+00:05:04,530 --> 00:05:06,780
+When we go camping, we
+actually pull a trailer.
+
+122
+00:05:06,780 --> 00:05:09,750
+And I'm constantly looking at
+two gauges on my dashboard.
+
+123
+00:05:09,750 --> 00:05:10,980
+I'm looking at the fuel level
+
+124
+00:05:10,980 --> 00:05:13,380
+because I'm getting like five
+miles per gallon on my car,
+
+125
+00:05:13,380 --> 00:05:15,990
+and I'm also looking at the
+transmission temperature.
+
+126
+00:05:15,990 --> 00:05:16,980
+So if there's an issue,
+
+127
+00:05:16,980 --> 00:05:18,540
+'cause I don't normally
+pull a camper every day,
+
+128
+00:05:18,540 --> 00:05:20,460
+I know exactly what to look at.
+
+129
+00:05:20,460 --> 00:05:21,540
+I know if it gets too hot,
+
+130
+00:05:21,540 --> 00:05:22,860
+I don't need to put gas in the car,
+
+131
+00:05:22,860 --> 00:05:26,100
+it's actually the transmission
+I need to pull over.
+
+132
+00:05:26,100 --> 00:05:28,495
+So the same is true for a streaming event.
+
+133
+00:05:28,495 --> 00:05:30,750
+Most of these only last a few hours.
+
+134
+00:05:30,750 --> 00:05:32,880
+In the case of like a sports event,
+
+135
+00:05:32,880 --> 00:05:33,840
+we need to know right away
+
+136
+00:05:33,840 --> 00:05:35,820
+whether we have a problem with an origin,
+
+137
+00:05:35,820 --> 00:05:36,780
+whether it's CloudFront
+
+138
+00:05:36,780 --> 00:05:39,210
+or if we're using something
+like DRM or advertising,
+
+139
+00:05:39,210 --> 00:05:41,520
+whether there's a problem with
+that affecting our stream.
+
+140
+00:05:41,520 --> 00:05:43,320
+So dashboards are the
+first line of defense,
+
+141
+00:05:43,320 --> 00:05:45,670
+so we know where to look,
+where to dive deeper.
+
+142
+00:05:46,740 --> 00:05:48,290
+Just speaking of diving deeper,
+
+143
+00:05:49,710 --> 00:05:52,080
+CloudFront, it supports
+real time access logs.
+
+144
+00:05:52,080 --> 00:05:53,130
+And as you can see here,
+
+145
+00:05:53,130 --> 00:05:56,040
+it actually uses Amazon
+Kinesis to deliver this.
+
+146
+00:05:56,040 --> 00:05:58,660
+It's delivering realtime
+logs for millions of viewers,
+
+147
+00:05:58,660 --> 00:06:00,420
+which is extremely difficult.
+
+148
+00:06:00,420 --> 00:06:03,120
+Kinesis is designed exactly for this.
+
+149
+00:06:03,120 --> 00:06:06,000
+So when you configure
+realtime logs in CloudFront,
+
+150
+00:06:06,000 --> 00:06:07,590
+it's gonna ask for a Kinesis endpoint.
+
+151
+00:06:07,590 --> 00:06:09,090
+And the nice thing about Kinesis
+
+152
+00:06:09,090 --> 00:06:11,070
+is you can have multiple consumers
+
+153
+00:06:11,070 --> 00:06:13,230
+pulling that data in parallel.
+
+154
+00:06:13,230 --> 00:06:15,570
+So we can have realtime dashboards,
+
+155
+00:06:15,570 --> 00:06:20,570
+we can have observability
+platforms, analytics platforms.
+
+156
+00:06:21,246 --> 00:06:24,270
+We can also share this data
+in real time with partners,
+
+157
+00:06:24,270 --> 00:06:26,250
+whether they're looking
+at viewership in real time
+
+158
+00:06:26,250 --> 00:06:28,770
+or they're looking at advertising data
+
+159
+00:06:28,770 --> 00:06:31,500
+and they need that
+information in real time.
+
+160
+00:06:31,500 --> 00:06:33,180
+So then with this real time data,
+
+161
+00:06:33,180 --> 00:06:35,700
+we can see issues before
+they become a big problem
+
+162
+00:06:35,700 --> 00:06:36,570
+and react to it.
+
+163
+00:06:36,570 --> 00:06:38,649
+And we can adjust our platform
+in real time as needed
+
+164
+00:06:38,649 --> 00:06:40,803
+to handle these largest events.
+
+165
+00:06:42,570 --> 00:06:44,887
+Then lastly, access logs.
+
+166
+00:06:44,887 --> 00:06:47,237
+These are stored in batches on S3.
+
+167
+00:06:47,237 --> 00:06:50,523
+As you can see here, the delay
+is usually in the minutes.
+
+168
+00:06:52,530 --> 00:06:54,810
+Nice thing about S3 is we can...
+
+169
+00:06:54,810 --> 00:06:56,220
+We can tie Athena into it
+
+170
+00:06:56,220 --> 00:06:59,130
+so we can query all these
+logs using standard SQL.
+
+171
+00:06:59,130 --> 00:07:01,530
+And we can set life
+cycles on the S3 bucket.
+
+172
+00:07:01,530 --> 00:07:05,490
+So we can have events from
+weeks or even years ago
+
+173
+00:07:05,490 --> 00:07:07,078
+stored in archival.
+
+174
+00:07:07,078 --> 00:07:10,710
+So we can compare this previous event
+
+175
+00:07:10,710 --> 00:07:13,620
+to one that we did, you know,
+maybe a week or a month ago,
+
+176
+00:07:13,620 --> 00:07:14,940
+and see how we've improved
+
+177
+00:07:14,940 --> 00:07:17,250
+and find out lessons learned.
+
+178
+00:07:17,250 --> 00:07:19,080
+We can do some
+troubleshooting after the fact
+
+179
+00:07:19,080 --> 00:07:21,380
+and we can pull reporting
+easily using Athena.
+
+180
+00:07:23,190 --> 00:07:25,261
+And then lastly, console reports.
+
+181
+00:07:25,261 --> 00:07:28,140
+This is in the CloudFront console
+
+182
+00:07:28,140 --> 00:07:29,610
+and is useful for just, you know,
+
+183
+00:07:29,610 --> 00:07:31,321
+figuring out trends, viewership,
+
+184
+00:07:31,321 --> 00:07:35,490
+cache fill ratio between
+events and monthly reports.
+
+185
+00:07:35,490 --> 00:07:37,240
+So that's always available as well.
+
+186
+00:07:39,180 --> 00:07:40,530
+Okay.
+
+187
+00:07:40,530 --> 00:07:44,379
+Next, I spoke a lot about
+CloudFront and its logs.
+
+188
+00:07:44,379 --> 00:07:46,770
+But typically CloudFront only has access
+
+189
+00:07:46,770 --> 00:07:50,639
+to things that are in the
+HTTP header or geo information
+
+190
+00:07:50,639 --> 00:07:53,340
+such as the user agent,
+
+191
+00:07:53,340 --> 00:07:55,827
+the client's IP address,
+maybe the geo region,
+
+192
+00:07:55,827 --> 00:07:58,050
+the ASN, cache status.
+
+193
+00:07:58,050 --> 00:07:59,880
+And this has always been logged,
+
+194
+00:07:59,880 --> 00:08:02,940
+whether it's in real time
+logs or in the S3 logs.
+
+195
+00:08:02,940 --> 00:08:05,610
+But I mentioned earlier about the client.
+
+196
+00:08:05,610 --> 00:08:08,729
+The client has a lot of
+really valuable information
+
+197
+00:08:08,729 --> 00:08:10,650
+such as like the throughput.
+
+198
+00:08:10,650 --> 00:08:15,650
+The client being the player
+like dash.js or hls.js,
+
+199
+00:08:16,140 --> 00:08:17,790
+it's making decisions
+
+200
+00:08:17,790 --> 00:08:19,800
+about which video bit rate to pull
+
+201
+00:08:19,800 --> 00:08:24,060
+based on what it knows your
+home internet bandwidth is.
+
+202
+00:08:24,060 --> 00:08:25,564
+And having that kind of information
+
+203
+00:08:25,564 --> 00:08:27,720
+along with session ID and content ID
+
+204
+00:08:27,720 --> 00:08:31,230
+is extremely valuable for
+figuring out what's going on.
+
+205
+00:08:31,230 --> 00:08:34,062
+But in the past, this
+information was only available
+
+206
+00:08:34,062 --> 00:08:36,900
+using like SDKs from third parties,
+
+207
+00:08:36,900 --> 00:08:40,350
+and it was sending it using
+beacons to some other platform.
+
+208
+00:08:40,350 --> 00:08:43,710
+So you had CloudFront or
+CDN logs in one bucket,
+
+209
+00:08:43,710 --> 00:08:46,170
+then you had all the player
+information in another bucket,
+
+210
+00:08:46,170 --> 00:08:48,330
+and really no way to tie the two together.
+
+211
+00:08:48,330 --> 00:08:51,509
+And trust me it's extremely
+difficult to do that.
+
+212
+00:08:51,509 --> 00:08:53,550
+It can be done but it's not easy.
+
+213
+00:08:53,550 --> 00:08:54,510
+But what if there were a way
+
+214
+00:08:54,510 --> 00:08:56,970
+to combine all this client information
+
+215
+00:08:56,970 --> 00:08:59,814
+such as you know, the bit rate
+being used, the session ID,
+
+216
+00:08:59,814 --> 00:09:01,135
+which rendition,
+
+217
+00:09:01,135 --> 00:09:04,230
+whether it's HD or standard
+definition content,
+
+218
+00:09:04,230 --> 00:09:07,320
+and combine that with all the information
+
+219
+00:09:07,320 --> 00:09:08,460
+that CloudFront knows about,
+
+220
+00:09:08,460 --> 00:09:13,050
+such as HTTP headers, you
+know, user agent IP address.
+
+221
+00:09:13,050 --> 00:09:16,320
+And that's exactly what CMCD,
+Common Media Client Data
+
+222
+00:09:16,320 --> 00:09:17,153
+attempts to solve.
+
+223
+00:09:17,153 --> 00:09:20,520
+It's actually a standard now
+that was created by CTA Wave,
+
+224
+00:09:20,520 --> 00:09:22,050
+which has created a lot of other standards
+
+225
+00:09:22,050 --> 00:09:23,910
+that Jamie's gonna talk about later,
+
+226
+00:09:23,910 --> 00:09:26,010
+that pretty much all CDNs adhere to
+
+227
+00:09:26,010 --> 00:09:28,110
+and the players know about.
+
+228
+00:09:28,110 --> 00:09:30,378
+So using CMCD, all this information...
+
+229
+00:09:30,378 --> 00:09:32,520
+(audience applauds)
+
+230
+00:09:32,520 --> 00:09:34,740
+All this information is
+kept in the same log line.
+
+231
+00:09:34,740 --> 00:09:36,900
+So all this content ID, session ID,
+
+232
+00:09:36,900 --> 00:09:39,870
+is transmitted as query
+strings or headers to the CDN.
+
+233
+00:09:39,870 --> 00:09:40,980
+And since it's standardized,
+
+234
+00:09:40,980 --> 00:09:43,020
+we know what to do with it already.
+
+235
+00:09:43,020 --> 00:09:44,449
+And a lot of partners
+
+236
+00:09:44,449 --> 00:09:46,305
+that you might be using
+for a monitoring platform
+
+237
+00:09:46,305 --> 00:09:48,333
+already know how to deal with CMCD.
+
+238
+00:09:51,300 --> 00:09:54,543
+So CloudFront has supported
+CMCD for quite a while.
+
+239
+00:09:55,830 --> 00:09:57,012
+If you look here on the left,
+
+240
+00:09:57,012 --> 00:09:59,430
+this is a realtime log configuration.
+
+241
+00:09:59,430 --> 00:10:01,170
+You can see here, we
+have additional fields
+
+242
+00:10:01,170 --> 00:10:03,150
+that are standard CMCD fields.
+
+243
+00:10:03,150 --> 00:10:05,340
+They're all prefixed with CMCD.
+
+244
+00:10:05,340 --> 00:10:07,920
+And you can just choose
+some of them or all of them
+
+245
+00:10:07,920 --> 00:10:09,660
+depending on what your client's sending.
+
+246
+00:10:09,660 --> 00:10:12,572
+And all this information will
+be added to the realtime logs
+
+247
+00:10:12,572 --> 00:10:14,730
+that we're sending through to Kinesis.
+
+248
+00:10:14,730 --> 00:10:16,599
+And again, a lot of partners
+already support this
+
+249
+00:10:16,599 --> 00:10:18,930
+on their logging platforms.
+
+250
+00:10:18,930 --> 00:10:20,880
+And we actually have a reference sample
+
+251
+00:10:20,880 --> 00:10:21,713
+that already knows
+
+252
+00:10:21,713 --> 00:10:23,160
+how to deal with this
+additional information
+
+253
+00:10:23,160 --> 00:10:24,090
+in the log lines.
+
+254
+00:10:24,090 --> 00:10:25,840
+And it has a realtime dashboard
+
+255
+00:10:26,760 --> 00:10:28,448
+that actually refreshes in real time
+
+256
+00:10:28,448 --> 00:10:29,640
+based on all this data
+
+257
+00:10:29,640 --> 00:10:31,080
+to show exactly what's happening
+
+258
+00:10:31,080 --> 00:10:33,810
+with the client and with the CDN.
+
+259
+00:10:33,810 --> 00:10:35,850
+So you can scan the QR code here
+
+260
+00:10:35,850 --> 00:10:38,023
+or just search for the video observability
+
+261
+00:10:38,023 --> 00:10:40,170
+with CMCD and CloudFront,
+
+262
+00:10:40,170 --> 00:10:41,850
+and try it out on your own distribution
+
+263
+00:10:41,850 --> 00:10:44,493
+being a reference sample
+that's free to use,
+
+264
+00:10:45,870 --> 00:10:48,070
+and you can edit it at
+Willow's open source.
+
+265
+00:10:49,109 --> 00:10:49,942
+(coughs)
+
+266
+00:10:49,942 --> 00:10:50,775
+Excuse me.
+
+267
+00:10:50,775 --> 00:10:51,608
+So it is easy.
+
+268
+00:10:51,608 --> 00:10:52,530
+CMCD is easy.
+
+269
+00:10:52,530 --> 00:10:55,530
+Again, you saw it on the realtime logs.
+
+270
+00:10:55,530 --> 00:10:57,261
+In CloudFront, it's just
+adding those additional fills
+
+271
+00:10:57,261 --> 00:10:59,220
+and having a consumer dashboard
+
+272
+00:10:59,220 --> 00:11:01,200
+that knows how to access it.
+
+273
+00:11:01,200 --> 00:11:02,160
+This is an example
+
+274
+00:11:02,160 --> 00:11:05,010
+on some of the players
+you might be using today.
+
+275
+00:11:05,010 --> 00:11:06,900
+These are two popular open source players,
+
+276
+00:11:06,900 --> 00:11:09,780
+hls.js and dash.js.
+
+277
+00:11:09,780 --> 00:11:11,343
+And as you can see here,
+
+278
+00:11:12,270 --> 00:11:13,220
+configuring CMCD
+
+279
+00:11:13,220 --> 00:11:16,560
+is just a matter of adding
+a few more key value pairs
+
+280
+00:11:16,560 --> 00:11:19,380
+when you instantiate your player.
+
+281
+00:11:19,380 --> 00:11:20,910
+In the case of hls.js,
+
+282
+00:11:20,910 --> 00:11:22,833
+which is one I'm very familiar with,
+
+283
+00:11:22,833 --> 00:11:25,350
+it's just a CMCD structure.
+
+284
+00:11:25,350 --> 00:11:27,840
+But notice specifically on the left,
+
+285
+00:11:27,840 --> 00:11:29,040
+we have a session ID now.
+
+286
+00:11:29,040 --> 00:11:34,040
+That's actually a common
+or standard CMCD field,
+
+287
+00:11:34,230 --> 00:11:35,850
+which is extremely useful.
+
+288
+00:11:35,850 --> 00:11:39,210
+If you are using CMCD and
+not using session ID today,
+
+289
+00:11:39,210 --> 00:11:40,950
+how I suggest you do it,
+
+290
+00:11:40,950 --> 00:11:41,783
+that's usually pulled
+
+291
+00:11:41,783 --> 00:11:43,620
+from like your content management system
+
+292
+00:11:43,620 --> 00:11:46,389
+for that particular user
+when they start a session.
+
+293
+00:11:46,389 --> 00:11:48,930
+When you include this
+session ID in a field,
+
+294
+00:11:48,930 --> 00:11:51,390
+you actually can find all the logs
+
+295
+00:11:51,390 --> 00:11:52,890
+that are tied to a specific user.
+
+296
+00:11:52,890 --> 00:11:54,960
+So you can see individual user's journey
+
+297
+00:11:54,960 --> 00:11:57,690
+from starting to playback
+your stream till end.
+
+298
+00:11:57,690 --> 00:11:59,610
+How many times they switched bit rates,
+
+299
+00:11:59,610 --> 00:12:01,770
+rebuffered, stalled, all that.
+
+300
+00:12:01,770 --> 00:12:04,830
+So you can figure out
+individual user journeys
+
+301
+00:12:04,830 --> 00:12:08,220
+and use the same information
+
+302
+00:12:08,220 --> 00:12:11,790
+to find other users' journeys
+as well based on session ID,
+
+303
+00:12:11,790 --> 00:12:13,170
+which wasn't possible before
+
+304
+00:12:13,170 --> 00:12:16,380
+since the client information
+and the CD information
+
+305
+00:12:16,380 --> 00:12:18,180
+were stored in separate locations,
+
+306
+00:12:18,180 --> 00:12:19,480
+so it makes it super easy.
+
+307
+00:12:21,840 --> 00:12:24,690
+Okay, so now this is
+security requirements.
+
+308
+00:12:24,690 --> 00:12:26,013
+We talked about logging.
+
+309
+00:12:26,850 --> 00:12:27,750
+We've vetted visibility
+
+310
+00:12:27,750 --> 00:12:29,700
+to our CloudFront distribution.
+
+311
+00:12:29,700 --> 00:12:31,890
+We wanna make sure all of our users,
+
+312
+00:12:31,890 --> 00:12:35,820
+our valid users are receiving
+the best possible experience.
+
+313
+00:12:35,820 --> 00:12:39,990
+But we don't want our invalid users
+
+314
+00:12:39,990 --> 00:12:41,691
+that are trying to steal our streams,
+
+315
+00:12:41,691 --> 00:12:43,170
+take down our...
+
+316
+00:12:43,170 --> 00:12:45,720
+You know, steal our content
+or take down our streams.
+
+317
+00:12:45,720 --> 00:12:48,660
+We really wanna stop them
+from receiving our content
+
+318
+00:12:48,660 --> 00:12:50,790
+and harming the experience
+
+319
+00:12:50,790 --> 00:12:53,463
+that other users are experiencing.
+
+320
+00:12:55,290 --> 00:12:57,390
+So what do these users look like?
+
+321
+00:12:57,390 --> 00:12:59,236
+Well, ideally in a perfect world
+
+322
+00:12:59,236 --> 00:13:01,360
+you'd have your origin
+server behind CloudFront,
+
+323
+00:13:01,360 --> 00:13:04,620
+you'd have CloudFront
+delivering a standard URL,
+
+324
+00:13:04,620 --> 00:13:07,500
+in this case it's HLS and index.m3u8.
+
+325
+00:13:07,500 --> 00:13:10,410
+And all of your paid or subscribed users
+
+326
+00:13:10,410 --> 00:13:11,613
+would pull the content.
+
+327
+00:13:12,570 --> 00:13:14,223
+That's not the case, as we all know.
+
+328
+00:13:14,223 --> 00:13:17,940
+We see users that are trying
+to re-stream the content.
+
+329
+00:13:17,940 --> 00:13:19,740
+So they're a paid valid user
+
+330
+00:13:19,740 --> 00:13:21,390
+coming from maybe a particular IP address,
+
+331
+00:13:21,390 --> 00:13:23,790
+pulling our content and then
+re-streaming it to their users
+
+332
+00:13:23,790 --> 00:13:25,240
+who are probably paying them.
+
+333
+00:13:26,100 --> 00:13:27,633
+Obviously, we don't want that.
+
+334
+00:13:28,710 --> 00:13:30,423
+And then invalid regions.
+
+335
+00:13:32,130 --> 00:13:34,830
+Not only have we not really
+designed our infrastructure
+
+336
+00:13:34,830 --> 00:13:37,879
+to maybe operate in a different country
+
+337
+00:13:37,879 --> 00:13:40,105
+for scalability purposes,
+
+338
+00:13:40,105 --> 00:13:42,303
+when we have viewers from invalid regions,
+
+339
+00:13:42,303 --> 00:13:43,710
+they're messing up our stats.
+
+340
+00:13:43,710 --> 00:13:45,540
+So they might be having a bad experience
+
+341
+00:13:45,540 --> 00:13:48,900
+and it's going to mess up
+our analysis of how our...
+
+342
+00:13:48,900 --> 00:13:51,300
+You know, whether our
+event was a success or not.
+
+343
+00:13:51,300 --> 00:13:53,430
+If we see viewers coming
+from outside of the country
+
+344
+00:13:53,430 --> 00:13:54,840
+with high latency numbers,
+
+345
+00:13:54,840 --> 00:13:58,290
+that's gonna affect all of our reporting.
+
+346
+00:13:58,290 --> 00:13:59,372
+And then lastly,
+
+347
+00:13:59,372 --> 00:14:01,920
+Jes is gonna talk about it in a little bit
+
+348
+00:14:01,920 --> 00:14:03,690
+with rights holders.
+
+349
+00:14:03,690 --> 00:14:05,220
+There might be even legal consequences
+
+350
+00:14:05,220 --> 00:14:07,590
+of delivering content
+outside of your country
+
+351
+00:14:07,590 --> 00:14:10,140
+where your contract states
+
+352
+00:14:10,140 --> 00:14:11,910
+that you can only deliver
+in a certain region,
+
+353
+00:14:11,910 --> 00:14:14,850
+you only have rights to deliver
+in maybe a specific state.
+
+354
+00:14:14,850 --> 00:14:17,800
+In the case of sporting events
+or maybe a specific country.
+
+355
+00:14:19,050 --> 00:14:21,161
+I know in the past dealing
+with some customers
+
+356
+00:14:21,161 --> 00:14:22,860
+when the Olympics are involved,
+
+357
+00:14:22,860 --> 00:14:25,800
+the contract for theirs
+is extremely specific
+
+358
+00:14:25,800 --> 00:14:28,170
+when it comes to regions
+
+359
+00:14:28,170 --> 00:14:31,200
+and the security required
+to deliver that content.
+
+360
+00:14:31,200 --> 00:14:34,110
+So again, rights holders
+are very important as well.
+
+361
+00:14:34,110 --> 00:14:35,670
+And then lastly, unpaid users
+
+362
+00:14:35,670 --> 00:14:37,620
+that have found the way around
+any CloudFront restrictions
+
+363
+00:14:37,620 --> 00:14:40,350
+and are able to go directly to the origin.
+
+364
+00:14:40,350 --> 00:14:42,270
+So obviously, we don't want that,
+
+365
+00:14:42,270 --> 00:14:44,030
+but also if you're able to
+go directly to the origin,
+
+366
+00:14:44,030 --> 00:14:46,710
+it's going to affect the
+experience of everybody
+
+367
+00:14:46,710 --> 00:14:49,290
+'cause the origin should be
+protected behind CloudFront,
+
+368
+00:14:49,290 --> 00:14:50,880
+where CloudFront serves
+
+369
+00:14:50,880 --> 00:14:53,430
+99 plus percent of the
+traffic from its cache.
+
+370
+00:14:53,430 --> 00:14:54,300
+So the origin server
+
+371
+00:14:54,300 --> 00:14:56,500
+should never be delivering
+content directly.
+
+372
+00:14:58,555 --> 00:15:00,933
+Okay, so what tools do
+we have available to us?
+
+373
+00:15:02,010 --> 00:15:04,500
+So first of all, my son, he's seven.
+
+374
+00:15:04,500 --> 00:15:06,349
+He's actually been home
+from school recently
+
+375
+00:15:06,349 --> 00:15:09,000
+on vacation for break.
+
+376
+00:15:09,000 --> 00:15:10,770
+And he tends to find ways
+
+377
+00:15:10,770 --> 00:15:12,767
+to stream YouTube when
+he is not supposed to.
+
+378
+00:15:12,767 --> 00:15:17,220
+So I've tried the firewall
+rules on my home internet.
+
+379
+00:15:17,220 --> 00:15:20,490
+And eventually ended up
+just locking the remotes
+
+380
+00:15:20,490 --> 00:15:22,410
+in the office and networks.
+
+381
+00:15:22,410 --> 00:15:23,520
+So that's the tools I have.
+
+382
+00:15:23,520 --> 00:15:24,690
+But obviously on CloudFront
+
+383
+00:15:24,690 --> 00:15:26,940
+we don't have physical locking keys,
+
+384
+00:15:26,940 --> 00:15:30,390
+but we do have some ways
+to restrict traffic.
+
+385
+00:15:30,390 --> 00:15:31,650
+So first off,
+
+386
+00:15:31,650 --> 00:15:33,600
+for anybody that's been
+in the CloudFront console,
+
+387
+00:15:33,600 --> 00:15:36,150
+you've probably noticed the
+geo restrictions built in.
+
+388
+00:15:36,150 --> 00:15:38,335
+So that's just built into the
+distribution in the console
+
+389
+00:15:38,335 --> 00:15:40,830
+through the API if you're using that.
+
+390
+00:15:40,830 --> 00:15:42,442
+So this is a way
+
+391
+00:15:42,442 --> 00:15:45,090
+to quickly allow or
+disallow specific regions.
+
+392
+00:15:45,090 --> 00:15:47,187
+So if I'm delivering content
+
+393
+00:15:47,187 --> 00:15:48,480
+that's only allowed
+
+394
+00:15:48,480 --> 00:15:50,670
+to be delivered in the
+United States, for instance.
+
+395
+00:15:50,670 --> 00:15:51,990
+I can go into CloudFront
+
+396
+00:15:51,990 --> 00:15:55,410
+and quickly add geo restrictions
+to only allow the US,
+
+397
+00:15:55,410 --> 00:15:59,253
+or I could block specific
+countries within there.
+
+398
+00:16:00,840 --> 00:16:02,550
+But the next layer we
+can add on top of that,
+
+399
+00:16:02,550 --> 00:16:03,870
+the next tool in our tool chain
+
+400
+00:16:03,870 --> 00:16:06,813
+is AWS Web Application Firewall, WAF.
+
+401
+00:16:08,070 --> 00:16:10,860
+So in this case, we can
+inspect anything coming in,
+
+402
+00:16:10,860 --> 00:16:12,993
+whether it's headers, IP addresses,
+
+403
+00:16:14,100 --> 00:16:16,590
+against a list.
+
+404
+00:16:16,590 --> 00:16:18,960
+And we also have lists
+that you can subscribe to.
+
+405
+00:16:18,960 --> 00:16:20,040
+So we have to manage lists.
+
+406
+00:16:20,040 --> 00:16:24,030
+So we're already able to
+allow specific regions
+
+407
+00:16:24,030 --> 00:16:24,870
+with geo restrictions,
+
+408
+00:16:24,870 --> 00:16:26,220
+but what about users who are using
+
+409
+00:16:26,220 --> 00:16:29,610
+maybe VPNs or proxies
+to access our stream?
+
+410
+00:16:29,610 --> 00:16:31,080
+Using WAF, we can actually subscribe
+
+411
+00:16:31,080 --> 00:16:32,880
+the list of known VPN endpoints,
+
+412
+00:16:32,880 --> 00:16:34,680
+known proxy endpoints.
+
+413
+00:16:34,680 --> 00:16:36,990
+Or in the case of the re-streamer,
+
+414
+00:16:36,990 --> 00:16:39,960
+we found there that our IP address,
+
+415
+00:16:39,960 --> 00:16:42,000
+in the case of the example was 1, 2, 3, 4.
+
+416
+00:16:42,000 --> 00:16:44,640
+During the event, we can
+actually add that IP address
+
+417
+00:16:44,640 --> 00:16:45,630
+to our own managed list
+
+418
+00:16:45,630 --> 00:16:47,630
+to block that user that's a re-streamer.
+
+419
+00:16:48,780 --> 00:16:51,990
+So WAF is really useful for
+before, during, and after event.
+
+420
+00:16:51,990 --> 00:16:53,910
+So if you notice something specific,
+
+421
+00:16:53,910 --> 00:16:56,580
+you can add rules after the
+fact for your next event.
+
+422
+00:16:56,580 --> 00:16:57,990
+Or in the case of the re-streamer,
+
+423
+00:16:57,990 --> 00:17:00,930
+you can actually modify
+it during the event.
+
+424
+00:17:00,930 --> 00:17:01,763
+And then lastly,
+
+425
+00:17:01,763 --> 00:17:04,740
+for anything above and beyond
+geo restrictions and WAF,
+
+426
+00:17:04,740 --> 00:17:06,090
+we have functions.
+
+427
+00:17:06,090 --> 00:17:07,350
+So CloudFront functions
+
+428
+00:17:07,350 --> 00:17:09,330
+run as JavaScript
+actually on the ad server.
+
+429
+00:17:09,330 --> 00:17:12,900
+They're extremely low
+latency and high performant.
+
+430
+00:17:12,900 --> 00:17:14,880
+And you're able to analyze the request
+
+431
+00:17:14,880 --> 00:17:18,360
+and/or responses coming from CloudFront
+
+432
+00:17:18,360 --> 00:17:19,950
+or to and from the origin.
+
+433
+00:17:19,950 --> 00:17:22,560
+And we've added key value stores as well.
+
+434
+00:17:22,560 --> 00:17:25,179
+So you're able to add data
+to the key value store
+
+435
+00:17:25,179 --> 00:17:26,550
+using the API
+
+436
+00:17:26,550 --> 00:17:28,350
+and query that on edge function.
+
+437
+00:17:28,350 --> 00:17:29,760
+So we're gonna go into detail
+
+438
+00:17:29,760 --> 00:17:31,020
+about what this can be used for
+
+439
+00:17:31,020 --> 00:17:32,920
+when it comes to security in a minute.
+
+440
+00:17:35,460 --> 00:17:37,023
+So how do we secure our origin?
+
+441
+00:17:38,880 --> 00:17:41,091
+So as we all know, CloudFront
+is origin agnostic.
+
+442
+00:17:41,091 --> 00:17:44,160
+So the origin could be anywhere, really.
+
+443
+00:17:44,160 --> 00:17:46,620
+So first off, if our origin is on-prem,
+
+444
+00:17:46,620 --> 00:17:48,240
+it's most likely on a public subnet.
+
+445
+00:17:48,240 --> 00:17:51,320
+So we obviously don't want
+users to access that directly
+
+446
+00:17:51,320 --> 00:17:54,180
+so that again, it affects
+the experience for everybody.
+
+447
+00:17:54,180 --> 00:17:55,950
+So the first thing we can do
+
+448
+00:17:55,950 --> 00:17:57,687
+is when you configure
+your origin in CloudFront,
+
+449
+00:17:57,687 --> 00:17:59,610
+you can leverage HTTP headers.
+
+450
+00:17:59,610 --> 00:18:00,750
+That's then the origin level.
+
+451
+00:18:00,750 --> 00:18:03,390
+You can send a secret
+header to the origin,
+
+452
+00:18:03,390 --> 00:18:04,560
+which the origin can validate
+
+453
+00:18:04,560 --> 00:18:07,140
+that this is actually in
+fact coming from CloudFront.
+
+454
+00:18:07,140 --> 00:18:07,973
+And then you can also...
+
+455
+00:18:07,973 --> 00:18:08,880
+We also publish a list
+
+456
+00:18:08,880 --> 00:18:11,250
+of known IP addresses of
+CloudFront edge servers
+
+457
+00:18:11,250 --> 00:18:12,930
+that you can add to your firewall on-prem
+
+458
+00:18:12,930 --> 00:18:14,130
+or on the origin itself
+
+459
+00:18:14,130 --> 00:18:17,220
+to allow only CloudFront to access it.
+
+460
+00:18:17,220 --> 00:18:18,063
+And then second,
+
+461
+00:18:19,110 --> 00:18:21,330
+if you're using something like
+an application load balancer
+
+462
+00:18:21,330 --> 00:18:22,380
+or network load balancer,
+
+463
+00:18:22,380 --> 00:18:25,833
+maybe EC2 instances behind
+those for your origin,
+
+464
+00:18:26,786 --> 00:18:29,130
+CloudFront now can leverage VPC Origins.
+
+465
+00:18:29,130 --> 00:18:31,440
+I don't know if everybody's aware of that.
+
+466
+00:18:31,440 --> 00:18:33,973
+And recently we've even
+introduced cross region...
+
+467
+00:18:33,973 --> 00:18:35,190
+Cross account, sorry.
+
+468
+00:18:35,190 --> 00:18:37,050
+Cross account VPC Origins.
+
+469
+00:18:37,050 --> 00:18:38,880
+So if you're using multiple accounts,
+
+470
+00:18:38,880 --> 00:18:40,530
+CloudFront can access these origins
+
+471
+00:18:40,530 --> 00:18:42,197
+on a VPC from other accounts,
+
+472
+00:18:42,197 --> 00:18:46,200
+whether your accounts or
+even partners' accounts,
+
+473
+00:18:46,200 --> 00:18:47,033
+which is huge,
+
+474
+00:18:47,033 --> 00:18:48,871
+'cause if your origin's not
+even on a public subnet,
+
+475
+00:18:48,871 --> 00:18:51,330
+it can't be accessed in the first place.
+
+476
+00:18:51,330 --> 00:18:52,260
+And then lastly,
+
+477
+00:18:52,260 --> 00:18:54,210
+for some of our managed
+services delivery media,
+
+478
+00:18:54,210 --> 00:18:56,586
+a lot of you use S3 for live
+and on-demand media delivery
+
+479
+00:18:56,586 --> 00:19:00,030
+as well as elemental media package.
+
+480
+00:19:00,030 --> 00:19:02,130
+These can use origin access control.
+
+481
+00:19:02,130 --> 00:19:03,750
+So those are rule sets
+
+482
+00:19:03,750 --> 00:19:05,610
+that specifically allow only CloudFront
+
+483
+00:19:05,610 --> 00:19:09,003
+to access the content using signed URLs.
+
+484
+00:19:10,740 --> 00:19:12,780
+So I mentioned functions to take...
+
+485
+00:19:12,780 --> 00:19:14,181
+To basically expand upon security
+
+486
+00:19:14,181 --> 00:19:18,259
+above and beyond WAF and geo restrictions.
+
+487
+00:19:18,259 --> 00:19:23,259
+We see a lot of customers use
+tokenization within functions
+
+488
+00:19:23,540 --> 00:19:25,080
+to further secure content.
+
+489
+00:19:25,080 --> 00:19:26,043
+So a token,
+
+490
+00:19:27,306 --> 00:19:29,670
+it's actually typically we see JWT used,
+
+491
+00:19:29,670 --> 00:19:31,200
+but there's quite a few formats out there.
+
+492
+00:19:31,200 --> 00:19:32,550
+And using functions, we're flexible.
+
+493
+00:19:32,550 --> 00:19:33,600
+You can basically implement
+
+494
+00:19:33,600 --> 00:19:36,750
+any sort of function
+mechanism that you'd like,
+
+495
+00:19:36,750 --> 00:19:39,460
+whether it's JWT or some custom function
+
+496
+00:19:40,680 --> 00:19:43,650
+or some custom token that
+you use across other CDNs.
+
+497
+00:19:43,650 --> 00:19:46,853
+So inside the token it
+basically describes who you are,
+
+498
+00:19:46,853 --> 00:19:49,920
+what you're able to
+watch, like a content ID,
+
+499
+00:19:49,920 --> 00:19:51,390
+and it would have a time limit.
+
+500
+00:19:51,390 --> 00:19:53,190
+So in case of JWT,
+
+501
+00:19:53,190 --> 00:19:54,600
+it's very easy to set a lifetime
+
+502
+00:19:54,600 --> 00:19:55,620
+that this token's only valid
+
+503
+00:19:55,620 --> 00:19:58,320
+for an hour, two hours, a full day.
+
+504
+00:19:58,320 --> 00:20:00,270
+And then it also provides,
+
+505
+00:20:00,270 --> 00:20:03,570
+you know, instructions on
+where and what you can watch.
+
+506
+00:20:03,570 --> 00:20:06,210
+So ideally a user with a valid token,
+
+507
+00:20:06,210 --> 00:20:07,890
+they're sending all
+this header information
+
+508
+00:20:07,890 --> 00:20:09,840
+and IP address information
+in the CloudFront.
+
+509
+00:20:09,840 --> 00:20:12,111
+We're able to look up
+their geo information
+
+510
+00:20:12,111 --> 00:20:13,620
+using geo headers,
+
+511
+00:20:13,620 --> 00:20:15,402
+they're configuring CloudFront.
+
+512
+00:20:15,402 --> 00:20:17,070
+And the token contains
+all this information,
+
+513
+00:20:17,070 --> 00:20:19,980
+that they're able to watch
+from a specific maybe US state,
+
+514
+00:20:19,980 --> 00:20:21,240
+that they're tied
+
+515
+00:20:21,240 --> 00:20:23,820
+to this particular IP
+address or user agent.
+
+516
+00:20:23,820 --> 00:20:25,650
+And the function is
+gonna validate all this
+
+517
+00:20:25,650 --> 00:20:28,620
+against the token and what
+CloudFront knows about the user.
+
+518
+00:20:28,620 --> 00:20:29,880
+And if everything matches up,
+
+519
+00:20:29,880 --> 00:20:32,901
+the token wasn't modified
+in transit from the user,
+
+520
+00:20:32,901 --> 00:20:34,380
+and the token hasn't expired,
+
+521
+00:20:34,380 --> 00:20:37,233
+then we just return a 200
+OK within the function.
+
+522
+00:20:39,180 --> 00:20:41,002
+And then we have users
+with invalid tokens.
+
+523
+00:20:41,002 --> 00:20:42,270
+Maybe they modify...
+
+524
+00:20:42,270 --> 00:20:43,530
+They tried to modify their token
+
+525
+00:20:43,530 --> 00:20:44,490
+and create their own token
+
+526
+00:20:44,490 --> 00:20:47,220
+and it's invalid 'cause
+that wasn't signed correctly
+
+527
+00:20:47,220 --> 00:20:50,130
+or they're coming from
+an invalid location.
+
+528
+00:20:50,130 --> 00:20:52,702
+You know, they may be
+traveled with a valid token,
+
+529
+00:20:52,702 --> 00:20:54,338
+we signed it for their home use
+
+530
+00:20:54,338 --> 00:20:57,030
+on their cellular network
+
+531
+00:20:57,030 --> 00:20:58,950
+and they didn't receive a new token.
+
+532
+00:20:58,950 --> 00:21:00,000
+We'll actually return back
+
+533
+00:21:00,000 --> 00:21:03,780
+a manufacturer 401 unauthorized response
+
+534
+00:21:03,780 --> 00:21:04,860
+from the function itself
+
+535
+00:21:04,860 --> 00:21:06,210
+and immediately deny that user
+
+536
+00:21:06,210 --> 00:21:08,960
+before they even hit CloudFront
+in their origin server.
+
+537
+00:21:10,170 --> 00:21:12,780
+And then lastly, we have a
+user here with a share token.
+
+538
+00:21:12,780 --> 00:21:15,180
+Again, all these examples are using JWT,
+
+539
+00:21:15,180 --> 00:21:16,470
+which is really common,
+
+540
+00:21:16,470 --> 00:21:18,840
+which is easily implemented in functions.
+
+541
+00:21:18,840 --> 00:21:20,160
+This user has a shared token,
+
+542
+00:21:20,160 --> 00:21:23,220
+so they received the valid
+token from the first user
+
+543
+00:21:23,220 --> 00:21:24,870
+and they're trying to reuse it,
+
+544
+00:21:24,870 --> 00:21:26,940
+and they might be living
+in the same neighborhood
+
+545
+00:21:26,940 --> 00:21:27,990
+and using the same device,
+
+546
+00:21:27,990 --> 00:21:30,660
+so it happens to be valid for some reason.
+
+547
+00:21:30,660 --> 00:21:32,143
+But we noticed that this user...
+
+548
+00:21:32,143 --> 00:21:34,992
+This token is being used multiple
+times and it's not valid.
+
+549
+00:21:34,992 --> 00:21:37,590
+We can actually add this token value
+
+550
+00:21:37,590 --> 00:21:38,880
+into the key value store.
+
+551
+00:21:38,880 --> 00:21:40,440
+So that's for us at a good use case
+
+552
+00:21:40,440 --> 00:21:44,190
+for key value stores and
+functions is token revocation.
+
+553
+00:21:44,190 --> 00:21:46,590
+So you can insert this
+token into a key value store
+
+554
+00:21:46,590 --> 00:21:48,240
+when you notice something wrong with it,
+
+555
+00:21:48,240 --> 00:21:49,950
+and it's just being used too many times.
+
+556
+00:21:49,950 --> 00:21:52,500
+And then you can have the
+function return a 403 forbidden
+
+557
+00:21:52,500 --> 00:21:55,080
+if that token's in that key value store.
+
+558
+00:21:55,080 --> 00:21:58,020
+So again, this is a common
+use case that we see
+
+559
+00:21:58,020 --> 00:22:00,840
+for tokenization JWT tokens.
+
+560
+00:22:00,840 --> 00:22:03,420
+But actually, we've recently
+right before re:Invent
+
+561
+00:22:03,420 --> 00:22:04,950
+released CBO token support,
+
+562
+00:22:04,950 --> 00:22:07,710
+which is needed by the
+common access tokens,
+
+563
+00:22:07,710 --> 00:22:09,990
+which again was created by CTA Wave.
+
+564
+00:22:09,990 --> 00:22:13,410
+So instead of having to
+figure out how to write
+
+565
+00:22:13,410 --> 00:22:17,640
+a full token authentication
+workflow in functions,
+
+566
+00:22:17,640 --> 00:22:19,890
+you can just tie directly into CBO,
+
+567
+00:22:19,890 --> 00:22:22,740
+which is supported as
+a module in functions.
+
+568
+00:22:22,740 --> 00:22:25,590
+And the code is extremely minimal,
+
+569
+00:22:25,590 --> 00:22:27,840
+I was using it earlier and
+it was just a few lines.
+
+570
+00:22:27,840 --> 00:22:29,730
+So that's natively supported now.
+
+571
+00:22:29,730 --> 00:22:31,681
+And against common access tokens
+
+572
+00:22:31,681 --> 00:22:33,510
+seems to be where the industry's headed
+
+573
+00:22:33,510 --> 00:22:35,360
+because it has been standardized now.
+
+574
+00:22:37,140 --> 00:22:39,600
+So we do have guidance
+
+575
+00:22:39,600 --> 00:22:42,000
+for security delivery at the edge on AWS.
+
+576
+00:22:42,000 --> 00:22:45,060
+So this takes all the work
+we've done on functions
+
+577
+00:22:45,060 --> 00:22:45,893
+and does it for you.
+
+578
+00:22:45,893 --> 00:22:47,430
+So you can simply deploy this
+
+579
+00:22:47,430 --> 00:22:49,440
+onto your CloudFront distribution.
+
+580
+00:22:49,440 --> 00:22:51,030
+And we're going to
+deploy all the functions
+
+581
+00:22:51,030 --> 00:22:53,220
+supporting JWT token support.
+
+582
+00:22:53,220 --> 00:22:55,804
+And we have a step function
+available that's also deployed
+
+583
+00:22:55,804 --> 00:22:58,057
+that can automatically replicate tokens
+
+584
+00:22:58,057 --> 00:23:00,755
+that are being used incorrectly,
+
+585
+00:23:00,755 --> 00:23:03,780
+either multiple times
+or from invalid users.
+
+586
+00:23:03,780 --> 00:23:08,145
+And we've even added a
+full playback application,
+
+587
+00:23:08,145 --> 00:23:10,500
+sample application with video players
+
+588
+00:23:10,500 --> 00:23:11,790
+so you can try it out.
+
+589
+00:23:11,790 --> 00:23:13,170
+So you can just deploy this
+
+590
+00:23:13,170 --> 00:23:15,099
+using cloud formation
+on your own distribution
+
+591
+00:23:15,099 --> 00:23:17,880
+and being open source,
+you can modify it at will.
+
+592
+00:23:17,880 --> 00:23:19,494
+We even included SDKs
+
+593
+00:23:19,494 --> 00:23:21,330
+for your content management system
+
+594
+00:23:21,330 --> 00:23:23,159
+to create tokens and sign tokens
+
+595
+00:23:23,159 --> 00:23:25,710
+when you create playback URLs.
+
+596
+00:23:25,710 --> 00:23:27,690
+So check it out if you haven't.
+
+597
+00:23:27,690 --> 00:23:29,460
+And we're actually enabling support
+
+598
+00:23:29,460 --> 00:23:31,241
+for common access tokens
+in this really soon.
+
+599
+00:23:31,241 --> 00:23:33,193
+That's coming shortly.
+
+600
+00:23:33,193 --> 00:23:37,473
+So yeah, just keep an eye
+on it for the updates.
+
+601
+00:23:39,780 --> 00:23:41,010
+Okay, so I'm gonna hand it back to Jamie
+
+602
+00:23:41,010 --> 00:23:43,383
+for a talk on last mile capacity.
+
+603
+00:23:45,780 --> 00:23:47,190
+- So large scale...
+
+604
+00:23:47,190 --> 00:23:48,023
+Large scale events
+
+605
+00:23:48,023 --> 00:23:49,831
+can generate significant
+internet traffic spikes
+
+606
+00:23:49,831 --> 00:23:51,840
+over a really short period of time,
+
+607
+00:23:51,840 --> 00:23:53,370
+with strained network links
+
+608
+00:23:53,370 --> 00:23:55,503
+that connect viewers to end content.
+
+609
+00:23:56,430 --> 00:23:57,660
+However, there might actually
+
+610
+00:23:57,660 --> 00:23:59,010
+only be a certain amount of capacity
+
+611
+00:23:59,010 --> 00:24:01,950
+between an internet exchange itself
+
+612
+00:24:01,950 --> 00:24:04,470
+and an ISP or a smaller city.
+
+613
+00:24:04,470 --> 00:24:07,770
+For example, ISPs continuously
+optimize their networks,
+
+614
+00:24:07,770 --> 00:24:09,510
+but scaling capacity
+
+615
+00:24:09,510 --> 00:24:11,760
+for like those last minute big events
+
+616
+00:24:11,760 --> 00:24:13,610
+is understandably challenging, right?
+
+617
+00:24:14,490 --> 00:24:15,570
+Especially those events
+
+618
+00:24:15,570 --> 00:24:17,010
+that you know, you only need that capacity
+
+619
+00:24:17,010 --> 00:24:18,510
+for that short period of time.
+
+620
+00:24:19,560 --> 00:24:22,467
+When a network becomes
+saturated or congested,
+
+621
+00:24:22,467 --> 00:24:26,160
+both packet loss and
+increased latencies can occur.
+
+622
+00:24:26,160 --> 00:24:27,750
+And a result on the viewer experience
+
+623
+00:24:27,750 --> 00:24:30,360
+is things like quality drops, rebuffering,
+
+624
+00:24:30,360 --> 00:24:32,013
+or even those playback failures.
+
+625
+00:24:32,940 --> 00:24:35,610
+Remember, you can lean on
+that monitoring approach
+
+626
+00:24:35,610 --> 00:24:36,810
+that John spoke about earlier
+
+627
+00:24:36,810 --> 00:24:39,570
+to try and help you identify
+some of these issues.
+
+628
+00:24:39,570 --> 00:24:41,310
+But unless you own the network
+
+629
+00:24:41,310 --> 00:24:44,040
+or the underlying network
+as an ATT provider,
+
+630
+00:24:44,040 --> 00:24:44,873
+this is something
+
+631
+00:24:44,873 --> 00:24:46,850
+that is really largely
+out of your control.
+
+632
+00:24:51,330 --> 00:24:52,350
+Last year, however,
+
+633
+00:24:52,350 --> 00:24:54,480
+we introduced Embedded POPs.
+
+634
+00:24:54,480 --> 00:24:55,740
+And they overcome this challenge
+
+635
+00:24:55,740 --> 00:24:58,170
+by getting you closer
+to those end viewers,
+
+636
+00:24:58,170 --> 00:25:00,366
+caching content directly
+inside an ISP network,
+
+637
+00:25:00,366 --> 00:25:03,630
+and removing some of the
+dependency on the network links
+
+638
+00:25:03,630 --> 00:25:06,720
+between the viewers and
+the internet exchange.
+
+639
+00:25:06,720 --> 00:25:08,700
+If you didn't see it
+on the POP map before,
+
+640
+00:25:08,700 --> 00:25:12,240
+we've got over 1,140 embedded POPs
+
+641
+00:25:12,240 --> 00:25:16,440
+across over a hundred ISPs
+in more than 20 countries.
+
+642
+00:25:16,440 --> 00:25:20,400
+Because that distance to end
+viewers is reduced further,
+
+643
+00:25:20,400 --> 00:25:21,870
+customers have already...
+
+644
+00:25:21,870 --> 00:25:24,030
+Customers that already
+adopted in embedded POPs
+
+645
+00:25:24,030 --> 00:25:26,193
+have seen performance improvements too.
+
+646
+00:25:29,970 --> 00:25:32,610
+Because we're able to remove
+some of the network dependency,
+
+647
+00:25:32,610 --> 00:25:35,060
+they're really great for
+highly cachable content.
+
+648
+00:25:35,940 --> 00:25:37,140
+So we are very focused
+
+649
+00:25:37,140 --> 00:25:39,330
+on the media and entertainment
+space today, obviously.
+
+650
+00:25:39,330 --> 00:25:40,590
+But you can also use them
+
+651
+00:25:40,590 --> 00:25:42,630
+for things like or
+content like game delivery
+
+652
+00:25:42,630 --> 00:25:44,223
+and also software downloads.
+
+653
+00:25:45,840 --> 00:25:48,510
+So as part of the
+onboarding of Embedded POPs,
+
+654
+00:25:48,510 --> 00:25:51,870
+we validate the workflow that
+you want to use them for.
+
+655
+00:25:51,870 --> 00:25:53,421
+If it is a good fit,
+
+656
+00:25:53,421 --> 00:25:57,150
+the distribution is enabled
+up by us in the backend.
+
+657
+00:25:57,150 --> 00:26:00,300
+However, there is some additional
+work required on your side
+
+658
+00:26:00,300 --> 00:26:01,890
+to make sure your client application
+
+659
+00:26:01,890 --> 00:26:04,110
+can route to Embedded POPs.
+
+660
+00:26:04,110 --> 00:26:05,520
+The way that we recommend doing this
+
+661
+00:26:05,520 --> 00:26:08,190
+is integrating the client routing SDK
+
+662
+00:26:08,190 --> 00:26:10,023
+into your URL vending service.
+
+663
+00:26:12,630 --> 00:26:13,980
+So how does this work?
+
+664
+00:26:13,980 --> 00:26:16,110
+Well firstly, you need
+to do that integration
+
+665
+00:26:16,110 --> 00:26:19,950
+of that client routing SDK
+into your Euro vending service.
+
+666
+00:26:19,950 --> 00:26:21,300
+The QR code on the bottom right
+
+667
+00:26:21,300 --> 00:26:24,540
+is actually the link
+to that SDK in GitHub,
+
+668
+00:26:24,540 --> 00:26:27,480
+if you're interested in
+having a look at that.
+
+669
+00:26:27,480 --> 00:26:29,010
+So when the client application
+
+670
+00:26:29,010 --> 00:26:31,680
+requests a URL from that vending service,
+
+671
+00:26:31,680 --> 00:26:32,760
+the client in...
+
+672
+00:26:32,760 --> 00:26:35,850
+The client IP is encoded into the URL,
+
+673
+00:26:35,850 --> 00:26:38,553
+and it's annotated a CR
+label in this diagram.
+
+674
+00:26:40,230 --> 00:26:43,347
+The client then performs a DNS lookup,
+
+675
+00:26:43,347 --> 00:26:45,360
+and Route53 and CloudFront
+
+676
+00:26:45,360 --> 00:26:50,280
+is able to decode that client
+IP from that CR label itself.
+
+677
+00:26:50,280 --> 00:26:52,530
+Then CloudFront returns the best POP
+
+678
+00:26:52,530 --> 00:26:54,300
+based on that client IP.
+
+679
+00:26:54,300 --> 00:26:56,550
+Whether that's an embedded
+POP if appropriate
+
+680
+00:26:56,550 --> 00:26:57,843
+or a traditional POP.
+
+681
+00:26:59,160 --> 00:27:02,110
+The client can then start
+fetching content from CloudFront.
+
+682
+00:27:02,970 --> 00:27:06,630
+So in summary, embedded
+POPs deliver cached content
+
+683
+00:27:06,630 --> 00:27:08,520
+directly from ISP networks,
+
+684
+00:27:08,520 --> 00:27:09,570
+improving performance
+
+685
+00:27:09,570 --> 00:27:10,710
+and overcoming
+
+686
+00:27:10,710 --> 00:27:13,590
+those potential last
+mile capacity constraints
+
+687
+00:27:13,590 --> 00:27:15,090
+that you might have.
+
+688
+00:27:15,090 --> 00:27:17,190
+If you want to make use of embedded POPs,
+
+689
+00:27:17,190 --> 00:27:19,680
+I really urge you to
+contact your account team
+
+690
+00:27:19,680 --> 00:27:20,670
+to help you validate...
+
+691
+00:27:20,670 --> 00:27:23,043
+Evaluate your workload
+to see if it's suitable.
+
+692
+00:27:25,740 --> 00:27:29,040
+So typically, the next bottleneck
+that we see is the origin.
+
+693
+00:27:29,040 --> 00:27:29,873
+Our aim really
+
+694
+00:27:29,873 --> 00:27:33,180
+is to offload as much traffic
+as possible from the origin
+
+695
+00:27:33,180 --> 00:27:37,140
+so it has enough capacity
+to serve requests at scale.
+
+696
+00:27:37,140 --> 00:27:38,460
+This is to prevent our origin
+
+697
+00:27:38,460 --> 00:27:40,810
+from becoming overwhelmed
+and failing entirely.
+
+698
+00:27:45,660 --> 00:27:47,160
+Caching helps with this, of course.
+
+699
+00:27:47,160 --> 00:27:48,602
+And CloudFront uses tiered caching.
+
+700
+00:27:48,602 --> 00:27:50,760
+So we have edge locations,
+
+701
+00:27:50,760 --> 00:27:52,770
+we have regional edge caches,
+
+702
+00:27:52,770 --> 00:27:54,780
+but you can also use
+something called Origin Shield
+
+703
+00:27:54,780 --> 00:27:57,840
+to further reduce that origin load.
+
+704
+00:27:57,840 --> 00:28:01,083
+Instead of regional edge caches
+hitting the origin directly,
+
+705
+00:28:02,670 --> 00:28:04,590
+they go through Origin Shield,
+
+706
+00:28:04,590 --> 00:28:07,290
+and this provides a
+better cache hit ratio,
+
+707
+00:28:07,290 --> 00:28:09,510
+reducing demand on your origin,
+
+708
+00:28:09,510 --> 00:28:11,460
+especially for those events,
+
+709
+00:28:11,460 --> 00:28:13,210
+you know, we've got a lot of scale.
+
+710
+00:28:18,540 --> 00:28:20,190
+So we've covered capacity,
+
+711
+00:28:20,190 --> 00:28:21,870
+we've covered reducing load
+
+712
+00:28:21,870 --> 00:28:25,890
+and ensuring viewers can
+get a great experience.
+
+713
+00:28:25,890 --> 00:28:27,540
+It's time to really think about
+
+714
+00:28:27,540 --> 00:28:29,400
+how you design the rest of the platform
+
+715
+00:28:29,400 --> 00:28:31,500
+to provide just that, right?
+
+716
+00:28:31,500 --> 00:28:32,647
+To quote Werner Vogels,
+
+717
+00:28:32,647 --> 00:28:35,310
+"everything fails, all of the time."
+
+718
+00:28:35,310 --> 00:28:36,420
+Lots of customers approach us
+
+719
+00:28:36,420 --> 00:28:39,990
+by thinking about how many
+nines you wanna design for.
+
+720
+00:28:39,990 --> 00:28:42,810
+But when you're thinking
+about a media world,
+
+721
+00:28:42,810 --> 00:28:44,460
+this can also be very different
+
+722
+00:28:44,460 --> 00:28:47,460
+if you're designing a 24 by
+seven channel for example,
+
+723
+00:28:47,460 --> 00:28:49,023
+and those event based channels.
+
+724
+00:28:50,070 --> 00:28:51,420
+And the other important part
+
+725
+00:28:51,420 --> 00:28:54,510
+is you've got the task of
+really balancing the cost
+
+726
+00:28:54,510 --> 00:28:56,960
+and how much resilience
+is really enough for you.
+
+727
+00:28:58,080 --> 00:29:01,260
+If your platform fails entirely,
+
+728
+00:29:01,260 --> 00:29:03,490
+users will be unable
+to consume your content
+
+729
+00:29:04,440 --> 00:29:06,150
+and this might impact you in other ways
+
+730
+00:29:06,150 --> 00:29:07,830
+such as increased customer contact
+
+731
+00:29:07,830 --> 00:29:09,453
+or maybe even financially too.
+
+732
+00:29:10,590 --> 00:29:12,240
+For live events especially,
+
+733
+00:29:12,240 --> 00:29:14,790
+there's no real second
+chance, we'll try again later,
+
+734
+00:29:14,790 --> 00:29:16,740
+that moment's just simply gone forever.
+
+735
+00:29:20,760 --> 00:29:23,007
+Like we discussed, things can go wrong.
+
+736
+00:29:23,007 --> 00:29:24,840
+So redundancy is really critical
+
+737
+00:29:24,840 --> 00:29:26,610
+to keep your stream up and running
+
+738
+00:29:26,610 --> 00:29:29,573
+so that you can deliver to your end users.
+
+739
+00:29:29,573 --> 00:29:31,380
+In this next example,
+
+740
+00:29:31,380 --> 00:29:33,190
+in particular we have two EC2s
+
+741
+00:29:34,319 --> 00:29:37,920
+and two availability zones
+to try and help combat this.
+
+742
+00:29:37,920 --> 00:29:38,790
+We do see customers
+
+743
+00:29:38,790 --> 00:29:41,970
+deploy their own encoders
+and origins in AWS,
+
+744
+00:29:41,970 --> 00:29:44,970
+but we do offer managed
+services for media workflows.
+
+745
+00:29:44,970 --> 00:29:46,560
+They offload the challenges
+
+746
+00:29:46,560 --> 00:29:49,920
+of managing your own
+customized infrastructure
+
+747
+00:29:49,920 --> 00:29:51,570
+and gives you capabilities and features
+
+748
+00:29:51,570 --> 00:29:53,603
+that we'll actually talk
+about in a little bit.
+
+749
+00:29:54,780 --> 00:29:57,780
+These features are such as
+like helping you provide
+
+750
+00:29:57,780 --> 00:30:01,083
+that best viewer experience
+possible to end viewers.
+
+751
+00:30:03,630 --> 00:30:06,480
+So if you're not familiar with
+AWS Elemental Media Services,
+
+752
+00:30:06,480 --> 00:30:09,903
+this is a typical workflow
+for an ATT stream.
+
+753
+00:30:11,190 --> 00:30:13,080
+So we have AWS Elemental Media Connect,
+
+754
+00:30:13,080 --> 00:30:14,550
+which is our secure and reliable
+
+755
+00:30:14,550 --> 00:30:16,413
+transport service for live video.
+
+756
+00:30:18,060 --> 00:30:20,310
+That's then fed into AWS
+Elemental Media Live,
+
+757
+00:30:20,310 --> 00:30:22,470
+which is our cloud-based, broadcast-grade
+
+758
+00:30:22,470 --> 00:30:24,093
+video processing service.
+
+759
+00:30:26,160 --> 00:30:28,350
+Then have AWS Elemental Media package,
+
+760
+00:30:28,350 --> 00:30:30,000
+and that is our just in time packaging
+
+761
+00:30:30,000 --> 00:30:31,590
+and origination service,
+
+762
+00:30:31,590 --> 00:30:33,930
+where you can implement
+DVR-like functionality
+
+763
+00:30:33,930 --> 00:30:35,643
+and things like DRM.
+
+764
+00:30:37,148 --> 00:30:38,340
+And we've got Amazon CloudFront,
+
+765
+00:30:38,340 --> 00:30:39,173
+which is our CDM,
+
+766
+00:30:39,173 --> 00:30:41,310
+which we are predominantly
+focusing on today.
+
+767
+00:30:42,720 --> 00:30:43,553
+And then viewers,
+
+768
+00:30:43,553 --> 00:30:45,570
+depending on what they wanna stream,
+
+769
+00:30:45,570 --> 00:30:46,560
+what manifests they need,
+
+770
+00:30:46,560 --> 00:30:49,310
+can pull different origin
+endpoints from media package.
+
+771
+00:30:50,970 --> 00:30:51,930
+So with this,
+
+772
+00:30:51,930 --> 00:30:53,430
+we've kind of moved from ECT
+
+773
+00:30:53,430 --> 00:30:56,220
+and we've gone to AWS
+Elemental Media Services.
+
+774
+00:30:56,220 --> 00:30:57,600
+So we no longer have to worry
+
+775
+00:30:57,600 --> 00:31:00,330
+about, you know, there's
+underlying instances
+
+776
+00:31:00,330 --> 00:31:04,650
+and get all the benefits of
+AWS Elemental Media Services.
+
+777
+00:31:04,650 --> 00:31:06,540
+For example, media live supports
+
+778
+00:31:06,540 --> 00:31:09,002
+across AZ synchronization and redundancy
+
+779
+00:31:09,002 --> 00:31:10,863
+for failover scenarios.
+
+780
+00:31:12,180 --> 00:31:13,500
+Customers running large events
+
+781
+00:31:13,500 --> 00:31:18,123
+tend to implement more redundancy
+than just one regionally.
+
+782
+00:31:19,050 --> 00:31:19,883
+So we're gonna look at
+
+783
+00:31:19,883 --> 00:31:22,403
+what that multi-region
+architecture might look like.
+
+784
+00:31:25,260 --> 00:31:27,810
+To help kind of speak this through,
+
+785
+00:31:27,810 --> 00:31:30,497
+I'm gonna look at a
+typical failover scenario
+
+786
+00:31:30,497 --> 00:31:31,440
+that you might see,
+
+787
+00:31:31,440 --> 00:31:35,370
+but looking at where manual
+intervention might be required.
+
+788
+00:31:35,370 --> 00:31:37,740
+So we have the same
+architecture as what we had,
+
+789
+00:31:37,740 --> 00:31:39,390
+but obviously we've got
+region one and region two
+
+790
+00:31:39,390 --> 00:31:42,030
+with Media Connect, Media
+Live, and Media Package.
+
+791
+00:31:42,030 --> 00:31:43,110
+But we also have the addition
+
+792
+00:31:43,110 --> 00:31:45,630
+of Elemental Live or AWS Elemental Live,
+
+793
+00:31:45,630 --> 00:31:48,750
+which is our on-prem encoding appliance,
+
+794
+00:31:48,750 --> 00:31:49,583
+which in our case
+
+795
+00:31:49,583 --> 00:31:51,603
+is doing that venue contribution encoding.
+
+796
+00:31:53,910 --> 00:31:55,380
+So let's say something goes wrong
+
+797
+00:31:55,380 --> 00:31:59,490
+with one of the contribution
+feeds going to region one
+
+798
+00:31:59,490 --> 00:32:02,550
+where the viewers are
+currently streaming from.
+
+799
+00:32:02,550 --> 00:32:05,760
+Well, viewers connected to that
+
+800
+00:32:05,760 --> 00:32:07,170
+might start seeing black frames
+
+801
+00:32:07,170 --> 00:32:09,783
+instead of the actual video
+content or real content.
+
+802
+00:32:10,650 --> 00:32:12,289
+But hopefully you've got a real...
+
+803
+00:32:12,289 --> 00:32:14,760
+An eyes on glass operations team
+
+804
+00:32:14,760 --> 00:32:16,890
+and they spot this issue early on
+
+805
+00:32:16,890 --> 00:32:19,110
+and decide that they
+want to do that failover
+
+806
+00:32:19,110 --> 00:32:20,940
+to region two manually.
+
+807
+00:32:20,940 --> 00:32:22,410
+Remember, there's a time delay, right?
+
+808
+00:32:22,410 --> 00:32:24,720
+Between the issue occurring,
+
+809
+00:32:24,720 --> 00:32:26,070
+somebody spotting it,
+
+810
+00:32:26,070 --> 00:32:30,693
+and then also proactively
+rectifying that situation.
+
+811
+00:32:32,460 --> 00:32:35,910
+So the failover occurs,
+
+812
+00:32:35,910 --> 00:32:39,240
+our viewers go to the URL vending service
+
+813
+00:32:39,240 --> 00:32:41,430
+and say I need a new URL,
+
+814
+00:32:41,430 --> 00:32:43,323
+and it returns one for region two.
+
+815
+00:32:44,790 --> 00:32:46,110
+However, there's a few challenges here
+
+816
+00:32:46,110 --> 00:32:47,490
+to kind of think about.
+
+817
+00:32:47,490 --> 00:32:49,620
+Number one, predominantly,
+is the, you know,
+
+818
+00:32:49,620 --> 00:32:52,770
+it requires somebody
+manually to do this, right?
+
+819
+00:32:52,770 --> 00:32:53,910
+And there's also a time delay
+
+820
+00:32:53,910 --> 00:32:57,093
+in detecting and then remediating it.
+
+821
+00:32:58,170 --> 00:33:00,480
+But not only that, when a viewer rejoins,
+
+822
+00:33:00,480 --> 00:33:01,770
+are they gonna have to go find
+
+823
+00:33:01,770 --> 00:33:04,110
+where they were viewing
+in a stream, for example?
+
+824
+00:33:04,110 --> 00:33:05,970
+And then the timing might be misaligned
+
+825
+00:33:05,970 --> 00:33:07,320
+between the two anyway,
+
+826
+00:33:07,320 --> 00:33:08,403
+two regions anyway.
+
+827
+00:33:09,240 --> 00:33:10,590
+So how do you keep things in sync?
+
+828
+00:33:10,590 --> 00:33:12,873
+How do you do these things automatically?
+
+829
+00:33:13,710 --> 00:33:14,880
+So we're gonna explore this further,
+
+830
+00:33:14,880 --> 00:33:16,920
+but we're gonna start with time code.
+
+831
+00:33:16,920 --> 00:33:18,210
+Time code is time reference
+
+832
+00:33:18,210 --> 00:33:19,860
+that's embedded in each video frame.
+
+833
+00:33:19,860 --> 00:33:21,000
+Time code can be really important
+
+834
+00:33:21,000 --> 00:33:23,033
+in the media distribution world.
+
+835
+00:33:23,033 --> 00:33:24,520
+We want to use it for synchronization
+
+836
+00:33:24,520 --> 00:33:28,170
+in downstream components such
+as the encoder and packager
+
+837
+00:33:28,170 --> 00:33:31,050
+to provide that frame accurate alignment.
+
+838
+00:33:31,050 --> 00:33:33,060
+So time code is part of the answer,
+
+839
+00:33:33,060 --> 00:33:35,910
+but how is it actually applied
+to a failover scenario?
+
+840
+00:33:35,910 --> 00:33:37,620
+We have a feature that
+can help manage this
+
+841
+00:33:37,620 --> 00:33:40,350
+and it's called seamless
+cross region failover.
+
+842
+00:33:40,350 --> 00:33:42,180
+So we are gonna start with
+
+843
+00:33:42,180 --> 00:33:44,580
+the elemental live encoder on-prem.
+
+844
+00:33:44,580 --> 00:33:46,710
+And that's gonna use the
+same time code source,
+
+845
+00:33:46,710 --> 00:33:50,670
+so both regions receive an
+aligned contribution feed.
+
+846
+00:33:50,670 --> 00:33:53,340
+Media live is then
+configured with Epoch locking
+
+847
+00:33:53,340 --> 00:33:54,630
+and uses the embedded timekeeper,
+
+848
+00:33:54,630 --> 00:33:57,150
+that timing source being that input lock.
+
+849
+00:33:57,150 --> 00:34:00,327
+And then CMAF ingests on the
+output media package into...
+
+850
+00:34:00,327 --> 00:34:02,340
+Intermediate package, sorry.
+
+851
+00:34:02,340 --> 00:34:05,160
+And when you combine CMAF
+ingest and Epoch locking,
+
+852
+00:34:05,160 --> 00:34:07,560
+it results in this regular
+segmentation cadence
+
+853
+00:34:07,560 --> 00:34:09,450
+based on the Epoch time.
+
+854
+00:34:09,450 --> 00:34:11,790
+Media package can then use
+stainless synchronization
+
+855
+00:34:11,790 --> 00:34:14,553
+to help predictably
+package the output content.
+
+856
+00:34:17,490 --> 00:34:19,230
+So what happens if
+something does go wrong,
+
+857
+00:34:19,230 --> 00:34:21,420
+such as slate input, incomplete manifesto,
+
+858
+00:34:21,420 --> 00:34:22,650
+and a missing DRM key?
+
+859
+00:34:22,650 --> 00:34:24,150
+Well, media package
+actually has the ability
+
+860
+00:34:24,150 --> 00:34:25,360
+to 404 its endpoint.
+
+861
+00:34:25,360 --> 00:34:27,120
+And CloudFront is configured
+
+862
+00:34:27,120 --> 00:34:28,530
+with something called Origin Groups
+
+863
+00:34:28,530 --> 00:34:31,470
+where you specify a
+primary and a secondary,
+
+864
+00:34:31,470 --> 00:34:35,073
+and also fail level criteria
+based on HTTP status code.
+
+865
+00:34:35,940 --> 00:34:38,370
+When it picks up the media package
+
+866
+00:34:38,370 --> 00:34:40,950
+has indeed 404 to one
+of its origin endpoints,
+
+867
+00:34:40,950 --> 00:34:44,370
+it'll automatically send that
+traffic to the secondary.
+
+868
+00:34:44,370 --> 00:34:45,295
+But what if
+
+869
+00:34:45,295 --> 00:34:47,010
+it's not such a fundamental
+problem, for example?
+
+870
+00:34:47,010 --> 00:34:50,455
+What if it's black frames,
+frozen frames in the source
+
+871
+00:34:50,455 --> 00:34:53,340
+and it's only impacting one
+of those contribution reads
+
+872
+00:34:53,340 --> 00:34:54,900
+going into one of the regions?
+
+873
+00:34:54,900 --> 00:34:56,430
+Well, building on the
+previous architecture,
+
+874
+00:34:56,430 --> 00:34:57,300
+we have a capability
+
+875
+00:34:57,300 --> 00:34:59,489
+called Media Quality Aware
+Resiliency to solve this,
+
+876
+00:34:59,489 --> 00:35:00,903
+or MQAR.
+
+877
+00:35:02,340 --> 00:35:03,840
+So Media Live actually has the ability
+
+878
+00:35:03,840 --> 00:35:06,630
+to also produce something
+called an MQCS score
+
+879
+00:35:06,630 --> 00:35:07,463
+on each segment.
+
+880
+00:35:07,463 --> 00:35:10,290
+And MQCS stands for Media
+Quality Confidence Score.
+
+881
+00:35:10,290 --> 00:35:12,030
+And that's based on those input parameters
+
+882
+00:35:12,030 --> 00:35:15,278
+of being black frame detection,
+frozen frame detection,
+
+883
+00:35:15,278 --> 00:35:16,830
+or input source loss.
+
+884
+00:35:16,830 --> 00:35:19,230
+And that score is out of a hundred.
+
+885
+00:35:19,230 --> 00:35:22,680
+And each score is independently
+based on its own input.
+
+886
+00:35:22,680 --> 00:35:24,150
+Media package actually has the ability
+
+887
+00:35:24,150 --> 00:35:25,710
+to use this in two locations.
+
+888
+00:35:25,710 --> 00:35:27,030
+It's able to use it on the input
+
+889
+00:35:27,030 --> 00:35:29,043
+to provide in-region failover,
+
+890
+00:35:30,210 --> 00:35:34,830
+and also on its output via CMSD
+
+891
+00:35:34,830 --> 00:35:36,660
+or Common Media Server Data.
+
+892
+00:35:36,660 --> 00:35:39,340
+John spoke about CMCD earlier,
+
+893
+00:35:39,340 --> 00:35:41,823
+CMSD is also part of that CTA spec.
+
+894
+00:35:43,650 --> 00:35:45,300
+And then finally,
+
+895
+00:35:45,300 --> 00:35:48,380
+continue to use origin
+groups on CloudFront.
+
+896
+00:35:48,380 --> 00:35:50,040
+But instead of it being default,
+
+897
+00:35:50,040 --> 00:35:52,150
+we use Media Quality Score
+
+898
+00:35:53,490 --> 00:35:56,880
+being the origin selection
+criteria, instead of the default.
+
+899
+00:35:56,880 --> 00:35:57,713
+The way it works
+
+900
+00:35:57,713 --> 00:36:00,330
+is there's a getting ahead
+request into both regions.
+
+901
+00:36:00,330 --> 00:36:02,100
+And it basically picks the segment
+
+902
+00:36:02,100 --> 00:36:03,540
+that's gonna ultimately provide
+
+903
+00:36:03,540 --> 00:36:06,630
+that better viewing experience
+to interviewers or clients.
+
+904
+00:36:06,630 --> 00:36:08,846
+So in summary, you can leverage
+
+905
+00:36:08,846 --> 00:36:12,537
+AWS Media Services and
+Amazon CloudFront with MQAR
+
+906
+00:36:12,537 --> 00:36:14,970
+or Media Quality Aware Resiliency.
+
+907
+00:36:14,970 --> 00:36:16,290
+So always make your eyes on glass
+
+908
+00:36:16,290 --> 00:36:19,413
+and minimize the duration
+of disruption events.
+
+909
+00:36:24,570 --> 00:36:25,920
+- We haven't got long left.
+
+910
+00:36:27,537 --> 00:36:28,863
+- All right, thanks Jamie.
+
+911
+00:36:30,900 --> 00:36:32,190
+Can you hear me?
+
+912
+00:36:32,190 --> 00:36:33,240
+Okay, good.
+
+913
+00:36:33,240 --> 00:36:34,073
+All right.
+
+914
+00:36:34,073 --> 00:36:35,850
+So all these measures we've taken
+
+915
+00:36:35,850 --> 00:36:37,890
+to analyze our stream using logging
+
+916
+00:36:37,890 --> 00:36:41,010
+and to make sure our origin
+and encoder are available
+
+917
+00:36:41,010 --> 00:36:43,350
+are useless if our contribution
+stream into the cloud
+
+918
+00:36:43,350 --> 00:36:45,210
+is not stable.
+
+919
+00:36:45,210 --> 00:36:48,240
+So we need to make sure our
+contribution stream is reliable
+
+920
+00:36:48,240 --> 00:36:50,310
+just as the rest of the
+chain on the encoder,
+
+921
+00:36:50,310 --> 00:36:51,633
+the origin and CloudFront.
+
+922
+00:36:53,460 --> 00:36:54,450
+So how do we make sure our source
+
+923
+00:36:54,450 --> 00:36:56,250
+is just as reliable as our delivery?
+
+924
+00:36:57,510 --> 00:36:59,550
+Well, some of the things
+that we require in our source
+
+925
+00:36:59,550 --> 00:37:00,663
+are consistency.
+
+926
+00:37:02,070 --> 00:37:04,110
+We need a reliable source.
+
+927
+00:37:04,110 --> 00:37:05,640
+We need coverage of that source
+
+928
+00:37:05,640 --> 00:37:09,000
+of wherever our event happens to be.
+
+929
+00:37:09,000 --> 00:37:10,140
+And we need it to be private
+
+930
+00:37:10,140 --> 00:37:11,880
+because usually the source
+coming into the cloud
+
+931
+00:37:11,880 --> 00:37:14,010
+is our highest quality mezzanine feed.
+
+932
+00:37:14,010 --> 00:37:15,900
+So we don't want anybody
+to be able to access that
+
+933
+00:37:15,900 --> 00:37:17,520
+as it's the...
+
+934
+00:37:17,520 --> 00:37:19,470
+You know, again, it's the
+highest quality content
+
+935
+00:37:19,470 --> 00:37:21,970
+and we don't want that to
+go into the wrong hands.
+
+936
+00:37:22,890 --> 00:37:24,270
+So we do have a solution for that
+
+937
+00:37:24,270 --> 00:37:25,380
+that a lot of customers use
+
+938
+00:37:25,380 --> 00:37:26,430
+and that is Direct Connect.
+
+939
+00:37:26,430 --> 00:37:30,210
+Direct Connect's used heavily
+for stream contribution.
+
+940
+00:37:30,210 --> 00:37:34,147
+For consistency, it is a
+dedicated connection into a region
+
+941
+00:37:34,147 --> 00:37:37,260
+offering up to a hundred
+gigabits of connectivity.
+
+942
+00:37:37,260 --> 00:37:40,410
+So a lot of you all are probably
+contributing content now
+
+943
+00:37:40,410 --> 00:37:42,744
+through some of the higher
+quality lossless formats
+
+944
+00:37:42,744 --> 00:37:46,350
+like JPEG excess and
+using 2022 dash seven.
+
+945
+00:37:46,350 --> 00:37:47,700
+And if you're doing things like that,
+
+946
+00:37:47,700 --> 00:37:51,000
+Direct Connect is extremely
+helpful for things like that.
+
+947
+00:37:51,000 --> 00:37:52,208
+And also it is reliable.
+
+948
+00:37:52,208 --> 00:37:55,392
+You can have multiple
+paths into the region
+
+949
+00:37:55,392 --> 00:37:56,853
+using Direct Connect.
+
+950
+00:37:58,860 --> 00:38:01,407
+And coverage is in over a
+hundred locations worldwide
+
+951
+00:38:01,407 --> 00:38:02,850
+in 30 plus countries.
+
+952
+00:38:02,850 --> 00:38:05,430
+So it's probably nearby
+
+953
+00:38:05,430 --> 00:38:08,430
+or at the facilities that
+you're broadcasting from,
+
+954
+00:38:08,430 --> 00:38:10,920
+like stadiums and things
+like that already.
+
+955
+00:38:10,920 --> 00:38:12,390
+And again, it is private.
+
+956
+00:38:12,390 --> 00:38:13,650
+It is a private network
+
+957
+00:38:13,650 --> 00:38:15,120
+and we are able to add things
+
+958
+00:38:15,120 --> 00:38:16,687
+like media encryption on top of it,
+
+959
+00:38:16,687 --> 00:38:18,737
+which we'll talk about in the next slide.
+
+960
+00:38:20,910 --> 00:38:22,350
+So this is where Jamie spoke a little bit
+
+961
+00:38:22,350 --> 00:38:23,250
+about Media Connect.
+
+962
+00:38:23,250 --> 00:38:26,310
+So this is one of the elemental
+services for entry point
+
+963
+00:38:26,310 --> 00:38:28,172
+of live media into the cloud.
+
+964
+00:38:28,172 --> 00:38:29,940
+Whether you're using Direct Connect
+
+965
+00:38:29,940 --> 00:38:31,332
+or internet contribution,
+
+966
+00:38:31,332 --> 00:38:35,010
+you can use Media Connect
+for both of those use cases.
+
+967
+00:38:35,010 --> 00:38:36,810
+So if you're using Direct Connect,
+
+968
+00:38:36,810 --> 00:38:39,353
+you're probably ingesting over a VPC.
+
+969
+00:38:39,353 --> 00:38:41,970
+If you're using internet connectivity,
+
+970
+00:38:41,970 --> 00:38:43,770
+you can certainly use a VPN endpoint
+
+971
+00:38:43,770 --> 00:38:47,460
+and also ingest through to Media
+Connect over a VPC as well.
+
+972
+00:38:47,460 --> 00:38:51,330
+So utilizing VPC Origins and VPT Ingest,
+
+973
+00:38:51,330 --> 00:38:53,550
+the whole media workflow can be private
+
+974
+00:38:53,550 --> 00:38:55,590
+since the CloudFront
+support's pulling from a VPC
+
+975
+00:38:55,590 --> 00:38:57,543
+and we can ingest to a VPC as well.
+
+976
+00:38:58,410 --> 00:39:00,270
+And we mentioned encryption earlier.
+
+977
+00:39:00,270 --> 00:39:03,600
+A lot of the protocols that
+we support on Media Connect
+
+978
+00:39:03,600 --> 00:39:07,049
+offer encryption such as
+SRT and Zixi and RIST.
+
+979
+00:39:07,049 --> 00:39:09,900
+SRT, USC, we use quite a bit.
+
+980
+00:39:09,900 --> 00:39:11,820
+And enabling encryption on that's trivial.
+
+981
+00:39:11,820 --> 00:39:15,150
+And pretty much every encoder
+out there that publishes SRT
+
+982
+00:39:15,150 --> 00:39:16,710
+supports encryption.
+
+983
+00:39:16,710 --> 00:39:19,890
+So whether you're using
+internet or Direct Connect,
+
+984
+00:39:19,890 --> 00:39:21,243
+encryption is an option.
+
+985
+00:39:22,470 --> 00:39:25,380
+And especially over internet contribution,
+
+986
+00:39:25,380 --> 00:39:26,733
+packet loss is a thing.
+
+987
+00:39:27,990 --> 00:39:30,612
+You know, drop packets are a thing.
+
+988
+00:39:30,612 --> 00:39:31,950
+Most of these protocols
+
+989
+00:39:31,950 --> 00:39:36,210
+like SRT and Zixi and RIST and RTP-FEC
+
+990
+00:39:36,210 --> 00:39:39,120
+support error correction for an ARQ,
+
+991
+00:39:39,120 --> 00:39:41,070
+automated repeat request.
+
+992
+00:39:41,070 --> 00:39:43,127
+So this is all adjustable on Media Connect
+
+993
+00:39:43,127 --> 00:39:44,880
+and on the encoder.
+
+994
+00:39:44,880 --> 00:39:47,660
+So if you're doing
+contribution over the internet,
+
+995
+00:39:47,660 --> 00:39:50,118
+adding a little bit of latency
+
+996
+00:39:50,118 --> 00:39:52,230
+and in exchange for reliability
+
+997
+00:39:52,230 --> 00:39:53,640
+is available in Media Connect.
+
+998
+00:39:53,640 --> 00:39:55,194
+So you can just...
+
+999
+00:39:55,194 --> 00:39:56,670
+You can add a little bit
+more error correction
+
+1000
+00:39:56,670 --> 00:39:58,650
+for known spotty connections.
+
+1001
+00:39:58,650 --> 00:40:02,070
+And both of these protocols,
+Zixi and SRT, that I mentioned,
+
+1002
+00:40:02,070 --> 00:40:04,590
+allow for failover of the streams.
+
+1003
+00:40:04,590 --> 00:40:06,600
+So you can have multiple ISPs contributing
+
+1004
+00:40:06,600 --> 00:40:07,950
+over Media Connect.
+
+1005
+00:40:07,950 --> 00:40:10,237
+And if one of them has an
+issue during the live event,
+
+1006
+00:40:10,237 --> 00:40:12,737
+it can automatically switch
+over to the other one.
+
+1007
+00:40:13,860 --> 00:40:15,750
+And then I mentioned
+earlier about metrics,
+
+1008
+00:40:15,750 --> 00:40:17,108
+they're super important.
+
+1009
+00:40:17,108 --> 00:40:20,730
+The dashboard that we
+create before the event
+
+1010
+00:40:20,730 --> 00:40:21,690
+has CloudFront on there
+
+1011
+00:40:21,690 --> 00:40:24,030
+so we know if there's an
+issue with CloudFront.
+
+1012
+00:40:24,030 --> 00:40:26,580
+Most likely it contains
+metrics from the origin server
+
+1013
+00:40:26,580 --> 00:40:27,930
+to know how the origin's performing.
+
+1014
+00:40:27,930 --> 00:40:31,110
+And if we're using DRM or ad insertion,
+
+1015
+00:40:31,110 --> 00:40:32,940
+those metrics are also available.
+
+1016
+00:40:32,940 --> 00:40:36,300
+But we can also add ingest
+metrics to the dashboard as well
+
+1017
+00:40:36,300 --> 00:40:39,420
+for ARQ recovery drop packets.
+
+1018
+00:40:39,420 --> 00:40:40,680
+So we have a quick view
+
+1019
+00:40:40,680 --> 00:40:42,870
+on whether our ingest is having issues,
+
+1020
+00:40:42,870 --> 00:40:45,018
+whether it's CloudFront or the origin.
+
+1021
+00:40:45,018 --> 00:40:47,542
+For SRT, which is one of
+the most common protocols
+
+1022
+00:40:47,542 --> 00:40:50,399
+for ingest over the internet,
+
+1023
+00:40:50,399 --> 00:40:52,830
+these are the recommended metrics
+
+1024
+00:40:52,830 --> 00:40:57,151
+that we see being used for
+dashboards for Media Connect.
+
+1025
+00:40:57,151 --> 00:40:57,984
+So these are the ones
+
+1026
+00:40:57,984 --> 00:40:59,850
+that you know, for the largest live events
+
+1027
+00:40:59,850 --> 00:41:03,330
+that customers are actually
+monitoring really closely
+
+1028
+00:41:03,330 --> 00:41:07,020
+for ingest quality.
+
+1029
+00:41:07,020 --> 00:41:09,120
+So next, Jes Palmer's going to come over.
+
+1030
+00:41:09,120 --> 00:41:11,970
+She's from New England Sports
+Network home of the Red Sox.
+
+1031
+00:41:11,970 --> 00:41:14,633
+And she's gonna speak a
+little bit about her platform.
+
+1032
+00:41:16,740 --> 00:41:17,573
+- Thank you.
+
+1033
+00:41:18,978 --> 00:41:21,660
+So NESN is not the largest RSN,
+
+1034
+00:41:21,660 --> 00:41:24,660
+but we are actually the first RSN
+
+1035
+00:41:24,660 --> 00:41:29,660
+to offer a direct to consumer
+live streaming app in 2022.
+
+1036
+00:41:30,399 --> 00:41:32,310
+As a regional sports network,
+
+1037
+00:41:32,310 --> 00:41:34,443
+NESN has a small digital team,
+
+1038
+00:41:35,610 --> 00:41:38,280
+mostly me and my boss, (laughing)
+
+1039
+00:41:38,280 --> 00:41:40,170
+serving a growing user base.
+
+1040
+00:41:40,170 --> 00:41:42,000
+Armed with basic streaming knowledge,
+
+1041
+00:41:42,000 --> 00:41:44,940
+we were able to easily learn
+and manage the stream flow
+
+1042
+00:41:44,940 --> 00:41:47,313
+through AWS Cloud Services.
+
+1043
+00:41:48,180 --> 00:41:51,900
+RSNs like NESN have unique
+streaming challenges.
+
+1044
+00:41:51,900 --> 00:41:54,300
+They must deliver high
+quality, low latency,
+
+1045
+00:41:54,300 --> 00:41:56,490
+live and on-demand sports content,
+
+1046
+00:41:56,490 --> 00:41:58,560
+and force regional broadcasting rights,
+
+1047
+00:41:58,560 --> 00:42:01,920
+and handle unpredictable traffic spikes,
+
+1048
+00:42:01,920 --> 00:42:05,730
+all while maintaining strong
+security and compliance.
+
+1049
+00:42:05,730 --> 00:42:08,760
+Additionally, unlike many
+national distributors
+
+1050
+00:42:08,760 --> 00:42:12,810
+who receive SRT feeds and
+then retransmit those,
+
+1051
+00:42:12,810 --> 00:42:16,470
+at NESN, we control every
+step of the broadcast.
+
+1052
+00:42:16,470 --> 00:42:18,750
+First, the game is captured by cameras,
+
+1053
+00:42:18,750 --> 00:42:21,360
+which are connected to our
+mobile production unit,
+
+1054
+00:42:21,360 --> 00:42:23,100
+otherwise known as the truck.
+
+1055
+00:42:23,100 --> 00:42:24,780
+It's an actual truck
+
+1056
+00:42:24,780 --> 00:42:27,700
+with the production equipment inside it.
+
+1057
+00:42:27,700 --> 00:42:30,570
+We have 4K cameras and HD cameras
+
+1058
+00:42:30,570 --> 00:42:32,580
+at Fenway Park for the Red Sox
+
+1059
+00:42:32,580 --> 00:42:35,310
+and at TD Garden for the Bruins.
+
+1060
+00:42:35,310 --> 00:42:36,143
+For away games,
+
+1061
+00:42:36,143 --> 00:42:39,870
+we have our own HD cameras
+that travel with the teams.
+
+1062
+00:42:39,870 --> 00:42:43,110
+The feed is then relayed over
+the internet from the truck
+
+1063
+00:42:43,110 --> 00:42:44,730
+or from the opponent's stadiums
+
+1064
+00:42:44,730 --> 00:42:47,340
+to master control at our Boston office.
+
+1065
+00:42:47,340 --> 00:42:51,090
+These feeds are shared directly
+with our linear distributors
+
+1066
+00:42:51,090 --> 00:42:54,030
+for fans still watching
+sports the old fashioned way
+
+1067
+00:42:54,030 --> 00:42:56,220
+through their cable subscriptions.
+
+1068
+00:42:56,220 --> 00:43:00,420
+And additionally, the SRT
+feed is routed directly to AWS
+
+1069
+00:43:00,420 --> 00:43:03,213
+through AWS hardware encoders.
+
+1070
+00:43:04,350 --> 00:43:08,070
+About 50% of the Red Sox
+and Bruins seasons games
+
+1071
+00:43:08,070 --> 00:43:09,480
+are home games,
+
+1072
+00:43:09,480 --> 00:43:13,098
+which we offer in HD and 4K.
+
+1073
+00:43:13,098 --> 00:43:15,120
+AWS makes it easy for us
+
+1074
+00:43:15,120 --> 00:43:18,330
+to manage the availability
+of our 4K stream
+
+1075
+00:43:18,330 --> 00:43:21,450
+using an AWS elemental encoder
+
+1076
+00:43:21,450 --> 00:43:25,440
+via Media Live for transcoding
+and streaming management.
+
+1077
+00:43:25,440 --> 00:43:26,790
+We installed Media live
+
+1078
+00:43:26,790 --> 00:43:31,680
+anywhere on our AWS Elemental
+encoder with John's help
+
+1079
+00:43:31,680 --> 00:43:34,830
+so that we could administer
+the feed through Media live
+
+1080
+00:43:34,830 --> 00:43:38,190
+the same way we manage
+our HD and UHD links
+
+1081
+00:43:38,190 --> 00:43:40,680
+in the media live dashboard.
+
+1082
+00:43:40,680 --> 00:43:44,520
+From the 4K source, we configured
+a media live output group
+
+1083
+00:43:44,520 --> 00:43:49,520
+that contains 4K, 2K, 1080p,
+and 720p video outputs,
+
+1084
+00:43:50,520 --> 00:43:53,141
+as well as stereo and
+surround audio outputs
+
+1085
+00:43:53,141 --> 00:43:56,190
+and closed caption outputs.
+
+1086
+00:43:56,190 --> 00:43:58,409
+We kept the traffic...
+
+1087
+00:43:58,409 --> 00:44:01,440
+Sorry, we kept the audio
+and video tracks separate
+
+1088
+00:44:01,440 --> 00:44:03,480
+because we found that maxing
+
+1089
+00:44:03,480 --> 00:44:07,770
+resulted in issues with
+some of the OTT players.
+
+1090
+00:44:07,770 --> 00:44:10,830
+We used a media package V2 channel group
+
+1091
+00:44:10,830 --> 00:44:14,280
+to create Dash and HLS origin endpoints,
+
+1092
+00:44:14,280 --> 00:44:18,240
+again, for compatibility
+on different systems.
+
+1093
+00:44:18,240 --> 00:44:19,530
+And those origins
+
+1094
+00:44:19,530 --> 00:44:22,620
+are then used for
+CloudFront distributions.
+
+1095
+00:44:22,620 --> 00:44:24,690
+A major advantage to using CloudFront
+
+1096
+00:44:24,690 --> 00:44:26,580
+is that it automatically scales
+
+1097
+00:44:26,580 --> 00:44:30,300
+to accommodate traffic variations.
+
+1098
+00:44:30,300 --> 00:44:32,760
+So for example, if the Sox
+are playing the Yankees,
+
+1099
+00:44:32,760 --> 00:44:35,280
+we don't have to worry
+about edge capacity,
+
+1100
+00:44:35,280 --> 00:44:37,413
+CloudFront takes care of that for us.
+
+1101
+00:44:38,940 --> 00:44:41,430
+We also occasionally get third party feeds
+
+1102
+00:44:41,430 --> 00:44:43,110
+or one-off direct feeds
+
+1103
+00:44:43,110 --> 00:44:46,470
+like batting practice
+directly from Fenway Park
+
+1104
+00:44:46,470 --> 00:44:49,620
+or morning skate from
+Bruins Practice Arena
+
+1105
+00:44:49,620 --> 00:44:52,440
+that we offer as digital exclusives.
+
+1106
+00:44:52,440 --> 00:44:57,330
+And we have an HD link that we
+use for those one-off events.
+
+1107
+00:44:57,330 --> 00:45:00,390
+We use the same basic
+flow for those events.
+
+1108
+00:45:00,390 --> 00:45:02,100
+The live or third party feed
+
+1109
+00:45:02,100 --> 00:45:04,290
+is rolled out through the HD link,
+
+1110
+00:45:04,290 --> 00:45:08,220
+and the HD feed is transcoded
+into lower output tiers
+
+1111
+00:45:08,220 --> 00:45:12,060
+to accommodate CTV and mobile devices.
+
+1112
+00:45:12,060 --> 00:45:13,680
+Then it's the same Media live
+
+1113
+00:45:13,680 --> 00:45:15,933
+to Media package to CloudFront Flow.
+
+1114
+00:45:17,250 --> 00:45:20,580
+Additionally, CloudFront
+logs across all services
+
+1115
+00:45:20,580 --> 00:45:22,410
+provide metrics and alarms
+
+1116
+00:45:22,410 --> 00:45:25,650
+that help detect performance issues early,
+
+1117
+00:45:25,650 --> 00:45:27,330
+maintain stream quality,
+
+1118
+00:45:27,330 --> 00:45:29,490
+and ensure smooth delivery.
+
+1119
+00:45:29,490 --> 00:45:30,870
+Having these logs
+
+1120
+00:45:30,870 --> 00:45:34,800
+easily accessible and
+queryable using Log Insights
+
+1121
+00:45:34,800 --> 00:45:38,433
+is essential to a lean
+digital team like ours.
+
+1122
+00:45:39,810 --> 00:45:43,320
+In summary, CloudFront empowers NESN
+
+1123
+00:45:43,320 --> 00:45:47,040
+to deliver reliable high
+quality streams for every fan,
+
+1124
+00:45:47,040 --> 00:45:50,370
+scale seamlessly during live sports peaks,
+
+1125
+00:45:50,370 --> 00:45:54,120
+protect media rights and
+maintain regulatory compliance,
+
+1126
+00:45:54,120 --> 00:45:55,890
+and gain real time insights
+
+1127
+00:45:55,890 --> 00:45:58,533
+into audience behavior and performance.
+
+1128
+00:46:03,600 --> 00:46:04,433
+- All right.
+
+1129
+00:46:04,433 --> 00:46:05,640
+Thanks Jes.
+
+1130
+00:46:05,640 --> 00:46:06,473
+It's really cool.
+
+1131
+00:46:06,473 --> 00:46:09,210
+I always love everything
+that you're doing over there.
+
+1132
+00:46:09,210 --> 00:46:11,463
+Jes spoke a little bit about MediaTailor,
+
+1133
+00:46:11,463 --> 00:46:13,920
+or it was on her diagram earlier
+
+1134
+00:46:13,920 --> 00:46:15,580
+when she gave her demonstration.
+
+1135
+00:46:15,580 --> 00:46:18,330
+MediaTailor is a managed service
+
+1136
+00:46:18,330 --> 00:46:19,740
+under the Elemental umbrella
+
+1137
+00:46:19,740 --> 00:46:24,420
+that does ad replacement and
+ad insertion for live streams
+
+1138
+00:46:24,420 --> 00:46:26,043
+or on-demand streams, actually.
+
+1139
+00:46:27,360 --> 00:46:30,401
+And this workflow here,
+again, it uses MediaTailor,
+
+1140
+00:46:30,401 --> 00:46:33,300
+but a lot of the other
+ad insertion platforms
+
+1141
+00:46:33,300 --> 00:46:35,160
+work in a similar manner.
+
+1142
+00:46:35,160 --> 00:46:36,940
+When you're trying to
+monetize your streams,
+
+1143
+00:46:36,940 --> 00:46:39,213
+it adds a whole new set of challenges.
+
+1144
+00:46:41,700 --> 00:46:43,100
+In effect of...
+
+1145
+00:46:44,040 --> 00:46:45,510
+This is called dynamic ad insertion.
+
+1146
+00:46:45,510 --> 00:46:50,250
+And just by the name, you add
+a dynamic element into it.
+
+1147
+00:46:50,250 --> 00:46:53,010
+Every single manifests for
+end users are personalized
+
+1148
+00:46:53,010 --> 00:46:55,350
+because they have ads
+destined for that end user.
+
+1149
+00:46:55,350 --> 00:46:57,060
+Whether you're using linear ads
+
+1150
+00:46:57,060 --> 00:46:58,710
+or whether you're using
+some of the newer formats
+
+1151
+00:46:58,710 --> 00:47:00,900
+like Squeeze Back or Pause Ads.
+
+1152
+00:47:00,900 --> 00:47:02,850
+So before, we've always
+talked about scaling
+
+1153
+00:47:02,850 --> 00:47:04,860
+and CloudFront scaling the origin.
+
+1154
+00:47:04,860 --> 00:47:06,630
+When we talk about ad insertion,
+
+1155
+00:47:06,630 --> 00:47:08,520
+the origin becomes that
+much more important
+
+1156
+00:47:08,520 --> 00:47:10,530
+because every single
+request from the end user,
+
+1157
+00:47:10,530 --> 00:47:12,210
+whether you have a thousand
+or a million users,
+
+1158
+00:47:12,210 --> 00:47:13,617
+are going directly to the origin,
+
+1159
+00:47:13,617 --> 00:47:16,830
+and the origin's modifying
+the manifest in real time.
+
+1160
+00:47:16,830 --> 00:47:17,820
+So it's really important
+
+1161
+00:47:17,820 --> 00:47:22,409
+that your origin can scale with
+your viewers appropriately.
+
+1162
+00:47:22,409 --> 00:47:25,050
+When you configure a
+CloudFront for advertising,
+
+1163
+00:47:25,050 --> 00:47:27,960
+you're gonna have a couple more
+behaviors being configured.
+
+1164
+00:47:27,960 --> 00:47:30,359
+For your manifest, you're
+no longer caching that,
+
+1165
+00:47:30,359 --> 00:47:32,817
+you're sending them directly
+to the origin server,
+
+1166
+00:47:32,817 --> 00:47:35,250
+which is then modifying
+every single manifest
+
+1167
+00:47:35,250 --> 00:47:36,900
+going to the end user.
+
+1168
+00:47:36,900 --> 00:47:39,570
+Then the MediaTailor in this case
+
+1169
+00:47:39,570 --> 00:47:42,390
+is going to make a call
+to an advertiser upstream,
+
+1170
+00:47:42,390 --> 00:47:44,340
+whether it's Spring Surf, Freewill,
+
+1171
+00:47:44,340 --> 00:47:46,650
+any of those ad platforms.
+
+1172
+00:47:46,650 --> 00:47:48,120
+And those must scale as well
+
+1173
+00:47:48,120 --> 00:47:49,260
+because every single request
+
+1174
+00:47:49,260 --> 00:47:51,543
+is gonna be a unique
+request to an ad server.
+
+1175
+00:47:52,680 --> 00:47:54,229
+So it's really important
+
+1176
+00:47:54,229 --> 00:47:56,489
+when we add dynamic ad
+insertion into a platform
+
+1177
+00:47:56,489 --> 00:47:59,250
+that we look into that as an origin.
+
+1178
+00:47:59,250 --> 00:48:00,560
+As well as DRM platforms as well,
+
+1179
+00:48:00,560 --> 00:48:04,471
+you know, they're typically
+not behind CloudFront.
+
+1180
+00:48:04,471 --> 00:48:06,981
+MediaTailor's actually
+recently added some features
+
+1181
+00:48:06,981 --> 00:48:09,870
+to help with the ad platform,
+
+1182
+00:48:09,870 --> 00:48:12,049
+'cause if everybody's going to
+an ad break at the same time
+
+1183
+00:48:12,049 --> 00:48:13,652
+and we're hitting a million viewers
+
+1184
+00:48:13,652 --> 00:48:15,900
+to an ad platform all at once,
+
+1185
+00:48:15,900 --> 00:48:19,260
+the ad platform, whoever it
+might be, can't handle that.
+
+1186
+00:48:19,260 --> 00:48:20,980
+So MediaTailor actually has the ability
+
+1187
+00:48:20,980 --> 00:48:23,340
+to pre-fetch ads before an ad break
+
+1188
+00:48:23,340 --> 00:48:25,740
+and stack a request to an ad server.
+
+1189
+00:48:25,740 --> 00:48:27,600
+So these are some of the
+really important considerations
+
+1190
+00:48:27,600 --> 00:48:29,910
+when you're adding monetization
+to your live stream.
+
+1191
+00:48:29,910 --> 00:48:32,880
+Again, whether it's linear ad replacement,
+
+1192
+00:48:32,880 --> 00:48:36,150
+overlay, squeeze back,
+any of the newer formats,
+
+1193
+00:48:36,150 --> 00:48:37,800
+there's a lot more considerations
+
+1194
+00:48:39,030 --> 00:48:40,290
+that you have to look over,
+
+1195
+00:48:40,290 --> 00:48:41,910
+specifically with the origin server,
+
+1196
+00:48:41,910 --> 00:48:44,643
+the origin server being
+the ad insertion provider.
+
+1197
+00:48:50,351 --> 00:48:52,770
+So I wanna hand it back over
+to Jamie for the summary.
+
+1198
+00:48:52,770 --> 00:48:54,840
+And yeah-
+- Cheers.
+
+1199
+00:48:54,840 --> 00:48:55,890
+Thank you.
+- Cheers.
+
+1200
+00:48:56,760 --> 00:49:00,870
+- So to wrap things up,
+
+1201
+00:49:00,870 --> 00:49:04,764
+we wanted to aim this talk
+about, you know, thinking of ways
+
+1202
+00:49:04,764 --> 00:49:05,597
+that you can...
+
+1203
+00:49:05,597 --> 00:49:07,410
+Or to help you deliver those events
+
+1204
+00:49:07,410 --> 00:49:10,050
+successfully and at scale.
+
+1205
+00:49:10,050 --> 00:49:12,090
+We want you to remember these key things
+
+1206
+00:49:12,090 --> 00:49:15,303
+when you start planning for
+your next large scale event.
+
+1207
+00:49:16,350 --> 00:49:19,590
+So firstly, observability
+is critical, right?
+
+1208
+00:49:19,590 --> 00:49:21,754
+Whether that's dashboards,
+data collection,
+
+1209
+00:49:21,754 --> 00:49:24,630
+and through real time logs and Kinesis,
+
+1210
+00:49:24,630 --> 00:49:26,880
+but think about how you
+could use other data points
+
+1211
+00:49:26,880 --> 00:49:28,403
+such as CMCD and CMSD
+
+1212
+00:49:28,403 --> 00:49:30,573
+to also help you with your observability.
+
+1213
+00:49:33,000 --> 00:49:34,680
+Architecture actually...
+
+1214
+00:49:34,680 --> 00:49:35,513
+Oh, sorry.
+
+1215
+00:49:35,513 --> 00:49:36,346
+Architecture design
+
+1216
+00:49:36,346 --> 00:49:37,650
+can actually also go beyond
+
+1217
+00:49:37,650 --> 00:49:40,590
+just the encode and
+the origination, right?
+
+1218
+00:49:40,590 --> 00:49:43,110
+We covered AWS Elemental Media Services,
+
+1219
+00:49:43,110 --> 00:49:44,186
+but also remember
+
+1220
+00:49:44,186 --> 00:49:46,689
+like how to leverage other infrastructure
+
+1221
+00:49:46,689 --> 00:49:49,470
+to help you absorb some of that traffic,
+
+1222
+00:49:49,470 --> 00:49:51,933
+such as Embedded POPs and Origin Shield.
+
+1223
+00:49:56,670 --> 00:49:58,680
+Security is also a
+really layered approach.
+
+1224
+00:49:58,680 --> 00:50:02,670
+There's not really one
+mechanism that fits all.
+
+1225
+00:50:02,670 --> 00:50:05,460
+So think about your
+end-to-end security strategy
+
+1226
+00:50:05,460 --> 00:50:10,460
+covering, you know, tokenization,
+IP blocking, GA blocking,
+
+1227
+00:50:10,500 --> 00:50:14,703
+and using mechanisms like
+CloudFront functions and AWS WAF.
+
+1228
+00:50:16,080 --> 00:50:18,600
+And then finally, monetization
+
+1229
+00:50:18,600 --> 00:50:21,180
+can be just more than a
+subscription payment, right?
+
+1230
+00:50:21,180 --> 00:50:23,850
+You can use server side ad insertion
+
+1231
+00:50:23,850 --> 00:50:26,250
+to help you monetize your content
+
+1232
+00:50:26,250 --> 00:50:28,743
+using services such as MediaTailor.
+
+1233
+00:50:31,230 --> 00:50:33,000
+So if you want to learn about
+
+1234
+00:50:33,000 --> 00:50:35,670
+or continue reading on
+some of these topics
+
+1235
+00:50:35,670 --> 00:50:37,353
+that we discussed today,
+
+1236
+00:50:37,353 --> 00:50:38,760
+or want to deploy the samples,
+
+1237
+00:50:38,760 --> 00:50:40,110
+here are the links to them.
+
+1238
+00:50:41,081 --> 00:50:43,248
+(silence)
+
+1239
+00:50:48,570 --> 00:50:50,970
+And finally, if you're interested
+
+1240
+00:50:50,970 --> 00:50:54,840
+in leveling up your skills on
+network and content delivery,
+
+1241
+00:50:54,840 --> 00:50:58,143
+I thoroughly recommend you
+check out Skill Builder.
+
+1242
+00:51:02,100 --> 00:51:04,410
+So that concludes our session today.
+
+1243
+00:51:04,410 --> 00:51:05,613
+Thanks for joining us.
+
+1244
+00:51:07,350 --> 00:51:08,597
+Hope you found it useful
+
+1245
+00:51:08,597 --> 00:51:10,170
+to kind of think about, you know,
+
+1246
+00:51:10,170 --> 00:51:11,490
+the next things you need to look out
+
+1247
+00:51:11,490 --> 00:51:13,320
+for those large scale events.
+
+1248
+00:51:13,320 --> 00:51:14,760
+Just a quick reminder,
+
+1249
+00:51:14,760 --> 00:51:16,830
+please go to the re:Invent app
+
+1250
+00:51:16,830 --> 00:51:18,780
+to submit your feedback
+on the session today
+
+1251
+00:51:18,780 --> 00:51:21,030
+so that we can help improve it.
+
+1252
+00:51:21,030 --> 00:51:22,470
+But yeah, we'll be hovering around
+
+1253
+00:51:22,470 --> 00:51:26,610
+if you've got any questions
+for what we spoke about today,
+
+1254
+00:51:26,610 --> 00:51:29,958
+but enjoy the rest of your
+time here at re:Invent.
+
+1255
+00:51:29,958 --> 00:51:32,958
+(audience applauds)
+
