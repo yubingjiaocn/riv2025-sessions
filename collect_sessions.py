@@ -83,9 +83,9 @@ def get_subtitles(video_url):
         ydl_opts = {
             'skip_download': True,
             'writesubtitles': True,
-            'writeautomaticsub': True,
+            'writeautomaticsub': False,
             'subtitleslangs': ['en'],
-            'subtitlesformat': 'vtt',
+            'subtitlesformat': 'srt',
             'quiet': True,
             'noprogress': True,
             'cookiefile': 'cookies.txt',
@@ -97,7 +97,7 @@ def get_subtitles(video_url):
                 ydl.download([video_url])
 
             # Find the downloaded subtitle file
-            vtt_files = glob.glob(f'{tmpdir}/*.vtt')
+            vtt_files = glob.glob(f'{tmpdir}/*.srt')
             if vtt_files:
                 with open(vtt_files[0], 'r', encoding='utf-8') as f:
                     return f.read()
