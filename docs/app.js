@@ -109,7 +109,7 @@ function renderSessions(filteredSessions, page = 1, updatePaginationControl = tr
     paginatedSessions.forEach(session => {
         const card = document.createElement('div');
         card.className = 'session-card';
-        card.onclick = () => window.location.href = `session.html?code=${session.session_code}`;
+        card.onclick = () => window.open(`session.html?code=${session.session_code}`, '_blank', 'noopener,noreferrer');
 
         card.innerHTML = `
             <div class="code">${session.session_code}</div>
