@@ -12,6 +12,7 @@ async function loadSession() {
     }
     
     document.getElementById('sessionTitle').textContent = session.title_cn;
+    document.title = session.title_cn;
     document.getElementById('sessionAbstract').textContent = session.abstract_cn;
     
     const videoId = new URL(session.video_url).searchParams.get('v');
