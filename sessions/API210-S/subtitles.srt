@@ -1,0 +1,4385 @@
+1
+00:00:00,660 --> 00:00:01,493
+- Hello.
+
+2
+00:00:01,493 --> 00:00:05,970
+Hi everybody. Welcome to
+my talk or to our talk.
+
+3
+00:00:05,970 --> 00:00:08,275
+We're doing a joint talk together today
+
+4
+00:00:08,275 --> 00:00:11,054
+about powering real time applications
+
+5
+00:00:11,054 --> 00:00:12,549
+with a modernized cache.
+
+6
+00:00:12,549 --> 00:00:14,460
+My name is Pieter Cailliau,
+
+7
+00:00:14,460 --> 00:00:17,130
+I'm with Redis now for eight years,
+
+8
+00:00:17,130 --> 00:00:18,930
+and I lead the product
+management team responsible
+
+9
+00:00:18,930 --> 00:00:20,273
+for the core engine of Redis.
+
+10
+00:00:20,273 --> 00:00:23,730
+But before we start, I
+wanted to ask like, who knows
+
+11
+00:00:23,730 --> 00:00:24,963
+what Redis is?
+
+12
+00:00:26,192 --> 00:00:29,100
+Oh, almost literally everybody.
+
+13
+00:00:29,100 --> 00:00:30,240
+So I was going to explain what it is.
+
+14
+00:00:30,240 --> 00:00:32,540
+So I'll give you the
+very brief what Redis is.
+
+15
+00:00:34,245 --> 00:00:36,490
+Oh, so sorry about that. Thank you.
+
+16
+00:00:36,490 --> 00:00:39,529
+Redis is an in-memory data structure store
+
+17
+00:00:39,529 --> 00:00:43,075
+that is most often used as
+a cache, as a session store,
+
+18
+00:00:43,075 --> 00:00:47,075
+as a message broker, as a
+database, as a vector search store
+
+19
+00:00:47,075 --> 00:00:48,960
+or full text search store.
+
+20
+00:00:48,960 --> 00:00:51,780
+And we have nowadays about 2.25 million
+
+21
+00:00:51,780 --> 00:00:52,830
+docker pools per day.
+
+22
+00:00:52,830 --> 00:00:54,360
+And we actually just crossed 10 billion
+
+23
+00:00:54,360 --> 00:00:56,389
+docker pools, which is amazing,
+
+24
+00:00:56,389 --> 00:00:58,764
+on the Open Source version of Redis.
+
+25
+00:00:58,764 --> 00:01:01,530
+We're voted again by Stack Overflow
+
+26
+00:01:01,530 --> 00:01:04,329
+as the most loved non-relational database
+
+27
+00:01:04,329 --> 00:01:06,723
+by the (indistinct) community.
+
+28
+00:01:08,717 --> 00:01:11,197
+Within my team, we
+focus upon three things.
+
+29
+00:01:11,197 --> 00:01:13,620
+We focus on the core
+Redis, Redis Open Source,
+
+30
+00:01:13,620 --> 00:01:15,293
+and the data structures
+that you've all been using.
+
+31
+00:01:15,293 --> 00:01:18,000
+We focus upon developer experience,
+
+32
+00:01:18,000 --> 00:01:20,220
+which means client libraries,
+visual developer tools,
+
+33
+00:01:20,220 --> 00:01:22,110
+copilots, Redis Insight.
+
+34
+00:01:22,110 --> 00:01:23,717
+Maybe some of you have used it.
+
+35
+00:01:23,717 --> 00:01:25,297
+I see some people nodding.
+
+36
+00:01:25,297 --> 00:01:28,710
+And we also focus upon
+moving data into Redis
+
+37
+00:01:28,710 --> 00:01:30,417
+and make it easy for you
+to move data into Redis.
+
+38
+00:01:30,417 --> 00:01:32,597
+I'll talk about that later on.
+
+39
+00:01:32,597 --> 00:01:37,260
+The way I structure the
+talk is a talk on evolution.
+
+40
+00:01:37,260 --> 00:01:40,920
+I think everything that
+we did like in the product
+
+41
+00:01:40,920 --> 00:01:43,713
+is a consequence of how
+users were using Redis.
+
+42
+00:01:45,390 --> 00:01:46,680
+Most often it's users
+
+43
+00:01:46,680 --> 00:01:49,331
+that were pushing the
+boundaries of Redis that
+
+44
+00:01:49,331 --> 00:01:51,450
+were hitting limitations
+of what it could do,
+
+45
+00:01:51,450 --> 00:01:53,850
+and we tried to find a
+better solution for that.
+
+46
+00:01:54,894 --> 00:01:57,360
+Of course, there will still
+be some product announcements
+
+47
+00:01:57,360 --> 00:01:59,340
+in there, so sometimes
+there'll be like a QR code,
+
+48
+00:01:59,340 --> 00:02:00,600
+which you can use to scan
+
+49
+00:02:00,600 --> 00:02:03,083
+and look into the product
+later on if you would love to.
+
+50
+00:02:04,280 --> 00:02:06,914
+Because the talk is low on AI,
+
+51
+00:02:06,914 --> 00:02:09,990
+I've used or asked ChatGPT
+to create some images.
+
+52
+00:02:09,990 --> 00:02:12,257
+They're quite funny, so I
+hope it's a bit entertaining.
+
+53
+00:02:12,257 --> 00:02:14,220
+So at least I can say AI as many times
+
+54
+00:02:14,220 --> 00:02:17,250
+as all the other talks
+that are going on today.
+
+55
+00:02:17,250 --> 00:02:22,050
+And then lastly, later on I'll
+be joined by Heber Scachetti,
+
+56
+00:02:22,050 --> 00:02:24,210
+which I just learned
+is an Italian last name
+
+57
+00:02:24,210 --> 00:02:27,657
+who is a machine learning
+engineer at ifood.
+
+58
+00:02:27,657 --> 00:02:30,780
+And he will talk you through
+how some of the capabilities
+
+59
+00:02:30,780 --> 00:02:32,696
+that I will show you in Redis
+
+60
+00:02:32,696 --> 00:02:34,496
+and how they're using that at ifood.
+
+61
+00:02:35,910 --> 00:02:39,370
+But I wanna start with
+the opportunity of Redis.
+
+62
+00:02:39,370 --> 00:02:42,750
+According to Microsoft, 80%
+
+63
+00:02:42,750 --> 00:02:46,170
+of the OLTP workloads
+on Microsoft SQL Server
+
+64
+00:02:46,170 --> 00:02:47,790
+are pure read queries.
+
+65
+00:02:47,790 --> 00:02:50,820
+Oracle claims that for
+typical OLTP workloads,
+
+66
+00:02:50,820 --> 00:02:53,150
+it range between 70 and 90%.
+
+67
+00:02:53,150 --> 00:02:55,890
+And 90% means that for every right
+
+68
+00:02:55,890 --> 00:02:57,060
+you make into a relational database,
+
+69
+00:02:57,060 --> 00:03:01,020
+on average you read the same
+unchanged data nine times.
+
+70
+00:03:01,020 --> 00:03:01,853
+Or the other reverse;
+
+71
+00:03:01,853 --> 00:03:03,336
+if you order foods on ifood,
+
+72
+00:03:03,336 --> 00:03:05,433
+you check on average on
+your phone nine times
+
+73
+00:03:05,433 --> 00:03:07,456
+that the food is going to arrive, right?
+
+74
+00:03:07,456 --> 00:03:10,516
+These reads are expensive as they run on
+
+75
+00:03:10,516 --> 00:03:12,930
+relational databases that require lots
+
+76
+00:03:12,930 --> 00:03:14,276
+of compute requirements.
+
+77
+00:03:14,276 --> 00:03:17,820
+And this is exactly why Redis
+was created by Salvatore.
+
+78
+00:03:17,820 --> 00:03:19,176
+It's about 16 years ago
+
+79
+00:03:19,176 --> 00:03:21,693
+and it was created to
+accelerate applications.
+
+80
+00:03:22,536 --> 00:03:24,447
+As a side effect, however,
+
+81
+00:03:24,447 --> 00:03:27,840
+some users, they thought
+they could also reduce
+
+82
+00:03:27,840 --> 00:03:29,276
+the cost of that relational database.
+
+83
+00:03:29,276 --> 00:03:31,683
+I'll come back to that later on.
+
+84
+00:03:33,843 --> 00:03:37,233
+This is the first ChatGPT generated image,
+
+85
+00:03:38,610 --> 00:03:39,443
+not my favorite.
+
+86
+00:03:39,443 --> 00:03:41,094
+There's one that comes later on.
+
+87
+00:03:41,094 --> 00:03:44,553
+So the prompt here is
+very straightforward.
+
+88
+00:03:45,990 --> 00:03:47,850
+So it's a common known problem.
+
+89
+00:03:47,850 --> 00:03:49,260
+The hot keys is a common known problem,
+
+90
+00:03:49,260 --> 00:03:51,453
+and everybody knows what it is?
+
+91
+00:03:53,760 --> 00:03:58,760
+So hot keys happen when keys
+are accessed very frequently
+
+92
+00:03:59,070 --> 00:04:00,852
+or written into very frequently.
+
+93
+00:04:00,852 --> 00:04:03,180
+Now, there are more
+than these two use cases
+
+94
+00:04:03,180 --> 00:04:06,210
+that I explained here on the
+slide that that can happen.
+
+95
+00:04:06,210 --> 00:04:07,960
+But let's focus on those two today.
+
+96
+00:04:09,056 --> 00:04:11,550
+Redis, when Salvatore created Redis
+
+97
+00:04:11,550 --> 00:04:13,050
+he was thinking about throwing away
+
+98
+00:04:13,050 --> 00:04:14,567
+as many other things
+in relational databases
+
+99
+00:04:14,567 --> 00:04:16,875
+that were not needed and
+wanted to make it very simple.
+
+100
+00:04:16,875 --> 00:04:18,276
+So Redis has a main thread
+
+101
+00:04:18,276 --> 00:04:22,013
+where all the commands
+are executed sequentially
+
+102
+00:04:22,013 --> 00:04:23,970
+and by minimizing, for example,
+
+103
+00:04:23,970 --> 00:04:25,560
+the time complexity of
+all these operations,
+
+104
+00:04:25,560 --> 00:04:27,356
+and by being obsessed about
+that, you can actually do many,
+
+105
+00:04:27,356 --> 00:04:29,343
+many operations on a single thread.
+
+106
+00:04:30,581 --> 00:04:32,700
+Now if you wanna scale it,
+
+107
+00:04:32,700 --> 00:04:33,930
+if you wanna scale your Redis cluster,
+
+108
+00:04:33,930 --> 00:04:34,800
+you can have a key space.
+
+109
+00:04:34,800 --> 00:04:36,030
+You can actually create a Redis cluster.
+
+110
+00:04:36,030 --> 00:04:38,196
+So you can have many
+nodes within a cluster.
+
+111
+00:04:38,196 --> 00:04:40,816
+But a single key can only
+reside in a single chart.
+
+112
+00:04:40,816 --> 00:04:42,294
+You can do some replication,
+
+113
+00:04:42,294 --> 00:04:45,510
+but still there are some
+limitations of what you can do.
+
+114
+00:04:45,510 --> 00:04:47,387
+There are two common patterns here.
+
+115
+00:04:47,387 --> 00:04:49,691
+One is the frequently
+accessed keys, which could be,
+
+116
+00:04:49,691 --> 00:04:52,560
+for example, in case of a social media,
+
+117
+00:04:52,560 --> 00:04:54,356
+there is an influencer, not me,
+
+118
+00:04:54,356 --> 00:04:58,614
+whose profile is being
+accessed very frequently.
+
+119
+00:04:58,614 --> 00:05:00,536
+So that could be a hot key.
+
+120
+00:05:00,536 --> 00:05:03,663
+That is where our high
+throughput is going to go
+
+121
+00:05:03,663 --> 00:05:05,296
+into a single Redis process.
+
+122
+00:05:05,296 --> 00:05:07,947
+But what we saw when we look into our data
+
+123
+00:05:07,947 --> 00:05:10,980
+and the cloud, how Redis is
+being used, we actually saw
+
+124
+00:05:10,980 --> 00:05:12,790
+that there was like lots of
+usage of sets and sorted sets
+
+125
+00:05:12,790 --> 00:05:15,480
+and we thought like, "Well, why is that?"
+
+126
+00:05:15,480 --> 00:05:18,036
+Like, which use cases
+are they using that for?
+
+127
+00:05:18,036 --> 00:05:19,920
+And I dunno if some of the users here
+
+128
+00:05:19,920 --> 00:05:22,235
+are using Spring Data Redis
+and Spring Data Redis,
+
+129
+00:05:22,235 --> 00:05:23,068
+you can add simple annotations
+
+130
+00:05:23,068 --> 00:05:24,840
+that say indexed or add index on top
+
+131
+00:05:24,840 --> 00:05:26,250
+of some of the fields you do.
+
+132
+00:05:26,250 --> 00:05:27,390
+And then actually that's translating
+
+133
+00:05:27,390 --> 00:05:28,627
+that into sets and sorted sets.
+
+134
+00:05:28,627 --> 00:05:31,268
+So you're creating second
+re-indexing use cases in Redis.
+
+135
+00:05:31,268 --> 00:05:35,040
+And what happened then is that
+if you wanna do, for example,
+
+136
+00:05:35,040 --> 00:05:36,600
+you wanna say this field and that field
+
+137
+00:05:36,600 --> 00:05:37,830
+that will do an intersection in between
+
+138
+00:05:37,830 --> 00:05:39,000
+those two sets, right?
+
+139
+00:05:39,000 --> 00:05:44,000
+That also becomes like a heavily
+hotkey in your key space.
+
+140
+00:05:44,280 --> 00:05:46,680
+And hotkeys lasting about that is actually
+
+141
+00:05:46,680 --> 00:05:48,074
+that it makes your key space imbalanced.
+
+142
+00:05:48,074 --> 00:05:52,196
+I've been working upon these two problems
+
+143
+00:05:52,196 --> 00:05:55,341
+and the the first problem,
+like the influencer problem,
+
+144
+00:05:55,341 --> 00:05:58,440
+we've created for that client side caching
+
+145
+00:05:58,440 --> 00:06:00,720
+and with client side caching,
+we'll actually keep a copy
+
+146
+00:06:00,720 --> 00:06:02,672
+of the hot key within the client library,
+
+147
+00:06:02,672 --> 00:06:04,536
+within the client application.
+
+148
+00:06:04,536 --> 00:06:06,810
+So on a repeated consecutive read,
+
+149
+00:06:06,810 --> 00:06:08,673
+you will just access the data
+locally from local memory
+
+150
+00:06:08,673 --> 00:06:10,350
+and avoiding the network roundtrip.
+
+151
+00:06:10,350 --> 00:06:12,250
+And this is of course
+
+152
+00:06:12,250 --> 00:06:13,849
+for great reads, heavy workloads.
+
+153
+00:06:13,849 --> 00:06:16,290
+We have some customers
+that sometimes do one write
+
+154
+00:06:16,290 --> 00:06:17,820
+and read the same key 50 times.
+
+155
+00:06:17,820 --> 00:06:20,120
+That's a perfect sweet
+spot use case for that.
+
+156
+00:06:21,065 --> 00:06:24,853
+Redis will track each client
+library, for each client,
+
+157
+00:06:24,853 --> 00:06:27,480
+which keys are being
+cached in a local cache,
+
+158
+00:06:27,480 --> 00:06:29,790
+and then when there's a
+write in the Redis database,
+
+159
+00:06:29,790 --> 00:06:31,020
+we can actually send them in validation
+
+160
+00:06:31,020 --> 00:06:33,848
+to these client libraries.
+
+161
+00:06:33,848 --> 00:06:35,670
+It's been around for a while,
+
+162
+00:06:35,670 --> 00:06:37,710
+but it was not supported by
+any of the client libraries.
+
+163
+00:06:37,710 --> 00:06:39,180
+So we added the support within
+
+164
+00:06:39,180 --> 00:06:40,620
+all the major client libraries
+
+165
+00:06:40,620 --> 00:06:43,830
+and it's available
+since Redis 7.4 onwards.
+
+166
+00:06:43,830 --> 00:06:46,685
+So this solves the influencer problem.
+
+167
+00:06:46,685 --> 00:06:49,650
+For the second indexing,
+we created something
+
+168
+00:06:49,650 --> 00:06:51,300
+that initially was called Redis search.
+
+169
+00:06:51,300 --> 00:06:52,973
+We now call it the Redis query engine.
+
+170
+00:06:52,973 --> 00:06:55,629
+And with the Redis query
+engine, you can define a schema
+
+171
+00:06:55,629 --> 00:07:00,450
+and a schema defines which
+fields in either hashes or JSON
+
+172
+00:07:00,450 --> 00:07:02,747
+we will index given also a prefix.
+
+173
+00:07:02,747 --> 00:07:04,830
+The index doesn't reside in the key space.
+
+174
+00:07:04,830 --> 00:07:06,390
+And whenever you do a write into the hash
+
+175
+00:07:06,390 --> 00:07:08,310
+or into the JSON, we
+will just automatically
+
+176
+00:07:08,310 --> 00:07:09,480
+update the index.
+
+177
+00:07:09,480 --> 00:07:10,771
+And they can access that index.
+
+178
+00:07:10,771 --> 00:07:12,334
+Now it comes with a coordinator.
+
+179
+00:07:12,334 --> 00:07:15,270
+So whenever you make a query,
+a read query, you will hit one
+
+180
+00:07:15,270 --> 00:07:17,160
+of the charts, sorry, I say charts,
+
+181
+00:07:17,160 --> 00:07:18,870
+but the notes in your cluster.
+
+182
+00:07:18,870 --> 00:07:20,850
+And the coordinator will like
+do map reduce operations,
+
+183
+00:07:20,850 --> 00:07:24,125
+all the processes and we'll
+gather the results back.
+
+184
+00:07:24,125 --> 00:07:27,000
+We've got support for
+different field types:
+
+185
+00:07:27,000 --> 00:07:28,680
+Text for full text search,
+
+186
+00:07:28,680 --> 00:07:29,653
+Tag for exact matching,
+
+187
+00:07:29,653 --> 00:07:32,711
+Numeric, Geo and also Vector.
+
+188
+00:07:32,711 --> 00:07:34,980
+And you can combine in the query,
+
+189
+00:07:34,980 --> 00:07:36,600
+you can actually combine
+the different fields
+
+190
+00:07:36,600 --> 00:07:40,263
+that you index within an index
+to create complex queries.
+
+191
+00:07:42,384 --> 00:07:44,434
+Now this actually changes,
+
+192
+00:07:44,434 --> 00:07:46,756
+this is a significant element
+in cache modernization
+
+193
+00:07:46,756 --> 00:07:49,093
+because it unlocks a huge variety
+
+194
+00:07:49,093 --> 00:07:51,561
+of new use cases that you can do.
+
+195
+00:07:51,561 --> 00:07:54,810
+One of them could be, for
+example, common use cases,
+
+196
+00:07:54,810 --> 00:07:58,170
+a session store, you put items
+in your shopping baskets,
+
+197
+00:07:58,170 --> 00:08:01,008
+but the shopping basket is a
+single hash for all your users.
+
+198
+00:08:01,008 --> 00:08:02,471
+But now you can ask a question like,
+
+199
+00:08:02,471 --> 00:08:04,890
+how many users have this particular item
+
+200
+00:08:04,890 --> 00:08:06,360
+in their shopping basket right now?
+
+201
+00:08:06,360 --> 00:08:08,220
+This is something you
+can now ask to Redis.
+
+202
+00:08:08,220 --> 00:08:09,686
+Just giving as an example,
+but there are many more.
+
+203
+00:08:09,686 --> 00:08:13,110
+One thing that Redis is
+commonly being used for
+
+204
+00:08:13,110 --> 00:08:15,660
+is a Feature Store, an
+online Feature Store where
+
+205
+00:08:15,660 --> 00:08:17,772
+you retrieve features to serve them
+
+206
+00:08:17,772 --> 00:08:19,560
+to an AI and machine learning model.
+
+207
+00:08:19,560 --> 00:08:21,155
+We'll talk about later on more.
+
+208
+00:08:21,155 --> 00:08:23,490
+But now with this query
+engine, you can actually do
+
+209
+00:08:23,490 --> 00:08:25,230
+the selection of those queries.
+
+210
+00:08:25,230 --> 00:08:28,009
+So imagine you're a food delivery company
+
+211
+00:08:28,009 --> 00:08:31,410
+and you would like to
+retrieve all the restaurants
+
+212
+00:08:31,410 --> 00:08:34,350
+that are in a specific radius
+from a specific geo point.
+
+213
+00:08:34,350 --> 00:08:36,930
+You wanna say all the
+restaurants that are having a tag
+
+214
+00:08:36,930 --> 00:08:38,135
+for example, Italian restaurants,
+
+215
+00:08:38,135 --> 00:08:40,476
+and you wanna retrieve
+all these restaurants
+
+216
+00:08:40,476 --> 00:08:42,633
+and feed them into a
+recommendation engine.
+
+217
+00:08:42,633 --> 00:08:44,932
+Before that, you had to do
+like a two phase approach
+
+218
+00:08:44,932 --> 00:08:46,230
+with some other solution.
+
+219
+00:08:46,230 --> 00:08:47,696
+Now you can do that in Redis directly.
+
+220
+00:08:47,696 --> 00:08:50,700
+And this makes sense
+because you probably want
+
+221
+00:08:50,700 --> 00:08:51,927
+to serve those recommendations very fast
+
+222
+00:08:51,927 --> 00:08:54,953
+and retrieve them from Redis.
+
+223
+00:08:59,201 --> 00:09:01,170
+The Redis query engine is also powering
+
+224
+00:09:01,170 --> 00:09:02,912
+our vector search technology.
+
+225
+00:09:02,912 --> 00:09:05,850
+It enables you to do like blazing fast,
+
+226
+00:09:05,850 --> 00:09:07,920
+a vector similarity search.
+
+227
+00:09:07,920 --> 00:09:09,840
+And just for you to know how fast it is,
+
+228
+00:09:09,840 --> 00:09:11,276
+we actually have a benchmark.
+
+229
+00:09:11,276 --> 00:09:13,040
+There is a blog post that
+we have written about.
+
+230
+00:09:13,040 --> 00:09:15,069
+And you can also find the code that we use
+
+231
+00:09:15,069 --> 00:09:17,687
+for benchmarking this on GitHub.
+
+232
+00:09:18,746 --> 00:09:21,120
+We tried all permutations.
+
+233
+00:09:21,120 --> 00:09:23,340
+We tried different data sets,
+different embedding models,
+
+234
+00:09:23,340 --> 00:09:25,050
+different vector sizes,
+different workloads,
+
+235
+00:09:25,050 --> 00:09:26,130
+different queries.
+
+236
+00:09:26,130 --> 00:09:28,890
+Whatever we tried compared
+to our competitors,
+
+237
+00:09:28,890 --> 00:09:29,869
+we came out faster.
+
+238
+00:09:29,869 --> 00:09:31,769
+We serve the vectors from memory.
+
+239
+00:09:31,769 --> 00:09:34,169
+So that's the obvious
+reason why we can do that.
+
+240
+00:09:36,997 --> 00:09:40,980
+One of those use cases that
+you might be using this vector
+
+241
+00:09:40,980 --> 00:09:43,620
+search technology for is RAG
+
+242
+00:09:43,620 --> 00:09:45,783
+and Heber will talk about that later on.
+
+243
+00:09:47,536 --> 00:09:51,090
+But it also powers a new
+product that we're building,
+
+244
+00:09:51,090 --> 00:09:53,250
+which is called LangCache.
+
+245
+00:09:53,250 --> 00:09:54,900
+And again, it's kind of like a sweet spot
+
+246
+00:09:54,900 --> 00:09:56,310
+use case for Redis.
+
+247
+00:09:56,310 --> 00:09:57,760
+It's called semantic caching.
+
+248
+00:09:59,130 --> 00:10:00,720
+So semantic caching allows you
+
+249
+00:10:00,720 --> 00:10:02,328
+to cache responses from an LLM
+
+250
+00:10:02,328 --> 00:10:04,516
+and then on subsequent similar
+
+251
+00:10:04,516 --> 00:10:06,810
+or semantically similarly questions
+
+252
+00:10:06,810 --> 00:10:09,196
+you can return the response
+rather than calling your LLM.
+
+253
+00:10:09,196 --> 00:10:11,896
+And as such, you can of course
+increase the performance
+
+254
+00:10:11,896 --> 00:10:14,880
+or the latency to your
+application up to 15 times.
+
+255
+00:10:14,880 --> 00:10:16,170
+But you can also reduce the cost,
+
+256
+00:10:16,170 --> 00:10:18,170
+you can avoid calling the expensive LLM.
+
+257
+00:10:19,500 --> 00:10:22,961
+We've got a solution there
+that is served from our cloud.
+
+258
+00:10:22,961 --> 00:10:25,410
+It has a rest API that you can call.
+
+259
+00:10:25,410 --> 00:10:27,690
+And you can also use
+several embedding models.
+
+260
+00:10:27,690 --> 00:10:29,953
+We have a support for OpenAI, Anthropic.
+
+261
+00:10:29,953 --> 00:10:31,157
+But we also have our own model
+
+262
+00:10:31,157 --> 00:10:35,320
+that is specifically fine
+tuned for semantic caching.
+
+263
+00:10:36,891 --> 00:10:38,880
+Asurion is one of our customers
+
+264
+00:10:38,880 --> 00:10:40,080
+that is using semantic caching
+
+265
+00:10:40,080 --> 00:10:43,181
+and they were able to do
+a cash hit rate of 70%.
+
+266
+00:10:43,181 --> 00:10:45,841
+And with that they would actually reduce
+
+267
+00:10:45,841 --> 00:10:50,010
+the response time in their
+customer service portal in half.
+
+268
+00:10:50,010 --> 00:10:51,690
+They would cut in half and
+they would get four times
+
+269
+00:10:51,690 --> 00:10:54,140
+more engagement on their
+customer service portal.
+
+270
+00:10:55,353 --> 00:10:58,711
+I personally think that
+this is a great use case,
+
+271
+00:10:58,711 --> 00:11:01,860
+a technology fit for Redis, right?
+
+272
+00:11:01,860 --> 00:11:02,693
+Redis was used for caching.
+
+273
+00:11:02,693 --> 00:11:04,301
+You can put a time to live
+up on top of this response
+
+274
+00:11:04,301 --> 00:11:06,241
+so you can recalculate
+off a specific time.
+
+275
+00:11:06,241 --> 00:11:08,403
+This is a sweet spot use case.
+
+276
+00:11:09,784 --> 00:11:13,034
+So it's now available in
+public preview if you want
+
+277
+00:11:13,034 --> 00:11:14,219
+to get access to it,
+
+278
+00:11:14,219 --> 00:11:18,300
+you can get directly get
+access by on redis.io/langcache
+
+279
+00:11:18,300 --> 00:11:20,280
+You can get started
+with the free database.
+
+280
+00:11:20,280 --> 00:11:21,450
+I'll see the phone coming up.
+
+281
+00:11:21,450 --> 00:11:23,763
+So I'll leave that on for a while.
+
+282
+00:11:26,498 --> 00:11:31,109
+I'm going to switch gears and
+talk a bit more about caching.
+
+283
+00:11:31,109 --> 00:11:33,990
+So there are several
+known caching patterns.
+
+284
+00:11:33,990 --> 00:11:36,570
+You've all heard about
+Cache-aside, right behind read
+
+285
+00:11:36,570 --> 00:11:38,502
+through and all these caching patterns.
+
+286
+00:11:38,502 --> 00:11:40,890
+But the Cache-aside is
+like the most common one.
+
+287
+00:11:40,890 --> 00:11:41,973
+So in a Cache-aside,
+
+288
+00:11:42,855 --> 00:11:45,930
+I know you all know Redis,
+but I still explain it.
+
+289
+00:11:45,930 --> 00:11:47,082
+You first go to Redis,
+
+290
+00:11:47,082 --> 00:11:50,135
+when there's a read you check
+in Redis, it's not there.
+
+291
+00:11:50,135 --> 00:11:51,690
+You've got a cache miss.
+
+292
+00:11:51,690 --> 00:11:53,801
+You will go to your relational
+database, execute the query,
+
+293
+00:11:53,801 --> 00:11:56,490
+put it in Redis, return
+to your application.
+
+294
+00:11:56,490 --> 00:11:59,250
+On a consecutive read,
+there will be a cache hit
+
+295
+00:11:59,250 --> 00:12:00,712
+and you will return the point faster.
+
+296
+00:12:00,712 --> 00:12:04,013
+And as such you accelerate
+your application.
+
+297
+00:12:04,013 --> 00:12:07,021
+So this is great when part
+of your data set is hot,
+
+298
+00:12:07,021 --> 00:12:09,270
+higher p95 latencies are allowed
+
+299
+00:12:09,270 --> 00:12:10,814
+because in some cases you
+will still have to go to
+
+300
+00:12:10,814 --> 00:12:13,801
+that relational database
+and data is changing slowly.
+
+301
+00:12:13,801 --> 00:12:15,460
+And notice that
+
+302
+00:12:16,601 --> 00:12:20,190
+your relational database
+is serving all the writes
+
+303
+00:12:20,190 --> 00:12:21,570
+but it's on your primary database,
+
+304
+00:12:21,570 --> 00:12:24,781
+but it's still serving
+some of the reads, right?
+
+305
+00:12:24,781 --> 00:12:27,568
+Remember that total cost of ownership.
+
+306
+00:12:27,568 --> 00:12:29,700
+Note that I made in the beginning
+
+307
+00:12:29,700 --> 00:12:30,900
+that Redis was supposed to kind
+
+308
+00:12:30,900 --> 00:12:32,280
+of reduce the total cost of ownership.
+
+309
+00:12:32,280 --> 00:12:33,390
+And this is not really true
+
+310
+00:12:33,390 --> 00:12:34,800
+because you still need
+to serve the reads from
+
+311
+00:12:34,800 --> 00:12:36,123
+that relational database.
+
+312
+00:12:37,462 --> 00:12:42,221
+A common problem with
+this, yeah, (chuckles)
+
+313
+00:12:42,221 --> 00:12:44,040
+I love this one.
+
+314
+00:12:44,040 --> 00:12:45,840
+There's still a better one. Hang on.
+
+315
+00:12:47,836 --> 00:12:51,540
+So a common problem with
+a cache site is stale data
+
+316
+00:12:51,540 --> 00:12:53,097
+and stale data can occur of course when
+
+317
+00:12:53,097 --> 00:12:54,940
+you did the write in
+that relation database
+
+318
+00:12:54,940 --> 00:12:58,221
+and you've put some keys in your cache.
+
+319
+00:12:58,221 --> 00:13:01,110
+So then at that moment in
+time they're out of sync.
+
+320
+00:13:01,110 --> 00:13:03,021
+So the way you can solve that
+in Redis is by putting a time
+
+321
+00:13:03,021 --> 00:13:06,570
+to live on that key and it will
+expire after a certain time.
+
+322
+00:13:06,570 --> 00:13:07,947
+And then of course there
+will be a cache miss
+
+323
+00:13:07,947 --> 00:13:09,960
+and you will call that data again.
+
+324
+00:13:09,960 --> 00:13:11,981
+You will, sorry, you'll call
+your primary database again.
+
+325
+00:13:11,981 --> 00:13:14,781
+The problem with this is
+that's a bit of a guesswork.
+
+326
+00:13:14,781 --> 00:13:16,821
+If you put your time to
+the very fine grains,
+
+327
+00:13:16,821 --> 00:13:18,979
+you will have lots of cache misses.
+
+328
+00:13:18,979 --> 00:13:20,640
+And what was the point of having
+
+329
+00:13:20,640 --> 00:13:21,773
+your cache in the first place?
+
+330
+00:13:21,773 --> 00:13:23,036
+If you put it too long,
+
+331
+00:13:23,036 --> 00:13:25,372
+you look at cumbersome
+customer experience.
+
+332
+00:13:25,372 --> 00:13:28,950
+Imagine for example, you
+would put all your order list
+
+333
+00:13:28,950 --> 00:13:31,701
+or your recently bought
+orders into a cache.
+
+334
+00:13:31,701 --> 00:13:33,540
+As a customer, I buy something, I go
+
+335
+00:13:33,540 --> 00:13:35,850
+and check the order list, it's not there.
+
+336
+00:13:35,850 --> 00:13:37,701
+I buy it again, that's quite
+a cumbersome experience,
+
+337
+00:13:37,701 --> 00:13:39,903
+so that might not be an ideal fit.
+
+338
+00:13:42,026 --> 00:13:44,133
+Now this is my favorite.
+
+339
+00:13:45,330 --> 00:13:47,968
+Another problem with a cache site is,
+
+340
+00:13:47,968 --> 00:13:51,363
+anybody wants to guess what
+the image on the left is?
+
+341
+00:13:53,501 --> 00:13:57,041
+So thundering herds, (chuckles)
+
+342
+00:13:57,041 --> 00:14:00,204
+which ChatGPT took very little literally.
+
+343
+00:14:00,204 --> 00:14:03,112
+So a thundering herd problem can occur
+
+344
+00:14:03,112 --> 00:14:07,231
+due to some, in a distributed
+system, due to some situation,
+
+345
+00:14:07,231 --> 00:14:09,960
+all requests will go
+into a single resource.
+
+346
+00:14:09,960 --> 00:14:11,721
+And as such you will overload
+that single resource.
+
+347
+00:14:11,721 --> 00:14:15,750
+It can happen in our social
+media and the influencer,
+
+348
+00:14:15,750 --> 00:14:17,850
+when we put an expiry on the social media.
+
+349
+00:14:18,960 --> 00:14:20,220
+The key will expire,
+
+350
+00:14:20,220 --> 00:14:22,140
+all requests into Redis
+will be cache misses.
+
+351
+00:14:22,140 --> 00:14:23,774
+They will go to your relational database.
+
+352
+00:14:23,774 --> 00:14:26,970
+It can also happen when
+you put like a TTL expire
+
+353
+00:14:26,970 --> 00:14:28,230
+at a specific moment in time.
+
+354
+00:14:28,230 --> 00:14:30,000
+All the keys with that
+specific moment in time,
+
+355
+00:14:30,000 --> 00:14:31,536
+they'll expire and they will go there.
+
+356
+00:14:31,536 --> 00:14:33,301
+It can also occur as a cold start
+
+357
+00:14:33,301 --> 00:14:35,595
+because if you start with
+a cache site initially,
+
+358
+00:14:35,595 --> 00:14:37,920
+the cache is empty and
+all your requests will go
+
+359
+00:14:37,920 --> 00:14:39,706
+to your relational database.
+
+360
+00:14:39,706 --> 00:14:42,838
+So the source database still
+needs to be signed according to
+
+361
+00:14:42,838 --> 00:14:47,013
+serving all the potential
+reads from that database.
+
+362
+00:14:49,068 --> 00:14:54,068
+Now this a quote from
+a seasoned developer.
+
+363
+00:14:54,150 --> 00:14:57,990
+It helped me, great in
+this, in the stock, right?
+
+364
+00:14:57,990 --> 00:15:02,052
+So Phil Karlton used to work
+on Netscape over a decade ago.
+
+365
+00:15:02,052 --> 00:15:04,500
+And he stated that there
+are only two hard things
+
+366
+00:15:04,500 --> 00:15:08,176
+in computer science: cache
+invalidation and naming things.
+
+367
+00:15:08,176 --> 00:15:10,376
+Now that alums are
+basically writing our codes,
+
+368
+00:15:10,376 --> 00:15:13,196
+we can consider the naming things solved.
+
+369
+00:15:13,196 --> 00:15:16,233
+So if Redis could solve the
+cache validation problem,
+
+370
+00:15:16,233 --> 00:15:19,563
+then we basically solved all
+the computer science problems.
+
+371
+00:15:21,184 --> 00:15:24,216
+So why is cache validation complex?
+
+372
+00:15:24,216 --> 00:15:26,270
+The first reason is, is that Redis
+
+373
+00:15:26,270 --> 00:15:27,660
+is a non transactional database.
+
+374
+00:15:27,660 --> 00:15:29,287
+So you don't have the concept
+of doing something like
+
+375
+00:15:29,287 --> 00:15:31,631
+a two phase commit in between your writes
+
+376
+00:15:31,631 --> 00:15:34,140
+and into those two database source.
+
+377
+00:15:34,140 --> 00:15:35,516
+But that's not the biggest problem.
+
+378
+00:15:35,516 --> 00:15:36,870
+The problem is that the
+application doesn't know
+
+379
+00:15:36,870 --> 00:15:40,830
+which data points are actually
+being cached within Redis.
+
+380
+00:15:40,830 --> 00:15:41,970
+You might have a single row
+
+381
+00:15:41,970 --> 00:15:44,550
+and a specific column that
+resulted into 20 keys,
+
+382
+00:15:44,550 --> 00:15:46,080
+cache keys in Redis.
+
+383
+00:15:46,080 --> 00:15:48,183
+So there's no mapping in between that.
+
+384
+00:15:50,084 --> 00:15:53,700
+The way we see our
+customers solving this is
+
+385
+00:15:53,700 --> 00:15:56,413
+by using instead of a Cache-aside,
+just use a Refresh-ahead.
+
+386
+00:15:56,413 --> 00:15:58,080
+A refresh-ahead cache
+
+387
+00:15:58,080 --> 00:16:00,244
+or a prefetch cache is also
+a common name for that.
+
+388
+00:16:00,244 --> 00:16:02,050
+So in that case, you move the data
+
+389
+00:16:03,433 --> 00:16:05,213
+from your primary data store into Redis.
+
+390
+00:16:05,213 --> 00:16:06,939
+There's some magic there
+happening in the middle.
+
+391
+00:16:06,939 --> 00:16:09,660
+And then you do have some way
+
+392
+00:16:09,660 --> 00:16:11,550
+to capture all the new
+changes in that database
+
+393
+00:16:11,550 --> 00:16:13,971
+and to replicate them to Redis.
+
+394
+00:16:13,971 --> 00:16:16,500
+In this case, all your
+writes going to Redis
+
+395
+00:16:16,500 --> 00:16:18,420
+and all your reads are
+being sourced from, sorry,
+
+396
+00:16:18,420 --> 00:16:19,680
+all your writes going
+to your private database
+
+397
+00:16:19,680 --> 00:16:22,287
+and all your reads are
+being sourced from Redis.
+
+398
+00:16:22,287 --> 00:16:25,170
+You could also see this for the architects
+
+399
+00:16:25,170 --> 00:16:28,590
+or the computer science
+room as CQS, it's a proper,
+
+400
+00:16:28,590 --> 00:16:31,434
+a common use case of CQS
+where you'll model your data
+
+401
+00:16:31,434 --> 00:16:34,964
+for rights in a specific,
+domain specific model
+
+402
+00:16:34,964 --> 00:16:37,530
+and then you will serve
+or translate your data
+
+403
+00:16:37,530 --> 00:16:41,156
+into Redis data structures,
+serving your reads faster.
+
+404
+00:16:41,156 --> 00:16:44,940
+Of course, this is great when
+data is accessed randomly,
+
+405
+00:16:44,940 --> 00:16:48,480
+you can't have high p95 file latencies.
+
+406
+00:16:48,480 --> 00:16:52,563
+Data is in flux or higher
+data consistency is required.
+
+407
+00:16:53,460 --> 00:16:55,795
+Now the way we see our
+customers doing that
+
+408
+00:16:55,795 --> 00:16:57,034
+is there are three different ways.
+
+409
+00:16:57,034 --> 00:17:01,309
+One of our customers is actually,
+they have like thousands
+
+410
+00:17:01,309 --> 00:17:06,309
+of Chrome jobs that move data
+from Oracle towards Redis.
+
+411
+00:17:06,418 --> 00:17:10,110
+It's literally an operational nightmare.
+
+412
+00:17:10,110 --> 00:17:12,750
+Other ways could be by
+using complex architectures,
+
+413
+00:17:12,750 --> 00:17:14,460
+using Kafka moving data.
+
+414
+00:17:14,460 --> 00:17:16,200
+But of course it makes, as more components
+
+415
+00:17:16,200 --> 00:17:18,113
+in your architecture.
+
+416
+00:17:18,113 --> 00:17:20,940
+Of course ETL tools could
+be handy to do that as well.
+
+417
+00:17:20,940 --> 00:17:22,320
+They can do change data capture,
+
+418
+00:17:22,320 --> 00:17:24,600
+but ETL tools are typically
+made for relational
+
+419
+00:17:24,600 --> 00:17:26,400
+to relational workloads
+and they don't know about
+
+420
+00:17:26,400 --> 00:17:28,407
+the variety of data searches
+that we have in Redis.
+
+421
+00:17:28,407 --> 00:17:31,426
+And for that we created
+Redis data integration.
+
+422
+00:17:31,426 --> 00:17:36,210
+Redis, or short RDI, it
+makes it synchronizing Redis
+
+423
+00:17:36,210 --> 00:17:38,758
+from any relational database
+and soon, any data source,
+
+424
+00:17:38,758 --> 00:17:41,542
+very straightforward, simple and fast.
+
+425
+00:17:41,542 --> 00:17:44,490
+And we've built RDI on
+proven technologies.
+
+426
+00:17:44,490 --> 00:17:47,610
+So we're using Apache Flink
+and the bees under the hood
+
+427
+00:17:47,610 --> 00:17:50,149
+and we're adding our expertise
+on top of that, on how to
+
+428
+00:17:50,149 --> 00:17:52,408
+transform data from a relation
+
+429
+00:17:52,408 --> 00:17:54,390
+or any data source towards the variety
+
+430
+00:17:54,390 --> 00:17:55,943
+of data structures in Redis.
+
+431
+00:17:58,467 --> 00:18:01,783
+So RDI actually is a low code solution.
+
+432
+00:18:01,783 --> 00:18:06,619
+You can upload transformation
+logic to towards RDI.
+
+433
+00:18:06,619 --> 00:18:09,195
+It can allow you to do
+some denormalization.
+
+434
+00:18:09,195 --> 00:18:12,784
+What happens here is that we will first
+
+435
+00:18:12,784 --> 00:18:14,700
+we will capture the changes
+from our initial load
+
+436
+00:18:14,700 --> 00:18:17,339
+from your data source via CDC collector.
+
+437
+00:18:17,339 --> 00:18:20,164
+We'll have an intermediate Redis database,
+
+438
+00:18:20,164 --> 00:18:21,510
+we're using Redis streams for that.
+
+439
+00:18:21,510 --> 00:18:24,726
+And then there's a second
+process, which is a asynchronously
+
+440
+00:18:24,726 --> 00:18:27,720
+retrieving those items from
+those streams is applying your
+
+441
+00:18:27,720 --> 00:18:29,840
+transformation logic and
+then writing it into Redis.
+
+442
+00:18:29,840 --> 00:18:31,710
+In that transformational
+logic, we might also
+
+443
+00:18:31,710 --> 00:18:34,510
+do lookups into Redis, for
+example, for denormalization.
+
+444
+00:18:38,820 --> 00:18:41,916
+We've got many customers using RDI already
+
+445
+00:18:41,916 --> 00:18:45,330
+on premise, but Axis Bank is one of those
+
+446
+00:18:45,330 --> 00:18:46,990
+that is actually using it
+
+447
+00:18:47,828 --> 00:18:49,650
+for their mobile banking application.
+
+448
+00:18:49,650 --> 00:18:53,160
+They were originally doing
+all their core banking logic
+
+449
+00:18:53,160 --> 00:18:54,930
+and writing it into Oracle.
+
+450
+00:18:54,930 --> 00:18:57,120
+And then their mobile
+banking app was actually
+
+451
+00:18:57,120 --> 00:18:59,880
+serving their reads directly
+from the same Oracle database.
+
+452
+00:18:59,880 --> 00:19:02,940
+They have 6 million daily
+active mobile banking users.
+
+453
+00:19:02,940 --> 00:19:05,138
+They were trying to
+scale, of course the reads
+
+454
+00:19:05,138 --> 00:19:06,598
+as an application modernization,
+
+455
+00:19:06,598 --> 00:19:09,202
+they were adding all
+Oracle reads replicas,
+
+456
+00:19:09,202 --> 00:19:12,723
+but it didn't hit the
+throughput that they needed.
+
+457
+00:19:12,723 --> 00:19:16,793
+So what we did is we added RDI
+
+458
+00:19:16,793 --> 00:19:19,916
+and together with our risk
+query engine that I spoke before
+
+459
+00:19:19,916 --> 00:19:22,290
+and now the results speaks for themselves.
+
+460
+00:19:22,290 --> 00:19:24,068
+Before they had like 173 milliseconds
+
+461
+00:19:24,068 --> 00:19:28,278
+response time at peak time
+and now it's 29 milliseconds.
+
+462
+00:19:28,278 --> 00:19:30,930
+They maxed out at 500 requests per second
+
+463
+00:19:30,930 --> 00:19:34,340
+that they could do on their
+original Oracle database
+
+464
+00:19:34,340 --> 00:19:36,540
+and now they can do tens of thousands
+
+465
+00:19:36,540 --> 00:19:37,920
+and they can actually just scale Redis
+
+466
+00:19:37,920 --> 00:19:39,820
+by adding more notes into the cluster.
+
+467
+00:19:42,847 --> 00:19:45,017
+So I have a demo for that.
+
+468
+00:19:45,017 --> 00:19:46,590
+I did do the recording,
+
+469
+00:19:46,590 --> 00:19:48,540
+so I didn't know I could do a live demo.
+
+470
+00:19:48,540 --> 00:19:51,483
+But in this demo, it's a recording.
+
+471
+00:19:53,670 --> 00:19:56,638
+I'll show you some data
+in a Postgres database.
+
+472
+00:19:56,638 --> 00:19:59,640
+We'll spin up RDI in Redis cloud
+
+473
+00:19:59,640 --> 00:20:01,620
+and we'll show you how
+it results into Redis.
+
+474
+00:20:01,620 --> 00:20:03,030
+And then after us we'll
+make a change of course
+
+475
+00:20:03,030 --> 00:20:06,833
+and hope that the change
+ends up being in Redis.
+
+476
+00:20:07,920 --> 00:20:08,883
+So let's go ahead.
+
+477
+00:20:09,930 --> 00:20:12,355
+So I'm connected to the Postgres database.
+
+478
+00:20:12,355 --> 00:20:14,730
+I'm going to show you the
+tables that are there.
+
+479
+00:20:14,730 --> 00:20:16,178
+It's the Chinook data set.
+
+480
+00:20:16,178 --> 00:20:18,993
+I'm gonna show you one
+table, the genre table.
+
+481
+00:20:18,993 --> 00:20:21,810
+So there are two columns.
+There is genre ID and name.
+
+482
+00:20:21,810 --> 00:20:23,280
+And the first ID is Rock,
+
+483
+00:20:23,280 --> 00:20:25,308
+which we'll use later on in the talk.
+
+484
+00:20:25,308 --> 00:20:29,790
+So I already created like a
+database and I will go ahead
+
+485
+00:20:29,790 --> 00:20:31,530
+and connect to that database.
+
+486
+00:20:31,530 --> 00:20:32,790
+So this is Redis Insight,
+
+487
+00:20:32,790 --> 00:20:34,117
+the visual developer tool for Redis.
+
+488
+00:20:34,117 --> 00:20:36,793
+You can see there is no data there,
+
+489
+00:20:36,793 --> 00:20:38,700
+but I'm live recording.
+
+490
+00:20:38,700 --> 00:20:39,810
+So I do ping and pong.
+
+491
+00:20:39,810 --> 00:20:42,411
+Redis is always friendly and answers me.
+
+492
+00:20:42,411 --> 00:20:44,400
+There's a data pipeline section.
+
+493
+00:20:44,400 --> 00:20:48,210
+I already set up the initial
+setup there with private link.
+
+494
+00:20:48,210 --> 00:20:50,097
+I can go ahead, I can select some tables.
+
+495
+00:20:50,097 --> 00:20:53,883
+I will do artist, album, genre.
+
+496
+00:20:54,895 --> 00:20:58,710
+And right now in the UI I can
+only choose to write into Hash
+
+497
+00:20:58,710 --> 00:21:00,050
+or in JSON, but you can
+write in all data structures
+
+498
+00:21:00,050 --> 00:21:03,930
+and you can also upload
+your transformation file.
+
+499
+00:21:03,930 --> 00:21:05,550
+It gives me a summary
+and then I can go ahead
+
+500
+00:21:05,550 --> 00:21:06,501
+and I can deploy the pipeline.
+
+501
+00:21:06,501 --> 00:21:10,530
+So we made RDI like
+secure from the ground up.
+
+502
+00:21:10,530 --> 00:21:12,330
+So this will run in your
+dedicated environment,
+
+503
+00:21:12,330 --> 00:21:14,670
+your dedicated RDI cluster together with,
+
+504
+00:21:14,670 --> 00:21:18,128
+or your dedicated database.
+
+505
+00:21:18,128 --> 00:21:20,610
+What it first will do, now we deploy this,
+
+506
+00:21:20,610 --> 00:21:22,860
+it'll do the initial
+sync or like hydration.
+
+507
+00:21:22,860 --> 00:21:25,380
+So it'll retrieve all the data
+from the Postgres database.
+
+508
+00:21:25,380 --> 00:21:27,394
+It's not that much, but the
+time it takes mostly here
+
+509
+00:21:27,394 --> 00:21:29,198
+is to deploy this pipeline actually.
+
+510
+00:21:29,198 --> 00:21:30,750
+So there we go.
+
+511
+00:21:30,750 --> 00:21:34,500
+Now it transferred those records.
+
+512
+00:21:34,500 --> 00:21:36,494
+There are 647 records in total.
+
+513
+00:21:36,494 --> 00:21:38,420
+And afterwards, once it finalize that,
+
+514
+00:21:38,420 --> 00:21:39,681
+it will go into streaming mode.
+
+515
+00:21:39,681 --> 00:21:41,970
+So we got notification,
+it's now in streaming mode.
+
+516
+00:21:41,970 --> 00:21:44,250
+So now it's capturing all the
+changes from that database.
+
+517
+00:21:44,250 --> 00:21:47,757
+We can go ahead and look
+again into Redis Insight.
+
+518
+00:21:47,757 --> 00:21:49,180
+The tables are now there.
+
+519
+00:21:49,180 --> 00:21:51,900
+We've got genre ID, genre ID 1.
+
+520
+00:21:51,900 --> 00:21:54,003
+Okay, there's our key rock that is there.
+
+521
+00:21:55,202 --> 00:21:57,810
+So that doesn't prove still
+that we can do changes
+
+522
+00:21:57,810 --> 00:21:59,048
+that capture and we can
+keep on your cache fresh
+
+523
+00:21:59,048 --> 00:22:01,560
+with any change that comes.
+
+524
+00:22:01,560 --> 00:22:05,006
+So we'll now do an update
+in the Postgres database.
+
+525
+00:22:05,006 --> 00:22:06,960
+And for that we're going to then use
+
+526
+00:22:06,960 --> 00:22:09,844
+of course the bees uses the
+write headlock from Postgres.
+
+527
+00:22:09,844 --> 00:22:13,170
+So instead of showing you
+within Redis Insight again
+
+528
+00:22:13,170 --> 00:22:15,701
+what the changed value would
+be, I thought to be creative
+
+529
+00:22:15,701 --> 00:22:19,185
+and I use the Redis MPC server
+just to talk a bit about AI
+
+530
+00:22:19,185 --> 00:22:23,536
+and access the data within Redis.
+
+531
+00:22:23,536 --> 00:22:25,440
+So I first asked it of course
+
+532
+00:22:25,440 --> 00:22:27,450
+how many keys there
+are within the database
+
+533
+00:22:27,450 --> 00:22:29,130
+and it knows there's a tool DB size.
+
+534
+00:22:29,130 --> 00:22:31,874
+Okay, we've got 647
+records. So far so good.
+
+535
+00:22:31,874 --> 00:22:33,660
+Then I was doing this recording
+
+536
+00:22:33,660 --> 00:22:37,470
+and I really struggled
+typing the right question.
+
+537
+00:22:37,470 --> 00:22:38,737
+I wanted to ask it like,
+
+538
+00:22:38,737 --> 00:22:40,170
+"Hey, can you retrieve this genre ID
+
+539
+00:22:40,170 --> 00:22:42,941
+with ID1, and can you tell
+me what the value is?"
+
+540
+00:22:42,941 --> 00:22:44,667
+But I was struggling a
+bit, but I thought like,
+
+541
+00:22:44,667 --> 00:22:46,523
+do I do another recording
+or I just leave it as is?
+
+542
+00:22:46,523 --> 00:22:48,600
+Because it's actually interesting,
+
+543
+00:22:48,600 --> 00:22:51,854
+it still figures out
+correctly what the value is.
+
+544
+00:22:51,854 --> 00:22:53,700
+So the first thing it'll do like,
+
+545
+00:22:53,700 --> 00:22:56,130
+well I don't know, it's a key value store.
+
+546
+00:22:56,130 --> 00:22:57,810
+It's schema-less Redis.
+
+547
+00:22:57,810 --> 00:22:59,280
+How do I know which
+key I need to retrieve?
+
+548
+00:22:59,280 --> 00:23:01,043
+So it does a bit of scanning.
+
+549
+00:23:01,043 --> 00:23:02,970
+It's going to scan a couple of keys,
+
+550
+00:23:02,970 --> 00:23:05,220
+and in those scans you can actually see
+
+551
+00:23:05,220 --> 00:23:06,366
+that it figures out what genres
+
+552
+00:23:06,366 --> 00:23:08,566
+and with that it can figure out
+
+553
+00:23:08,566 --> 00:23:11,730
+what is the key pattern you use.
+
+554
+00:23:11,730 --> 00:23:13,759
+In Redis you typically
+use a colon in the middle
+
+555
+00:23:13,759 --> 00:23:17,526
+to separate the specific
+fields within a key
+
+556
+00:23:17,526 --> 00:23:20,763
+or to make a hierarchy or like
+a nesting, like a tree view.
+
+557
+00:23:20,763 --> 00:23:23,828
+So it figured out, okay,
+what the structure is.
+
+558
+00:23:23,828 --> 00:23:26,220
+It figured out there are 25 keys.
+
+559
+00:23:26,220 --> 00:23:27,450
+Great. And this is a structure.
+
+560
+00:23:27,450 --> 00:23:28,857
+So that's the key that is there.
+
+561
+00:23:28,857 --> 00:23:30,184
+And I guess it ask me friendly
+
+562
+00:23:30,184 --> 00:23:31,297
+of course if I can retrieve it.
+
+563
+00:23:31,297 --> 00:23:34,946
+And still doesn't know
+which command to execute
+
+564
+00:23:34,946 --> 00:23:37,310
+because it could be a hash,
+it could be whatever it is.
+
+565
+00:23:37,310 --> 00:23:39,798
+So it first is going
+to figure out the type
+
+566
+00:23:39,798 --> 00:23:43,106
+and then retrieve that from Redis.
+
+567
+00:23:43,106 --> 00:23:46,346
+I hope you're going to see
+Rock and Roll in the end.
+
+568
+00:23:46,346 --> 00:23:47,720
+I know we will.
+
+569
+00:23:47,720 --> 00:23:49,623
+So there we go.
+
+570
+00:23:54,379 --> 00:23:56,970
+I'm happy to say we're
+working upon that in our team.
+
+571
+00:23:56,970 --> 00:23:59,166
+That Redis data integration
+is now in public preview.
+
+572
+00:23:59,166 --> 00:24:01,380
+You can go ahead and get access to it
+
+573
+00:24:01,380 --> 00:24:03,090
+by scanning this QR code
+
+574
+00:24:03,090 --> 00:24:05,710
+or just go to Redis.io/data-integration
+
+575
+00:24:07,078 --> 00:24:09,437
+For those who who've
+been paying attention,
+
+576
+00:24:09,437 --> 00:24:11,670
+they might have thought like, well,
+
+577
+00:24:11,670 --> 00:24:13,920
+in a cache site I have like a portion
+
+578
+00:24:13,920 --> 00:24:15,561
+of my dataset like 20%,
+
+579
+00:24:15,561 --> 00:24:17,940
+but with this new Redis data integration,
+
+580
+00:24:17,940 --> 00:24:19,440
+you will move all my data.
+
+581
+00:24:19,440 --> 00:24:20,970
+And we got a couple of sales reps
+
+582
+00:24:20,970 --> 00:24:23,681
+in the audience they were like,
+"Be very happy about that."
+
+583
+00:24:23,681 --> 00:24:26,520
+Because it might be that you think
+
+584
+00:24:26,520 --> 00:24:27,598
+that it's gonna cost me a lot more.
+
+585
+00:24:27,598 --> 00:24:29,001
+So we thought about that
+
+586
+00:24:29,001 --> 00:24:33,293
+and when Salvatore created Redis,
+
+587
+00:24:35,139 --> 00:24:37,260
+like the bandwidth of memory
+
+588
+00:24:37,260 --> 00:24:39,180
+was about 10,000 megabytes per second.
+
+589
+00:24:39,180 --> 00:24:41,222
+And nowadays, and Vimy search
+
+590
+00:24:41,222 --> 00:24:42,825
+is 16,000 megabytes per second.
+
+591
+00:24:42,825 --> 00:24:45,917
+Like, the architectural principles,
+
+592
+00:24:45,917 --> 00:24:48,673
+design principles, that that he used
+
+593
+00:24:48,673 --> 00:24:51,376
+for creating Redis like 15, 16 years ago,
+
+594
+00:24:51,376 --> 00:24:52,786
+they're no longer valid.
+
+595
+00:24:52,786 --> 00:24:56,070
+So what we created is
+we created Redis Flex
+
+596
+00:24:56,070 --> 00:24:58,037
+and Redis Flex is auto tiering
+
+597
+00:24:58,037 --> 00:25:00,750
+for higher scale at lower costs.
+
+598
+00:25:00,750 --> 00:25:03,900
+So we extend your key space
+with a slower storage,
+
+599
+00:25:03,900 --> 00:25:05,220
+either SSD or NVME.
+
+600
+00:25:05,220 --> 00:25:08,160
+And so key and values, they
+either reside in memory
+
+601
+00:25:08,160 --> 00:25:09,786
+or they reside on the slower storage.
+
+602
+00:25:09,786 --> 00:25:11,670
+Of course, we will keep the keys
+
+603
+00:25:11,670 --> 00:25:13,354
+that you access more frequently into RAM
+
+604
+00:25:13,354 --> 00:25:16,504
+and the ones that are cold
+values are called cold keys.
+
+605
+00:25:16,504 --> 00:25:19,271
+And cold values will keep
+them on the slower storage.
+
+606
+00:25:19,271 --> 00:25:21,688
+So within Redis cloud
+you can actually choose
+
+607
+00:25:21,688 --> 00:25:24,690
+how much RAM you will
+have within your database.
+
+608
+00:25:24,690 --> 00:25:28,529
+You can configure that
+to 90% to be on disk.
+
+609
+00:25:28,529 --> 00:25:30,960
+You can create databases
+up to 50 terabytes.
+
+610
+00:25:30,960 --> 00:25:32,475
+It starts at 250 gigabytes minimum.
+
+611
+00:25:32,475 --> 00:25:35,970
+And of course the new pricing is in place
+
+612
+00:25:35,970 --> 00:25:37,980
+and it reduces the cost
+compared to an in-memory days
+
+613
+00:25:37,980 --> 00:25:40,013
+by up to 75%.
+
+614
+00:25:41,101 --> 00:25:44,808
+We've got customers like
+ifood, Heber will talk about
+
+615
+00:25:44,808 --> 00:25:46,676
+that later on, of course
+using this as well.
+
+616
+00:25:46,676 --> 00:25:49,726
+And the top use case for
+using this is actually
+
+617
+00:25:49,726 --> 00:25:51,956
+a Feature Store use case.
+
+618
+00:25:51,956 --> 00:25:55,476
+And if you combine it again
+with RDI, we can actually move
+
+619
+00:25:55,476 --> 00:25:57,750
+and keep that Feature
+Store always in sync,
+
+620
+00:25:57,750 --> 00:26:01,893
+the latest feature that you
+have in your primary databases.
+
+621
+00:26:03,642 --> 00:26:07,197
+One more QR code, there's one more coming.
+
+622
+00:26:07,197 --> 00:26:11,010
+Redis Flex, since this week
+actually generally available
+
+623
+00:26:11,010 --> 00:26:12,303
+on Redis Cloud.
+
+624
+00:26:16,049 --> 00:26:21,049
+So one more evolution story is that
+
+625
+00:26:24,420 --> 00:26:27,150
+as users we're leveraging Redis,
+
+626
+00:26:27,150 --> 00:26:30,090
+they were actually using
+it for more rich use cases.
+
+627
+00:26:30,090 --> 00:26:32,904
+And this is a beautiful
+prompt as well by the way.
+
+628
+00:26:32,904 --> 00:26:35,866
+But what we saw is that lots
+of users, they were actually
+
+629
+00:26:35,866 --> 00:26:38,850
+serializing Java objects
+
+630
+00:26:38,850 --> 00:26:40,590
+and writing them into strings
+
+631
+00:26:40,590 --> 00:26:42,629
+in the strings data structure.
+
+632
+00:26:42,629 --> 00:26:45,510
+Now that's interesting
+because what they needed
+
+633
+00:26:45,510 --> 00:26:46,890
+was some level of nesting,
+
+634
+00:26:46,890 --> 00:26:48,750
+they needed like a
+hierarchical data structure,
+
+635
+00:26:48,750 --> 00:26:51,530
+but the only hierarchical
+data structure available
+
+636
+00:26:51,530 --> 00:26:54,573
+in Redis is a hash where we
+have like one level of nesting.
+
+637
+00:26:55,773 --> 00:26:57,723
+So the prompt here was,
+
+638
+00:26:58,784 --> 00:27:02,793
+draw me an image of JSON
+serialized into a string.
+
+639
+00:27:04,006 --> 00:27:09,006
+There are many things wrong
+there, but... (chuckles)
+
+640
+00:27:10,020 --> 00:27:11,963
+So what is the problem
+
+641
+00:27:11,963 --> 00:27:14,221
+that we see that our users,
+
+642
+00:27:14,221 --> 00:27:17,238
+our community actually
+doing with this is that
+
+643
+00:27:17,238 --> 00:27:20,040
+they would like to do, for example,
+
+644
+00:27:20,040 --> 00:27:22,275
+a small update within an asset document.
+
+645
+00:27:22,275 --> 00:27:23,790
+But to do that they have to retrieve
+
+646
+00:27:23,790 --> 00:27:24,996
+the entire serialized object.
+
+647
+00:27:24,996 --> 00:27:28,020
+Deserialize it, make an update,
+
+648
+00:27:28,020 --> 00:27:30,360
+serialize it, and write it back.
+
+649
+00:27:30,360 --> 00:27:31,440
+Meanwhile, somebody else
+
+650
+00:27:31,440 --> 00:27:32,813
+or some other client might
+have updated that key.
+
+651
+00:27:32,813 --> 00:27:34,290
+So you need to watch that key.
+
+652
+00:27:34,290 --> 00:27:36,882
+You might need to rewrite
+that entire operation.
+
+653
+00:27:36,882 --> 00:27:39,540
+Another problem is, is
+that if you would like
+
+654
+00:27:39,540 --> 00:27:41,852
+to retrieve some part of your
+nest document, you still have
+
+655
+00:27:41,852 --> 00:27:43,202
+to retrieve the entire document.
+
+656
+00:27:43,202 --> 00:27:45,180
+And that's not the Redis way.
+
+657
+00:27:45,180 --> 00:27:47,460
+The Redis way is about
+simplicity and about performance.
+
+658
+00:27:47,460 --> 00:27:48,870
+You only wanna retrieve and send over
+
+659
+00:27:48,870 --> 00:27:51,265
+the network exactly what you need.
+
+660
+00:27:51,265 --> 00:27:54,282
+So we created a native
+JSON data structure.
+
+661
+00:27:54,282 --> 00:27:55,710
+There's lots of text on there,
+
+662
+00:27:55,710 --> 00:27:58,110
+but the main point is that
+
+663
+00:27:58,110 --> 00:28:00,016
+under the hood it's a binary tree.
+
+664
+00:28:00,016 --> 00:28:03,690
+And as such with JSON pod, you
+can actually do two things.
+
+665
+00:28:03,690 --> 00:28:05,602
+There are many things you can do,
+
+666
+00:28:05,602 --> 00:28:06,435
+but the two important ones
+to take away from it is
+
+667
+00:28:06,435 --> 00:28:08,985
+that you can do atomic updates
+
+668
+00:28:08,985 --> 00:28:11,160
+on a sub path of your documents.
+
+669
+00:28:11,160 --> 00:28:12,672
+So for example, you can say in this JSON,
+
+670
+00:28:12,672 --> 00:28:16,212
+there's a MacBook with a quantity of 15.
+
+671
+00:28:16,212 --> 00:28:20,190
+You can do JSON.inker by,
+you can specify the path
+
+672
+00:28:20,190 --> 00:28:22,920
+of your document and you
+say increment it by 3.
+
+673
+00:28:22,920 --> 00:28:23,970
+This is the Redis way, right?
+
+674
+00:28:23,970 --> 00:28:25,521
+Rather than having to retrieve
+that document client site,
+
+675
+00:28:25,521 --> 00:28:27,423
+make the change and write it back.
+
+676
+00:28:28,629 --> 00:28:31,170
+And you can of course also still retrieve
+
+677
+00:28:31,170 --> 00:28:32,613
+sub parts of that document.
+
+678
+00:28:34,860 --> 00:28:37,800
+Now we've built this Redis query engine
+
+679
+00:28:37,800 --> 00:28:40,650
+and this also works of course
+with our Redis query engine.
+
+680
+00:28:40,650 --> 00:28:41,970
+So that makes it very interesting
+
+681
+00:28:41,970 --> 00:28:44,160
+because we can now index
+fields based upon this
+
+682
+00:28:44,160 --> 00:28:45,483
+JSON path expression.
+
+683
+00:28:46,633 --> 00:28:50,250
+Users also wanted to use our
+vector search capabilities
+
+684
+00:28:50,250 --> 00:28:53,100
+with this Redis query engine.
+
+685
+00:28:53,100 --> 00:28:56,220
+The way to model a
+vector into JSON is just
+
+686
+00:28:56,220 --> 00:28:57,870
+by using an array and
+you have all the values
+
+687
+00:28:57,870 --> 00:29:00,532
+of your vector in that array.
+
+688
+00:29:00,532 --> 00:29:04,722
+The problem with this
+initial data structure
+
+689
+00:29:04,722 --> 00:29:08,394
+that we've created was that
+if you would model the same
+
+690
+00:29:08,394 --> 00:29:10,770
+vector in a JSON data structure,
+
+691
+00:29:10,770 --> 00:29:13,881
+it would consume seven times
+more memory than it would do
+
+692
+00:29:13,881 --> 00:29:16,320
+into into a hash.
+
+693
+00:29:16,320 --> 00:29:18,420
+It makes it like very impractical
+
+694
+00:29:18,420 --> 00:29:20,861
+because it can be way too
+expensive to use that.
+
+695
+00:29:20,861 --> 00:29:23,190
+So it's great that we
+have this capability,
+
+696
+00:29:23,190 --> 00:29:25,754
+but it was not useful for
+vector search capabilities.
+
+697
+00:29:25,754 --> 00:29:28,710
+So what we did is we
+actually built a feature
+
+698
+00:29:28,710 --> 00:29:30,813
+that allows us to compress vectors
+
+699
+00:29:30,813 --> 00:29:33,270
+and we call it like for homogeneous erase.
+
+700
+00:29:33,270 --> 00:29:35,672
+So when all the elements in
+your JSON are of the same type
+
+701
+00:29:35,672 --> 00:29:38,232
+or the same elements, you
+can actually compress that,
+
+702
+00:29:38,232 --> 00:29:40,920
+rather than having type, value type value
+
+703
+00:29:40,920 --> 00:29:42,262
+will now just like compress that.
+
+704
+00:29:42,262 --> 00:29:44,237
+And for specific vector types,
+
+705
+00:29:44,237 --> 00:29:46,933
+we can actually reduce
+the memory up to 92%.
+
+706
+00:29:46,933 --> 00:29:49,050
+And that really makes it
+like practical because
+
+707
+00:29:49,050 --> 00:29:50,550
+before that it was like seven times more
+
+708
+00:29:50,550 --> 00:29:52,650
+and now it's actually even less than hash.
+
+709
+00:29:53,757 --> 00:29:56,220
+I think this is really interesting
+
+710
+00:29:56,220 --> 00:29:59,430
+because now we can have model
+hierarchical data in Redis
+
+711
+00:29:59,430 --> 00:30:02,283
+and also add a vector similarity
+search on top of that.
+
+712
+00:30:03,427 --> 00:30:06,541
+Now that's not the only thing
+that we've been improving.
+
+713
+00:30:06,541 --> 00:30:09,440
+We've also focused upon Redis Open Source
+
+714
+00:30:09,440 --> 00:30:10,600
+and making it incrementally faster.
+
+715
+00:30:10,600 --> 00:30:13,944
+This is a benchmark that
+we did on a mixed workload
+
+716
+00:30:13,944 --> 00:30:15,379
+and we try to focus upon that.
+
+717
+00:30:15,379 --> 00:30:17,430
+We try to focus upon
+like real life workload,
+
+718
+00:30:17,430 --> 00:30:19,959
+not like workloads that
+are like lab setups tests.
+
+719
+00:30:19,959 --> 00:30:23,642
+So in this case it's like
+10% writes, 90% reads.
+
+720
+00:30:23,642 --> 00:30:26,370
+We're using four IO threads,
+
+721
+00:30:26,370 --> 00:30:28,382
+but each key is one kilobyte in size.
+
+722
+00:30:28,382 --> 00:30:30,510
+And every minor version
+
+723
+00:30:30,510 --> 00:30:32,254
+that we make there is
+actually an increment.
+
+724
+00:30:32,254 --> 00:30:34,440
+And the latest version 8.4,
+
+725
+00:30:34,440 --> 00:30:35,850
+we actually crossed to 1 million.
+
+726
+00:30:35,850 --> 00:30:37,342
+So in a four core box,
+
+727
+00:30:37,342 --> 00:30:40,260
+on a single main thread Redis process,
+
+728
+00:30:40,260 --> 00:30:42,873
+you can now do more than
+1.25 million operations.
+
+729
+00:30:44,670 --> 00:30:45,603
+Mixed workload.
+
+730
+00:30:46,980 --> 00:30:48,570
+And we also wanted to
+make it faster of course
+
+731
+00:30:48,570 --> 00:30:50,250
+for our enterprise customers.
+
+732
+00:30:50,250 --> 00:30:53,070
+So what we've done is we invested
+a lot in our TLS solution.
+
+733
+00:30:53,070 --> 00:30:55,080
+So when you have a secure connection
+
+734
+00:30:55,080 --> 00:30:59,333
+with TLS towards our Redis
+cloud database, we can easily
+
+735
+00:30:59,333 --> 00:31:01,320
+deliver two times the performance compared
+
+736
+00:31:01,320 --> 00:31:03,783
+to ElastiCache on the
+same number of VCPUs.
+
+737
+00:31:07,265 --> 00:31:10,590
+In general Redis the 8.4,
+which is the latest release,
+
+738
+00:31:10,590 --> 00:31:12,042
+is the fastest Redis ever.
+
+739
+00:31:12,042 --> 00:31:16,410
+It's up to 40% faster in
+scaling up and scaling down,
+
+740
+00:31:16,410 --> 00:31:18,162
+which is particularly
+important for our customers,
+
+741
+00:31:18,162 --> 00:31:20,743
+for example, in events like Black Friday.
+
+742
+00:31:20,743 --> 00:31:24,559
+We focus a lot upon improving
+the latency of each command.
+
+743
+00:31:24,559 --> 00:31:28,227
+We can now just by upgrading
+to 7.4, which was the latest,
+
+744
+00:31:28,227 --> 00:31:31,440
+the the previous minus
+to 8.4, you can get up
+
+745
+00:31:31,440 --> 00:31:33,722
+to 90% latency improvements
+just by upgrading.
+
+746
+00:31:33,722 --> 00:31:37,560
+I know that the top two there
+are hyper log and bitmap,
+
+747
+00:31:37,560 --> 00:31:39,300
+which you might not be using.
+
+748
+00:31:39,300 --> 00:31:42,650
+However, for hashes it's
+up to 55% and for sets
+
+749
+00:31:42,650 --> 00:31:45,312
+it sets is up to 70%.
+
+750
+00:31:45,312 --> 00:31:47,340
+And we also added quantization
+
+751
+00:31:47,340 --> 00:31:48,480
+into our vector search solution,
+
+752
+00:31:48,480 --> 00:31:50,449
+which obviously drastically
+reduces the size
+
+753
+00:31:50,449 --> 00:31:53,457
+of the index but also
+enables a higher throughput.
+
+754
+00:31:53,457 --> 00:31:56,137
+And we spoke about the
+memory savings before.
+
+755
+00:31:56,137 --> 00:31:59,165
+There are many more things
+that we did in Redis 8.4
+
+756
+00:31:59,165 --> 00:32:01,890
+and it would just be
+like a long enumeration
+
+757
+00:32:01,890 --> 00:32:02,723
+of small things.
+
+758
+00:32:02,723 --> 00:32:04,999
+And actually I think they're
+all like paper cut fixes.
+
+759
+00:32:04,999 --> 00:32:07,830
+Sometimes you need to use
+two commands, for example,
+
+760
+00:32:07,830 --> 00:32:10,020
+to add an element into a specific key
+
+761
+00:32:10,020 --> 00:32:12,240
+and then do an expiry which required you
+
+762
+00:32:12,240 --> 00:32:13,774
+to do a transaction, et cetera, et cetera.
+
+763
+00:32:13,774 --> 00:32:15,784
+So there are small things
+that we keep on improving
+
+764
+00:32:15,784 --> 00:32:19,413
+and actually make a better
+experience for our developers.
+
+765
+00:32:20,250 --> 00:32:21,083
+They're made there.
+
+766
+00:32:21,083 --> 00:32:23,010
+I don't wanna go over the long list,
+
+767
+00:32:23,010 --> 00:32:24,720
+but we wrote a long blog post about that
+
+768
+00:32:24,720 --> 00:32:26,190
+with all those changes.
+
+769
+00:32:26,190 --> 00:32:28,714
+And I'm happy to say that
+the Redis 8.4 is now also
+
+770
+00:32:28,714 --> 00:32:30,570
+generally available for Redis Open Source
+
+771
+00:32:30,570 --> 00:32:34,110
+and it'll be available
+early next year in our cloud
+
+772
+00:32:34,110 --> 00:32:36,783
+and also for our enterprise
+on-premise customers.
+
+773
+00:32:38,229 --> 00:32:39,690
+I've been talking a lot.
+
+774
+00:32:39,690 --> 00:32:40,800
+I'm going to summarize, I'm going
+
+775
+00:32:40,800 --> 00:32:43,264
+to head out over finally
+to Heber, gimme one moment.
+
+776
+00:32:43,264 --> 00:32:46,305
+So the modern cache,
+like how this all evolved
+
+777
+00:32:46,305 --> 00:32:49,874
+from let's say 10 years ago.
+
+778
+00:32:49,874 --> 00:32:52,364
+We believe that the Redis
+query engine is now really
+
+779
+00:32:52,364 --> 00:32:55,194
+an essential ingredient
+in our modern cache stack.
+
+780
+00:32:55,194 --> 00:32:58,470
+It doesn't only solve like
+the hot key problem for
+
+781
+00:32:58,470 --> 00:32:59,586
+the sets and sorted sets,
+
+782
+00:32:59,586 --> 00:33:01,590
+but it also powers new use case such
+
+783
+00:33:01,590 --> 00:33:03,558
+as RAG and semantic caching.
+
+784
+00:33:03,558 --> 00:33:06,870
+It transforms existing use
+cases such as session store
+
+785
+00:33:06,870 --> 00:33:08,661
+but also Feature Store use cases.
+
+786
+00:33:08,661 --> 00:33:10,983
+Client side caching of
+course solves the hot key,
+
+787
+00:33:10,983 --> 00:33:12,927
+the other hot key problem.
+
+788
+00:33:12,927 --> 00:33:14,344
+Whereas data integration,
+
+789
+00:33:14,344 --> 00:33:17,465
+which is now hosted
+allows you to cache data
+
+790
+00:33:17,465 --> 00:33:21,333
+and keep it always in sync
+with your primary data source.
+
+791
+00:33:22,410 --> 00:33:24,540
+That allows for greater scalability
+
+792
+00:33:24,540 --> 00:33:26,490
+and it's faster the first time.
+
+793
+00:33:26,490 --> 00:33:27,330
+And the last thing you need to know
+
+794
+00:33:27,330 --> 00:33:28,890
+is that we're obsessed by latency.
+
+795
+00:33:28,890 --> 00:33:31,662
+It's our fastest release
+now with Redis 8.4
+
+796
+00:33:31,662 --> 00:33:33,780
+with the fastest secure cache
+
+797
+00:33:33,780 --> 00:33:37,020
+and also the fastest effective
+database on the planet.
+
+798
+00:33:37,020 --> 00:33:38,640
+And I highlighted three red things
+
+799
+00:33:38,640 --> 00:33:40,530
+and these three red things are things
+
+800
+00:33:40,530 --> 00:33:42,990
+that Heber from ifood
+is going to talk about.
+
+801
+00:33:42,990 --> 00:33:45,565
+So I would welcome him to stage right now.
+
+802
+00:33:45,565 --> 00:33:48,774
+(audience applauds)
+Thank you.
+
+803
+00:33:48,774 --> 00:33:49,607
+Good luck.
+
+804
+00:33:49,607 --> 00:33:51,131
+- Thank you Pieter.
+
+805
+00:33:51,131 --> 00:33:56,131
+So, I want to share you first
+of all my three goals here.
+
+806
+00:33:57,450 --> 00:34:01,170
+My first goal is to
+share part of my journey
+
+807
+00:34:01,170 --> 00:34:06,170
+and some applications that
+use Redis Insight, ifood.
+
+808
+00:34:06,180 --> 00:34:11,180
+And my second goal is to
+connect these applications to
+
+809
+00:34:12,012 --> 00:34:14,880
+what Pieter showed you.
+
+810
+00:34:14,880 --> 00:34:19,880
+And my third goal is to make
+my English clear to you.
+
+811
+00:34:19,950 --> 00:34:22,860
+So I hope to achieve the first two goals
+
+812
+00:34:22,860 --> 00:34:24,243
+with my English, right?
+
+813
+00:34:26,160 --> 00:34:29,067
+First of all, I am from Brazil.
+
+814
+00:34:29,067 --> 00:34:34,067
+I work with tech for more than 20 years,
+
+815
+00:34:34,080 --> 00:34:36,693
+probably just shows part of my age.
+
+816
+00:34:38,160 --> 00:34:41,546
+I'm at ifood for five years.
+
+817
+00:34:41,546 --> 00:34:46,350
+Today, I work inside a
+Gene AI platform team,
+
+818
+00:34:46,350 --> 00:34:50,580
+which is part of the ML
+platform inside ifood.
+
+819
+00:34:50,580 --> 00:34:53,832
+And part of the examples
+that I will show you is
+
+820
+00:34:53,832 --> 00:34:56,437
+inside this platform team.
+
+821
+00:34:56,437 --> 00:35:00,720
+Before ifood I worked
+with industrial automation
+
+822
+00:35:00,720 --> 00:35:05,713
+for almost 15 years.
+
+823
+00:35:05,713 --> 00:35:10,713
+And what connected me
+to the data and AI area
+
+824
+00:35:10,830 --> 00:35:13,923
+was my master degree in computer science.
+
+825
+00:35:15,277 --> 00:35:18,122
+So I know as I am,
+
+826
+00:35:18,122 --> 00:35:21,510
+you will probably forget
+part of these numbers
+
+827
+00:35:21,510 --> 00:35:25,140
+in few seconds, this is what I expect.
+
+828
+00:35:25,140 --> 00:35:30,140
+But what I'm trying to show
+you here is that ifood has
+
+829
+00:35:30,510 --> 00:35:34,662
+more than 160 million orders per month.
+
+830
+00:35:34,662 --> 00:35:39,450
+And this basically shows which
+is the amount of sessions
+
+831
+00:35:39,450 --> 00:35:43,050
+that we have per day, which
+is the amount of users
+
+832
+00:35:43,050 --> 00:35:46,641
+that are connected using ifood.
+
+833
+00:35:46,641 --> 00:35:48,129
+Ifood is,
+
+834
+00:35:48,129 --> 00:35:51,213
+who here knows ifood?
+
+835
+00:35:53,100 --> 00:35:54,780
+Wow, great.
+
+836
+00:35:54,780 --> 00:35:59,627
+Who here knows our Redis went to Brazil?
+
+837
+00:36:01,920 --> 00:36:03,270
+Great, great.
+
+838
+00:36:03,270 --> 00:36:07,350
+So ifood is known to be the biggest
+
+839
+00:36:07,350 --> 00:36:10,050
+food delivery company in Latin America.
+
+840
+00:36:10,050 --> 00:36:14,302
+But it's also a company
+with a whole ecosystem,
+
+841
+00:36:14,302 --> 00:36:18,730
+we don't deliver just food, we deliver
+
+842
+00:36:20,550 --> 00:36:25,170
+groceries, we also have logistic services
+
+843
+00:36:25,170 --> 00:36:29,130
+to deliver things to
+companies, restaurants,
+
+844
+00:36:29,130 --> 00:36:32,580
+and other types of merchants.
+
+845
+00:36:32,580 --> 00:36:37,170
+We have, when we think about
+partner establishments,
+
+846
+00:36:37,170 --> 00:36:42,170
+we have more than 450 establishments.
+
+847
+00:36:42,473 --> 00:36:47,473
+We are working or running
+inside more than 1,500 cities,
+
+848
+00:36:50,190 --> 00:36:52,080
+different cities in Brazil.
+
+849
+00:36:52,080 --> 00:36:57,080
+We have connected to the
+logistic access ecosystem.
+
+850
+00:36:57,720 --> 00:37:02,103
+We have more than 450 delivery people.
+
+851
+00:37:03,180 --> 00:37:08,180
+We have probably more
+than 60 different users
+
+852
+00:37:09,390 --> 00:37:12,960
+using monthly ifood app.
+
+853
+00:37:12,960 --> 00:37:17,960
+And we call employees
+from ifood, food lovers.
+
+854
+00:37:18,502 --> 00:37:23,070
+We have more than 8,000
+food lovers at this moment.
+
+855
+00:37:23,070 --> 00:37:26,730
+And to connect to the applications
+that we will show you,
+
+856
+00:37:26,730 --> 00:37:28,896
+and this is the message that I want you
+
+857
+00:37:28,896 --> 00:37:32,310
+to record from this slide.
+
+858
+00:37:32,310 --> 00:37:37,310
+So we have thousands of
+different services running.
+
+859
+00:37:38,760 --> 00:37:43,760
+When I say different services
+are microservices, softwares
+
+860
+00:37:44,313 --> 00:37:48,720
+that are running and
+supporting all these numbers.
+
+861
+00:37:48,720 --> 00:37:51,570
+We have agents, internal agents,
+
+862
+00:37:51,570 --> 00:37:56,570
+or agents that interact
+with external partners
+
+863
+00:37:56,678 --> 00:38:01,530
+running inside our infrastructure.
+
+864
+00:38:01,530 --> 00:38:05,310
+So this is what ifood
+representing in Brazil.
+
+865
+00:38:07,890 --> 00:38:11,970
+And the first application
+that I want to show you
+
+866
+00:38:11,970 --> 00:38:16,260
+or connect to Redis is
+
+867
+00:38:16,260 --> 00:38:19,350
+what we call internally as GenPlat.
+
+868
+00:38:19,350 --> 00:38:23,790
+Basically it's Gene AI platform which
+
+869
+00:38:23,790 --> 00:38:28,790
+connects users and different
+services to Gene AI models.
+
+870
+00:38:29,580 --> 00:38:33,450
+It's basically a way to centralize
+the access to the models,
+
+871
+00:38:33,450 --> 00:38:36,049
+but it also solves governance
+
+872
+00:38:36,049 --> 00:38:39,930
+and a lot of other challenge.
+
+873
+00:38:39,930 --> 00:38:43,020
+So the numbers of this platform
+
+874
+00:38:43,020 --> 00:38:46,100
+is basically 1 trillion tokens per month,
+
+875
+00:38:46,100 --> 00:38:50,670
+more than 400 million requests per month.
+
+876
+00:38:50,670 --> 00:38:54,600
+And basically we have at this
+moment more than 200 different
+
+877
+00:38:54,600 --> 00:38:59,460
+services using our platform
+to access Gene AI models.
+
+878
+00:38:59,460 --> 00:39:01,844
+Part of these models are inside AWS,
+
+879
+00:39:01,844 --> 00:39:05,160
+part of these models are
+outside, for example,
+
+880
+00:39:05,160 --> 00:39:07,140
+we have OpenAI, Gemini,
+
+881
+00:39:07,140 --> 00:39:09,990
+and we also have some Open
+Source models that we train
+
+882
+00:39:09,990 --> 00:39:12,210
+by ourselves and are running
+
+883
+00:39:12,210 --> 00:39:15,783
+and making Gene AI inferences
+there internally, ifood.
+
+884
+00:39:17,029 --> 00:39:20,861
+Besides these services
+numbers, we also have
+
+885
+00:39:20,861 --> 00:39:25,500
+more than 500 different users
+
+886
+00:39:25,500 --> 00:39:27,969
+that uses Gene AI models to create code
+
+887
+00:39:27,969 --> 00:39:32,969
+and use them to make their
+life easier and better.
+
+888
+00:39:33,568 --> 00:39:35,692
+And where is Redis here?
+
+889
+00:39:35,692 --> 00:39:38,730
+Redis is basically
+
+890
+00:39:38,730 --> 00:39:42,678
+the system used to
+control the rate limiting.
+
+891
+00:39:42,678 --> 00:39:44,940
+I think you already know that,
+
+892
+00:39:44,940 --> 00:39:48,844
+but when we think about the
+Gene AI model, you have limits,
+
+893
+00:39:48,844 --> 00:39:52,853
+you have requests per minute
+limits, you have tokens
+
+894
+00:39:52,853 --> 00:39:54,540
+per minute limit.
+
+895
+00:39:54,540 --> 00:39:57,846
+And Redis is used inside this platform
+
+896
+00:39:57,846 --> 00:40:01,567
+to guarantee consistence of this number.
+
+897
+00:40:01,567 --> 00:40:03,944
+"Oh, I'm a user or I'm a service,
+
+898
+00:40:03,944 --> 00:40:06,780
+I'm using this specific model
+
+899
+00:40:06,780 --> 00:40:10,230
+and I need to control this rate limit
+
+900
+00:40:10,230 --> 00:40:14,070
+and Redis is an excellent
+solution to do that.
+
+901
+00:40:14,070 --> 00:40:19,070
+So the second example that I
+want to show here is the RAG
+
+902
+00:40:21,330 --> 00:40:22,973
+that we have internally.
+
+903
+00:40:22,973 --> 00:40:27,902
+This is basically, I know
+that we are in a agent moment,
+
+904
+00:40:27,902 --> 00:40:32,250
+but few months ago we were
+talking about few months
+
+905
+00:40:32,250 --> 00:40:37,250
+or probably two years ago, we
+starting to talk about RAG.
+
+906
+00:40:37,320 --> 00:40:38,490
+It's basically a solution
+
+907
+00:40:38,490 --> 00:40:43,490
+that solves the missing context
+from the Gene AI models.
+
+908
+00:40:43,590 --> 00:40:48,006
+So if you're using an OpenAI
+model, if you're using
+
+909
+00:40:48,006 --> 00:40:52,590
+a Google model or other provider model,
+
+910
+00:40:52,590 --> 00:40:57,590
+you already know that it
+doesn't have your data there.
+
+911
+00:40:57,750 --> 00:41:00,810
+It wasn't trained using your data.
+
+912
+00:41:00,810 --> 00:41:04,410
+So the RAG solution basically
+solves this problem.
+
+913
+00:41:04,410 --> 00:41:07,238
+It gives context to the
+models to answer things
+
+914
+00:41:07,238 --> 00:41:12,238
+and to give you the answer
+you know, given this context.
+
+915
+00:41:13,380 --> 00:41:17,753
+So our internal RAG API basically is
+
+916
+00:41:17,753 --> 00:41:20,760
+split in two important pipelines.
+
+917
+00:41:20,760 --> 00:41:23,440
+The first pipeline is
+the ingestion pipeline
+
+918
+00:41:26,426 --> 00:41:30,240
+which given a group of documents,
+
+919
+00:41:30,240 --> 00:41:32,460
+you split them in chunks,
+
+920
+00:41:32,460 --> 00:41:35,700
+you store them at Redis Vector store.
+
+921
+00:41:35,700 --> 00:41:39,510
+And then this process is configurable
+
+922
+00:41:39,510 --> 00:41:44,190
+by services or by projects
+there inside ifood.
+
+923
+00:41:44,190 --> 00:41:46,698
+And then there's a second pipeline,
+
+924
+00:41:46,698 --> 00:41:47,970
+which is the retrieval pipeline.
+
+925
+00:41:47,970 --> 00:41:50,250
+During these two pipelines,
+
+926
+00:41:50,250 --> 00:41:54,870
+we are using different
+models through GenPlat API.
+
+927
+00:41:54,870 --> 00:41:57,476
+The first type of model
+is the embedding model,
+
+928
+00:41:57,476 --> 00:41:59,180
+which basically transforms the text
+
+929
+00:41:59,180 --> 00:42:02,339
+or the content in a vector of numbers
+
+930
+00:42:02,339 --> 00:42:05,820
+and stores inside the Vector store.
+
+931
+00:42:05,820 --> 00:42:09,870
+The second pipeline is the
+retrieve and answer thing.
+
+932
+00:42:09,870 --> 00:42:12,030
+So if you receive a text,
+
+933
+00:42:12,030 --> 00:42:16,196
+basically first you transform
+this text in an embedding
+
+934
+00:42:16,196 --> 00:42:20,250
+and then you retrieve from
+the vector store, which is
+
+935
+00:42:20,250 --> 00:42:24,360
+inside Redis, the contexts
+that are near that text.
+
+936
+00:42:24,360 --> 00:42:27,429
+And with this near this context,
+
+937
+00:42:27,429 --> 00:42:32,310
+you deliver it to the
+model, to the Gene AI model
+
+938
+00:42:32,310 --> 00:42:34,800
+to answer your initial question.
+
+939
+00:42:34,800 --> 00:42:35,750
+So...
+
+940
+00:42:38,340 --> 00:42:41,670
+the third application
+example that I want to share
+
+941
+00:42:41,670 --> 00:42:43,426
+with you is the Feature Store.
+
+942
+00:42:43,426 --> 00:42:47,430
+I don't know if everybody
+knows here what's
+
+943
+00:42:47,430 --> 00:42:51,476
+the solution or the pain
+that Feature Store solves,
+
+944
+00:42:51,476 --> 00:42:56,476
+but it's basically delivering
+content to make inference.
+
+945
+00:42:56,820 --> 00:43:01,416
+Inside ifood, before
+Gene AI model were used,
+
+946
+00:43:01,416 --> 00:43:05,880
+we developed a lot of
+classical machine learning.
+
+947
+00:43:05,880 --> 00:43:09,452
+And part of this
+classical machine learning
+
+948
+00:43:09,452 --> 00:43:13,560
+are make inferences to enter things.
+
+949
+00:43:13,560 --> 00:43:16,530
+For example, give
+recommendations of dishes
+
+950
+00:43:16,530 --> 00:43:19,773
+or other type of products
+to users that are connected
+
+951
+00:43:19,773 --> 00:43:22,110
+to our application.
+
+952
+00:43:22,110 --> 00:43:26,416
+So when these models are making inference,
+
+953
+00:43:26,416 --> 00:43:29,661
+they need information, they need inputs,
+
+954
+00:43:29,661 --> 00:43:34,260
+and these inputs are
+stored inside Feature Store
+
+955
+00:43:34,260 --> 00:43:37,234
+and connected to those sessions, users,
+
+956
+00:43:37,234 --> 00:43:42,234
+establishments, partners
+that I showed you,
+
+957
+00:43:42,807 --> 00:43:45,386
+we have this type of solution.
+
+958
+00:43:45,386 --> 00:43:48,830
+Basically you need to make a
+recommendation, for example,
+
+959
+00:43:48,830 --> 00:43:53,396
+to a user sometimes thousands
+or millions of users
+
+960
+00:43:53,396 --> 00:43:58,396
+and you retrieve some
+features from that user,
+
+961
+00:43:58,500 --> 00:43:59,716
+from the Feature Store
+
+962
+00:43:59,716 --> 00:44:04,080
+and you give it to a classical
+machine learning model.
+
+963
+00:44:04,080 --> 00:44:07,211
+And the output is
+basically a recommendation
+
+964
+00:44:07,211 --> 00:44:08,656
+that can be used there.
+
+965
+00:44:08,656 --> 00:44:12,356
+So with the Feature
+Store, we basically have
+
+966
+00:44:12,356 --> 00:44:17,106
+two different types of storage solutions.
+
+967
+00:44:17,106 --> 00:44:20,550
+One is for offline
+inference, which basically is
+
+968
+00:44:20,550 --> 00:44:22,830
+inside our data lake.
+
+969
+00:44:22,830 --> 00:44:26,100
+And the second one is
+to start inside Redis.
+
+970
+00:44:26,100 --> 00:44:30,660
+So when we want low latency,
+when we need to deliver things
+
+971
+00:44:30,660 --> 00:44:33,650
+to the model, and make inferences below,
+
+972
+00:44:33,650 --> 00:44:37,453
+let me see here, 10 milliseconds,
+
+973
+00:44:37,453 --> 00:44:39,383
+we use Redis.
+
+974
+00:44:39,383 --> 00:44:43,440
+This is basically one
+of the best solutions
+
+975
+00:44:43,440 --> 00:44:48,440
+or best points that Redis
+solves there inside ifood.
+
+976
+00:44:48,480 --> 00:44:49,620
+So this is it.
+
+977
+00:44:49,620 --> 00:44:53,010
+This platform also delivered
+more than 5 million
+
+978
+00:44:53,010 --> 00:44:54,168
+requests per second.
+
+979
+00:44:54,168 --> 00:44:56,836
+And this is basically because we use Redis
+
+980
+00:44:56,836 --> 00:45:00,071
+and we have more than one,
+
+981
+00:45:00,071 --> 00:45:05,071
+almost 2,000 different features
+that are available there.
+
+982
+00:45:09,030 --> 00:45:09,863
+This is it.
+
+983
+00:45:11,396 --> 00:45:13,533
+I think we are ready.
+

@@ -1,0 +1,4535 @@
+1
+00:00:00,000 --> 00:00:01,860
+- [Ulli] So in the talk today,
+
+2
+00:00:01,860 --> 00:00:05,760
+what we're going to do is
+look at how AI can help us
+
+3
+00:00:05,760 --> 00:00:09,330
+become more effective at
+this troubleshooting, right?
+
+4
+00:00:09,330 --> 00:00:13,830
+How we can restore service
+to our customers quicker,
+
+5
+00:00:13,830 --> 00:00:16,860
+how we can find the
+root cause of a problem,
+
+6
+00:00:16,860 --> 00:00:20,760
+and then mitigate the
+problem easier and faster.
+
+7
+00:00:20,760 --> 00:00:24,060
+Now, this is a level 300 code
+talk you're attending today,
+
+8
+00:00:24,060 --> 00:00:25,860
+so which means we're gonna show you a lot
+
+9
+00:00:25,860 --> 00:00:29,460
+of hands-on things using
+Amazon OpenSearch Service,
+
+10
+00:00:29,460 --> 00:00:31,050
+we're going to show you code,
+
+11
+00:00:31,050 --> 00:00:34,170
+but we're not necessarily
+going into the level 400
+
+12
+00:00:34,170 --> 00:00:36,960
+of explaining every single line
+
+13
+00:00:36,960 --> 00:00:38,100
+of what we're doing.
+
+14
+00:00:38,100 --> 00:00:40,722
+It's more meant to be
+an inspirational session
+
+15
+00:00:40,722 --> 00:00:43,890
+of what you can do in this area,
+
+16
+00:00:43,890 --> 00:00:46,413
+and how you can achieve
+it using OpenSearch.
+
+17
+00:00:49,740 --> 00:00:53,850
+We have prepared a thorough guide for you
+
+18
+00:00:53,850 --> 00:00:57,060
+that will link to, in the
+end, it's a GitHub Gist,
+
+19
+00:00:57,060 --> 00:00:59,130
+which will contain all of the references,
+
+20
+00:00:59,130 --> 00:01:00,360
+all of the code snippets,
+
+21
+00:01:00,360 --> 00:01:02,550
+and all of the material that you will need
+
+22
+00:01:02,550 --> 00:01:05,010
+to dive deeper on this
+yourself afterwards.
+
+23
+00:01:05,010 --> 00:01:08,370
+So there's no need for
+you to take photographs
+
+24
+00:01:08,370 --> 00:01:12,030
+or note stuff down, and
+research on the fly and so on.
+
+25
+00:01:12,030 --> 00:01:14,253
+We'll all reference that afterwards, okay?
+
+26
+00:01:15,120 --> 00:01:16,530
+So my name is Ulli.
+
+27
+00:01:16,530 --> 00:01:20,010
+I'm a solutions architect
+based in Berlin, Germany,
+
+28
+00:01:20,010 --> 00:01:23,130
+and my primary job is to work
+
+29
+00:01:23,130 --> 00:01:27,120
+with software companies
+running SaaS on AWS,
+
+30
+00:01:27,120 --> 00:01:30,960
+but I'm also part of the
+OpenSearch community here at AWS.
+
+31
+00:01:30,960 --> 00:01:35,460
+And today I'm very happy to
+be accompanied by Rueben.
+
+32
+00:01:35,460 --> 00:01:36,293
+- [Rueben] Hi, everyone.
+
+33
+00:01:36,293 --> 00:01:39,570
+Rueben Jimenez, also a
+senior solutions architect,
+
+34
+00:01:39,570 --> 00:01:43,800
+and dedicated to the
+community of CloudOps.
+
+35
+00:01:43,800 --> 00:01:45,030
+More of the observability,
+
+36
+00:01:45,030 --> 00:01:47,010
+more of the optimization perspective,
+
+37
+00:01:47,010 --> 00:01:48,810
+and very similar to Ulli,
+
+38
+00:01:48,810 --> 00:01:51,873
+dealing with SaaS customers
+and SaaS customers at scale.
+
+39
+00:01:53,520 --> 00:01:55,980
+- [Ulli] So before we go
+into the hands-on part,
+
+40
+00:01:55,980 --> 00:01:58,680
+let me give you a brief
+tour of the demo application
+
+41
+00:01:58,680 --> 00:02:00,990
+that we've developed for this talk.
+
+42
+00:02:00,990 --> 00:02:03,480
+So when we talk about observability
+
+43
+00:02:03,480 --> 00:02:06,030
+and we do a hands-on demo for that,
+
+44
+00:02:06,030 --> 00:02:07,260
+we need some application
+
+45
+00:02:07,260 --> 00:02:09,750
+that generates our observability data.
+
+46
+00:02:09,750 --> 00:02:13,320
+And what we've done here, for
+you to have as a background,
+
+47
+00:02:13,320 --> 00:02:18,320
+is we've basically taken the
+OpenTelemetry demo application
+
+48
+00:02:18,360 --> 00:02:19,950
+and modified that.
+
+49
+00:02:19,950 --> 00:02:22,770
+So the OpenTelemetry demo application,
+
+50
+00:02:22,770 --> 00:02:24,990
+if you don't know it, it's
+an open-source project.
+
+51
+00:02:24,990 --> 00:02:27,330
+You can go and check it out on GitHub,
+
+52
+00:02:27,330 --> 00:02:31,680
+and it's basically a web shop
+where you can buy telescopes,
+
+53
+00:02:31,680 --> 00:02:33,900
+binoculars, and such things.
+
+54
+00:02:33,900 --> 00:02:36,600
+And this web shop is backed by a series
+
+55
+00:02:36,600 --> 00:02:38,520
+of different microservices
+
+56
+00:02:38,520 --> 00:02:40,320
+that are all performing different tasks,
+
+57
+00:02:40,320 --> 00:02:44,520
+such as shipping, such
+as billing, checkout,
+
+58
+00:02:44,520 --> 00:02:45,630
+and so on and so forth,
+
+59
+00:02:45,630 --> 00:02:47,490
+accounting and different microservices.
+
+60
+00:02:47,490 --> 00:02:48,933
+You'll see later on.
+
+61
+00:02:49,920 --> 00:02:53,040
+Now, the main modification
+we did to that application
+
+62
+00:02:53,040 --> 00:02:56,310
+is to make it into a
+multi-tenant SaaS application.
+
+63
+00:02:56,310 --> 00:02:59,130
+So what we're pretending here
+is that we're a SaaS provider
+
+64
+00:02:59,130 --> 00:03:01,290
+that offers these web shops
+
+65
+00:03:01,290 --> 00:03:06,270
+to different web shop providers
+in a multi-tenant fashion.
+
+66
+00:03:06,270 --> 00:03:07,980
+And what we did for that is,
+
+67
+00:03:07,980 --> 00:03:10,290
+we duplicated this demo application
+
+68
+00:03:10,290 --> 00:03:12,090
+across our different tenants.
+
+69
+00:03:12,090 --> 00:03:14,220
+And when you see these animal names,
+
+70
+00:03:14,220 --> 00:03:16,410
+this is our tenant identifiers, right?
+
+71
+00:03:16,410 --> 00:03:17,940
+So we have 10 of those.
+
+72
+00:03:17,940 --> 00:03:21,180
+And then we also extracted
+some shared services
+
+73
+00:03:21,180 --> 00:03:23,670
+from these tenants, which is a pattern
+
+74
+00:03:23,670 --> 00:03:26,130
+that we often see in
+multi-tenant applications, right?
+
+75
+00:03:26,130 --> 00:03:29,160
+So some things are run
+locally for each tenant,
+
+76
+00:03:29,160 --> 00:03:31,140
+but then we also have shared services
+
+77
+00:03:31,140 --> 00:03:32,400
+that are running things
+
+78
+00:03:32,400 --> 00:03:34,623
+that all of our tenants have access to.
+
+79
+00:03:35,760 --> 00:03:38,730
+Now this demo application
+is deployed into Kubernetes
+
+80
+00:03:38,730 --> 00:03:40,560
+and Amazon EKS.
+
+81
+00:03:40,560 --> 00:03:43,500
+And there is a another
+component to be aware of,
+
+82
+00:03:43,500 --> 00:03:46,980
+which is these OpenTelemetry
+collector component,
+
+83
+00:03:46,980 --> 00:03:49,083
+and the application,
+
+84
+00:03:50,910 --> 00:03:53,040
+so the different tenant applications
+
+85
+00:03:53,040 --> 00:03:55,680
+and also the shared services export
+
+86
+00:03:55,680 --> 00:03:57,270
+their observability data.
+
+87
+00:03:57,270 --> 00:03:59,220
+So logs, metrics, and traces
+
+88
+00:03:59,220 --> 00:04:01,770
+into this OpenTelemetry collector,
+
+89
+00:04:01,770 --> 00:04:04,890
+and this OpenTelemetry collector
+then forwards this data
+
+90
+00:04:04,890 --> 00:04:07,113
+into Amazon OpenSearch Service.
+
+91
+00:04:08,160 --> 00:04:09,780
+And if you're not super familiar
+
+92
+00:04:09,780 --> 00:04:13,260
+with OpenSearch and
+Amazon OpenSearch Service,
+
+93
+00:04:13,260 --> 00:04:16,920
+the kind of the main database or the thing
+
+94
+00:04:16,920 --> 00:04:20,670
+that is storing the data in
+OpenSearch is called an index.
+
+95
+00:04:20,670 --> 00:04:24,180
+And then in OpenSearch Service,
+we also have this component
+
+96
+00:04:24,180 --> 00:04:28,590
+called OpenSearch Ingestion,
+which is kind of an ETL tool
+
+97
+00:04:28,590 --> 00:04:30,120
+aimed at OpenSearch, right?
+
+98
+00:04:30,120 --> 00:04:32,340
+So OpenSearch Ingestion takes the data
+
+99
+00:04:32,340 --> 00:04:35,460
+from OpenTelemetry
+collector, transforms it,
+
+100
+00:04:35,460 --> 00:04:38,250
+and puts it into OpenSearch.
+
+101
+00:04:38,250 --> 00:04:41,280
+And then last but not least,
+we have OpenSearch Dashboards,
+
+102
+00:04:41,280 --> 00:04:45,060
+which is an exploration
+and visualization component
+
+103
+00:04:45,060 --> 00:04:46,710
+in the OpenSearch ecosystem
+
+104
+00:04:46,710 --> 00:04:49,293
+that we're going to use
+to look at our data.
+
+105
+00:04:50,340 --> 00:04:53,640
+Now what you see here is a
+very classic architecture
+
+106
+00:04:53,640 --> 00:04:55,080
+for observability, right?
+
+107
+00:04:55,080 --> 00:04:58,650
+So many AWS customers
+running their applications
+
+108
+00:04:58,650 --> 00:05:01,770
+in Amazon EKS and running
+their observability
+
+109
+00:05:01,770 --> 00:05:04,200
+using OpenSearch have
+such an architecture.
+
+110
+00:05:04,200 --> 00:05:06,180
+So this is nothing new.
+
+111
+00:05:06,180 --> 00:05:10,200
+What we want to talk about
+today is the addition of AI
+
+112
+00:05:10,200 --> 00:05:12,000
+to this whole setup.
+
+113
+00:05:12,000 --> 00:05:15,510
+And we're going to cover
+three different AI use cases,
+
+114
+00:05:15,510 --> 00:05:17,880
+again, with the goal of how helping us
+
+115
+00:05:17,880 --> 00:05:21,483
+to speed up this search for
+the root cause of an issue.
+
+116
+00:05:23,010 --> 00:05:25,260
+The first thing that we'll talk about
+
+117
+00:05:25,260 --> 00:05:28,320
+is natural language query generation
+
+118
+00:05:28,320 --> 00:05:30,150
+in OpenSearch Dashboards,
+
+119
+00:05:30,150 --> 00:05:34,680
+which will help us query
+our log data quicker,
+
+120
+00:05:34,680 --> 00:05:38,073
+so that we can get to the
+root of the problem quicker.
+
+121
+00:05:39,540 --> 00:05:41,970
+Secondly, we'll talk
+about semantic log search,
+
+122
+00:05:41,970 --> 00:05:46,830
+which will enable us to
+find pieces of log data
+
+123
+00:05:46,830 --> 00:05:48,660
+that we don't know how they look.
+
+124
+00:05:48,660 --> 00:05:51,270
+So maybe you remember that if you look
+
+125
+00:05:51,270 --> 00:05:52,890
+for a specific log line,
+
+126
+00:05:52,890 --> 00:05:55,590
+you have to kind of know
+how that log line looks.
+
+127
+00:05:55,590 --> 00:05:57,540
+You have to know the specific words
+
+128
+00:05:57,540 --> 00:05:58,770
+that are mentioned in the log line
+
+129
+00:05:58,770 --> 00:06:01,140
+to actually be able to surface that.
+
+130
+00:06:01,140 --> 00:06:03,000
+But sometimes you just don't know really
+
+131
+00:06:03,000 --> 00:06:03,870
+what you're looking for.
+
+132
+00:06:03,870 --> 00:06:06,370
+And this is what the second
+section will be about.
+
+133
+00:06:07,260 --> 00:06:08,100
+And last but not least,
+
+134
+00:06:08,100 --> 00:06:11,730
+we're going to tie
+everything together using MCP
+
+135
+00:06:11,730 --> 00:06:14,910
+or model context protocol,
+where we have an AI agent,
+
+136
+00:06:14,910 --> 00:06:17,310
+in our case, Kiro CLI,
+
+137
+00:06:17,310 --> 00:06:20,670
+to do a semantic search on our log data
+
+138
+00:06:20,670 --> 00:06:23,340
+and do natural language interaction for us
+
+139
+00:06:23,340 --> 00:06:25,860
+to not only troubleshoot
+or find the root cause,
+
+140
+00:06:25,860 --> 00:06:29,553
+but also mitigate the
+issue that is underlying.
+
+141
+00:06:31,170 --> 00:06:35,523
+So let me switch over to
+our demo environment here.
+
+142
+00:06:38,010 --> 00:06:40,110
+And I brought up the same architecture
+
+143
+00:06:40,110 --> 00:06:41,940
+that I just showed you here on the left,
+
+144
+00:06:41,940 --> 00:06:43,350
+so this should be familiar.
+
+145
+00:06:43,350 --> 00:06:46,260
+This is our hotel demo application running
+
+146
+00:06:46,260 --> 00:06:48,510
+in a multi-tenant fashion.
+
+147
+00:06:48,510 --> 00:06:50,130
+And I just want to quickly show you
+
+148
+00:06:50,130 --> 00:06:51,990
+how this looks on a technical level.
+
+149
+00:06:51,990 --> 00:06:55,380
+So, if you don't know
+Kubernetes very much,
+
+150
+00:06:55,380 --> 00:07:00,090
+kubectl is the standard tooling
+to interact with Kubernetes
+
+151
+00:07:00,090 --> 00:07:01,710
+and Amazon EKS.
+
+152
+00:07:01,710 --> 00:07:03,060
+So what we can do here is,
+
+153
+00:07:03,060 --> 00:07:06,750
+we can say kubectl get namespaces,
+
+154
+00:07:06,750 --> 00:07:09,750
+and then we'll see exactly
+what you see here on the right,
+
+155
+00:07:09,750 --> 00:07:10,833
+on the left, sorry.
+
+156
+00:07:11,670 --> 00:07:16,158
+We have our different animals,
+which are our tenants.
+
+157
+00:07:16,158 --> 00:07:19,383
+We have this shared namespace down here,
+
+158
+00:07:21,000 --> 00:07:24,900
+and we also have our
+OpenTelemetry collector namespace
+
+159
+00:07:24,900 --> 00:07:25,740
+up here.
+
+160
+00:07:25,740 --> 00:07:30,273
+So this is all currently deployed
+in Amazon EKS and running.
+
+161
+00:07:31,110 --> 00:07:34,290
+And we can also have a deeper
+look into these namespaces.
+
+162
+00:07:34,290 --> 00:07:37,320
+So we can say kubectl get pods,
+
+163
+00:07:37,320 --> 00:07:39,000
+and then take one of our tenants.
+
+164
+00:07:39,000 --> 00:07:41,040
+Let's take the falcon tenant,
+
+165
+00:07:41,040 --> 00:07:43,800
+and just have a look at
+what's running in there.
+
+166
+00:07:43,800 --> 00:07:46,890
+And you can see there are
+these different microservices
+
+167
+00:07:46,890 --> 00:07:50,460
+that are powering this web
+shop that I talked about.
+
+168
+00:07:50,460 --> 00:07:52,500
+So you see here things like the cart
+
+169
+00:07:52,500 --> 00:07:56,223
+and the product catalog,
+and so on and so forth.
+
+170
+00:07:57,240 --> 00:07:59,940
+Same thing with our shared services.
+
+171
+00:07:59,940 --> 00:08:02,283
+We can have a look at those as well.
+
+172
+00:08:04,260 --> 00:08:06,450
+And you see here the shared services
+
+173
+00:08:06,450 --> 00:08:09,393
+that all of our tenants
+are centrally accessing.
+
+174
+00:08:10,620 --> 00:08:13,860
+Now you see here that, I
+mean, here we see an error,
+
+175
+00:08:13,860 --> 00:08:17,010
+but this has already
+been there for 44 days,
+
+176
+00:08:17,010 --> 00:08:19,830
+so it's nothing going on right now.
+
+177
+00:08:19,830 --> 00:08:23,010
+Everything else seems to
+be running smoothly, right?
+
+178
+00:08:23,010 --> 00:08:25,503
+No, no big issues to see so far,
+
+179
+00:08:26,640 --> 00:08:28,410
+but unfortunately not everything is good.
+
+180
+00:08:28,410 --> 00:08:30,330
+In fact, just before our session,
+
+181
+00:08:30,330 --> 00:08:34,230
+we got a call from our
+CEO and he's really upset
+
+182
+00:08:34,230 --> 00:08:36,630
+because our customers are really upset,
+
+183
+00:08:36,630 --> 00:08:39,480
+because actually the web
+shops are not working,
+
+184
+00:08:39,480 --> 00:08:42,690
+like any of our customers
+web shops are not working
+
+185
+00:08:42,690 --> 00:08:44,190
+at the moment.
+
+186
+00:08:44,190 --> 00:08:46,710
+And he said that people are able
+
+187
+00:08:46,710 --> 00:08:48,870
+to shop on the web shops,
+
+188
+00:08:48,870 --> 00:08:52,140
+like they're able to put things
+into their carts and so on,
+
+189
+00:08:52,140 --> 00:08:54,750
+but they're not actually
+able to purchase anything,
+
+190
+00:08:54,750 --> 00:08:57,570
+which, of course, is bad
+for any web shop, right?
+
+191
+00:08:57,570 --> 00:09:01,143
+So we should go and fix that ASAP.
+
+192
+00:09:02,640 --> 00:09:05,100
+So as a first step in
+troubleshooting this,
+
+193
+00:09:05,100 --> 00:09:08,280
+I'll do what probably an
+ops person would do as well
+
+194
+00:09:08,280 --> 00:09:11,460
+and try to reproduce or,
+
+195
+00:09:11,460 --> 00:09:14,760
+yeah, try to reproduce the
+problem on my own system, right?
+
+196
+00:09:14,760 --> 00:09:18,873
+And the way I do this is
+using kubectl port-forward.
+
+197
+00:09:19,710 --> 00:09:23,040
+So this is basically a tool
+to bring an application
+
+198
+00:09:23,040 --> 00:09:26,070
+that is running in
+Kubernetes to my local host
+
+199
+00:09:26,070 --> 00:09:28,650
+to be able to access it in a browser.
+
+200
+00:09:28,650 --> 00:09:31,290
+So I'll do that again
+using the falcon tenant,
+
+201
+00:09:31,290 --> 00:09:33,900
+and now I can access this demo application
+
+202
+00:09:33,900 --> 00:09:38,900
+from the falcon tenant at my
+port 8080 of my local host.
+
+203
+00:09:40,110 --> 00:09:41,853
+So let's go ahead and do that.
+
+204
+00:09:44,430 --> 00:09:46,143
+Local host: 8080.
+
+205
+00:09:47,490 --> 00:09:49,320
+And this is the web shop
+I was talking about.
+
+206
+00:09:49,320 --> 00:09:53,040
+So this is kind of the
+classic OTel demo application.
+
+207
+00:09:53,040 --> 00:09:56,550
+And down here you have different
+products at your disposal
+
+208
+00:09:56,550 --> 00:09:57,960
+that you can purchase.
+
+209
+00:09:57,960 --> 00:10:01,260
+Let's take this telescope
+here, this looks good.
+
+210
+00:10:01,260 --> 00:10:05,883
+And then let's scroll down
+here to place the order.
+
+211
+00:10:10,380 --> 00:10:12,270
+Nothing happens, right?
+
+212
+00:10:12,270 --> 00:10:13,533
+I click this,
+
+213
+00:10:15,090 --> 00:10:16,170
+nothing actually happens,
+
+214
+00:10:16,170 --> 00:10:18,240
+let's open the dev console of the browser
+
+215
+00:10:18,240 --> 00:10:21,897
+to see what's going on in
+terms of network activity here.
+
+216
+00:10:21,897 --> 00:10:24,400
+And we see that there's a call to checkout
+
+217
+00:10:25,680 --> 00:10:28,950
+and this is still pending, so
+this is taking a long time.
+
+218
+00:10:28,950 --> 00:10:31,893
+So let's see if that comes back.
+
+219
+00:10:37,260 --> 00:10:40,800
+It's actually timed out
+now with a 504, right?
+
+220
+00:10:40,800 --> 00:10:42,660
+So there seems to be something wrong.
+
+221
+00:10:42,660 --> 00:10:45,155
+504, if you remember,
+
+222
+00:10:45,155 --> 00:10:47,370
+it's a gateway timeout HTTP error, right?
+
+223
+00:10:47,370 --> 00:10:50,070
+So something is timing out somewhere,
+
+224
+00:10:50,070 --> 00:10:52,530
+but in a distributed system like this,
+
+225
+00:10:52,530 --> 00:10:55,650
+it's quite hard to find
+the root cause of this now.
+
+226
+00:10:55,650 --> 00:10:57,750
+So maybe, Rueben, we can have a look
+
+227
+00:10:57,750 --> 00:11:00,930
+at OpenSearch Dashboards to
+figure out what the problem is.
+
+228
+00:11:00,930 --> 00:11:02,543
+- [Rueben] Awesome. Thank you, Ulli.
+
+229
+00:11:03,570 --> 00:11:05,280
+So as Ulli mentioned,
+
+230
+00:11:05,280 --> 00:11:07,650
+what we can do is we
+can go into the console
+
+231
+00:11:07,650 --> 00:11:11,550
+or go into the OpenSearch
+Service, open dashboards.
+
+232
+00:11:11,550 --> 00:11:14,430
+As you can see it's an
+OpenSearch UI or dashboards
+
+233
+00:11:14,430 --> 00:11:17,430
+that specifically have
+connectivity into our clusters
+
+234
+00:11:17,430 --> 00:11:19,470
+or a multi-tenant cluster.
+
+235
+00:11:19,470 --> 00:11:21,270
+What we have here is an application
+
+236
+00:11:21,270 --> 00:11:23,283
+or endpoint that we've configured.
+
+237
+00:11:24,360 --> 00:11:25,560
+And what we'll do is we're going ahead
+
+238
+00:11:25,560 --> 00:11:28,260
+and launch this dashboard.
+
+239
+00:11:28,260 --> 00:11:30,120
+Here we have our particular cluster.
+
+240
+00:11:30,120 --> 00:11:32,160
+We can go ahead and click on that.
+
+241
+00:11:32,160 --> 00:11:33,570
+- [Ulli] Can you zoom in a bit?
+
+242
+00:11:33,570 --> 00:11:35,350
+- Sure.
+- I think it's a bit...
+
+243
+00:11:36,510 --> 00:11:37,343
+Yeah.
+
+244
+00:11:39,720 --> 00:11:41,363
+- [Rueben] How are we doing there? Good?
+
+245
+00:11:44,070 --> 00:11:46,110
+Maybe a little too much. (chuckles)
+
+246
+00:11:46,110 --> 00:11:48,060
+So what we have is, we have the logs
+
+247
+00:11:48,060 --> 00:11:51,030
+in terms of the multi-cluster
+showing up here.
+
+248
+00:11:51,030 --> 00:11:53,550
+So what we have is, we have
+kind of the look and feel for,
+
+249
+00:11:53,550 --> 00:11:55,500
+most of you that actually
+have been working
+
+250
+00:11:55,500 --> 00:11:57,960
+with OpenSearch or OpenSearch Dashboards,
+
+251
+00:11:57,960 --> 00:12:00,030
+this should look very familiar to you.
+
+252
+00:12:00,030 --> 00:12:02,010
+Really kinda have the histogram here,
+
+253
+00:12:02,010 --> 00:12:04,050
+really kinda showing the
+activity of those logs
+
+254
+00:12:04,050 --> 00:12:06,833
+that are actually put into
+that particular index.
+
+255
+00:12:13,020 --> 00:12:15,933
+I'll shrink it just a little
+bit so we can get down here.
+
+256
+00:12:18,240 --> 00:12:20,310
+And then from there, what
+we're really kind of looking at
+
+257
+00:12:20,310 --> 00:12:23,130
+is how do we then take it
+
+258
+00:12:23,130 --> 00:12:27,283
+and really kinda look at it
+from signal to noise, right?
+
+259
+00:12:27,283 --> 00:12:28,920
+So we have a lot of logs
+
+260
+00:12:28,920 --> 00:12:31,440
+that come through or that are there,
+
+261
+00:12:31,440 --> 00:12:35,520
+and how do we make it more palatable?
+
+262
+00:12:35,520 --> 00:12:38,430
+Or how do we really kind
+of start to search for
+
+263
+00:12:38,430 --> 00:12:42,780
+what is that root cause, or
+how can we start looking for
+
+264
+00:12:42,780 --> 00:12:44,550
+that needle in the haystack?
+
+265
+00:12:44,550 --> 00:12:47,010
+So if we were to just
+kind of peruse it here,
+
+266
+00:12:47,010 --> 00:12:50,190
+which we all kind of know and
+work with on a daily basis,
+
+267
+00:12:50,190 --> 00:12:53,130
+especially from an ops
+perspective, kinda looking down
+
+268
+00:12:53,130 --> 00:12:56,700
+and it's really kind of a
+lot of information, right?
+
+269
+00:12:56,700 --> 00:12:58,380
+Nothing that we can really index on,
+
+270
+00:12:58,380 --> 00:13:00,150
+or really anything that we can kind
+
+271
+00:13:00,150 --> 00:13:03,000
+of put our finger on,
+right, in terms of that.
+
+272
+00:13:03,000 --> 00:13:04,617
+So what we wanna do here,
+
+273
+00:13:04,617 --> 00:13:07,140
+and you kind of ask yourself,
+"Well, I could just go ahead
+
+274
+00:13:07,140 --> 00:13:09,630
+and I could do a query,
+I could put it together,
+
+275
+00:13:09,630 --> 00:13:11,370
+and I could kinda figure it out."
+
+276
+00:13:11,370 --> 00:13:13,350
+That might take a lot of time, right?
+
+277
+00:13:13,350 --> 00:13:15,727
+And especially if you haven't
+done it in a while, it's like,
+
+278
+00:13:15,727 --> 00:13:18,150
+"Oh, my goodness, where do I start?"
+
+279
+00:13:18,150 --> 00:13:20,700
+So what we wanna do is
+then kind of ask ourselves,
+
+280
+00:13:20,700 --> 00:13:23,850
+could we use AI to actually
+help us do that, right?
+
+281
+00:13:23,850 --> 00:13:26,340
+Could we use AI to give
+us a little helping hand
+
+282
+00:13:26,340 --> 00:13:29,070
+in order to kind of figure that
+out or what that looks like?
+
+283
+00:13:29,070 --> 00:13:30,300
+So what we're gonna do now is,
+
+284
+00:13:30,300 --> 00:13:32,340
+we're gonna go ahead and put in a prompt,
+
+285
+00:13:32,340 --> 00:13:33,390
+and then what we'll try to do is,
+
+286
+00:13:33,390 --> 00:13:34,980
+we'll try to narrow it down, right?
+
+287
+00:13:34,980 --> 00:13:36,810
+Kinda narrow the logs down,
+
+288
+00:13:36,810 --> 00:13:39,753
+kinda narrow overall what's
+happening or what's going on.
+
+289
+00:13:41,280 --> 00:13:42,330
+So what I have here is,
+
+290
+00:13:42,330 --> 00:13:44,700
+I kinda have a cheat
+sheet from here, right,
+
+291
+00:13:44,700 --> 00:13:45,630
+in terms of that.
+
+292
+00:13:45,630 --> 00:13:48,000
+So what I'll do is, I'll pop into here,
+
+293
+00:13:48,000 --> 00:13:50,010
+I'll copy this, and this
+is really the prompt
+
+294
+00:13:50,010 --> 00:13:52,560
+that I'm putting in for AI.
+
+295
+00:13:52,560 --> 00:13:54,660
+So what I'll do is, I'll pop it into here,
+
+296
+00:13:57,240 --> 00:13:58,620
+and what I'm actually mentioning
+
+297
+00:13:58,620 --> 00:14:01,023
+or what I'm actually
+bringing attention to is,
+
+298
+00:14:02,424 --> 00:14:06,033
+how can we narrow it, or get to the cause.
+
+299
+00:14:06,900 --> 00:14:09,480
+In the past, I've worked with this before,
+
+300
+00:14:09,480 --> 00:14:10,980
+and since I've been familiar
+
+301
+00:14:10,980 --> 00:14:12,360
+with the infrastructure
+and things like that
+
+302
+00:14:12,360 --> 00:14:15,180
+and working with teams, I'm able to say,
+
+303
+00:14:15,180 --> 00:14:19,080
+this really kind of barks
+like a dog and kinda acts like
+
+304
+00:14:19,080 --> 00:14:21,750
+in terms of an exceeded rate limit, right?
+
+305
+00:14:21,750 --> 00:14:24,060
+And so we've kind of had this in the past
+
+306
+00:14:24,060 --> 00:14:26,160
+and I've kind of seen it, right?
+
+307
+00:14:26,160 --> 00:14:28,230
+So I'm heading towards that direction
+
+308
+00:14:28,230 --> 00:14:29,700
+and see if I can get confirmation
+
+309
+00:14:29,700 --> 00:14:32,130
+or not overall for that, right?
+
+310
+00:14:32,130 --> 00:14:34,230
+So I'll go ahead and hit this prompt here.
+
+311
+00:14:37,320 --> 00:14:39,240
+And so what's nice about AI as well,
+
+312
+00:14:39,240 --> 00:14:41,130
+so not only did it actually narrow it down
+
+313
+00:14:41,130 --> 00:14:43,320
+a little bit for me,
+right, in terms of the logs
+
+314
+00:14:43,320 --> 00:14:45,090
+and things like that that are happening,
+
+315
+00:14:45,090 --> 00:14:47,040
+what I'll do is, I'll open it up a bit.
+
+316
+00:14:48,480 --> 00:14:50,310
+Can kinda see a little
+bit of the instrumentation
+
+317
+00:14:50,310 --> 00:14:51,600
+that went on here, right?
+
+318
+00:14:51,600 --> 00:14:53,700
+Looking for different things.
+
+319
+00:14:53,700 --> 00:14:55,830
+Ah, and it actually picked it up, right?
+
+320
+00:14:55,830 --> 00:14:57,180
+Rate limit exceeded.
+
+321
+00:14:57,180 --> 00:14:58,620
+And it looks like it's actually doing
+
+322
+00:14:58,620 --> 00:14:59,880
+kinda the ship-order, right?
+
+323
+00:14:59,880 --> 00:15:03,210
+Or the ship-order maybe being affected,
+
+324
+00:15:03,210 --> 00:15:05,430
+or maybe something going on with that
+
+325
+00:15:05,430 --> 00:15:08,190
+in terms of, could cause some problems
+
+326
+00:15:08,190 --> 00:15:10,440
+with the other tenants, right, overall,
+
+327
+00:15:10,440 --> 00:15:13,320
+or it could be a tenant
+that's oversubscribed
+
+328
+00:15:13,320 --> 00:15:16,680
+and actually causing that
+shared service to have issues.
+
+329
+00:15:16,680 --> 00:15:19,980
+What it also did for us, it
+actually went ahead normally,
+
+330
+00:15:19,980 --> 00:15:22,710
+as I mentioned before, is
+we could do a PPL, right?
+
+331
+00:15:22,710 --> 00:15:24,120
+And it actually did that for us.
+
+332
+00:15:24,120 --> 00:15:26,460
+So not only did it actually do an AI
+
+333
+00:15:26,460 --> 00:15:28,470
+or give us kind of some recommendations,
+
+334
+00:15:28,470 --> 00:15:31,470
+but it also gave us a PPL,
+that if we weren't familiar
+
+335
+00:15:31,470 --> 00:15:34,500
+with really kind of how
+to craft that or do that,
+
+336
+00:15:34,500 --> 00:15:36,750
+it gives it to us right
+there and then, right?
+
+337
+00:15:36,750 --> 00:15:38,070
+So we have a reference
+
+338
+00:15:38,070 --> 00:15:39,720
+that we could actually do it and run it.
+
+339
+00:15:39,720 --> 00:15:42,330
+So it's very similar to the different PPLs
+
+340
+00:15:42,330 --> 00:15:45,300
+that you would run normally
+in your operations.
+
+341
+00:15:45,300 --> 00:15:46,950
+So if we go to the AI Summary too,
+
+342
+00:15:46,950 --> 00:15:49,293
+which gives us a little bit of help here.
+
+343
+00:15:54,060 --> 00:15:56,970
+Ah, taking a bit to generate.
+
+344
+00:15:56,970 --> 00:15:59,370
+So again, it's saying, "Hey,
+we did a sample of this,"
+
+345
+00:15:59,370 --> 00:16:02,280
+and it looks like it's the
+shipping-rate-limiter, right,
+
+346
+00:16:02,280 --> 00:16:03,750
+or shared namespace.
+
+347
+00:16:03,750 --> 00:16:05,970
+That could be the smoking gun, right?
+
+348
+00:16:05,970 --> 00:16:07,200
+So it gives us a little bit more
+
+349
+00:16:07,200 --> 00:16:09,300
+and it says, "Hey, look,
+it could actually affect
+
+350
+00:16:09,300 --> 00:16:12,120
+or affect these downstream
+processes," right?
+
+351
+00:16:12,120 --> 00:16:14,910
+Or these other shared services
+because of high traffic
+
+352
+00:16:14,910 --> 00:16:17,190
+and not be able to process it overall.
+
+353
+00:16:17,190 --> 00:16:19,290
+So we're now kind of formulating a picture
+
+354
+00:16:19,290 --> 00:16:21,060
+of what does that look like.
+
+355
+00:16:21,060 --> 00:16:22,620
+Now we're starting to
+really kind of hone in
+
+356
+00:16:22,620 --> 00:16:25,980
+on what does that needle
+in the haystack overall.
+
+357
+00:16:25,980 --> 00:16:27,480
+So, really, we could do this
+
+358
+00:16:27,480 --> 00:16:29,730
+and have some confirmation here,
+
+359
+00:16:29,730 --> 00:16:32,070
+but what we wanna do is really
+kind of just look at this
+
+360
+00:16:32,070 --> 00:16:33,990
+and let's go through even kind
+
+361
+00:16:33,990 --> 00:16:35,730
+of some visualization, right?
+
+362
+00:16:35,730 --> 00:16:38,040
+I want to pretty kind
+of kick that through.
+
+363
+00:16:38,040 --> 00:16:38,880
+But what I wanna do is,
+
+364
+00:16:38,880 --> 00:16:41,190
+I wanna kinda show you how this works.
+
+365
+00:16:41,190 --> 00:16:42,090
+So what we can do is,
+
+366
+00:16:42,090 --> 00:16:46,380
+we can actually do an NLP
+also for a visualization.
+
+367
+00:16:46,380 --> 00:16:49,290
+And so, again, this is kind of, ah,
+
+368
+00:16:49,290 --> 00:16:50,670
+it's kinda not really nice
+
+369
+00:16:50,670 --> 00:16:52,950
+in terms of where it actually
+shows it and things like that.
+
+370
+00:16:52,950 --> 00:16:55,500
+I think it might be an
+upgrade or not that's needed.
+
+371
+00:16:55,500 --> 00:16:56,333
+But what we're gonna do is,
+
+372
+00:16:56,333 --> 00:16:58,590
+we're gonna put in a natural response here
+
+373
+00:16:58,590 --> 00:17:01,110
+and we're gonna see where that ends up
+
+374
+00:17:01,110 --> 00:17:04,620
+or what kind of visualization
+that will confirm,
+
+375
+00:17:04,620 --> 00:17:06,480
+is our shared services having a problem
+
+376
+00:17:06,480 --> 00:17:08,460
+with other tenants, right?
+
+377
+00:17:08,460 --> 00:17:10,713
+So what I'll do is, I'll come back here,
+
+378
+00:17:12,180 --> 00:17:14,760
+and what I'm gonna do for
+this visualization here is,
+
+379
+00:17:14,760 --> 00:17:16,920
+I'm gonna log the activity, right?
+
+380
+00:17:16,920 --> 00:17:21,090
+Give me the activity of
+these particular tenants
+
+381
+00:17:21,090 --> 00:17:23,550
+and show me if there's a problem
+
+382
+00:17:23,550 --> 00:17:25,920
+or there could potentially be a problem.
+
+383
+00:17:25,920 --> 00:17:27,240
+And again, I like to think of it
+
+384
+00:17:27,240 --> 00:17:29,190
+as a picture's worth a thousand words,
+
+385
+00:17:29,190 --> 00:17:30,690
+and you can really kind of then see
+
+386
+00:17:30,690 --> 00:17:32,970
+what's happening or what's going on.
+
+387
+00:17:32,970 --> 00:17:34,110
+So as we can see here,
+
+388
+00:17:34,110 --> 00:17:36,330
+it actually generated a
+particular visualization
+
+389
+00:17:36,330 --> 00:17:37,980
+that we can kinda see it.
+
+390
+00:17:37,980 --> 00:17:41,430
+So you can see the eagle
+tenant is really, really busy,
+
+391
+00:17:41,430 --> 00:17:42,720
+really trying to process,
+
+392
+00:17:42,720 --> 00:17:45,000
+and you can see that the other services
+
+393
+00:17:45,000 --> 00:17:46,740
+are really competing, right?
+
+394
+00:17:46,740 --> 00:17:48,530
+So what we can really
+kind of index on that
+
+395
+00:17:48,530 --> 00:17:49,740
+or really kind of just make
+
+396
+00:17:49,740 --> 00:17:52,560
+that leap a bit is a
+noisy neighbor problem,
+
+397
+00:17:52,560 --> 00:17:55,440
+and a lot of us, in terms of EKS clusters,
+
+398
+00:17:55,440 --> 00:17:58,860
+and the operational piece, how
+many times do we actually run
+
+399
+00:17:58,860 --> 00:18:01,440
+in the noisy neighbor problem,
+right, in terms of that,
+
+400
+00:18:01,440 --> 00:18:03,810
+especially in the
+multi-tenancy environment.
+
+401
+00:18:03,810 --> 00:18:05,610
+So now we're starting to say,
+
+402
+00:18:05,610 --> 00:18:08,460
+we really have this
+noise that's out there,
+
+403
+00:18:08,460 --> 00:18:11,640
+in terms of logs, but now we're
+able to really kind of make
+
+404
+00:18:11,640 --> 00:18:14,100
+that funnel a little more finite,
+
+405
+00:18:14,100 --> 00:18:15,240
+and then we have some answers
+
+406
+00:18:15,240 --> 00:18:18,450
+or we have some areas
+that we can actually start
+
+407
+00:18:18,450 --> 00:18:20,460
+to dive deep in.
+
+408
+00:18:20,460 --> 00:18:23,790
+And Ulli mentioned these are
+kind of just a couple ways
+
+409
+00:18:23,790 --> 00:18:28,350
+to go about, how do we
+make semblance out of chaos
+
+410
+00:18:28,350 --> 00:18:30,090
+in terms of where we can start moving,
+
+411
+00:18:30,090 --> 00:18:31,890
+and how we can start troubleshooting.
+
+412
+00:18:31,890 --> 00:18:33,270
+And it gives us a little bit of foray
+
+413
+00:18:33,270 --> 00:18:35,520
+into the AI perspective.
+
+414
+00:18:35,520 --> 00:18:38,160
+So I'll hand it over
+to Ulli at this point,
+
+415
+00:18:38,160 --> 00:18:39,690
+and then we'll go a little deeper,
+
+416
+00:18:39,690 --> 00:18:41,550
+in terms of the next kind of mechanism
+
+417
+00:18:41,550 --> 00:18:43,470
+or kind of tool in our toolbox
+
+418
+00:18:43,470 --> 00:18:44,910
+to do the semantic search,
+
+419
+00:18:44,910 --> 00:18:47,760
+and then really, really hone
+in on what could be the issue
+
+420
+00:18:47,760 --> 00:18:48,780
+or what's going on
+
+421
+00:18:48,780 --> 00:18:50,820
+with the actual
+multi-tenant clusters pass.
+
+422
+00:18:50,820 --> 00:18:52,370
+Ulli, I'll pass it over to you.
+
+423
+00:18:54,030 --> 00:18:55,320
+- [Ulli] So just to summarize this piece,
+
+424
+00:18:55,320 --> 00:18:58,470
+we've now figured out both the issue
+
+425
+00:18:58,470 --> 00:18:59,610
+that is going on, right?
+
+426
+00:18:59,610 --> 00:19:02,340
+There's a rate-limiting
+problem in our shipping service
+
+427
+00:19:02,340 --> 00:19:03,810
+in our shared namespace,
+
+428
+00:19:03,810 --> 00:19:06,600
+and this is caused by a
+noisy neighbor problem,
+
+429
+00:19:06,600 --> 00:19:08,460
+caused by our eagle tenant, right?
+
+430
+00:19:08,460 --> 00:19:10,470
+So it's apparently
+they're doing a big sale
+
+431
+00:19:10,470 --> 00:19:12,540
+or something, overloading our system,
+
+432
+00:19:12,540 --> 00:19:14,640
+and affecting everyone else.
+
+433
+00:19:14,640 --> 00:19:18,660
+So, in this next section
+on semantic search,
+
+434
+00:19:18,660 --> 00:19:20,100
+I wanna take a step back.
+
+435
+00:19:20,100 --> 00:19:23,380
+So you saw that Rueben
+in the very beginning
+
+436
+00:19:24,330 --> 00:19:26,970
+put in this prompt like, is there a log
+
+437
+00:19:26,970 --> 00:19:30,330
+that is mentioning rate
+limit exceeded, right?
+
+438
+00:19:30,330 --> 00:19:33,570
+Which basically tells you
+that he kind of already knew
+
+439
+00:19:33,570 --> 00:19:34,830
+what he was looking for, right?
+
+440
+00:19:34,830 --> 00:19:37,260
+He said like he had
+this problem in the past
+
+441
+00:19:37,260 --> 00:19:40,770
+and he knew a bit what to dig after.
+
+442
+00:19:40,770 --> 00:19:44,010
+But in lots of cases you
+don't really know, right?
+
+443
+00:19:44,010 --> 00:19:46,200
+There's something weird
+going on in your system
+
+444
+00:19:46,200 --> 00:19:47,040
+and you don't really know,
+
+445
+00:19:47,040 --> 00:19:49,440
+like there's this 504 gateway timeout
+
+446
+00:19:49,440 --> 00:19:51,480
+and maybe you've never
+seen that before, right?
+
+447
+00:19:51,480 --> 00:19:54,060
+So you may be completely blank.
+
+448
+00:19:54,060 --> 00:19:59,013
+And in this case, semantic log
+search could be of good use.
+
+449
+00:20:00,840 --> 00:20:02,610
+Now for semantic log search,
+
+450
+00:20:02,610 --> 00:20:04,893
+I will pull up this architecture here.
+
+451
+00:20:05,850 --> 00:20:08,310
+Give me a brief show of hands
+who of you knows, in general,
+
+452
+00:20:08,310 --> 00:20:10,023
+what semantic search is?
+
+453
+00:20:12,360 --> 00:20:14,310
+Okay, so that's like a third of the room.
+
+454
+00:20:14,310 --> 00:20:18,000
+So let me briefly explain,
+in general, semantic search.
+
+455
+00:20:18,000 --> 00:20:21,910
+So, semantic search is
+kind of an evolution
+
+456
+00:20:22,918 --> 00:20:24,690
+of a classic lexical search, right?
+
+457
+00:20:24,690 --> 00:20:27,210
+So lexical search, what
+we basically do there,
+
+458
+00:20:27,210 --> 00:20:29,460
+we compare words with each other.
+
+459
+00:20:29,460 --> 00:20:31,080
+We have a user query
+
+460
+00:20:31,080 --> 00:20:33,900
+and we compare this
+user query word by word
+
+461
+00:20:33,900 --> 00:20:35,640
+with what we have in our database.
+
+462
+00:20:35,640 --> 00:20:37,080
+And in this case, it's log data,
+
+463
+00:20:37,080 --> 00:20:39,780
+but it could be other
+types of data as well.
+
+464
+00:20:39,780 --> 00:20:42,090
+For semantic search,
+we're evolving this a bit
+
+465
+00:20:42,090 --> 00:20:45,870
+and we're making search
+available also by meaning,
+
+466
+00:20:45,870 --> 00:20:48,540
+which means that we're not
+only looking at the words
+
+467
+00:20:48,540 --> 00:20:51,420
+that the user put in, but
+we're looking at the meaning
+
+468
+00:20:51,420 --> 00:20:54,600
+of what the user put in and
+comparing that to the meaning
+
+469
+00:20:54,600 --> 00:20:57,090
+of things that we have in our database.
+
+470
+00:20:57,090 --> 00:20:59,760
+And semantic search is powered heavily
+
+471
+00:20:59,760 --> 00:21:01,650
+by these vector-embedding models
+
+472
+00:21:01,650 --> 00:21:05,250
+and we have a couple of them
+running on Amazon Bedrock.
+
+473
+00:21:05,250 --> 00:21:06,780
+And for this particular purpose,
+
+474
+00:21:06,780 --> 00:21:09,660
+we chose the most cost-effective
+one that we have there,
+
+475
+00:21:09,660 --> 00:21:13,620
+which is Amazon Titan Text Embeddings V2.
+
+476
+00:21:13,620 --> 00:21:16,110
+And I'll show you a bit how the output
+
+477
+00:21:16,110 --> 00:21:18,183
+of those models looks later on.
+
+478
+00:21:19,320 --> 00:21:22,650
+But for log semantic log search,
+
+479
+00:21:22,650 --> 00:21:26,640
+we have to consider two,
+let's say, specifics
+
+480
+00:21:26,640 --> 00:21:29,880
+about log data versus
+other types of search.
+
+481
+00:21:29,880 --> 00:21:33,630
+And the first specific
+is that we have log data
+
+482
+00:21:33,630 --> 00:21:36,270
+is typically very large in volume, right?
+
+483
+00:21:36,270 --> 00:21:38,400
+So it's not just a product catalog
+
+484
+00:21:38,400 --> 00:21:41,100
+where we have a couple of
+thousands of entries maybe,
+
+485
+00:21:41,100 --> 00:21:43,440
+but even in our little demo application,
+
+486
+00:21:43,440 --> 00:21:47,220
+we're ingesting thousands of
+log lines per minute already.
+
+487
+00:21:47,220 --> 00:21:48,930
+And of course, in production systems,
+
+488
+00:21:48,930 --> 00:21:52,080
+it will be orders of
+magnitude more than that.
+
+489
+00:21:52,080 --> 00:21:55,620
+So we cannot just go and
+run every single log line
+
+490
+00:21:55,620 --> 00:21:58,110
+against this embedding model
+because it's an AI model
+
+491
+00:21:58,110 --> 00:22:01,200
+and this will like stack
+up quite a bill, right,
+
+492
+00:22:01,200 --> 00:22:03,900
+if we do that for every single log line.
+
+493
+00:22:03,900 --> 00:22:06,150
+So what we have to do
+instead is we need to work
+
+494
+00:22:06,150 --> 00:22:08,040
+with a subset of our logs
+
+495
+00:22:08,040 --> 00:22:11,490
+and just do embeddings for the subset,
+
+496
+00:22:11,490 --> 00:22:14,400
+and we're doing that using
+a technique called sampling.
+
+497
+00:22:14,400 --> 00:22:16,383
+And I'll dive a bit into that.
+
+498
+00:22:17,910 --> 00:22:21,120
+Now, what's good on the
+other hand, with log lines,
+
+499
+00:22:21,120 --> 00:22:24,240
+is that log lines are
+typically semantically
+
+500
+00:22:24,240 --> 00:22:26,280
+not very different from each other, right?
+
+501
+00:22:26,280 --> 00:22:30,910
+So when you look at one
+specific microservice
+
+502
+00:22:32,010 --> 00:22:35,400
+and the log lines that this
+microservice is producing,
+
+503
+00:22:35,400 --> 00:22:38,340
+it's typically repeating itself
+over and over again, right?
+
+504
+00:22:38,340 --> 00:22:41,490
+It's the same log lines,
+maybe with different IDs,
+
+505
+00:22:41,490 --> 00:22:42,900
+maybe with different numbers,
+
+506
+00:22:42,900 --> 00:22:45,060
+like the time something took or something.
+
+507
+00:22:45,060 --> 00:22:47,580
+But this all doesn't change
+anything semantically,
+
+508
+00:22:47,580 --> 00:22:50,010
+like it doesn't change the
+meaning of the log line, right?
+
+509
+00:22:50,010 --> 00:22:53,550
+It's only like a different
+identifier or so,
+
+510
+00:22:53,550 --> 00:22:56,220
+which doesn't change anything
+in terms of semantics.
+
+511
+00:22:56,220 --> 00:22:58,230
+So we're good to do this sampling.
+
+512
+00:22:58,230 --> 00:23:00,870
+We shouldn't miss out
+on too much information
+
+513
+00:23:00,870 --> 00:23:03,180
+because it's the same
+things repeating themselves
+
+514
+00:23:03,180 --> 00:23:04,380
+all the time anyway, right?
+
+515
+00:23:04,380 --> 00:23:07,293
+So we're good to do this
+sort of technique here.
+
+516
+00:23:08,940 --> 00:23:10,260
+So let me first show you
+
+517
+00:23:10,260 --> 00:23:13,800
+how we actually achieve this sampling.
+
+518
+00:23:13,800 --> 00:23:17,490
+And for that, let's dive
+into OpenSearch Ingestion,
+
+519
+00:23:17,490 --> 00:23:19,440
+which I mentioned in the beginning,
+
+520
+00:23:19,440 --> 00:23:22,530
+which is this ETL tool
+that we have available
+
+521
+00:23:22,530 --> 00:23:24,453
+in the OpenSearch context.
+
+522
+00:23:25,920 --> 00:23:29,160
+Now let's dive into the
+logs ingestion pipeline,
+
+523
+00:23:29,160 --> 00:23:32,640
+which takes logs from our
+OpenTelemetry collector,
+
+524
+00:23:32,640 --> 00:23:35,480
+transforms, and puts them into OpenSearch.
+
+525
+00:23:39,960 --> 00:23:44,460
+The log data that we've
+been working with so far
+
+526
+00:23:44,460 --> 00:23:46,530
+was our raw log data.
+
+527
+00:23:46,530 --> 00:23:48,870
+And you see that we have
+a little sub-pipeline here
+
+528
+00:23:48,870 --> 00:23:51,300
+that is basically just
+putting every single log line
+
+529
+00:23:51,300 --> 00:23:52,320
+into OpenSearch.
+
+530
+00:23:52,320 --> 00:23:54,420
+And what Rueben has showed
+you before was working
+
+531
+00:23:54,420 --> 00:23:56,193
+with this raw data.
+
+532
+00:23:57,270 --> 00:24:00,090
+But we have a different,
+another sub-pipeline here,
+
+533
+00:24:00,090 --> 00:24:02,760
+which we call the sampled sub-pipeline.
+
+534
+00:24:02,760 --> 00:24:06,600
+And when we look at this
+definition down here,
+
+535
+00:24:06,600 --> 00:24:10,080
+we see that we've introduced
+this rate limiter in here,
+
+536
+00:24:10,080 --> 00:24:12,900
+and this rate limiter now
+does the sampling for us.
+
+537
+00:24:12,900 --> 00:24:16,290
+So it takes only 10 events per second,
+
+538
+00:24:16,290 --> 00:24:21,290
+10 log lines per second per
+service and will drop the rest,
+
+539
+00:24:21,300 --> 00:24:23,850
+which basically means
+we have now a good kind
+
+540
+00:24:23,850 --> 00:24:26,070
+of little selection of log lines
+
+541
+00:24:26,070 --> 00:24:27,660
+from each and every single service
+
+542
+00:24:27,660 --> 00:24:29,973
+that we have in our system.
+
+543
+00:24:30,870 --> 00:24:31,890
+And then what we're doing
+
+544
+00:24:31,890 --> 00:24:35,218
+with those sampled logs
+is we're ingesting them
+
+545
+00:24:35,218 --> 00:24:39,180
+into a new index and
+OpenSearch called sampled logs.
+
+546
+00:24:39,180 --> 00:24:42,060
+So we now have two indexes,
+we have the main one
+
+547
+00:24:42,060 --> 00:24:43,650
+that stores all of our logs,
+
+548
+00:24:43,650 --> 00:24:45,030
+and then we have the sample logs
+
+549
+00:24:45,030 --> 00:24:46,953
+that just contains a subset.
+
+550
+00:24:47,850 --> 00:24:51,840
+But with the subset of logs,
+
+551
+00:24:51,840 --> 00:24:54,150
+we're not able to do
+semantic search yet, right?
+
+552
+00:24:54,150 --> 00:24:57,150
+We need to do some configuration
+on the OpenSearch side
+
+553
+00:24:57,150 --> 00:25:00,903
+to be actually able to do
+this kind of semantic search.
+
+554
+00:25:01,800 --> 00:25:03,243
+So let's do that together.
+
+555
+00:25:05,910 --> 00:25:09,630
+The way I'll do that is using
+the OpenSearch Dev Tools,
+
+556
+00:25:09,630 --> 00:25:12,000
+and if you're not familiar
+with OpenSearch so much,
+
+557
+00:25:12,000 --> 00:25:17,000
+it's basically a very
+lightweight developer environment
+
+558
+00:25:17,010 --> 00:25:20,940
+where you have HTTP requests
+on the left-hand side
+
+559
+00:25:20,940 --> 00:25:24,270
+and the result of those
+requests on the right-hand side,
+
+560
+00:25:24,270 --> 00:25:27,030
+and we can just kind of fire
+off HTTP requests, right,
+
+561
+00:25:27,030 --> 00:25:28,680
+and see what they come back with.
+
+562
+00:25:29,760 --> 00:25:31,530
+Now with setting up semantic search,
+
+563
+00:25:31,530 --> 00:25:33,090
+there are three steps involved
+
+564
+00:25:33,090 --> 00:25:35,760
+and we're gonna walk
+through them one by one.
+
+565
+00:25:35,760 --> 00:25:37,320
+The first one is we need
+
+566
+00:25:37,320 --> 00:25:42,210
+to connect Amazon OpenSearch
+Service to Amazon Bedrock,
+
+567
+00:25:42,210 --> 00:25:44,880
+because Amazon Bedrock hosts
+the actual embedding model
+
+568
+00:25:44,880 --> 00:25:47,550
+that we need, as I said before,
+
+569
+00:25:47,550 --> 00:25:49,740
+and OpenSearch will be the database
+
+570
+00:25:49,740 --> 00:25:51,780
+and it will also do the communication
+
+571
+00:25:51,780 --> 00:25:53,373
+to Bedrock on our behalf.
+
+572
+00:25:55,560 --> 00:25:57,990
+Now the requests I'll fire off here
+
+573
+00:25:57,990 --> 00:25:59,700
+are a pretty boilerplate.
+
+574
+00:25:59,700 --> 00:26:03,390
+I'm not gonna dive too
+much into details here.
+
+575
+00:26:03,390 --> 00:26:06,086
+What we first need to create in OpenSearch
+
+576
+00:26:06,086 --> 00:26:08,250
+is a connector to Amazon Bedrock,
+
+577
+00:26:08,250 --> 00:26:10,680
+and we will specify the model here
+
+578
+00:26:10,680 --> 00:26:12,513
+that we want to use in Bedrock.
+
+579
+00:26:14,010 --> 00:26:17,040
+And then we're gonna
+take this connector ID
+
+580
+00:26:17,040 --> 00:26:18,960
+that OpenSearch generated
+
+581
+00:26:18,960 --> 00:26:22,830
+and put it into our register call here.
+
+582
+00:26:22,830 --> 00:26:26,460
+But we also need to create
+this so-called model group,
+
+583
+00:26:26,460 --> 00:26:28,050
+and we'll also take that ID
+
+584
+00:26:28,050 --> 00:26:30,660
+and put it into our register call.
+
+585
+00:26:30,660 --> 00:26:33,480
+As I said, I'm going
+through that a bit quicker.
+
+586
+00:26:33,480 --> 00:26:35,250
+It's all in the GitHub Gist if you want
+
+587
+00:26:35,250 --> 00:26:36,993
+to follow up a bit more in detail.
+
+588
+00:26:38,310 --> 00:26:41,280
+Now when registering the
+model, we get this model ID,
+
+589
+00:26:41,280 --> 00:26:46,050
+which we'll be using for the
+remainder of this section.
+
+590
+00:26:46,050 --> 00:26:48,240
+We need to deploy this model first
+
+591
+00:26:48,240 --> 00:26:51,270
+so it's known throughout
+our OpenSearch domain,
+
+592
+00:26:51,270 --> 00:26:54,390
+and then we can actually go and predict,
+
+593
+00:26:54,390 --> 00:26:56,793
+which means we're testing this model now.
+
+594
+00:26:57,660 --> 00:27:00,240
+And the cool thing is,
+we're now talking still
+
+595
+00:27:00,240 --> 00:27:02,190
+to the OpenSearch API, right?
+
+596
+00:27:02,190 --> 00:27:04,980
+So through the OpenSearch API,
+
+597
+00:27:04,980 --> 00:27:08,640
+this will call Amazon
+Bedrock under the hood
+
+598
+00:27:08,640 --> 00:27:12,180
+and give us a response again
+through the OpenSearch API.
+
+599
+00:27:12,180 --> 00:27:15,393
+So the two systems are now
+connected with each other.
+
+600
+00:27:17,400 --> 00:27:20,490
+And this embedding model, if
+you've never seen this before,
+
+601
+00:27:20,490 --> 00:27:24,060
+comes back with this long list
+of floating point numbers.
+
+602
+00:27:24,060 --> 00:27:27,480
+And this is the output that
+an embedding model produces.
+
+603
+00:27:27,480 --> 00:27:30,000
+And this, in a mathematical way,
+
+604
+00:27:30,000 --> 00:27:32,640
+encodes the meaning of what I put in.
+
+605
+00:27:32,640 --> 00:27:35,550
+So I put in here: "What
+is the meaning of life?"
+
+606
+00:27:35,550 --> 00:27:39,450
+And this question is now
+encoded into this long list
+
+607
+00:27:39,450 --> 00:27:42,303
+of floating point numbers,
+which is our vector embedding.
+
+608
+00:27:44,070 --> 00:27:46,710
+Cool, so we have established
+the connection now,
+
+609
+00:27:46,710 --> 00:27:50,640
+but our sampled logs
+index is still not able
+
+610
+00:27:50,640 --> 00:27:52,050
+to do semantic search.
+
+611
+00:27:52,050 --> 00:27:54,420
+So we need to configure
+the sampled logs index
+
+612
+00:27:54,420 --> 00:27:57,450
+to perform this embedding
+automatically on our behalf
+
+613
+00:27:57,450 --> 00:27:59,850
+to be able to do this semantic search.
+
+614
+00:27:59,850 --> 00:28:02,613
+So let's go ahead and
+configure this index.
+
+615
+00:28:04,320 --> 00:28:06,480
+When I look at the index so far,
+
+616
+00:28:06,480 --> 00:28:09,480
+and I'm just kind of
+spitting out the definition
+
+617
+00:28:09,480 --> 00:28:12,690
+of this index here, we don't find anything
+
+618
+00:28:12,690 --> 00:28:14,400
+in terms of embedding in here, right?
+
+619
+00:28:14,400 --> 00:28:15,390
+It's not in there.
+
+620
+00:28:15,390 --> 00:28:19,053
+It's just containing all
+of our plain log lines.
+
+621
+00:28:20,220 --> 00:28:23,910
+What I would do first is create
+a so-called ingest pipeline,
+
+622
+00:28:23,910 --> 00:28:27,150
+which is a configuration object
+that will enable OpenSearch
+
+623
+00:28:27,150 --> 00:28:30,120
+to automatically embed log lines
+
+624
+00:28:30,120 --> 00:28:32,820
+that are flowing into the index.
+
+625
+00:28:32,820 --> 00:28:37,200
+So I'm creating this embedding,
+this ingest pipeline.
+
+626
+00:28:37,200 --> 00:28:42,200
+And what this does is just
+processing all of the log lines
+
+627
+00:28:42,810 --> 00:28:46,230
+that are flowing in, taking the log body,
+
+628
+00:28:46,230 --> 00:28:48,780
+and producing a new field
+called body embedding
+
+629
+00:28:48,780 --> 00:28:50,910
+that will store this floating point,
+
+630
+00:28:50,910 --> 00:28:53,460
+like array of floating point
+numbers that we saw before,
+
+631
+00:28:53,460 --> 00:28:54,960
+which is the vector embedding.
+
+632
+00:28:57,360 --> 00:29:00,810
+And then we are going to
+create an index template
+
+633
+00:29:00,810 --> 00:29:04,620
+for our sampled logs, which
+contains this pipeline.
+
+634
+00:29:04,620 --> 00:29:07,560
+So basically, now saying,
+please prepare this index
+
+635
+00:29:07,560 --> 00:29:10,710
+for automatically embedding
+all of the log lines
+
+636
+00:29:10,710 --> 00:29:11,880
+that are flowing in.
+
+637
+00:29:11,880 --> 00:29:14,160
+And you see here that I also specified
+
+638
+00:29:14,160 --> 00:29:15,840
+this new body embedding field,
+
+639
+00:29:15,840 --> 00:29:17,740
+which is a vector field in OpenSearch.
+
+640
+00:29:19,440 --> 00:29:20,670
+And what I'll then do is,
+
+641
+00:29:20,670 --> 00:29:23,340
+I'll just delete the sample logs index.
+
+642
+00:29:23,340 --> 00:29:25,530
+And what's happening now under the hood
+
+643
+00:29:25,530 --> 00:29:28,320
+is that OpenSearch Ingestion will continue
+
+644
+00:29:28,320 --> 00:29:31,140
+to ingest data into this index,
+
+645
+00:29:31,140 --> 00:29:33,570
+and OpenSearch, since
+the index does not exist,
+
+646
+00:29:33,570 --> 00:29:36,210
+it will recreate it automatically,
+
+647
+00:29:36,210 --> 00:29:38,970
+applying the configuration
+that we've set up here.
+
+648
+00:29:38,970 --> 00:29:41,280
+So now the index will be recreated
+
+649
+00:29:41,280 --> 00:29:43,200
+using all this embedding pipeline
+
+650
+00:29:43,200 --> 00:29:44,733
+and the new embedding field.
+
+651
+00:29:46,080 --> 00:29:49,320
+So let's have a look at
+this sample logs index now.
+
+652
+00:29:49,320 --> 00:29:50,250
+It's not yet found,
+
+653
+00:29:50,250 --> 00:29:53,970
+so apparently OpenSearch
+Ingestion has not ingested
+
+654
+00:29:53,970 --> 00:29:55,290
+new log lines yet.
+
+655
+00:29:55,290 --> 00:29:58,320
+Let me repeat that a few times,
+
+656
+00:29:58,320 --> 00:30:00,180
+should usually take just a few seconds,
+
+657
+00:30:00,180 --> 00:30:02,673
+but sometimes it can take a bit more.
+
+658
+00:30:10,410 --> 00:30:11,790
+And there it is back up.
+
+659
+00:30:11,790 --> 00:30:14,220
+And when I now search for embedding,
+
+660
+00:30:14,220 --> 00:30:17,130
+we have this body embedding field here
+
+661
+00:30:17,130 --> 00:30:21,000
+that is now part of my index definition.
+
+662
+00:30:21,000 --> 00:30:24,690
+And when I go down here,
+I also have this pipeline
+
+663
+00:30:24,690 --> 00:30:26,580
+as part of my index setting.
+
+664
+00:30:26,580 --> 00:30:28,890
+So what's now happening,
+exactly what I wanted,
+
+665
+00:30:28,890 --> 00:30:30,000
+all of the new log lines
+
+666
+00:30:30,000 --> 00:30:33,270
+that are flowing in are
+automatically embedded
+
+667
+00:30:33,270 --> 00:30:35,583
+by OpenSearch using Amazon Bedrock.
+
+668
+00:30:37,350 --> 00:30:39,870
+And this is the last piece
+of setup I needed to do.
+
+669
+00:30:39,870 --> 00:30:43,890
+I can now perform semantic
+search on this index.
+
+670
+00:30:43,890 --> 00:30:45,750
+Now we've been talking,
+or I've been talking
+
+671
+00:30:45,750 --> 00:30:48,090
+so much about setting this
+up that it's worth kind
+
+672
+00:30:48,090 --> 00:30:51,000
+of recapping what the
+value of this is actually.
+
+673
+00:30:51,000 --> 00:30:53,040
+So, let's take a step back.
+
+674
+00:30:53,040 --> 00:30:56,310
+Remember we have this 504 gateway timeout.
+
+675
+00:30:56,310 --> 00:31:00,720
+I know that, when there's
+a 504 gateway timeout,
+
+676
+00:31:00,720 --> 00:31:03,150
+it indicates that something
+just takes very long
+
+677
+00:31:03,150 --> 00:31:04,680
+to process, right?
+
+678
+00:31:04,680 --> 00:31:06,000
+Kind of that's what I know, right?
+
+679
+00:31:06,000 --> 00:31:08,220
+I don't know anything of rate limiting.
+
+680
+00:31:08,220 --> 00:31:11,640
+I don't know any exceeded
+or acute or anything.
+
+681
+00:31:11,640 --> 00:31:15,030
+I don't know how the
+specific log line would look,
+
+682
+00:31:15,030 --> 00:31:17,220
+but I have an idea
+
+683
+00:31:17,220 --> 00:31:20,913
+that something is just
+taking very long to process.
+
+684
+00:31:22,800 --> 00:31:24,000
+So let's do that.
+
+685
+00:31:24,000 --> 00:31:26,910
+Let's search, so I can put
+in something very vague here.
+
+686
+00:31:26,910 --> 00:31:29,257
+I can ask for something like,
+
+687
+00:31:29,257 --> 00:31:30,870
+"Something is taking too long,"
+
+688
+00:31:30,870 --> 00:31:34,560
+and I can do a semantic search
+for that to find log lines
+
+689
+00:31:34,560 --> 00:31:37,503
+that are semantically
+relevant for this query.
+
+690
+00:31:38,820 --> 00:31:41,610
+So let's have a look
+what it came back with,
+
+691
+00:31:41,610 --> 00:31:44,610
+and it's exactly again the
+shared shipping service
+
+692
+00:31:44,610 --> 00:31:46,500
+that we saw before, right?
+
+693
+00:31:46,500 --> 00:31:48,127
+And it's found the log line:
+
+694
+00:31:48,127 --> 00:31:50,130
+"Rate limit exceeded. Request queued."
+
+695
+00:31:50,130 --> 00:31:53,160
+So you see that lexically,
+
+696
+00:31:53,160 --> 00:31:55,410
+those things are not related, right?
+
+697
+00:31:55,410 --> 00:31:57,210
+Something is taking too long.
+
+698
+00:31:57,210 --> 00:31:59,610
+It's not contained
+anywhere in this log line.
+
+699
+00:31:59,610 --> 00:32:01,350
+But in meaning, in semantics,
+
+700
+00:32:01,350 --> 00:32:03,150
+they're very similar to each other.
+
+701
+00:32:03,150 --> 00:32:06,090
+So I've now gone from a kind
+of a blank page problem.
+
+702
+00:32:06,090 --> 00:32:08,340
+I have no idea what to even look for.
+
+703
+00:32:08,340 --> 00:32:10,330
+I've gone to the log entry
+
+704
+00:32:11,734 --> 00:32:14,640
+that is going into the
+right direction, right?
+
+705
+00:32:14,640 --> 00:32:18,210
+So now I can have a deeper
+look at my shipping service
+
+706
+00:32:18,210 --> 00:32:21,153
+to figure out what exactly
+that problem could be.
+
+707
+00:32:25,050 --> 00:32:28,050
+Okay, so having finished
+our semantic search,
+
+708
+00:32:28,050 --> 00:32:31,110
+let's do the third part of the session
+
+709
+00:32:31,110 --> 00:32:32,610
+and do everything together.
+
+710
+00:32:32,610 --> 00:32:35,310
+Natural language processing
+and semantic search,
+
+711
+00:32:35,310 --> 00:32:39,453
+bring it all together using
+model context protocol or MCP.
+
+712
+00:32:41,730 --> 00:32:43,380
+- [Rueben] Cool. Thank you, Ulli.
+
+713
+00:32:44,430 --> 00:32:45,630
+So as Ulli had mentioned,
+
+714
+00:32:45,630 --> 00:32:48,690
+so it's really kind of the
+latest and greatest, right?
+
+715
+00:32:48,690 --> 00:32:50,350
+So how can we have an agent
+
+716
+00:32:51,210 --> 00:32:53,910
+process these particular searches for us,
+
+717
+00:32:53,910 --> 00:32:56,070
+really kind of, with a prompt, right?
+
+718
+00:32:56,070 --> 00:32:58,500
+How can we use that same NLP
+
+719
+00:32:58,500 --> 00:33:01,440
+or that prompt to get
+information back, right?
+
+720
+00:33:01,440 --> 00:33:05,490
+How can we use it as a tool
+in order to interrogate
+
+721
+00:33:05,490 --> 00:33:07,950
+that particular OpenSearch Service, right?
+
+722
+00:33:07,950 --> 00:33:10,620
+And as we are moving into kind
+of that agentic framework,
+
+723
+00:33:10,620 --> 00:33:13,170
+and I'm sure you're hearing
+throughout the conference,
+
+724
+00:33:13,170 --> 00:33:15,120
+what is that agentic enterprise
+
+725
+00:33:15,120 --> 00:33:17,760
+or what does that agentic
+framework look like, right?
+
+726
+00:33:17,760 --> 00:33:22,050
+So we have standalone agents,
+we have autonomous agents,
+
+727
+00:33:22,050 --> 00:33:23,520
+and things like that, right?
+
+728
+00:33:23,520 --> 00:33:24,420
+So what we're doing is,
+
+729
+00:33:24,420 --> 00:33:28,080
+we're gonna use Kiro CLI as our client.
+
+730
+00:33:28,080 --> 00:33:30,360
+What we're gonna do is
+we're going to talk to you,
+
+731
+00:33:30,360 --> 00:33:32,880
+or interact with, an MCP server
+
+732
+00:33:32,880 --> 00:33:36,000
+that we've actually
+went ahead and built out
+
+733
+00:33:36,000 --> 00:33:37,380
+in terms of Python.
+
+734
+00:33:37,380 --> 00:33:40,560
+And then from there, it actually
+has all of the scaffolding
+
+735
+00:33:40,560 --> 00:33:43,170
+that Ulli had talked about
+in terms of being able
+
+736
+00:33:43,170 --> 00:33:45,450
+to use the model, use the embeddings,
+
+737
+00:33:45,450 --> 00:33:47,760
+and then go ahead and use that reasoning,
+
+738
+00:33:47,760 --> 00:33:50,820
+and then bring back a particular response.
+
+739
+00:33:50,820 --> 00:33:53,344
+And this was all kind of connective tissue
+
+740
+00:33:53,344 --> 00:33:57,360
+kinda leading up to this or
+delivering this piece overall.
+
+741
+00:33:57,360 --> 00:33:59,430
+What I'm gonna do now is I'm gonna go
+
+742
+00:33:59,430 --> 00:34:01,950
+into the configuration file in terms
+
+743
+00:34:01,950 --> 00:34:04,770
+of the actual MCP server itself,
+
+744
+00:34:04,770 --> 00:34:06,510
+but again, in the Gist itself,
+
+745
+00:34:06,510 --> 00:34:08,430
+it has really kind of that scaffolding
+
+746
+00:34:08,430 --> 00:34:09,660
+of how you would set it up,
+
+747
+00:34:09,660 --> 00:34:12,300
+how you would configure it in Kiro CLI.
+
+748
+00:34:12,300 --> 00:34:14,040
+So, if you're kind of wanting
+
+749
+00:34:14,040 --> 00:34:15,990
+to dive a little bit
+deeper in those settings
+
+750
+00:34:15,990 --> 00:34:17,970
+and that configuration, it's in the Gist.
+
+751
+00:34:17,970 --> 00:34:20,790
+So we'll share it up
+there and you can go ahead
+
+752
+00:34:20,790 --> 00:34:23,490
+and look at it and try it
+out or kick the tires on it.
+
+753
+00:34:31,860 --> 00:34:34,227
+I'm a huge fan of clear,
+if nobody's noticed.
+
+754
+00:34:34,227 --> 00:34:36,894
+(Rueben laughs)
+
+755
+00:34:39,030 --> 00:34:40,230
+Ah.
+
+756
+00:34:40,230 --> 00:34:42,300
+So I'm gonna just go into the file itself
+
+757
+00:34:42,300 --> 00:34:45,730
+in terms of where the
+actual downloads is or
+
+758
+00:34:49,628 --> 00:34:51,347
+where we have that MCP server.
+
+759
+00:34:55,230 --> 00:34:58,046
+It's kinda painful for you
+guys to watch me type here.
+
+760
+00:34:58,046 --> 00:35:00,879
+(Rueben chuckles)
+
+761
+00:35:08,340 --> 00:35:09,453
+Goodness gracious.
+
+762
+00:35:11,400 --> 00:35:12,233
+Let's see.
+
+763
+00:35:18,450 --> 00:35:19,590
+Ah, it doesn't say it's there.
+
+764
+00:35:19,590 --> 00:35:20,883
+Sorry, guys, on that one.
+
+765
+00:35:23,910 --> 00:35:24,840
+We'll pop in here.
+
+766
+00:35:24,840 --> 00:35:27,153
+- [Ulli] Just add a main.py in the end.
+
+767
+00:35:28,050 --> 00:35:30,030
+- I'm sorry?
+- With the cat, not a cd.
+
+768
+00:35:30,030 --> 00:35:31,313
+- [Rueben] Oh, that's right.
+
+769
+00:35:35,040 --> 00:35:36,393
+There we go. Perfect.
+
+770
+00:35:39,240 --> 00:35:41,730
+So what we have here is
+just kind of the setup
+
+771
+00:35:41,730 --> 00:35:43,770
+in terms of where we're setting this up
+
+772
+00:35:43,770 --> 00:35:45,840
+or actually the main.py itself.
+
+773
+00:35:45,840 --> 00:35:47,580
+So what we have is, we
+have our really kind
+
+774
+00:35:47,580 --> 00:35:50,160
+of our import boto3
+client right from there.
+
+775
+00:35:50,160 --> 00:35:52,230
+We're actually referencing the fast MCP
+
+776
+00:35:52,230 --> 00:35:54,000
+for that particular component.
+
+777
+00:35:54,000 --> 00:35:55,020
+Then we're walking down
+
+778
+00:35:55,020 --> 00:35:57,000
+and kind of the OpenSearch connection.
+
+779
+00:35:57,000 --> 00:35:59,010
+There's documentation that's out there
+
+780
+00:35:59,010 --> 00:36:00,660
+that really kinda brings this to bear
+
+781
+00:36:00,660 --> 00:36:02,820
+or you can actually look at and reference.
+
+782
+00:36:02,820 --> 00:36:04,590
+So what we have here is, we have the host,
+
+783
+00:36:04,590 --> 00:36:06,990
+which is the actual search
+
+784
+00:36:06,990 --> 00:36:08,940
+or it's actually the OpenSearch endpoint
+
+785
+00:36:08,940 --> 00:36:10,950
+that we're gonna interrogate or hit.
+
+786
+00:36:10,950 --> 00:36:13,440
+We have the region that's there as well,
+
+787
+00:36:13,440 --> 00:36:16,020
+services, yes, of course, credentials.
+
+788
+00:36:16,020 --> 00:36:17,850
+We use the session and things like that,
+
+789
+00:36:17,850 --> 00:36:19,710
+which is in the AWS account.
+
+790
+00:36:19,710 --> 00:36:23,595
+So you can access it,
+use that SigV4 access,
+
+791
+00:36:23,595 --> 00:36:28,440
+and go ahead and being able
+to get that information
+
+792
+00:36:28,440 --> 00:36:30,300
+or query that information.
+
+793
+00:36:30,300 --> 00:36:31,140
+Then what we have is,
+
+794
+00:36:31,140 --> 00:36:33,600
+we use the OpenSearch client here
+
+795
+00:36:33,600 --> 00:36:35,850
+based on the Python piece overall
+
+796
+00:36:35,850 --> 00:36:37,410
+in terms of that client, right?
+
+797
+00:36:37,410 --> 00:36:38,640
+So it's actually calling it,
+
+798
+00:36:38,640 --> 00:36:41,790
+it's using the host and
+using the variables above
+
+799
+00:36:41,790 --> 00:36:45,480
+in order to make that
+connection or hit that endpoint.
+
+800
+00:36:45,480 --> 00:36:46,680
+Then what we have here is,
+
+801
+00:36:46,680 --> 00:36:49,650
+we're actually describing
+the MCP server itself.
+
+802
+00:36:49,650 --> 00:36:53,550
+Fast MCP seems to be within Python.
+
+803
+00:36:53,550 --> 00:36:56,970
+The best way to go ahead
+and do that query, right,
+
+804
+00:36:56,970 --> 00:36:59,910
+or do that interrogation of that endpoint.
+
+805
+00:36:59,910 --> 00:37:02,460
+And then from here, if
+we really look at it,
+
+806
+00:37:02,460 --> 00:37:04,350
+it really just kind of boil it down,
+
+807
+00:37:04,350 --> 00:37:08,940
+is we can just put in a few lines of code
+
+808
+00:37:08,940 --> 00:37:13,320
+for that MCP server to actually
+do a really dynamic fetch
+
+809
+00:37:13,320 --> 00:37:15,540
+of that particular model
+or that embedding model
+
+810
+00:37:15,540 --> 00:37:18,090
+that Ulli actually set
+up, right, initially.
+
+811
+00:37:18,090 --> 00:37:20,040
+So there really isn't a whole lot of work.
+
+812
+00:37:20,040 --> 00:37:21,960
+We already have the plumbing
+that can actually make
+
+813
+00:37:21,960 --> 00:37:25,470
+that connectivity or
+talk to that endpoint.
+
+814
+00:37:25,470 --> 00:37:26,730
+And what we have here is,
+
+815
+00:37:26,730 --> 00:37:29,040
+we actually have just a stanza here
+
+816
+00:37:29,040 --> 00:37:31,387
+in terms of MCP tooling that we can say,
+
+817
+00:37:31,387 --> 00:37:33,984
+"Hey look, we want you to
+do that semantic search
+
+818
+00:37:33,984 --> 00:37:36,210
+and we want you to go ahead."
+
+819
+00:37:36,210 --> 00:37:39,810
+That body information coming
+back and it's really displayed.
+
+820
+00:37:39,810 --> 00:37:42,300
+Before, we actually have that embedding
+
+821
+00:37:42,300 --> 00:37:44,850
+that will actually return
+a response based on
+
+822
+00:37:44,850 --> 00:37:49,440
+that very finite query
+on those 10 logs, right?
+
+823
+00:37:49,440 --> 00:37:51,390
+And then we also have the model ID.
+
+824
+00:37:51,390 --> 00:37:54,780
+So dynamically, we're actually
+pulling in that model ID,
+
+825
+00:37:54,780 --> 00:37:56,400
+so that we can use it and leverage it
+
+826
+00:37:56,400 --> 00:37:58,023
+within the semantic search.
+
+827
+00:37:59,550 --> 00:38:01,110
+And again, as you referenced before,
+
+828
+00:38:01,110 --> 00:38:02,550
+we have the sampled logs here
+
+829
+00:38:02,550 --> 00:38:04,750
+that we could actually
+leverage and utilize.
+
+830
+00:38:08,400 --> 00:38:09,690
+So what I'm gonna now do is,
+
+831
+00:38:09,690 --> 00:38:12,660
+I'm gonna go ahead and
+kick off our client, right?
+
+832
+00:38:12,660 --> 00:38:14,760
+Here, the MCP client from there.
+
+833
+00:38:14,760 --> 00:38:16,713
+So, we'll clear that out.
+
+834
+00:38:25,200 --> 00:38:27,090
+So what this is doing
+is it's actually going
+
+835
+00:38:27,090 --> 00:38:30,150
+into the mcp.json file or settings file,
+
+836
+00:38:30,150 --> 00:38:32,520
+and what it's doing is
+it's setting it up, right?
+
+837
+00:38:32,520 --> 00:38:34,800
+So it's reading all of the MCP servers
+
+838
+00:38:34,800 --> 00:38:36,210
+that I have configured already.
+
+839
+00:38:36,210 --> 00:38:38,460
+And so one of them is the OS logs
+
+840
+00:38:38,460 --> 00:38:39,870
+or it's the main py, right?
+
+841
+00:38:39,870 --> 00:38:41,610
+That's actually coming through.
+
+842
+00:38:41,610 --> 00:38:43,620
+And as you can see, it
+went ahead and welcomed
+
+843
+00:38:43,620 --> 00:38:45,750
+and it actually loaded it successfully.
+
+844
+00:38:45,750 --> 00:38:48,690
+You can actually go in
+and type MCP itself,
+
+845
+00:38:48,690 --> 00:38:50,670
+and you can validate that
+it actually did load,
+
+846
+00:38:50,670 --> 00:38:52,800
+or it did actually come
+into your environment,
+
+847
+00:38:52,800 --> 00:38:56,010
+or within your MCP client through Kiro.
+
+848
+00:38:56,010 --> 00:38:58,350
+So what I'm gonna now do
+is I'm gonna just type in
+
+849
+00:38:58,350 --> 00:39:02,310
+a particular input or an NLP input,
+
+850
+00:39:02,310 --> 00:39:05,760
+and see what I actually
+get, right, from there.
+
+851
+00:39:05,760 --> 00:39:09,330
+So I'm gonna come down my
+cheat sheet one more time here.
+
+852
+00:39:09,330 --> 00:39:12,423
+What I'm gonna do at that point is ask it.
+
+853
+00:39:14,640 --> 00:39:15,559
+Goodness gracious.
+
+854
+00:39:15,559 --> 00:39:19,309
+(Rueben speaks indistinctly)
+
+855
+00:39:22,200 --> 00:39:24,630
+And I'm going back to a
+little bit to what I know
+
+856
+00:39:24,630 --> 00:39:26,640
+in terms of the exceeded rate limits.
+
+857
+00:39:26,640 --> 00:39:29,100
+Ulli said just sight unseen,
+we could actually get it.
+
+858
+00:39:29,100 --> 00:39:31,170
+But again, I wanna see
+what we're gonna get back
+
+859
+00:39:31,170 --> 00:39:33,760
+with a very targeted
+
+860
+00:39:34,920 --> 00:39:36,423
+NLP or prompt.
+
+861
+00:39:41,880 --> 00:39:43,260
+So again, on everything here,
+
+862
+00:39:43,260 --> 00:39:44,850
+we'll go ask, do we really trust it
+
+863
+00:39:44,850 --> 00:39:47,520
+or do we want it to do
+what we say it wants to do?
+
+864
+00:39:47,520 --> 00:39:49,320
+So we'll push it through here again.
+
+865
+00:39:50,781 --> 00:39:51,614
+And here we go.
+
+866
+00:39:51,614 --> 00:39:52,920
+So it's actually showing us here,
+
+867
+00:39:52,920 --> 00:39:54,900
+it found a 500 rate limit logs
+
+868
+00:39:54,900 --> 00:39:56,940
+from the shared shipping service.
+
+869
+00:39:56,940 --> 00:39:58,620
+So, through the whole talk,
+
+870
+00:39:58,620 --> 00:40:00,270
+we've kind of been dancing around,
+
+871
+00:40:00,270 --> 00:40:02,910
+okay, how do we really
+kind of close the funnel,
+
+872
+00:40:02,910 --> 00:40:06,030
+or actually start to hone in
+on the particular root cause,
+
+873
+00:40:06,030 --> 00:40:07,500
+and then we see it again, right?
+
+874
+00:40:07,500 --> 00:40:09,270
+So it's more or less,
+
+875
+00:40:09,270 --> 00:40:11,640
+it's a problem with the shared shipping
+
+876
+00:40:11,640 --> 00:40:13,830
+and it's actually a noisy neighbor issue
+
+877
+00:40:13,830 --> 00:40:16,110
+and causing that component altogether.
+
+878
+00:40:16,110 --> 00:40:18,720
+So we kind of have
+confirmation at this point.
+
+879
+00:40:18,720 --> 00:40:19,950
+So what we also want to do is,
+
+880
+00:40:19,950 --> 00:40:21,780
+how do we remediate this, right?
+
+881
+00:40:21,780 --> 00:40:23,973
+So we can just ask it directly:
+
+882
+00:40:25,057 --> 00:40:27,477
+"Remediate issue for me."
+
+883
+00:40:28,470 --> 00:40:32,613
+And so Kiro and really kind
+of the whole AI component here
+
+884
+00:40:32,613 --> 00:40:34,890
+will go ahead and just
+kinda give me suggestions
+
+885
+00:40:34,890 --> 00:40:38,130
+on what they can do in order
+to remediate this, right?
+
+886
+00:40:38,130 --> 00:40:40,320
+Again, if I didn't really know
+
+887
+00:40:40,320 --> 00:40:42,320
+or understand what was actually going on
+
+888
+00:40:44,160 --> 00:40:47,310
+with that piece, it would
+actually show me exactly
+
+889
+00:40:47,310 --> 00:40:49,950
+what could be going on in that.
+
+890
+00:40:49,950 --> 00:40:52,743
+So what it's saying really
+at this point, let's see,
+
+891
+00:40:55,410 --> 00:40:56,903
+so it's actually scaling itself, right?
+
+892
+00:40:56,903 --> 00:40:58,290
+So it's actually go ahead
+
+893
+00:40:58,290 --> 00:41:02,160
+and it's actually scaling
+this shipping, right?
+
+894
+00:41:02,160 --> 00:41:03,360
+So it's actually going through
+
+895
+00:41:03,360 --> 00:41:06,510
+and it's scaling it for me overall.
+
+896
+00:41:06,510 --> 00:41:08,820
+So, it actually went ahead and looked,
+
+897
+00:41:08,820 --> 00:41:11,490
+and says, "Hey, the
+recommendation is scaling
+
+898
+00:41:11,490 --> 00:41:13,470
+that shipping shared service."
+
+899
+00:41:13,470 --> 00:41:15,420
+Then if we go ahead and scale it,
+
+900
+00:41:15,420 --> 00:41:17,730
+will it go ahead and
+remediate the problem?
+
+901
+00:41:17,730 --> 00:41:19,110
+So it went ahead and gave us that,
+
+902
+00:41:19,110 --> 00:41:20,550
+or it kicked off for us, right?
+
+903
+00:41:20,550 --> 00:41:22,470
+And we went ahead and
+said, "Okay, trust it,
+
+904
+00:41:22,470 --> 00:41:23,850
+go ahead and do it," right?
+
+905
+00:41:23,850 --> 00:41:26,190
+Very similar like, "Are
+you sure you wanna delete?"
+
+906
+00:41:26,190 --> 00:41:27,600
+Kind of the same thing, right?
+
+907
+00:41:27,600 --> 00:41:29,670
+You wanna make sure that
+you're adhering to it
+
+908
+00:41:29,670 --> 00:41:31,590
+and kinda responding to it.
+
+909
+00:41:31,590 --> 00:41:33,300
+So basically, it actually scaled,
+
+910
+00:41:33,300 --> 00:41:34,987
+so it actually gives you actions here.
+
+911
+00:41:34,987 --> 00:41:38,100
+"Scaled shipping deployment
+from 1 to 5 replicas," right?
+
+912
+00:41:38,100 --> 00:41:40,350
+And it did a few other things there.
+
+913
+00:41:40,350 --> 00:41:42,960
+So this is kind of what it
+fixed here, distributions,
+
+914
+00:41:42,960 --> 00:41:44,847
+and it gives you kind of
+an overview of what it did
+
+915
+00:41:44,847 --> 00:41:47,430
+and what it didn't do at that point.
+
+916
+00:41:47,430 --> 00:41:49,800
+So what we're gonna do at this
+point is we're gonna go back
+
+917
+00:41:49,800 --> 00:41:52,860
+into the application to see
+if it actually did prove
+
+918
+00:41:52,860 --> 00:41:55,260
+to be successful or not, right?
+
+919
+00:41:55,260 --> 00:42:00,260
+So, what we'll do is, we'll go
+back out on our command line,
+
+920
+00:42:00,570 --> 00:42:04,080
+and we'll see what actually
+happened, if anything.
+
+921
+00:42:04,080 --> 00:42:06,843
+So we'll quit that piece,
+
+922
+00:42:08,490 --> 00:42:09,873
+forward again.
+
+923
+00:42:11,250 --> 00:42:14,550
+We'll just take a look at the
+shared services real quick,
+
+924
+00:42:14,550 --> 00:42:15,780
+and see if it actually did.
+
+925
+00:42:15,780 --> 00:42:17,070
+It did actually scale it,
+
+926
+00:42:17,070 --> 00:42:19,110
+so we can say yes, that actually happened,
+
+927
+00:42:19,110 --> 00:42:22,200
+and Kiro did what we really
+kind of recommended it could do
+
+928
+00:42:22,200 --> 00:42:23,343
+to solve that problem,
+
+929
+00:42:24,706 --> 00:42:26,070
+that we wanna do is come over here.
+
+930
+00:42:26,070 --> 00:42:27,180
+We wanna port forward.
+
+931
+00:42:27,180 --> 00:42:29,370
+So it really had kicked off before,
+
+932
+00:42:29,370 --> 00:42:30,880
+which is port forward here
+
+933
+00:42:31,860 --> 00:42:33,240
+on one of these front-ends,
+
+934
+00:42:33,240 --> 00:42:34,980
+and then we'll go and test the application
+
+935
+00:42:34,980 --> 00:42:36,690
+to see if that application is functioning
+
+936
+00:42:36,690 --> 00:42:37,890
+the way we wanted it to.
+
+937
+00:42:38,850 --> 00:42:41,220
+So we'll go back here to the OTel,
+
+938
+00:42:41,220 --> 00:42:43,620
+we'll go ahead and exit out of that,
+
+939
+00:42:43,620 --> 00:42:45,300
+and we'll continue shopping.
+
+940
+00:42:45,300 --> 00:42:47,430
+We'll come back in and
+we will actually choose
+
+941
+00:42:47,430 --> 00:42:49,470
+this particular product, right?
+
+942
+00:42:49,470 --> 00:42:52,590
+We'll just kind of stay with
+what we wanted to before.
+
+943
+00:42:52,590 --> 00:42:55,590
+Of course, our nephew wanted
+this particular thing.
+
+944
+00:42:55,590 --> 00:42:58,950
+So let's see if we can actually
+complete it or get it done.
+
+945
+00:42:58,950 --> 00:43:01,380
+So we'll add it to the
+cart as we did before.
+
+946
+00:43:01,380 --> 00:43:02,430
+We'll walk it down here,
+
+947
+00:43:02,430 --> 00:43:04,110
+everything else is pretty much the same,
+
+948
+00:43:04,110 --> 00:43:06,270
+and we'll see if we can
+actually place that order.
+
+949
+00:43:06,270 --> 00:43:07,980
+Boom, successful.
+
+950
+00:43:07,980 --> 00:43:11,040
+So now we've really kind
+of have full circle, right?
+
+951
+00:43:11,040 --> 00:43:12,150
+So we actually went through
+
+952
+00:43:12,150 --> 00:43:15,090
+and we looked at it from NLP,
+really kind of narrowed it.
+
+953
+00:43:15,090 --> 00:43:18,090
+We went from the semantic
+search not really understanding
+
+954
+00:43:18,090 --> 00:43:20,850
+what could be the issue, but
+then we actually honing in more
+
+955
+00:43:20,850 --> 00:43:22,230
+and more in terms of what the needle
+
+956
+00:43:22,230 --> 00:43:25,380
+in the haystack would
+be, and then we used MCP.
+
+957
+00:43:25,380 --> 00:43:27,630
+It's kind of an external or an agent tool
+
+958
+00:43:27,630 --> 00:43:29,460
+to actually give us
+that same confirmation,
+
+959
+00:43:29,460 --> 00:43:31,530
+to actually fix it and, and move forward.
+
+960
+00:43:31,530 --> 00:43:35,130
+So, with that, I'll go
+ahead and hand it back over
+
+961
+00:43:35,130 --> 00:43:36,603
+to Ulli to take us home.
+
+962
+00:43:46,470 --> 00:43:48,120
+- [Ulli] So this already brings us
+
+963
+00:43:48,120 --> 00:43:49,623
+to the end of the session.
+
+964
+00:43:50,520 --> 00:43:53,490
+This is the GitHub Gist we promised
+
+965
+00:43:53,490 --> 00:43:54,900
+a few times during the session.
+
+966
+00:43:54,900 --> 00:43:56,940
+So do check this out.
+
+967
+00:43:56,940 --> 00:44:00,780
+It contains all of the code
+snippets, documentation,
+
+968
+00:44:00,780 --> 00:44:04,230
+references and other
+references, explanations,
+
+969
+00:44:04,230 --> 00:44:07,203
+and so on that we talked
+about during this session.
+
+970
+00:44:08,280 --> 00:44:09,630
+Let's have a look at the time.
+
+971
+00:44:09,630 --> 00:44:11,310
+So I think we have time for one
+
+972
+00:44:11,310 --> 00:44:12,930
+or two spontaneous questions.
+
+973
+00:44:12,930 --> 00:44:14,850
+So if any one of you has a,
+
+974
+00:44:14,850 --> 00:44:17,700
+wants to have a question for the room
+
+975
+00:44:17,700 --> 00:44:20,130
+that we can answer, you can do that now,
+
+976
+00:44:20,130 --> 00:44:21,990
+if you wanna raise your hand.
+
+977
+00:44:21,990 --> 00:44:22,823
+Anyone here?
+
+978
+00:44:24,060 --> 00:44:25,372
+Okay. Yeah.
+
+979
+00:44:25,372 --> 00:44:28,500
+(attendee speaking indistinctly)
+
+980
+00:44:28,500 --> 00:44:29,829
+Uh-huh.
+
+981
+00:44:29,829 --> 00:44:33,912
+(attendee speaking indistinctly)
+
+982
+00:44:36,570 --> 00:44:38,550
+Okay, so just repeating
+the question for everyone.
+
+983
+00:44:38,550 --> 00:44:40,410
+The question was for the connection
+
+984
+00:44:40,410 --> 00:44:42,630
+between OpenSearch and Bedrock,
+
+985
+00:44:42,630 --> 00:44:45,870
+whether we can have a
+cross-region connection for that,
+
+986
+00:44:45,870 --> 00:44:47,010
+and yes, in fact, you can.
+
+987
+00:44:47,010 --> 00:44:48,960
+Yeah, you can do that.
+
+988
+00:44:48,960 --> 00:44:50,700
+In our case, we did it same region,
+
+989
+00:44:50,700 --> 00:44:52,770
+but you can have it cross-region as well.
+
+990
+00:44:52,770 --> 00:44:56,070
+Basically, how it works is
+that OpenSearch is assuming
+
+991
+00:44:56,070 --> 00:44:57,600
+a role on your behalf,
+
+992
+00:44:57,600 --> 00:45:00,660
+and just calling the
+Bedrock service endpoint
+
+993
+00:45:00,660 --> 00:45:01,493
+on your behalf.
+
+994
+00:45:01,493 --> 00:45:02,326
+Yeah.
+
+995
+00:45:03,810 --> 00:45:05,460
+- [Rueben] Any other
+questions from the Ops side
+
+996
+00:45:05,460 --> 00:45:06,360
+of the house?
+
+997
+00:45:06,360 --> 00:45:07,380
+Go ahead.
+
+998
+00:45:07,380 --> 00:45:10,290
+- [Attendee] Just a question
+on your demo, all those inputs
+
+999
+00:45:10,290 --> 00:45:12,300
+with dev tools (indistinct)
+I'm showing you,
+
+1000
+00:45:12,300 --> 00:45:14,312
+what part was that dev tool?
+
+1001
+00:45:14,312 --> 00:45:16,110
+Is that something part of OpenSearch?
+
+1002
+00:45:16,110 --> 00:45:19,920
+- [Ulli] Yes, it's a standard
+part of OpenSearch dashboards.
+
+1003
+00:45:19,920 --> 00:45:24,920
+So, OpenSearch is fully
+HTTP API-based, right?
+
+1004
+00:45:25,200 --> 00:45:28,710
+So, in contrast to other search
+tools that are out there,
+
+1005
+00:45:28,710 --> 00:45:30,870
+it's fully HTTP API.
+
+1006
+00:45:30,870 --> 00:45:34,740
+And this is kind of the
+main, kind of playground
+
+1007
+00:45:34,740 --> 00:45:37,320
+that people use in OpenSearch, right,
+
+1008
+00:45:37,320 --> 00:45:40,470
+to play with different play
+with different endpoints.
+
+1009
+00:45:40,470 --> 00:45:41,880
+Yeah. So this is nothing new.
+
+1010
+00:45:41,880 --> 00:45:44,280
+This has been around for
+pretty much ever. Yeah.
+
+1011
+00:45:46,320 --> 00:45:49,980
+Cool. Okay, so with that,
+let's close off the session.
+
+1012
+00:45:49,980 --> 00:45:52,650
+Thanks a lot for spending
+your valuable time with us.
+
+1013
+00:45:52,650 --> 00:45:55,230
+We can take further questions
+in the hallway, by the way.
+
+1014
+00:45:55,230 --> 00:45:58,650
+We just need to move out in
+a bit for the next speakers.
+
+1015
+00:45:58,650 --> 00:46:01,923
+Happy to take any questions offline,
+
+1016
+00:46:03,450 --> 00:46:05,610
+please do fill out the session survey.
+
+1017
+00:46:05,610 --> 00:46:07,590
+I know everyone reminds you of that.
+
+1018
+00:46:07,590 --> 00:46:09,210
+Please do for this session as well,
+
+1019
+00:46:09,210 --> 00:46:10,530
+especially if you liked it.
+
+1020
+00:46:10,530 --> 00:46:12,510
+We read every single piece of feedback
+
+1021
+00:46:12,510 --> 00:46:13,343
+that you put in there.
+
+1022
+00:46:13,343 --> 00:46:15,810
+So please do fill that out.
+
+1023
+00:46:15,810 --> 00:46:18,570
+Have a great rest of re:Invent.
+
+1024
+00:46:18,570 --> 00:46:21,690
+Enjoy the conference, and
+hopefully see you all soon.
+
+1025
+00:46:21,690 --> 00:46:22,814
+Thanks.
+- Thank you, folks.
+
+1026
+00:46:22,814 --> 00:46:24,878
+(attendees applauding)
+

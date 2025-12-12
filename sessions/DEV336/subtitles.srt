@@ -1,0 +1,1224 @@
+1
+00:00:00,930 --> 00:00:04,503
+- Welcome to Dev 336 Kiro in action.
+
+2
+00:00:05,550 --> 00:00:06,660
+Let's talk about the problem
+
+3
+00:00:06,660 --> 00:00:08,006
+that we're trying to solve today.
+
+4
+00:00:08,006 --> 00:00:10,680
+That's the visibility gap.
+
+5
+00:00:10,680 --> 00:00:12,450
+When you're doing a red team engagement
+
+6
+00:00:12,450 --> 00:00:16,020
+or a pen testing assessment
+for a large organization
+
+7
+00:00:16,020 --> 00:00:18,990
+with hundreds of AWS accounts,
+you're gonna have hundreds
+
+8
+00:00:18,990 --> 00:00:20,891
+of thousands of resources
+
+9
+00:00:20,891 --> 00:00:22,320
+and you're gonna need to find the
+
+10
+00:00:22,320 --> 00:00:24,060
+vulnerabilities within those.
+
+11
+00:00:24,060 --> 00:00:26,460
+We're gonna show you how
+to build a tool using
+
+12
+00:00:26,460 --> 00:00:27,573
+Kiro to do that.
+
+13
+00:00:29,100 --> 00:00:30,633
+Let's introduce ourselves.
+
+14
+00:00:31,470 --> 00:00:34,530
+I'm Nick Gilbert, the
+red team manager at FICO.
+
+15
+00:00:34,530 --> 00:00:37,230
+I'm an AWS community
+builder on the security
+
+16
+00:00:37,230 --> 00:00:38,760
+and identity team.
+
+17
+00:00:38,760 --> 00:00:42,480
+I'm also part of the AWS
+Subject Matter Experts program
+
+18
+00:00:42,480 --> 00:00:46,233
+for the security specialty
+exam and a Gen AI enthusiast.
+
+19
+00:00:47,520 --> 00:00:49,470
+- And what's going on
+y'all, my name's Damien.
+
+20
+00:00:49,470 --> 00:00:52,350
+I am a senior cloud security
+engineer at FICO during the day
+
+21
+00:00:52,350 --> 00:00:55,050
+and at night I'm the founder
+of the Devsec Blueprint,
+
+22
+00:00:55,050 --> 00:00:55,883
+which is basically
+
+23
+00:00:55,883 --> 00:00:58,380
+to help people get into
+DevSecOps Cloud security.
+
+24
+00:00:58,380 --> 00:00:59,910
+I'm an AWS community builder,
+
+25
+00:00:59,910 --> 00:01:01,380
+just like my buddy Nick over here.
+
+26
+00:01:01,380 --> 00:01:03,780
+I also produce a lot of content as well
+
+27
+00:01:03,780 --> 00:01:05,520
+as create courses on LinkedIn.
+
+28
+00:01:05,520 --> 00:01:08,640
+And then for fun, when I have the time,
+
+29
+00:01:08,640 --> 00:01:11,100
+whenever I have the time, I love anime,
+
+30
+00:01:11,100 --> 00:01:12,900
+I like cars, I play video games.
+
+31
+00:01:12,900 --> 00:01:16,320
+And those are just a
+sumation of my hobbies.
+
+32
+00:01:16,320 --> 00:01:21,320
+But let's just quickly
+discuss how we intend to close
+
+33
+00:01:21,540 --> 00:01:22,770
+that visibility gap.
+
+34
+00:01:22,770 --> 00:01:24,180
+And I'm gonna turn it back to Nick
+
+35
+00:01:24,180 --> 00:01:25,620
+so he can cover the IAM scanner
+
+36
+00:01:25,620 --> 00:01:28,230
+and the high level requirements.
+
+37
+00:01:28,230 --> 00:01:31,380
+- So we're gonna build a IAM
+scan that does the following.
+
+38
+00:01:31,380 --> 00:01:35,160
+So first it's gonna identify
+your high value attack fast.
+
+39
+00:01:35,160 --> 00:01:37,260
+It's gonna enumerate cross account access.
+
+40
+00:01:37,260 --> 00:01:39,450
+So you'll often start out in a dev account
+
+41
+00:01:39,450 --> 00:01:41,730
+and then wanna work your way
+to those crown jewel assets
+
+42
+00:01:41,730 --> 00:01:43,080
+in the prod accounts.
+
+43
+00:01:43,080 --> 00:01:46,320
+It's gonna be able to
+prioritize roles by impact.
+
+44
+00:01:46,320 --> 00:01:48,840
+It's gonna spot common
+mistakes like wild cards
+
+45
+00:01:48,840 --> 00:01:51,690
+and trust policies, missing external IDs.
+
+46
+00:01:51,690 --> 00:01:55,053
+It'll give you specific
+actionable escalation pass.
+
+47
+00:01:56,010 --> 00:01:57,750
+It'll provide repeatable results,
+
+48
+00:01:57,750 --> 00:01:59,880
+so once you report your findings,
+
+49
+00:01:59,880 --> 00:02:01,860
+the team will tell you
+they fixed the issue
+
+50
+00:02:01,860 --> 00:02:03,600
+and then you can simply
+run the scanner again
+
+51
+00:02:03,600 --> 00:02:05,520
+to confirm everything's fixed.
+
+52
+00:02:05,520 --> 00:02:07,440
+And then finally, we're gonna use Python
+
+53
+00:02:07,440 --> 00:02:10,410
+with multi-threading to
+be able to scan hundreds
+
+54
+00:02:10,410 --> 00:02:11,823
+of accounts all at once.
+
+55
+00:02:14,130 --> 00:02:17,040
+- So the question that we
+need to ask ourselves is
+
+56
+00:02:17,040 --> 00:02:21,750
+how can we solve our solution
+quickly as security engineers?
+
+57
+00:02:21,750 --> 00:02:25,170
+So with the introduction of
+AI into the industry, we know
+
+58
+00:02:25,170 --> 00:02:27,750
+for a fact that there are
+two kinds of strategies
+
+59
+00:02:27,750 --> 00:02:29,910
+that we can use to be,
+to make this happen.
+
+60
+00:02:29,910 --> 00:02:34,110
+So there's vibe coding and
+there's also spec based design
+
+61
+00:02:34,110 --> 00:02:35,940
+or spec driven development.
+
+62
+00:02:35,940 --> 00:02:38,490
+And the question is, which one do we use?
+
+63
+00:02:38,490 --> 00:02:42,836
+So let's talk through vibe
+coding, right, at a high level.
+
+64
+00:02:42,836 --> 00:02:44,850
+So Vibe coding essentially
+is basically you
+
+65
+00:02:44,850 --> 00:02:47,940
+and the AI just vibe, right?
+
+66
+00:02:47,940 --> 00:02:51,240
+You open a chat, chatGPT,
+(indistinct) code, AI,
+
+67
+00:02:51,240 --> 00:02:52,080
+whatever have you.
+
+68
+00:02:52,080 --> 00:02:55,470
+You throw some ideas at it,
+you brainstorm, you refine it,
+
+69
+00:02:55,470 --> 00:02:57,869
+and you copy and paste the
+code, you keep tweaking it
+
+70
+00:02:57,869 --> 00:03:00,480
+and you just keep doing
+the same thing over
+
+71
+00:03:00,480 --> 00:03:02,220
+and over again until it actually works.
+
+72
+00:03:02,220 --> 00:03:03,750
+And it's great for proof of concepts,
+
+73
+00:03:03,750 --> 00:03:07,800
+but it is not what we need
+for scalability, right?
+
+74
+00:03:07,800 --> 00:03:08,760
+It doesn't scale.
+
+75
+00:03:08,760 --> 00:03:10,470
+There's no way to understand,
+
+76
+00:03:10,470 --> 00:03:12,930
+there's no shared
+understanding, no guarantees.
+
+77
+00:03:12,930 --> 00:03:16,350
+And there's definitely no
+long-term maintainability
+
+78
+00:03:16,350 --> 00:03:18,000
+for all of that, right?
+
+79
+00:03:18,000 --> 00:03:20,970
+And for us in our approach,
+that's not how we want
+
+80
+00:03:20,970 --> 00:03:24,180
+to basically build a
+production scale security tool
+
+81
+00:03:24,180 --> 00:03:26,070
+or even guardrails for that matter
+
+82
+00:03:26,070 --> 00:03:28,699
+or any type of security automation, right?
+
+83
+00:03:28,699 --> 00:03:30,840
+But with spec based design and
+
+84
+00:03:30,840 --> 00:03:33,570
+or spec driven development,
+it's quite different.
+
+85
+00:03:33,570 --> 00:03:35,730
+And when you look at it like this,
+
+86
+00:03:35,730 --> 00:03:37,800
+you're basically the
+architect of your solution.
+
+87
+00:03:37,800 --> 00:03:40,260
+Before you even ask the AI to
+write code, you basically have
+
+88
+00:03:40,260 --> 00:03:42,810
+to think about everything
+from the beginning all the way
+
+89
+00:03:42,810 --> 00:03:44,880
+to the end, from the requirements,
+
+90
+00:03:44,880 --> 00:03:46,092
+have everything mapped out
+
+91
+00:03:46,092 --> 00:03:49,590
+and how you actually want
+it to be implemented, right?
+
+92
+00:03:49,590 --> 00:03:51,630
+Which in a sense, is gonna help us build
+
+93
+00:03:51,630 --> 00:03:56,160
+that scalable maintainable
+solution that updated by changes
+
+94
+00:03:56,160 --> 00:03:57,483
+to the spec itself.
+
+95
+00:03:59,100 --> 00:04:00,150
+And that's pretty much
+
+96
+00:04:00,150 --> 00:04:01,980
+where Kiro comes into the picture, right?
+
+97
+00:04:01,980 --> 00:04:04,830
+So Kiro is basically that AI powered IDE,
+
+98
+00:04:04,830 --> 00:04:08,500
+that basically is used to
+enhance the software development
+
+99
+00:04:09,780 --> 00:04:11,970
+by using AI agents on the backend.
+
+100
+00:04:11,970 --> 00:04:14,730
+And one of the key features
+of Kiro is that it supports
+
+101
+00:04:14,730 --> 00:04:17,640
+that spec based or spec driven development
+
+102
+00:04:17,640 --> 00:04:19,830
+and spec based design
+that we talked about.
+
+103
+00:04:19,830 --> 00:04:22,740
+Not only that, but it's very
+user friendly and easy to use.
+
+104
+00:04:22,740 --> 00:04:25,740
+If you're a developer and you
+use VS code, it's very easy
+
+105
+00:04:25,740 --> 00:04:28,860
+because it's basically a clone of VS code.
+
+106
+00:04:28,860 --> 00:04:30,630
+And it also supports various different
+
+107
+00:04:30,630 --> 00:04:31,890
+programming languages.
+
+108
+00:04:31,890 --> 00:04:34,470
+So with Python being our
+number one programming language
+
+109
+00:04:34,470 --> 00:04:37,620
+of choice and what it is
+that we use to what we use
+
+110
+00:04:37,620 --> 00:04:40,110
+to build the IAM scanner.
+
+111
+00:04:40,110 --> 00:04:43,500
+So now I'm gonna turn it back
+to Nick so he can talk about
+
+112
+00:04:43,500 --> 00:04:46,830
+how to create a spec using
+the prompt framework.
+
+113
+00:04:46,830 --> 00:04:49,050
+- So to create your spec
+files, good way to do
+
+114
+00:04:49,050 --> 00:04:50,610
+that is using the prompt framework.
+
+115
+00:04:50,610 --> 00:04:52,353
+So PROMPT is an acronym.
+
+116
+00:04:54,240 --> 00:04:56,130
+So the P stands for purpose.
+
+117
+00:04:56,130 --> 00:04:57,630
+So this is a brief description of
+
+118
+00:04:57,630 --> 00:04:59,193
+what you're trying to build.
+
+119
+00:04:59,193 --> 00:05:01,650
+Then you wanna give the requirements,
+
+120
+00:05:01,650 --> 00:05:04,110
+so a high level overview of your program.
+
+121
+00:05:04,110 --> 00:05:05,973
+Think of this like a job description.
+
+122
+00:05:07,470 --> 00:05:08,640
+Next is the output,
+
+123
+00:05:08,640 --> 00:05:10,620
+list how you wanna
+receive the deliverables.
+
+124
+00:05:10,620 --> 00:05:12,120
+Do you want it in one single file
+
+125
+00:05:12,120 --> 00:05:14,463
+or do you want it
+modular in several files?
+
+126
+00:05:15,329 --> 00:05:17,010
+Next up is the method.
+
+127
+00:05:17,010 --> 00:05:19,020
+This is gonna be the largest
+section of the prompt.
+
+128
+00:05:19,020 --> 00:05:21,150
+So you wanna enumerate the very specific
+
+129
+00:05:21,150 --> 00:05:22,503
+details of your prompt.
+
+130
+00:05:23,983 --> 00:05:26,490
+And then a pro tip, this
+is something I always like
+
+131
+00:05:26,490 --> 00:05:29,610
+to do when using Kiro is
+at the end of the prompt,
+
+132
+00:05:29,610 --> 00:05:32,700
+I tell it to ask me clarifying
+questions before it begins.
+
+133
+00:05:32,700 --> 00:05:35,550
+There's usually always something
+important that I forgot.
+
+134
+00:05:36,420 --> 00:05:38,070
+And then finally testability.
+
+135
+00:05:38,070 --> 00:05:41,670
+So one great thing about
+kiro is it can create
+
+136
+00:05:41,670 --> 00:05:42,930
+unit tests for you.
+
+137
+00:05:42,930 --> 00:05:45,780
+So anytime you make a change
+to the software, simply run
+
+138
+00:05:45,780 --> 00:05:48,330
+the unit test to confirm
+everything's working okay.
+
+139
+00:05:49,680 --> 00:05:52,620
+- All right, so when it comes
+down to the IAM scanner,
+
+140
+00:05:52,620 --> 00:05:53,769
+the thing that we use
+
+141
+00:05:53,769 --> 00:05:57,390
+and that kiro expects
+is three markdown files.
+
+142
+00:05:57,390 --> 00:05:59,400
+So we have the requirements,
+which is basically
+
+143
+00:05:59,400 --> 00:06:01,440
+what we are wanting, right?
+
+144
+00:06:01,440 --> 00:06:03,120
+The design, which is what is needed,
+
+145
+00:06:03,120 --> 00:06:06,060
+and then also the task, which
+is how we actually want this
+
+146
+00:06:06,060 --> 00:06:07,140
+to work, right?
+
+147
+00:06:07,140 --> 00:06:09,000
+So the step by step execution.
+
+148
+00:06:09,000 --> 00:06:11,940
+But the beautiful thing
+about this is that as someone
+
+149
+00:06:11,940 --> 00:06:14,790
+who may not necessarily have
+a lot of software development
+
+150
+00:06:14,790 --> 00:06:16,440
+or engineering experience,
+
+151
+00:06:16,440 --> 00:06:18,690
+you can essentially
+create your own products
+
+152
+00:06:18,690 --> 00:06:21,450
+by just essentially creating
+markdown files with a bunch
+
+153
+00:06:21,450 --> 00:06:22,890
+of texts, right?
+
+154
+00:06:22,890 --> 00:06:25,230
+And I think that's the
+key thing with kiro is
+
+155
+00:06:25,230 --> 00:06:27,000
+that it puts you in a different part
+
+156
+00:06:27,000 --> 00:06:30,450
+or in a different spot of
+the SDLC by allowing you to
+
+157
+00:06:30,450 --> 00:06:34,890
+be able to write the the specifications in
+
+158
+00:06:34,890 --> 00:06:36,840
+English instead of in code.
+
+159
+00:06:36,840 --> 00:06:37,863
+And next slide.
+
+160
+00:06:39,240 --> 00:06:41,610
+- So let's talk about how
+the I Am scanner works.
+
+161
+00:06:41,610 --> 00:06:44,247
+So the first thing it's
+gonna do is cache the
+
+162
+00:06:44,247 --> 00:06:45,570
+AWS managed policies.
+
+163
+00:06:45,570 --> 00:06:47,130
+There's over a thousand of 'em.
+
+164
+00:06:47,130 --> 00:06:49,170
+So when you're doing hundreds
+of accounts, you don't want
+
+165
+00:06:49,170 --> 00:06:50,580
+to download 'em each time.
+
+166
+00:06:50,580 --> 00:06:52,784
+So it's gonna use a
+caching system from that.
+
+167
+00:06:52,784 --> 00:06:55,380
+Next up is gonna collect the IAM data.
+
+168
+00:06:55,380 --> 00:06:57,690
+So this is your users, groups, roles
+
+169
+00:06:57,690 --> 00:06:59,940
+and customer managed policies.
+
+170
+00:06:59,940 --> 00:07:02,910
+Then it's gonna analyze all
+those managed policies using a
+
+171
+00:07:02,910 --> 00:07:05,280
+policy engine, find out
+which ones have high
+
+172
+00:07:05,280 --> 00:07:07,080
+level permissions.
+
+173
+00:07:07,080 --> 00:07:09,240
+Next is gonna check all the principles.
+
+174
+00:07:09,240 --> 00:07:12,189
+So both the managed policies
+as well as the inline policies
+
+175
+00:07:12,189 --> 00:07:15,063
+and determine which
+principles are dangerous.
+
+176
+00:07:16,170 --> 00:07:19,230
+Then it's gonna look at
+the role trust policy.
+
+177
+00:07:19,230 --> 00:07:20,063
+So this is important for lateral
+movement bulk (indistinct)
+
+178
+00:07:20,063 --> 00:07:25,063
+in the current account, as
+well as cross account access.
+
+179
+00:07:25,188 --> 00:07:27,390
+Then it's gonna look at unused roles.
+
+180
+00:07:27,390 --> 00:07:29,670
+So a lot of times when
+doing red team assessments,
+
+181
+00:07:29,670 --> 00:07:31,890
+the roles we end up using are unused ones
+
+182
+00:07:31,890 --> 00:07:33,750
+that were created a long time ago
+
+183
+00:07:33,750 --> 00:07:36,660
+with high privileges and never deleted.
+
+184
+00:07:36,660 --> 00:07:39,870
+And then it's gonna analyze
+privilege escalation paths.
+
+185
+00:07:39,870 --> 00:07:41,160
+So this will go through every role,
+
+186
+00:07:41,160 --> 00:07:43,680
+determine if it has a
+path to admin access,
+
+187
+00:07:43,680 --> 00:07:45,900
+and then tell you how you
+get from where you're at
+
+188
+00:07:45,900 --> 00:07:46,920
+to admin access.
+
+189
+00:07:46,920 --> 00:07:49,710
+For example, it may say,
+assume a certain role, then use
+
+190
+00:07:49,710 --> 00:07:51,660
+that role to create an EC2 instance
+
+191
+00:07:51,660 --> 00:07:53,610
+with the high privileged role.
+
+192
+00:07:53,610 --> 00:07:55,810
+We'll give you the code
+for this at the end.
+
+193
+00:07:57,028 --> 00:07:59,940
+- All right, so now that you understand
+
+194
+00:07:59,940 --> 00:08:03,420
+how the IAM scanner works from
+an architectural standpoint,
+
+195
+00:08:03,420 --> 00:08:06,780
+let's talk about the estimated
+time it would take if we
+
+196
+00:08:06,780 --> 00:08:09,000
+attempted to do this without using AI
+
+197
+00:08:09,000 --> 00:08:10,380
+versus with using Kiro.
+
+198
+00:08:10,380 --> 00:08:14,100
+So if you take a look at
+the table, you can see that
+
+199
+00:08:14,100 --> 00:08:16,080
+from planning and design to development,
+
+200
+00:08:16,080 --> 00:08:17,640
+you got touchpoint meetings, testing,
+
+201
+00:08:17,640 --> 00:08:20,393
+and also the rework rate.
+
+202
+00:08:20,393 --> 00:08:23,850
+You're looking at between 200 to 350 hours
+
+203
+00:08:23,850 --> 00:08:26,700
+for building out a tool
+as sophisticated as that
+
+204
+00:08:26,700 --> 00:08:28,710
+with all those various different steps.
+
+205
+00:08:28,710 --> 00:08:29,850
+But with Kiro, you can see
+
+206
+00:08:29,850 --> 00:08:33,540
+that there's at least a 70%
+reduction across the board
+
+207
+00:08:33,540 --> 00:08:36,960
+simply because we're
+essentially passing in all the
+
+208
+00:08:36,960 --> 00:08:38,550
+parameters for it to be able
+
+209
+00:08:38,550 --> 00:08:40,695
+to build out everything with AI.
+
+210
+00:08:40,695 --> 00:08:43,500
+That includes unit test cases.
+
+211
+00:08:43,500 --> 00:08:46,590
+And the key thing is also that rework rate
+
+212
+00:08:46,590 --> 00:08:49,050
+because it's generating the
+code and it's also going through
+
+213
+00:08:49,050 --> 00:08:51,990
+and testing the code as well
+while it's generating it.
+
+214
+00:08:51,990 --> 00:08:56,670
+So you're thinking about maybe
+25, 35 hours, if not a week,
+
+215
+00:08:56,670 --> 00:08:59,133
+for us to be able to build this tool.
+
+216
+00:09:01,110 --> 00:09:05,340
+So just so y'all know that
+I'm not telling y'all no lie.
+
+217
+00:09:05,340 --> 00:09:06,510
+Let's talk about some of the results
+
+218
+00:09:06,510 --> 00:09:09,728
+so you can see everything
+that actually happens, right?
+
+219
+00:09:09,728 --> 00:09:13,230
+So when you take a look
+at this, this is step five
+
+220
+00:09:13,230 --> 00:09:17,436
+of the IAM scanner where it's
+basically iterating through
+
+221
+00:09:17,436 --> 00:09:20,730
+and performing a role
+analysis in my account.
+
+222
+00:09:20,730 --> 00:09:24,090
+So yes, this is my account
+ID please do not steal it
+
+223
+00:09:24,090 --> 00:09:26,560
+or take it or do anything bad
+
+224
+00:09:26,560 --> 00:09:28,920
+because I'm going to
+terminate the account anyway.
+
+225
+00:09:28,920 --> 00:09:32,280
+But ultimately you can see
+that there are 40 unused roles,
+
+226
+00:09:32,280 --> 00:09:36,180
+and 21 of them are considered
+to be dangerous, right?
+
+227
+00:09:36,180 --> 00:09:37,830
+And the beautiful thing about this is
+
+228
+00:09:37,830 --> 00:09:40,020
+that it generates two files.
+
+229
+00:09:40,020 --> 00:09:43,380
+It generates the JSON file,
+which can be used for, you know,
+
+230
+00:09:43,380 --> 00:09:45,090
+some automation that you're writing,
+
+231
+00:09:45,090 --> 00:09:48,750
+and it also generates that
+markdown report with all of
+
+232
+00:09:48,750 --> 00:09:51,123
+that information in those analysis points.
+
+233
+00:09:52,080 --> 00:09:54,300
+But the thing about this
+is that with that report
+
+234
+00:09:54,300 --> 00:09:56,460
+that's being generated, if you need
+
+235
+00:09:56,460 --> 00:09:59,940
+to convince your leadership
+to throw some extra money so
+
+236
+00:09:59,940 --> 00:10:03,000
+that you can have the additional
+support to secure some
+
+237
+00:10:03,000 --> 00:10:05,640
+of those resources in the
+cloud, you can export this
+
+238
+00:10:05,640 --> 00:10:08,040
+as a PDF and send it all on your way.
+
+239
+00:10:08,040 --> 00:10:10,110
+And basically, that'll
+allow you to be able
+
+240
+00:10:10,110 --> 00:10:11,400
+to convince people
+
+241
+00:10:11,400 --> 00:10:14,130
+otherwise by basically giving
+you an executive summary
+
+242
+00:10:14,130 --> 00:10:16,590
+of what's going on in
+your account and why.
+
+243
+00:10:16,590 --> 00:10:19,890
+And all this, again, is maintained
+by those markdown files.
+
+244
+00:10:19,890 --> 00:10:22,350
+So if we need to make a change to this,
+
+245
+00:10:22,350 --> 00:10:25,170
+we essentially update the
+spec and have kiro go through
+
+246
+00:10:25,170 --> 00:10:27,423
+and update the code for us, right?
+
+247
+00:10:28,860 --> 00:10:32,978
+So some key takeaways.
+
+248
+00:10:32,978 --> 00:10:37,470
+Use spec driven design or
+kiro to rapidly develop
+
+249
+00:10:37,470 --> 00:10:39,270
+and scale your security solutions.
+
+250
+00:10:39,270 --> 00:10:40,103
+Why?
+
+251
+00:10:40,103 --> 00:10:42,510
+Because you can essentially
+pass in those requirements
+
+252
+00:10:42,510 --> 00:10:45,570
+via text to be able to make that happen.
+
+253
+00:10:45,570 --> 00:10:47,190
+Also, use spec files
+
+254
+00:10:47,190 --> 00:10:50,190
+to translate those product
+requirements into a working code
+
+255
+00:10:50,190 --> 00:10:51,720
+and software without writing code.
+
+256
+00:10:51,720 --> 00:10:54,450
+Hence what I just said in
+the first key takeaway.
+
+257
+00:10:54,450 --> 00:10:57,330
+And the last thing, if you
+are a security engineer,
+
+258
+00:10:57,330 --> 00:10:58,950
+whether it's red team,
+blue team, purple team,
+
+259
+00:10:58,950 --> 00:11:01,530
+whatever color you're on
+the map, you wanna make sure
+
+260
+00:11:01,530 --> 00:11:03,090
+that you create automated tool
+
+261
+00:11:03,090 --> 00:11:05,580
+and to be able to find those
+unlike entry points into your
+
+262
+00:11:05,580 --> 00:11:09,000
+cloud environment and any of
+those hidden vulnerabilities
+
+263
+00:11:09,000 --> 00:11:12,390
+and risks so that you can
+pretty much mitigate all
+
+264
+00:11:12,390 --> 00:11:14,163
+of those in an automated fashion.
+
+265
+00:11:15,159 --> 00:11:18,627
+So next steps, as we
+approach the end, if you want
+
+266
+00:11:18,627 --> 00:11:20,250
+to check out the code,
+
+267
+00:11:20,250 --> 00:11:23,340
+please make sure you scan
+the QR code at the very top
+
+268
+00:11:23,340 --> 00:11:27,030
+for the IAM scanners and
+GitHub it is available for use.
+
+269
+00:11:27,030 --> 00:11:29,640
+And then also connect
+with us on social media,
+
+270
+00:11:29,640 --> 00:11:31,435
+myself and also Nick.
+
+271
+00:11:31,435 --> 00:11:35,160
+Those are our QR codes
+to our LinkedIn profiles.
+
+272
+00:11:35,160 --> 00:11:36,893
+Thank you guys so much for listening.
+

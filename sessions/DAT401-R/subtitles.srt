@@ -1,0 +1,5191 @@
+1
+00:00:00,630 --> 00:00:01,860
+- [Marc] Hello and welcome, everyone.
+
+2
+00:00:01,860 --> 00:00:03,930
+Good morning, welcome to re:Invent.
+
+3
+00:00:03,930 --> 00:00:05,370
+My name is Mark, I'm an engineer.
+
+4
+00:00:05,370 --> 00:00:08,820
+I work in DSQL, and I'm
+joined by my colleague Raluca.
+
+5
+00:00:08,820 --> 00:00:12,570
+She's a database engineer.
+She works in DSQL with me.
+
+6
+00:00:12,570 --> 00:00:17,190
+And this is a code talk. This
+is a developer's perspective.
+
+7
+00:00:17,190 --> 00:00:19,770
+We're gonna be building
+a very simple application
+
+8
+00:00:19,770 --> 00:00:22,200
+in DSQL this morning, using Lambda.
+
+9
+00:00:22,200 --> 00:00:25,620
+And I'm gonna show you
+how to connect to DSQL,
+
+10
+00:00:25,620 --> 00:00:26,820
+how to use the CDK
+
+11
+00:00:26,820 --> 00:00:29,490
+to manage your
+infrastructure declaratively.
+
+12
+00:00:29,490 --> 00:00:33,420
+We're gonna to be writing
+some banking applications,
+
+13
+00:00:33,420 --> 00:00:35,370
+just very simple application.
+
+14
+00:00:35,370 --> 00:00:37,140
+You know, turns out I owe Raluca money,
+
+15
+00:00:37,140 --> 00:00:38,789
+so I need to settle my debts with her.
+
+16
+00:00:38,789 --> 00:00:40,260
+(Raluca chuckles)
+
+17
+00:00:40,260 --> 00:00:42,240
+And we're gonna be showing you
+
+18
+00:00:42,240 --> 00:00:43,740
+how to scale that application up,
+
+19
+00:00:43,740 --> 00:00:45,390
+how to deal with concurrency,
+
+20
+00:00:45,390 --> 00:00:48,840
+what happens when there's
+conflicts in the application.
+
+21
+00:00:48,840 --> 00:00:52,110
+This is really meant to
+be a bit of a baking show.
+
+22
+00:00:52,110 --> 00:00:54,540
+And so there're gonna be
+moments where, you know,
+
+23
+00:00:54,540 --> 00:00:55,710
+the pie is in the oven.
+
+24
+00:00:55,710 --> 00:00:57,990
+We're gonna be waiting for it,
+
+25
+00:00:57,990 --> 00:01:00,153
+so feel free to ask us questions.
+
+26
+00:01:01,110 --> 00:01:02,763
+Yeah, let's get into it.
+
+27
+00:01:03,900 --> 00:01:04,950
+- [Raluca] All right,
+
+28
+00:01:08,640 --> 00:01:10,800
+I'm gonna take over Marc's computer.
+
+29
+00:01:10,800 --> 00:01:11,633
+- [Marc] Okay.
+
+30
+00:01:11,633 --> 00:01:13,350
+- [Raluca] It's part of
+his paying his debts to me.
+
+31
+00:01:13,350 --> 00:01:16,250
+- [Marc] So a quick show of
+hands, who here has used DSQL?
+
+32
+00:01:17,970 --> 00:01:19,440
+Okay, that's about what I expected.
+
+33
+00:01:19,440 --> 00:01:23,460
+So, DSQL was announced at
+re:Invent this time last year
+
+34
+00:01:23,460 --> 00:01:26,220
+in preview, almost exactly a year ago,
+
+35
+00:01:26,220 --> 00:01:30,780
+and became generally
+available earlier this year.
+
+36
+00:01:30,780 --> 00:01:35,780
+We're about six months
+old now. So, what is DSQL?
+
+37
+00:01:36,210 --> 00:01:40,560
+DSQL is a distributed
+implementation of Postgres.
+
+38
+00:01:40,560 --> 00:01:44,347
+And so, for the longest time,
+customers have been asking us,
+
+39
+00:01:44,347 --> 00:01:47,250
+"Hey, we really like relational databases.
+
+40
+00:01:47,250 --> 00:01:50,520
+We like being able to do
+joins, manage our schema,
+
+41
+00:01:50,520 --> 00:01:52,290
+run complex queries,
+
+42
+00:01:52,290 --> 00:01:54,720
+but we also like systems like DynamoDB,
+
+43
+00:01:54,720 --> 00:01:57,060
+where there is no single point of failure,
+
+44
+00:01:57,060 --> 00:01:59,460
+where the system scales horizontally.
+
+45
+00:01:59,460 --> 00:02:02,880
+And we also like services like Lambda,
+
+46
+00:02:02,880 --> 00:02:05,190
+where I don't have to
+think about infrastructure,
+
+47
+00:02:05,190 --> 00:02:09,210
+or scaling, or patching, or
+security, or anything like that.
+
+48
+00:02:09,210 --> 00:02:12,000
+So these three things, I
+want them in one package,
+
+49
+00:02:12,000 --> 00:02:15,090
+and that's what we set out to
+do, and that's what DSQL is.
+
+50
+00:02:15,090 --> 00:02:17,700
+DSQL has four pillars.
+
+51
+00:02:17,700 --> 00:02:19,410
+You can find these in our website:
+
+52
+00:02:19,410 --> 00:02:22,590
+virtually unlimited
+scale, high availability,
+
+53
+00:02:22,590 --> 00:02:24,963
+no infrastructure
+management, and ease of use.
+
+54
+00:02:25,860 --> 00:02:29,070
+Okay, let's hop on over
+to the DSQL console
+
+55
+00:02:29,070 --> 00:02:30,060
+and create a cluster.
+
+56
+00:02:30,060 --> 00:02:32,430
+This is gonna go by really fast.
+
+57
+00:02:32,430 --> 00:02:34,530
+I challenge you all to count to 10.
+
+58
+00:02:34,530 --> 00:02:35,430
+Five,
+
+59
+00:02:35,430 --> 00:02:36,390
+four,
+
+60
+00:02:36,390 --> 00:02:37,223
+three,
+
+61
+00:02:37,223 --> 00:02:38,550
+two,
+
+62
+00:02:38,550 --> 00:02:39,450
+one.
+
+63
+00:02:39,450 --> 00:02:40,710
+- [Raluca] I was late.
+
+64
+00:02:40,710 --> 00:02:41,881
+- [Marc] I can't count to 10?
+
+65
+00:02:41,881 --> 00:02:43,320
+- (chuckles) Done.
+- There we go. Okay, great.
+
+66
+00:02:43,320 --> 00:02:46,260
+So, that's what it looks like
+to create a DSQL cluster.
+
+67
+00:02:46,260 --> 00:02:47,093
+It's pretty fast.
+
+68
+00:02:47,093 --> 00:02:48,810
+We've just rolled out
+fast practice creation
+
+69
+00:02:48,810 --> 00:02:50,313
+about two weeks ago.
+
+70
+00:02:51,540 --> 00:02:52,453
+Let's do that in slowmo.
+
+71
+00:02:52,453 --> 00:02:54,780
+So Raluca, take us back on over.
+
+72
+00:02:54,780 --> 00:02:57,390
+You'll notice that there's
+actually two options there
+
+73
+00:02:57,390 --> 00:03:00,120
+in the dropdown, there's
+single-region or multi-region.
+
+74
+00:03:00,120 --> 00:03:00,990
+For today's talk,
+
+75
+00:03:00,990 --> 00:03:03,490
+we're gonna be focusing
+on single-region clusters.
+
+76
+00:03:05,490 --> 00:03:07,710
+There is no scroll bar on the screen.
+
+77
+00:03:07,710 --> 00:03:11,460
+This is something that I'm
+just like super excited about
+
+78
+00:03:11,460 --> 00:03:15,000
+because, you know, I've
+made a ton of databases
+
+79
+00:03:15,000 --> 00:03:17,340
+in my career, and every time I make one,
+
+80
+00:03:17,340 --> 00:03:19,980
+I find it just like really awful
+
+81
+00:03:19,980 --> 00:03:22,860
+because I have to make all
+these decisions ahead of time.
+
+82
+00:03:22,860 --> 00:03:25,920
+It's really hard to decide
+what instance type do I want,
+
+83
+00:03:25,920 --> 00:03:28,740
+how many replicas, what
+subnet should I be in,
+
+84
+00:03:28,740 --> 00:03:29,573
+what security?
+
+85
+00:03:29,573 --> 00:03:31,170
+It's just this endless list of choices,
+
+86
+00:03:31,170 --> 00:03:32,763
+and they all really matter.
+
+87
+00:03:33,600 --> 00:03:35,940
+And so which one of
+those is gonna be the one
+
+88
+00:03:35,940 --> 00:03:37,110
+that causes an outage
+
+89
+00:03:37,110 --> 00:03:39,120
+and makes me wake up in
+the middle of the night.
+
+90
+00:03:39,120 --> 00:03:40,080
+And in DC recall,
+
+91
+00:03:40,080 --> 00:03:42,360
+you don't have to worry
+about any of that stuff.
+
+92
+00:03:42,360 --> 00:03:45,300
+You can tag your cluster if you want.
+
+93
+00:03:45,300 --> 00:03:48,060
+If you wanna change the tags
+later, go ahead and do that.
+
+94
+00:03:48,060 --> 00:03:50,190
+Clusters are always encrypted by default.
+
+95
+00:03:50,190 --> 00:03:52,320
+If you wanna change to a different key,
+
+96
+00:03:52,320 --> 00:03:53,370
+you can do that here.
+
+97
+00:03:53,370 --> 00:03:54,870
+If you wanna change your mind later
+
+98
+00:03:54,870 --> 00:03:57,090
+and move to a different
+key, you can do that later.
+
+99
+00:03:57,090 --> 00:03:59,070
+You can toggle deletion protection
+
+100
+00:03:59,070 --> 00:04:02,650
+and we've recently rolled out
+some advanced security options
+
+101
+00:04:04,494 --> 00:04:05,700
+for some of our customers.
+
+102
+00:04:05,700 --> 00:04:09,540
+But that's really all there is to it.
+
+103
+00:04:09,540 --> 00:04:12,390
+Let's connect to DSQL cluster, Raluca.
+
+104
+00:04:12,390 --> 00:04:13,390
+- [Raluca] Right on.
+
+105
+00:04:14,880 --> 00:04:17,640
+Let's choose this one. Have
+you done anything with it?
+
+106
+00:04:17,640 --> 00:04:18,900
+- Nope, not yet.
+- Okay.
+
+107
+00:04:18,900 --> 00:04:21,690
+- [Marc] Okay, so we have two ways
+
+108
+00:04:21,690 --> 00:04:24,030
+to connect the DSQL cluster.
+
+109
+00:04:24,030 --> 00:04:26,340
+This is the query editor.
+
+110
+00:04:26,340 --> 00:04:29,640
+We actually only shipped
+this about two weeks ago
+
+111
+00:04:29,640 --> 00:04:32,520
+and this is just a Postgres editor
+
+112
+00:04:32,520 --> 00:04:34,020
+running in the web browser, right?
+
+113
+00:04:34,020 --> 00:04:35,670
+What's really cool about this editor
+
+114
+00:04:35,670 --> 00:04:39,093
+is that your browser is
+connecting to DSQL directly.
+
+115
+00:04:40,020 --> 00:04:41,490
+DSQL supports web sockets.
+
+116
+00:04:41,490 --> 00:04:43,980
+And so, your browser's
+just connecting over
+
+117
+00:04:43,980 --> 00:04:47,220
+and speaking the Postgres
+protocol right there.
+
+118
+00:04:47,220 --> 00:04:51,930
+We also have a CloudShell integration.
+
+119
+00:04:51,930 --> 00:04:56,930
+So, every page in the AWS console
+
+120
+00:04:57,540 --> 00:04:58,980
+has a little shell at the bottom left.
+
+121
+00:04:58,980 --> 00:05:00,830
+I don't know if you've all seen that.
+
+122
+00:05:01,710 --> 00:05:03,840
+But you can also go to any DSQL cluster
+
+123
+00:05:03,840 --> 00:05:05,670
+and click Connect with CloudShell.
+
+124
+00:05:05,670 --> 00:05:08,820
+It will just fill in the
+prompt with everything
+
+125
+00:05:08,820 --> 00:05:10,070
+that's needed to connect.
+
+126
+00:05:10,980 --> 00:05:12,630
+Okay, so that's getting started.
+
+127
+00:05:12,630 --> 00:05:15,090
+We're gonna swap over here,
+
+128
+00:05:15,090 --> 00:05:18,450
+and we're gonna start
+to build an application.
+
+129
+00:05:18,450 --> 00:05:19,523
+- All right.
+- Okay.
+
+130
+00:05:25,070 --> 00:05:28,920
+So before we do that,
+I wanna orientate you.
+
+131
+00:05:28,920 --> 00:05:32,250
+So I've built a little starter
+kit for this code talk.
+
+132
+00:05:32,250 --> 00:05:34,983
+It's on GitHub if you
+would like to check it out.
+
+133
+00:05:36,541 --> 00:05:38,640
+We've got a link we can share
+with you after the talk.
+
+134
+00:05:38,640 --> 00:05:41,220
+And there's a little starter kit,
+
+135
+00:05:41,220 --> 00:05:42,870
+and it's got two key folders.
+
+136
+00:05:42,870 --> 00:05:45,360
+The first one is the CDK folder
+
+137
+00:05:45,360 --> 00:05:46,920
+and the second one is the Lambda folder.
+
+138
+00:05:46,920 --> 00:05:48,450
+I'm actually gonna start
+with the Lambda one
+
+139
+00:05:48,450 --> 00:05:49,750
+'cause it's really simple.
+
+140
+00:05:50,970 --> 00:05:54,660
+Here we have a function,
+actually, quick show of hands,
+
+141
+00:05:54,660 --> 00:05:57,450
+who has built a Lambda function before?
+
+142
+00:05:57,450 --> 00:05:58,830
+Okay, almost all of you. Great.
+
+143
+00:05:58,830 --> 00:06:01,440
+Okay, so I won't go into
+too much detail here.
+
+144
+00:06:01,440 --> 00:06:02,970
+We have a request handler.
+
+145
+00:06:02,970 --> 00:06:05,223
+This request handler is taking an event,
+
+146
+00:06:06,270 --> 00:06:08,760
+the input is gonna be a request,
+
+147
+00:06:08,760 --> 00:06:12,030
+one of these request interfaces
+and then the response.
+
+148
+00:06:12,030 --> 00:06:13,867
+And so we can call this function and say,
+
+149
+00:06:13,867 --> 00:06:15,360
+"Hello," whatever we want,
+
+150
+00:06:15,360 --> 00:06:19,410
+and then it's gonna return
+a classic greeting to us.
+
+151
+00:06:19,410 --> 00:06:21,423
+Meanwhile, in the CDK folder,
+
+152
+00:06:24,570 --> 00:06:28,230
+we have our Lambda
+function being bundled up.
+
+153
+00:06:28,230 --> 00:06:29,910
+And every time we deploy the stack,
+
+154
+00:06:29,910 --> 00:06:31,560
+we're just gonna take the latest code
+
+155
+00:06:31,560 --> 00:06:34,140
+that we've been working
+on, send it over to Lambda,
+
+156
+00:06:34,140 --> 00:06:35,790
+and then we can invoke it.
+
+157
+00:06:35,790 --> 00:06:38,370
+The second thing that's
+happening in the starter kit
+
+158
+00:06:38,370 --> 00:06:41,340
+is a DSQL cluster.
+
+159
+00:06:41,340 --> 00:06:43,950
+And this cluster, you'll
+see it just kind of follows
+
+160
+00:06:43,950 --> 00:06:45,990
+what you saw in the UI, right?
+
+161
+00:06:45,990 --> 00:06:49,410
+So, we have deletion
+protection, we have our tags.
+
+162
+00:06:49,410 --> 00:06:50,850
+And if you're using TypeScript,
+
+163
+00:06:50,850 --> 00:06:53,677
+you can get this like nice
+order completion to say,
+
+164
+00:06:53,677 --> 00:06:55,710
+"What else can I configure here?"
+
+165
+00:06:55,710 --> 00:06:58,140
+Now I've gone ahead and
+created one of these already,
+
+166
+00:06:58,140 --> 00:07:00,150
+and when you run it, this is what you get.
+
+167
+00:07:00,150 --> 00:07:02,250
+You're gonna get two outputs.
+
+168
+00:07:02,250 --> 00:07:04,450
+These outputs are defined
+here at the bottom
+
+169
+00:07:06,016 --> 00:07:07,590
+of the CDK stack.
+
+170
+00:07:07,590 --> 00:07:09,900
+That's, say, what our cluster endpoint is
+
+171
+00:07:09,900 --> 00:07:14,900
+and what the security, the
+IAM role for our function is.
+
+172
+00:07:17,673 --> 00:07:21,090
+DSQL clusters have their own endpoint.
+
+173
+00:07:21,090 --> 00:07:23,970
+Actually, behind the scenes
+is a big shared endpoint,
+
+174
+00:07:23,970 --> 00:07:26,310
+which is really important,
+because that's gonna be part of
+
+175
+00:07:26,310 --> 00:07:28,830
+how we provide automatic
+capacity management.
+
+176
+00:07:28,830 --> 00:07:32,730
+But we present a unique
+endpoint to your cluster.
+
+177
+00:07:32,730 --> 00:07:36,060
+This is just basically
+a UUID for your cluster,
+
+178
+00:07:36,060 --> 00:07:37,470
+which makes it just really easy
+
+179
+00:07:37,470 --> 00:07:39,720
+to connecting with Postgres clients
+
+180
+00:07:39,720 --> 00:07:41,880
+because they expect a host name, right?
+
+181
+00:07:41,880 --> 00:07:43,683
+So that's why we do it like this.
+
+182
+00:07:44,610 --> 00:07:47,130
+And what I wanna show you
+quickly is what it looks like
+
+183
+00:07:47,130 --> 00:07:49,083
+to invoke our Lambda function.
+
+184
+00:07:50,220 --> 00:07:51,641
+See, here we say
+
+185
+00:07:51,641 --> 00:07:55,530
+AWS Lambda invoke with the
+CLI is our function name,
+
+186
+00:07:55,530 --> 00:07:57,750
+and we're gonna pass in name=reinvent
+
+187
+00:07:57,750 --> 00:07:59,583
+and write the response to that file.
+
+188
+00:08:00,480 --> 00:08:04,530
+And then we can take a look
+at that file, Hello reinvent.
+
+189
+00:08:04,530 --> 00:08:05,363
+Okay, great.
+
+190
+00:08:07,110 --> 00:08:08,670
+What I wanna do now is to show you
+
+191
+00:08:08,670 --> 00:08:10,260
+what it looks like to connect.
+
+192
+00:08:10,260 --> 00:08:12,960
+So we need to export a couple of variables
+
+193
+00:08:12,960 --> 00:08:15,390
+to make the Postgres shell work.
+
+194
+00:08:15,390 --> 00:08:19,980
+The first one is the PG user.
+I'm gonna set that to admin.
+
+195
+00:08:19,980 --> 00:08:24,393
+The next one is the PG database,
+which is gonna be Postgres.
+
+196
+00:08:26,550 --> 00:08:29,040
+Then we have PG host.
+
+197
+00:08:29,040 --> 00:08:30,060
+And if we try and connect,
+
+198
+00:08:30,060 --> 00:08:32,790
+now we're gonna get a prompt
+for a password, right?
+
+199
+00:08:32,790 --> 00:08:34,590
+So where does my password come from?
+
+200
+00:08:35,460 --> 00:08:40,460
+And I'm gonna get one
+
+201
+00:08:40,560 --> 00:08:42,150
+from the AWS command line tool.
+
+202
+00:08:42,150 --> 00:08:43,500
+That's my password.
+
+203
+00:08:43,500 --> 00:08:44,790
+Feel free to copy it down
+
+204
+00:08:44,790 --> 00:08:47,190
+because you'll notice
+that it's expired already.
+
+205
+00:08:48,720 --> 00:08:52,680
+So the way this works
+is through a technique
+
+206
+00:08:52,680 --> 00:08:55,650
+that looks a lot like S3 pre-signed URLs,
+
+207
+00:08:55,650 --> 00:08:57,150
+if you're familiar with those.
+
+208
+00:08:57,150 --> 00:08:59,940
+So the AWS SDK, what it usually is doing
+
+209
+00:08:59,940 --> 00:09:02,647
+is making HTTP requests
+to a service saying,
+
+210
+00:09:02,647 --> 00:09:05,850
+"Hey, I would like to download
+this file from my S3 bucket."
+
+211
+00:09:05,850 --> 00:09:08,400
+And it's building an HDP
+request that has headers,
+
+212
+00:09:08,400 --> 00:09:11,100
+it has a body, and then
+the SDK is gonna go
+
+213
+00:09:11,100 --> 00:09:12,540
+and sign that request, right?
+
+214
+00:09:12,540 --> 00:09:15,660
+So it's gonna go and run these
+cryptographic hash functions
+
+215
+00:09:15,660 --> 00:09:18,660
+of your headers and over the request body,
+
+216
+00:09:18,660 --> 00:09:20,970
+and it's gonna put a signature, right?
+
+217
+00:09:20,970 --> 00:09:25,740
+And that signature is gonna
+give us a tamper proof property,
+
+218
+00:09:25,740 --> 00:09:29,372
+so that if anybody
+intercepted your request,
+
+219
+00:09:29,372 --> 00:09:30,900
+they can't modify it.
+
+220
+00:09:30,900 --> 00:09:32,700
+It's also gonna give us expiry.
+
+221
+00:09:32,700 --> 00:09:36,420
+And so if somebody managed
+to intercept this request,
+
+222
+00:09:36,420 --> 00:09:39,390
+they would have a time bound
+window in which to exploit it.
+
+223
+00:09:39,390 --> 00:09:41,220
+And usually, you can't do that
+
+224
+00:09:41,220 --> 00:09:46,220
+because your request is being
+sent over a TLS connection.
+
+225
+00:09:46,950 --> 00:09:48,780
+Something like S3 pre-signed URLs
+
+226
+00:09:48,780 --> 00:09:50,250
+works a little bit differently
+
+227
+00:09:50,250 --> 00:09:51,427
+because what you're saying is,
+
+228
+00:09:51,427 --> 00:09:53,910
+"I, who have access to my S3 bucket,
+
+229
+00:09:53,910 --> 00:09:56,700
+I'm gonna make this request,
+but before I send the request,
+
+230
+00:09:56,700 --> 00:09:58,470
+I'm just gonna take that signed URL,
+
+231
+00:09:58,470 --> 00:10:01,080
+and then I'm gonna intentionally
+give it to somebody else."
+
+232
+00:10:01,080 --> 00:10:04,950
+Right? That's pretty much
+what's going on here.
+
+233
+00:10:04,950 --> 00:10:07,200
+You'll see that this looks like a URL.
+
+234
+00:10:07,200 --> 00:10:09,240
+Here's the host, it's our cluster.
+
+235
+00:10:09,240 --> 00:10:11,760
+We have an action called DBConnectAdmin,
+
+236
+00:10:11,760 --> 00:10:13,260
+and then we have that signature.
+
+237
+00:10:13,260 --> 00:10:15,969
+And this is gonna take
+the place of our password.
+
+238
+00:10:15,969 --> 00:10:19,920
+So rather than giving a very,
+very short-lived password,
+
+239
+00:10:19,920 --> 00:10:23,373
+I can just export this into
+an environment variable.
+
+240
+00:10:24,782 --> 00:10:28,500
+(keyboard clicking)
+
+241
+00:10:28,500 --> 00:10:31,515
+And now we should be in. Oops!
+
+242
+00:10:31,515 --> 00:10:34,515
+(keyboard clicking)
+
+243
+00:10:39,390 --> 00:10:40,640
+Did I get the host wrong?
+
+244
+00:10:48,431 --> 00:10:51,431
+(keyboard clicking)
+
+245
+00:11:01,800 --> 00:11:03,900
+Ah, I remember what I didn't do.
+
+246
+00:11:03,900 --> 00:11:05,306
+I haven't had coffee this morning.
+
+247
+00:11:05,306 --> 00:11:06,360
+(Raluca chuckles)
+
+248
+00:11:06,360 --> 00:11:07,680
+Ah, demo.
+
+249
+00:11:07,680 --> 00:11:09,373
+- [Raluca] Did you send the region?
+
+250
+00:11:09,373 --> 00:11:12,373
+(keyboard clicking)
+
+251
+00:11:14,160 --> 00:11:16,080
+- [Marc] Okay, there we're in.
+
+252
+00:11:16,080 --> 00:11:17,250
+So I'm using a demo account,
+
+253
+00:11:17,250 --> 00:11:19,680
+and I forgot to switch
+the profile of the shell,
+
+254
+00:11:19,680 --> 00:11:20,513
+but we're in now,
+
+255
+00:11:20,513 --> 00:11:24,780
+and we can just run kind of
+standard Postgres commands.
+
+256
+00:11:24,780 --> 00:11:25,950
+And what I'm gonna do
+
+257
+00:11:25,950 --> 00:11:29,283
+is exactly the same thing
+in our Lambda function.
+
+258
+00:11:30,180 --> 00:11:31,920
+So we're gonna go over
+to this Lambda function,
+
+259
+00:11:31,920 --> 00:11:35,340
+and you'll notice that there's
+a file here called db.ts.
+
+260
+00:11:35,340 --> 00:11:39,030
+And this is essentially
+the node Postgres driver.
+
+261
+00:11:39,030 --> 00:11:40,200
+I've just gone to their readme,
+
+262
+00:11:40,200 --> 00:11:42,550
+and I've copy-pasted
+everything into this file.
+
+263
+00:11:44,130 --> 00:11:46,500
+There's one change,
+which is this password.
+
+264
+00:11:46,500 --> 00:11:51,030
+And so the password is gonna
+come from calling a function.
+
+265
+00:11:51,030 --> 00:11:53,430
+And that function is
+essentially the same thing
+
+266
+00:11:53,430 --> 00:11:54,930
+that we just did on the
+command line, right?
+
+267
+00:11:54,930 --> 00:11:58,500
+This is, "Hey, use the SDK to
+generate one of these tokens."
+
+268
+00:11:58,500 --> 00:12:00,900
+And you'll notice that the
+cluster endpoint is coming in
+
+269
+00:12:00,900 --> 00:12:02,610
+through an environment variable.
+
+270
+00:12:02,610 --> 00:12:04,050
+So let's just wire this up quickly.
+
+271
+00:12:04,050 --> 00:12:09,050
+We're gonna say my cluster endpoint.
+
+272
+00:12:10,800 --> 00:12:12,870
+- [Raluca] And while you do
+that, we do take questions.
+
+273
+00:12:12,870 --> 00:12:15,810
+So wave your hand if you
+want me to grab the mic
+
+274
+00:12:15,810 --> 00:12:17,970
+and get a question.
+
+275
+00:12:17,970 --> 00:12:20,327
+Yeah, we have a question. How about that?
+
+276
+00:12:24,835 --> 00:12:25,910
+All right, I'll-
+
+277
+00:12:25,910 --> 00:12:27,690
+- [Person] Thank you.
+
+278
+00:12:27,690 --> 00:12:31,140
+You mentioned that you
+don't need security groups
+
+279
+00:12:31,140 --> 00:12:31,980
+and things like that.
+
+280
+00:12:31,980 --> 00:12:35,370
+Does that mean DSQL runs as
+just like a general service,
+
+281
+00:12:35,370 --> 00:12:37,020
+kind of like an S3,
+
+282
+00:12:37,020 --> 00:12:39,540
+you don't have it in your
+VPC or something like that?
+
+283
+00:12:39,540 --> 00:12:41,400
+- [Raluca] So we do have public endpoints,
+
+284
+00:12:41,400 --> 00:12:43,933
+and we do have the option
+to set up a VPC endpoint
+
+285
+00:12:43,933 --> 00:12:44,967
+if you need that.
+
+286
+00:12:44,967 --> 00:12:45,800
+- [Person] Would it be
+through A VPC endpoint?
+
+287
+00:12:45,800 --> 00:12:47,940
+- [Raluca] But it would
+be through a VPC endpoint.
+
+288
+00:12:47,940 --> 00:12:49,893
+Yes, correctly. Another question?
+
+289
+00:12:54,129 --> 00:12:55,793
+- [Person] Is there a
+MySQL flavor of DSQL?
+
+290
+00:12:56,971 --> 00:12:57,804
+(Raluca chuckling)
+No?
+
+291
+00:12:57,804 --> 00:13:00,810
+- Not yet.
+- Not yet, okay.
+
+292
+00:13:00,810 --> 00:13:02,163
+- [Raluca] But we are very,
+
+293
+00:13:05,100 --> 00:13:07,500
+not very specific in terms of SQL dialect.
+
+294
+00:13:07,500 --> 00:13:09,210
+So if you have an application
+
+295
+00:13:09,210 --> 00:13:12,570
+that's pretty much sticking
+to the general dialect,
+
+296
+00:13:12,570 --> 00:13:15,257
+you should be able to
+use the DSQL as well.
+
+297
+00:13:15,257 --> 00:13:16,713
+Okay, one question,
+
+298
+00:13:21,720 --> 00:13:23,910
+- [Person] Just to touch
+on the VPC endpoint part.
+
+299
+00:13:23,910 --> 00:13:26,730
+I noticed sometimes in
+some newer services in AWS,
+
+300
+00:13:26,730 --> 00:13:28,290
+even if you do have VPC endpoints,
+
+301
+00:13:28,290 --> 00:13:31,323
+you don't necessarily always
+support endpoint policies.
+
+302
+00:13:32,280 --> 00:13:34,803
+Do you support endpoint policies for DSQL?
+
+303
+00:13:36,180 --> 00:13:39,725
+- [Raluca] We just added
+resource-based policies, yes.
+
+304
+00:13:39,725 --> 00:13:40,563
+- Okay.
+- Yeah.
+
+305
+00:13:40,563 --> 00:13:42,844
+- [Person] That's really
+important for our use cases.
+
+306
+00:13:42,844 --> 00:13:45,258
+- [Raluca] What's the use cases?
+
+307
+00:13:45,258 --> 00:13:47,841
+- We don't want potential of...
+
+308
+00:13:49,020 --> 00:13:50,100
+We don't want the potential of,
+
+309
+00:13:50,100 --> 00:13:53,400
+you know, people getting
+access to our VPC.
+
+310
+00:13:53,400 --> 00:13:55,290
+It's security requires it on our side.
+
+311
+00:13:55,290 --> 00:13:56,400
+I can't remember the exact details,
+
+312
+00:13:56,400 --> 00:13:57,870
+but there's always a
+sticking point for us.
+
+313
+00:13:57,870 --> 00:13:59,160
+- [Raluca] Got it. Thank you.
+
+314
+00:13:59,160 --> 00:14:00,150
+- [Marc] Yeah, there's,
+
+315
+00:14:00,150 --> 00:14:03,060
+we've actually got a
+really detailed blog post
+
+316
+00:14:03,060 --> 00:14:04,800
+on how to do this.
+
+317
+00:14:04,800 --> 00:14:06,330
+If you wanna chat to me afterwards,
+
+318
+00:14:06,330 --> 00:14:08,340
+then I can give you the link.
+
+319
+00:14:08,340 --> 00:14:10,530
+But it goes through like,
+there are five different ways
+
+320
+00:14:10,530 --> 00:14:12,240
+that you can lock this down.
+
+321
+00:14:12,240 --> 00:14:14,340
+And as Reluca just mentioned,
+
+322
+00:14:14,340 --> 00:14:16,050
+and you saw on the cluster creation page,
+
+323
+00:14:16,050 --> 00:14:17,370
+is that advanced tick box,
+
+324
+00:14:17,370 --> 00:14:20,910
+you can put in just any kind of standard
+
+325
+00:14:20,910 --> 00:14:22,230
+AWS policy language stuff there.
+
+326
+00:14:22,230 --> 00:14:24,660
+So you can say, "Restrict
+to these IP addresses,
+
+327
+00:14:24,660 --> 00:14:27,603
+restrict to these VPCs,"
+anything like that.
+
+328
+00:14:28,560 --> 00:14:33,560
+Okay, I need to quickly update
+you on what I did in this.
+
+329
+00:14:35,970 --> 00:14:39,063
+So we've changed our
+Lambda function to say,
+
+330
+00:14:40,537 --> 00:14:43,230
+"Give me one of these
+pools, database pools,
+
+331
+00:14:43,230 --> 00:14:45,120
+and that we're gonna run a query."
+
+332
+00:14:45,120 --> 00:14:45,953
+And so the idea
+
+333
+00:14:45,953 --> 00:14:47,970
+is that if we're still
+able to see our greeting,
+
+334
+00:14:47,970 --> 00:14:49,770
+then we've connected to DSQL, right?
+
+335
+00:14:51,720 --> 00:14:56,130
+And I wanna quickly draw your attention
+
+336
+00:14:56,130 --> 00:14:57,960
+to this function here.
+
+337
+00:14:57,960 --> 00:14:58,980
+This is gonna make sure
+
+338
+00:14:58,980 --> 00:15:00,540
+that we are gonna reuse our connections
+
+339
+00:15:00,540 --> 00:15:02,130
+between Lambda invocations, right?
+
+340
+00:15:02,130 --> 00:15:04,050
+So the first time our Lambda starts up,
+
+341
+00:15:04,050 --> 00:15:06,050
+we're gonna have to initialize the pool.
+
+342
+00:15:06,930 --> 00:15:09,000
+This pool's gonna maintain 20 connections,
+
+343
+00:15:09,000 --> 00:15:10,650
+up to 20 connections, in the background.
+
+344
+00:15:10,650 --> 00:15:12,870
+Like, our Lambda function's
+gonna get one request at a time,
+
+345
+00:15:12,870 --> 00:15:14,460
+so this is totally overkill.
+
+346
+00:15:14,460 --> 00:15:18,183
+But you can do kind of
+whatever you wanna do here,
+
+347
+00:15:19,290 --> 00:15:21,030
+but every time a connection's opened,
+
+348
+00:15:21,030 --> 00:15:23,460
+we're gonna go grab one of
+these authentication tokens.
+
+349
+00:15:23,460 --> 00:15:26,100
+Now this is just a really,
+really fast operation.
+
+350
+00:15:26,100 --> 00:15:29,220
+It takes something like
+20 nanoseconds to run.
+
+351
+00:15:29,220 --> 00:15:31,230
+And if you are using a
+service like S3 or Dynamo,
+
+352
+00:15:31,230 --> 00:15:33,810
+you're actually running this
+all the time on every request.
+
+353
+00:15:33,810 --> 00:15:35,400
+With DSQL, you're just running this code
+
+354
+00:15:35,400 --> 00:15:36,423
+once per connection.
+
+355
+00:15:37,990 --> 00:15:39,660
+Okay, the second thing we've done here
+
+356
+00:15:39,660 --> 00:15:43,350
+is we've just asked the
+SDK to wire in our endpoint
+
+357
+00:15:43,350 --> 00:15:45,180
+into the Lambda function.
+
+358
+00:15:45,180 --> 00:15:46,350
+And then down here,
+
+359
+00:15:46,350 --> 00:15:50,790
+we've told IAM that we want
+to allow this Lambda function
+
+360
+00:15:50,790 --> 00:15:52,473
+to connect to the database.
+
+361
+00:15:53,700 --> 00:15:57,330
+And if I do that and run my function,
+
+362
+00:15:57,330 --> 00:15:59,130
+I'm expecting it to fail.
+
+363
+00:15:59,130 --> 00:16:01,890
+And the reason I'm expecting it to fail
+
+364
+00:16:01,890 --> 00:16:04,950
+is because we've not yet told the database
+
+365
+00:16:04,950 --> 00:16:06,390
+to allow our functioning, right?
+
+366
+00:16:06,390 --> 00:16:11,310
+So we've Lambda, "Hey,
+the role that you have
+
+367
+00:16:11,310 --> 00:16:14,190
+is allowed to connect
+to this DSQL cluster,"
+
+368
+00:16:14,190 --> 00:16:18,250
+but the DSQL cluster is trying to see
+
+369
+00:16:19,128 --> 00:16:20,460
+whether our application,
+
+370
+00:16:20,460 --> 00:16:23,190
+which is connecting and
+is a user called myapp,
+
+371
+00:16:23,190 --> 00:16:24,270
+is allowed to connect.
+
+372
+00:16:24,270 --> 00:16:25,740
+And we haven't actually set that up yet.
+
+373
+00:16:25,740 --> 00:16:27,390
+So let's do that quickly.
+
+374
+00:16:27,390 --> 00:16:31,347
+We can do "create role myapp with login."
+
+375
+00:16:32,640 --> 00:16:35,260
+And then I gotta do some
+copy-pasting of this ARN
+
+376
+00:16:36,510 --> 00:16:41,433
+to say that this AWS ARN is allowed to be,
+
+377
+00:16:42,300 --> 00:16:45,615
+is allowed permission to
+grant this, to use this role.
+
+378
+00:16:45,615 --> 00:16:48,615
+(keyboard clicking)
+
+379
+00:16:53,220 --> 00:16:54,900
+And if we try and run that again,
+
+380
+00:16:54,900 --> 00:16:57,123
+we should hopefully see success.
+
+381
+00:16:58,542 --> 00:16:59,850
+(keyboard clicking)
+
+382
+00:16:59,850 --> 00:17:04,290
+Okay, (claps) so the way this works,
+
+383
+00:17:04,290 --> 00:17:08,258
+we can actually just take a
+look at this table quickly.
+
+384
+00:17:08,258 --> 00:17:10,620
+(keyboard clicking)
+
+385
+00:17:10,620 --> 00:17:11,940
+You don't have to remember these names,
+
+386
+00:17:11,940 --> 00:17:13,740
+I just use tab completion there.
+
+387
+00:17:13,740 --> 00:17:16,710
+So there's a name space
+in the database called CIS
+
+388
+00:17:16,710 --> 00:17:18,270
+that contains all our metadata.
+
+389
+00:17:18,270 --> 00:17:20,580
+And you'll see that we've
+got a mapping that says
+
+390
+00:17:20,580 --> 00:17:23,850
+this IAM role is allowed to
+become this Postgres role.
+
+391
+00:17:23,850 --> 00:17:27,570
+And the reason we went this
+direction in the DSQL design
+
+392
+00:17:27,570 --> 00:17:31,470
+is that it exposes the full
+power of Postgres permissions.
+
+393
+00:17:31,470 --> 00:17:34,560
+Right, so if you wanna say,
+"Here's a role that can only
+
+394
+00:17:34,560 --> 00:17:36,840
+like read these tables in the schema
+
+395
+00:17:36,840 --> 00:17:39,780
+or a role that has read, write,
+or only to specific tables,"
+
+396
+00:17:39,780 --> 00:17:42,900
+you can do all of that
+with the standard Postgres,
+
+397
+00:17:42,900 --> 00:17:45,090
+the standard Postgres role system.
+
+398
+00:17:45,090 --> 00:17:47,010
+The only thing you need
+to do is sort of bind
+
+399
+00:17:47,010 --> 00:17:50,430
+which IAM entities are
+allowed to become withdrawals.
+
+400
+00:17:50,430 --> 00:17:55,430
+Okay, so I'm gonna get coding
+on our banking application.
+
+401
+00:17:55,890 --> 00:17:56,850
+But before we do that,
+
+402
+00:17:56,850 --> 00:17:59,340
+I wanna quickly show you
+what the schema looks like.
+
+403
+00:17:59,340 --> 00:18:01,443
+So we can have a table called accounts.
+
+404
+00:18:02,307 --> 00:18:03,930
+(keyboard clicking)
+
+405
+00:18:03,930 --> 00:18:08,700
+And accounts have an ID
+that's just an integer,
+
+406
+00:18:08,700 --> 00:18:10,680
+and it's a primary key.
+
+407
+00:18:10,680 --> 00:18:14,670
+And they're gonna have a
+balance, which is an integer too.
+
+408
+00:18:14,670 --> 00:18:16,680
+And once we have this set up,
+
+409
+00:18:16,680 --> 00:18:19,410
+we can start to do a
+balance transfer, right?
+
+410
+00:18:19,410 --> 00:18:20,670
+So we can run a transaction
+
+411
+00:18:20,670 --> 00:18:22,140
+where we have some money in one account,
+
+412
+00:18:22,140 --> 00:18:24,510
+some money in another account,
+and then we can move it over.
+
+413
+00:18:24,510 --> 00:18:25,830
+So I'm gonna do that the wrong way,
+
+414
+00:18:25,830 --> 00:18:27,558
+and then we're gonna talk
+about why that's wrong.
+
+415
+00:18:27,558 --> 00:18:30,060
+(keyboard clicking)
+
+416
+00:18:30,060 --> 00:18:34,770
+- [Raluca] Okay, can I start
+talking about transactions?
+
+417
+00:18:34,770 --> 00:18:36,450
+You might not make it to the next session,
+
+418
+00:18:36,450 --> 00:18:39,270
+but (chuckles) as a database geek,
+
+419
+00:18:39,270 --> 00:18:40,440
+I really love transactions.
+
+420
+00:18:40,440 --> 00:18:43,920
+And the reason I prefer
+to do database changes
+
+421
+00:18:43,920 --> 00:18:45,120
+inside the transaction
+
+422
+00:18:45,120 --> 00:18:49,680
+is because it allows me
+to specify all the changes
+
+423
+00:18:49,680 --> 00:18:51,690
+to succeed or fail at once.
+
+424
+00:18:51,690 --> 00:18:52,523
+So you're familiar,
+
+425
+00:18:52,523 --> 00:18:54,960
+everything that goes between begin,
+
+426
+00:18:54,960 --> 00:18:57,060
+and then commit or rollback,
+
+427
+00:18:57,060 --> 00:18:59,040
+will succeed together or fail together.
+
+428
+00:18:59,040 --> 00:19:01,893
+So that's the atomicity of a transaction.
+
+429
+00:19:02,730 --> 00:19:04,230
+Do you wanna-
+
+430
+00:19:04,230 --> 00:19:05,790
+- [Marc] Yeah, so I just
+did it the wrong way, right?
+
+431
+00:19:05,790 --> 00:19:10,790
+Because what happens if
+after running this statement,
+
+432
+00:19:11,370 --> 00:19:13,350
+my laptop died, right?
+
+433
+00:19:13,350 --> 00:19:15,210
+At this point, like
+what I'm intending to do
+
+434
+00:19:15,210 --> 00:19:17,820
+is move some money between accounts,
+
+435
+00:19:17,820 --> 00:19:20,280
+but any number of things
+that can go wrong, right?
+
+436
+00:19:20,280 --> 00:19:24,720
+Like, we may lose connectivity,
+database may crash,
+
+437
+00:19:24,720 --> 00:19:26,730
+but there also could be
+business logic errors.
+
+438
+00:19:26,730 --> 00:19:29,610
+Like, maybe I don't have
+enough money, right?
+
+439
+00:19:29,610 --> 00:19:33,540
+What happens if I only
+have $10 to my name,
+
+440
+00:19:33,540 --> 00:19:35,160
+and I, you know, unfortunately,
+
+441
+00:19:35,160 --> 00:19:36,690
+I get into a little bit of debt?
+
+442
+00:19:36,690 --> 00:19:39,570
+And so I'm trying to pay
+off all my debt at once.
+
+443
+00:19:39,570 --> 00:19:43,260
+So I'm gonna go to Reluca,
+I'm gonna go to somebody else,
+
+444
+00:19:43,260 --> 00:19:45,510
+I'm gonna say, "Start a transaction.
+
+445
+00:19:45,510 --> 00:19:48,570
+How much money is in my account? $10.
+
+446
+00:19:48,570 --> 00:19:52,260
+Let's go and pay both debts
+off at the same time," right?
+
+447
+00:19:52,260 --> 00:19:56,370
+And so without any kind
+of consistency checks,
+
+448
+00:19:56,370 --> 00:19:57,780
+two transactions could start.
+
+449
+00:19:57,780 --> 00:20:00,420
+They could both determine that
+I have enough money to pay,
+
+450
+00:20:00,420 --> 00:20:02,520
+we could deduct money from both accounts,
+
+451
+00:20:02,520 --> 00:20:04,560
+and then we're gonna land
+up with a bad outcome
+
+452
+00:20:04,560 --> 00:20:05,970
+where I've sort of been able
+
+453
+00:20:05,970 --> 00:20:08,760
+to spend $20 despite only having one.
+
+454
+00:20:08,760 --> 00:20:10,830
+And so for these kinds of reasons,
+
+455
+00:20:10,830 --> 00:20:13,920
+we wanna make sure that we're
+always using transactions.
+
+456
+00:20:13,920 --> 00:20:17,190
+DSQL supports something
+that's very equivalent
+
+457
+00:20:17,190 --> 00:20:20,190
+to Postgres repeatable read isolation,
+
+458
+00:20:20,190 --> 00:20:22,680
+except it's just one
+not stronger than that.
+
+459
+00:20:22,680 --> 00:20:25,530
+It's a strong snapshot isolation mode.
+
+460
+00:20:25,530 --> 00:20:28,350
+And for those of you who
+aren't deeply familiar
+
+461
+00:20:28,350 --> 00:20:29,940
+with isolation modes,
+
+462
+00:20:29,940 --> 00:20:31,800
+really the easiest way to understand them
+
+463
+00:20:31,800 --> 00:20:34,170
+is through this concept of anomalies.
+
+464
+00:20:34,170 --> 00:20:36,000
+And an anomaly is something
+
+465
+00:20:36,000 --> 00:20:38,340
+that you can see in your transaction
+
+466
+00:20:38,340 --> 00:20:40,110
+that doesn't make sense, right?
+
+467
+00:20:40,110 --> 00:20:41,700
+So like a good example of this one
+
+468
+00:20:41,700 --> 00:20:44,070
+you've probably all run
+into is a phantom row,
+
+469
+00:20:44,070 --> 00:20:48,060
+where you run a select
+statement, you don't see a row,
+
+470
+00:20:48,060 --> 00:20:50,280
+you run a select statement
+again, you see the row,
+
+471
+00:20:50,280 --> 00:20:53,100
+you run it again, you
+don't see the row, right?
+
+472
+00:20:53,100 --> 00:20:54,150
+These kinds of things are happening
+
+473
+00:20:54,150 --> 00:20:56,010
+because there's multiple
+transactions running
+
+474
+00:20:56,010 --> 00:20:57,750
+on the database the whole time.
+
+475
+00:20:57,750 --> 00:21:00,360
+And so the job of the database is to try
+
+476
+00:21:00,360 --> 00:21:03,300
+and isolate our transaction
+as much as possible
+
+477
+00:21:03,300 --> 00:21:04,770
+to give us the illusion
+
+478
+00:21:04,770 --> 00:21:07,050
+that we're the only user on the system,
+
+479
+00:21:07,050 --> 00:21:09,960
+because that's gonna allow
+us to write correct code.
+
+480
+00:21:09,960 --> 00:21:14,400
+And because DSQL is slightly
+stronger than repeatable read,
+
+481
+00:21:14,400 --> 00:21:16,500
+that means that there are fewer anomalies.
+
+482
+00:21:16,500 --> 00:21:19,650
+In fact, DSQL only has one
+anomaly called write skew.
+
+483
+00:21:19,650 --> 00:21:22,980
+And so if anybody would like
+to talk about write skew
+
+484
+00:21:22,980 --> 00:21:24,960
+later in this talk, depending
+on how much time we have,
+
+485
+00:21:24,960 --> 00:21:25,793
+we can do that.
+
+486
+00:21:25,793 --> 00:21:26,626
+- Yep.
+- Okay,
+
+487
+00:21:26,626 --> 00:21:28,200
+so what I wanna do right now
+
+488
+00:21:28,200 --> 00:21:32,250
+is start to take this
+Lambda function that we have
+
+489
+00:21:32,250 --> 00:21:34,893
+and turn it into a little
+banking application.
+
+490
+00:21:36,780 --> 00:21:38,820
+- [Raluca] I'm just gonna add one thing
+
+491
+00:21:38,820 --> 00:21:41,160
+to what Marc just mentioned.
+
+492
+00:21:41,160 --> 00:21:45,210
+Strong snapshot isolation in DSQL
+
+493
+00:21:45,210 --> 00:21:49,110
+means we have this property
+of being strongly consistent.
+
+494
+00:21:49,110 --> 00:21:53,250
+So whatever you write
+will be immediately seen
+
+495
+00:21:53,250 --> 00:21:56,940
+by all the other places you read from.
+
+496
+00:21:56,940 --> 00:21:59,580
+So you don't have to worry
+about routing your query
+
+497
+00:21:59,580 --> 00:22:03,510
+to a specific reader or
+to a specific endpoint
+
+498
+00:22:03,510 --> 00:22:04,770
+because wherever you read from,
+
+499
+00:22:04,770 --> 00:22:08,670
+you're gonna immediately
+see what has been written.
+
+500
+00:22:08,670 --> 00:22:10,440
+And that is a strong consistency
+
+501
+00:22:10,440 --> 00:22:12,060
+as opposed to eventual consistency,
+
+502
+00:22:12,060 --> 00:22:15,090
+which some other database
+flavors would offer.
+
+503
+00:22:15,090 --> 00:22:18,960
+So that's strong snapshot isolation.
+
+504
+00:22:18,960 --> 00:22:23,040
+And then there's two more
+things, we call transactions ACID
+
+505
+00:22:23,040 --> 00:22:27,390
+because they're atomic,
+consistent, insulate, and durable.
+
+506
+00:22:27,390 --> 00:22:30,840
+And I'm gonna quickly touch on consistency
+
+507
+00:22:30,840 --> 00:22:33,960
+while Marc is doing all the coding there.
+
+508
+00:22:33,960 --> 00:22:38,797
+That means you don't get
+these phantom money transfer
+
+509
+00:22:42,150 --> 00:22:47,150
+where you've sent, you see
+the money in one account,
+
+510
+00:22:47,310 --> 00:22:48,990
+you don't see it in the other.
+
+511
+00:22:48,990 --> 00:22:50,130
+Everything stays consistent.
+
+512
+00:22:50,130 --> 00:22:53,040
+The database moves from
+one valid state to another
+
+513
+00:22:53,040 --> 00:22:54,450
+in a consistent mode.
+
+514
+00:22:54,450 --> 00:22:55,650
+And then you have durability,
+
+515
+00:22:55,650 --> 00:22:57,360
+which means the database will recover,
+
+516
+00:22:57,360 --> 00:22:59,040
+in case of errors, for you.
+
+517
+00:22:59,040 --> 00:23:00,810
+So once you've acknowledged
+
+518
+00:23:00,810 --> 00:23:04,230
+that a write has been
+made to the database,
+
+519
+00:23:04,230 --> 00:23:07,350
+you'll always continue to
+see that data persisted
+
+520
+00:23:07,350 --> 00:23:08,190
+in the database.
+
+521
+00:23:08,190 --> 00:23:12,753
+You don't have to worry about
+machine restarts or failures.
+
+522
+00:23:15,270 --> 00:23:18,393
+All right, let's see, what are we doing?
+
+523
+00:23:19,950 --> 00:23:21,720
+- [Marc] I am doing ceremony,
+
+524
+00:23:21,720 --> 00:23:23,940
+so this is kind of a little boring code,
+
+525
+00:23:23,940 --> 00:23:25,620
+but I wanted to, you know,
+
+526
+00:23:25,620 --> 00:23:27,450
+if we have time later on in this talk,
+
+527
+00:23:27,450 --> 00:23:29,430
+we can maybe move to
+
+528
+00:23:29,430 --> 00:23:33,060
+like a bit of a higher-level
+abstraction through an ORM.
+
+529
+00:23:33,060 --> 00:23:35,790
+But I wanted to take the time
+to show you what it looks like
+
+530
+00:23:35,790 --> 00:23:38,310
+to write these transactions
+at a very low level.
+
+531
+00:23:38,310 --> 00:23:42,000
+So we have our, we sort of
+have a try-catch pattern.
+
+532
+00:23:42,000 --> 00:23:43,350
+And then within the try-catch,
+
+533
+00:23:43,350 --> 00:23:45,327
+we have a begin and commit, right?
+
+534
+00:23:45,327 --> 00:23:48,030
+And that's gonna start
+our transaction boundary.
+
+535
+00:23:48,030 --> 00:23:49,680
+And then if anything goes wrong,
+
+536
+00:23:49,680 --> 00:23:51,843
+we are just gonna throw the error,
+
+537
+00:23:52,800 --> 00:23:54,150
+and we're gonna have to take care
+
+538
+00:23:54,150 --> 00:23:56,280
+to return this connection
+to the pool, right?
+
+539
+00:23:56,280 --> 00:23:58,200
+Otherwise, when we run the function again,
+
+540
+00:23:58,200 --> 00:24:01,020
+we're gonna start to go from
+20 available connections to 19
+
+541
+00:24:01,020 --> 00:24:02,770
+until we eventually have an outage.
+
+542
+00:24:03,960 --> 00:24:08,610
+And here's our pay state,
+here's our pay query.
+
+543
+00:24:08,610 --> 00:24:10,620
+So we are gonna be taking
+money out of the account.
+
+544
+00:24:10,620 --> 00:24:14,790
+And notice how I'm using bind variables
+
+545
+00:24:14,790 --> 00:24:16,710
+just to make sure that
+we don't have a case
+
+546
+00:24:16,710 --> 00:24:19,110
+of Bobby drop tables going on here.
+
+547
+00:24:19,110 --> 00:24:24,023
+And this is the payee who's
+gonna be receiving money.
+
+548
+00:24:25,440 --> 00:24:28,200
+And we need to do a
+little bit of checks here.
+
+549
+00:24:28,200 --> 00:24:32,793
+So, what can go wrong? Think
+about that for a moment.
+
+550
+00:24:34,770 --> 00:24:35,603
+- [Raluca] Let me know
+
+551
+00:24:35,603 --> 00:24:37,150
+if you need me to hand the mic to anyone.
+
+552
+00:24:38,461 --> 00:24:39,294
+Okay.
+
+553
+00:24:42,092 --> 00:24:44,675
+(mouse clicks)
+
+554
+00:24:46,530 --> 00:24:49,620
+- [Person] So the thing
+is, let's say we have,
+
+555
+00:24:49,620 --> 00:24:52,530
+we are running two
+transaction, same transactions.
+
+556
+00:24:52,530 --> 00:24:54,812
+We're drawing the amount
+from the bank account.
+
+557
+00:24:54,812 --> 00:24:55,645
+- [Raluca] Okay.
+
+558
+00:24:55,645 --> 00:24:57,870
+- [Person] The bank
+account has $100 balance.
+
+559
+00:24:57,870 --> 00:24:59,490
+The transaction is also doing the same,
+
+560
+00:24:59,490 --> 00:25:01,050
+like it's withdrawing $100,
+
+561
+00:25:01,050 --> 00:25:04,140
+because both the transactions
+running in parallel.
+
+562
+00:25:04,140 --> 00:25:05,940
+How are you gonna handle that situation?
+
+563
+00:25:05,940 --> 00:25:07,050
+- [Raluca] That's an
+excellent question. Thank you.
+
+564
+00:25:07,050 --> 00:25:08,910
+(chuckles) Because it segues
+
+565
+00:25:08,910 --> 00:25:11,250
+into what I wanted to
+talk to you next about,
+
+566
+00:25:11,250 --> 00:25:16,250
+which is how theses DSQL
+handles concurrency control.
+
+567
+00:25:17,670 --> 00:25:22,530
+So, we do optimistic concurrency control,
+
+568
+00:25:22,530 --> 00:25:24,360
+which means when two transactions
+
+569
+00:25:24,360 --> 00:25:25,890
+try to update the same row,
+
+570
+00:25:25,890 --> 00:25:27,810
+they will both be allowed to try.
+
+571
+00:25:27,810 --> 00:25:30,990
+And then the first transaction
+to issue the commit will win,
+
+572
+00:25:30,990 --> 00:25:34,380
+and the second transaction
+will have to retry.
+
+573
+00:25:34,380 --> 00:25:36,720
+And that retry logic needs to be embedded
+
+574
+00:25:36,720 --> 00:25:38,850
+in the application code.
+
+575
+00:25:38,850 --> 00:25:41,760
+And so the ideal design
+pattern is idempotent
+
+576
+00:25:41,760 --> 00:25:44,920
+so that transactions can
+just retry on failure
+
+577
+00:25:45,840 --> 00:25:50,840
+and they don't need to
+embed any business logic.
+
+578
+00:25:51,060 --> 00:25:53,820
+So that's optimistic concurrency control.
+
+579
+00:25:53,820 --> 00:25:56,400
+And if you were to use the opposite,
+
+580
+00:25:56,400 --> 00:25:58,680
+which is pessimistic concurrency control,
+
+581
+00:25:58,680 --> 00:26:01,590
+this used to be my nightmare
+as an Oracle EBA. (chuckles)
+
+582
+00:26:01,590 --> 00:26:04,740
+So you'd get all these sessions,
+
+583
+00:26:04,740 --> 00:26:09,180
+all the transactions lining
+up, waiting for a row lock,
+
+584
+00:26:09,180 --> 00:26:10,020
+I think it was called.
+
+585
+00:26:10,020 --> 00:26:13,680
+The wait event was in queue transaction,
+
+586
+00:26:13,680 --> 00:26:15,177
+row lock contention, something like that.
+
+587
+00:26:15,177 --> 00:26:18,390
+And Postgres would be a lock relation.
+
+588
+00:26:18,390 --> 00:26:19,590
+So what happens there
+
+589
+00:26:19,590 --> 00:26:23,760
+is the first transaction trying
+to grab, to update the row,
+
+590
+00:26:23,760 --> 00:26:25,290
+grab the lock on that row,
+
+591
+00:26:25,290 --> 00:26:28,717
+and then the subsequent ones
+will just line up and say,
+
+592
+00:26:28,717 --> 00:26:30,840
+"I want to update that row,
+I want to update that row."
+
+593
+00:26:30,840 --> 00:26:35,340
+And eventually, either the
+first session needs to be killed
+
+594
+00:26:35,340 --> 00:26:39,780
+or it just finishes doing the
+processing it needed to do.
+
+595
+00:26:39,780 --> 00:26:42,030
+And then the whole thing unblocks it.
+
+596
+00:26:42,030 --> 00:26:45,240
+And that particular scenario also requires
+
+597
+00:26:45,240 --> 00:26:47,610
+an abort and retry logic, except in DSQL,
+
+598
+00:26:47,610 --> 00:26:51,280
+you just get notified sooner
+and you need to retry.
+
+599
+00:26:51,280 --> 00:26:52,113
+- Okay.
+- Okay.
+
+600
+00:26:52,113 --> 00:26:53,833
+- [Person] So the
+transaction on the that's....
+
+601
+00:26:53,833 --> 00:26:57,030
+That's fine, I can, so the transaction,
+
+602
+00:26:57,030 --> 00:26:58,380
+the first transaction, basically,
+
+603
+00:26:58,380 --> 00:27:00,420
+when it acquires a lock on the row?
+
+604
+00:27:00,420 --> 00:27:01,320
+- [Raluca] Yeah.
+
+605
+00:27:01,320 --> 00:27:02,430
+- [Person] The row will be released
+
+606
+00:27:02,430 --> 00:27:04,714
+only when the commit happens?
+- There's no lock.
+
+607
+00:27:04,714 --> 00:27:07,050
+In DSQL?
+(person faintly speaks)
+
+608
+00:27:07,050 --> 00:27:08,203
+Pardon?
+
+609
+00:27:08,203 --> 00:27:11,700
+(person faintly speaking)
+
+610
+00:27:11,700 --> 00:27:14,010
+- [Person] The variables are rolling out.
+
+611
+00:27:14,010 --> 00:27:15,030
+- [Raluca] Marc, your variables
+
+612
+00:27:15,030 --> 00:27:16,936
+are all wrong.
+- They are?
+
+613
+00:27:16,936 --> 00:27:18,695
+- Yeah. (chuckles)
+- Thank you.
+
+614
+00:27:18,695 --> 00:27:20,123
+- [Person] On the involvement,
+
+615
+00:27:20,123 --> 00:27:22,964
+you said balance is one, ID is two.
+
+616
+00:27:22,964 --> 00:27:26,037
+- [Marc] Ah, thank you so much.
+
+617
+00:27:26,037 --> 00:27:27,787
+You probably just saved us an hour.
+
+618
+00:27:28,680 --> 00:27:30,780
+So the release is not gonna-
+
+619
+00:27:30,780 --> 00:27:32,580
+- [Raluca] There's no
+lock, it's lock-free.
+
+620
+00:27:32,580 --> 00:27:34,147
+There is no lock in this SQL.
+
+621
+00:27:35,098 --> 00:27:36,150
+- Oh, okay.
+- So that's why
+
+622
+00:27:36,150 --> 00:27:41,150
+we can also support higher
+transaction throughput
+
+623
+00:27:41,520 --> 00:27:43,680
+because you don't have to
+wait for another transaction.
+
+624
+00:27:43,680 --> 00:27:45,090
+There's no coordination there.
+
+625
+00:27:45,090 --> 00:27:48,240
+Everybody who wants to update
+will just issue the update,
+
+626
+00:27:48,240 --> 00:27:51,060
+and then the first one
+to have to commit wins.
+
+627
+00:27:51,060 --> 00:27:54,030
+And then the other ones
+get serialization error.
+
+628
+00:27:54,030 --> 00:27:57,150
+It's Postgres error, code 40001.
+
+629
+00:27:57,150 --> 00:27:57,983
+- [Marc] Hm.
+
+630
+00:27:57,983 --> 00:27:59,383
+- [Raluca] Oh, and by the way, (chuckles)
+
+631
+00:27:59,383 --> 00:28:00,583
+I have to tell you this,
+
+632
+00:28:01,980 --> 00:28:06,980
+if you go to the AWS booth
+in the expo in the Venetian,
+
+633
+00:28:08,070 --> 00:28:11,250
+and they ask you the one unique thing
+
+634
+00:28:11,250 --> 00:28:12,420
+you've learned from this session,
+
+635
+00:28:12,420 --> 00:28:15,240
+and you tell them about
+serialization error 40001,
+
+636
+00:28:15,240 --> 00:28:17,170
+they will hand you a
+hoodie, an AWS hoodie,
+
+637
+00:28:17,170 --> 00:28:19,797
+and a sticker, a TC code sticker.
+
+638
+00:28:20,730 --> 00:28:21,930
+Do you have more questions?
+
+639
+00:28:21,930 --> 00:28:22,770
+I have one more.
+- No, I'm good.
+
+640
+00:28:22,770 --> 00:28:23,603
+- [Raluca] Thank you.
+
+641
+00:28:23,603 --> 00:28:26,220
+- Yeah, we're actually go
+look right at conflicts
+
+642
+00:28:26,220 --> 00:28:27,053
+in a moment,
+
+643
+00:28:27,053 --> 00:28:30,510
+because as soon as we start
+to run this a bunch of times,
+
+644
+00:28:30,510 --> 00:28:32,880
+we're gonna see exactly
+your question in action.
+
+645
+00:28:32,880 --> 00:28:34,347
+So let's see if we can invoke this.
+
+646
+00:28:34,347 --> 00:28:36,170
+- [Raluca] Marc, I have one
+more question. Can I take it?
+
+647
+00:28:36,170 --> 00:28:38,100
+- [Marc] Oh yeah, let's take that.
+
+648
+00:28:38,100 --> 00:28:39,540
+- [Person] It's actually not a question.
+
+649
+00:28:39,540 --> 00:28:42,450
+A little bit of a contrarian
+comment, if I may?
+
+650
+00:28:42,450 --> 00:28:43,440
+- [Raluca] Okay.
+
+651
+00:28:43,440 --> 00:28:44,543
+- [Person] And don't get
+me wrong, I love DSQL,
+
+652
+00:28:44,543 --> 00:28:47,100
+and I think it's a marvel of engineering
+
+653
+00:28:47,100 --> 00:28:49,500
+and brings a lot of value.
+
+654
+00:28:49,500 --> 00:28:53,070
+I was just, wanna say
+that I'm not totally sold
+
+655
+00:28:53,070 --> 00:28:57,420
+on that the optimistic
+locking approach used here
+
+656
+00:28:57,420 --> 00:29:00,930
+is straightaway better
+than classical Postgres,
+
+657
+00:29:00,930 --> 00:29:04,410
+because having to do
+idempotency puts a burden
+
+658
+00:29:04,410 --> 00:29:05,490
+on the developer,
+
+659
+00:29:05,490 --> 00:29:09,240
+that if you run on repeatable
+read committed mode,
+
+660
+00:29:09,240 --> 00:29:10,500
+which is the usual for Postgres,
+
+661
+00:29:10,500 --> 00:29:12,780
+and most applications are fine with that,
+
+662
+00:29:12,780 --> 00:29:14,280
+it's an extra burden,
+
+663
+00:29:14,280 --> 00:29:16,830
+adds friction on the
+application developer side.
+
+664
+00:29:16,830 --> 00:29:20,370
+And having to have
+retries can also at point
+
+665
+00:29:20,370 --> 00:29:22,050
+also hamper performance,
+
+666
+00:29:22,050 --> 00:29:23,280
+because you're doing retries
+
+667
+00:29:23,280 --> 00:29:26,490
+versus just waiting a little
+bit for a lock to be acquired.
+
+668
+00:29:26,490 --> 00:29:29,403
+So just this comment is not,
+
+669
+00:29:31,260 --> 00:29:32,940
+it's something that makes sense,
+
+670
+00:29:32,940 --> 00:29:35,520
+and it's an acceptable compromise,
+but still a compromise.
+
+671
+00:29:35,520 --> 00:29:37,530
+I don't think it's just
+straight out better.
+
+672
+00:29:37,530 --> 00:29:39,630
+- [Raluca] Wait, we call
+it a trade off. (chuckles)
+
+673
+00:29:39,630 --> 00:29:42,870
+It is what you need to obtain
+a higher throughput, right?
+
+674
+00:29:42,870 --> 00:29:46,350
+- [Marc] So, we're gonna actually
+dig into OCC in a minute.
+
+675
+00:29:46,350 --> 00:29:48,630
+So, your two points, I think there's,
+
+676
+00:29:48,630 --> 00:29:51,210
+Is it better than
+Postgres? Is it ergonomic?
+
+677
+00:29:51,210 --> 00:29:52,710
+And what performance?
+
+678
+00:29:52,710 --> 00:29:54,810
+Let's make sure we cover
+all three of those.
+
+679
+00:29:54,810 --> 00:29:56,253
+So our function works,
+
+680
+00:29:59,670 --> 00:30:00,750
+we're returning the balance
+
+681
+00:30:00,750 --> 00:30:02,793
+using the Postgres returning syntax.
+
+682
+00:30:03,990 --> 00:30:06,930
+And so if we run a bunch of times,
+
+683
+00:30:06,930 --> 00:30:09,360
+we can see our money going down.
+
+684
+00:30:09,360 --> 00:30:13,020
+So I'm gonna quickly
+run this setup script,
+
+685
+00:30:13,020 --> 00:30:17,583
+and then we can, we have 1,000 accounts,
+
+686
+00:30:18,570 --> 00:30:19,803
+and then we can do,
+
+687
+00:30:22,080 --> 00:30:23,550
+let's see if I remember where we are now.
+
+688
+00:30:23,550 --> 00:30:26,400
+Are we on chapter two? I think so, maybe.
+
+689
+00:30:26,400 --> 00:30:28,620
+Okay, so this is gonna open
+
+690
+00:30:28,620 --> 00:30:31,200
+up to 1,000 requests in parallel,
+
+691
+00:30:31,200 --> 00:30:33,300
+and it's gonna call that function.
+
+692
+00:30:33,300 --> 00:30:37,290
+And every time it calls that function,
+
+693
+00:30:37,290 --> 00:30:39,780
+it's gonna say, "Pick a random account,
+
+694
+00:30:39,780 --> 00:30:43,620
+a random payer, a random
+payee, move some money around."
+
+695
+00:30:43,620 --> 00:30:47,640
+And then this is gonna keep
+track of the errors we get back.
+
+696
+00:30:47,640 --> 00:30:49,500
+And you'll see that we're
+getting change conflicts
+
+697
+00:30:49,500 --> 00:30:51,420
+with another transaction, right?
+
+698
+00:30:51,420 --> 00:30:53,040
+And so the reason this is important
+
+699
+00:30:53,040 --> 00:30:54,750
+from a correctness point of view
+
+700
+00:30:54,750 --> 00:30:58,140
+is that we are running
+all of these checks here.
+
+701
+00:30:58,140 --> 00:31:00,540
+Like, does the payer exist?
+Does the payee exist?
+
+702
+00:31:00,540 --> 00:31:01,920
+Do I have enough money?
+
+703
+00:31:01,920 --> 00:31:04,440
+And because we have this
+concurrency going on,
+
+704
+00:31:04,440 --> 00:31:09,360
+DSQL is detecting, and it's
+detecting here on line 43,
+
+705
+00:31:09,360 --> 00:31:11,790
+that somebody else has
+mucked with the data
+
+706
+00:31:11,790 --> 00:31:13,287
+that you've been working with, right?
+
+707
+00:31:13,287 --> 00:31:14,793
+And so you need to try again.
+
+708
+00:31:15,627 --> 00:31:16,980
+And the way we do that
+
+709
+00:31:16,980 --> 00:31:19,710
+is we're gonna handle this
+error code and just try again.
+
+710
+00:31:19,710 --> 00:31:21,207
+So we'll say "while true,"
+
+711
+00:31:22,620 --> 00:31:24,843
+and then I need to indent everything.
+
+712
+00:31:28,945 --> 00:31:30,090
+(mouse clicking)
+
+713
+00:31:30,090 --> 00:31:32,850
+And then in our catch block,
+
+714
+00:31:32,850 --> 00:31:36,390
+this gets a a little funky in TypeScript
+
+715
+00:31:36,390 --> 00:31:37,653
+because of error handing,
+
+716
+00:31:38,760 --> 00:31:43,760
+but what we're gonna say is if
+the error is not a PG error,
+
+717
+00:31:44,693 --> 00:31:46,170
+(keyboard clicking)
+
+718
+00:31:46,170 --> 00:31:48,720
+something else has just gone wrong.
+
+719
+00:31:48,720 --> 00:31:50,470
+Then we're gonna run this old code.
+
+720
+00:31:52,899 --> 00:31:53,910
+(mouse clicking)
+
+721
+00:31:53,910 --> 00:31:56,670
+Otherwise, we're gonna take
+a look at the error code.
+
+722
+00:31:56,670 --> 00:31:58,140
+So this function here just lets us
+
+723
+00:31:58,140 --> 00:32:00,652
+like get some type of
+information out of the error.
+
+724
+00:32:00,652 --> 00:32:03,402
+(mouse clicking)
+
+725
+00:32:06,630 --> 00:32:07,893
+We can just run continue,
+
+726
+00:32:11,700 --> 00:32:14,340
+and then we'll have a to-do over here.
+
+727
+00:32:14,340 --> 00:32:16,440
+Now it's kind of important,
+
+728
+00:32:16,440 --> 00:32:18,510
+I've made this bug a bunch of times,
+
+729
+00:32:18,510 --> 00:32:21,810
+to make sure that we are
+grabbing a new connection
+
+730
+00:32:21,810 --> 00:32:24,663
+outta the pool inside this loop over here.
+
+731
+00:32:26,207 --> 00:32:28,957
+(mouse clicking)
+
+732
+00:32:30,928 --> 00:32:35,400
+Okay, and I'm gonna do a
+little bit more decoration here
+
+733
+00:32:35,400 --> 00:32:38,100
+just so we can keep track of our retries.
+
+734
+00:32:38,100 --> 00:32:40,395
+So we'll say retry is a number.
+
+735
+00:32:40,395 --> 00:32:41,807
+(keyboard clicking)
+
+736
+00:32:41,807 --> 00:32:42,843
+That's a typo.
+
+737
+00:32:44,640 --> 00:32:47,733
+And we'll say duration is a number too.
+
+738
+00:32:48,570 --> 00:32:51,925
+And then at the start here,
+we'll take the current time.
+
+739
+00:32:51,925 --> 00:32:54,925
+(keyboard clicking)
+
+740
+00:32:58,140 --> 00:33:01,383
+And then down here we
+will return the duration.
+
+741
+00:33:02,380 --> 00:33:05,380
+(keyboard clicking)
+
+742
+00:33:08,460 --> 00:33:09,990
+We're gonna do that down here, too,
+
+743
+00:33:09,990 --> 00:33:13,233
+for a reason that we become apparent.
+
+744
+00:33:14,670 --> 00:33:19,018
+Okay, and then we need to
+return retries too, right?
+
+745
+00:33:19,018 --> 00:33:20,250
+- [Raluca] Right, so we
+just have some telemetry
+
+746
+00:33:20,250 --> 00:33:21,990
+around the OCC retries.
+
+747
+00:33:21,990 --> 00:33:24,760
+To your point, you can exactly quantify
+
+748
+00:33:25,710 --> 00:33:27,300
+what your hotspots are,
+
+749
+00:33:27,300 --> 00:33:28,860
+how many times you have to retry
+
+750
+00:33:28,860 --> 00:33:32,340
+if the application
+tends to have these hot,
+
+751
+00:33:32,340 --> 00:33:35,013
+deadlocks, and so on, so.
+
+752
+00:33:38,337 --> 00:33:40,980
+And if you do want, for example,
+
+753
+00:33:40,980 --> 00:33:44,010
+not to have all the
+sessions retry at once,
+
+754
+00:33:44,010 --> 00:33:47,310
+then you would add some
+exponential back off and retries
+
+755
+00:33:47,310 --> 00:33:48,600
+and things like that.
+
+756
+00:33:48,600 --> 00:33:51,390
+But in this case, I don't
+think that's gonna be required
+
+757
+00:33:51,390 --> 00:33:52,983
+in this simple application.
+
+758
+00:33:52,983 --> 00:33:54,335
+(keyboard clicking)
+
+759
+00:33:54,335 --> 00:33:55,950
+- [Person] Just-
+
+760
+00:33:55,950 --> 00:33:59,677
+- [Raluca] Hold on, I want
+everybody to hear what you say.
+
+761
+00:34:00,725 --> 00:34:02,640
+Just hold on.
+
+762
+00:34:02,640 --> 00:34:04,020
+- [Person] Just if I may.
+
+763
+00:34:04,020 --> 00:34:07,110
+Absolutely, I like the
+word that it's a trade off.
+
+764
+00:34:07,110 --> 00:34:08,100
+That's exactly what it is.
+
+765
+00:34:08,100 --> 00:34:09,540
+That's why I just wanna make sure
+
+766
+00:34:09,540 --> 00:34:12,930
+that it's not presented
+as a best solution,
+
+767
+00:34:12,930 --> 00:34:14,520
+because again, if I run, for example,
+
+768
+00:34:14,520 --> 00:34:17,610
+read committed mode
+using regular Postgres,
+
+769
+00:34:17,610 --> 00:34:20,070
+I will not need to do this while true loop
+
+770
+00:34:20,070 --> 00:34:22,530
+and check for the errors
+and handle the retries.
+
+771
+00:34:22,530 --> 00:34:24,270
+I'm not saying this is better or worse,
+
+772
+00:34:24,270 --> 00:34:26,550
+it's again a trade off,
+
+773
+00:34:26,550 --> 00:34:28,890
+but here you're forced
+versus not being forced,
+
+774
+00:34:28,890 --> 00:34:31,309
+and therefore, it's a compromise, yeah.
+
+775
+00:34:31,309 --> 00:34:34,623
+- [Raluca] Thanks. Does anybody
+have any other questions?
+
+776
+00:34:36,300 --> 00:34:37,133
+Okay.
+
+777
+00:34:42,640 --> 00:34:47,343
+- [Marc] Okay, so this code
+is actually still wrong,
+
+778
+00:34:48,180 --> 00:34:50,550
+and the reason is we
+need to handle our errors
+
+779
+00:34:50,550 --> 00:34:52,143
+a little bit better over here,
+
+780
+00:34:53,520 --> 00:34:55,620
+but we'll see what happens when we run it.
+
+781
+00:35:02,490 --> 00:35:07,440
+So adding this retry
+loop is work for sure.
+
+782
+00:35:08,940 --> 00:35:10,740
+You know, I've gone a
+little bit above and beyond
+
+783
+00:35:10,740 --> 00:35:12,150
+in terms of adding telemetry,
+
+784
+00:35:12,150 --> 00:35:16,260
+because I want you to
+see when we run this code
+
+785
+00:35:16,260 --> 00:35:18,960
+what the error rate is, right?
+
+786
+00:35:18,960 --> 00:35:21,450
+And it's gonna be really
+bad, (chuckles) right?
+
+787
+00:35:21,450 --> 00:35:22,920
+And the reason it's really bad
+
+788
+00:35:22,920 --> 00:35:26,250
+is that we only have
+1,000 accounts, right?
+
+789
+00:35:26,250 --> 00:35:29,130
+We're running at 1,000
+requests per second.
+
+790
+00:35:29,130 --> 00:35:30,000
+And so the chance
+
+791
+00:35:30,000 --> 00:35:32,760
+of there being two concurrent
+requests of the conflict
+
+792
+00:35:32,760 --> 00:35:33,960
+is gonna be pretty high.
+
+793
+00:35:34,969 --> 00:35:37,544
+(computer chiming)
+
+794
+00:35:37,544 --> 00:35:40,294
+(mouse clicking)
+
+795
+00:35:56,070 --> 00:35:58,170
+Timeout exceeded. (sighs)
+
+796
+00:35:58,170 --> 00:35:59,970
+I think I'm leaking connection somewhere.
+
+797
+00:35:59,970 --> 00:36:01,470
+Okay, gimme a moment to debug.
+
+798
+00:36:04,470 --> 00:36:06,833
+- [Raluca] I'm happy to take
+more questions in the meantime.
+
+799
+00:36:10,260 --> 00:36:12,773
+I saw that hand first.
+I'll go up there first.
+
+800
+00:36:14,670 --> 00:36:15,503
+- [Person] Thank you.
+
+801
+00:36:15,503 --> 00:36:18,120
+Yeah, I was just wondering
+what the problem was with,
+
+802
+00:36:18,120 --> 00:36:20,580
+like you mentioned you had to
+push the client acquisition
+
+803
+00:36:20,580 --> 00:36:22,620
+inside the like retry loop.
+
+804
+00:36:22,620 --> 00:36:25,620
+What's the issue you run
+into if you don't do that?
+
+805
+00:36:25,620 --> 00:36:27,570
+- [Marc] Yeah, that's a great question.
+
+806
+00:36:30,316 --> 00:36:32,640
+(mouse clicking)
+
+807
+00:36:32,640 --> 00:36:34,893
+Gimme a sec, I can't
+do two things at once.
+
+808
+00:36:37,390 --> 00:36:39,510
+Okay, so the reason we had a leak here
+
+809
+00:36:39,510 --> 00:36:42,960
+is that I wasn't returning
+the connection to the pool.
+
+810
+00:36:42,960 --> 00:36:45,243
+The reason we wanna do that is,
+
+811
+00:36:47,970 --> 00:36:50,880
+depending on how much
+time we get here today,
+
+812
+00:36:50,880 --> 00:36:53,100
+I wanna show you just how you can recover
+
+813
+00:36:53,100 --> 00:36:56,460
+from other kinds of errors in DSQL, right?
+
+814
+00:36:56,460 --> 00:37:00,330
+For example, when you're
+running on a single node system,
+
+815
+00:37:00,330 --> 00:37:02,550
+what happens if your primary fails?
+
+816
+00:37:02,550 --> 00:37:04,230
+Right, like you have to
+learn about the new primary,
+
+817
+00:37:04,230 --> 00:37:06,240
+you have to shift your connections open.
+
+818
+00:37:06,240 --> 00:37:09,390
+And so in DSQL, because
+you're a distributed system,
+
+819
+00:37:09,390 --> 00:37:11,250
+each of your connections
+is actually running
+
+820
+00:37:11,250 --> 00:37:12,960
+on a different machine somewhere.
+
+821
+00:37:12,960 --> 00:37:15,270
+And so when something goes wrong,
+
+822
+00:37:15,270 --> 00:37:16,770
+you're gonna lose just a fraction
+
+823
+00:37:16,770 --> 00:37:20,100
+of your healthy connections,
+depending on like what failed.
+
+824
+00:37:20,100 --> 00:37:21,210
+And so it's really important
+
+825
+00:37:21,210 --> 00:37:23,550
+that your application can
+take advantage of that
+
+826
+00:37:23,550 --> 00:37:26,400
+and get it, grab a new
+connection and keep going.
+
+827
+00:37:26,400 --> 00:37:28,920
+And so the simplest way to do that
+
+828
+00:37:28,920 --> 00:37:31,890
+is to simply grab a
+connection out of the pool
+
+829
+00:37:31,890 --> 00:37:33,240
+when you retry, right?
+
+830
+00:37:33,240 --> 00:37:34,290
+Because if anything goes wrong,
+
+831
+00:37:34,290 --> 00:37:38,017
+and then you can change that
+catch handler to simply say,
+
+832
+00:37:38,017 --> 00:37:40,620
+"Hey, if any of these, you know,
+
+833
+00:37:40,620 --> 00:37:42,060
+if any of these conditions happen,
+
+834
+00:37:42,060 --> 00:37:44,160
+just grab a new connection and try again."
+
+835
+00:37:46,560 --> 00:37:49,167
+- [Raluca] We have one more question here,
+
+836
+00:37:49,167 --> 00:37:51,060
+and then I'll come there.
+
+837
+00:37:51,060 --> 00:37:54,240
+- [Person] Do we have to
+to pay for each connection?
+
+838
+00:37:54,240 --> 00:37:57,960
+So if I open 1,000 connection,
+
+839
+00:37:57,960 --> 00:38:01,053
+do I have to pay something
+if I don't run any query?
+
+840
+00:38:02,070 --> 00:38:02,940
+- [Marc] No.
+
+841
+00:38:02,940 --> 00:38:05,550
+So the question is, how do
+you pay for connections?
+
+842
+00:38:05,550 --> 00:38:09,930
+The answer is connections
+are free, with an asterisk.
+
+843
+00:38:09,930 --> 00:38:12,000
+And the asterisk is that
+opening a connection
+
+844
+00:38:12,000 --> 00:38:14,640
+does a small number of reads
+
+845
+00:38:14,640 --> 00:38:17,970
+because it has to do things
+like check your permissions.
+
+846
+00:38:17,970 --> 00:38:21,270
+Right? But the thing you're
+actually paying for is usage.
+
+847
+00:38:21,270 --> 00:38:23,100
+So you pay for reads and writes.
+
+848
+00:38:23,100 --> 00:38:25,470
+And so once you've opened a connection,
+
+849
+00:38:25,470 --> 00:38:27,810
+like you can just leave
+it there idle, it's fine.
+
+850
+00:38:27,810 --> 00:38:29,460
+- Okay.
+- Okay,
+
+851
+00:38:29,460 --> 00:38:30,780
+so we're done with that,
+
+852
+00:38:30,780 --> 00:38:33,420
+and we'll notice that
+our min execution times
+
+853
+00:38:33,420 --> 00:38:37,830
+are pretty low, but our max
+execution times are pretty high.
+
+854
+00:38:37,830 --> 00:38:41,220
+And the reason for that is we
+are doing a bunch of retries.
+
+855
+00:38:41,220 --> 00:38:42,210
+Okay-
+
+856
+00:38:42,210 --> 00:38:43,470
+- [Raluca] I have more question.
+
+857
+00:38:43,470 --> 00:38:45,000
+- [Marc] So what I'm gonna do now
+
+858
+00:38:45,000 --> 00:38:48,273
+is actually load this
+system up a little bit more.
+
+859
+00:38:51,840 --> 00:38:53,580
+And what this script is gonna do
+
+860
+00:38:53,580 --> 00:38:56,043
+is just dump in a million accounts.
+
+861
+00:38:57,360 --> 00:38:59,100
+And while we do that,
+
+862
+00:38:59,100 --> 00:39:01,560
+we're gonna quickly add another table,
+
+863
+00:39:01,560 --> 00:39:03,453
+which is our transaction log table.
+
+864
+00:39:04,440 --> 00:39:05,951
+- [Raluca] Marc, I have one more question.
+
+865
+00:39:05,951 --> 00:39:08,667
+- Yeah.
+- Okay.
+
+866
+00:39:08,667 --> 00:39:10,353
+You, yeah.
+
+867
+00:39:11,308 --> 00:39:13,904
+- [Person] I know in the DSQL launch
+
+868
+00:39:13,904 --> 00:39:15,990
+there was a few unsupported features,
+
+869
+00:39:15,990 --> 00:39:18,150
+like foreign keys, partition sequences.
+
+870
+00:39:18,150 --> 00:39:20,190
+Are things like that planned
+to be added in the future,
+
+871
+00:39:20,190 --> 00:39:22,470
+or is it like the distributed
+nature kind of makes it
+
+872
+00:39:22,470 --> 00:39:25,260
+so they'd be not able to be implemented?
+
+873
+00:39:25,260 --> 00:39:27,323
+Did I phrase that, I hope
+I phrased that correctly.
+
+874
+00:39:28,680 --> 00:39:31,503
+- [Raluca] Yeah, so foreign
+keys are on the roadmap.
+
+875
+00:39:32,520 --> 00:39:35,820
+We do plan to be closing that gap
+
+876
+00:39:35,820 --> 00:39:38,223
+with the Postgres competitive.
+
+877
+00:39:39,270 --> 00:39:40,420
+One more question here?
+
+878
+00:39:41,820 --> 00:39:43,194
+Did you have one more question, or?
+
+879
+00:39:43,194 --> 00:39:44,943
+Oh, I missed, oh, sorry.
+
+880
+00:39:47,400 --> 00:39:51,420
+- [Person] So in a distributed
+database kind of thing,
+
+881
+00:39:51,420 --> 00:39:54,240
+how do you manage, because you mentioned
+
+882
+00:39:54,240 --> 00:39:57,900
+that right consistencies are
+maintained in an optimized way,
+
+883
+00:39:57,900 --> 00:40:01,500
+and once you get a confirmation
+about a right commit,
+
+884
+00:40:01,500 --> 00:40:04,713
+it'll be read across the
+cluster in the same way.
+
+885
+00:40:05,550 --> 00:40:09,390
+But if somebody reads a transaction
+
+886
+00:40:09,390 --> 00:40:11,253
+which is returned in somewhere else,
+
+887
+00:40:12,870 --> 00:40:15,180
+does it, the decision needs to wait,
+
+888
+00:40:15,180 --> 00:40:17,820
+how does it get the committed
+block from the storage?
+
+889
+00:40:17,820 --> 00:40:20,640
+Because storage is being
+shared, not the data.
+
+890
+00:40:20,640 --> 00:40:22,413
+So, how does that happen?
+
+891
+00:40:23,580 --> 00:40:25,170
+- [Marc] Yeah, so this is the reason
+
+892
+00:40:25,170 --> 00:40:27,810
+that we do optimistic concurrency
+control in the system,
+
+893
+00:40:27,810 --> 00:40:28,643
+right?
+
+894
+00:40:28,643 --> 00:40:30,060
+Because there's really two ways to do it.
+
+895
+00:40:30,060 --> 00:40:32,370
+with pessimistic currency control,
+
+896
+00:40:32,370 --> 00:40:34,350
+as soon as you do anything in the system,
+
+897
+00:40:34,350 --> 00:40:36,630
+you have to go and sort
+of like put a lock there,
+
+898
+00:40:36,630 --> 00:40:38,970
+saying like, "Hey, I'm busy here," right?
+
+899
+00:40:38,970 --> 00:40:41,250
+And that would require us pushing down
+
+900
+00:40:41,250 --> 00:40:43,560
+that locking information somewhere, right?
+
+901
+00:40:43,560 --> 00:40:46,500
+With optimistic concurrency
+control, we don't do that.
+
+902
+00:40:46,500 --> 00:40:48,240
+We just do our work
+
+903
+00:40:48,240 --> 00:40:51,090
+completely independent of everybody else.
+
+904
+00:40:51,090 --> 00:40:52,920
+And then when we commit,
+
+905
+00:40:52,920 --> 00:40:55,470
+the commit's written to a single place.
+
+906
+00:40:55,470 --> 00:40:58,170
+And that single place looks at
+everything that you're doing,
+
+907
+00:40:58,170 --> 00:41:00,360
+and it checks if it's been,
+
+908
+00:41:00,360 --> 00:41:01,710
+if somebody else has done something
+
+909
+00:41:01,710 --> 00:41:03,911
+that interferes with it, right?
+
+910
+00:41:03,911 --> 00:41:04,890
+- [Person] So you need to check, right,
+
+911
+00:41:04,890 --> 00:41:06,600
+if somebody else made a
+transaction on the block
+
+912
+00:41:06,600 --> 00:41:09,090
+that somebody else is interested in?
+
+913
+00:41:09,090 --> 00:41:11,970
+- [Marc] Right, and so
+it looks at the changes
+
+914
+00:41:11,970 --> 00:41:13,110
+that you're making.
+
+915
+00:41:13,110 --> 00:41:16,530
+So in this case, because
+both transactions are reading
+
+916
+00:41:16,530 --> 00:41:19,380
+and writing the payer and the payee id,
+
+917
+00:41:19,380 --> 00:41:21,150
+so if we have one transaction
+
+918
+00:41:21,150 --> 00:41:23,430
+that is one, two, three, right,
+
+919
+00:41:23,430 --> 00:41:24,807
+that's account one and account three,
+
+920
+00:41:24,807 --> 00:41:28,560
+and the other one is account
+three and account five,
+
+921
+00:41:28,560 --> 00:41:31,830
+then because both of them
+have three in their right set,
+
+922
+00:41:31,830 --> 00:41:33,540
+when they get to the point of commit,
+
+923
+00:41:33,540 --> 00:41:36,630
+that's when the system,
+called the adjudicator,
+
+924
+00:41:36,630 --> 00:41:37,687
+is gonna look at that and say,
+
+925
+00:41:37,687 --> 00:41:39,150
+"Only one of these can go through,
+
+926
+00:41:39,150 --> 00:41:41,100
+and the other one has to retry."
+
+927
+00:41:41,100 --> 00:41:43,440
+And so there's like no,
+
+928
+00:41:43,440 --> 00:41:45,960
+there's nothing happening at
+the storage layer to do this.
+
+929
+00:41:45,960 --> 00:41:48,483
+It's all happening at the commit layer.
+
+930
+00:41:49,560 --> 00:41:52,680
+- [Person] Okay, so do you
+have a memory share concept
+
+931
+00:41:52,680 --> 00:41:53,930
+between the cluster also?
+
+932
+00:41:55,200 --> 00:41:57,288
+- [Marc] Everything is
+just fully independent.
+
+933
+00:41:57,288 --> 00:41:58,533
+- Okay.
+- Yeah.
+
+934
+00:42:00,310 --> 00:42:05,223
+Okay, so we have a table
+of transactions now,
+
+935
+00:42:08,670 --> 00:42:11,490
+and all this is is a record
+
+936
+00:42:11,490 --> 00:42:13,440
+of everything we've done in the system.
+
+937
+00:42:13,440 --> 00:42:15,990
+And there's two columns
+
+938
+00:42:15,990 --> 00:42:18,960
+that are being automatically
+generated by the database.
+
+939
+00:42:18,960 --> 00:42:21,023
+The first one is the ID, which is a UUID
+
+940
+00:42:21,940 --> 00:42:24,810
+And the reason we wanna use a UUID here
+
+941
+00:42:24,810 --> 00:42:26,280
+is for the same reason
+
+942
+00:42:26,280 --> 00:42:28,470
+that you would want to use
+one in DynamoDB, right?
+
+943
+00:42:28,470 --> 00:42:31,860
+That's gonna just give you
+the best possible fan out,
+
+944
+00:42:31,860 --> 00:42:34,650
+which is maybe a different
+philosophy than you would have
+
+945
+00:42:34,650 --> 00:42:37,440
+on a instance-based Postgres system
+
+946
+00:42:37,440 --> 00:42:39,120
+where you want to do
+everything sequentially
+
+947
+00:42:39,120 --> 00:42:40,380
+to get the best IO.
+
+948
+00:42:40,380 --> 00:42:42,990
+Right, in DSQL is just
+way better to go wide.
+
+949
+00:42:42,990 --> 00:42:46,080
+And then the last column creates
+it out as just a timestamp.
+
+950
+00:42:46,080 --> 00:42:49,100
+And so what we're gonna do in our function
+
+951
+00:42:49,100 --> 00:42:51,003
+is just populate this table.
+
+952
+00:42:52,845 --> 00:42:55,845
+(keyboard clicking)
+
+953
+00:43:18,900 --> 00:43:21,833
+See if I get this wrong
+again. Up here first.
+
+954
+00:43:30,708 --> 00:43:31,541
+Okay.
+
+955
+00:43:33,180 --> 00:43:37,064
+- [Raluca] Did you assign the the role to-
+
+956
+00:43:37,064 --> 00:43:38,130
+- [Marc] Did I do that?
+
+957
+00:43:38,130 --> 00:43:39,090
+- I don't-
+- Maybe.
+
+958
+00:43:39,090 --> 00:43:40,273
+- [Raluca] I missed it.
+
+959
+00:43:40,273 --> 00:43:41,970
+(Marc chuckling)
+Good.
+
+960
+00:43:41,970 --> 00:43:43,493
+- [Marc] Thank you for checking me.
+
+961
+00:43:56,050 --> 00:43:58,020
+Okay, so what I wanna show you now is,
+
+962
+00:43:58,020 --> 00:44:00,360
+this table's gonna start
+to fill up rapidly, right,
+
+963
+00:44:00,360 --> 00:44:02,610
+when we start to run at scale.
+
+964
+00:44:02,610 --> 00:44:04,350
+And we're gonna want to
+be able to query that.
+
+965
+00:44:04,350 --> 00:44:06,600
+So imagine this is a real application.
+
+966
+00:44:06,600 --> 00:44:08,340
+Our customer's going to our page
+
+967
+00:44:08,340 --> 00:44:09,480
+and they're clicking on their homepage,
+
+968
+00:44:09,480 --> 00:44:12,240
+and they wanna see what
+transactions that they've run.
+
+969
+00:44:12,240 --> 00:44:14,583
+And so we're gonna wanna run a query,
+
+970
+00:44:15,787 --> 00:44:19,890
+"select * from transactions,"
+
+971
+00:44:19,890 --> 00:44:24,187
+where we can pick out for this account,
+
+972
+00:44:24,187 --> 00:44:27,180
+"select * from transactions,"
+
+973
+00:44:27,180 --> 00:44:30,780
+where payee ID equals that number.
+
+974
+00:44:30,780 --> 00:44:32,250
+And then we see our log, right?
+
+975
+00:44:32,250 --> 00:44:33,930
+And if we run this a few more times,
+
+976
+00:44:33,930 --> 00:44:35,613
+we should see more rows.
+
+977
+00:44:35,613 --> 00:44:36,930
+(mouse clicking)
+
+978
+00:44:36,930 --> 00:44:39,543
+There we go. Okay, the RNG was on my side.
+
+979
+00:44:40,710 --> 00:44:42,270
+But I wanna show you quickly
+
+980
+00:44:42,270 --> 00:44:43,890
+how to think about performance here.
+
+981
+00:44:43,890 --> 00:44:48,330
+So if we do "explain select from account,"
+
+982
+00:44:48,330 --> 00:44:50,629
+you'll see that we're doing
+a full scan on this table,
+
+983
+00:44:50,629 --> 00:44:52,863
+right, because there aren't any indexes.
+
+984
+00:44:54,300 --> 00:44:57,780
+And what we can do here is,
+
+985
+00:44:57,780 --> 00:45:01,830
+I'm actually gonna use "explain analyze,"
+
+986
+00:45:01,830 --> 00:45:03,660
+which is gonna give us a
+little bit more information,
+
+987
+00:45:03,660 --> 00:45:05,760
+'cause this actually runs a query.
+
+988
+00:45:05,760 --> 00:45:08,070
+So we can say "create index,"
+
+989
+00:45:08,070 --> 00:45:11,040
+I'm intentionally getting
+this wrong for a moment,
+
+990
+00:45:11,040 --> 00:45:14,883
+on "transactions, payer ID,
+
+991
+00:45:16,140 --> 00:45:20,430
+on transactions, payer ID,"
+
+992
+00:45:20,430 --> 00:45:25,430
+and I'm an insert, put "created
+at" in here, for a reason.
+
+993
+00:45:25,620 --> 00:45:28,200
+And we get an error, "unsupported mode."
+
+994
+00:45:28,200 --> 00:45:30,510
+And you'll see that we
+have to use the syntax
+
+995
+00:45:30,510 --> 00:45:32,867
+called "create index ASYMC."
+
+996
+00:45:34,080 --> 00:45:39,080
+And the reason we do this in
+DSQL is because in Postgres,
+
+997
+00:45:39,390 --> 00:45:41,280
+when you create an index, by default,
+
+998
+00:45:41,280 --> 00:45:43,680
+you're gonna be taking a lock on the table
+
+999
+00:45:43,680 --> 00:45:46,200
+so nobody else can
+record any transactions.
+
+1000
+00:45:46,200 --> 00:45:48,180
+Because the system needs to go row by row
+
+1001
+00:45:48,180 --> 00:45:51,510
+and make sure that it's
+building the index correctly.
+
+1002
+00:45:51,510 --> 00:45:55,440
+Now, Postgres has an alternative syntax
+
+1003
+00:45:55,440 --> 00:45:57,750
+called "create index concurrently."
+
+1004
+00:45:57,750 --> 00:46:02,750
+That does less locking, but
+it still does some locking
+
+1005
+00:46:02,790 --> 00:46:05,940
+because it has to wait for
+this sort of quiescent phase
+
+1006
+00:46:05,940 --> 00:46:07,620
+before it can start.
+
+1007
+00:46:07,620 --> 00:46:10,500
+And it also has to scan the table twice,
+
+1008
+00:46:10,500 --> 00:46:13,497
+which can be very expensive
+and cause performance impact.
+
+1009
+00:46:13,497 --> 00:46:14,910
+And there's another small issue
+
+1010
+00:46:14,910 --> 00:46:16,560
+with create index concurrently,
+
+1011
+00:46:16,560 --> 00:46:19,077
+which is that there's no
+way to track it, right?
+
+1012
+00:46:19,077 --> 00:46:21,210
+And so when we were thinking
+about building the system,
+
+1013
+00:46:21,210 --> 00:46:23,220
+we wanted to solve all these problems
+
+1014
+00:46:23,220 --> 00:46:26,340
+and create index ASYMC gives you a job ID
+
+1015
+00:46:26,340 --> 00:46:27,810
+that you can wait for.
+
+1016
+00:46:27,810 --> 00:46:31,800
+So if we do "call sys.wait for job"
+
+1017
+00:46:31,800 --> 00:46:36,210
+and put this ID in here, it
+should say it's succeeded.
+
+1018
+00:46:36,210 --> 00:46:38,670
+And you can actually take
+a look at all of the jobs
+
+1019
+00:46:38,670 --> 00:46:43,110
+that the system has been running
+by digging into this table,
+
+1020
+00:46:43,110 --> 00:46:45,420
+and you'll notice that
+there's this index build
+
+1021
+00:46:45,420 --> 00:46:46,560
+that we just did here.
+
+1022
+00:46:46,560 --> 00:46:48,570
+But there's also these
+analyze jobs, right?
+
+1023
+00:46:48,570 --> 00:46:49,403
+Because the system
+
+1024
+00:46:49,403 --> 00:46:52,080
+is constantly looking
+at stats in your tables
+
+1025
+00:46:52,080 --> 00:46:57,080
+to make sure that it's
+building the right query plans.
+
+1026
+00:46:57,660 --> 00:47:00,153
+But if we go and run our query gain,
+
+1027
+00:47:01,440 --> 00:47:04,500
+you'll notice that it's still
+doing a full scan, right?
+
+1028
+00:47:04,500 --> 00:47:08,220
+And this is just a little
+gotcha for you to keep in mind.
+
+1029
+00:47:08,220 --> 00:47:13,220
+Actually, I probably picked
+the wrong field here.
+
+1030
+00:47:14,460 --> 00:47:16,260
+Okay, we're using our index here,
+
+1031
+00:47:16,260 --> 00:47:18,690
+but if we picked a different ID,
+
+1032
+00:47:18,690 --> 00:47:20,160
+maybe one with fewer transactions,
+
+1033
+00:47:20,160 --> 00:47:23,460
+or if we had a smaller table,
+you may still see a full scan,
+
+1034
+00:47:23,460 --> 00:47:26,160
+because the query plan is
+actually free to choose, right?
+
+1035
+00:47:26,160 --> 00:47:28,560
+It can say, "Hey, should
+I scan this whole table?"
+
+1036
+00:47:28,560 --> 00:47:30,510
+If there's only 10 rows in it,
+
+1037
+00:47:30,510 --> 00:47:32,310
+then it might just scan the whole table.
+
+1038
+00:47:32,310 --> 00:47:34,710
+Or it's gonna take a look
+at those analyzed jobs
+
+1039
+00:47:34,710 --> 00:47:35,543
+that are running,
+
+1040
+00:47:35,543 --> 00:47:37,110
+it's gonna take a look at
+the indexes that are running
+
+1041
+00:47:37,110 --> 00:47:39,160
+and pick an efficient query plan for you.
+
+1042
+00:47:41,940 --> 00:47:44,760
+This may look very intimidating.
+
+1043
+00:47:44,760 --> 00:47:46,680
+If you're not used to reading query plans,
+
+1044
+00:47:46,680 --> 00:47:48,720
+just dump it in your favorite AI tool,
+
+1045
+00:47:48,720 --> 00:47:50,670
+and we'll do like a really good job
+
+1046
+00:47:50,670 --> 00:47:52,410
+telling you what's going on here.
+
+1047
+00:47:52,410 --> 00:47:56,070
+But I wanna quickly call
+out a couple of things here.
+
+1048
+00:47:56,070 --> 00:47:59,493
+This is using an index,
+and there is no sorting.
+
+1049
+00:48:00,690 --> 00:48:02,347
+And if we do something like
+
+1050
+00:48:02,347 --> 00:48:06,270
+"order by created at descending,"
+
+1051
+00:48:06,270 --> 00:48:08,130
+you'll see that there's still no sorting,
+
+1052
+00:48:08,130 --> 00:48:11,190
+just your eyes scan
+for memory, quick sort,
+
+1053
+00:48:11,190 --> 00:48:12,900
+anything like that, not in that list.
+
+1054
+00:48:12,900 --> 00:48:16,110
+Because we actually put the
+timestamp in the index, right?
+
+1055
+00:48:16,110 --> 00:48:18,390
+So this is gonna allow like the database
+
+1056
+00:48:18,390 --> 00:48:20,493
+to traverse the data in the right order.
+
+1057
+00:48:22,230 --> 00:48:24,450
+And what's already cool
+about create index ASYMC,
+
+1058
+00:48:24,450 --> 00:48:27,450
+'cause you can do this
+fully online at, you know,
+
+1059
+00:48:27,450 --> 00:48:29,790
+any scale you want, and
+there's never any blocking,
+
+1060
+00:48:29,790 --> 00:48:32,130
+and there's never gonna
+be any performance impact,
+
+1061
+00:48:32,130 --> 00:48:34,320
+because it's built
+completely asynchronously
+
+1062
+00:48:34,320 --> 00:48:37,293
+in the background using dedicated
+resources for your index.
+
+1063
+00:48:39,330 --> 00:48:40,163
+Now with that said,
+
+1064
+00:48:40,163 --> 00:48:45,120
+I wanna show you how we can
+scale this application out.
+
+1065
+00:48:45,120 --> 00:48:49,330
+So this could get a little messy because,
+
+1066
+00:48:54,420 --> 00:48:55,620
+you know, demo gods.
+
+1067
+00:48:55,620 --> 00:48:56,580
+So let's take a run.
+
+1068
+00:48:56,580 --> 00:49:00,368
+So this tool,
+(Raluca chuckles)
+
+1069
+00:49:00,368 --> 00:49:01,230
+(keyboard clicking)
+
+1070
+00:49:01,230 --> 00:49:03,420
+this is sustained load generator,
+
+1071
+00:49:03,420 --> 00:49:05,250
+and we're gonna tell it
+how many accounts there are
+
+1072
+00:49:05,250 --> 00:49:06,210
+in the system.
+
+1073
+00:49:06,210 --> 00:49:07,590
+There is a million.
+
+1074
+00:49:07,590 --> 00:49:09,150
+And then we're gonna give each host
+
+1075
+00:49:09,150 --> 00:49:12,450
+a target number of
+transactions per second.
+
+1076
+00:49:12,450 --> 00:49:15,420
+And what they're gonna do
+
+1077
+00:49:15,420 --> 00:49:18,090
+is you'll notice this little
+inflight counter over here,
+
+1078
+00:49:18,090 --> 00:49:22,410
+they're gonna continue to
+open batches of connections
+
+1079
+00:49:22,410 --> 00:49:27,410
+until this number on the bottom
+left gets to their target.
+
+1080
+00:49:28,860 --> 00:49:30,690
+And so with this running,
+
+1081
+00:49:30,690 --> 00:49:34,500
+we have four machines driving 4,000 TPS.
+
+1082
+00:49:34,500 --> 00:49:38,733
+And if we jump over here, we can do,
+
+1083
+00:49:40,451 --> 00:49:44,089
+(keyboard clicking)
+
+1084
+00:49:44,089 --> 00:49:45,480
+and this is actually gonna go row by row
+
+1085
+00:49:45,480 --> 00:49:47,730
+and count every transaction we have.
+
+1086
+00:49:47,730 --> 00:49:51,169
+And if I do this again,
+it's gonna be even slower.
+
+1087
+00:49:51,169 --> 00:49:53,850
+(chuckles) It's gonna go row
+by row with even more data.
+
+1088
+00:49:53,850 --> 00:49:55,923
+But this number should start ticking up.
+
+1089
+00:49:57,990 --> 00:49:59,193
+Now,
+
+1090
+00:50:00,759 --> 00:50:01,592
+(keyboard clicking)
+
+1091
+00:50:01,592 --> 00:50:04,090
+that didn't fail, so let's
+go a little bit higher.
+
+1092
+00:50:05,160 --> 00:50:08,982
+At this number, I should
+hit the account quota
+
+1093
+00:50:08,982 --> 00:50:12,513
+for Lambda, (chuckles)
+right, on my system.
+
+1094
+00:50:14,220 --> 00:50:18,900
+But pay attention to these numbers here,
+
+1095
+00:50:18,900 --> 00:50:20,133
+error and OCC.
+
+1096
+00:50:21,150 --> 00:50:23,190
+We're not getting any errors,
+
+1097
+00:50:23,190 --> 00:50:25,320
+and we're not getting any OCC errors.
+
+1098
+00:50:25,320 --> 00:50:26,220
+And the reason for that
+
+1099
+00:50:26,220 --> 00:50:29,220
+is by sort of cheating with
+the number of accounts, right,
+
+1100
+00:50:29,220 --> 00:50:31,170
+We've created more right keys.
+
+1101
+00:50:31,170 --> 00:50:32,790
+And so the probability
+
+1102
+00:50:32,790 --> 00:50:35,820
+of any of these transactions
+conflicting is low.
+
+1103
+00:50:35,820 --> 00:50:37,920
+Now this is a obviously a
+little contrived example.
+
+1104
+00:50:37,920 --> 00:50:39,450
+I didn't wanna spend too much of this talk
+
+1105
+00:50:39,450 --> 00:50:41,910
+getting into like some kind of like
+
+1106
+00:50:41,910 --> 00:50:44,193
+really complex real-world schema,
+
+1107
+00:50:45,270 --> 00:50:46,590
+but the takeaway for you
+
+1108
+00:50:46,590 --> 00:50:48,800
+is to think about designing
+your app and schemas
+
+1109
+00:50:48,800 --> 00:50:52,620
+so that you don't have what
+we call hot-for-write keys.
+
+1110
+00:50:52,620 --> 00:50:53,453
+Right?
+
+1111
+00:50:54,840 --> 00:50:59,840
+Okay, while that runs, let's
+take a quick look at pricing.
+
+1112
+00:51:01,050 --> 00:51:04,323
+If we jump on over to our cluster-
+
+1113
+00:51:08,640 --> 00:51:11,580
+- [Raluca] Can I just
+grab everyone's attention
+
+1114
+00:51:11,580 --> 00:51:16,440
+to highlight that we went
+from 1,000 concurrency to,
+
+1115
+00:51:16,440 --> 00:51:17,790
+what was it, 10,000?
+
+1116
+00:51:17,790 --> 00:51:19,110
+How much did you put in the system?
+
+1117
+00:51:19,110 --> 00:51:22,260
+- [Marc] Yeah, we're running
+at about 10,000 TPS right now.
+
+1118
+00:51:22,260 --> 00:51:25,410
+- [Raluca] And we didn't need
+to provision higher instances
+
+1119
+00:51:25,410 --> 00:51:28,920
+or more parameter groups
+
+1120
+00:51:28,920 --> 00:51:32,310
+with a higher number of connections
+allowed, or any of that.
+
+1121
+00:51:32,310 --> 00:51:36,630
+So, that's another nice thing
+to learn to bear in mind.
+
+1122
+00:51:36,630 --> 00:51:37,980
+- [Marc] Yeah.
+
+1123
+00:51:37,980 --> 00:51:40,530
+Nothing to patch, nothing
+to scale. (chuckles)
+
+1124
+00:51:40,530 --> 00:51:43,110
+Just send traffic at the
+system, it scales for you.
+
+1125
+00:51:43,110 --> 00:51:45,420
+And if you're using something
+like Lambda that can scale,
+
+1126
+00:51:45,420 --> 00:51:47,730
+then you also don't have
+to worry about the compute.
+
+1127
+00:51:47,730 --> 00:51:50,580
+So this is the, so we're
+on the cluster page,
+
+1128
+00:51:50,580 --> 00:51:52,740
+I've clicked on metrics,
+I clicked on usage,
+
+1129
+00:51:52,740 --> 00:51:54,933
+and you'll see that there are,
+
+1130
+00:51:55,830 --> 00:51:58,140
+there's really two
+metrics for you to track.
+
+1131
+00:51:58,140 --> 00:52:02,280
+There is total DPU. DPU is a
+distributed processing unit.
+
+1132
+00:52:02,280 --> 00:52:05,130
+And this is like a pay per use metric.
+
+1133
+00:52:05,130 --> 00:52:09,330
+If you're used to DynamoDB, in
+DynamoDB, you pay for rights,
+
+1134
+00:52:09,330 --> 00:52:12,057
+and you pay for reads,
+and you pay for storage.
+
+1135
+00:52:12,057 --> 00:52:15,840
+And DSQL has all three of these units too,
+
+1136
+00:52:15,840 --> 00:52:19,410
+but it also has an additional
+one which is called compute.
+
+1137
+00:52:19,410 --> 00:52:22,380
+And this is like Lambda, you're
+paying for compute seconds
+
+1138
+00:52:22,380 --> 00:52:23,850
+because we're a SQL engine, right?
+
+1139
+00:52:23,850 --> 00:52:25,560
+And so you can run these complex queries
+
+1140
+00:52:25,560 --> 00:52:27,780
+that are doing joins, that
+can be doing aggregates,
+
+1141
+00:52:27,780 --> 00:52:29,040
+you can do Fibonacci in it.
+
+1142
+00:52:29,040 --> 00:52:31,740
+And so there needs to be
+some way to track that usage.
+
+1143
+00:52:33,180 --> 00:52:37,410
+DPUs are, you can monitor
+them with CloudWatch.
+
+1144
+00:52:37,410 --> 00:52:39,160
+I've also built a little tool
+
+1145
+00:52:41,190 --> 00:52:43,833
+where if we can take this cluster ID,
+
+1146
+00:52:47,400 --> 00:52:49,050
+make sure I'm in the right place,
+
+1147
+00:52:52,740 --> 00:52:53,787
+we can paste it in here.
+
+1148
+00:52:53,787 --> 00:52:57,000
+And that's gonna go fetch
+those CloudWatch metrics,
+
+1149
+00:52:57,000 --> 00:52:59,850
+just sum up all of the data points.
+
+1150
+00:52:59,850 --> 00:53:01,740
+Run it through our pricing calculator,
+
+1151
+00:53:01,740 --> 00:53:04,683
+and you'll see that we spent $2 on DSQL.
+
+1152
+00:53:08,280 --> 00:53:11,400
+If I stop this load and
+we wait a few minutes,
+
+1153
+00:53:11,400 --> 00:53:14,670
+and we run this again, it'll
+still be $2, (chuckles) right?
+
+1154
+00:53:14,670 --> 00:53:16,590
+If we wait five minutes
+and leave the load running,
+
+1155
+00:53:16,590 --> 00:53:18,383
+it'll eventually take up to $3 or $4.
+
+1156
+00:53:19,290 --> 00:53:23,460
+I've run this workload for,
+you know, 20, 30 minutes,
+
+1157
+00:53:23,460 --> 00:53:26,490
+and I came back and it's
+running at a million TPS,
+
+1158
+00:53:26,490 --> 00:53:28,200
+and I spend $10.
+
+1159
+00:53:28,200 --> 00:53:31,380
+So this is one of the really
+cool things about DSQLs,
+
+1160
+00:53:31,380 --> 00:53:35,340
+that not only are you not
+having to provision hardware,
+
+1161
+00:53:35,340 --> 00:53:37,020
+but the database just out of the box
+
+1162
+00:53:37,020 --> 00:53:39,270
+is gonna give you this ability to scale up
+
+1163
+00:53:39,270 --> 00:53:42,560
+and pay only for what you're
+using in that moment, right?
+
+1164
+00:53:42,560 --> 00:53:45,870
+So if this load stops,
+that's it, you're done.
+
+1165
+00:53:45,870 --> 00:53:47,070
+Frozen in time.
+
+1166
+00:53:47,070 --> 00:53:50,373
+The thing that you're gonna
+continue to pay for is storage.
+
+1167
+00:53:51,690 --> 00:53:53,430
+Okay, I think we have five minutes left,
+
+1168
+00:53:53,430 --> 00:53:54,630
+so we should probably wrap it up
+
+1169
+00:53:54,630 --> 00:53:55,950
+and take any final questions.
+
+1170
+00:53:55,950 --> 00:53:57,120
+- [Raluca] I have a ten-second comments,
+
+1171
+00:53:57,120 --> 00:53:58,290
+and then the rest of questions,
+
+1172
+00:53:58,290 --> 00:53:59,123
+if there are more, we can-
+
+1173
+00:53:59,123 --> 00:54:01,560
+- [Marc] I'll be hanging
+around outside afterwards.
+
+1174
+00:54:02,850 --> 00:54:03,683
+- [Raluca] Thanks, everyone.
+
+1175
+00:54:03,683 --> 00:54:06,370
+- Please remember to fill in
+the survey for the session.
+

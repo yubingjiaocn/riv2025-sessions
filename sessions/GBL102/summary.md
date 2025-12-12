@@ -9,10 +9,9 @@ The transcript shows:
 - Everything else is marked as "(presenter speaking in foreign language)"
 
 To create a meaningful technical summary in Chinese as requested, I would need:
-- Actual spoken content or translated text
-- Specific timestamps 
-- Technical topics and key points discussed
-- Speaker names and roles
-- Concrete AWS services or solutions mentioned
+- Actual spoken content or proper subtitles with technical details
+- Specific timestamps for when topics are discussed
+- Information about the speakers and session title
+- Key technical concepts, services, or solutions presented
 
-Could you provide the actual transcript content or a version with the foreign language portions translated? This would allow me to create the comprehensive Chinese summary with proper timeline and technical details you're looking for.
+Could you provide the actual transcript content with the technical details and real timestamps? That would allow me to create the comprehensive Chinese summary you're looking for.

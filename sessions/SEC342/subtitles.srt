@@ -1,0 +1,6068 @@
+1
+00:00:00,389 --> 00:00:02,479
+OK, hi folks. Welcome
+
+2
+00:00:02,479 --> 00:00:05,158
+to session sec 342.
+
+3
+00:00:05,400 --> 00:00:06,679
+Threat modeling is code,
+
+4
+00:00:07,118 --> 00:00:09,390
+transforming your threat statements into attack trees.
+
+5
+00:00:09,550 --> 00:00:11,560
+My name's Danny. I'm a principal
+
+6
+00:00:11,560 --> 00:00:12,858
+security specialist with
+
+7
+00:00:13,118 --> 00:00:15,140
+our organization that's called AWS Industries.
+
+8
+00:00:15,398 --> 00:00:16,789
+I'm directly customer facing,
+
+9
+00:00:17,079 --> 00:00:19,399
+so I get the opportunity to work with customers
+
+10
+00:00:19,399 --> 00:00:20,239
+to understand.
+
+11
+00:00:20,589 --> 00:00:22,949
+Uh, specifically more around some of the
+
+12
+00:00:22,949 --> 00:00:24,708
+application security problems that they may be having,
+
+13
+00:00:25,208 --> 00:00:27,309
+uh, how to deploy that into the cloud, but also some
+
+14
+00:00:27,309 --> 00:00:29,350
+of the principles around application security,
+
+15
+00:00:29,629 --> 00:00:31,750
+threat modeling being one of the biggest ones that we tend to
+
+16
+00:00:31,750 --> 00:00:33,130
+talk about or that I talk about
+
+17
+00:00:33,389 --> 00:00:34,289
+with our customers.
+
+18
+00:00:34,908 --> 00:00:36,990
+I'm joined here today by Christian. Hi
+
+19
+00:00:36,990 --> 00:00:39,149
+everyone, my name is uh Christian Leo. I'm
+
+20
+00:00:39,149 --> 00:00:41,590
+a data scientist in uh AWS Security,
+
+21
+00:00:41,990 --> 00:00:44,060
+mainly specialize in compliance
+
+22
+00:00:44,060 --> 00:00:46,069
+information and building and training AI model
+
+23
+00:00:46,069 --> 00:00:46,848
+for security.
+
+24
+00:00:49,679 --> 00:00:51,118
+So, threat modeling.
+
+25
+00:00:51,978 --> 00:00:54,179
+Who here has heard of the 4
+
+26
+00:00:54,179 --> 00:00:56,179
+question frame or framework of
+
+27
+00:00:56,179 --> 00:00:56,740
+threat modeling?
+
+28
+00:00:58,000 --> 00:01:00,298
+OK, a couple of, couple of hands, so.
+
+29
+00:01:01,098 --> 00:01:03,298
+Really, when we talk about threat modeling, this was
+
+30
+00:01:03,298 --> 00:01:05,379
+a framework that was kind of coined
+
+31
+00:01:05,379 --> 00:01:07,859
+by Adam Shostack in the late 90s
+
+32
+00:01:08,019 --> 00:01:10,058
+of this mental model to help us
+
+33
+00:01:10,058 --> 00:01:12,198
+define and think about and kind of structure
+
+34
+00:01:13,299 --> 00:01:15,299
+how we how we work through the process of
+
+35
+00:01:15,299 --> 00:01:17,459
+threat modeling, and it's really comes down to four
+
+36
+00:01:17,459 --> 00:01:19,528
+questions. What are
+
+37
+00:01:19,528 --> 00:01:20,230
+we working on?
+
+38
+00:01:21,250 --> 00:01:22,150
+What can go wrong?
+
+39
+00:01:23,329 --> 00:01:24,838
+What are we gonna do about that?
+
+40
+00:01:25,260 --> 00:01:26,719
+And did we do a good enough job?
+
+41
+00:01:27,739 --> 00:01:29,859
+Now these questions, when we step through them one by
+
+42
+00:01:29,859 --> 00:01:31,980
+one, when it comes to an application, when it comes
+
+43
+00:01:31,980 --> 00:01:33,338
+to something that we're working on,
+
+44
+00:01:33,739 --> 00:01:35,198
+really helps us to define
+
+45
+00:01:36,019 --> 00:01:36,719
+risks,
+
+46
+00:01:37,338 --> 00:01:38,040
+controls,
+
+47
+00:01:38,659 --> 00:01:41,180
+and understanding the po the
+
+48
+00:01:41,180 --> 00:01:42,698
+potential threats to an application.
+
+49
+00:01:45,370 --> 00:01:46,409
+Now why do we do this?
+
+50
+00:01:46,689 --> 00:01:49,028
+OK, and when do we do this?
+
+51
+00:01:49,760 --> 00:01:52,219
+So when we think about the
+
+52
+00:01:52,760 --> 00:01:54,000
+design life cycle
+
+53
+00:01:54,439 --> 00:01:55,680
+of an application.
+
+54
+00:01:56,489 --> 00:01:57,838
+We can typically see
+
+55
+00:01:58,588 --> 00:01:59,299
+threat modeling.
+
+56
+00:02:00,528 --> 00:02:02,629
+Performed in the design phase.
+
+57
+00:02:03,250 --> 00:02:05,329
+If we do that, that means we get to identify
+
+58
+00:02:05,329 --> 00:02:07,448
+threats early, we get to iterate quickly on
+
+59
+00:02:07,448 --> 00:02:08,479
+early designs,
+
+60
+00:02:08,849 --> 00:02:10,969
+we get to do this in a way that helps us to find
+
+61
+00:02:10,969 --> 00:02:12,469
+the appropriate controls
+
+62
+00:02:12,770 --> 00:02:14,849
+to help reduce risk as we start to get to
+
+63
+00:02:14,849 --> 00:02:15,808
+the later stages.
+
+64
+00:02:16,868 --> 00:02:19,050
+We can also see this further down the pipelines as well.
+
+65
+00:02:19,508 --> 00:02:21,610
+We, the reason that we do this, even when it comes
+
+66
+00:02:21,610 --> 00:02:23,949
+to the deployment mode and even the maintenance
+
+67
+00:02:23,949 --> 00:02:26,300
+mode, is because things change, the threat landscape
+
+68
+00:02:26,300 --> 00:02:26,899
+changes.
+
+69
+00:02:27,189 --> 00:02:28,528
+You know, from one day to the next,
+
+70
+00:02:29,270 --> 00:02:31,349
+something may have happened, there may be a new vulnerability, there
+
+71
+00:02:31,349 --> 00:02:33,379
+may be a new threat actor group, there may be something
+
+72
+00:02:33,379 --> 00:02:34,969
+in place which
+
+73
+00:02:35,349 --> 00:02:37,439
+allows us to re-look at our
+
+74
+00:02:37,439 --> 00:02:39,618
+application, re-look at the threats that we orig
+
+75
+00:02:39,618 --> 00:02:41,669
+originally had defined, and then say,
+
+76
+00:02:41,710 --> 00:02:43,210
+do those things still apply,
+
+77
+00:02:43,629 --> 00:02:45,669
+given the new context, given the new information that
+
+78
+00:02:45,669 --> 00:02:46,229
+we have.
+
+79
+00:02:48,490 --> 00:02:50,490
+The reason that we try and do this as early as
+
+80
+00:02:50,490 --> 00:02:51,149
+possible
+
+81
+00:02:51,409 --> 00:02:53,868
+is because the cost of defect fixes
+
+82
+00:02:54,689 --> 00:02:56,778
+increases exponentially the further right we go.
+
+83
+00:02:57,129 --> 00:02:59,449
+So that's why it's one of the main benefits of doing it early.
+
+84
+00:02:59,729 --> 00:03:02,050
+We should be doing it often, as I said, as the threat landscape
+
+85
+00:03:02,050 --> 00:03:04,330
+changes, but the earlier we can do it,
+
+86
+00:03:04,729 --> 00:03:06,990
+the cheaper it is to add those mitigations.
+
+87
+00:03:07,819 --> 00:03:10,020
+No one wants to get to the point where they're
+
+88
+00:03:10,020 --> 00:03:12,020
+almost at the deployment phase, they're just
+
+89
+00:03:12,020 --> 00:03:13,439
+about to hit the button to production
+
+90
+00:03:13,979 --> 00:03:14,500
+and.
+
+91
+00:03:15,379 --> 00:03:17,610
+Something has happened and security says, hold on,
+
+92
+00:03:17,778 --> 00:03:19,460
+we need to, we've identified a threat.
+
+93
+00:03:20,270 --> 00:03:22,349
+This should have been fixed in the design phase, but it's not now.
+
+94
+00:03:22,429 --> 00:03:24,508
+We can't get this out into production because of
+
+95
+00:03:24,508 --> 00:03:25,409
+it's too high risk.
+
+96
+00:03:26,199 --> 00:03:27,479
+Right, so the earlier we can do that,
+
+97
+00:03:27,800 --> 00:03:30,139
+the cheaper it is from an effort perspective,
+
+98
+00:03:30,758 --> 00:03:33,179
+engineering perspective, and from a risk perspective.
+
+99
+00:03:34,719 --> 00:03:36,889
+So that's really what we mean by shift left.
+
+100
+00:03:38,990 --> 00:03:40,819
+But the reason that we do this as well
+
+101
+00:03:41,240 --> 00:03:43,399
+is because it helps us to keep pace with
+
+102
+00:03:43,399 --> 00:03:45,460
+risk. Right, we see that
+
+103
+00:03:45,719 --> 00:03:47,758
+risk goes up as you get closer
+
+104
+00:03:47,758 --> 00:03:49,758
+to production, right, as you are in production, as you are
+
+105
+00:03:49,758 --> 00:03:50,338
+in maintenance.
+
+106
+00:03:50,679 --> 00:03:52,758
+Obviously if you're in pre-production, it may not be
+
+107
+00:03:52,758 --> 00:03:54,758
+public facing yet, you may not be exposing
+
+108
+00:03:54,758 --> 00:03:56,838
+anything to users, and so therefore
+
+109
+00:03:56,838 --> 00:03:58,879
+the risk is lower. But as we get out there, as
+
+110
+00:03:58,879 --> 00:04:00,960
+we put things out on the public internet, we
+
+111
+00:04:00,960 --> 00:04:02,058
+start to see scraping
+
+112
+00:04:02,429 --> 00:04:04,439
+of live applications within
+
+113
+00:04:04,439 --> 00:04:05,000
+seconds.
+
+114
+00:04:05,500 --> 00:04:07,580
+And so we want to be able to understand that, we wanna be
+
+115
+00:04:07,580 --> 00:04:09,580
+able to have those threats in our
+
+116
+00:04:09,580 --> 00:04:11,719
+minds, have the appropriate mitigations
+
+117
+00:04:11,860 --> 00:04:13,899
+in place to help reduce that risk.
+
+118
+00:04:17,619 --> 00:04:19,619
+Now what are some of the benefits that we do this? The
+
+119
+00:04:19,619 --> 00:04:20,699
+top one is my favorite.
+
+120
+00:04:21,470 --> 00:04:23,660
+Whenever I do threat modeling workshops with customers,
+
+121
+00:04:23,988 --> 00:04:25,338
+we always bring in business,
+
+122
+00:04:25,670 --> 00:04:27,670
+we always bring in developers, and we always
+
+123
+00:04:27,670 --> 00:04:29,509
+bring in security into the same room.
+
+124
+00:04:30,569 --> 00:04:32,928
+How many times have those 3 different personas
+
+125
+00:04:32,928 --> 00:04:35,009
+been in the same room together in your organization?
+
+126
+00:04:36,439 --> 00:04:37,220
+Not that many.
+
+127
+00:04:37,548 --> 00:04:39,798
+It would be great if we could have that every single day,
+
+128
+00:04:39,899 --> 00:04:42,069
+and they could be having active participation
+
+129
+00:04:42,069 --> 00:04:44,088
+together. But actually when you
+
+130
+00:04:44,088 --> 00:04:46,129
+get to a threat modeling workshop, and you're
+
+131
+00:04:46,129 --> 00:04:47,439
+doing something on a whiteboard,
+
+132
+00:04:47,730 --> 00:04:49,850
+that allows us to start building strong relationships,
+
+133
+00:04:49,928 --> 00:04:51,309
+the business understands risk.
+
+134
+00:04:51,889 --> 00:04:54,250
+They have certain decisions or certain criteria
+
+135
+00:04:54,250 --> 00:04:56,528
+as to why things can go out into production, or
+
+136
+00:04:56,528 --> 00:04:58,170
+what risk they're willing to accept.
+
+137
+00:04:59,319 --> 00:05:01,209
+The developers understand the application,
+
+138
+00:05:01,569 --> 00:05:03,678
+they understand the code, they understand the intricacies
+
+139
+00:05:03,678 --> 00:05:04,600
+of the workload.
+
+140
+00:05:05,040 --> 00:05:07,160
+And the security understand the risks, they
+
+141
+00:05:07,160 --> 00:05:08,059
+understand the threats.
+
+142
+00:05:08,439 --> 00:05:10,459
+By combining those separate
+
+143
+00:05:10,920 --> 00:05:12,920
+and kind of unique perspectives, it gives
+
+144
+00:05:12,920 --> 00:05:14,939
+us a really powerful threat modeling activity.
+
+145
+00:05:17,230 --> 00:05:18,428
+When we run this as well,
+
+146
+00:05:18,709 --> 00:05:19,660
+we identify often
+
+147
+00:05:20,519 --> 00:05:22,548
+similar types of threats, similar types of risks,
+
+148
+00:05:22,829 --> 00:05:24,879
+and there could be controls that apply to
+
+149
+00:05:24,879 --> 00:05:25,980
+all of those things
+
+150
+00:05:26,358 --> 00:05:28,399
+that help reduce that risk. And so when we think
+
+151
+00:05:28,399 --> 00:05:30,778
+about this and when we do threat modeling and we identify
+
+152
+00:05:31,358 --> 00:05:32,738
+potential threats, there could be
+
+153
+00:05:33,199 --> 00:05:35,559
+controls that are often overlapping, let's say multi-factor
+
+154
+00:05:35,559 --> 00:05:36,379
+authentication.
+
+155
+00:05:36,720 --> 00:05:39,019
+That's gonna help us to reduce a number of
+
+156
+00:05:39,199 --> 00:05:40,778
+authentication type threats.
+
+157
+00:05:41,319 --> 00:05:41,899
+And so,
+
+158
+00:05:42,358 --> 00:05:44,439
+where we say actually, MFA is going
+
+159
+00:05:44,439 --> 00:05:45,619
+to show up on,
+
+160
+00:05:46,399 --> 00:05:48,519
+90% of the threats that we've identified, maybe
+
+161
+00:05:48,519 --> 00:05:49,278
+let's start there,
+
+162
+00:05:49,600 --> 00:05:52,019
+because that's gonna give us a good return on investment,
+
+163
+00:05:52,319 --> 00:05:53,278
+good value there.
+
+164
+00:05:55,238 --> 00:05:57,238
+It also becomes very helpful when we want to adopt new
+
+165
+00:05:57,238 --> 00:05:58,100
+technologies.
+
+166
+00:05:59,028 --> 00:06:01,588
+If we wanna adopt things like generative AI chatbots
+
+167
+00:06:01,588 --> 00:06:02,809
+into our workforce,
+
+168
+00:06:03,230 --> 00:06:04,858
+we wanna understand the threats to that.
+
+169
+00:06:05,189 --> 00:06:06,548
+What are the things that could go wrong?
+
+170
+00:06:06,910 --> 00:06:09,069
+How can we quickly allow the business
+
+171
+00:06:09,069 --> 00:06:10,850
+to adopt these new technologies, because
+
+172
+00:06:11,189 --> 00:06:13,230
+the developers, the people in that business, they want to
+
+173
+00:06:13,230 --> 00:06:14,129
+use these things.
+
+174
+00:06:14,548 --> 00:06:16,670
+So how do we, as a security organization, how
+
+175
+00:06:16,670 --> 00:06:18,420
+do we allow them to do that fast,
+
+176
+00:06:18,829 --> 00:06:20,588
+but safely and securely?
+
+177
+00:06:20,869 --> 00:06:22,410
+And threat modeling is a great way to do that.
+
+178
+00:06:24,259 --> 00:06:26,259
+And it also significantly helps us to
+
+179
+00:06:26,259 --> 00:06:27,699
+reduce review time.
+
+180
+00:06:28,480 --> 00:06:30,519
+At AWS we do threat modeling as part of
+
+181
+00:06:30,519 --> 00:06:32,559
+our application security review
+
+182
+00:06:32,559 --> 00:06:34,559
+process. We have a
+
+183
+00:06:34,559 --> 00:06:35,858
+program called the Guardian's Program,
+
+184
+00:06:36,119 --> 00:06:38,559
+which is a set of builders that are specifically
+
+185
+00:06:38,559 --> 00:06:39,858
+trained to act as
+
+186
+00:06:40,209 --> 00:06:42,459
+security advocates on their team, and they help
+
+187
+00:06:42,798 --> 00:06:44,699
+their teams do the threat modeling before
+
+188
+00:06:45,000 --> 00:06:47,160
+they get assigned an APsec engineer.
+
+189
+00:06:48,108 --> 00:06:50,269
+And what we found is that where
+
+190
+00:06:50,269 --> 00:06:51,759
+a threat model is applied,
+
+191
+00:06:52,189 --> 00:06:53,778
+and where a guardian is involved,
+
+192
+00:06:54,069 --> 00:06:56,410
+it reduces the time of an APsec review
+
+193
+00:06:56,410 --> 00:06:58,410
+by about 22, 23%.
+
+194
+00:06:58,869 --> 00:07:00,850
+That's a significant time saving.
+
+195
+00:07:01,269 --> 00:07:03,269
+And so if you and your organization are starting to
+
+196
+00:07:03,269 --> 00:07:05,269
+think about threat modeling, and you want to do
+
+197
+00:07:05,269 --> 00:07:06,048
+this early.
+
+198
+00:07:06,559 --> 00:07:08,730
+The security teams and you can go to the
+
+199
+00:07:08,730 --> 00:07:10,879
+security teams and say hey, we've done a threat model,
+
+200
+00:07:10,959 --> 00:07:12,600
+we've identified a number of threats
+
+201
+00:07:12,959 --> 00:07:14,819
+and therefore a number of mitigations
+
+202
+00:07:15,160 --> 00:07:16,178
+that's only gonna allow
+
+203
+00:07:16,600 --> 00:07:19,129
+the security team to review it faster,
+
+204
+00:07:19,600 --> 00:07:21,639
+maybe bar raise it a little bit, do
+
+205
+00:07:21,639 --> 00:07:22,500
+some, you know,
+
+206
+00:07:22,959 --> 00:07:25,160
+do some additional thinking and support and say have you
+
+207
+00:07:25,160 --> 00:07:27,199
+thought about these extra things, but really it's
+
+208
+00:07:27,199 --> 00:07:28,899
+gonna significantly reduce that time.
+
+209
+00:07:32,259 --> 00:07:33,879
+So at a high level, this is the
+
+210
+00:07:34,579 --> 00:07:36,619
+main framework that we tend to think
+
+211
+00:07:36,619 --> 00:07:38,850
+about, at least that, that I speak to customers about.
+
+212
+00:07:39,178 --> 00:07:41,009
+We've got our 4 questions, what are we building?
+
+213
+00:07:41,338 --> 00:07:43,459
+That's our scope decomposition, we
+
+214
+00:07:43,459 --> 00:07:46,059
+think about the scope, we think about our data flow diagrams.
+
+215
+00:07:47,108 --> 00:07:48,088
+What can go wrong?
+
+216
+00:07:48,509 --> 00:07:50,829
+We can think about threat intelligence input, that's really
+
+217
+00:07:50,829 --> 00:07:51,850
+important to help us
+
+218
+00:07:52,350 --> 00:07:54,230
+understand the current threats that are out there.
+
+219
+00:07:54,670 --> 00:07:56,389
+What are previous known
+
+220
+00:07:56,790 --> 00:07:57,850
+attacks from
+
+221
+00:07:58,579 --> 00:07:59,980
+advanced persistent threats
+
+222
+00:08:00,379 --> 00:08:03,290
+from other threat actor groups? What are the techniques,
+
+223
+00:08:03,509 --> 00:08:06,048
+tactics and procedures they've used
+
+224
+00:08:06,750 --> 00:08:09,369
+for certain similar types of workloads,
+
+225
+00:08:09,629 --> 00:08:11,459
+and could those things affect us?
+
+226
+00:08:12,959 --> 00:08:14,519
+We think about threat statements.
+
+227
+00:08:15,488 --> 00:08:17,528
+We'll talk about threat statements in a little bit in, in a bit
+
+228
+00:08:17,528 --> 00:08:19,869
+more detail, and we'll talk about attack trees as well.
+
+229
+00:08:21,329 --> 00:08:23,369
+And then we do the, what can we do about it, we understand
+
+230
+00:08:23,369 --> 00:08:24,160
+the risks.
+
+231
+00:08:24,569 --> 00:08:26,389
+Is this particular threat to our application
+
+232
+00:08:27,250 --> 00:08:29,369
+high risk, is it high impact? Is
+
+233
+00:08:29,369 --> 00:08:30,369
+it high likelihood?
+
+234
+00:08:30,689 --> 00:08:33,009
+And we define those things, this is where the business lens
+
+235
+00:08:33,009 --> 00:08:33,808
+comes into play.
+
+236
+00:08:34,599 --> 00:08:36,879
+Why is it risky? Why is it high risk? Is it
+
+237
+00:08:37,080 --> 00:08:39,219
+because it's going to compromise the confidentiality
+
+238
+00:08:39,440 --> 00:08:41,479
+of our data, the integrity of that data,
+
+239
+00:08:41,639 --> 00:08:43,158
+or the availability of the workload?
+
+240
+00:08:43,928 --> 00:08:45,710
+Different applications will
+
+241
+00:08:46,529 --> 00:08:48,750
+have different priorities for each of those.
+
+242
+00:08:49,168 --> 00:08:51,250
+If you're just a public facing site that
+
+243
+00:08:51,250 --> 00:08:51,788
+serves
+
+244
+00:08:52,489 --> 00:08:54,969
+content that is publicly available, maybe the confidentiality
+
+245
+00:08:54,969 --> 00:08:55,710
+is not too high,
+
+246
+00:08:56,168 --> 00:08:57,349
+but the availability is.
+
+247
+00:08:58,070 --> 00:08:59,190
+Maybe if you're healthcare,
+
+248
+00:08:59,469 --> 00:09:01,469
+then all of a sudden you're gonna err much more
+
+249
+00:09:01,469 --> 00:09:03,009
+on the side of confidentiality
+
+250
+00:09:03,389 --> 00:09:04,769
+over availability.
+
+251
+00:09:06,340 --> 00:09:08,279
+That then means we can identify controls.
+
+252
+00:09:09,070 --> 00:09:11,139
+For each of the things that we've identified that can go
+
+253
+00:09:11,139 --> 00:09:13,450
+wrong, how can we help to reduce that risk?
+
+254
+00:09:13,820 --> 00:09:15,538
+How can we bring either the impact down,
+
+255
+00:09:16,019 --> 00:09:16,899
+or the likelihood?
+
+256
+00:09:18,109 --> 00:09:20,349
+And then really importantly, we want to test the
+
+257
+00:09:20,349 --> 00:09:21,759
+effectiveness of those controls.
+
+258
+00:09:22,529 --> 00:09:24,969
+It's great to say, yes, we have this thing in place,
+
+259
+00:09:25,428 --> 00:09:26,808
+but have we actually tested it?
+
+260
+00:09:27,570 --> 00:09:29,548
+Have we gone through a penetration test, have we done
+
+261
+00:09:29,849 --> 00:09:32,250
+static testing, have we done dynamic testing
+
+262
+00:09:32,250 --> 00:09:33,109
+to confirm
+
+263
+00:09:33,609 --> 00:09:35,830
+that we think that that control
+
+264
+00:09:36,009 --> 00:09:38,080
+is sufficiently reducing the risk to
+
+265
+00:09:38,080 --> 00:09:39,369
+a level that we are happy with?
+
+266
+00:09:40,538 --> 00:09:41,259
+Super important.
+
+267
+00:09:43,840 --> 00:09:44,359
+So
+
+268
+00:09:44,639 --> 00:09:45,440
+threat statements.
+
+269
+00:09:46,359 --> 00:09:48,369
+Threat statements are a way, uh, it's, it's
+
+270
+00:09:48,369 --> 00:09:49,950
+essentially just structured grammar.
+
+271
+00:09:50,250 --> 00:09:52,408
+It's a way to write prescriptive threats,
+
+272
+00:09:52,808 --> 00:09:54,849
+to make it iterative and to make them very
+
+273
+00:09:54,849 --> 00:09:55,428
+useful.
+
+274
+00:09:55,808 --> 00:09:57,808
+And their structure really helps us
+
+275
+00:09:57,808 --> 00:09:58,428
+to define
+
+276
+00:09:58,849 --> 00:10:00,950
+things like priority, and things like impact.
+
+277
+00:10:01,899 --> 00:10:03,719
+So this is the main syntax that we'll talk through.
+
+278
+00:10:04,649 --> 00:10:05,668
+A threat source
+
+279
+00:10:06,330 --> 00:10:07,729
+with some prerequisites.
+
+280
+00:10:08,489 --> 00:10:10,460
+Can do something, some threat action,
+
+281
+00:10:10,928 --> 00:10:12,070
+that leads to some impact.
+
+282
+00:10:13,000 --> 00:10:15,038
+Which results in the reduction
+
+283
+00:10:15,038 --> 00:10:17,340
+of a required property or goal
+
+284
+00:10:17,558 --> 00:10:18,259
+of an asset.
+
+285
+00:10:19,519 --> 00:10:21,558
+Now a threat source can be an external actor, it can
+
+286
+00:10:21,558 --> 00:10:23,639
+be an internal actor, we've got different
+
+287
+00:10:23,639 --> 00:10:24,440
+threat actors there.
+
+288
+00:10:24,719 --> 00:10:26,918
+Prerequisites are just something that they need to have
+
+289
+00:10:26,918 --> 00:10:29,200
+access to. It could be someone with
+
+290
+00:10:29,200 --> 00:10:31,239
+no access, and that could be the prerequisite. Or it
+
+291
+00:10:31,239 --> 00:10:32,298
+could be someone with
+
+292
+00:10:32,599 --> 00:10:34,639
+administrative credentials, or someone with access to
+
+293
+00:10:34,639 --> 00:10:35,739
+an to the network.
+
+294
+00:10:37,119 --> 00:10:39,210
+They can go and do something that's going to impact
+
+295
+00:10:39,210 --> 00:10:40,389
+us in some way.
+
+296
+00:10:41,500 --> 00:10:43,729
+Now, as I mentioned, the applications
+
+297
+00:10:43,739 --> 00:10:44,418
+could have
+
+298
+00:10:44,739 --> 00:10:46,519
+or should have a required
+
+299
+00:10:46,779 --> 00:10:48,779
+property, like high confidentiality or high
+
+300
+00:10:48,779 --> 00:10:50,298
+availability, high integrity.
+
+301
+00:10:50,820 --> 00:10:52,940
+So when we talk about a threat that reduces that
+
+302
+00:10:52,940 --> 00:10:54,279
+thing, that's where
+
+303
+00:10:54,580 --> 00:10:55,918
+we put that into the goal,
+
+304
+00:10:56,219 --> 00:10:58,379
+and then we have an asset. Is it an S3 bucket? Is
+
+305
+00:10:58,379 --> 00:10:59,058
+it a.
+
+306
+00:10:59,750 --> 00:11:01,529
+EKS cluster, is there something else?
+
+307
+00:11:02,340 --> 00:11:04,320
+And so this syntax helps us to define,
+
+308
+00:11:04,779 --> 00:11:06,879
+allows us, the structure of it allows us to do
+
+309
+00:11:07,178 --> 00:11:08,489
+good analysis on things.
+
+310
+00:11:08,779 --> 00:11:11,139
+Right, which of these, as you start iterating
+
+311
+00:11:11,139 --> 00:11:11,658
+uh
+
+312
+00:11:12,019 --> 00:11:14,019
+these over time and time again, you can
+
+313
+00:11:14,019 --> 00:11:16,298
+say we've got 2025 threat, threat
+
+314
+00:11:16,298 --> 00:11:16,979
+statements.
+
+315
+00:11:17,259 --> 00:11:18,399
+How many of those are internal
+
+316
+00:11:18,940 --> 00:11:21,048
+threat actors, how many of those are external threat actors?
+
+317
+00:11:21,259 --> 00:11:23,298
+How many of those impact the confidentiality or the
+
+318
+00:11:23,298 --> 00:11:25,000
+integrity or the availability?
+
+319
+00:11:25,418 --> 00:11:27,580
+How many of those impact this specific critical
+
+320
+00:11:27,580 --> 00:11:28,119
+asset?
+
+321
+00:11:28,808 --> 00:11:30,808
+So having this structure makes that
+
+322
+00:11:31,009 --> 00:11:32,808
+analysis very easy to do.
+
+323
+00:11:35,450 --> 00:11:36,639
+So let's talk through an example.
+
+324
+00:11:37,639 --> 00:11:39,879
+An unauthorized user with the ability to scan
+
+325
+00:11:39,879 --> 00:11:40,918
+for open ports
+
+326
+00:11:41,239 --> 00:11:43,239
+can gain unauthorized entry to
+
+327
+00:11:43,239 --> 00:11:44,500
+the application instances.
+
+328
+00:11:45,369 --> 00:11:47,729
+Which leads to crypto mining on those instances,
+
+329
+00:11:48,288 --> 00:11:50,408
+resulting in the reduced availability of
+
+330
+00:11:50,408 --> 00:11:51,210
+the application.
+
+331
+00:11:52,538 --> 00:11:53,048
+OK,
+
+332
+00:11:53,619 --> 00:11:55,750
+so that first section is really the
+
+333
+00:11:55,750 --> 00:11:57,048
+what can go wrong, right?
+
+334
+00:11:57,469 --> 00:11:59,009
+Can gain unauthorized entry
+
+335
+00:11:59,428 --> 00:12:00,509
+to the application in instance.
+
+336
+00:12:02,479 --> 00:12:04,969
+We then have the impact side of things, which
+
+337
+00:12:04,969 --> 00:12:05,830
+leads to
+
+338
+00:12:06,139 --> 00:12:07,070
+crypto mining,
+
+339
+00:12:07,529 --> 00:12:08,428
+resulting in
+
+340
+00:12:08,690 --> 00:12:09,719
+reduced availability.
+
+341
+00:12:10,038 --> 00:12:12,330
+So that second section helps us to prioritize.
+
+342
+00:12:14,038 --> 00:12:16,210
+But what we found with threat statements
+
+343
+00:12:16,210 --> 00:12:16,750
+is
+
+344
+00:12:17,369 --> 00:12:18,428
+they can go further.
+
+345
+00:12:19,090 --> 00:12:21,469
+And we can do that in the form of attack steps.
+
+346
+00:12:21,889 --> 00:12:23,928
+And it's great, the threat statement's really great to help
+
+347
+00:12:23,928 --> 00:12:25,629
+us structures, to help us start thinking
+
+348
+00:12:25,969 --> 00:12:28,048
+about the what can go wrong, but the attack
+
+349
+00:12:28,048 --> 00:12:29,308
+steps are the how.
+
+350
+00:12:29,808 --> 00:12:31,558
+How can that thing really happen?
+
+351
+00:12:31,849 --> 00:12:34,070
+And it can happen in a number of different ways.
+
+352
+00:12:36,928 --> 00:12:39,210
+This is a set of attack steps
+
+353
+00:12:39,210 --> 00:12:40,989
+in order to get to that threat statement.
+
+354
+00:12:41,690 --> 00:12:43,908
+They perform brute forcing SSH or RDP.
+
+355
+00:12:44,489 --> 00:12:46,629
+They drop malware on the instance for local
+
+356
+00:12:46,629 --> 00:12:48,359
+privilege escalation.
+
+357
+00:12:48,808 --> 00:12:51,090
+They exfiltrate IM credentials over DNS.
+
+358
+00:12:51,769 --> 00:12:53,918
+They probe APIs with the credentials
+
+359
+00:12:53,918 --> 00:12:54,599
+that they have,
+
+360
+00:12:54,889 --> 00:12:57,168
+and they configure and create and launch
+
+361
+00:12:57,168 --> 00:12:58,330
+UEC2 instances.
+
+362
+00:12:59,029 --> 00:13:01,070
+And then they install crypto mining software
+
+363
+00:13:01,070 --> 00:13:01,808
+on top of that.
+
+364
+00:13:03,158 --> 00:13:05,558
+There could be 456
+
+365
+00:13:05,558 --> 00:13:06,379
+different other
+
+366
+00:13:06,678 --> 00:13:08,678
+ways to execute and to
+
+367
+00:13:08,678 --> 00:13:10,960
+get to the frame, the, the same threat statement.
+
+368
+00:13:12,269 --> 00:13:14,869
+And that set of different
+
+369
+00:13:14,869 --> 00:13:15,908
+attack paths
+
+370
+00:13:16,190 --> 00:13:18,389
+is ultimately what we get to for an attack
+
+371
+00:13:18,389 --> 00:13:22,239
+tree. Now,
+
+372
+00:13:22,418 --> 00:13:23,558
+attack trees are nothing new.
+
+373
+00:13:25,058 --> 00:13:27,340
+Schneier Bruce Schneier has been writing
+
+374
+00:13:27,340 --> 00:13:29,239
+about attack trees since 1999.
+
+375
+00:13:30,940 --> 00:13:33,129
+Right, as a way to provide a formal
+
+376
+00:13:33,129 --> 00:13:33,808
+and
+
+377
+00:13:35,178 --> 00:13:36,399
+excuse me, methodical way
+
+378
+00:13:36,859 --> 00:13:38,519
+of describing the security
+
+379
+00:13:38,859 --> 00:13:40,599
+based on a varying number
+
+380
+00:13:40,859 --> 00:13:42,239
+of attack paths.
+
+381
+00:13:44,099 --> 00:13:46,178
+And that's what Chris and I have really been
+
+382
+00:13:46,178 --> 00:13:46,899
+thinking about.
+
+383
+00:13:47,729 --> 00:13:49,519
+When I talk to customers about this,
+
+384
+00:13:49,928 --> 00:13:52,019
+I'm thinking, how can we go one step further, how
+
+385
+00:13:52,019 --> 00:13:52,889
+can we help them?
+
+386
+00:13:53,259 --> 00:13:55,379
+How can we help developers start thinking about this
+
+387
+00:13:55,379 --> 00:13:57,649
+thing? Developers may not necessarily
+
+388
+00:13:57,649 --> 00:13:58,889
+have the expertise
+
+389
+00:13:59,298 --> 00:14:01,418
+and the security mindset to think
+
+390
+00:14:01,418 --> 00:14:02,960
+about all the different ways
+
+391
+00:14:03,418 --> 00:14:04,918
+a threat statement can actually
+
+392
+00:14:05,178 --> 00:14:06,859
+happen across their application.
+
+393
+00:14:08,229 --> 00:14:08,989
+And so
+
+394
+00:14:09,428 --> 00:14:10,849
+we have been working on a tool.
+
+395
+00:14:12,139 --> 00:14:13,700
+That we call Threat Forest.
+
+396
+00:14:14,058 --> 00:14:16,058
+So this is going to be an open source
+
+397
+00:14:16,058 --> 00:14:18,149
+tool. This is gonna be something
+
+398
+00:14:18,149 --> 00:14:20,210
+that is available on GitHub samples
+
+399
+00:14:20,219 --> 00:14:21,440
+for everyone to go and use.
+
+400
+00:14:21,979 --> 00:14:23,500
+And what Threat Forest does
+
+401
+00:14:23,779 --> 00:14:26,019
+is it allows developers to execute this
+
+402
+00:14:26,019 --> 00:14:28,599
+on the CLI in their terminal or in their IDE.
+
+403
+00:14:29,099 --> 00:14:31,259
+It can point to a directory, and
+
+404
+00:14:31,259 --> 00:14:32,320
+it will help
+
+405
+00:14:32,700 --> 00:14:34,700
+run and create a set of threat
+
+406
+00:14:34,700 --> 00:14:36,700
+statements and attack trees
+
+407
+00:14:36,700 --> 00:14:39,109
+for them. We're
+
+408
+00:14:39,109 --> 00:14:41,009
+gonna demo this in just a minute, because
+
+409
+00:14:41,509 --> 00:14:43,548
+Chris, the brains behind the solution, is gonna
+
+410
+00:14:43,548 --> 00:14:45,590
+talk about all the science that has gone in
+
+411
+00:14:45,590 --> 00:14:47,889
+behind this. But let me, let me talk about the high level.
+
+412
+00:14:48,349 --> 00:14:49,830
+The two main phases that we have
+
+413
+00:14:50,109 --> 00:14:50,808
+our attack tree
+
+414
+00:14:51,219 --> 00:14:53,570
+generation. This is
+
+415
+00:14:53,889 --> 00:14:55,048
+gather some information.
+
+416
+00:14:55,808 --> 00:14:58,090
+Extract context from that
+
+417
+00:14:58,090 --> 00:14:59,960
+information, and start the attack tree generation,
+
+418
+00:15:00,928 --> 00:15:03,190
+and then phase two is the additional
+
+419
+00:15:03,450 --> 00:15:04,889
+threat intelligence alignment.
+
+420
+00:15:05,580 --> 00:15:07,619
+Now this really becomes important to us, because it
+
+421
+00:15:07,619 --> 00:15:08,678
+helps us understand
+
+422
+00:15:09,599 --> 00:15:11,369
+these things have happened in the past,
+
+423
+00:15:11,700 --> 00:15:13,960
+they are linked to existing and known
+
+424
+00:15:13,960 --> 00:15:15,489
+micro attack steps,
+
+425
+00:15:15,899 --> 00:15:18,330
+and so they have really good resources
+
+426
+00:15:18,330 --> 00:15:19,558
+and information associated with that.
+
+427
+00:15:20,408 --> 00:15:22,460
+Known throughout the groups that have used that sort
+
+428
+00:15:22,460 --> 00:15:23,340
+of attack step,
+
+429
+00:15:23,979 --> 00:15:26,229
+known. Mitigations and
+
+430
+00:15:26,229 --> 00:15:28,349
+controls that can help to reduce the risk of that attack
+
+431
+00:15:28,349 --> 00:15:29,239
+step from happening,
+
+432
+00:15:29,590 --> 00:15:30,750
+and so that's really phase two.
+
+433
+00:15:33,798 --> 00:15:36,038
+So diving in a little bit more, I'll let Chris
+
+434
+00:15:36,038 --> 00:15:38,279
+go through the various phases and
+
+435
+00:15:38,639 --> 00:15:40,700
+the, and the science behind this.
+
+436
+00:15:41,038 --> 00:15:41,879
+Thanks, Danny.
+
+437
+00:15:42,279 --> 00:15:44,399
+So let's zoom in on the first
+
+438
+00:15:44,399 --> 00:15:45,869
+phase, the attack 3 generation.
+
+439
+00:15:46,928 --> 00:15:49,500
+What we've built is a multi-aggentic
+
+440
+00:15:49,500 --> 00:15:51,570
+architecture that will
+
+441
+00:15:51,570 --> 00:15:53,168
+start reading your repository.
+
+442
+00:15:53,450 --> 00:15:55,629
+This repository may contain source code,
+
+443
+00:15:55,960 --> 00:15:57,450
+architecture diagram,
+
+444
+00:15:57,808 --> 00:16:00,038
+threat statements, and any piece of
+
+445
+00:16:00,038 --> 00:16:02,129
+information that will help threat forest
+
+446
+00:16:02,129 --> 00:16:03,548
+to actually automate
+
+447
+00:16:03,808 --> 00:16:05,808
+both threat modeling and the
+
+448
+00:16:05,808 --> 00:16:06,889
+regeneration.
+
+449
+00:16:07,979 --> 00:16:10,779
+So we start with an agent that
+
+450
+00:16:10,779 --> 00:16:11,418
+understands
+
+451
+00:16:11,700 --> 00:16:14,038
+the architecture of your repository.
+
+452
+00:16:14,259 --> 00:16:16,519
+It will start looking at what files exist
+
+453
+00:16:16,619 --> 00:16:17,798
+and it will guide
+
+454
+00:16:18,058 --> 00:16:19,779
+the future agents.
+
+455
+00:16:20,298 --> 00:16:22,619
+If any threat statements is provided, then
+
+456
+00:16:22,619 --> 00:16:25,178
+the parser agents will actually analyze
+
+457
+00:16:25,178 --> 00:16:27,178
+the threat statement. This can be a markdown
+
+458
+00:16:27,178 --> 00:16:29,259
+file, a PDF, or this can be actually
+
+459
+00:16:29,259 --> 00:16:31,259
+a file, an output of threat composer.
+
+460
+00:16:31,529 --> 00:16:33,580
+Threat Composer is another uh
+
+461
+00:16:33,580 --> 00:16:35,779
+CLI uh developed by AWS
+
+462
+00:16:35,779 --> 00:16:36,918
+to automate trend modeling.
+
+463
+00:16:37,690 --> 00:16:39,739
+If it's not provided, it will trigger
+
+464
+00:16:39,739 --> 00:16:41,739
+instead a specialized agent to
+
+465
+00:16:41,739 --> 00:16:43,538
+generate a threat statement file for you.
+
+466
+00:16:44,759 --> 00:16:46,769
+The second step is the content
+
+467
+00:16:46,769 --> 00:16:47,548
+extraction.
+
+468
+00:16:47,808 --> 00:16:49,889
+So once we have an understanding of what this
+
+469
+00:16:49,889 --> 00:16:51,479
+repository looks like,
+
+470
+00:16:51,759 --> 00:16:54,109
+once we have a threat statement in place,
+
+471
+00:16:54,330 --> 00:16:56,330
+then the agent will
+
+472
+00:16:56,330 --> 00:16:58,710
+start gathering the evidence required
+
+473
+00:16:58,928 --> 00:17:01,090
+to actually generate the attack
+
+474
+00:17:01,090 --> 00:17:01,690
+trees.
+
+475
+00:17:02,168 --> 00:17:04,170
+And then there is the 3rd step, which is
+
+476
+00:17:04,170 --> 00:17:05,789
+the actual attack tree generation.
+
+477
+00:17:06,439 --> 00:17:07,160
+And so
+
+478
+00:17:07,559 --> 00:17:09,920
+as a science person, I was, I wanted to
+
+479
+00:17:09,920 --> 00:17:12,219
+understand how we can leverage the
+
+480
+00:17:12,439 --> 00:17:14,039
+domain knowledge of SMEs,
+
+481
+00:17:14,318 --> 00:17:15,279
+security engineers
+
+482
+00:17:15,598 --> 00:17:17,640
+like uh Danny, like Anton
+
+483
+00:17:17,640 --> 00:17:19,848
+and other folks who contributed to develop
+
+484
+00:17:19,848 --> 00:17:20,900
+Threat Forest
+
+485
+00:17:21,209 --> 00:17:21,900
+and
+
+486
+00:17:22,279 --> 00:17:23,259
+science knowledge.
+
+487
+00:17:23,827 --> 00:17:25,968
+And so this is uh where
+
+488
+00:17:26,188 --> 00:17:27,428
+we implemented
+
+489
+00:17:27,749 --> 00:17:29,909
+a framework called DSPY.
+
+490
+00:17:30,229 --> 00:17:31,958
+DSPY claims to
+
+491
+00:17:32,288 --> 00:17:34,167
+code and not prompt so that
+
+492
+00:17:34,587 --> 00:17:37,269
+science and security engineers can collaborate
+
+493
+00:17:37,269 --> 00:17:39,628
+together to define a basic
+
+494
+00:17:39,628 --> 00:17:41,888
+prompt and then leverage science,
+
+495
+00:17:42,428 --> 00:17:44,667
+especially this novel algorithm
+
+496
+00:17:44,667 --> 00:17:47,019
+called GEPA, to
+
+497
+00:17:47,028 --> 00:17:49,298
+create optimal prompts
+
+498
+00:17:49,298 --> 00:17:50,428
+based on statistics.
+
+499
+00:17:51,009 --> 00:17:53,068
+And what GPA does is
+
+500
+00:17:53,289 --> 00:17:55,449
+using genetic Pareto, genetic
+
+501
+00:17:55,449 --> 00:17:57,598
+because it will spawn different
+
+502
+00:17:57,598 --> 00:17:59,769
+variations of prompts and
+
+503
+00:17:59,769 --> 00:18:02,078
+automatically using statistics,
+
+504
+00:18:02,088 --> 00:18:04,209
+find the optimal version. They won't
+
+505
+00:18:04,209 --> 00:18:06,289
+be stuck on a local optima, but will
+
+506
+00:18:06,289 --> 00:18:08,009
+find the very optimal version,
+
+507
+00:18:08,799 --> 00:18:11,328
+and this requires SMEs
+
+508
+00:18:11,328 --> 00:18:13,328
+to first create a first draft
+
+509
+00:18:13,328 --> 00:18:14,130
+of the prompt,
+
+510
+00:18:14,608 --> 00:18:16,689
+leverage strength agent, which
+
+511
+00:18:16,689 --> 00:18:18,848
+is energetic framework that we use in
+
+512
+00:18:18,848 --> 00:18:20,289
+production at AWS.
+
+513
+00:18:21,489 --> 00:18:23,759
+And generate traces, so
+
+514
+00:18:23,759 --> 00:18:25,949
+reasoning steps of the agent, the
+
+515
+00:18:25,949 --> 00:18:28,430
+tool executions, input and output,
+
+516
+00:18:28,640 --> 00:18:30,838
+and then have SMEs actually review
+
+517
+00:18:30,838 --> 00:18:32,930
+those traces and score them and provide
+
+518
+00:18:32,930 --> 00:18:33,979
+textual feedback
+
+519
+00:18:34,239 --> 00:18:36,049
+that then GAA will use
+
+520
+00:18:36,479 --> 00:18:37,019
+to
+
+521
+00:18:37,640 --> 00:18:39,640
+perform something called reflective prompt
+
+522
+00:18:39,640 --> 00:18:40,578
+optimization.
+
+523
+00:18:41,380 --> 00:18:43,259
+And this is an iterative step,
+
+524
+00:18:43,699 --> 00:18:45,699
+step that we took and uh
+
+525
+00:18:45,699 --> 00:18:47,759
+um we ran a bunch of times until
+
+526
+00:18:47,759 --> 00:18:49,979
+we were satisfied with the prompt.
+
+527
+00:18:50,250 --> 00:18:52,259
+The output of this is the actual final prompt.
+
+528
+00:18:52,420 --> 00:18:54,140
+They will be visible in the repository.
+
+529
+00:18:56,439 --> 00:18:58,439
+The second phase is
+
+530
+00:18:58,439 --> 00:19:00,559
+threat intelligence alignment.
+
+531
+00:19:00,989 --> 00:19:02,578
+Threat intelligence alignment
+
+532
+00:19:02,880 --> 00:19:04,920
+starts with an attack tree that we
+
+533
+00:19:04,920 --> 00:19:06,598
+generated in the previous phase,
+
+534
+00:19:07,039 --> 00:19:09,199
+and now we want to match
+
+535
+00:19:09,199 --> 00:19:11,519
+every step in the attack tree, every
+
+536
+00:19:11,519 --> 00:19:12,160
+node
+
+537
+00:19:12,640 --> 00:19:13,259
+to
+
+538
+00:19:13,759 --> 00:19:15,920
+techniques, to the TTPs, so
+
+539
+00:19:15,920 --> 00:19:18,078
+tactic techniques and procedures.
+
+540
+00:19:18,598 --> 00:19:20,578
+Uh, specifically for the first release,
+
+541
+00:19:20,880 --> 00:19:23,199
+we will be using the enterprise attack matrix
+
+542
+00:19:23,199 --> 00:19:25,949
+by Miter. Which we pre-index
+
+543
+00:19:25,949 --> 00:19:26,989
+as a graph,
+
+544
+00:19:27,368 --> 00:19:29,318
+and then an inference time,
+
+545
+00:19:29,598 --> 00:19:31,809
+once we generate every node in the
+
+546
+00:19:31,809 --> 00:19:34,150
+attack tree, we'll be able to encode
+
+547
+00:19:34,150 --> 00:19:35,029
+the node
+
+548
+00:19:35,289 --> 00:19:37,828
+and retrieve the most similar
+
+549
+00:19:37,828 --> 00:19:39,769
+attack step, technique by Miter.
+
+550
+00:19:41,160 --> 00:19:43,189
+And something important here,
+
+551
+00:19:43,309 --> 00:19:45,509
+I don't know if you're familiar with embedding models,
+
+552
+00:19:45,588 --> 00:19:47,500
+this is what we're using for the encoding,
+
+553
+00:19:47,789 --> 00:19:49,969
+but they tend to be smaller
+
+554
+00:19:50,108 --> 00:19:52,269
+than the classic LLM trained for
+
+555
+00:19:52,269 --> 00:19:52,858
+text generation.
+
+556
+00:19:53,789 --> 00:19:54,568
+And so
+
+557
+00:19:54,828 --> 00:19:57,108
+one important thing when choosing
+
+558
+00:19:57,108 --> 00:19:58,608
+the embedding model is that
+
+559
+00:19:58,868 --> 00:20:00,509
+will the embedding model have
+
+560
+00:20:00,868 --> 00:20:02,289
+knowledge about security?
+
+561
+00:20:02,670 --> 00:20:04,910
+Because something that can happen is that depending
+
+562
+00:20:04,910 --> 00:20:06,709
+on the choice of their embedding model.
+
+563
+00:20:07,000 --> 00:20:09,199
+The many model may not have been exposed on security
+
+564
+00:20:09,199 --> 00:20:11,380
+data and uh if we're asking
+
+565
+00:20:11,660 --> 00:20:13,219
+does this attack step.
+
+566
+00:20:14,519 --> 00:20:16,289
+Match a certain technique,
+
+567
+00:20:16,759 --> 00:20:18,140
+you may get a random number.
+
+568
+00:20:18,630 --> 00:20:20,759
+Why? Because the many model does
+
+569
+00:20:20,759 --> 00:20:23,000
+not know what an attack step is, or
+
+570
+00:20:23,000 --> 00:20:25,160
+you may get something very similar because it's
+
+571
+00:20:25,160 --> 00:20:27,189
+recognizing that this is a cybersecurity
+
+572
+00:20:27,189 --> 00:20:29,390
+domain. And so
+
+573
+00:20:30,289 --> 00:20:32,279
+We are using specialized
+
+574
+00:20:32,769 --> 00:20:34,348
+security embedded models.
+
+575
+00:20:34,608 --> 00:20:36,979
+Um, the default model that
+
+576
+00:20:36,979 --> 00:20:38,989
+Threat Forest provides is
+
+577
+00:20:38,989 --> 00:20:39,519
+Attackbird,
+
+578
+00:20:39,848 --> 00:20:42,338
+which is an embedded model fine-tuned
+
+579
+00:20:42,338 --> 00:20:44,689
+on the microt metrics, on
+
+580
+00:20:44,689 --> 00:20:46,269
+security data and security knowledge.
+
+581
+00:20:47,219 --> 00:20:49,309
+And to give you a comparison
+
+582
+00:20:49,900 --> 00:20:52,209
+about why the choice of the embedded
+
+583
+00:20:52,209 --> 00:20:53,799
+model is really important,
+
+584
+00:20:54,219 --> 00:20:56,459
+we created this, uh, uh, chart
+
+585
+00:20:56,459 --> 00:20:58,578
+where on the left column you can see the attack
+
+586
+00:20:58,578 --> 00:21:00,618
+step. These are attack steps that
+
+587
+00:21:00,618 --> 00:21:03,209
+will be generating during the attack 3
+
+588
+00:21:03,209 --> 00:21:04,039
+generation phase.
+
+589
+00:21:04,618 --> 00:21:06,818
+On the middle column we can see attack pair,
+
+590
+00:21:07,098 --> 00:21:09,140
+and the third column MPNET, which is
+
+591
+00:21:09,140 --> 00:21:11,269
+another embedding model for a general
+
+592
+00:21:11,269 --> 00:21:11,779
+purpose.
+
+593
+00:21:12,939 --> 00:21:15,019
+Something that you can see from the scores,
+
+594
+00:21:15,059 --> 00:21:17,059
+the similarity scores that are generated,
+
+595
+00:21:17,289 --> 00:21:19,380
+is that they are different, even
+
+596
+00:21:19,380 --> 00:21:21,420
+though we are trying to map the same attack
+
+597
+00:21:21,420 --> 00:21:21,939
+step.
+
+598
+00:21:22,299 --> 00:21:22,900
+And
+
+599
+00:21:23,219 --> 00:21:25,729
+the third column, the general purpose embedding
+
+600
+00:21:25,729 --> 00:21:28,098
+model, is less confident.
+
+601
+00:21:28,250 --> 00:21:30,380
+It tends to generate a lower
+
+602
+00:21:30,380 --> 00:21:31,479
+similarity score.
+
+603
+00:21:32,039 --> 00:21:34,568
+Whereas the attack bird is more confident
+
+604
+00:21:34,568 --> 00:21:36,920
+with its prediction, which is what we want
+
+605
+00:21:37,358 --> 00:21:39,680
+because we optimize prompts
+
+606
+00:21:39,680 --> 00:21:41,799
+of this attack 3 generator to
+
+607
+00:21:41,799 --> 00:21:44,598
+generate steps that are inspired
+
+608
+00:21:44,598 --> 00:21:46,630
+by micro-attack metrics or
+
+609
+00:21:46,630 --> 00:21:48,279
+other enterprise attack matrices.
+
+610
+00:21:50,150 --> 00:21:52,410
+And then the 3rd innovation
+
+611
+00:21:52,410 --> 00:21:54,559
+we created our own
+
+612
+00:21:54,559 --> 00:21:55,949
+local graph engine.
+
+613
+00:21:56,250 --> 00:21:58,289
+And we are representing TTPs
+
+614
+00:21:58,289 --> 00:21:59,130
+as graph
+
+615
+00:21:59,449 --> 00:22:01,449
+with the intent of in the future
+
+616
+00:22:01,449 --> 00:22:03,769
+supporting multiple TTPs
+
+617
+00:22:03,769 --> 00:22:06,150
+from spanning from Wiz, uh, Myer,
+
+618
+00:22:06,489 --> 00:22:08,529
+TTC, and so on, and merge
+
+619
+00:22:08,529 --> 00:22:10,709
+them together so that we can increase coverage.
+
+620
+00:22:10,890 --> 00:22:13,068
+And so once you want to actually
+
+621
+00:22:13,068 --> 00:22:13,670
+match
+
+622
+00:22:14,000 --> 00:22:16,328
+the your attack trees to multiple
+
+623
+00:22:16,328 --> 00:22:18,618
+mattresses, you will be able to do it,
+
+624
+00:22:18,969 --> 00:22:21,140
+considering multiple matriceses at the same time.
+
+625
+00:22:23,900 --> 00:22:25,949
+So now, then it will actually go through
+
+626
+00:22:25,949 --> 00:22:28,180
+a practical example using Thread
+
+627
+00:22:28,180 --> 00:22:29,328
+Forest CLI, OK.
+
+628
+00:22:30,769 --> 00:22:32,750
+We're gonna pray to the demo gods
+
+629
+00:22:33,009 --> 00:22:35,160
+and see if this works. I'm gonna need your fingerprints, sir,
+
+630
+00:22:35,239 --> 00:22:36,068
+to unlock your laptop.
+
+631
+00:22:37,180 --> 00:22:38,160
+Thank you very much, OK,
+
+632
+00:22:38,420 --> 00:22:41,239
+so. I
+
+633
+00:22:41,239 --> 00:22:42,160
+press this button.
+
+634
+00:22:42,420 --> 00:22:43,180
+OK.
+
+635
+00:22:43,969 --> 00:22:44,769
+It's a little
+
+636
+00:22:45,078 --> 00:22:46,939
+off, but that should be OK. Right,
+
+637
+00:22:47,199 --> 00:22:48,420
+so we're gonna run,
+
+638
+00:22:49,000 --> 00:22:51,118
+first thing we're gonna do is we're gonna run through our forest. OK, so
+
+639
+00:22:51,118 --> 00:22:52,009
+this is CLI
+
+640
+00:22:52,439 --> 00:22:54,598
+tool that we have here, it's going to
+
+641
+00:22:54,598 --> 00:22:56,640
+set this up and we're actually gonna start this from
+
+642
+00:22:56,640 --> 00:22:58,660
+scratch, OK, so you can see
+
+643
+00:22:59,118 --> 00:23:00,539
+the end to end process.
+
+644
+00:23:01,078 --> 00:23:02,640
+So the first step is
+
+645
+00:23:03,118 --> 00:23:04,640
+credential configuring, OK?
+
+646
+00:23:05,000 --> 00:23:07,049
+So when we do this, we're gonna,
+
+647
+00:23:07,118 --> 00:23:09,219
+we. At the moment for our
+
+648
+00:23:09,219 --> 00:23:11,578
+initial release, we support Bedrock.
+
+649
+00:23:12,059 --> 00:23:13,299
+We are going to support
+
+650
+00:23:13,578 --> 00:23:15,838
+other LLM providers, Anthropic,
+
+651
+00:23:16,029 --> 00:23:16,699
+Gemini,
+
+652
+00:23:17,059 --> 00:23:19,059
+a bring your own API key type
+
+653
+00:23:19,059 --> 00:23:21,098
+scenario, but for now we're gonna use Bedrock and we're gonna do
+
+654
+00:23:21,098 --> 00:23:22,750
+that with an AWS profile.
+
+655
+00:23:23,368 --> 00:23:25,618
+So, we're gonna choose our API
+
+656
+00:23:25,618 --> 00:23:26,239
+provider.
+
+657
+00:23:27,640 --> 00:23:29,469
+I'm going to hit Bedrock,
+
+658
+00:23:29,779 --> 00:23:31,318
+uh, we're going to choose a model.
+
+659
+00:23:31,939 --> 00:23:33,969
+So our suggestions at the moment are to
+
+660
+00:23:33,969 --> 00:23:36,160
+use something like Haiku for speed
+
+661
+00:23:36,338 --> 00:23:38,949
+or Sonic 4.5 for accuracy.
+
+662
+00:23:39,380 --> 00:23:40,799
+Opus gives us
+
+663
+00:23:41,500 --> 00:23:43,539
+more confidence and better structure,
+
+664
+00:23:43,699 --> 00:23:45,719
+but it just takes a little bit more time as well.
+
+665
+00:23:46,380 --> 00:23:48,459
+So I'm gonna go ahead and go for
+
+666
+00:23:48,459 --> 00:23:49,479
+speed for today.
+
+667
+00:23:49,858 --> 00:23:50,900
+I'm gonna go with Haiku.
+
+668
+00:23:51,229 --> 00:23:53,598
+And then I'm gonna use an AWS profile.
+
+669
+00:23:57,660 --> 00:23:59,039
+I can type correctly,
+
+670
+00:23:59,410 --> 00:24:01,410
+I'm gonna run this in East one, and the first
+
+671
+00:24:01,410 --> 00:24:03,848
+thing it's gonna do is it's gonna actually test our connection, just to validate
+
+672
+00:24:03,848 --> 00:24:05,868
+that it can access the,
+
+673
+00:24:06,009 --> 00:24:08,170
+the. Bedrock service,
+
+674
+00:24:08,430 --> 00:24:09,989
+and it can access that model.
+
+675
+00:24:10,959 --> 00:24:12,959
+So then what we have is
+
+676
+00:24:12,959 --> 00:24:14,719
+our first step, which is to generate
+
+677
+00:24:15,049 --> 00:24:17,160
+a well our kind of main workflow, which is to
+
+678
+00:24:17,160 --> 00:24:18,799
+generate attack trees and analysis.
+
+679
+00:24:19,160 --> 00:24:21,420
+And so in order to do this, it's gonna kind of take us through.
+
+680
+00:24:21,939 --> 00:24:24,088
+But we can see here on the configuration, which is
+
+681
+00:24:24,088 --> 00:24:25,779
+just the YAML file that gets created,
+
+682
+00:24:26,049 --> 00:24:27,789
+that we can, we can see the bedrock
+
+683
+00:24:28,209 --> 00:24:30,588
+provider, we can see the model ID, we can see the region,
+
+684
+00:24:30,930 --> 00:24:32,469
+we can see the profile that we're using,
+
+685
+00:24:32,848 --> 00:24:34,108
+we can see the embeddings model
+
+686
+00:24:34,489 --> 00:24:36,489
+that Chris spoke about, and we can also
+
+687
+00:24:36,489 --> 00:24:37,828
+see the TTP threshold.
+
+688
+00:24:38,130 --> 00:24:40,209
+And so this is the, this is the threshold
+
+689
+00:24:40,209 --> 00:24:42,719
+at which it will do that matching. So if it's
+
+690
+00:24:42,719 --> 00:24:45,059
+confidence score is above 30%
+
+691
+00:24:45,059 --> 00:24:47,170
+or 0.3, then it will map
+
+692
+00:24:47,170 --> 00:24:49,660
+that to a relevant uh TTP
+
+693
+00:24:49,769 --> 00:24:51,068
+from the microtack framework.
+
+694
+00:24:51,719 --> 00:24:52,578
+This is configurable.
+
+695
+00:24:52,920 --> 00:24:54,949
+If you want, you can say actually I only want ones
+
+696
+00:24:54,949 --> 00:24:56,439
+with really high confidence scores,
+
+697
+00:24:56,769 --> 00:24:57,539
+only map
+
+698
+00:24:58,160 --> 00:25:00,799
+attack steps to MITA if it's an 80%
+
+699
+00:25:00,799 --> 00:25:02,838
+or or above, you can, you can go and
+
+700
+00:25:02,838 --> 00:25:05,039
+actually configure that. But we're gonna keep that as
+
+701
+00:25:05,039 --> 00:25:06,279
+the default setting for now.
+
+702
+00:25:07,400 --> 00:25:08,160
+And so
+
+703
+00:25:09,029 --> 00:25:11,150
+What we do here is choose a
+
+704
+00:25:11,150 --> 00:25:12,269
+directory, OK?
+
+705
+00:25:12,588 --> 00:25:14,750
+Now, one thing that we have in this
+
+706
+00:25:14,750 --> 00:25:16,289
+is, or one thing that we recommend,
+
+707
+00:25:16,880 --> 00:25:18,979
+and the documentation as well that's that's in
+
+708
+00:25:18,979 --> 00:25:20,809
+the GitHub repository talks about
+
+709
+00:25:21,199 --> 00:25:22,689
+your preparing your project.
+
+710
+00:25:23,650 --> 00:25:24,789
+This is really important.
+
+711
+00:25:25,939 --> 00:25:27,618
+Having good documentation.
+
+712
+00:25:29,000 --> 00:25:29,750
+The more
+
+713
+00:25:30,009 --> 00:25:32,318
+good information we can give Threat
+
+714
+00:25:32,318 --> 00:25:33,430
+Forest about
+
+715
+00:25:34,009 --> 00:25:35,920
+the application, what it does,
+
+716
+00:25:36,250 --> 00:25:37,750
+what kind of things it serves,
+
+717
+00:25:38,049 --> 00:25:39,430
+what its objective is,
+
+718
+00:25:39,930 --> 00:25:42,049
+is it a healthcare application that's
+
+719
+00:25:42,049 --> 00:25:44,170
+going to be public facing and containing
+
+720
+00:25:44,170 --> 00:25:46,279
+super high sensitive patient information,
+
+721
+00:25:46,568 --> 00:25:47,588
+or is it a
+
+722
+00:25:48,368 --> 00:25:49,868
+static web page
+
+723
+00:25:50,250 --> 00:25:52,479
+that is going to serve, you know, just static content.
+
+724
+00:25:52,989 --> 00:25:55,029
+The more context you can give it
+
+725
+00:25:55,029 --> 00:25:56,559
+about the application,
+
+726
+00:25:56,828 --> 00:25:57,630
+as part of your,
+
+727
+00:25:58,029 --> 00:26:00,150
+in your directory, right, and this is gonna be local
+
+728
+00:26:00,150 --> 00:26:02,809
+files, things like PDFs, MD files,
+
+729
+00:26:03,390 --> 00:26:04,410
+images,
+
+730
+00:26:04,989 --> 00:26:06,608
+anything like that, so it's multimodal.
+
+731
+00:26:07,108 --> 00:26:09,189
+The more you can give it, the better the
+
+732
+00:26:09,189 --> 00:26:10,358
+output is going to be.
+
+733
+00:26:11,098 --> 00:26:13,420
+I'm sure we've heard this a number of times when interacting
+
+734
+00:26:13,420 --> 00:26:15,318
+with AI context is king.
+
+735
+00:26:15,640 --> 00:26:17,699
+It's very, very important to, to give
+
+736
+00:26:17,699 --> 00:26:19,939
+it good context, because you're gonna get
+
+737
+00:26:19,939 --> 00:26:21,160
+more accurate results.
+
+738
+00:26:21,660 --> 00:26:24,059
+Yes, you can absolutely have no documentation
+
+739
+00:26:24,059 --> 00:26:24,858
+or very little.
+
+740
+00:26:25,259 --> 00:26:27,338
+It will still go through this process,
+
+741
+00:26:27,578 --> 00:26:29,979
+but it will just give you more generic outputs
+
+742
+00:26:29,979 --> 00:26:31,979
+because it doesn't understand the application as
+
+743
+00:26:31,979 --> 00:26:34,019
+well. So, um
+
+744
+00:26:34,019 --> 00:26:36,170
+I'm gonna go over in the GitHub,
+
+745
+00:26:36,219 --> 00:26:38,500
+we're gonna have a number of sample
+
+746
+00:26:38,500 --> 00:26:40,660
+applications that you're gonna have an opportunity to play around
+
+747
+00:26:40,660 --> 00:26:42,759
+with. So in this case, this is actually,
+
+748
+00:26:42,818 --> 00:26:44,318
+uh, we're actually using the
+
+749
+00:26:44,868 --> 00:26:45,959
+threat composer file.
+
+750
+00:26:46,489 --> 00:26:48,608
+So Chris mentioned Threat Composer. Threat Composer
+
+751
+00:26:48,608 --> 00:26:50,729
+is an open source tool as well that we've
+
+752
+00:26:50,729 --> 00:26:53,088
+created to help you document your threat models, and
+
+753
+00:26:53,088 --> 00:26:55,449
+what this has is, what this does, it's got some
+
+754
+00:26:55,449 --> 00:26:57,489
+application information, uh, we've got a connected
+
+755
+00:26:57,489 --> 00:26:59,848
+vehicle solution here, we've got an architecture diagram,
+
+756
+00:26:59,890 --> 00:27:01,199
+we've got data flows,
+
+757
+00:27:01,529 --> 00:27:03,568
+uh, we've got assumptions, we've got an existing
+
+758
+00:27:03,568 --> 00:27:05,068
+set of threat statements.
+
+759
+00:27:05,489 --> 00:27:07,568
+We've also got a, a kind of another version of
+
+760
+00:27:07,568 --> 00:27:08,848
+this data flow diagram here.
+
+761
+00:27:09,509 --> 00:27:11,469
+Now this is something that you as a developer
+
+762
+00:27:11,789 --> 00:27:14,049
+can use day to day. This is using
+
+763
+00:27:14,049 --> 00:27:16,068
+the AWS toolkit extension in Visual
+
+764
+00:27:16,068 --> 00:27:16,900
+Studio code.
+
+765
+00:27:17,229 --> 00:27:19,250
+You can go in and interactively modify
+
+766
+00:27:19,588 --> 00:27:21,588
+um any of these threats. You can go create new
+
+767
+00:27:21,588 --> 00:27:23,789
+ones, and you can iterate on this directly
+
+768
+00:27:23,789 --> 00:27:25,949
+in your IDE. You can then commit this and it just
+
+769
+00:27:25,949 --> 00:27:28,500
+lives as a living threat model in
+
+770
+00:27:28,500 --> 00:27:30,858
+your, in your in your project repository,
+
+771
+00:27:30,910 --> 00:27:32,979
+and it can save in GitHub, you'll have,
+
+772
+00:27:32,989 --> 00:27:34,049
+uh, you know, the commit history
+
+773
+00:27:34,348 --> 00:27:35,509
+a part as part of that.
+
+774
+00:27:36,039 --> 00:27:38,118
+So we're actually gonna go ahead and use this,
+
+775
+00:27:38,199 --> 00:27:40,000
+so I'm just going to grab
+
+776
+00:27:40,318 --> 00:27:42,299
+this path, I'm gonna paste it in here.
+
+777
+00:27:43,949 --> 00:27:45,949
+And then the next question that Threat Forest is going to ask
+
+778
+00:27:45,949 --> 00:27:47,828
+you is, do you have existing threat statements?
+
+779
+00:27:48,229 --> 00:27:49,880
+OK. If so,
+
+780
+00:27:50,420 --> 00:27:52,420
+we'll, if so press yes and we'll continue on.
+
+781
+00:27:52,539 --> 00:27:53,318
+If not,
+
+782
+00:27:53,779 --> 00:27:55,779
+what Threat Forest does is it will generate
+
+783
+00:27:55,779 --> 00:27:58,318
+threat statements on your behalf in the same syntax
+
+784
+00:27:58,318 --> 00:28:00,920
+that we spoke about. And again, that syntax
+
+785
+00:28:00,920 --> 00:28:02,000
+is so important
+
+786
+00:28:02,578 --> 00:28:05,140
+to allow something like a model to
+
+787
+00:28:05,140 --> 00:28:05,900
+understand that syntax,
+
+788
+00:28:06,259 --> 00:28:07,489
+understand why it's important,
+
+789
+00:28:07,818 --> 00:28:09,818
+and then use that syntax
+
+790
+00:28:09,818 --> 00:28:11,890
+to create the threat statements, right, in,
+
+791
+00:28:11,939 --> 00:28:14,259
+in a way that becomes easier to analyze.
+
+792
+00:28:15,049 --> 00:28:17,489
+So I'm gonna go ahead and say yes because we actually have
+
+793
+00:28:17,858 --> 00:28:20,209
+our threat composer file, so I can just
+
+794
+00:28:20,209 --> 00:28:22,328
+copy the link to that file path
+
+795
+00:28:22,328 --> 00:28:24,368
+here. And again, because it's threat
+
+796
+00:28:24,368 --> 00:28:26,059
+composer, it just saves it as a JSON JSON format.
+
+797
+00:28:28,848 --> 00:28:30,930
+And then we are ready to go, so we are
+
+798
+00:28:30,930 --> 00:28:32,809
+going to review the configuration very quickly,
+
+799
+00:28:33,279 --> 00:28:35,368
+and we've got our full mode project threat
+
+800
+00:28:35,368 --> 00:28:37,410
+model, it's gonna generate the attack trees, it's gonna
+
+801
+00:28:37,410 --> 00:28:39,469
+enrich with micro attack map mappings
+
+802
+00:28:39,689 --> 00:28:41,729
+and add the mitigation recommendations. So I'm gonna go
+
+803
+00:28:41,729 --> 00:28:43,269
+ahead and say yes.
+
+804
+00:28:43,809 --> 00:28:44,949
+And so while this is working,
+
+805
+00:28:45,328 --> 00:28:47,410
+and hopefully it will go fairly quickly, and
+
+806
+00:28:47,410 --> 00:28:49,410
+what we'll see is we'll see how this
+
+807
+00:28:49,410 --> 00:28:51,410
+iterates through, we'll see the stages
+
+808
+00:28:51,689 --> 00:28:52,489
+that it's going through.
+
+809
+00:28:53,088 --> 00:28:54,469
+So the first one is actually looking at
+
+810
+00:28:55,209 --> 00:28:57,410
+threat composer file. It's quite a large file.
+
+811
+00:28:57,650 --> 00:28:59,689
+Um, we're trying to, we've, this is where we've got the
+
+812
+00:28:59,689 --> 00:29:01,799
+passer agents that Chris has mentioned,
+
+813
+00:29:01,809 --> 00:29:03,809
+where we, where we use that passer agent
+
+814
+00:29:03,809 --> 00:29:05,848
+to look through the file to only get some
+
+815
+00:29:05,848 --> 00:29:08,000
+of the specific things that it needs out of that. So
+
+816
+00:29:08,000 --> 00:29:10,670
+in this case, the first thing it's doing is looking for the threat statements.
+
+817
+00:29:11,328 --> 00:29:13,449
+So we can see here it's extracted 11
+
+818
+00:29:13,449 --> 00:29:15,529
+threats, 6 of those are high, 5
+
+819
+00:29:15,529 --> 00:29:16,338
+of those are medium.
+
+820
+00:29:16,608 --> 00:29:17,959
+Right, we can actually go,
+
+821
+00:29:18,368 --> 00:29:20,449
+go back into threat compose on the dashboard and we
+
+822
+00:29:20,449 --> 00:29:22,049
+can see, uh, the same thing.
+
+823
+00:29:23,229 --> 00:29:25,309
+Or high, medium and lows, right, so 11 threats,
+
+824
+00:29:25,348 --> 00:29:27,469
+6 high and and 5 high, high,
+
+825
+00:29:27,549 --> 00:29:28,368
+medium or lows.
+
+826
+00:29:29,689 --> 00:29:31,509
+Now the next thing it's doing is going to then.
+
+827
+00:29:32,469 --> 00:29:34,809
+Have our reposit repository analysis
+
+828
+00:29:34,809 --> 00:29:36,828
+agent look through that repository to get
+
+829
+00:29:36,828 --> 00:29:37,588
+the context.
+
+830
+00:29:37,868 --> 00:29:40,009
+So it's got some threat statements, it's going to look through
+
+831
+00:29:40,009 --> 00:29:41,068
+the files,
+
+832
+00:29:41,348 --> 00:29:43,410
+also look through the threat composer file as well,
+
+833
+00:29:43,568 --> 00:29:44,750
+for that additional context,
+
+834
+00:29:45,019 --> 00:29:47,108
+and it's going to start generating the attack
+
+835
+00:29:47,108 --> 00:29:48,318
+trees for us.
+
+836
+00:29:55,219 --> 00:29:56,559
+If you want, in the meantime,
+
+837
+00:29:56,828 --> 00:29:58,939
+um, we can actually look at logs.
+
+838
+00:29:59,269 --> 00:30:01,309
+So in here we can see two types, two
+
+839
+00:30:01,309 --> 00:30:03,309
+different types of logs, so we can see how things
+
+840
+00:30:03,309 --> 00:30:03,949
+are going,
+
+841
+00:30:04,269 --> 00:30:06,670
+and we can see that it's discovered in a series of files,
+
+842
+00:30:06,910 --> 00:30:09,068
+it's got our threat model file, it's going to
+
+843
+00:30:09,068 --> 00:30:09,699
+look through the,
+
+844
+00:30:10,348 --> 00:30:12,130
+uh, identify the model provider,
+
+845
+00:30:12,588 --> 00:30:14,630
+generate a number of threats, and extract
+
+846
+00:30:14,630 --> 00:30:17,250
+the high priority ones, and also look at strands
+
+847
+00:30:17,469 --> 00:30:19,469
+to take a look at what strands is helping
+
+848
+00:30:19,469 --> 00:30:21,390
+us do as part of the orchestration.
+
+849
+00:30:24,880 --> 00:30:27,318
+So as we do this, the repository
+
+850
+00:30:27,318 --> 00:30:30,029
+analysis agent has identified 12 different technologies.
+
+851
+00:30:30,439 --> 00:30:32,469
+Lambda, API gateway, Dynamo DB
+
+852
+00:30:32,469 --> 00:30:34,559
+has done this using the threat composer file
+
+853
+00:30:34,680 --> 00:30:36,029
+and that architecture diagram.
+
+854
+00:30:36,489 --> 00:30:38,799
+It's found 10 main
+
+855
+00:30:38,799 --> 00:30:40,880
+data assets, so things like S3 buckets,
+
+856
+00:30:41,000 --> 00:30:42,078
+EBS volumes,
+
+857
+00:30:42,358 --> 00:30:44,709
+and 8 possible entry points.
+
+858
+00:30:45,199 --> 00:30:47,368
+And so it's using that now to actually generate
+
+859
+00:30:47,828 --> 00:30:48,900
+the attack steps.
+
+860
+00:30:49,739 --> 00:30:51,858
+So as it goes through each of those different threats, so
+
+861
+00:30:51,858 --> 00:30:52,689
+the 6 high,
+
+862
+00:30:52,979 --> 00:30:54,979
+high severity ones, the next step is
+
+863
+00:30:54,979 --> 00:30:55,818
+then the mapping.
+
+864
+00:30:56,219 --> 00:30:57,890
+And this is where the embeddings model come in.
+
+865
+00:30:58,420 --> 00:31:00,680
+We've got the attack steps in their raw format.
+
+866
+00:31:01,219 --> 00:31:02,420
+It's now going to
+
+867
+00:31:02,739 --> 00:31:04,818
+go through each of the nodes in
+
+868
+00:31:04,818 --> 00:31:06,858
+that attack step and map it
+
+869
+00:31:06,858 --> 00:31:07,880
+to the embeddings model,
+
+870
+00:31:08,338 --> 00:31:09,680
+the attack boat embeddings model
+
+871
+00:31:09,939 --> 00:31:11,140
+that is stored locally.
+
+872
+00:31:11,838 --> 00:31:13,880
+And so it's going to map each one of these, and
+
+873
+00:31:13,880 --> 00:31:15,920
+then it's going to, to generate the, the final
+
+874
+00:31:15,920 --> 00:31:18,140
+output for us. So you can see that it's going
+
+875
+00:31:18,140 --> 00:31:18,739
+through that,
+
+876
+00:31:19,318 --> 00:31:21,358
+and then we can see what it does is
+
+877
+00:31:21,358 --> 00:31:23,519
+it creates a nice visual
+
+878
+00:31:23,519 --> 00:31:25,640
+dashboard for us, and it opens this up for
+
+879
+00:31:25,640 --> 00:31:26,660
+us, OK?
+
+880
+00:31:27,118 --> 00:31:28,979
+So we have, again, our exact summary.
+
+881
+00:31:29,759 --> 00:31:31,779
+11 total threats, 6 of which are high,
+
+882
+00:31:31,949 --> 00:31:33,949
+6 attack trees, 113 total
+
+883
+00:31:33,949 --> 00:31:34,608
+nodes.
+
+884
+00:31:35,269 --> 00:31:37,430
+The repository analysis agent gives us our
+
+885
+00:31:37,430 --> 00:31:39,469
+project information summary here. It's a connected
+
+886
+00:31:39,469 --> 00:31:40,289
+vehicle solution.
+
+887
+00:31:40,910 --> 00:31:42,989
+It's a server architecture type, it runs on
+
+888
+00:31:42,989 --> 00:31:43,890
+AWS.
+
+889
+00:31:44,430 --> 00:31:46,650
+It's extracted the industry sector,
+
+890
+00:31:46,828 --> 00:31:48,828
+and we've got a number of technology stacks in there
+
+891
+00:31:48,828 --> 00:31:50,858
+as well. And now
+
+892
+00:31:50,858 --> 00:31:53,059
+for the fun part, we have our high severity threats.
+
+893
+00:31:53,299 --> 00:31:54,939
+So each of these threat statements,
+
+894
+00:31:55,299 --> 00:31:57,539
+if you can see this, maybe I'll uh zoom
+
+895
+00:31:57,539 --> 00:31:58,118
+in
+
+896
+00:31:58,729 --> 00:31:59,598
+a little bit.
+
+897
+00:32:00,598 --> 00:32:02,660
+Each of these threat statements have come from the
+
+898
+00:32:02,660 --> 00:32:03,598
+threat composer file,
+
+899
+00:32:03,890 --> 00:32:05,078
+so we can see that syntax.
+
+900
+00:32:05,358 --> 00:32:07,439
+An internal actor with access to
+
+901
+00:32:07,439 --> 00:32:09,500
+the AWS to the AWS account
+
+902
+00:32:09,680 --> 00:32:11,539
+can deploy a lambda function that will use
+
+903
+00:32:11,799 --> 00:32:13,000
+existing execution role,
+
+904
+00:32:13,318 --> 00:32:15,338
+leads to unauthorized access to sensitive data,
+
+905
+00:32:15,739 --> 00:32:17,920
+resulting in reduced confidentiality of registration
+
+906
+00:32:17,920 --> 00:32:18,618
+status.
+
+907
+00:32:18,949 --> 00:32:19,818
+OK, so another
+
+908
+00:32:21,108 --> 00:32:22,920
+another threat statement using that syntax.
+
+909
+00:32:23,920 --> 00:32:26,449
+And then we can actually go in and view our attack trees.
+
+910
+00:32:26,880 --> 00:32:29,039
+So, for each of these threats.
+
+911
+00:32:29,709 --> 00:32:32,130
+Oh, I've zoomed out too far.
+
+912
+00:32:34,509 --> 00:32:35,670
+Let me zoom in a little bit.
+
+913
+00:32:40,660 --> 00:32:42,559
+OK, there we go.
+
+914
+00:32:42,920 --> 00:32:43,799
+So we can see
+
+915
+00:32:44,338 --> 00:32:46,469
+this is where the interesting stuff happens,
+
+916
+00:32:46,818 --> 00:32:47,469
+right, we can,
+
+917
+00:32:47,739 --> 00:32:49,739
+our attack tree gives us a start
+
+918
+00:32:49,739 --> 00:32:51,920
+point, which is our internal actor
+
+919
+00:32:51,920 --> 00:32:53,818
+with AWS account access
+
+920
+00:32:54,140 --> 00:32:56,358
+that has been extracted from the threat statement.
+
+921
+00:32:57,500 --> 00:32:59,729
+We then get down to a number of different
+
+922
+00:32:59,729 --> 00:33:00,489
+ways
+
+923
+00:33:00,848 --> 00:33:01,750
+in order.
+
+924
+00:33:02,479 --> 00:33:03,269
+Let me just
+
+925
+00:33:04,630 --> 00:33:06,670
+Zoom out for a minute, in order to get to our
+
+926
+00:33:06,670 --> 00:33:07,269
+goal,
+
+927
+00:33:07,670 --> 00:33:09,479
+and our goal down here at the bottom
+
+928
+00:33:09,750 --> 00:33:11,818
+is confidentiality breach of
+
+929
+00:33:11,818 --> 00:33:13,130
+the registration status.
+
+930
+00:33:13,670 --> 00:33:15,848
+Now, from a visual perspective, we can see
+
+931
+00:33:16,390 --> 00:33:18,549
+that there's a number of different flows in order
+
+932
+00:33:18,549 --> 00:33:19,549
+to achieve this.
+
+933
+00:33:19,880 --> 00:33:21,269
+Right, there's a number of different steps,
+
+934
+00:33:21,549 --> 00:33:23,709
+attack paths, in order to
+
+935
+00:33:23,709 --> 00:33:24,729
+get from
+
+936
+00:33:25,108 --> 00:33:26,828
+our initial objective.
+
+937
+00:33:27,578 --> 00:33:28,910
+Down to our goal,
+
+938
+00:33:29,299 --> 00:33:31,019
+and we can click on each one of these nodes
+
+939
+00:33:31,380 --> 00:33:33,618
+to look at what it's trying to do. So we've got reconnaissance,
+
+940
+00:33:33,739 --> 00:33:36,019
+so it's looking at existing lambda execution
+
+941
+00:33:36,019 --> 00:33:36,568
+roles,
+
+942
+00:33:36,979 --> 00:33:39,009
+identify sensitive data locations.
+
+943
+00:33:39,338 --> 00:33:41,500
+If we follow this one down, it's going to enumerate
+
+944
+00:33:41,500 --> 00:33:43,368
+I am roles with excessive permissions,
+
+945
+00:33:43,699 --> 00:33:45,640
+identify lambda execution role,
+
+946
+00:33:46,019 --> 00:33:48,358
+and, and each one of these, right, we've got
+
+947
+00:33:48,779 --> 00:33:50,858
+deploying malicious lambda functions, and so the point of
+
+948
+00:33:50,858 --> 00:33:51,650
+this is,
+
+949
+00:33:52,019 --> 00:33:53,939
+is that we've gone from a
+
+950
+00:33:54,338 --> 00:33:56,380
+fairly broad, high level threat
+
+951
+00:33:56,380 --> 00:33:58,150
+statement. Which is
+
+952
+00:33:58,719 --> 00:34:00,618
+something bad can happen with the lambda function
+
+953
+00:34:00,900 --> 00:34:03,239
+to a very specific
+
+954
+00:34:03,239 --> 00:34:05,439
+targeted steps of how that
+
+955
+00:34:05,439 --> 00:34:06,259
+thing can actually
+
+956
+00:34:06,640 --> 00:34:09,119
+get executed across our across our workload.
+
+957
+00:34:09,938 --> 00:34:12,019
+Which then means we can map that to MITA,
+
+958
+00:34:12,250 --> 00:34:14,300
+so we can see here, uh, this particular
+
+959
+00:34:14,300 --> 00:34:15,159
+one is
+
+960
+00:34:15,458 --> 00:34:17,659
+42% confident that it's mapped
+
+961
+00:34:17,659 --> 00:34:19,208
+to this one. Now obviously,
+
+962
+00:34:19,579 --> 00:34:21,898
+it's trying its best, right, as we get
+
+963
+00:34:21,898 --> 00:34:22,478
+more,
+
+964
+00:34:23,099 --> 00:34:25,688
+as we get, as we have more data that we're consuming,
+
+965
+00:34:25,860 --> 00:34:27,978
+we can start to see this, you know, the accuracy
+
+966
+00:34:27,978 --> 00:34:30,019
+of these, of these mappings go
+
+967
+00:34:30,019 --> 00:34:32,039
+up. And then what becomes
+
+968
+00:34:32,039 --> 00:34:33,498
+important is our mitigations,
+
+969
+00:34:34,039 --> 00:34:35,967
+right, because of this, we can now say,
+
+970
+00:34:36,358 --> 00:34:38,677
+uh, we can now look at some of the information that Mita
+
+971
+00:34:38,677 --> 00:34:39,717
+is going to give us
+
+972
+00:34:39,998 --> 00:34:41,858
+to help as a developer understand
+
+973
+00:34:42,197 --> 00:34:43,918
+why we need these mitigations in place.
+
+974
+00:34:44,659 --> 00:34:46,789
+And now as we expand this out, we can start to think
+
+975
+00:34:46,789 --> 00:34:48,829
+about how many of these mitigations are common,
+
+976
+00:34:49,309 --> 00:34:51,500
+how many of these things are, you know, repeat themselves
+
+977
+00:34:51,500 --> 00:34:53,510
+over different types of attack steps, maybe we
+
+978
+00:34:53,510 --> 00:34:55,449
+start there, going back to that benefit
+
+979
+00:34:55,750 --> 00:34:57,329
+that I mentioned earlier of
+
+980
+00:34:57,789 --> 00:35:00,429
+prioritizing controls and prioritizing mitigations.
+
+981
+00:35:02,389 --> 00:35:04,458
+So that's really it from, from a demo
+
+982
+00:35:04,458 --> 00:35:05,289
+perspective. I'll let
+
+983
+00:35:05,550 --> 00:35:07,929
+Chris talk through some of the science natural code
+
+984
+00:35:08,228 --> 00:35:09,449
+behind some of this as well.
+
+985
+00:35:12,159 --> 00:35:13,019
+Thanks Danny.
+
+986
+00:35:13,958 --> 00:35:14,500
+So
+
+987
+00:35:14,760 --> 00:35:17,079
+switching now to the actual
+
+988
+00:35:17,079 --> 00:35:19,079
+code, some of the things that you want
+
+989
+00:35:19,079 --> 00:35:21,199
+to look for and know when using
+
+990
+00:35:21,199 --> 00:35:23,458
+this CLI application is that
+
+991
+00:35:23,840 --> 00:35:25,878
+um the first time that you're
+
+992
+00:35:25,878 --> 00:35:28,188
+using it, it will create a do threadforest folder
+
+993
+00:35:28,188 --> 00:35:30,510
+for you. Uh, it will generate a graph.
+
+994
+00:35:30,829 --> 00:35:33,030
+Uh, the graph is stored as a JSO file
+
+995
+00:35:33,030 --> 00:35:34,769
+with nodes and a relationship.
+
+996
+00:35:35,070 --> 00:35:37,329
+Um, the use of a local
+
+997
+00:35:37,329 --> 00:35:39,389
+graph engine will make it
+
+998
+00:35:39,389 --> 00:35:41,989
+a stand-alone application. It doesn't need to rely
+
+999
+00:35:41,989 --> 00:35:43,579
+on, uh, third party,
+
+1000
+00:35:43,860 --> 00:35:45,860
+uh, applications or graph database. It's also
+
+1001
+00:35:45,860 --> 00:35:47,619
+much faster. The idea is that,
+
+1002
+00:35:47,909 --> 00:35:50,030
+um, TDPs tend to be
+
+1003
+00:35:50,030 --> 00:35:52,079
+smaller in size and so we don't need to rely
+
+1004
+00:35:52,079 --> 00:35:53,409
+on, uh, um,
+
+1005
+00:35:54,070 --> 00:35:55,188
+uh, proper graph database.
+
+1006
+00:35:56,010 --> 00:35:58,360
+This is also where we'll be able to see
+
+1007
+00:35:58,360 --> 00:36:00,418
+the embeddings that are stored, so
+
+1008
+00:36:00,418 --> 00:36:02,809
+every time that uh you choose an embedded
+
+1009
+00:36:02,809 --> 00:36:05,059
+model, that will automatically index
+
+1010
+00:36:05,059 --> 00:36:07,260
+every node for the
+
+1011
+00:36:07,260 --> 00:36:08,378
+um TTPs.
+
+1012
+00:36:09,820 --> 00:36:12,030
+It will also create a dot EMV file.
+
+1013
+00:36:12,309 --> 00:36:14,349
+Uh, I can actually show you the. EMB file
+
+1014
+00:36:14,349 --> 00:36:16,429
+here because I'm using the WS profile,
+
+1015
+00:36:16,510 --> 00:36:18,510
+so it's not a sensitive information per se.
+
+1016
+00:36:18,989 --> 00:36:21,070
+Uh, but if you are using any other
+
+1017
+00:36:21,070 --> 00:36:23,110
+API key, it will automatically show it to
+
+1018
+00:36:23,110 --> 00:36:24,969
+you, so, uh, don't send it around.
+
+1019
+00:36:25,659 --> 00:36:27,820
+And the config YAML file where it can
+
+1020
+00:36:27,820 --> 00:36:29,478
+actually show what we're using,
+
+1021
+00:36:29,860 --> 00:36:31,860
+attack bird, you will be able to also set
+
+1022
+00:36:31,860 --> 00:36:33,679
+the uh TDP threshold.
+
+1023
+00:36:34,019 --> 00:36:36,260
+In this case we're using 0.3. Uh, it's
+
+1024
+00:36:36,260 --> 00:36:38,418
+leveraging cosine similarity, so the score
+
+1025
+00:36:38,418 --> 00:36:40,820
+tends to go from -1 to 1. 0.3
+
+1026
+00:36:40,820 --> 00:36:42,820
+is not necessarily low, but it's
+
+1027
+00:36:42,820 --> 00:36:44,820
+not necessarily high, but you can change that based
+
+1028
+00:36:44,820 --> 00:36:46,820
+on how confident you want to be in
+
+1029
+00:36:46,820 --> 00:36:47,340
+the mapping.
+
+1030
+00:36:49,250 --> 00:36:51,599
+And then, um, a bunch of sample
+
+1031
+00:36:51,599 --> 00:36:52,250
+applications.
+
+1032
+00:36:52,579 --> 00:36:54,760
+Something that on a code wise,
+
+1033
+00:36:54,860 --> 00:36:57,418
+I want to focus on is,
+
+1034
+00:36:57,429 --> 00:37:00,239
+um, the actual modules. So
+
+1035
+00:37:00,699 --> 00:37:02,739
+the main entry point for this will be the
+
+1036
+00:37:02,739 --> 00:37:03,340
+CLI,
+
+1037
+00:37:03,898 --> 00:37:05,878
+but the actual core,
+
+1038
+00:37:06,139 --> 00:37:08,458
+uh, module will be the orchestrator,
+
+1039
+00:37:08,739 --> 00:37:10,938
+which is running all these multi-agent
+
+1040
+00:37:10,938 --> 00:37:13,070
+steps. But before diving
+
+1041
+00:37:13,070 --> 00:37:15,070
+into that, um, there is
+
+1042
+00:37:15,070 --> 00:37:17,110
+the graph module where
+
+1043
+00:37:17,110 --> 00:37:18,989
+we are using sentence transformers.
+
+1044
+00:37:19,349 --> 00:37:21,519
+So sentence Transformers is a library
+
+1045
+00:37:21,519 --> 00:37:23,789
+built on top of the Transformers
+
+1046
+00:37:23,789 --> 00:37:25,289
+library from hugging face,
+
+1047
+00:37:25,668 --> 00:37:27,949
+uh, and what this lets you use
+
+1048
+00:37:27,949 --> 00:37:29,590
+is bring your own model.
+
+1049
+00:37:29,898 --> 00:37:32,228
+So you can use any model existing
+
+1050
+00:37:32,228 --> 00:37:33,250
+on hugging face.
+
+1051
+00:37:33,708 --> 00:37:36,110
+Uh, and now pretty much every open source model is a hugging
+
+1052
+00:37:36,110 --> 00:37:38,188
+phase, and if you wanted to use
+
+1053
+00:37:38,188 --> 00:37:40,550
+your own model, for example, take this and
+
+1054
+00:37:40,550 --> 00:37:41,728
+fine tune it with your own,
+
+1055
+00:37:42,188 --> 00:37:43,688
+uh, data, you can do that.
+
+1056
+00:37:45,050 --> 00:37:45,590
+Uh,
+
+1057
+00:37:45,860 --> 00:37:47,679
+the next step is the graph builder.
+
+1058
+00:37:47,949 --> 00:37:50,059
+So this is our own logic for
+
+1059
+00:37:50,059 --> 00:37:52,239
+graph Builder. Something that you can see here is that
+
+1060
+00:37:52,239 --> 00:37:53,699
+we leverage the micro Attack
+
+1061
+00:37:54,059 --> 00:37:55,559
+in sticks format
+
+1062
+00:37:55,820 --> 00:37:57,820
+and so, um, we will
+
+1063
+00:37:57,820 --> 00:38:00,659
+turn every technique and mitigation.
+
+1064
+00:38:00,789 --> 00:38:03,398
+Into nodes and one of the primary
+
+1065
+00:38:03,398 --> 00:38:05,478
+reasons why we're also using graph
+
+1066
+00:38:05,478 --> 00:38:06,199
+is that
+
+1067
+00:38:06,679 --> 00:38:08,938
+considering that we always want to do traversal,
+
+1068
+00:38:09,239 --> 00:38:11,320
+the complexity in when
+
+1069
+00:38:11,320 --> 00:38:13,519
+doing traversal from a graph is linear
+
+1070
+00:38:13,519 --> 00:38:15,840
+instead of a quadratic compared to relational
+
+1071
+00:38:15,840 --> 00:38:16,398
+database.
+
+1072
+00:38:17,889 --> 00:38:20,079
+And this is our actual graph, uh,
+
+1073
+00:38:20,099 --> 00:38:22,539
+engine that will let us, um, store,
+
+1074
+00:38:22,579 --> 00:38:24,820
+uh, behind the scenes. This is actually just using
+
+1075
+00:38:24,820 --> 00:38:26,820
+Ampi arrays and ASource
+
+1076
+00:38:26,820 --> 00:38:28,168
+to get the most similar,
+
+1077
+00:38:29,260 --> 00:38:31,418
+uh, nodes, uh, but then we'll
+
+1078
+00:38:31,418 --> 00:38:33,458
+probably make it more, a little bit more advanced as
+
+1079
+00:38:33,458 --> 00:38:36,079
+we scale up involving multiple graphs.
+
+1080
+00:38:36,619 --> 00:38:39,079
+And then this is the vector search function function
+
+1081
+00:38:39,079 --> 00:38:41,260
+to run memory vector similarity
+
+1082
+00:38:41,260 --> 00:38:43,309
+search. Uh, we also have
+
+1083
+00:38:43,309 --> 00:38:45,659
+a visualization module which is, um,
+
+1084
+00:38:45,668 --> 00:38:47,909
+what lets you generate the report
+
+1085
+00:38:47,909 --> 00:38:49,289
+in HTML file,
+
+1086
+00:38:49,949 --> 00:38:51,969
+but now let's actually dig into the
+
+1087
+00:38:51,969 --> 00:38:52,978
+agent component.
+
+1088
+00:38:53,590 --> 00:38:56,030
+So something that I specified
+
+1089
+00:38:56,030 --> 00:38:58,059
+before is that we're using strands
+
+1090
+00:38:58,059 --> 00:39:00,070
+agents. So if you're not familiar
+
+1091
+00:39:00,070 --> 00:39:02,309
+with strands, it's an agentic framework
+
+1092
+00:39:02,309 --> 00:39:03,668
+developed by AWS.
+
+1093
+00:39:04,260 --> 00:39:06,610
+Um, it supports multiple model
+
+1094
+00:39:06,610 --> 00:39:08,119
+providers. Um,
+
+1095
+00:39:08,418 --> 00:39:10,789
+as of now we have an experimental mode
+
+1096
+00:39:10,789 --> 00:39:12,938
+Gemini or LA, L L LLM,
+
+1097
+00:39:13,418 --> 00:39:14,418
+LMA API,
+
+1098
+00:39:14,809 --> 00:39:16,019
+uh, OpenAI and Atropic.
+
+1099
+00:39:17,309 --> 00:39:19,739
+And uh uh the content extractor
+
+1100
+00:39:19,739 --> 00:39:22,039
+uh relies on a base agent class and abstract
+
+1101
+00:39:22,039 --> 00:39:24,309
+class uh with a bunch of signatures,
+
+1102
+00:39:24,500 --> 00:39:26,889
+but its goal is to extract the
+
+1103
+00:39:26,889 --> 00:39:29,239
+uh context and so we look for
+
+1104
+00:39:29,239 --> 00:39:31,679
+files and automatically classify
+
+1105
+00:39:31,679 --> 00:39:34,119
+them as architecture diagram,
+
+1106
+00:39:34,398 --> 00:39:36,438
+as, um, rhythmi files,
+
+1107
+00:39:36,610 --> 00:39:38,780
+source code, and so on, and they will help,
+
+1108
+00:39:38,958 --> 00:39:41,119
+uh, this agent has actually access to
+
+1109
+00:39:41,119 --> 00:39:42,050
+two different agents,
+
+1110
+00:39:42,478 --> 00:39:44,559
+one that is the parser agent and the other
+
+1111
+00:39:44,559 --> 00:39:46,800
+one is the threat generation agent.
+
+1112
+00:39:47,250 --> 00:39:49,398
+Uh, the parser agent is used when
+
+1113
+00:39:50,500 --> 00:39:52,769
+we, uh, have a threat statement file
+
+1114
+00:39:52,769 --> 00:39:54,438
+or we have a threat composer file,
+
+1115
+00:39:54,898 --> 00:39:56,978
+um, and so it's instructed to
+
+1116
+00:39:56,978 --> 00:39:59,059
+extract existing threat statement
+
+1117
+00:39:59,260 --> 00:40:00,458
+from a threat statement file.
+
+1118
+00:40:00,978 --> 00:40:03,099
+The other one is the, uh, threat
+
+1119
+00:40:03,099 --> 00:40:05,610
+generation agent, which instead we leverage the
+
+1120
+00:40:05,610 --> 00:40:07,938
+information by the contact extractor agent
+
+1121
+00:40:08,260 --> 00:40:09,878
+to create your own,
+
+1122
+00:40:10,139 --> 00:40:11,619
+uh, threat statement file.
+
+1123
+00:40:12,789 --> 00:40:16,030
+These agents are leverage, leveraging
+
+1124
+00:40:16,030 --> 00:40:18,628
+three main tools by Strength agent.
+
+1125
+00:40:19,300 --> 00:40:21,429
+Uh, so, um, as Danny
+
+1126
+00:40:21,429 --> 00:40:23,869
+mentioned before, this is multi-modal. It's
+
+1127
+00:40:23,869 --> 00:40:26,070
+multi-modal because we use the read
+
+1128
+00:40:26,070 --> 00:40:28,260
+image uh tool byres.
+
+1129
+00:40:28,389 --> 00:40:30,570
+This will encode, uh,
+
+1130
+00:40:30,579 --> 00:40:33,269
+images, and then it will automatically
+
+1131
+00:40:33,269 --> 00:40:35,309
+send a request to
+
+1132
+00:40:35,309 --> 00:40:37,389
+your LLM provider, um, to
+
+1133
+00:40:37,389 --> 00:40:38,878
+resonate over the image.
+
+1134
+00:40:39,269 --> 00:40:41,239
+It will also be able to read files,
+
+1135
+00:40:41,530 --> 00:40:43,898
+list directories, and it's also using, uh,
+
+1136
+00:40:43,909 --> 00:40:44,989
+an editor tool,
+
+1137
+00:40:45,320 --> 00:40:47,398
+um, to actually scan in
+
+1138
+00:40:47,398 --> 00:40:48,539
+your repository,
+
+1139
+00:40:48,878 --> 00:40:50,519
+create the three directory structures,
+
+1140
+00:40:50,789 --> 00:40:53,039
+run in line search, fuzzy search, so
+
+1141
+00:40:53,039 --> 00:40:55,199
+that if, let's say that you have a
+
+1142
+00:40:55,199 --> 00:40:57,199
+very big file that wouldn't fit in the
+
+1143
+00:40:57,199 --> 00:40:58,909
+context window of your agent,
+
+1144
+00:40:59,280 --> 00:41:01,300
+then it's able to run a, um,
+
+1145
+00:41:01,438 --> 00:41:03,579
+intelligent search within the file itself.
+
+1146
+00:41:04,559 --> 00:41:06,780
+We actually uh run a smart
+
+1147
+00:41:06,780 --> 00:41:07,418
+tweak,
+
+1148
+00:41:07,719 --> 00:41:09,800
+uh, since the editor agent
+
+1149
+00:41:09,800 --> 00:41:12,159
+by strengths is able to write
+
+1150
+00:41:12,159 --> 00:41:13,378
+and create new files,
+
+1151
+00:41:13,719 --> 00:41:15,918
+so we created a wrapper on top of it
+
+1152
+00:41:15,918 --> 00:41:17,378
+so that we can uh
+
+1153
+00:41:17,918 --> 00:41:20,099
+allow certain actions, for example, view
+
+1154
+00:41:20,099 --> 00:41:22,159
+to create the three directories and find
+
+1155
+00:41:22,159 --> 00:41:24,269
+line to, uh, start running a smart
+
+1156
+00:41:24,269 --> 00:41:26,378
+search. So that uh
+
+1157
+00:41:26,378 --> 00:41:28,458
+everything when you're running through a forest, you don't
+
+1158
+00:41:28,458 --> 00:41:30,539
+have to uh run into the risk of
+
+1159
+00:41:30,539 --> 00:41:32,699
+actually overwriting your files
+
+1160
+00:41:32,978 --> 00:41:34,039
+or having
+
+1161
+00:41:34,570 --> 00:41:36,820
+it access something that you don't want to
+
+1162
+00:41:36,820 --> 00:41:37,719
+have it access to.
+
+1163
+00:41:38,050 --> 00:41:40,059
+Anything that once you select
+
+1164
+00:41:40,059 --> 00:41:42,139
+the path to the directory that you want to
+
+1165
+00:41:42,139 --> 00:41:42,760
+scan,
+
+1166
+00:41:43,398 --> 00:41:45,500
+the thread forest will only be able to read
+
+1167
+00:41:45,500 --> 00:41:48,079
+the directory and it will only have read permissions.
+
+1168
+00:41:49,369 --> 00:41:51,570
+Um, and then, um,
+
+1169
+00:41:51,728 --> 00:41:54,208
+just to continue, we have the 3 generator
+
+1170
+00:41:54,208 --> 00:41:54,769
+agent.
+
+1171
+00:41:55,090 --> 00:41:57,570
+The 3 generator agent, uh, consume
+
+1172
+00:41:57,570 --> 00:41:59,989
+is able to generate mermaid code,
+
+1173
+00:42:00,369 --> 00:42:02,188
+uh, so it's been, uh,
+
+1174
+00:42:02,449 --> 00:42:04,489
+prompt optimized on generating mermaid, and
+
+1175
+00:42:04,489 --> 00:42:06,769
+then what we do behind the scenes is converting
+
+1176
+00:42:06,769 --> 00:42:09,789
+the mermaid structure into a graph.
+
+1177
+00:42:11,039 --> 00:42:13,079
+And uh uh and so this
+
+1178
+00:42:13,079 --> 00:42:15,418
+is pretty much it. The CLI module
+
+1179
+00:42:15,418 --> 00:42:17,639
+will actually be able to run the CLI
+
+1180
+00:42:17,639 --> 00:42:19,668
+and is responsible to for the CLI
+
+1181
+00:42:19,668 --> 00:42:20,648
+interactions,
+
+1182
+00:42:21,239 --> 00:42:23,619
+uh, and then models will contain um
+
+1183
+00:42:23,619 --> 00:42:24,978
+the data signatures.
+
+1184
+00:42:25,579 --> 00:42:27,590
+And uh uh in utils instead we can
+
+1185
+00:42:27,590 --> 00:42:29,829
+be able to run the uh
+
+1186
+00:42:29,829 --> 00:42:32,030
+WS validator and uh and so on. In
+
+1187
+00:42:32,030 --> 00:42:34,119
+prompts you'll be able to see actually the prompt they've been
+
+1188
+00:42:34,119 --> 00:42:36,329
+generated using uh DSPY
+
+1189
+00:42:37,148 --> 00:42:38,070
+uh with GA.
+
+1190
+00:42:38,329 --> 00:42:40,898
+uh, in the future we'll be able to
+
+1191
+00:42:40,898 --> 00:42:43,030
+release the specific module
+
+1192
+00:42:43,030 --> 00:42:45,030
+that we are using to run
+
+1193
+00:42:45,030 --> 00:42:45,668
+DSPY.
+
+1194
+00:42:46,269 --> 00:42:48,449
+Um, and how we can optimize
+
+1195
+00:42:48,449 --> 00:42:50,510
+with the intent that, um, if you have
+
+1196
+00:42:50,510 --> 00:42:52,590
+a specific data set and specific needs and you
+
+1197
+00:42:52,590 --> 00:42:54,628
+want to customize thread for as to
+
+1198
+00:42:54,628 --> 00:42:56,869
+your specific data, you will be able to
+
+1199
+00:42:56,869 --> 00:42:57,570
+optimize,
+
+1200
+00:42:57,989 --> 00:43:00,110
+uh, the prompt and use the collaboration that I was
+
+1201
+00:43:00,110 --> 00:43:01,969
+talking about between, uh,
+
+1202
+00:43:02,429 --> 00:43:04,409
+scientists and engineers.
+
+1203
+00:43:04,909 --> 00:43:06,110
+Um, now everything,
+
+1204
+00:43:06,668 --> 00:43:08,708
+everything of this is, um, available
+
+1205
+00:43:08,708 --> 00:43:09,260
+on GitHub.
+
+1206
+00:43:09,550 --> 00:43:11,590
+Um, we made it available right before this
+
+1207
+00:43:11,590 --> 00:43:13,590
+talk, so, uh, then I think
+
+1208
+00:43:13,590 --> 00:43:14,550
+you have a, yeah,
+
+1209
+00:43:14,829 --> 00:43:15,570
+a QR code.
+
+1210
+00:43:17,320 --> 00:43:19,349
+Cool. Couple of other things I think just in
+
+1211
+00:43:19,349 --> 00:43:21,489
+general that we that we could talk about for the
+
+1212
+00:43:21,489 --> 00:43:22,849
+for the last few minutes is
+
+1213
+00:43:23,148 --> 00:43:25,228
+um some learnings, some learnings that we've
+
+1214
+00:43:25,228 --> 00:43:27,269
+done. So one around the prompt is, is really
+
+1215
+00:43:27,269 --> 00:43:29,590
+important. When we first started creating
+
+1216
+00:43:29,590 --> 00:43:30,128
+this,
+
+1217
+00:43:30,628 --> 00:43:31,769
+it was a fairly
+
+1218
+00:43:32,070 --> 00:43:33,019
+big prompt,
+
+1219
+00:43:33,458 --> 00:43:35,050
+one or two big agents,
+
+1220
+00:43:35,469 --> 00:43:37,128
+a lot of reliance on
+
+1221
+00:43:37,469 --> 00:43:38,369
+the LLM
+
+1222
+00:43:38,789 --> 00:43:40,949
+to do a lot of the heavy lifting and intelligence, right? So
+
+1223
+00:43:40,949 --> 00:43:42,369
+it was a big prompt that says you are
+
+1224
+00:43:42,708 --> 00:43:43,829
+cybersecurity expert,
+
+1225
+00:43:44,199 --> 00:43:45,530
+read through all of my files.
+
+1226
+00:43:46,789 --> 00:43:48,898
+Generate some threat statements, generate a
+
+1227
+00:43:48,898 --> 00:43:51,139
+series, a series of attack steps, you know, using
+
+1228
+00:43:51,139 --> 00:43:52,119
+that context,
+
+1229
+00:43:52,659 --> 00:43:55,599
+whereas we found, and we found a lot of inconsistency,
+
+1230
+00:43:55,860 --> 00:43:57,898
+you know, we live in a non-deterministic world these
+
+1231
+00:43:57,898 --> 00:44:00,000
+days, so we found it was hard to kind of
+
+1232
+00:44:00,000 --> 00:44:02,139
+get structure, get consistency out of this,
+
+1233
+00:44:02,378 --> 00:44:05,059
+and so that's why you see, you know, we've got 12,
+
+1234
+00:44:05,260 --> 00:44:07,300
+between 12 and 15, or, or maybe a few
+
+1235
+00:44:07,300 --> 00:44:09,739
+more very specific targeted
+
+1236
+00:44:09,739 --> 00:44:10,398
+prompts
+
+1237
+00:44:10,688 --> 00:44:12,340
+for very specific targeted.
+
+1238
+00:44:13,003 --> 00:44:14,594
+actions and agents
+
+1239
+00:44:14,945 --> 00:44:16,784
+we've got a number of agents, a number of prompts.
+
+1240
+00:44:17,164 --> 00:44:18,144
+This kind of
+
+1241
+00:44:18,644 --> 00:44:20,764
+small modularization of the prompting
+
+1242
+00:44:20,764 --> 00:44:21,784
+has allowed us to
+
+1243
+00:44:22,043 --> 00:44:24,083
+be very targeted and get very good
+
+1244
+00:44:24,083 --> 00:44:26,543
+structure and output and control
+
+1245
+00:44:26,965 --> 00:44:29,204
+the outputs of what we're expecting
+
+1246
+00:44:29,204 --> 00:44:31,445
+from the LLM, do some validation on that thing
+
+1247
+00:44:31,445 --> 00:44:32,224
+before moving on.
+
+1248
+00:44:32,684 --> 00:44:34,684
+OK, so that's, that was a really important thing
+
+1249
+00:44:34,684 --> 00:44:36,344
+that that we started to learn through.
+
+1250
+00:44:37,978 --> 00:44:40,019
+Just a couple of other things to
+
+1251
+00:44:40,019 --> 00:44:41,639
+show quickly is.
+
+1252
+00:44:43,329 --> 00:44:45,340
+We also have uh the outputs
+
+1253
+00:44:45,340 --> 00:44:46,668
+of this is not just
+
+1254
+00:44:47,010 --> 00:44:47,550
+the
+
+1255
+00:44:48,128 --> 00:44:50,320
+nice visual dashboard in HTML that we've
+
+1256
+00:44:50,320 --> 00:44:52,570
+created, and we also store all of this
+
+1257
+00:44:52,570 --> 00:44:54,648
+data and provide all of this data in it's kind of raw
+
+1258
+00:44:54,648 --> 00:44:55,708
+formats in MD
+
+1259
+00:44:56,208 --> 00:44:57,030
+and Jason.
+
+1260
+00:44:57,570 --> 00:44:58,599
+So this is the,
+
+1261
+00:44:58,889 --> 00:44:59,590
+the high level.
+
+1262
+00:45:00,519 --> 00:45:02,878
+Report that gets created uh
+
+1263
+00:45:02,878 --> 00:45:04,208
+in an MD file
+
+1264
+00:45:04,590 --> 00:45:06,628
+right so we see again a lot of the same
+
+1265
+00:45:06,628 --> 00:45:08,869
+information, technology stacks, security objectives,
+
+1266
+00:45:09,148 --> 00:45:11,239
+analysis results, each of the high severity
+
+1267
+00:45:11,239 --> 00:45:13,320
+threats. This is just the ID that comes from
+
+1268
+00:45:13,320 --> 00:45:14,119
+threat composer.
+
+1269
+00:45:15,458 --> 00:45:17,469
+Um, we have our generator attackies, and then
+
+1270
+00:45:17,469 --> 00:45:19,789
+we've got our kind of recommendations
+
+1271
+00:45:19,789 --> 00:45:21,860
+here. And then for each,
+
+1272
+00:45:22,309 --> 00:45:22,978
+oops,
+
+1273
+00:45:23,668 --> 00:45:24,679
+let me close that one.
+
+1274
+00:45:26,128 --> 00:45:28,289
+For each of the attack trees, we then also form,
+
+1275
+00:45:28,489 --> 00:45:30,570
+as Chris mentioned, format this in Mermaid,
+
+1276
+00:45:30,648 --> 00:45:33,010
+so it's a slightly different way of visualizing it, but
+
+1277
+00:45:33,010 --> 00:45:35,168
+again it's slightly nice, um nice views,
+
+1278
+00:45:35,329 --> 00:45:36,228
+nice visuals here
+
+1279
+00:45:36,570 --> 00:45:38,789
+to actually get to this mapping, and then we see each
+
+1280
+00:45:39,039 --> 00:45:41,239
+a little bit more detail on the micro attack mapping.
+
+1281
+00:45:41,449 --> 00:45:43,688
+We see the similarity scores, we see mitigations
+
+1282
+00:45:43,688 --> 00:45:44,269
+in here.
+
+1283
+00:45:45,489 --> 00:45:47,570
+And then a little further down
+
+1284
+00:45:47,570 --> 00:45:48,489
+we have.
+
+1285
+00:45:49,398 --> 00:45:51,478
+Uh, just, yeah, some of that more attack
+
+1286
+00:45:51,478 --> 00:45:52,219
+path analysis.
+
+1287
+00:45:53,469 --> 00:45:55,469
+And then we also keep things in state just
+
+1288
+00:45:55,469 --> 00:45:57,708
+in case there's any errors or
+
+1289
+00:45:57,708 --> 00:46:00,070
+anything like that, so or if you do
+
+1290
+00:46:00,070 --> 00:46:00,809
+introduce new.
+
+1291
+00:46:01,619 --> 00:46:03,659
+New threats to your threat composer file, it'll look
+
+1292
+00:46:03,659 --> 00:46:04,260
+at the state,
+
+1293
+00:46:04,898 --> 00:46:05,438
+understand
+
+1294
+00:46:05,820 --> 00:46:07,860
+there's one new, one new threat, it's a high threat.
+
+1295
+00:46:07,898 --> 00:46:09,898
+We're gonna go and create an attack for you based on that rather
+
+1296
+00:46:09,898 --> 00:46:10,519
+than creating,
+
+1297
+00:46:10,860 --> 00:46:13,019
+you know, another 6 other ones that are,
+
+1298
+00:46:13,099 --> 00:46:15,219
+you know, that end up being duplication, and
+
+1299
+00:46:15,219 --> 00:46:17,539
+then the whole thing is then just stored in a, in a large
+
+1300
+00:46:17,539 --> 00:46:19,820
+Jason format as well in case you want to do
+
+1301
+00:46:19,820 --> 00:46:21,539
+anything more programmatic with this.
+
+1302
+00:46:23,668 --> 00:46:25,789
+Another example as well to show you, uh, so
+
+1303
+00:46:25,789 --> 00:46:28,429
+we ran this one earlier, this is just one of the other sample
+
+1304
+00:46:28,429 --> 00:46:30,510
+applications that we have in the repository. This one
+
+1305
+00:46:30,510 --> 00:46:32,688
+didn't have any, any threats
+
+1306
+00:46:32,789 --> 00:46:34,489
+in here already, right, so we just had
+
+1307
+00:46:34,789 --> 00:46:37,070
+an overview of the application
+
+1308
+00:46:37,429 --> 00:46:39,489
+and an image
+
+1309
+00:46:40,159 --> 00:46:41,179
+that was used.
+
+1310
+00:46:41,469 --> 00:46:43,739
+And so this is kind of the, the other mode,
+
+1311
+00:46:44,099 --> 00:46:45,409
+this is the, the,
+
+1312
+00:46:45,750 --> 00:46:47,949
+the generation of the threat statements
+
+1313
+00:46:47,949 --> 00:46:48,489
+itself.
+
+1314
+00:46:48,989 --> 00:46:50,128
+And so we see here.
+
+1315
+00:46:50,539 --> 00:46:52,978
+That it's actually gone through using this context and is generating
+
+1316
+00:46:52,978 --> 00:46:54,010
+threat statements for us.
+
+1317
+00:46:54,378 --> 00:46:56,378
+So in case you are at a point where you actually, you
+
+1318
+00:46:56,378 --> 00:46:58,500
+haven't started yet, that's fine, you don't
+
+1319
+00:46:58,500 --> 00:46:59,250
+have a threat model,
+
+1320
+00:46:59,579 --> 00:47:01,699
+we'll help you create that threat model and then this
+
+1321
+00:47:01,699 --> 00:47:02,239
+is used
+
+1322
+00:47:02,619 --> 00:47:04,648
+as input into the next stage
+
+1323
+00:47:04,648 --> 00:47:06,659
+4 for the attack regeneration. And then
+
+1324
+00:47:06,659 --> 00:47:08,699
+we can see here it's broken down using our
+
+1325
+00:47:08,699 --> 00:47:09,878
+syntax as well.
+
+1326
+00:47:11,809 --> 00:47:12,909
+Anything else that you wanna cover?
+
+1327
+00:47:14,809 --> 00:47:17,139
+You know, just the emphasis also on the
+
+1328
+00:47:17,139 --> 00:47:19,179
+um open source and local fact
+
+1329
+00:47:19,179 --> 00:47:20,239
+that we played out
+
+1330
+00:47:20,570 --> 00:47:22,619
+so that um most of the times if
+
+1331
+00:47:22,619 --> 00:47:24,679
+you're running a threat modeling you want to make sure
+
+1332
+00:47:24,679 --> 00:47:27,059
+that nothing gets sent out on the cloud
+
+1333
+00:47:27,059 --> 00:47:27,679
+or
+
+1334
+00:47:28,059 --> 00:47:30,320
+you have full control over your data
+
+1335
+00:47:30,539 --> 00:47:32,820
+uh and so this is uh the reasoning behind
+
+1336
+00:47:32,820 --> 00:47:35,099
+some of our um assumptions
+
+1337
+00:47:35,099 --> 00:47:37,340
+of having open source deployed in your own
+
+1338
+00:47:37,340 --> 00:47:39,648
+environment running local embedding
+
+1339
+00:47:39,648 --> 00:47:40,159
+models.
+
+1340
+00:47:40,820 --> 00:47:42,929
+Uh, and reliance as
+
+1341
+00:47:42,929 --> 00:47:45,019
+for the genetic component, uh, Pedrock
+
+1342
+00:47:45,019 --> 00:47:46,239
+that you can trust,
+
+1343
+00:47:46,659 --> 00:47:47,599
+um.
+
+1344
+00:47:48,409 --> 00:47:50,739
+Um, and you have full
+
+1345
+00:47:50,739 --> 00:47:52,800
+control over the data, you can see the prompts
+
+1346
+00:47:52,800 --> 00:47:55,079
+and you can just see all the code. There is nothing
+
+1347
+00:47:55,079 --> 00:47:57,780
+that is not visible in the Gita repository.
+
+1348
+00:47:59,750 --> 00:48:02,019
+OK, so wrapping up
+
+1349
+00:48:02,019 --> 00:48:02,820
+a little bit.
+
+1350
+00:48:04,030 --> 00:48:06,329
+Just an overview of where kind of threat forest
+
+1351
+00:48:06,750 --> 00:48:08,750
+or the coverage that we have mapping back
+
+1352
+00:48:08,750 --> 00:48:09,530
+to our framework,
+
+1353
+00:48:09,869 --> 00:48:11,869
+OK, it can do everything apart from
+
+1354
+00:48:11,869 --> 00:48:13,949
+actually test the controls for us and do
+
+1355
+00:48:13,949 --> 00:48:15,079
+the risk analysis,
+
+1356
+00:48:15,668 --> 00:48:17,208
+right, so, so we are
+
+1357
+00:48:17,510 --> 00:48:19,668
+allowing it to help with the scope
+
+1358
+00:48:19,668 --> 00:48:21,989
+decomposition, really the, the what are we building?
+
+1359
+00:48:23,000 --> 00:48:25,010
+To be fair, Dire Forest isn't really doing that for
+
+1360
+00:48:25,010 --> 00:48:27,010
+us. That's, that's a you job, that's
+
+1361
+00:48:27,010 --> 00:48:28,188
+a developer job
+
+1362
+00:48:28,449 --> 00:48:30,570
+that has to create the documentation
+
+1363
+00:48:30,570 --> 00:48:31,188
+to give us
+
+1364
+00:48:31,530 --> 00:48:33,530
+that information. Again, the more we can
+
+1365
+00:48:33,530 --> 00:48:35,610
+give it, the, the better context
+
+1366
+00:48:35,610 --> 00:48:37,688
+we can give it with that scope decomposition, data
+
+1367
+00:48:37,688 --> 00:48:39,079
+flow diagrams and and whatnot,
+
+1368
+00:48:39,409 --> 00:48:41,050
+the, the better you're gonna get
+
+1369
+00:48:41,409 --> 00:48:42,929
+or the better output that you're gonna get.
+
+1370
+00:48:43,579 --> 00:48:45,668
+But we have our threat intelligence input. We've got a mitter attack
+
+1371
+00:48:45,668 --> 00:48:46,340
+framework
+
+1372
+00:48:46,628 --> 00:48:48,628
+right in our next version that we're gonna be releasing,
+
+1373
+00:48:48,708 --> 00:48:49,869
+we're gonna have an
+
+1374
+00:48:50,168 --> 00:48:52,320
+additional input from the AWS
+
+1375
+00:48:52,320 --> 00:48:54,628
+threat technique catalog. If you haven't seen that, go
+
+1376
+00:48:54,628 --> 00:48:57,090
+check that out. That is specific steps
+
+1377
+00:48:57,510 --> 00:48:59,250
+related to AWS
+
+1378
+00:48:59,739 --> 00:49:02,110
+TTPs, so tactics, techniques and procedures
+
+1379
+00:49:02,260 --> 00:49:04,590
+that are also mapped to MITA, but these are very
+
+1380
+00:49:04,590 --> 00:49:05,309
+specific to.
+
+1381
+00:49:05,875 --> 00:49:07,994
+Um, tactics used that we see or
+
+1382
+00:49:07,994 --> 00:49:08,853
+our, our,
+
+1383
+00:49:09,313 --> 00:49:11,563
+our customer instant response team, the cert
+
+1384
+00:49:11,753 --> 00:49:12,333
+they see
+
+1385
+00:49:12,715 --> 00:49:14,753
+being used in AWS environments, right?
+
+1386
+00:49:14,793 --> 00:49:17,175
+So it's very, very specific to AWS
+
+1387
+00:49:17,175 --> 00:49:19,235
+environments. So that is a really, really great resource
+
+1388
+00:49:19,235 --> 00:49:21,235
+that we're gonna be consuming as well. And then any
+
+1389
+00:49:21,235 --> 00:49:23,074
+other third party open source,
+
+1390
+00:49:23,353 --> 00:49:25,514
+um, matrices that that are available,
+
+1391
+00:49:25,554 --> 00:49:27,253
+we're gonna start to consume those as well.
+
+1392
+00:49:28,119 --> 00:49:30,250
+We've got our threat statement creation, we've got our attack tree
+
+1393
+00:49:30,250 --> 00:49:35,010
+development. Now,
+
+1394
+00:49:35,668 --> 00:49:36,539
+attack trees.
+
+1395
+00:49:37,438 --> 00:49:39,000
+Can also be used for other things,
+
+1396
+00:49:39,398 --> 00:49:41,530
+right, I've been thinking about this more and more as, as we've
+
+1397
+00:49:41,530 --> 00:49:42,438
+been creating this.
+
+1398
+00:49:42,800 --> 00:49:44,989
+Initially this started out as a, we want
+
+1399
+00:49:44,989 --> 00:49:47,199
+developers to be using this, and we absolutely do want developers
+
+1400
+00:49:47,199 --> 00:49:49,559
+to be using this, we're trying to make it as friendly for
+
+1401
+00:49:49,559 --> 00:49:51,559
+them to use in the IDE to use in,
+
+1402
+00:49:51,579 --> 00:49:53,969
+in, in their, in their, in their CLI.
+
+1403
+00:49:54,849 --> 00:49:57,369
+Another really interesting use case of attack trees
+
+1404
+00:49:57,369 --> 00:49:58,070
+is scoping
+
+1405
+00:49:58,570 --> 00:50:00,878
+and defining test cases for penetration testing,
+
+1406
+00:50:00,889 --> 00:50:02,550
+and automated penetration testing.
+
+1407
+00:50:02,929 --> 00:50:04,148
+We're starting to see more
+
+1408
+00:50:04,648 --> 00:50:06,840
+agents in that, in this space. We, we,
+
+1409
+00:50:06,889 --> 00:50:09,128
+we announced one in preview, in public
+
+1410
+00:50:09,128 --> 00:50:11,159
+preview yesterday, our AWS security agent,
+
+1411
+00:50:11,449 --> 00:50:13,659
+where it can do penetration testing against an
+
+1412
+00:50:13,659 --> 00:50:14,929
+application. And so
+
+1413
+00:50:15,289 --> 00:50:17,449
+as we're starting to see those, there could be really
+
+1414
+00:50:17,449 --> 00:50:19,719
+interesting overlaps where it takes some specific
+
+1415
+00:50:19,719 --> 00:50:20,789
+context of your application,
+
+1416
+00:50:21,648 --> 00:50:23,958
+generates the threat statements, generates the attack trees,
+
+1417
+00:50:24,128 --> 00:50:26,699
+and then that can be used as inputs for another agent
+
+1418
+00:50:26,969 --> 00:50:29,188
+to start simulating those attack trees
+
+1419
+00:50:29,489 --> 00:50:30,378
+on our behalf.
+
+1420
+00:50:30,769 --> 00:50:32,809
+OK, so another pretty interesting use
+
+1421
+00:50:32,809 --> 00:50:33,510
+case as well.
+
+1422
+00:50:33,780 --> 00:50:35,849
+The other use case that I've been thinking about is from a
+
+1423
+00:50:35,849 --> 00:50:36,648
+defensive side.
+
+1424
+00:50:37,300 --> 00:50:39,300
+If you're a security operations center and you're a
+
+1425
+00:50:39,300 --> 00:50:40,039
+defensive
+
+1426
+00:50:40,739 --> 00:50:42,938
+organization, you want to maybe think about
+
+1427
+00:50:42,938 --> 00:50:44,398
+generating these detectories,
+
+1428
+00:50:44,898 --> 00:50:47,019
+maybe, and then looking through them and saying which
+
+1429
+00:50:47,019 --> 00:50:48,949
+ones of these would we be able to detect?
+
+1430
+00:50:49,500 --> 00:50:51,659
+Do we have the right logs in place to look for land
+
+1431
+00:50:51,659 --> 00:50:52,840
+for execution role,
+
+1432
+00:50:53,139 --> 00:50:55,219
+uh, bypasses or compromises, or the,
+
+1433
+00:50:55,300 --> 00:50:56,398
+the misuse of those?
+
+1434
+00:50:56,829 --> 00:50:58,938
+Do we have the detections in place to look for
+
+1435
+00:50:59,119 --> 00:51:01,239
+these types of things and these very specific tax
+
+1436
+00:51:01,239 --> 00:51:03,320
+steps? Do we have the logs in place? Do we have the
+
+1437
+00:51:03,320 --> 00:51:05,438
+detection use cases? Do we have the alerting,
+
+1438
+00:51:05,550 --> 00:51:07,639
+do we have the run books? So it could be really
+
+1439
+00:51:07,639 --> 00:51:10,478
+interesting ways to stress test some scenarios
+
+1440
+00:51:10,478 --> 00:51:12,458
+for your defensive blue teams.
+
+1441
+00:51:15,628 --> 00:51:17,699
+That threat intelligence really kind of helps us to bridge
+
+1442
+00:51:17,699 --> 00:51:19,829
+the gap with how, OK, so we see
+
+1443
+00:51:19,829 --> 00:51:21,550
+that these industry frameworks
+
+1444
+00:51:21,909 --> 00:51:24,250
+are there because they are a collection
+
+1445
+00:51:24,250 --> 00:51:26,369
+of previously of known attack
+
+1446
+00:51:26,369 --> 00:51:28,389
+steps, right, from known
+
+1447
+00:51:28,389 --> 00:51:29,329
+threat actor groups.
+
+1448
+00:51:30,059 --> 00:51:31,188
+So that gives us
+
+1449
+00:51:31,699 --> 00:51:34,059
+some understanding that these things are viable.
+
+1450
+00:51:34,139 --> 00:51:35,280
+They have happened in the past.
+
+1451
+00:51:35,739 --> 00:51:37,840
+There are certain threat actor groups which typically use
+
+1452
+00:51:37,840 --> 00:51:38,708
+these things more.
+
+1453
+00:51:39,019 --> 00:51:41,139
+That again allows us if we're in a more
+
+1454
+00:51:41,139 --> 00:51:43,139
+defensive mindset, we may be able to say,
+
+1455
+00:51:43,260 --> 00:51:44,059
+given our industry,
+
+1456
+00:51:44,418 --> 00:51:46,539
+given the types of, you know, our position in the market.
+
+1457
+00:51:47,063 --> 00:51:49,394
+We are usually susceptible to
+
+1458
+00:51:49,394 --> 00:51:51,655
+attempted attempted attacks from these
+
+1459
+00:51:51,655 --> 00:51:53,934
+sorts of threat actor groups that are known for targeting
+
+1460
+00:51:53,934 --> 00:51:55,014
+these sorts of industries.
+
+1461
+00:51:55,333 --> 00:51:57,534
+We can go and simulate these particular attack
+
+1462
+00:51:57,534 --> 00:51:58,534
+steps based on
+
+1463
+00:51:59,014 --> 00:51:59,954
+known
+
+1464
+00:52:00,324 --> 00:52:01,655
+micro attack steps.
+
+1465
+00:52:02,898 --> 00:52:04,898
+And then the graphical side of things, right?
+
+1466
+00:52:05,300 --> 00:52:07,458
+As in through, through graphs, these knowledge graphs
+
+1467
+00:52:07,458 --> 00:52:09,478
+allows us to capture these relationships
+
+1468
+00:52:09,659 --> 00:52:11,378
+in a really structured way.
+
+1469
+00:52:11,780 --> 00:52:13,929
+Right? And so having these TTPs as graph, which
+
+1470
+00:52:13,929 --> 00:52:16,059
+is just a, a more scientific way of calling
+
+1471
+00:52:16,059 --> 00:52:16,958
+an attack tree,
+
+1472
+00:52:17,329 --> 00:52:19,458
+means that we can start to normalize and
+
+1473
+00:52:19,458 --> 00:52:21,699
+start to understand the different ways these
+
+1474
+00:52:21,699 --> 00:52:23,780
+things are going uh interact with each other and the
+
+1475
+00:52:23,780 --> 00:52:25,860
+relationships between them, and having those
+
+1476
+00:52:25,860 --> 00:52:27,929
+relationships between them means that it
+
+1477
+00:52:27,929 --> 00:52:29,978
+helps us to improve accuracy when we're when
+
+1478
+00:52:29,978 --> 00:52:32,039
+we're mapping to, to the microattack framework.
+
+1479
+00:52:33,599 --> 00:52:35,599
+And so, as Chris mentioned, we are happy to
+
+1480
+00:52:35,599 --> 00:52:37,679
+say that Threat Forest is available on AWS
+
+1481
+00:52:37,679 --> 00:52:38,438
+Samples GitHub,
+
+1482
+00:52:38,760 --> 00:52:39,949
+um, as of today.
+
+1483
+00:52:40,239 --> 00:52:42,349
+So that QR code should take you straight there.
+
+1484
+00:52:42,639 --> 00:52:44,599
+We encourage you to use it,
+
+1485
+00:52:44,918 --> 00:52:45,639
+clone it,
+
+1486
+00:52:46,119 --> 00:52:48,320
+play around with it, look at the code, run
+
+1487
+00:52:48,320 --> 00:52:50,438
+it, give us feedback. We
+
+1488
+00:52:50,438 --> 00:52:52,478
+really wanna hear feedback from you, and you
+
+1489
+00:52:52,478 --> 00:52:54,840
+can, you can connect with us, uh, through,
+
+1490
+00:52:54,958 --> 00:52:57,239
+you know, through a GitHub issue or even via email.
+
+1491
+00:52:57,519 --> 00:52:58,179
+We wanna know
+
+1492
+00:52:58,639 --> 00:52:59,639
+how it's working for you.
+
+1493
+00:53:00,289 --> 00:53:01,478
+And what you'd like to see,
+
+1494
+00:53:01,820 --> 00:53:04,110
+OK, so that's available uh there on,
+
+1495
+00:53:04,340 --> 00:53:06,418
+on GitHub. We recommend starting with
+
+1496
+00:53:06,418 --> 00:53:07,659
+the sample applications,
+
+1497
+00:53:08,019 --> 00:53:10,260
+right, there's a lot of good documentation in there, and
+
+1498
+00:53:10,260 --> 00:53:12,378
+the sample applications are there to help
+
+1499
+00:53:12,378 --> 00:53:14,398
+you test so that you don't have to test it on something
+
+1500
+00:53:14,539 --> 00:53:15,659
+that you may be working with.
+
+1501
+00:53:16,688 --> 00:53:18,809
+Got links here as well for an overview of
+
+1502
+00:53:18,809 --> 00:53:20,869
+GPA that the the framework that Chris
+
+1503
+00:53:20,869 --> 00:53:23,110
+mentioned earlier for our reflective prompt
+
+1504
+00:53:23,110 --> 00:53:25,188
+optimization and obviously we've got the the
+
+1505
+00:53:25,188 --> 00:53:27,369
+MITer attack framework here too.
+
+1506
+00:53:29,000 --> 00:53:30,050
+Any closing remarks?
+
+1507
+00:53:32,000 --> 00:53:34,119
+Just, uh, stay tuned because
+
+1508
+00:53:34,119 --> 00:53:36,340
+we provide many updates. We may release,
+
+1509
+00:53:36,360 --> 00:53:38,438
+uh, the research and
+
+1510
+00:53:38,438 --> 00:53:39,340
+the science,
+
+1511
+00:53:39,719 --> 00:53:41,409
+um, that get into creating the forest,
+
+1512
+00:53:43,199 --> 00:53:45,369
+um, and also following up with the
+
+1513
+00:53:45,369 --> 00:53:46,860
+specialized embedding models as well.
+
+1514
+00:53:47,829 --> 00:53:48,409
+OK,
+
+1515
+00:53:48,789 --> 00:53:49,648
+thank you everyone.
+
+1516
+00:53:50,219 --> 00:53:52,429
+Please fill out the survey in the app. Hope
+
+1517
+00:53:52,429 --> 00:53:54,708
+you enjoyed that, we'll be around for some questions as well.
+

@@ -1,0 +1,5291 @@
+1
+00:00:00,960 --> 00:00:01,793
+- [Baji] Hello everyone!
+
+2
+00:00:01,793 --> 00:00:03,810
+Welcome to DAT410.
+
+3
+00:00:03,810 --> 00:00:07,323
+This is PostgreSQL Performance:
+Real-World Workload Tuning.
+
+4
+00:00:08,310 --> 00:00:09,270
+Let me ask you this.
+
+5
+00:00:09,270 --> 00:00:11,970
+Have you ever received alarms
+at 3:00 AM in the morning
+
+6
+00:00:11,970 --> 00:00:14,670
+due to degrade of database performance?
+
+7
+00:00:14,670 --> 00:00:16,770
+It could be high CCP utilization
+
+8
+00:00:16,770 --> 00:00:19,530
+or high query execution times
+
+9
+00:00:19,530 --> 00:00:22,220
+or plans are switching, then yeah.
+
+10
+00:00:22,220 --> 00:00:24,570
+We are going to see,
+today we're going to see
+
+11
+00:00:24,570 --> 00:00:27,120
+a few common performance challenges,
+
+12
+00:00:27,120 --> 00:00:30,450
+which most of us face and fix together.
+
+13
+00:00:30,450 --> 00:00:31,530
+My name is Baji Shaik
+
+14
+00:00:31,530 --> 00:00:34,017
+and I'm a senior database engineer for RDS
+
+15
+00:00:34,017 --> 00:00:38,526
+and Aurora PostgreSQL databases
+and I have a co-speaker.
+
+16
+00:00:38,526 --> 00:00:39,957
+- [Vlad] Hi everyone, I'm Vlad Vlasceanu.
+
+17
+00:00:39,957 --> 00:00:42,993
+I'm the tech leader for
+databases here at AWS.
+
+18
+00:00:44,220 --> 00:00:49,140
+I'm here to help Baji, so
+if you have any questions,
+
+19
+00:00:49,140 --> 00:00:50,160
+please raise your hands
+
+20
+00:00:50,160 --> 00:00:51,750
+and I'll come with the mic to you
+
+21
+00:00:51,750 --> 00:00:54,780
+so you can ask the questions
+so everybody can hear it
+
+22
+00:00:54,780 --> 00:00:56,490
+and then we'll try to
+answer your questions
+
+23
+00:00:56,490 --> 00:00:57,780
+to the best of our knowledge.
+
+24
+00:00:57,780 --> 00:01:02,340
+- [Baji] Sure, thanks Vlad.
+So let's start with it.
+
+25
+00:01:02,340 --> 00:01:04,710
+Before starting the content,
+
+26
+00:01:04,710 --> 00:01:08,160
+I just want to start a load generator.
+
+27
+00:01:08,160 --> 00:01:10,200
+I have a slide to talk
+about this load generator,
+
+28
+00:01:10,200 --> 00:01:12,123
+just started the load generator.
+
+29
+00:01:13,290 --> 00:01:15,420
+So yeah, meet Mr. John.
+
+30
+00:01:15,420 --> 00:01:18,960
+He's a senior database
+engineer at any company.
+
+31
+00:01:18,960 --> 00:01:22,410
+He's responsible for PostgreSQL
+databases in his company.
+
+32
+00:01:22,410 --> 00:01:25,080
+He did pretty good job in installing,
+
+33
+00:01:25,080 --> 00:01:27,330
+setting up PostgreSQL databases.
+
+34
+00:01:27,330 --> 00:01:28,620
+He tuned it very well
+
+35
+00:01:28,620 --> 00:01:31,710
+and it set up all monitoring all alarms,
+
+36
+00:01:31,710 --> 00:01:34,650
+but eventually data grows.
+
+37
+00:01:34,650 --> 00:01:37,920
+He started seeing alarms
+at 3:00 AM in the morning
+
+38
+00:01:37,920 --> 00:01:40,920
+due to query execution times are high
+
+39
+00:01:40,920 --> 00:01:44,310
+and CPU utilization is also high.
+
+40
+00:01:44,310 --> 00:01:45,690
+Does that sound familiar?
+
+41
+00:01:45,690 --> 00:01:48,504
+Then let's fix PostgreSQL
+performance issues
+
+42
+00:01:48,504 --> 00:01:50,163
+of John together.
+
+43
+00:01:51,390 --> 00:01:54,630
+Before that, let's look
+at the key areas to focus
+
+44
+00:01:54,630 --> 00:01:56,370
+for performance tuning.
+
+45
+00:01:56,370 --> 00:01:58,290
+I would start with CPU utilization.
+
+46
+00:01:58,290 --> 00:02:02,850
+It could be due to sub-optimal
+queries, which are going to
+
+47
+00:02:02,850 --> 00:02:05,670
+full table scans, which
+is high CPU intensive.
+
+48
+00:02:05,670 --> 00:02:10,670
+And your application workload
+is undersized for the instance
+
+49
+00:02:11,370 --> 00:02:13,890
+where you see high CPU utilization
+
+50
+00:02:13,890 --> 00:02:17,760
+and by default PostgreSQL
+uses parallel queries.
+
+51
+00:02:17,760 --> 00:02:20,430
+So if you have large
+number of parallel queries,
+
+52
+00:02:20,430 --> 00:02:23,310
+you'll see more number
+of connections using CPU.
+
+53
+00:02:23,310 --> 00:02:26,640
+So that's where you see
+high CPU utilization.
+
+54
+00:02:26,640 --> 00:02:28,830
+Next thing to look at is memory.
+
+55
+00:02:28,830 --> 00:02:32,070
+Again, sub-optimal queries,
+memory intensive queries.
+
+56
+00:02:32,070 --> 00:02:36,030
+And then PostgreSQL uses
+process based architecture.
+
+57
+00:02:36,030 --> 00:02:39,630
+So each connection is a process
+which consumes some memory.
+
+58
+00:02:39,630 --> 00:02:41,940
+So if you have high number of connections,
+
+59
+00:02:41,940 --> 00:02:44,160
+you'll see high memory utilization.
+
+60
+00:02:44,160 --> 00:02:47,850
+And PostgreSQL has some
+memory related parameter
+
+61
+00:02:47,850 --> 00:02:50,250
+based on which you control the memory.
+
+62
+00:02:50,250 --> 00:02:53,670
+But if those parameters
+are over configured,
+
+63
+00:02:53,670 --> 00:02:56,610
+that's where you see
+high memory utilization.
+
+64
+00:02:56,610 --> 00:02:59,940
+Next thing to look at is storage and IOPS.
+
+65
+00:02:59,940 --> 00:03:02,790
+So PostgreSQL uses multi-version
+
+66
+00:03:02,790 --> 00:03:04,830
+concurrency control mechanism.
+
+67
+00:03:04,830 --> 00:03:07,080
+So every modification to the database
+
+68
+00:03:07,080 --> 00:03:10,470
+will have two versions
+of rows, old and new.
+
+69
+00:03:10,470 --> 00:03:13,620
+The old version of row called as bloat,
+
+70
+00:03:13,620 --> 00:03:15,210
+which will be cleaned up
+
+71
+00:03:15,210 --> 00:03:17,790
+by maintenance activities like vacuum.
+
+72
+00:03:17,790 --> 00:03:21,930
+Otherwise you'll see high
+storage and IOPS utilization.
+
+73
+00:03:21,930 --> 00:03:26,730
+And if you have more indexes
+which are unused or duplicate,
+
+74
+00:03:26,730 --> 00:03:28,470
+every modification to the database
+
+75
+00:03:28,470 --> 00:03:31,560
+will lead to update those
+indexes unnecessarily,
+
+76
+00:03:31,560 --> 00:03:34,860
+which is where you see
+storage and IOPS utilization.
+
+77
+00:03:34,860 --> 00:03:37,530
+And PostgreSQL uses work memory
+
+78
+00:03:37,530 --> 00:03:41,370
+to control the query
+operations such as sorting,
+
+79
+00:03:41,370 --> 00:03:44,520
+but if that memory is insufficient,
+
+80
+00:03:44,520 --> 00:03:47,940
+that's where it create
+temporary files on disc,
+
+81
+00:03:47,940 --> 00:03:51,000
+which is high IOPS activity.
+
+82
+00:03:51,000 --> 00:03:53,220
+And next is application pattern.
+
+83
+00:03:53,220 --> 00:03:55,170
+So if you have large number of queries
+
+84
+00:03:55,170 --> 00:03:56,610
+which are blocking each other,
+
+85
+00:03:56,610 --> 00:03:59,340
+that's where you see slowed
+database performance,
+
+86
+00:03:59,340 --> 00:04:01,230
+not due to query executions,
+
+87
+00:04:01,230 --> 00:04:04,230
+but those queries are
+conflicting each other.
+
+88
+00:04:04,230 --> 00:04:06,450
+But if you have long
+rendering transaction,
+
+89
+00:04:06,450 --> 00:04:09,660
+our idle-in-transaction
+for longer period of time,
+
+90
+00:04:09,660 --> 00:04:11,730
+which will block the maintenance
+
+91
+00:04:11,730 --> 00:04:14,820
+so that eventually
+database will slow down.
+
+92
+00:04:14,820 --> 00:04:17,460
+So if you have more number
+of ideal connections
+
+93
+00:04:17,460 --> 00:04:20,550
+which are doing nothing,
+they still consume resources,
+
+94
+00:04:20,550 --> 00:04:22,560
+which is where a connection pooler
+
+95
+00:04:22,560 --> 00:04:25,050
+would help to optimize the connections.
+
+96
+00:04:25,050 --> 00:04:27,840
+So these are a few key areas to focus.
+
+97
+00:04:27,840 --> 00:04:30,300
+Next, we can look at
+query tuning methodology,
+
+98
+00:04:30,300 --> 00:04:32,340
+which is a step by step process
+
+99
+00:04:32,340 --> 00:04:36,330
+where you would start with
+looking at active session summary
+
+100
+00:04:36,330 --> 00:04:38,730
+in database insights,
+performance insights,
+
+101
+00:04:38,730 --> 00:04:42,690
+or you can look at pg_stat_activity
+view inside the database
+
+102
+00:04:42,690 --> 00:04:44,610
+and you can look at top SQLs
+
+103
+00:04:44,610 --> 00:04:48,390
+and top wait events
+consuming those resources.
+
+104
+00:04:48,390 --> 00:04:51,603
+And you will generate explain analyze plan
+
+105
+00:04:51,603 --> 00:04:53,670
+with buffers option where you can see
+
+106
+00:04:53,670 --> 00:04:55,780
+shared buffers information as well
+
+107
+00:04:56,700 --> 00:04:59,370
+and investigate from that.
+
+108
+00:04:59,370 --> 00:05:02,550
+So it's a step by step
+and iterate to process.
+
+109
+00:05:02,550 --> 00:05:04,980
+So you need to find out the top SQLs
+
+110
+00:05:04,980 --> 00:05:07,140
+and start fixing from there.
+
+111
+00:05:07,140 --> 00:05:10,350
+But how does an explain
+analyze plan looks like?
+
+112
+00:05:10,350 --> 00:05:11,820
+So this is a simple plan.
+
+113
+00:05:11,820 --> 00:05:15,090
+So every arrow mark
+represents the plan node
+
+114
+00:05:15,090 --> 00:05:19,830
+and the top row is the
+consolidation of all the plan nodes.
+
+115
+00:05:19,830 --> 00:05:22,627
+So it has, if you observe
+first row and every plan node,
+
+116
+00:05:22,627 --> 00:05:25,920
+there are two sections to it.
+
+117
+00:05:25,920 --> 00:05:30,000
+So first part is estimations
+and second part is actual.
+
+118
+00:05:30,000 --> 00:05:31,230
+So let's look at the number.
+
+119
+00:05:31,230 --> 00:05:33,910
+So first number is estimated startup cost
+
+120
+00:05:35,293 --> 00:05:38,160
+and then total estimated cost,
+
+121
+00:05:38,160 --> 00:05:41,793
+and then total estimated
+rows and then you know,
+
+122
+00:05:42,660 --> 00:05:45,540
+width of each, average width of the row.
+
+123
+00:05:45,540 --> 00:05:47,220
+And the next section is actual
+
+124
+00:05:47,220 --> 00:05:51,060
+where it starts with actual
+startup time in milliseconds.
+
+125
+00:05:51,060 --> 00:05:54,720
+And this is total, next is
+total time in milliseconds
+
+126
+00:05:54,720 --> 00:05:59,190
+and the total number of rows
+for that particular query.
+
+127
+00:05:59,190 --> 00:06:01,350
+Every plan node has these two sections.
+
+128
+00:06:01,350 --> 00:06:06,210
+So if you look at the second
+part of each plan node,
+
+129
+00:06:06,210 --> 00:06:08,940
+so that's execution time of
+that particular plan node
+
+130
+00:06:08,940 --> 00:06:11,400
+and the consolidation is the top row.
+
+131
+00:06:11,400 --> 00:06:14,670
+So the top row has the
+number of rows executed
+
+132
+00:06:14,670 --> 00:06:16,440
+with that particular query.
+
+133
+00:06:16,440 --> 00:06:18,660
+And next is the loops, number of loops.
+
+134
+00:06:18,660 --> 00:06:22,620
+If you have complex query,
+you'll see more number of loops.
+
+135
+00:06:22,620 --> 00:06:26,700
+So that's the kind of basic
+for explain analyze plan,
+
+136
+00:06:26,700 --> 00:06:30,960
+but what problems to look
+at in explain analyze plan.
+
+137
+00:06:30,960 --> 00:06:33,210
+So in the demo we have
+
+138
+00:06:33,210 --> 00:06:35,730
+several problems to look at in detail,
+
+139
+00:06:35,730 --> 00:06:39,090
+but at high level, it'll
+start with bad estimates.
+
+140
+00:06:39,090 --> 00:06:43,410
+So if planner is dependent on statistics,
+
+141
+00:06:43,410 --> 00:06:46,170
+if the statistics are not up to date,
+
+142
+00:06:46,170 --> 00:06:49,530
+you'll see bad plans and
+execution times are high.
+
+143
+00:06:49,530 --> 00:06:53,340
+And you can look at sequential
+scans, full table scans
+
+144
+00:06:53,340 --> 00:06:56,850
+which are CPU intensive
+where an index can help.
+
+145
+00:06:56,850 --> 00:07:00,990
+But if index is already there
+and a strategic index can help
+
+146
+00:07:00,990 --> 00:07:05,850
+to improve the performance and
+you can look at buffer reads
+
+147
+00:07:05,850 --> 00:07:10,170
+with buffer's option in
+explain analyze plan.
+
+148
+00:07:10,170 --> 00:07:13,620
+And as I said, you need
+to look at each plan node
+
+149
+00:07:13,620 --> 00:07:16,320
+and pick up the slow operation
+
+150
+00:07:16,320 --> 00:07:19,323
+in that plan node and start
+investigation from there.
+
+151
+00:07:20,751 --> 00:07:21,930
+This is a e-commerce...
+
+152
+00:07:21,930 --> 00:07:24,810
+We have a simple e-commerce app,
+
+153
+00:07:24,810 --> 00:07:26,400
+that's the load generator
+I have started with.
+
+154
+00:07:26,400 --> 00:07:30,570
+This app has simple
+e-commerce tables like orders,
+
+155
+00:07:30,570 --> 00:07:32,010
+products, users,
+
+156
+00:07:32,010 --> 00:07:34,680
+and we have the load generator
+that's what I started.
+
+157
+00:07:34,680 --> 00:07:38,880
+So it opens the connection to the database
+
+158
+00:07:38,880 --> 00:07:40,830
+more than 150 connections
+
+159
+00:07:40,830 --> 00:07:43,380
+and it has balanced reads and writes
+
+160
+00:07:43,380 --> 00:07:46,170
+and it provides summary every 30 minutes
+
+161
+00:07:46,170 --> 00:07:50,133
+on how many queries run,
+we can see that in demo.
+
+162
+00:07:51,750 --> 00:07:53,940
+These are the five
+critical performance issues
+
+163
+00:07:53,940 --> 00:07:55,350
+we're going to cover.
+
+164
+00:07:55,350 --> 00:07:58,503
+So we will cover in detail
+in demo, but at high level.
+
+165
+00:07:59,460 --> 00:08:03,390
+First one is how rewriting
+a query could help.
+
+166
+00:08:03,390 --> 00:08:06,360
+And second one is, it's
+going for a different plan,
+
+167
+00:08:06,360 --> 00:08:07,710
+but other plan can help,
+
+168
+00:08:07,710 --> 00:08:09,870
+how do you switch between the plans?
+
+169
+00:08:09,870 --> 00:08:13,110
+And third one is you
+already have an index.
+
+170
+00:08:13,110 --> 00:08:15,450
+How can a strategic index can help
+
+171
+00:08:15,450 --> 00:08:17,130
+to improve the performance?
+
+172
+00:08:17,130 --> 00:08:20,160
+And fourth one is heap
+only to pull updates,
+
+173
+00:08:20,160 --> 00:08:23,070
+how can that help to
+improve the performance?
+
+174
+00:08:23,070 --> 00:08:27,270
+And we have some lightweight
+logs we can see in the demo.
+
+175
+00:08:27,270 --> 00:08:31,983
+And what are those logs and
+how can we fix those logs?
+
+176
+00:08:33,270 --> 00:08:36,764
+This is the content. We
+can start with the demo.
+
+177
+00:08:36,764 --> 00:08:40,053
+I will just switch back to demo.
+
+178
+00:08:45,015 --> 00:08:50,015
+Is this okay, it's visible or
+you want one size to increase?
+
+179
+00:08:53,070 --> 00:08:53,903
+All okay?
+
+180
+00:08:55,590 --> 00:08:58,893
+So this is the load
+generator I've started.
+
+181
+00:09:00,900 --> 00:09:02,820
+It has eight queries that are running
+
+182
+00:09:02,820 --> 00:09:05,370
+and it gives you information about
+
+183
+00:09:05,370 --> 00:09:07,830
+how many times each query run
+
+184
+00:09:07,830 --> 00:09:09,820
+and aggregation of the queries
+
+185
+00:09:10,980 --> 00:09:13,140
+for that particular 30 second interval.
+
+186
+00:09:13,140 --> 00:09:15,780
+As we fix the queries,
+we can see improvement
+
+187
+00:09:15,780 --> 00:09:18,573
+in these number of queries.
+
+188
+00:09:19,470 --> 00:09:24,210
+And switching back to the
+console, this is the instance.
+
+189
+00:09:24,210 --> 00:09:26,410
+You can go to performance insights
+
+190
+00:09:28,140 --> 00:09:30,090
+of that instance.
+
+191
+00:09:30,090 --> 00:09:33,120
+Let's select last 10 minutes
+
+192
+00:09:33,120 --> 00:09:35,790
+and you can see different wait events
+
+193
+00:09:35,790 --> 00:09:39,300
+where CPU being the most top wait event.
+
+194
+00:09:39,300 --> 00:09:43,050
+You can see more than 60, 70
+sessions are consuming CPU,
+
+195
+00:09:43,050 --> 00:09:46,593
+but we have a lot of wait events.
+
+196
+00:09:47,700 --> 00:09:49,770
+I'll go to Database Insights,
+
+197
+00:09:49,770 --> 00:09:53,010
+which is an extended version
+of performance insights
+
+198
+00:09:53,010 --> 00:09:55,773
+and continue monitoring from there.
+
+199
+00:09:56,850 --> 00:10:00,183
+And if you select last maybe 10 minutes,
+
+200
+00:10:01,560 --> 00:10:06,560
+you'll see the same wait
+events where CPU being the most
+
+201
+00:10:08,910 --> 00:10:10,930
+and I'm switching back to terminal
+
+202
+00:10:13,917 --> 00:10:15,750
+and let's connect to database.
+
+203
+00:10:15,750 --> 00:10:19,200
+And I was talking about
+pg-stat-activity view as well
+
+204
+00:10:19,200 --> 00:10:24,200
+congest a query pg-stat-activity view
+
+205
+00:10:24,606 --> 00:10:29,606
+of substring(query, 1,20)
+from pg-stat-activity view
+
+206
+00:10:34,980 --> 00:10:39,423
+where that name is,
+database name is e-commerce.
+
+207
+00:10:41,520 --> 00:10:43,560
+So you can see all connections
+
+208
+00:10:43,560 --> 00:10:46,800
+to the database more than 150 connections.
+
+209
+00:10:46,800 --> 00:10:50,130
+So this all are running
+against database and if you see
+
+210
+00:10:50,130 --> 00:10:54,964
+all our inserts, selects,
+updates, all sort of queries.
+
+211
+00:10:54,964 --> 00:10:59,490
+So it has balanced read
+and writes to the database.
+
+212
+00:10:59,490 --> 00:11:02,100
+So let's go back to the console
+
+213
+00:11:02,100 --> 00:11:05,700
+and select the CPU wait event,
+which has peaked the most.
+
+214
+00:11:05,700 --> 00:11:08,910
+If I scroll down, you'll
+see the top queries
+
+215
+00:11:08,910 --> 00:11:11,190
+that are consuming the CPU.
+
+216
+00:11:11,190 --> 00:11:16,023
+So today we are going to fix
+top five queries one by one.
+
+217
+00:11:17,580 --> 00:11:20,010
+Another thing to monitor is
+
+218
+00:11:20,010 --> 00:11:22,650
+if you go to database telemetry section,
+
+219
+00:11:22,650 --> 00:11:27,650
+you have individual
+metrics on CPU, memory, I/O
+
+220
+00:11:27,900 --> 00:11:29,460
+and all sort of monitoring.
+
+221
+00:11:29,460 --> 00:11:33,240
+If you view metrics in CloudWatch,
+
+222
+00:11:33,240 --> 00:11:37,770
+you can create your own dashboards
+to monitor these metrics.
+
+223
+00:11:37,770 --> 00:11:40,770
+I have a simple dashboard created
+
+224
+00:11:40,770 --> 00:11:45,770
+with metrics like CPU,
+read IOPS, write IOPS,
+
+225
+00:11:46,320 --> 00:11:49,920
+all those basic metrics,
+we have commit latency
+
+226
+00:11:49,920 --> 00:11:51,210
+and all those.
+
+227
+00:11:51,210 --> 00:11:56,210
+And if you see the CPU,
+the last 15 minutes,
+
+228
+00:11:58,710 --> 00:12:00,717
+which is touching 100%.
+
+229
+00:12:03,090 --> 00:12:07,980
+So now let's go back to database insights
+
+230
+00:12:07,980 --> 00:12:12,980
+and pick up those top
+queries and fix one by one.
+
+231
+00:12:13,380 --> 00:12:17,370
+I'll just select last 10 minutes
+
+232
+00:12:17,370 --> 00:12:20,523
+and then the CPU wait event.
+
+233
+00:12:22,211 --> 00:12:24,420
+If you scroll down, you can see the query.
+
+234
+00:12:24,420 --> 00:12:26,880
+So this is a select function call
+
+235
+00:12:26,880 --> 00:12:31,140
+which is consuming more CPU resources.
+
+236
+00:12:31,140 --> 00:12:34,200
+If I check that query,
+
+237
+00:12:34,200 --> 00:12:36,900
+this is the query that's
+running against database.
+
+238
+00:12:36,900 --> 00:12:41,900
+So let's see the DDL deal
+of this query, this function
+
+239
+00:12:43,320 --> 00:12:45,093
+and see what's inside it.
+
+240
+00:12:48,270 --> 00:12:51,300
+So it has only a single select query
+
+241
+00:12:51,300 --> 00:12:54,810
+with a predicate to a function call.
+
+242
+00:12:54,810 --> 00:12:57,003
+So if you execute this function,
+
+243
+00:12:59,520 --> 00:13:03,630
+sale movement type is coming to this query
+
+244
+00:13:03,630 --> 00:13:05,490
+and the overall function
+
+245
+00:13:05,490 --> 00:13:09,633
+gets the count of all sale movement type.
+
+246
+00:13:11,520 --> 00:13:14,490
+But if you execute, explain
+analyze on this query,
+
+247
+00:13:14,490 --> 00:13:15,480
+it's gonna take time.
+
+248
+00:13:15,480 --> 00:13:16,890
+So a few minutes back
+
+249
+00:13:16,890 --> 00:13:20,070
+I have executed explain
+analyze on this function
+
+250
+00:13:20,070 --> 00:13:22,833
+just to save some time, it
+takes more than one minute.
+
+251
+00:13:23,790 --> 00:13:28,790
+So if you explain analyze
+buffers for that function call,
+
+252
+00:13:29,910 --> 00:13:33,300
+you don't see much information
+on explain analyze directly
+
+253
+00:13:33,300 --> 00:13:35,010
+on the function.
+
+254
+00:13:35,010 --> 00:13:37,830
+For this you can use plprofiler extension
+
+255
+00:13:37,830 --> 00:13:42,060
+which gives you the internal
+query details of the function
+
+256
+00:13:42,060 --> 00:13:46,470
+or you can check the
+function and manually execute
+
+257
+00:13:46,470 --> 00:13:49,650
+the explain analyze for
+the queries inside it.
+
+258
+00:13:49,650 --> 00:13:52,050
+So as we have only one query,
+
+259
+00:13:52,050 --> 00:13:55,140
+I just did explain analyze on that query.
+
+260
+00:13:55,140 --> 00:13:57,510
+So we are gonna spend a couple of minutes
+
+261
+00:13:57,510 --> 00:14:01,350
+to deeply look at this
+explain analyze plan
+
+262
+00:14:01,350 --> 00:14:06,180
+and then for other queries
+we can just spend less time.
+
+263
+00:14:06,180 --> 00:14:08,370
+So this is the explained analyze plan,
+
+264
+00:14:08,370 --> 00:14:10,320
+the arrow mark that I talked about.
+
+265
+00:14:10,320 --> 00:14:13,350
+This is the plan node, one plan node
+
+266
+00:14:13,350 --> 00:14:17,370
+as we have only one query,
+one table, one query single,
+
+267
+00:14:17,370 --> 00:14:20,700
+it's a strike query, that's
+why we have one plan node.
+
+268
+00:14:20,700 --> 00:14:24,930
+And this top line is the
+aggregation of all the plan nodes.
+
+269
+00:14:24,930 --> 00:14:29,850
+So now first thing to do
+is which plan node is slow?
+
+270
+00:14:29,850 --> 00:14:32,763
+So I have only one plan node.
+If I look at the plan node,
+
+271
+00:14:33,750 --> 00:14:36,930
+the cost, estimated cost is over 3 million
+
+272
+00:14:36,930 --> 00:14:41,100
+and rows are nearly 2 million.
+
+273
+00:14:41,100 --> 00:14:45,480
+And actual time, total
+time is around 60 seconds.
+
+274
+00:14:45,480 --> 00:14:49,500
+And the rows returned by
+this plan node is 1 million,
+
+275
+00:14:49,500 --> 00:14:50,880
+only 1 million.
+
+276
+00:14:50,880 --> 00:14:54,270
+So now another couple
+of things to look at is
+
+277
+00:14:54,270 --> 00:14:59,070
+rows removed by filter
+are 10 million rows.
+
+278
+00:14:59,070 --> 00:15:01,050
+But if you observe this plan node
+
+279
+00:15:01,050 --> 00:15:06,050
+is returning only 1 million
+rows, but planner thinks
+
+280
+00:15:08,040 --> 00:15:12,060
+10 million rows should be
+removed from what it has done.
+
+281
+00:15:12,060 --> 00:15:15,090
+This is because if you
+look at the number of rows
+
+282
+00:15:15,090 --> 00:15:18,630
+in the same table, the 11 million rows
+
+283
+00:15:18,630 --> 00:15:22,650
+and if you group the
+movement type for sale,
+
+284
+00:15:22,650 --> 00:15:23,850
+this is 1 million.
+
+285
+00:15:23,850 --> 00:15:28,110
+So this sale movement type
+is what it's returning here.
+
+286
+00:15:28,110 --> 00:15:33,110
+So, and if you exclude that
+sale, that's 10 million rows,
+
+287
+00:15:33,810 --> 00:15:36,990
+which is where it's removed by the filter.
+
+288
+00:15:36,990 --> 00:15:41,490
+So now what's happening is for each row,
+
+289
+00:15:41,490 --> 00:15:44,340
+this function call gets executed.
+
+290
+00:15:44,340 --> 00:15:48,420
+That's why it gets executed
+for all 11 million rows.
+
+291
+00:15:48,420 --> 00:15:50,310
+And then planner realizes that
+
+292
+00:15:50,310 --> 00:15:53,310
+sale movement type is only 1 million row.
+
+293
+00:15:53,310 --> 00:15:58,310
+So I need to remove all
+the row that I've worked on
+
+294
+00:15:58,557 --> 00:16:02,040
+for 10 million rows, it should be removed.
+
+295
+00:16:02,040 --> 00:16:05,310
+So if you observe this is
+unnecessary work for planner
+
+296
+00:16:05,310 --> 00:16:09,180
+to go to 11 million rows
+to execute that function.
+
+297
+00:16:09,180 --> 00:16:14,180
+And if you look at shared
+hit, these are in blocks.
+
+298
+00:16:14,340 --> 00:16:19,340
+So 87,008 KB blocks are
+fetched from the memory.
+
+299
+00:16:19,740 --> 00:16:22,907
+So that's high if you
+multiply 87 by 8K bits
+
+300
+00:16:22,907 --> 00:16:25,050
+around 800 megabytes or something.
+
+301
+00:16:25,050 --> 00:16:27,303
+So that much data has been read.
+
+302
+00:16:29,400 --> 00:16:31,320
+Now if you look at this plan node,
+
+303
+00:16:31,320 --> 00:16:35,280
+it's going for sequential scan,
+which is a full table scan.
+
+304
+00:16:35,280 --> 00:16:39,947
+But if I look at this table DDL
+with \d option, you can see,
+
+305
+00:16:45,570 --> 00:16:48,837
+well I'll connect back once again
+
+306
+00:16:51,300 --> 00:16:55,323
+and then look at the DDL for this table.
+
+307
+00:16:56,160 --> 00:16:58,620
+This is the moment type index.
+
+308
+00:16:58,620 --> 00:17:01,860
+So there is an index on
+movement type column,
+
+309
+00:17:01,860 --> 00:17:06,860
+but it goes to a sequential
+scan for this query.
+
+310
+00:17:07,290 --> 00:17:10,500
+This is because planner
+doesn't know the value
+
+311
+00:17:10,500 --> 00:17:11,440
+that's coming from this.
+
+312
+00:17:11,440 --> 00:17:14,820
+If you execute this
+function with a select call,
+
+313
+00:17:14,820 --> 00:17:15,990
+then it gives you sale.
+
+314
+00:17:15,990 --> 00:17:18,900
+But planner doesn't know
+what value it's coming there.
+
+315
+00:17:18,900 --> 00:17:22,800
+So that's why for each row
+it's executing that function.
+
+316
+00:17:22,800 --> 00:17:27,600
+So to make the optimizer aware
+of that sale movement type,
+
+317
+00:17:27,600 --> 00:17:31,980
+if I change the query to maybe,
+
+318
+00:17:31,980 --> 00:17:36,980
+I'll take this query from here
+and explain analyze buffers
+
+319
+00:17:42,900 --> 00:17:47,010
+and if I use select
+call for that function,
+
+320
+00:17:47,010 --> 00:17:50,343
+if I go back to the function name,
+
+321
+00:17:52,620 --> 00:17:55,500
+so if I add a select call to that function
+
+322
+00:17:55,500 --> 00:17:58,320
+and see what happens, it
+should pick up that index
+
+323
+00:17:58,320 --> 00:18:03,017
+because it knows that sale
+comes to that filter column.
+
+324
+00:18:04,680 --> 00:18:08,860
+So first time it's gonna
+take time because if you see
+
+325
+00:18:10,230 --> 00:18:12,960
+it's going for index scan,
+that's what we wanted.
+
+326
+00:18:12,960 --> 00:18:16,590
+So now select call gives index hint that
+
+327
+00:18:16,590 --> 00:18:18,450
+you should go for index scan.
+
+328
+00:18:18,450 --> 00:18:21,660
+And if you observe I/O timings,
+
+329
+00:18:21,660 --> 00:18:23,280
+this is for the first time,
+
+330
+00:18:23,280 --> 00:18:25,890
+index has to be loaded into memory.
+
+331
+00:18:25,890 --> 00:18:27,990
+That's where you see I/O timings there.
+
+332
+00:18:27,990 --> 00:18:31,950
+But if I run it again, as
+it's already in memory,
+
+333
+00:18:31,950 --> 00:18:36,950
+it took 10 seconds earlier and
+now it took 800 milliseconds,
+
+334
+00:18:36,960 --> 00:18:39,840
+but initially it was nearly one minute.
+
+335
+00:18:39,840 --> 00:18:43,710
+So we brought down the
+execution time from one minute
+
+336
+00:18:43,710 --> 00:18:45,420
+to 800 millisecond.
+
+337
+00:18:45,420 --> 00:18:48,960
+Not only that, you don't
+see that rows removed
+
+338
+00:18:48,960 --> 00:18:50,370
+by filter here.
+
+339
+00:18:50,370 --> 00:18:55,370
+So planner exactly goes to the
+sale movement type rows here
+
+340
+00:18:55,590 --> 00:18:58,050
+and if you see the shared buffer hits,
+
+341
+00:18:58,050 --> 00:19:01,110
+it was 87,000 8 KB blocks.
+
+342
+00:19:01,110 --> 00:19:03,420
+Now it's just 2000 8 KB blocks,
+
+343
+00:19:03,420 --> 00:19:05,940
+which is very, very less work for planner.
+
+344
+00:19:05,940 --> 00:19:08,130
+That's why execution time is low.
+
+345
+00:19:08,130 --> 00:19:11,430
+But if you look at all of the metrics,
+
+346
+00:19:11,430 --> 00:19:15,630
+the cost was 3 million,
+earlier it's 43,000
+
+347
+00:19:15,630 --> 00:19:19,020
+so everything came down.
+
+348
+00:19:19,020 --> 00:19:24,020
+So to fix this query, we just
+need to rewrite this query
+
+349
+00:19:26,970 --> 00:19:28,740
+to use the select call.
+
+350
+00:19:28,740 --> 00:19:29,823
+I'll just do that.
+
+351
+00:19:32,370 --> 00:19:34,510
+I'm just modifying that function
+
+352
+00:19:35,880 --> 00:19:38,400
+to use that select call.
+
+353
+00:19:38,400 --> 00:19:42,720
+And now if you see the
+definition DDL of that function,
+
+354
+00:19:42,720 --> 00:19:45,720
+you can see that select
+call has been added.
+
+355
+00:19:45,720 --> 00:19:49,350
+So every connection that
+comes after this modification
+
+356
+00:19:49,350 --> 00:19:54,323
+should go to index scan if I
+go back to my load generator.
+
+357
+00:19:56,610 --> 00:19:59,261
+So function calls for every 30 seconds
+
+358
+00:19:59,261 --> 00:20:01,470
+are only just nine queries.
+
+359
+00:20:01,470 --> 00:20:02,670
+If you keep monitoring,
+
+360
+00:20:02,670 --> 00:20:05,100
+if you wait for next
+summary to be displayed,
+
+361
+00:20:05,100 --> 00:20:06,720
+then you can see the improvement
+
+362
+00:20:06,720 --> 00:20:09,660
+in that function calls as well.
+
+363
+00:20:09,660 --> 00:20:11,190
+So now it improved to 12 queries.
+
+364
+00:20:11,190 --> 00:20:16,190
+If you wait for a few minutes,
+you'll see the improvement,
+
+365
+00:20:16,260 --> 00:20:17,493
+actual improvement.
+
+366
+00:20:19,020 --> 00:20:21,210
+Another thing I'm
+switching back to console
+
+367
+00:20:21,210 --> 00:20:23,250
+to look at other stats.
+
+368
+00:20:23,250 --> 00:20:28,170
+If I go to a dashboard,
+if I scroll down to,
+
+369
+00:20:28,170 --> 00:20:33,170
+maybe I'll pick up commit
+latency, even cloud watch metrics,
+
+370
+00:20:35,340 --> 00:20:39,690
+if I select for last 15 minutes.
+
+371
+00:20:39,690 --> 00:20:42,720
+So it's slowly coming
+down, it was around 23
+
+372
+00:20:42,720 --> 00:20:45,300
+and now it's coming to 21.
+
+373
+00:20:45,300 --> 00:20:49,290
+So commit latency for function
+calls has been reduced
+
+374
+00:20:49,290 --> 00:20:52,170
+and it gives more resources
+to other queries as well.
+
+375
+00:20:52,170 --> 00:20:55,440
+So you can see little
+improvement of number of queries
+
+376
+00:20:55,440 --> 00:20:59,400
+for other queries as well
+because resources are consumed
+
+377
+00:20:59,400 --> 00:21:01,980
+by this function call are less now.
+
+378
+00:21:01,980 --> 00:21:06,980
+So, and we can see other
+metrics like queries finished,
+
+379
+00:21:07,230 --> 00:21:09,690
+maybe I'll go for this metric.
+
+380
+00:21:09,690 --> 00:21:14,690
+If you go to CloudWatch
+and deselect all metrics
+
+381
+00:21:15,720 --> 00:21:19,830
+and select only queries finished,
+
+382
+00:21:19,830 --> 00:21:24,300
+so this should also get
+improved over the time.
+
+383
+00:21:24,300 --> 00:21:27,720
+So you can see it's improving
+the number of queries.
+
+384
+00:21:27,720 --> 00:21:32,720
+If you see the total query
+time, this should get reduced.
+
+385
+00:21:32,760 --> 00:21:37,760
+So it started with 5
+million and now it's at 525
+
+386
+00:21:37,830 --> 00:21:40,440
+because other queries are also running.
+
+387
+00:21:40,440 --> 00:21:43,030
+It created resources for other queries
+
+388
+00:21:44,070 --> 00:21:47,253
+but it eventually comes down.
+
+389
+00:21:48,300 --> 00:21:50,940
+So that's how we can rewrite the queries
+
+390
+00:21:50,940 --> 00:21:52,260
+to improve the performance.
+
+391
+00:21:52,260 --> 00:21:54,180
+This is an example to rewrite the query.
+
+392
+00:21:54,180 --> 00:21:56,820
+So if you're using function
+calls to our predicate,
+
+393
+00:21:56,820 --> 00:21:58,950
+make sure you use select call.
+
+394
+00:21:58,950 --> 00:22:02,700
+Otherwise, optimizer will get confused
+
+395
+00:22:02,700 --> 00:22:05,760
+and it takes a sequential full table scan
+
+396
+00:22:05,760 --> 00:22:07,770
+instead of index scans.
+
+397
+00:22:07,770 --> 00:22:11,070
+If I go back to database insights-
+
+398
+00:22:11,070 --> 00:22:13,321
+- [Speaker] I think we have a question.
+
+399
+00:22:13,321 --> 00:22:14,654
+- [Baji] Oh, so.
+
+400
+00:22:16,050 --> 00:22:19,230
+- [Speaker] Is there any
+reason you would want to,
+
+401
+00:22:19,230 --> 00:22:21,840
+like why would we not always do this?
+
+402
+00:22:21,840 --> 00:22:25,440
+Or is this just like, why
+would you ever not prefix it
+
+403
+00:22:25,440 --> 00:22:29,313
+with a select to call a function directly?
+
+404
+00:22:30,750 --> 00:22:32,190
+Does that make sense?
+- [Baji] If I understand
+
+405
+00:22:32,190 --> 00:22:33,210
+the question,
+
+406
+00:22:33,210 --> 00:22:36,060
+so why would we need to
+add that select to call?
+
+407
+00:22:36,060 --> 00:22:38,670
+- [Speaker] Why would
+you ever not do that?
+
+408
+00:22:38,670 --> 00:22:40,290
+Like I didn't even know this was a thing
+
+409
+00:22:40,290 --> 00:22:42,990
+and like I'm thinking about
+all the queries I've written
+
+410
+00:22:42,990 --> 00:22:46,860
+and like man I should be
+doing this everywhere.
+
+411
+00:22:46,860 --> 00:22:49,770
+Is there any reason we
+wouldn't wanna do this?
+
+412
+00:22:49,770 --> 00:22:53,310
+- [Vlad] Yeah, just to
+paraphrase, he's asking
+
+413
+00:22:53,310 --> 00:22:57,843
+why the database engine would
+not automatically do that.
+
+414
+00:22:57,843 --> 00:23:00,750
+(indistinct) talking line it like a-
+
+415
+00:23:00,750 --> 00:23:04,077
+- [Baji] Yeah, understood.
+Yes. Yeah. Thanks Vlad.
+
+416
+00:23:06,720 --> 00:23:11,070
+So why database engine
+itself picks up that
+
+417
+00:23:11,070 --> 00:23:12,360
+as a select call.
+
+418
+00:23:12,360 --> 00:23:13,773
+That's the question, right?
+
+419
+00:23:15,060 --> 00:23:17,040
+Yeah, it's a kind of, so,
+
+420
+00:23:17,040 --> 00:23:20,070
+but yeah, that's how optimizer works.
+
+421
+00:23:20,070 --> 00:23:23,220
+It only looks at the function call.
+
+422
+00:23:23,220 --> 00:23:26,490
+If it doesn't have, it
+has to execute that call
+
+423
+00:23:26,490 --> 00:23:29,940
+and get the value for that filter type.
+
+424
+00:23:29,940 --> 00:23:32,040
+But if you have that select call,
+
+425
+00:23:32,040 --> 00:23:35,940
+it already execute that call first
+
+426
+00:23:35,940 --> 00:23:37,980
+because it's a subquery now,
+
+427
+00:23:37,980 --> 00:23:40,800
+it's not the actual
+filter, it's a subquery.
+
+428
+00:23:40,800 --> 00:23:42,870
+So it executes the subquery first
+
+429
+00:23:42,870 --> 00:23:45,573
+and then gives the value
+to the further rows.
+
+430
+00:23:48,300 --> 00:23:49,133
+Thank you.
+
+431
+00:23:50,370 --> 00:23:53,490
+And if we observe the next queries,
+
+432
+00:23:53,490 --> 00:23:56,370
+I'll fix this third query first.
+
+433
+00:23:56,370 --> 00:23:57,450
+Any questions?
+
+434
+00:23:57,450 --> 00:23:58,660
+- [Speaker] Yeah, yeah, sorry,
+
+435
+00:23:58,660 --> 00:24:01,140
+I had a few questions on this example too
+
+436
+00:24:01,140 --> 00:24:04,080
+just before you get too much into this.
+
+437
+00:24:04,080 --> 00:24:06,870
+Did earlier when you were
+running those explain plans,
+
+438
+00:24:06,870 --> 00:24:07,863
+did you,
+
+439
+00:24:08,940 --> 00:24:11,760
+I thought the first time you ran it,
+
+440
+00:24:11,760 --> 00:24:14,790
+you said that you weren't
+getting very much,
+
+441
+00:24:14,790 --> 00:24:16,080
+very many details.
+
+442
+00:24:16,080 --> 00:24:19,020
+Did you run a second one
+before you made that,
+
+443
+00:24:19,020 --> 00:24:20,940
+tested that fix?
+
+444
+00:24:20,940 --> 00:24:24,420
+- [Baji] Oh, this is
+because of the I/O timings.
+
+445
+00:24:24,420 --> 00:24:28,530
+I mean the first time it has
+to load the index into memory.
+
+446
+00:24:28,530 --> 00:24:32,070
+So all the extra lines are related to I/O
+
+447
+00:24:32,070 --> 00:24:35,130
+and he fetches is I/O timing line.
+
+448
+00:24:35,130 --> 00:24:36,360
+So that's where it's-
+
+449
+00:24:36,360 --> 00:24:39,780
+- [Speaker] Did you
+have to add a parameter
+
+450
+00:24:39,780 --> 00:24:42,001
+or something that they explain
+
+451
+00:24:42,001 --> 00:24:47,001
+to have it come out with more details
+
+452
+00:24:47,400 --> 00:24:49,200
+or is this just the regular explain?
+
+453
+00:24:50,589 --> 00:24:54,250
+- It's just the regular,
+it is just (indistinct)
+
+454
+00:25:04,110 --> 00:25:06,330
+- [Speaker] Oh okay.
+That was the difference.
+
+455
+00:25:06,330 --> 00:25:09,840
+Okay, thank you that
+was what I was asking.
+
+456
+00:25:09,840 --> 00:25:10,980
+That's what I wanted to know. Thanks.
+
+457
+00:25:10,980 --> 00:25:14,640
+And then one other thing,
+all of these like Postgres,
+
+458
+00:25:14,640 --> 00:25:16,490
+like command line things you're doing
+
+459
+00:25:17,400 --> 00:25:22,400
+such as the explain plan
+or like the \d function,
+
+460
+00:25:23,700 --> 00:25:26,100
+are those something that you could
+
+461
+00:25:26,100 --> 00:25:29,343
+or would want to do in the AWS console?
+
+462
+00:25:30,630 --> 00:25:32,310
+- [Baji] Not in the AWS console
+
+463
+00:25:32,310 --> 00:25:36,510
+but any client tool like PG
+admin or other client tools.
+
+464
+00:25:36,510 --> 00:25:38,070
+You can use those client tools
+
+465
+00:25:38,070 --> 00:25:41,910
+to see the details of the tables
+
+466
+00:25:41,910 --> 00:25:44,580
+and what indexes, what
+functions, everything,
+
+467
+00:25:44,580 --> 00:25:47,283
+can be done through client tools.
+
+468
+00:25:51,600 --> 00:25:54,420
+- [Speaker] Just one more,
+just a very quick follow up.
+
+469
+00:25:54,420 --> 00:25:56,940
+Is there a significant difference between
+
+470
+00:25:56,940 --> 00:25:58,380
+what things you shown here
+
+471
+00:25:58,380 --> 00:26:01,130
+and if you're doing Aurora PostgreSQL?
+
+472
+00:26:02,013 --> 00:26:03,880
+- [Baji] Oh, this is Aurora PostgreSQL.
+
+473
+00:26:03,880 --> 00:26:05,640
+- [Speaker] Okay, thank you.
+
+474
+00:26:05,640 --> 00:26:08,340
+- [Baji] I'm so sorry. I
+haven't mentioned that.
+
+475
+00:26:08,340 --> 00:26:12,180
+If you go back to the console,
+this is my Aurora instance
+
+476
+00:26:12,180 --> 00:26:14,223
+that I started looking at.
+
+477
+00:26:15,269 --> 00:26:18,137
+- [Speaker] So the explain
+as a standard (indistinct)
+
+478
+00:26:18,137 --> 00:26:22,810
+that you use it for any
+Postgres flavored database?
+
+479
+00:26:22,810 --> 00:26:25,950
+- [Baji] Yeah, yeah,
+there is nothing special
+
+480
+00:26:25,950 --> 00:26:28,923
+if it's RDS Aurora or community Postgres.
+
+481
+00:26:30,840 --> 00:26:34,980
+So next query that I wanna
+pick is the third one.
+
+482
+00:26:34,980 --> 00:26:38,490
+If you look at the query,
+it's getting average price
+
+483
+00:26:38,490 --> 00:26:43,490
+for the products for certain category,
+
+484
+00:26:44,040 --> 00:26:45,690
+only for the active products.
+
+485
+00:26:45,690 --> 00:26:49,857
+If I select this query and generate
+
+486
+00:26:49,857 --> 00:26:53,313
+and explain analyze plan, perfect.
+
+487
+00:26:58,140 --> 00:27:01,980
+This goes to index scan,
+a bitmap index scan.
+
+488
+00:27:01,980 --> 00:27:04,200
+The difference between normal index scan
+
+489
+00:27:04,200 --> 00:27:08,220
+and bitmap index scan is for
+index scan, it takes one row
+
+490
+00:27:08,220 --> 00:27:11,160
+and get fetched from the index file.
+
+491
+00:27:11,160 --> 00:27:14,790
+So for one row, one iteration
+but bitmap index scan,
+
+492
+00:27:14,790 --> 00:27:16,950
+it takes a group of rows
+
+493
+00:27:16,950 --> 00:27:19,080
+and it goes to fetch all the rows at one.
+
+494
+00:27:19,080 --> 00:27:23,130
+So it reduces the number of
+iterations to the index files.
+
+495
+00:27:23,130 --> 00:27:26,100
+So that's why bitmap
+index is more efficient
+
+496
+00:27:26,100 --> 00:27:28,800
+than normal index in some cases.
+
+497
+00:27:28,800 --> 00:27:31,260
+So perfect, it's going
+for bitmap index scan,
+
+498
+00:27:31,260 --> 00:27:32,580
+it's going for index scan.
+
+499
+00:27:32,580 --> 00:27:36,240
+But the two things that we
+looked at the last query,
+
+500
+00:27:36,240 --> 00:27:37,740
+we are again looking at here.
+
+501
+00:27:37,740 --> 00:27:42,600
+So you can see 30,000 rows
+were removed by this filter
+
+502
+00:27:42,600 --> 00:27:46,500
+and 13,000 8 KB blocks are fetched.
+
+503
+00:27:46,500 --> 00:27:48,630
+So if I look at the query,
+
+504
+00:27:48,630 --> 00:27:51,840
+it's getting average price
+for the certain category
+
+505
+00:27:51,840 --> 00:27:53,640
+which is active.
+
+506
+00:27:53,640 --> 00:27:56,790
+Only for the active products,
+it's getting the information.
+
+507
+00:27:56,790 --> 00:28:01,790
+But if I look at only
+active inactive products
+
+508
+00:28:03,360 --> 00:28:04,863
+from the products table,
+
+509
+00:28:07,470 --> 00:28:12,360
+it's only 33% of the products are active.
+
+510
+00:28:12,360 --> 00:28:17,360
+So if I know that I always
+select the active products
+
+511
+00:28:17,370 --> 00:28:19,260
+and not the inactive products,
+
+512
+00:28:19,260 --> 00:28:22,410
+then I can clearly create a partial index
+
+513
+00:28:22,410 --> 00:28:27,410
+on the same category column
+with only for active products.
+
+514
+00:28:28,770 --> 00:28:31,680
+Let's try to create that index.
+
+515
+00:28:31,680 --> 00:28:33,683
+I'm using concurrently option because
+
+516
+00:28:33,683 --> 00:28:36,063
+all the queries are running in parallel.
+
+517
+00:28:37,110 --> 00:28:42,110
+So IDX for category and only
+active on products table
+
+518
+00:28:43,710 --> 00:28:47,867
+on category column, where
+is_active = to true.
+
+519
+00:28:51,540 --> 00:28:54,090
+So this is the partial
+index I want to create.
+
+520
+00:28:54,090 --> 00:28:58,620
+So let's create this index
+and execute the explain plan
+
+521
+00:28:58,620 --> 00:29:01,170
+and see the difference.
+
+522
+00:29:01,170 --> 00:29:05,880
+So now it goes for bitmap
+index scan for that new index
+
+523
+00:29:05,880 --> 00:29:08,430
+and if you observe these two metrics
+
+524
+00:29:08,430 --> 00:29:12,390
+and rows removed filter are only 900 now
+
+525
+00:29:12,390 --> 00:29:14,003
+where there were 30,000
+
+526
+00:29:14,993 --> 00:29:18,630
+and the execution time is 360 milliseconds
+
+527
+00:29:18,630 --> 00:29:21,780
+and 23 milliseconds now.
+
+528
+00:29:21,780 --> 00:29:26,520
+And buffers are only
+10,000, there were 13,000.
+
+529
+00:29:26,520 --> 00:29:29,520
+So some less work to do.
+
+530
+00:29:29,520 --> 00:29:32,100
+So now as we have created the index,
+
+531
+00:29:32,100 --> 00:29:35,490
+I'll just go back to the load generator
+
+532
+00:29:35,490 --> 00:29:40,490
+and if you observe the
+function calls were 9, 12
+
+533
+00:29:41,970 --> 00:29:44,340
+before we fixed the first query.
+
+534
+00:29:44,340 --> 00:29:47,937
+And now eventually you can see 489 queries
+
+535
+00:29:47,937 --> 00:29:50,790
+are running for that function calls.
+
+536
+00:29:50,790 --> 00:29:54,570
+So it's a lot of improvement
+due to that index scan
+
+537
+00:29:54,570 --> 00:29:56,610
+for the first query.
+
+538
+00:29:56,610 --> 00:29:58,800
+Now let's look at strategic index.
+
+539
+00:29:58,800 --> 00:30:02,443
+It's the number of
+queries are 1200, 1,200.
+
+540
+00:30:04,710 --> 00:30:09,710
+And now after creating that
+index you can see 1200 to 2000,
+
+541
+00:30:10,471 --> 00:30:14,040
+almost 100% improvement.
+
+542
+00:30:14,040 --> 00:30:17,370
+So aggregation of the queries are 20,000
+
+543
+00:30:17,370 --> 00:30:20,250
+now after we fixed the couple of queries,
+
+544
+00:30:20,250 --> 00:30:23,580
+but initially when we
+started, it was 15,000.
+
+545
+00:30:23,580 --> 00:30:25,920
+So we have 5,000 more queries
+
+546
+00:30:25,920 --> 00:30:28,260
+running for the same
+workload, same instance.
+
+547
+00:30:28,260 --> 00:30:31,350
+I haven't changed anything
+at instance level,
+
+548
+00:30:31,350 --> 00:30:36,180
+just fixing the queries,
+improved 15,000 to 20,000.
+
+549
+00:30:36,180 --> 00:30:41,180
+So now let's go back here and
+go to the next query to fix.
+
+550
+00:30:43,530 --> 00:30:44,783
+- [Speaker] A question.
+- [Baji] Sure.
+
+551
+00:30:45,708 --> 00:30:48,125
+(indistinct)
+
+552
+00:30:53,426 --> 00:30:55,140
+- [Speaker] Would that not have helped,
+
+553
+00:30:55,140 --> 00:30:57,690
+instead of using like active, right,
+
+554
+00:30:57,690 --> 00:30:59,970
+and you have a multi column index.
+
+555
+00:30:59,970 --> 00:31:01,740
+- [Baji] Okay, if I
+understand the question,
+
+556
+00:31:01,740 --> 00:31:04,260
+so why can't we have a composite index
+
+557
+00:31:04,260 --> 00:31:05,912
+on category and is_active?
+
+558
+00:31:05,912 --> 00:31:06,930
+- [Speaker] Because we can't be creating
+
+559
+00:31:06,930 --> 00:31:09,227
+like these so many indexes for
+different strategies, right?
+
+560
+00:31:09,227 --> 00:31:11,190
+- [Baji] That's right but again,
+
+561
+00:31:11,190 --> 00:31:13,498
+if you create a composite index,
+
+562
+00:31:13,498 --> 00:31:16,770
+is_active has inactive products as well.
+
+563
+00:31:16,770 --> 00:31:20,850
+So we want to filter only
+active products specifically
+
+564
+00:31:20,850 --> 00:31:24,000
+because I know that I always
+search for active products.
+
+565
+00:31:24,000 --> 00:31:26,100
+So if you go for composite index,
+
+566
+00:31:26,100 --> 00:31:29,400
+it still have large number
+of rows removed by filter
+
+567
+00:31:29,400 --> 00:31:31,740
+because that category have
+
+568
+00:31:31,740 --> 00:31:34,260
+any number of inactive products as well.
+
+569
+00:31:34,260 --> 00:31:38,490
+So a composite index might
+not be the right choice here,
+
+570
+00:31:38,490 --> 00:31:40,920
+a partial index would work well.
+
+571
+00:31:40,920 --> 00:31:42,930
+So that's why we created specifically
+
+572
+00:31:42,930 --> 00:31:44,613
+on the active products.
+
+573
+00:31:48,240 --> 00:31:49,263
+Any other questions?
+
+574
+00:31:53,130 --> 00:31:55,350
+- [Speaker] Oh hi, couple
+of questions, right?
+
+575
+00:31:55,350 --> 00:31:59,130
+So first one, we are taught for long that
+
+576
+00:31:59,130 --> 00:32:00,300
+the index scanning happens
+
+577
+00:32:00,300 --> 00:32:03,030
+from the leftmost column on the predicate.
+
+578
+00:32:03,030 --> 00:32:05,160
+Right now, we are picking
+something in the middle.
+
+579
+00:32:05,160 --> 00:32:06,870
+Is that something we are
+supposed to benchmark
+
+580
+00:32:06,870 --> 00:32:07,820
+before we roll out?
+
+581
+00:32:09,480 --> 00:32:13,740
+- [Baji] Oh, this happens because
+of the data grows as well.
+
+582
+00:32:13,740 --> 00:32:18,740
+So let's say you only have active products
+
+583
+00:32:18,780 --> 00:32:22,140
+for 90% of the products stable initially
+
+584
+00:32:22,140 --> 00:32:25,500
+and your A category
+column index works well.
+
+585
+00:32:25,500 --> 00:32:27,330
+But now eventually data grows,
+
+586
+00:32:27,330 --> 00:32:31,110
+some of your products
+become active and inactive.
+
+587
+00:32:31,110 --> 00:32:35,100
+Now inactive amount has 66% of the table.
+
+588
+00:32:35,100 --> 00:32:39,090
+So that's where you see, but
+if you benchmark initially,
+
+589
+00:32:39,090 --> 00:32:41,580
+it would've gotten best performance.
+
+590
+00:32:41,580 --> 00:32:42,510
+- [Speaker] Got it, got it.
+
+591
+00:32:42,510 --> 00:32:45,900
+So the other question,
+building on top of the question
+
+592
+00:32:45,900 --> 00:32:48,030
+the gentleman raised over there,
+
+593
+00:32:48,030 --> 00:32:50,340
+the more indexes we
+create, I mean, so that
+
+594
+00:32:50,340 --> 00:32:52,800
+essentially indicates that we
+need to periodically monitor,
+
+595
+00:32:52,800 --> 00:32:53,910
+observe and optimize.
+
+596
+00:32:53,910 --> 00:32:55,680
+I think that's probably the whole plan
+
+597
+00:32:55,680 --> 00:32:56,730
+because otherwise what happens is
+
+598
+00:32:56,730 --> 00:32:59,190
+you end up creating indexes on
+
+599
+00:32:59,190 --> 00:33:00,870
+every single one of those columns, right?
+
+600
+00:33:00,870 --> 00:33:03,570
+So if you plan it ahead of
+time, which you cannot, so.
+
+601
+00:33:04,590 --> 00:33:06,360
+- [Baji] No, I understand. Yeah, yeah.
+
+602
+00:33:06,360 --> 00:33:09,060
+So the more indexes, you'll get
+
+603
+00:33:09,060 --> 00:33:13,478
+less performance for
+modifications to the table, right?
+
+604
+00:33:13,478 --> 00:33:14,340
+So yeah, yeah.
+
+605
+00:33:14,340 --> 00:33:17,640
+If you are creating that partial index,
+
+606
+00:33:17,640 --> 00:33:21,270
+you can keep observing the
+first index of category
+
+607
+00:33:21,270 --> 00:33:26,130
+and that is not being used
+other than this index.
+
+608
+00:33:26,130 --> 00:33:28,290
+You'll keep monitoring the index scans
+
+609
+00:33:28,290 --> 00:33:30,960
+for that particular table,
+that particular index.
+
+610
+00:33:30,960 --> 00:33:33,930
+And if you observe that that
+index is not being used,
+
+611
+00:33:33,930 --> 00:33:35,732
+you can get rid of that index.
+
+612
+00:33:35,732 --> 00:33:40,732
+We have how to get those
+annual indexes as well
+
+613
+00:33:41,550 --> 00:33:44,430
+moving forward. but yeah,
+that's a good question.
+
+614
+00:33:44,430 --> 00:33:49,080
+So yeah, we can create
+index on single columns.
+
+615
+00:33:49,080 --> 00:33:51,430
+- [Speaker] Right. Thank you.
+- [Baji] Thanks.
+
+616
+00:33:55,980 --> 00:33:57,990
+- [Speaker] Hey, maybe I missed it.
+
+617
+00:33:57,990 --> 00:34:01,680
+When you, that last example,
+what was the indication that
+
+618
+00:34:01,680 --> 00:34:06,270
+there was something wrong
+with that, with that query
+
+619
+00:34:06,270 --> 00:34:10,563
+and then how did you know
+that an index would fix that?
+
+620
+00:34:12,330 --> 00:34:17,330
+- [Baji] Oh because I looked
+at the inactive products,
+
+621
+00:34:17,700 --> 00:34:21,300
+active products inside the table.
+
+622
+00:34:21,300 --> 00:34:25,620
+So I know that only 30%
+of my table is active.
+
+623
+00:34:25,620 --> 00:34:29,100
+- [Speaker] What was the
+initial like red flag
+
+624
+00:34:29,100 --> 00:34:29,933
+that this was?
+
+625
+00:34:29,933 --> 00:34:31,683
+- [Baji] Oh this, this, this two.
+
+626
+00:34:32,580 --> 00:34:34,770
+So rows removed by filter are high.
+
+627
+00:34:34,770 --> 00:34:39,450
+So actually planner worked
+on inactive products as well
+
+628
+00:34:39,450 --> 00:34:43,710
+and then it realizes and
+removed all those inactive rows.
+
+629
+00:34:43,710 --> 00:34:45,450
+- [Speaker] So you want
+a low number of rows
+
+630
+00:34:45,450 --> 00:34:48,420
+removed by filter because
+it's doing more work like-
+
+631
+00:34:48,420 --> 00:34:49,500
+- [Baji] That's-
+- [Speaker] Every time.
+
+632
+00:34:49,500 --> 00:34:52,200
+- [Baji] Correct. That's
+a hint there. Yeah.
+
+633
+00:34:52,200 --> 00:34:54,630
+- [Speaker] Oh thank you.
+- [Baji] Thank you.
+
+634
+00:34:54,630 --> 00:34:57,093
+So let's go to this query.
+
+635
+00:34:59,010 --> 00:35:01,890
+If I select this query,
+if you observe this query,
+
+636
+00:35:01,890 --> 00:35:04,770
+I'm not sure if it's visible,
+
+637
+00:35:04,770 --> 00:35:09,770
+I'll just paste it here with
+the next plan, analyze plan,
+
+638
+00:35:20,280 --> 00:35:22,757
+buffers, and then query.
+
+639
+00:35:25,566 --> 00:35:27,750
+And this goes to index scan.
+
+640
+00:35:27,750 --> 00:35:32,070
+So let's observe the
+query so it has a hint.
+
+641
+00:35:32,070 --> 00:35:33,723
+Like we use in Oracle,
+
+642
+00:35:34,650 --> 00:35:38,220
+this can be done through the
+extension called pg_hint_plan.
+
+643
+00:35:38,220 --> 00:35:40,860
+I already created pg_hint_plan
+
+644
+00:35:40,860 --> 00:35:44,490
+and at initial days of my application
+
+645
+00:35:44,490 --> 00:35:48,060
+I provided hint to go
+to this particular index
+
+646
+00:35:48,060 --> 00:35:51,423
+because that index
+performs well for my query.
+
+647
+00:35:52,440 --> 00:35:55,740
+So now as I hinted for
+this particular index,
+
+648
+00:35:55,740 --> 00:36:00,120
+now you can see index scan
+using that particular index.
+
+649
+00:36:00,120 --> 00:36:01,590
+So all good.
+
+650
+00:36:01,590 --> 00:36:04,260
+But again, the red flags same,
+
+651
+00:36:04,260 --> 00:36:08,220
+rows removed by filter are 400,000
+
+652
+00:36:08,220 --> 00:36:12,663
+and the buffers fetched
+are 400,000 8 KB blocks.
+
+653
+00:36:14,400 --> 00:36:19,050
+But why, why optimizer
+went to that bad index
+
+654
+00:36:19,050 --> 00:36:20,493
+because you hinted?
+
+655
+00:36:21,330 --> 00:36:22,980
+If you observe the predicates,
+
+656
+00:36:22,980 --> 00:36:25,170
+you have created_at in total amount
+
+657
+00:36:25,170 --> 00:36:28,650
+and this is where a
+composite index can help.
+
+658
+00:36:28,650 --> 00:36:33,650
+So, but if you look at
+the detail of the table,
+
+659
+00:36:33,860 --> 00:36:38,860
+orders_table, I already
+have that composite index.
+
+660
+00:36:38,910 --> 00:36:42,510
+So if you see this index
+alert, already have that index,
+
+661
+00:36:42,510 --> 00:36:46,140
+but it still goes to
+the single column index
+
+662
+00:36:46,140 --> 00:36:49,650
+and created it column
+because I hinted for that.
+
+663
+00:36:49,650 --> 00:36:54,650
+The simple solution is
+to just remove that hint.
+
+664
+00:36:57,180 --> 00:37:00,870
+So optimizer is smart enough
+to pick the right index,
+
+665
+00:37:00,870 --> 00:37:04,380
+so let's remove the hint
+and see what happens.
+
+666
+00:37:04,380 --> 00:37:07,473
+So it should pick up that composite index.
+
+667
+00:37:09,694 --> 00:37:13,583
+Create so it went to
+createdat_amount composite index
+
+668
+00:37:14,820 --> 00:37:16,920
+and if you look at rows removed,
+
+669
+00:37:16,920 --> 00:37:18,660
+there is no rows removed by filter.
+
+670
+00:37:18,660 --> 00:37:22,800
+So it exactly knows how
+many rows to locate.
+
+671
+00:37:22,800 --> 00:37:27,410
+And shared buffer it's are
+only 37,000 from 400,000,
+
+672
+00:37:28,350 --> 00:37:31,620
+so which is a significant reduce.
+
+673
+00:37:31,620 --> 00:37:33,630
+But yeah, now we know the solution.
+
+674
+00:37:33,630 --> 00:37:37,140
+Simple solution is to remove
+that hint and it works well,
+
+675
+00:37:37,140 --> 00:37:39,330
+but it needs an application change.
+
+676
+00:37:39,330 --> 00:37:41,970
+That query will be at different places
+
+677
+00:37:41,970 --> 00:37:46,110
+and removing that hint is
+not short term solution.
+
+678
+00:37:46,110 --> 00:37:49,080
+Maybe you can plan for a long
+term solution to remove it,
+
+679
+00:37:49,080 --> 00:37:51,030
+but as a short term solution,
+
+680
+00:37:51,030 --> 00:37:55,050
+how do you make this query
+to use the different index
+
+681
+00:37:55,050 --> 00:37:56,850
+without changing the query?
+
+682
+00:37:56,850 --> 00:37:58,530
+So this is where
+
+683
+00:37:58,530 --> 00:38:02,730
+query plan management
+extension from Aurora helps.
+
+684
+00:38:02,730 --> 00:38:06,570
+So using this extension you
+can capture the right plan
+
+685
+00:38:06,570 --> 00:38:09,050
+and switch the plans between the queries.
+
+686
+00:38:09,050 --> 00:38:13,827
+So this can be done using
+apg_plan_management extension.
+
+687
+00:38:14,880 --> 00:38:16,560
+So if I create this extension,
+
+688
+00:38:16,560 --> 00:38:20,730
+it'll give you DBA plans table
+
+689
+00:38:20,730 --> 00:38:24,540
+where it capture all the
+plans that hit the database.
+
+690
+00:38:24,540 --> 00:38:29,540
+So if I create this plan
+and if I run this query,
+
+691
+00:38:42,503 --> 00:38:46,353
+I will just drop the
+extension and recreate it.
+
+692
+00:38:53,580 --> 00:38:54,900
+- [Speaker] Yeah, I
+have a question for you
+
+693
+00:38:54,900 --> 00:38:56,760
+about the extensions.
+
+694
+00:38:56,760 --> 00:38:59,940
+So right now the Aurora
+product team has not guaranteed
+
+695
+00:38:59,940 --> 00:39:03,750
+that extensions will
+be forward compatible.
+
+696
+00:39:03,750 --> 00:39:05,430
+So is that gonna change on the roadmap?
+
+697
+00:39:05,430 --> 00:39:08,520
+So for example, if we begin
+to rely on this extension
+
+698
+00:39:08,520 --> 00:39:10,320
+and then as the product moves forward
+
+699
+00:39:10,320 --> 00:39:11,460
+and it's no longer supported,
+
+700
+00:39:11,460 --> 00:39:14,460
+it could put us in a little
+bit of a difficult situation.
+
+701
+00:39:14,460 --> 00:39:16,980
+So are you guys endorsing that
+
+702
+00:39:16,980 --> 00:39:18,570
+or how are you helping
+work with the product team
+
+703
+00:39:18,570 --> 00:39:19,650
+to make sure that
+
+704
+00:39:19,650 --> 00:39:22,350
+any extension that we pick
+will be forward compatible?
+
+705
+00:39:24,233 --> 00:39:25,993
+- [Baji] I'm sorry, Vlad, do
+you want to take that question?
+
+706
+00:39:25,993 --> 00:39:28,350
+I just want to restart my instance once.
+
+707
+00:39:28,350 --> 00:39:33,350
+- [Vlad] Yeah, I mean
+honestly we are working
+
+708
+00:39:33,450 --> 00:39:34,860
+with the service team to make sure
+
+709
+00:39:34,860 --> 00:39:36,630
+that some of these capabilities exist
+
+710
+00:39:36,630 --> 00:39:38,850
+and they become forward compatible,
+
+711
+00:39:38,850 --> 00:39:40,650
+but we're not yet at a point
+
+712
+00:39:40,650 --> 00:39:42,690
+where we can just guarantee it yet.
+
+713
+00:39:42,690 --> 00:39:46,023
+So I think you generally
+can't expect that.
+
+714
+00:39:46,023 --> 00:39:49,410
+It's just we can't make that
+as a guarantee just yet.
+
+715
+00:39:49,410 --> 00:39:54,410
+In time, I think, you know, as
+more of these extensions get,
+
+716
+00:39:55,440 --> 00:39:58,860
+let's say a level of maturity
+that we're comfortable with,
+
+717
+00:39:58,860 --> 00:40:01,560
+we would be able to make
+that type of a guarantee
+
+718
+00:40:01,560 --> 00:40:04,140
+but right now we're not quite there yet.
+
+719
+00:40:04,140 --> 00:40:06,000
+But still it's a tool, it's a release,
+
+720
+00:40:06,000 --> 00:40:08,550
+it's supported right now by AWS.
+
+721
+00:40:08,550 --> 00:40:11,853
+So if you need to use it by
+all means go ahead and do that.
+
+722
+00:40:18,030 --> 00:40:19,383
+- [Baji] I had to reboot the instance
+
+723
+00:40:19,383 --> 00:40:21,930
+just because I created extension
+
+724
+00:40:21,930 --> 00:40:23,340
+and I dropped sometime back.
+
+725
+00:40:23,340 --> 00:40:25,380
+So that needs a restart of the database.
+
+726
+00:40:25,380 --> 00:40:28,680
+So I just restarted it. Go ahead.
+
+727
+00:40:28,680 --> 00:40:30,300
+- [Speaker] Is this
+only available in Aurora
+
+728
+00:40:30,300 --> 00:40:33,510
+or RDS also, this extension?
+
+729
+00:40:33,510 --> 00:40:35,730
+- [Baji] This is specifically for Aurora.
+
+730
+00:40:35,730 --> 00:40:37,890
+- [Speaker] Okay.
+- [Baji] Yeah.
+
+731
+00:40:37,890 --> 00:40:41,370
+So now if you look at DBA plans table,
+
+732
+00:40:41,370 --> 00:40:44,610
+it captured plans for all
+the queries that are running.
+
+733
+00:40:44,610 --> 00:40:47,460
+So all inserts updates select everything.
+
+734
+00:40:47,460 --> 00:40:51,640
+So if I only specifically query for
+
+735
+00:40:53,700 --> 00:40:58,700
+our query that we are working
+on, which is created_at.
+
+736
+00:41:01,202 --> 00:41:03,067
+- [Speaker] It's rebooting
+(indistinct) that's common?
+
+737
+00:41:04,680 --> 00:41:08,370
+- [Baji] Yeah, yeah if you
+create and drop extension,
+
+738
+00:41:08,370 --> 00:41:09,633
+it needs a reboot.
+
+739
+00:41:14,370 --> 00:41:17,850
+Yes, this plan has been captured here,
+
+740
+00:41:17,850 --> 00:41:22,850
+but just for no visibility,
+clear visibility, I have a query
+
+741
+00:41:26,340 --> 00:41:29,963
+that just use JSON
+function to bring the index
+
+742
+00:41:29,963 --> 00:41:33,060
+that is being used for
+that particular query.
+
+743
+00:41:33,060 --> 00:41:37,740
+So it just, it's on DBA plans,
+but it's a simple query.
+
+744
+00:41:37,740 --> 00:41:42,740
+If I execute this query, you can see that
+
+745
+00:41:42,990 --> 00:41:46,530
+this query's plan has
+been approved in status
+
+746
+00:41:46,530 --> 00:41:49,560
+and this is the plan hash
+and this is the SQL hash.
+
+747
+00:41:49,560 --> 00:41:53,160
+So plan for this query
+is already captured.
+
+748
+00:41:53,160 --> 00:41:56,400
+That goes to create an index.
+
+749
+00:41:56,400 --> 00:41:59,700
+Now let's remove that
+hint and run the query
+
+750
+00:41:59,700 --> 00:42:02,073
+to capture the plan again.
+
+751
+00:42:03,930 --> 00:42:06,303
+So now if you run this query,
+
+752
+00:42:08,040 --> 00:42:11,850
+in the note it says an
+approved plan was taken
+
+753
+00:42:11,850 --> 00:42:15,840
+because that has, but
+instead of minimum cost plan.
+
+754
+00:42:15,840 --> 00:42:19,440
+So this query plan has
+been captured already,
+
+755
+00:42:19,440 --> 00:42:21,990
+but Aurora knows that
+there is an approved plan
+
+756
+00:42:21,990 --> 00:42:23,490
+I should go for that.
+
+757
+00:42:23,490 --> 00:42:27,870
+So it still went to created_at
+index plan, the old plan,
+
+758
+00:42:27,870 --> 00:42:29,760
+but it captured the new plan.
+
+759
+00:42:29,760 --> 00:42:34,760
+So what I need to do is to
+look at this DBA plan's table
+
+760
+00:42:35,070 --> 00:42:38,010
+and there is another plan which goes to
+
+761
+00:42:38,010 --> 00:42:40,803
+created_at amount table,
+the composite index.
+
+762
+00:42:42,000 --> 00:42:46,233
+Go to composite index and
+this is unapproved at.
+
+763
+00:42:47,070 --> 00:42:50,640
+So if I unapprove this,
+reject this and approve this,
+
+764
+00:42:50,640 --> 00:42:52,920
+it should go to the new plan.
+
+765
+00:42:52,920 --> 00:42:55,590
+So that's how we can
+switch back the plans.
+
+766
+00:42:55,590 --> 00:42:58,845
+Before that we have Aurora
+stat plans function,
+
+767
+00:42:58,845 --> 00:43:03,845
+which will show you plans being
+used for the live queries.
+
+768
+00:43:04,410 --> 00:43:06,570
+So if you are running queries
+
+769
+00:43:06,570 --> 00:43:08,700
+and you are confused which plan is taking,
+
+770
+00:43:08,700 --> 00:43:11,610
+you can use Aurora stat plan function
+
+771
+00:43:11,610 --> 00:43:14,220
+to see which plan exactly that's taking.
+
+772
+00:43:14,220 --> 00:43:18,300
+So I'm just going for my queries tab,
+
+773
+00:43:18,300 --> 00:43:23,300
+and this is a simple query
+on Aurora stats plan function
+
+774
+00:43:24,780 --> 00:43:27,450
+with filtering that particular query.
+
+775
+00:43:27,450 --> 00:43:29,673
+If I execute this,
+
+776
+00:43:33,420 --> 00:43:37,500
+so index can hint query,
+this goes for orders
+
+777
+00:43:37,500 --> 00:43:40,830
+created_at single column index still
+
+778
+00:43:40,830 --> 00:43:42,930
+because I haven't approved the new plan.
+
+779
+00:43:42,930 --> 00:43:45,930
+If you look at the number of calls, 1800.
+
+780
+00:43:45,930 --> 00:43:49,953
+If I run the same query
+again, it is 2000 now.
+
+781
+00:43:51,000 --> 00:43:54,540
+This is because these
+queries are coming in
+
+782
+00:43:54,540 --> 00:43:56,790
+and it's taking the old plan still.
+
+783
+00:43:56,790 --> 00:43:59,970
+So that's why you see number
+of calls being increased
+
+784
+00:43:59,970 --> 00:44:02,190
+for this particular plan.
+
+785
+00:44:02,190 --> 00:44:04,890
+So now, how do you switch these plans?
+
+786
+00:44:04,890 --> 00:44:09,890
+So, other plan management
+comes with a function
+
+787
+00:44:11,160 --> 00:44:13,350
+called set_plan_status.
+
+788
+00:44:13,350 --> 00:44:16,170
+So using the set_plan_status function,
+
+789
+00:44:16,170 --> 00:44:20,190
+you can reject or approve particular plan.
+
+790
+00:44:20,190 --> 00:44:25,080
+It just need SQL hash
+and plan hash as inputs.
+
+791
+00:44:25,080 --> 00:44:29,730
+So already built two
+statements on this function
+
+792
+00:44:29,730 --> 00:44:33,330
+with SQL hash of new and old plans.
+
+793
+00:44:33,330 --> 00:44:37,623
+If I just execute to approve the new plan,
+
+794
+00:44:38,460 --> 00:44:40,650
+sorry to switch back between the windows,
+
+795
+00:44:40,650 --> 00:44:45,650
+but if I approve and reject
+plans, and if I go back to this
+
+796
+00:44:46,770 --> 00:44:49,843
+now the plan with composite index
+
+797
+00:44:49,843 --> 00:44:53,010
+created_at an amount is approved now
+
+798
+00:44:53,010 --> 00:44:55,380
+and old plan is rejected.
+
+799
+00:44:55,380 --> 00:44:59,310
+Now the assumption is it
+should take the new plan
+
+800
+00:44:59,310 --> 00:45:01,050
+with composite index.
+
+801
+00:45:01,050 --> 00:45:02,370
+How do you check that?
+
+802
+00:45:02,370 --> 00:45:07,350
+So again, you can execute
+Aurora start plans view
+
+803
+00:45:07,350 --> 00:45:09,000
+for that particular query.
+
+804
+00:45:09,000 --> 00:45:12,060
+And now if you see there are two rows,
+
+805
+00:45:12,060 --> 00:45:17,053
+this is for old index created_at,
+there are 2,493 calls.
+
+806
+00:45:18,390 --> 00:45:21,940
+With the new index composite index,
+
+807
+00:45:21,940 --> 00:45:26,070
+there are 1,200 calls now if I run again.
+
+808
+00:45:26,070 --> 00:45:27,660
+So this is constant
+
+809
+00:45:27,660 --> 00:45:30,540
+because it's not taking that old plan now.
+
+810
+00:45:30,540 --> 00:45:33,660
+This will keep increasing.
+
+811
+00:45:33,660 --> 00:45:35,973
+So now we fix that query.
+
+812
+00:45:37,290 --> 00:45:39,423
+If we go back here,
+
+813
+00:45:42,243 --> 00:45:45,497
+the plan instability
+queries are around 255, 260.
+
+814
+00:45:46,740 --> 00:45:51,740
+So now the plans stability
+queries are 800, from 255 to 800
+
+815
+00:45:53,910 --> 00:45:56,850
+and total number of
+queries increased to 24,000
+
+816
+00:45:56,850 --> 00:46:00,527
+and previously they were
+16,000 and around 20,008,
+
+817
+00:46:01,827 --> 00:46:04,410
+20,000 with two queries fixed.
+
+818
+00:46:04,410 --> 00:46:08,730
+And now the queries count
+increased by 94,000.
+
+819
+00:46:08,730 --> 00:46:12,780
+So we looked at how to rewrite
+the queries the first one.
+
+820
+00:46:12,780 --> 00:46:14,310
+Second is we have the index,
+
+821
+00:46:14,310 --> 00:46:17,280
+but we can create a strategic
+index, partial index
+
+822
+00:46:17,280 --> 00:46:18,810
+to improve the performance.
+
+823
+00:46:18,810 --> 00:46:22,080
+Third is you have the right
+index already created,
+
+824
+00:46:22,080 --> 00:46:24,480
+but how do you switch
+back between the plans
+
+825
+00:46:24,480 --> 00:46:26,133
+to use right index?
+
+826
+00:46:28,050 --> 00:46:29,520
+Next thing to look at is
+
+827
+00:46:29,520 --> 00:46:32,133
+if I go back to Cloud Watch metrics,
+
+828
+00:46:33,420 --> 00:46:36,240
+the update query is
+consuming more resources.
+
+829
+00:46:36,240 --> 00:46:39,423
+So if you look at this update query,
+
+830
+00:46:44,010 --> 00:46:46,890
+update products set on nodes column.
+
+831
+00:46:46,890 --> 00:46:51,890
+So if I look at the TDL
+of this products table
+
+832
+00:46:57,090 --> 00:47:00,240
+and indexes that table,
+
+833
+00:47:00,240 --> 00:47:04,173
+there is no index on
+nodes column if you see.
+
+834
+00:47:05,400 --> 00:47:09,540
+So now, Postgres has a feature
+called heap only triples.
+
+835
+00:47:09,540 --> 00:47:12,750
+If you are updating a non-indexed columns
+
+836
+00:47:12,750 --> 00:47:16,620
+within a data block, if there
+is some space inside it,
+
+837
+00:47:16,620 --> 00:47:18,840
+then instead of updating the index,
+
+838
+00:47:18,840 --> 00:47:21,870
+because this is a
+non-indexed column updating,
+
+839
+00:47:21,870 --> 00:47:24,900
+so instead of updating the indexes,
+
+840
+00:47:24,900 --> 00:47:29,100
+it'll just create pointers
+inside that data block.
+
+841
+00:47:29,100 --> 00:47:31,650
+So it doesn't need to update the indexes.
+
+842
+00:47:31,650 --> 00:47:34,770
+So that iteration of that
+work has been reduced.
+
+843
+00:47:34,770 --> 00:47:38,100
+So this is called as heap only couples,
+
+844
+00:47:38,100 --> 00:47:42,000
+but you need empty space
+inside the data block.
+
+845
+00:47:42,000 --> 00:47:45,810
+So this is defined by
+fill factor in PostgreSQL.
+
+846
+00:47:45,810 --> 00:47:50,493
+So if you look at the fill
+factor for this table,
+
+847
+00:47:52,020 --> 00:47:53,460
+this is 100%.
+
+848
+00:47:53,460 --> 00:47:58,200
+So I'm saying right to the entire block,
+
+849
+00:47:58,200 --> 00:48:00,360
+don't leave any space.
+
+850
+00:48:00,360 --> 00:48:02,880
+So that's the meaning of fill factor 100%.
+
+851
+00:48:02,880 --> 00:48:05,670
+Now hard to pull needs some space
+
+852
+00:48:05,670 --> 00:48:09,840
+either those are created by
+vacuum for the empty spaces
+
+853
+00:48:09,840 --> 00:48:14,793
+or you specifically need
+that percentage of need free.
+
+854
+00:48:16,421 --> 00:48:17,610
+Yeah.
+- [Speaker] Yeah, sorry,
+
+855
+00:48:17,610 --> 00:48:18,870
+I have a quick question.
+
+856
+00:48:18,870 --> 00:48:23,160
+So is a query plan is gonna
+be the same for the writer
+
+857
+00:48:23,160 --> 00:48:26,040
+and reader instance in the same cluster?
+
+858
+00:48:26,040 --> 00:48:27,030
+If it's not the same,
+
+859
+00:48:27,030 --> 00:48:29,220
+like where do you see
+it's gonna be different
+
+860
+00:48:29,220 --> 00:48:31,383
+to be optimized for each of them?
+
+861
+00:48:33,660 --> 00:48:36,770
+- [Baji] Sorry, did you
+understand the question Vlad?
+
+862
+00:48:36,770 --> 00:48:38,550
+- [Vlad] So what you're
+showing there on the screen
+
+863
+00:48:38,550 --> 00:48:40,920
+with the query plan, the question is,
+
+864
+00:48:40,920 --> 00:48:43,320
+if you have a cluster of multiple readers
+
+865
+00:48:43,320 --> 00:48:45,330
+or writers and readers,
+
+866
+00:48:45,330 --> 00:48:47,280
+do you need to make that change only once
+
+867
+00:48:47,280 --> 00:48:48,570
+or do you have to make that change
+
+868
+00:48:48,570 --> 00:48:50,790
+on every one of those instances?
+
+869
+00:48:50,790 --> 00:48:52,230
+- [Baji] Oh, it has to make the change
+
+870
+00:48:52,230 --> 00:48:56,763
+on the writer instance so
+reader instance will be updated.
+
+871
+00:48:57,720 --> 00:48:59,657
+- [Vlad] So it's propagating
+from the writer instance-
+
+872
+00:48:59,657 --> 00:49:00,510
+- [Baji] Writer instance.
+
+873
+00:49:00,510 --> 00:49:01,980
+- [Vlad] To make that change there
+
+874
+00:49:01,980 --> 00:49:04,412
+or propagate to to the plan changes.
+
+875
+00:49:04,412 --> 00:49:07,046
+- [Speaker] Is there cases
+that they have difference
+
+876
+00:49:07,046 --> 00:49:08,800
+because the writer and reader instance,
+
+877
+00:49:08,800 --> 00:49:13,140
+that's gonna be used for
+more read-only workload?
+
+878
+00:49:13,140 --> 00:49:15,820
+- [Baji] Are there cases
+when you know they have to
+
+879
+00:49:16,800 --> 00:49:19,440
+you need to have them being different
+
+880
+00:49:19,440 --> 00:49:21,633
+between readers and writers?
+
+881
+00:49:24,900 --> 00:49:26,940
+- [Baji] I am not aware of any cases.
+
+882
+00:49:26,940 --> 00:49:29,070
+- [Vlad] Yeah, I'm not sure either, yeah.
+
+883
+00:49:29,070 --> 00:49:30,590
+I haven't seen any but...
+
+884
+00:49:32,160 --> 00:49:36,900
+- [Baji] If it's the same query
+then it has to be same index
+
+885
+00:49:36,900 --> 00:49:39,210
+because that gives you better performance.
+
+886
+00:49:39,210 --> 00:49:40,417
+- [Vlad] Yeah, I mean
+the results of a query
+
+887
+00:49:40,417 --> 00:49:42,270
+are gonna be deterministic
+
+888
+00:49:42,270 --> 00:49:43,680
+no matter where you're running it,
+
+889
+00:49:43,680 --> 00:49:45,990
+subject obviously your replication lack.
+
+890
+00:49:45,990 --> 00:49:48,510
+- [Baji] But if there is
+a slight change in query,
+
+891
+00:49:48,510 --> 00:49:51,420
+then SQL hash will change and then,
+
+892
+00:49:51,420 --> 00:49:54,033
+that will not work for the query, yeah.
+
+893
+00:49:55,800 --> 00:49:56,633
+- [Vlad] Yeah.
+
+894
+00:49:57,840 --> 00:50:00,120
+- [Speaker] Yeah. Sorry, quick question.
+
+895
+00:50:00,120 --> 00:50:01,710
+So what you mentioned is
+
+896
+00:50:01,710 --> 00:50:04,710
+what about query changes
+optimizations we do
+
+897
+00:50:04,710 --> 00:50:05,850
+on the writer instance,
+
+898
+00:50:05,850 --> 00:50:10,020
+it's automatically propagated
+to the reader instance, right?
+
+899
+00:50:10,020 --> 00:50:11,427
+But it's not bi-directional, right?
+
+900
+00:50:11,427 --> 00:50:15,030
+So, what I optimize on
+reader instance will not,
+
+901
+00:50:15,030 --> 00:50:19,410
+because oftentimes we run into
+reader instances, you know
+
+902
+00:50:19,410 --> 00:50:23,861
+that a lot of reads going to
+the downstream systems like
+
+903
+00:50:23,861 --> 00:50:25,290
+(indistinct) whatnot, right?
+
+904
+00:50:25,290 --> 00:50:28,200
+So the reader instance is always
+resource intense in nature.
+
+905
+00:50:28,200 --> 00:50:30,850
+So we end up optimizing a
+lot on the reader instance.
+
+906
+00:50:31,980 --> 00:50:34,590
+- [Baji] What kind of
+optimization on specifically
+
+907
+00:50:34,590 --> 00:50:35,550
+for reader instances?
+
+908
+00:50:35,550 --> 00:50:37,050
+- [Speaker] What about query plans, right?
+
+909
+00:50:37,050 --> 00:50:41,250
+So similar stuff we did
+on right instance, right?
+
+910
+00:50:41,250 --> 00:50:42,090
+But it's not,
+
+911
+00:50:42,090 --> 00:50:44,853
+those queries basically
+hitting the reader instance.
+
+912
+00:50:45,780 --> 00:50:47,040
+- [Baji] Yeah, that's same question-
+
+913
+00:50:47,040 --> 00:50:49,703
+- [Speaker] It's not bi-directional
+in nature, right? So?
+
+914
+00:50:50,970 --> 00:50:52,800
+- [Baji] But if you want a different plan
+
+915
+00:50:52,800 --> 00:50:54,870
+on the reader instance?
+- [Speaker] Right?
+
+916
+00:50:54,870 --> 00:50:55,830
+- [Baji] Yeah, it's the same question.
+
+917
+00:50:55,830 --> 00:50:58,170
+So yeah, so it has to be,
+
+918
+00:50:58,170 --> 00:51:02,490
+if it's the same query, it
+has to be same plan, right?
+
+919
+00:51:02,490 --> 00:51:04,320
+At least I'm not aware of the cases,
+
+920
+00:51:04,320 --> 00:51:07,350
+for the same query, I
+need two different plans.
+
+921
+00:51:07,350 --> 00:51:11,473
+One will work on writer and
+one will work on reader.
+
+922
+00:51:11,473 --> 00:51:14,790
+At least, I'm not aware
+of those cases. Yeah.
+
+923
+00:51:14,790 --> 00:51:16,260
+- [Speaker] Alright, thank you.
+
+924
+00:51:16,260 --> 00:51:18,870
+- [Vlad] I mean structurally
+the data is physically laid out
+
+925
+00:51:18,870 --> 00:51:21,300
+in storage the same
+way, it's same storage.
+
+926
+00:51:21,300 --> 00:51:24,750
+So there's no reason you
+would have the same query
+
+927
+00:51:24,750 --> 00:51:28,620
+needing different
+performance optimizations
+
+928
+00:51:28,620 --> 00:51:30,540
+on different instances.
+
+929
+00:51:30,540 --> 00:51:33,000
+The question is that you
+might only run that query
+
+930
+00:51:33,000 --> 00:51:35,100
+on the reader instances because
+
+931
+00:51:35,100 --> 00:51:38,460
+it's feeding downstream systems
+
+932
+00:51:38,460 --> 00:51:40,207
+and it doesn't run on the writer
+
+933
+00:51:40,207 --> 00:51:44,100
+that it's not gonna impact
+the performance of the writer.
+
+934
+00:51:44,100 --> 00:51:48,180
+But the optimization is
+still valuable intrinsically
+
+935
+00:51:48,180 --> 00:51:51,030
+because it's, again the
+query is deterministic
+
+936
+00:51:51,030 --> 00:51:52,230
+in its response.
+
+937
+00:51:52,230 --> 00:51:53,970
+It's always going to
+produce the same response
+
+938
+00:51:53,970 --> 00:51:55,270
+given the same input data.
+
+939
+00:51:59,220 --> 00:52:03,270
+- [Baji] Okay, coming
+back to the HOT updates.
+
+940
+00:52:03,270 --> 00:52:05,310
+So I need fill factor to be reduced
+
+941
+00:52:05,310 --> 00:52:08,400
+to maintain some free space in each block
+
+942
+00:52:08,400 --> 00:52:10,200
+for those index pointers.
+
+943
+00:52:10,200 --> 00:52:14,670
+So that can be done by
+changing the fill factor
+
+944
+00:52:14,670 --> 00:52:16,293
+for that particular table,
+
+945
+00:52:17,143 --> 00:52:21,300
+using this command set fill factor to 80%.
+
+946
+00:52:21,300 --> 00:52:26,300
+Now I changed fill factor, but
+that's not immediate effect
+
+947
+00:52:26,820 --> 00:52:29,850
+because my all blocks are filled now.
+
+948
+00:52:29,850 --> 00:52:31,710
+I need to reorganize the blocks
+
+949
+00:52:31,710 --> 00:52:34,140
+to leave that empty space for every block.
+
+950
+00:52:34,140 --> 00:52:37,620
+That can be done by vacuum full.
+
+951
+00:52:37,620 --> 00:52:40,980
+Vacuum full is acquires
+access exclusive log
+
+952
+00:52:40,980 --> 00:52:44,610
+so I need to get rid of the connections
+
+953
+00:52:44,610 --> 00:52:48,000
+to improve the vacuum full time.
+
+954
+00:52:48,000 --> 00:52:50,370
+So I'll just kill the connection
+
+955
+00:52:50,370 --> 00:52:52,920
+and load generator is
+smart enough to restart
+
+956
+00:52:52,920 --> 00:52:54,570
+when you kill the query.
+
+957
+00:52:54,570 --> 00:52:58,900
+So, pg terminate backend
+using pg_stat_activity
+
+958
+00:52:59,820 --> 00:53:03,660
+where database name is e-commerce
+
+959
+00:53:03,660 --> 00:53:07,890
+and pid not in the pid that
+I'm currently working on.
+
+960
+00:53:07,890 --> 00:53:10,050
+If that pid gets killed,
+
+961
+00:53:10,050 --> 00:53:13,170
+then you cannot move
+forward with the session.
+
+962
+00:53:13,170 --> 00:53:17,303
+So I'll execute vacuum full
+analyze on products table.
+
+963
+00:53:19,470 --> 00:53:24,090
+It's gonna take few seconds
+to execute that vacuum full,
+
+964
+00:53:24,090 --> 00:53:25,410
+maybe five or six seconds.
+
+965
+00:53:25,410 --> 00:53:28,710
+So after that vacuum full,
+now you will have space
+
+966
+00:53:28,710 --> 00:53:33,450
+for 20% space for those HOT updates.
+
+967
+00:53:33,450 --> 00:53:38,450
+If I go back to the load generator,
+
+968
+00:53:38,460 --> 00:53:40,800
+let's check if it's changed.
+
+969
+00:53:40,800 --> 00:53:45,800
+In the table DDL, now fill factor is 80%.
+
+970
+00:53:46,770 --> 00:53:50,820
+You can check whether updates
+are going for HOT or not
+
+971
+00:53:50,820 --> 00:53:54,270
+using pg_stat_user tables.
+
+972
+00:53:54,270 --> 00:53:56,807
+There is a column in pg_stat_user tables,
+
+973
+00:54:00,448 --> 00:54:01,950
+n_tuple_hot_update.
+
+974
+00:54:01,950 --> 00:54:04,290
+So this column shows how many HOT updates
+
+975
+00:54:04,290 --> 00:54:06,480
+for that particular table.
+
+976
+00:54:06,480 --> 00:54:10,533
+Let's get the percentage,
+I'm just going to my query,
+
+977
+00:54:12,780 --> 00:54:14,400
+this is HOT updates.
+
+978
+00:54:14,400 --> 00:54:17,940
+So I'm selecting how many
+updates, how many HOT updates,
+
+979
+00:54:17,940 --> 00:54:20,670
+and the percentage for
+that particular table.
+
+980
+00:54:20,670 --> 00:54:24,153
+If I execute this simple select here,
+
+981
+00:54:25,980 --> 00:54:30,450
+then there are 70% tuples
+going to HOT updates.
+
+982
+00:54:30,450 --> 00:54:34,860
+If you keep observing, then
+you'll see performance,
+
+983
+00:54:34,860 --> 00:54:37,380
+the ratio will get increased.
+
+984
+00:54:37,380 --> 00:54:40,950
+So 72, 72.1 and it'll keep increasing.
+
+985
+00:54:40,950 --> 00:54:44,703
+So now there are more
+HOT updates to the table.
+
+986
+00:54:46,320 --> 00:54:51,320
+If you go back to load generator
+and HOT updates are here,
+
+987
+00:54:51,847 --> 00:54:56,693
+they're 2,300, previously
+also they were 3,800,
+
+988
+00:54:58,470 --> 00:55:02,280
+but we restarted the instance
+so it takes time to pick up.
+
+989
+00:55:02,280 --> 00:55:04,380
+So you will eventually see
+
+990
+00:55:04,380 --> 00:55:07,533
+the more number of
+queries for HOT updates.
+
+991
+00:55:08,670 --> 00:55:10,770
+So that's where HOT updates help.
+
+992
+00:55:10,770 --> 00:55:13,740
+If you have updates on non-indexed column,
+
+993
+00:55:13,740 --> 00:55:17,910
+it can create some free
+space on each data block
+
+994
+00:55:17,910 --> 00:55:21,603
+to have those pointer instead
+of updating the indexes.
+
+995
+00:55:23,160 --> 00:55:27,000
+Now, you can see 3,900,
+almost 4,000 queries.
+
+996
+00:55:27,000 --> 00:55:29,880
+Previously, they were around two to 3000
+
+997
+00:55:29,880 --> 00:55:31,743
+so a lot of improvement.
+
+998
+00:55:33,090 --> 00:55:35,040
+If I go back to this
+
+999
+00:55:35,040 --> 00:55:39,060
+and the fifth query we
+have is this function call.
+
+1000
+00:55:39,060 --> 00:55:44,060
+If I select this and this
+and this is my function.
+
+1001
+00:55:44,910 --> 00:55:45,960
+- [Speaker] There's a question.
+
+1002
+00:55:45,960 --> 00:55:46,793
+- [Baji] Oh!
+
+1003
+00:55:46,793 --> 00:55:50,070
+- [Speaker] So we
+originally started by saying
+
+1004
+00:55:50,070 --> 00:55:52,320
+that there's no index on that column.
+
+1005
+00:55:52,320 --> 00:55:56,430
+So it was going to basically
+update the space in the table.
+
+1006
+00:55:56,430 --> 00:55:58,770
+And then we said the way to improve it
+
+1007
+00:55:58,770 --> 00:56:02,670
+is to reduce fill factor from 100 to 80.
+
+1008
+00:56:02,670 --> 00:56:06,480
+What is better long term,
+with an index on that column
+
+1009
+00:56:06,480 --> 00:56:08,790
+or reduce the fill factor?
+
+1010
+00:56:08,790 --> 00:56:11,910
+- [Baji] It's not because there
+is no index on the column,
+
+1011
+00:56:11,910 --> 00:56:14,400
+it's because how Postgres...
+
+1012
+00:56:14,400 --> 00:56:18,450
+Postgres needs to update all
+the indexes for those DMLs.
+
+1013
+00:56:18,450 --> 00:56:21,450
+Irrespective if you're updating
+non index column or not,
+
+1014
+00:56:21,450 --> 00:56:23,970
+but those indexes should be updated.
+
+1015
+00:56:23,970 --> 00:56:26,100
+Imagine if I don't have index,
+
+1016
+00:56:26,100 --> 00:56:28,020
+I don't need index on that column,
+
+1017
+00:56:28,020 --> 00:56:31,620
+but still I am making Postgres to update
+
+1018
+00:56:31,620 --> 00:56:33,813
+all those indexes unnecessarily.
+
+1019
+00:56:34,800 --> 00:56:38,130
+But those indexes should
+be aware of these updates.
+
+1020
+00:56:38,130 --> 00:56:41,430
+So how can we do that? So
+that's where this feature helps.
+
+1021
+00:56:41,430 --> 00:56:44,910
+Instead of updating
+indexes, create pointers,
+
+1022
+00:56:44,910 --> 00:56:47,190
+you can at least reduce
+the time of updating.
+
+1023
+00:56:47,190 --> 00:56:50,520
+So those pointers should be
+available in the same block,
+
+1024
+00:56:50,520 --> 00:56:52,590
+it can't be in the new block.
+
+1025
+00:56:52,590 --> 00:56:55,050
+So that's why we need space in that block
+
+1026
+00:56:55,050 --> 00:56:56,680
+to update those pointers.
+
+1027
+00:56:56,680 --> 00:56:57,780
+- [Speaker] Thank you.
+
+1028
+00:56:58,800 --> 00:57:02,100
+- [Baji] Another maybe
+disadvantage is if you have
+
+1029
+00:57:02,100 --> 00:57:04,110
+that free space in that block,
+
+1030
+00:57:04,110 --> 00:57:06,660
+your inserts need more blocks.
+
+1031
+00:57:06,660 --> 00:57:09,540
+So asking your operating
+system to give you a block
+
+1032
+00:57:09,540 --> 00:57:12,690
+to update the data is again overhead.
+
+1033
+00:57:12,690 --> 00:57:16,800
+So if you have more updates
+on that table, less inserts,
+
+1034
+00:57:16,800 --> 00:57:19,380
+then you can go for that fill
+factor to leave that space.
+
+1035
+00:57:19,380 --> 00:57:22,680
+Otherwise, your inserts
+need more and more blocks
+
+1036
+00:57:22,680 --> 00:57:26,070
+because you're leaving
+that space in each block.
+
+1037
+00:57:26,070 --> 00:57:29,910
+So if you look at this
+function definition, TDL,
+
+1038
+00:57:33,540 --> 00:57:36,060
+this is a select on order items column.
+
+1039
+00:57:36,060 --> 00:57:37,980
+This is a simple select,
+
+1040
+00:57:37,980 --> 00:57:42,270
+but if you look at
+order_items column table,
+
+1041
+00:57:42,270 --> 00:57:46,260
+this is a partition table
+with daily partition,
+
+1042
+00:57:46,260 --> 00:57:47,670
+it's each day partition.
+
+1043
+00:57:47,670 --> 00:57:50,910
+You can see 731 partition.
+
+1044
+00:57:50,910 --> 00:57:54,840
+So now, we know that if
+we have a WHERE clause
+
+1045
+00:57:54,840 --> 00:57:58,320
+on partition key, it goes
+to partition pruning.
+
+1046
+00:57:58,320 --> 00:58:01,380
+But before that optimizer needs to
+
+1047
+00:58:01,380 --> 00:58:04,800
+get a lock on each partition first
+
+1048
+00:58:04,800 --> 00:58:08,340
+and then it prunes the exact
+partition for the data,
+
+1049
+00:58:08,340 --> 00:58:11,460
+but still it needs to
+lock all the partitions.
+
+1050
+00:58:11,460 --> 00:58:13,983
+Now Postgres by default allows...
+
+1051
+00:58:15,062 --> 00:58:19,020
+In Postgres there is a
+non-fastpath and fastpath locking.
+
+1052
+00:58:19,020 --> 00:58:23,130
+Fastpath locking is reduces the overhead
+
+1053
+00:58:23,130 --> 00:58:25,200
+of acquiring the locks.
+
+1054
+00:58:25,200 --> 00:58:30,000
+So by default, only 16 of
+fastpath locks can be acquired
+
+1055
+00:58:30,000 --> 00:58:31,380
+for each query.
+
+1056
+00:58:31,380 --> 00:58:35,490
+So now if you have a partition
+table with 700 partitions,
+
+1057
+00:58:35,490 --> 00:58:38,100
+so 700 different independent tables,
+
+1058
+00:58:38,100 --> 00:58:42,030
+so now it has to acquire
+locks, 700 locks on that table.
+
+1059
+00:58:42,030 --> 00:58:45,910
+So obviously it goes to
+non-fastpath locking,
+
+1060
+00:58:47,070 --> 00:58:49,410
+which is some overhead.
+
+1061
+00:58:49,410 --> 00:58:54,340
+So that's why you see
+particularly lock manager,
+
+1062
+00:58:56,490 --> 00:58:59,733
+lock manager events for this query.
+
+1063
+00:59:00,870 --> 00:59:02,760
+So that lock manager event occurs
+
+1064
+00:59:02,760 --> 00:59:07,760
+when your query has more
+number of non-fastpath locking.
+
+1065
+00:59:07,950 --> 00:59:12,950
+So just to check, if I begin
+and execute this function,
+
+1066
+00:59:15,990 --> 00:59:18,640
+select * from function
+
+1067
+00:59:21,510 --> 00:59:26,510
+and let's check the number
+of locks for that particular,
+
+1068
+00:59:29,310 --> 00:59:31,743
+I'll just reconnect to the database.
+
+1069
+00:59:33,090 --> 00:59:36,393
+Select count of logs from pg_locks.
+
+1070
+00:59:38,460 --> 00:59:43,170
+So it acquired around 1300 locks.
+
+1071
+00:59:43,170 --> 00:59:48,170
+But if I remove the fastpath locks,
+
+1072
+00:59:51,990 --> 00:59:56,460
+there are still 800 non-fastpath locks.
+
+1073
+00:59:56,460 --> 00:59:59,703
+This is because it acquired
+lock on each partition.
+
+1074
+01:00:00,960 --> 01:00:05,263
+But I have a new table
+for this order items,
+
+1075
+01:00:08,597 --> 01:00:10,980
+order_items_new,
+
+1076
+01:00:10,980 --> 01:00:14,490
+which comes with monthly
+partition, not daily partition.
+
+1077
+01:00:14,490 --> 01:00:15,990
+This has the same amount of data
+
+1078
+01:00:15,990 --> 01:00:19,350
+as this order_items partition table,
+
+1079
+01:00:19,350 --> 01:00:22,743
+but it has less number of partitions.
+
+1080
+01:00:23,790 --> 01:00:28,650
+If I update this function just to check,
+
+1081
+01:00:28,650 --> 01:00:32,070
+update this function to
+use the partition table,
+
+1082
+01:00:32,070 --> 01:00:35,230
+which has less number
+of partitions instead
+
+1083
+01:00:38,010 --> 01:00:41,850
+and if you select this
+function in a transaction,
+
+1084
+01:00:41,850 --> 01:00:46,850
+if I go back here and check
+the non-fastpath locks,
+
+1085
+01:00:47,280 --> 01:00:49,350
+those are significantly reduced.
+
+1086
+01:00:49,350 --> 01:00:53,490
+So all those difference of
+locks over it has been reduced.
+
+1087
+01:00:53,490 --> 01:00:55,500
+And also if you keep observing,
+
+1088
+01:00:55,500 --> 01:00:57,750
+you don't see those lock manager events
+
+1089
+01:00:57,750 --> 01:01:01,560
+or see very less amount of
+lock manager events here.
+
+1090
+01:01:01,560 --> 01:01:05,670
+So this will affect the query performance
+
+1091
+01:01:05,670 --> 01:01:08,133
+because of that locking overhead.
+
+1092
+01:01:09,810 --> 01:01:14,220
+We've fixed five queries.
+
+1093
+01:01:14,220 --> 01:01:18,570
+And one last thing I want
+to show is about indexes.
+
+1094
+01:01:18,570 --> 01:01:23,100
+So if you have unused or
+duplicate indexes unnecessarily,
+
+1095
+01:01:23,100 --> 01:01:25,080
+no database needs to update
+
+1096
+01:01:25,080 --> 01:01:27,270
+or insert data into those indexes,
+
+1097
+01:01:27,270 --> 01:01:28,953
+which is again, heavy work.
+
+1098
+01:01:32,432 --> 01:01:35,130
+This is a query to check unused indexes.
+
+1099
+01:01:35,130 --> 01:01:36,630
+This is not a query build by me,
+
+1100
+01:01:36,630 --> 01:01:38,700
+this, you can find it in wiki.
+
+1101
+01:01:38,700 --> 01:01:40,950
+So if I execute this query
+
+1102
+01:01:40,950 --> 01:01:44,733
+to find unused indexes in my database,
+
+1103
+01:01:46,740 --> 01:01:48,963
+I'll get rid of this transaction.
+
+1104
+01:01:52,260 --> 01:01:56,370
+And you can see lot of
+unused indexes are there
+
+1105
+01:01:56,370 --> 01:01:58,710
+and duplicate indexes as well.
+
+1106
+01:01:58,710 --> 01:02:01,860
+Sometimes in development instances
+
+1107
+01:02:01,860 --> 01:02:03,930
+we keep checking indexes usage
+
+1108
+01:02:03,930 --> 01:02:05,880
+and we create more and more indexes
+
+1109
+01:02:05,880 --> 01:02:09,780
+and sometimes we forget to
+drop the duplicate indexes.
+
+1110
+01:02:09,780 --> 01:02:12,660
+We create multiple indexes and we forget.
+
+1111
+01:02:12,660 --> 01:02:15,480
+So that's where the
+duplicate indexes comes up.
+
+1112
+01:02:15,480 --> 01:02:18,453
+If you check the duplicate indexes,
+
+1113
+01:02:20,233 --> 01:02:22,290
+there are 14 duplicate indexes.
+
+1114
+01:02:22,290 --> 01:02:25,680
+Not only that, these
+indexes are around five
+
+1115
+01:02:25,680 --> 01:02:27,660
+to six gigabytes in size.
+
+1116
+01:02:27,660 --> 01:02:29,793
+It's unnecessary stories as well.
+
+1117
+01:02:32,370 --> 01:02:37,370
+Now I can drop those indexes
+and see the performance.
+
+1118
+01:02:38,520 --> 01:02:39,840
+I'm getting rid of the connections
+
+1119
+01:02:39,840 --> 01:02:41,490
+because dropping indexes
+
+1120
+01:02:41,490 --> 01:02:43,980
+will take some time with that connections.
+
+1121
+01:02:43,980 --> 01:02:48,980
+But if I execute this drop index command,
+
+1122
+01:02:49,350 --> 01:02:54,350
+it gives me a set of drop index
+commands for this as well,
+
+1123
+01:02:57,780 --> 01:02:59,313
+for duplicate indexes as well.
+
+1124
+01:03:03,243 --> 01:03:05,580
+There are 14 duplicate indexes.
+
+1125
+01:03:05,580 --> 01:03:10,580
+Now if I go back to this query
+
+1126
+01:03:10,890 --> 01:03:13,660
+where I'm terminating all the connections
+
+1127
+01:03:18,240 --> 01:03:21,177
+and now run the duplicate command,
+
+1128
+01:03:21,177 --> 01:03:23,940
+you just need to execute, gexecute
+
+1129
+01:03:23,940 --> 01:03:27,810
+so that all those drop
+commands will get executed.
+
+1130
+01:03:27,810 --> 01:03:32,397
+And same for duplicate indexes as well.
+
+1131
+01:03:32,397 --> 01:03:34,323
+You just need to execute, gexecute.
+
+1132
+01:03:35,970 --> 01:03:39,330
+So now all those indexes were dropped,
+
+1133
+01:03:39,330 --> 01:03:42,750
+all unused and duplicate indexes.
+
+1134
+01:03:42,750 --> 01:03:44,493
+We can keep observing,
+
+1135
+01:03:45,570 --> 01:03:49,260
+our loads and data has
+restarted all the queries.
+
+1136
+01:03:49,260 --> 01:03:50,940
+So we can keep observing these queries
+
+1137
+01:03:50,940 --> 01:03:53,610
+and you can see the improvement.
+
+1138
+01:03:53,610 --> 01:03:58,200
+So we started with somewhere
+around 14,000, 12,000 queries
+
+1139
+01:03:58,200 --> 01:04:02,840
+and after fixing our five
+queries, we are at 24,000 queries
+
+1140
+01:04:02,840 --> 01:04:07,840
+so more than 100%
+improvement with this tuning.
+
+1141
+01:04:09,390 --> 01:04:14,390
+Thus, it takes some
+time to send the report
+
+1142
+01:04:15,150 --> 01:04:18,150
+but meanwhile, if you have any
+questions, I'm happy to take.
+
+1143
+01:04:23,130 --> 01:04:24,030
+- [Speaker] I just wanted to confirm,
+
+1144
+01:04:24,030 --> 01:04:27,480
+when you did the HOT updates,
+you made that change,
+
+1145
+01:04:27,480 --> 01:04:29,670
+you didn't change the
+code in any way, correct?
+
+1146
+01:04:29,670 --> 01:04:31,380
+It was just 'cause you've-
+- [Baji] No, no.
+
+1147
+01:04:31,380 --> 01:04:32,280
+- [Speaker] Had some spare space.
+
+1148
+01:04:32,280 --> 01:04:35,190
+- [Baji] I just changed
+tables fill factor.
+
+1149
+01:04:35,190 --> 01:04:36,023
+- [Speaker] Okay, thanks.
+
+1150
+01:04:36,023 --> 01:04:37,350
+The second question,
+
+1151
+01:04:37,350 --> 01:04:41,310
+are you aware of any development
+underway for Postgres
+
+1152
+01:04:41,310 --> 01:04:46,310
+or for Aurora Postgres to
+consolidate query plans?
+
+1153
+01:04:47,040 --> 01:04:49,080
+For example, if you have a query
+
+1154
+01:04:49,080 --> 01:04:50,310
+and it's got a certain comment,
+
+1155
+01:04:50,310 --> 01:04:52,530
+but the rest of the text is identical,
+
+1156
+01:04:52,530 --> 01:04:53,850
+it produces a different hash.
+
+1157
+01:04:53,850 --> 01:04:56,160
+Or if you have spaces or carriage returns,
+
+1158
+01:04:56,160 --> 01:04:58,500
+same query, same number of parameters,
+
+1159
+01:04:58,500 --> 01:05:00,510
+but spacing's a little different,
+
+1160
+01:05:00,510 --> 01:05:01,647
+it's a different query hash.
+
+1161
+01:05:01,647 --> 01:05:05,070
+Are you aware of any efforts
+to consolidate those queries
+
+1162
+01:05:05,070 --> 01:05:09,030
+that are actually the
+same query functionally
+
+1163
+01:05:09,030 --> 01:05:11,973
+into one hash or have
+some kind of mapping?
+
+1164
+01:05:13,590 --> 01:05:18,590
+- [Baji] Honestly, I'm
+not, but if you have hints,
+
+1165
+01:05:18,630 --> 01:05:21,450
+it'll remove the hints
+to generate the SQL hash
+
+1166
+01:05:21,450 --> 01:05:23,000
+for that particular query.
+
+1167
+01:05:23,000 --> 01:05:26,340
+Or if you have explained
+whatever before that select,
+
+1168
+01:05:26,340 --> 01:05:29,580
+it removes those hints
+to generate SQL hash.
+
+1169
+01:05:29,580 --> 01:05:33,100
+But if you have spaces
+or enters, then you know
+
+1170
+01:05:33,972 --> 01:05:35,940
+it's a different SQL hash.
+
+1171
+01:05:35,940 --> 01:05:38,550
+But I'm not aware of anything
+that's being developed
+
+1172
+01:05:38,550 --> 01:05:40,660
+to enhance that.
+
+1173
+01:05:40,660 --> 01:05:43,230
+- [Vlad] Well, we can capture
+this as a feature request
+
+1174
+01:05:43,230 --> 01:05:48,230
+for the service team and see
+if they can work on that.
+
+1175
+01:05:48,624 --> 01:05:51,957
+(indistinct chattering)
+
+1176
+01:05:53,179 --> 01:05:54,012
+So, I mean the entire extension
+is available only for Aurora
+
+1177
+01:05:58,764 --> 01:06:01,743
+it's our extension, so we
+should be able to do it.
+
+1178
+01:06:01,743 --> 01:06:04,470
+It's just a matter of
+prioritizing the work
+
+1179
+01:06:04,470 --> 01:06:07,050
+based on relative to customer needs.
+
+1180
+01:06:07,050 --> 01:06:10,990
+So we can just, we can definitely
+
+1181
+01:06:12,180 --> 01:06:14,793
+let the service team
+know about this request.
+
+1182
+01:06:16,560 --> 01:06:19,680
+You would, or you know,
+now that we know about it,
+
+1183
+01:06:19,680 --> 01:06:22,503
+we can put in this each
+request for the service team.
+
+1184
+01:06:24,810 --> 01:06:25,643
+All right?
+
+1185
+01:06:32,370 --> 01:06:34,860
+All right. Thanks everyone. Thanks Baji.
+
+1186
+01:06:34,860 --> 01:06:36,660
+That was wonderful.
+- [Baji] Thank you.
+
+1187
+01:06:36,660 --> 01:06:38,333
+Thanks for joining.
+- [Vlad] Great job.
+

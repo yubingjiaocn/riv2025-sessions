@@ -1,0 +1,2104 @@
+1
+00:00:00,879 --> 00:00:01,899
+Hi everyone.
+
+2
+00:00:02,959 --> 00:00:05,000
+Thanks for coming to my session today.
+
+3
+00:00:05,078 --> 00:00:06,280
+I really appreciate it.
+
+4
+00:00:06,599 --> 00:00:08,179
+Uh, I'm James Chatmus,
+
+5
+00:00:08,439 --> 00:00:10,640
+Principal Solutions Engineer at Octopus
+
+6
+00:00:10,640 --> 00:00:11,220
+Deploy.
+
+7
+00:00:12,339 --> 00:00:14,189
+Genuinely excited to be here today.
+
+8
+00:00:14,470 --> 00:00:16,829
+Uh, today we're diving into a challenge
+
+9
+00:00:16,829 --> 00:00:18,870
+that every bank on the planet
+
+10
+00:00:18,870 --> 00:00:20,010
+is wrestling with.
+
+11
+00:00:20,850 --> 00:00:23,309
+How do I deploy software faster?
+
+12
+00:00:24,440 --> 00:00:26,370
+Without breaking compliance
+
+13
+00:00:26,809 --> 00:00:28,250
+and without failing my audit.
+
+14
+00:00:29,530 --> 00:00:31,839
+My session is all about building CICD
+
+15
+00:00:31,839 --> 00:00:34,459
+pipelines that are both genuinely
+
+16
+00:00:34,459 --> 00:00:37,109
+fast and 100% compliant,
+
+17
+00:00:37,658 --> 00:00:40,399
+which is a true North Star that most banks
+
+18
+00:00:40,779 --> 00:00:42,899
+are looking towards, uh, in
+
+19
+00:00:42,899 --> 00:00:43,478
+this current
+
+20
+00:00:43,819 --> 00:00:44,759
+day and age.
+
+21
+00:00:45,719 --> 00:00:47,798
+In my role at Octopus Deploy, I work with
+
+22
+00:00:47,798 --> 00:00:49,560
+some of the largest banks in the world,
+
+23
+00:00:49,840 --> 00:00:51,969
+helping them automate their CICD
+
+24
+00:00:51,969 --> 00:00:52,819
+pipelines.
+
+25
+00:00:53,630 --> 00:00:55,728
+So everything that we're going to be looking at today
+
+26
+00:00:55,728 --> 00:00:57,969
+is based on patterns that I've seen
+
+27
+00:00:57,969 --> 00:00:59,209
+time and time again.
+
+28
+00:01:00,649 --> 00:01:01,228
+All right.
+
+29
+00:01:01,719 --> 00:01:03,740
+Great. All right, so
+
+30
+00:01:03,750 --> 00:01:06,230
+here's the game plan for the next 18 minutes.
+
+31
+00:01:06,430 --> 00:01:08,510
+Uh, we're gonna start by talking about
+
+32
+00:01:08,510 --> 00:01:10,709
+why supply chain attacks are the number
+
+33
+00:01:10,709 --> 00:01:13,109
+one risk for banks in 2025,
+
+34
+00:01:13,430 --> 00:01:14,650
+uh, and why all
+
+35
+00:01:15,349 --> 00:01:18,069
+automated software delivery pipelines are susceptible
+
+36
+00:01:18,069 --> 00:01:20,230
+to them. Uh, then I'll fire
+
+37
+00:01:20,230 --> 00:01:21,489
+up a live demo.
+
+38
+00:01:21,750 --> 00:01:23,409
+Uh, I'll walk you through a true
+
+39
+00:01:24,079 --> 00:01:25,409
+zero trust.
+
+40
+00:01:26,088 --> 00:01:28,290
+Deployment pipeline end to end
+
+41
+00:01:28,439 --> 00:01:30,900
+uh using GitHub actions and Octopus Deploy,
+
+42
+00:01:31,129 --> 00:01:32,379
+which is the exact pattern
+
+43
+00:01:33,290 --> 00:01:35,388
+that a lot of banks are moving towards
+
+44
+00:01:35,569 --> 00:01:37,668
+uh to deploy their production workloads.
+
+45
+00:01:38,558 --> 00:01:40,650
+And then finally, uh, we'll look at how
+
+46
+00:01:40,650 --> 00:01:43,028
+Octopus deploy enforces governance
+
+47
+00:01:43,730 --> 00:01:46,150
+around things like verifying attestations,
+
+48
+00:01:46,370 --> 00:01:48,769
+uh, checking S-bombs, and validating
+
+49
+00:01:48,769 --> 00:01:50,969
+vulnerabilities at deploy time.
+
+50
+00:01:53,388 --> 00:01:54,370
+So let's
+
+51
+00:01:54,668 --> 00:01:56,870
+set the stage with a statistic that's
+
+52
+00:01:56,870 --> 00:01:58,549
+uh pretty eye-opening.
+
+53
+00:01:59,650 --> 00:02:02,069
+75% of enterprise
+
+54
+00:02:02,168 --> 00:02:04,388
+organizations, that's 3 out of 4,
+
+55
+00:02:05,049 --> 00:02:07,329
+have experienced some sort of supply chain
+
+56
+00:02:07,329 --> 00:02:09,389
+attack in the past 12 months.
+
+57
+00:02:09,838 --> 00:02:11,330
+Pretty wild, right? Um,
+
+58
+00:02:11,889 --> 00:02:13,969
+and I mean if I'm an attacker, it
+
+59
+00:02:13,969 --> 00:02:15,069
+kind of makes sense.
+
+60
+00:02:15,490 --> 00:02:17,490
+I could spend time trying to, you know,
+
+61
+00:02:17,569 --> 00:02:19,610
+hack into a hardened production
+
+62
+00:02:19,610 --> 00:02:20,189
+environment.
+
+63
+00:02:21,210 --> 00:02:23,210
+But why would I do that? Why wouldn't I just
+
+64
+00:02:23,210 --> 00:02:25,659
+slip some malicious code into the CICD
+
+65
+00:02:25,659 --> 00:02:27,819
+pipeline and let my target just deploy
+
+66
+00:02:27,819 --> 00:02:29,558
+it out to production themselves?
+
+67
+00:02:31,979 --> 00:02:34,229
+And what if you're a bank or a
+
+68
+00:02:34,229 --> 00:02:36,270
+payments processing company or some
+
+69
+00:02:36,270 --> 00:02:38,729
+other regulated financial
+
+70
+00:02:38,729 --> 00:02:39,580
+institution, uh,
+
+71
+00:02:40,588 --> 00:02:42,669
+all of a sudden that malicious code that makes it
+
+72
+00:02:42,669 --> 00:02:43,788
+out into production
+
+73
+00:02:44,469 --> 00:02:46,588
+could turn into eight-figure fines for your
+
+74
+00:02:46,588 --> 00:02:48,750
+company, uh, could turn into your
+
+75
+00:02:48,750 --> 00:02:50,969
+CISO or CEO on the evening news.
+
+76
+00:02:51,469 --> 00:02:52,368
+Not a great look.
+
+77
+00:02:53,099 --> 00:02:55,500
+So that's exactly why supply chain security
+
+78
+00:02:55,500 --> 00:02:56,080
+has
+
+79
+00:02:56,659 --> 00:02:58,740
+quickly bubbled up to the top of the list
+
+80
+00:02:58,740 --> 00:03:00,558
+of priorities for organizations
+
+81
+00:03:00,860 --> 00:03:02,419
+over the past 12 months.
+
+82
+00:03:04,610 --> 00:03:06,689
+So let's talk about the true reality
+
+83
+00:03:06,689 --> 00:03:07,889
+of modern.
+
+84
+00:03:09,099 --> 00:03:10,058
+Pipelines
+
+85
+00:03:10,889 --> 00:03:12,210
+You kick off a build,
+
+86
+00:03:12,528 --> 00:03:14,308
+uh, your unit tests run,
+
+87
+00:03:14,569 --> 00:03:16,909
+uh, you code scan your repo,
+
+88
+00:03:17,308 --> 00:03:17,919
+uh,
+
+89
+00:03:18,330 --> 00:03:20,368
+your artifacts get created, get pushed
+
+90
+00:03:20,368 --> 00:03:22,229
+out to your package repository,
+
+91
+00:03:22,729 --> 00:03:23,308
+uh,
+
+92
+00:03:23,770 --> 00:03:25,830
+and you're ready to deploy, and then
+
+93
+00:03:26,929 --> 00:03:27,588
+nothing.
+
+94
+00:03:28,719 --> 00:03:30,639
+The artifact just sits there,
+
+95
+00:03:31,000 --> 00:03:32,990
+you know, sometimes for hours,
+
+96
+00:03:33,520 --> 00:03:34,389
+sometimes for days,
+
+97
+00:03:34,679 --> 00:03:36,889
+uh, and in a lot of the companies that I've
+
+98
+00:03:36,889 --> 00:03:38,038
+spoken with recently,
+
+99
+00:03:38,360 --> 00:03:40,679
+uh, those artifacts just sit there for weeks
+
+100
+00:03:40,679 --> 00:03:41,960
+before they get deployed.
+
+101
+00:03:43,969 --> 00:03:46,330
+And that time gap between the build
+
+102
+00:03:46,330 --> 00:03:47,389
+and the deploy,
+
+103
+00:03:47,808 --> 00:03:50,270
+uh, that's called the drift window or
+
+104
+00:03:50,528 --> 00:03:53,028
+as I like to call it, that's the danger zone.
+
+105
+00:03:53,610 --> 00:03:55,788
+And a lot of things can happen in there,
+
+106
+00:03:56,008 --> 00:03:56,629
+um.
+
+107
+00:03:57,520 --> 00:04:00,038
+Anything from a configuration
+
+108
+00:04:00,038 --> 00:04:00,819
+drift,
+
+109
+00:04:01,118 --> 00:04:03,240
+uh, you could have a new zero
+
+110
+00:04:03,240 --> 00:04:05,360
+day published, or
+
+111
+00:04:05,360 --> 00:04:07,360
+in the worst case scenario, a
+
+112
+00:04:07,360 --> 00:04:09,338
+bad actor decides to
+
+113
+00:04:10,038 --> 00:04:12,159
+replace the artifact with one that has
+
+114
+00:04:12,159 --> 00:04:13,479
+malicious code in it.
+
+115
+00:04:15,250 --> 00:04:17,670
+Point being, the longer that drift window
+
+116
+00:04:17,670 --> 00:04:19,809
+exists, the bigger the blast radius,
+
+117
+00:04:19,988 --> 00:04:22,009
+uh, for any sort of changes.
+
+118
+00:04:25,579 --> 00:04:28,410
+The scary part though, is that most
+
+119
+00:04:28,410 --> 00:04:28,959
+organizations
+
+120
+00:04:29,220 --> 00:04:31,379
+have multiple drift windows within
+
+121
+00:04:31,379 --> 00:04:32,920
+any release cycle.
+
+122
+00:04:33,420 --> 00:04:35,619
+So, uh, you know, you've deployed to
+
+123
+00:04:35,619 --> 00:04:37,819
+dev, you're waiting for your QA
+
+124
+00:04:37,819 --> 00:04:40,019
+team to promote it out to their environment
+
+125
+00:04:40,019 --> 00:04:42,160
+before they can test it, could be a few days.
+
+126
+00:04:42,980 --> 00:04:45,100
+Maybe you've made it to your stage environment, but
+
+127
+00:04:45,100 --> 00:04:47,100
+you're waiting on cab approval to go to
+
+128
+00:04:47,100 --> 00:04:49,579
+production. That could be weeks, uh.
+
+129
+00:04:50,309 --> 00:04:51,980
+And I've worked with some companies
+
+130
+00:04:52,238 --> 00:04:54,319
+that get everything approved, they're ready to deploy
+
+131
+00:04:54,319 --> 00:04:54,980
+to production,
+
+132
+00:04:55,319 --> 00:04:57,519
+but they only do deployments once
+
+133
+00:04:57,519 --> 00:04:59,678
+per quarter, so you're sitting around, that
+
+134
+00:04:59,678 --> 00:05:01,838
+artifact is just sitting there essentially going
+
+135
+00:05:01,838 --> 00:05:03,170
+stale, uh,
+
+136
+00:05:03,519 --> 00:05:05,160
+during that drift window,
+
+137
+00:05:05,600 --> 00:05:06,220
+um.
+
+138
+00:05:08,189 --> 00:05:10,548
+So how do we make that drift
+
+139
+00:05:10,548 --> 00:05:12,709
+window something that's safe and, and
+
+140
+00:05:12,709 --> 00:05:14,569
+not something that's, uh,
+
+141
+00:05:15,309 --> 00:05:17,369
+a constant risk as when
+
+142
+00:05:17,369 --> 00:05:18,790
+it exists?
+
+143
+00:05:20,059 --> 00:05:21,160
+So we can make that safe with,
+
+144
+00:05:21,889 --> 00:05:23,988
+uh, by putting together three
+
+145
+00:05:25,488 --> 00:05:26,269
+key
+
+146
+00:05:26,850 --> 00:05:27,709
+pieces
+
+147
+00:05:27,970 --> 00:05:29,869
+that work in harmony to kind of.
+
+148
+00:05:30,699 --> 00:05:32,420
+Make that drift window safer.
+
+149
+00:05:32,738 --> 00:05:35,079
+The first one, software bill of materials.
+
+150
+00:05:35,579 --> 00:05:37,798
+You might have heard the term S-bomb.
+
+151
+00:05:38,298 --> 00:05:40,428
+This is the ingredient list of what went
+
+152
+00:05:40,428 --> 00:05:41,319
+into building
+
+153
+00:05:41,899 --> 00:05:43,399
+our artifact. So
+
+154
+00:05:43,899 --> 00:05:46,119
+it's a complete list of the third party
+
+155
+00:05:46,809 --> 00:05:48,980
+libraries and components that were used to
+
+156
+00:05:48,980 --> 00:05:50,139
+create the application.
+
+157
+00:05:51,459 --> 00:05:53,819
+The second piece is our provenance.
+
+158
+00:05:54,108 --> 00:05:56,149
+So this is the who, what, when, where and
+
+159
+00:05:56,149 --> 00:05:58,149
+how of that artifact
+
+160
+00:05:58,149 --> 00:05:59,069
+getting created.
+
+161
+00:05:59,428 --> 00:06:01,639
+Um, so everything from the commits
+
+162
+00:06:01,639 --> 00:06:02,480
+that are in it
+
+163
+00:06:02,829 --> 00:06:04,838
+to the, the workflow file
+
+164
+00:06:04,838 --> 00:06:06,298
+that was used to build it
+
+165
+00:06:06,670 --> 00:06:08,678
+to, uh, the runner that
+
+166
+00:06:08,678 --> 00:06:10,399
+the build was run on, uh,
+
+167
+00:06:10,838 --> 00:06:12,959
+everything around the creation of that artifact
+
+168
+00:06:12,959 --> 00:06:15,579
+is the Province, and then finally
+
+169
+00:06:15,838 --> 00:06:17,988
+the third piece is our attestation.
+
+170
+00:06:18,160 --> 00:06:20,319
+This is the, the cryptographic glue
+
+171
+00:06:20,319 --> 00:06:22,298
+that kind of holds everything together.
+
+172
+00:06:22,798 --> 00:06:25,298
+It's a signed statement or a certificate,
+
+173
+00:06:25,759 --> 00:06:27,970
+uh. That's saying, hey,
+
+174
+00:06:28,088 --> 00:06:30,290
+this S-bomb belongs
+
+175
+00:06:30,290 --> 00:06:32,319
+to the package that I created,
+
+176
+00:06:32,608 --> 00:06:34,608
+and this is the provenance that was used
+
+177
+00:06:34,608 --> 00:06:35,410
+to create it.
+
+178
+00:06:36,170 --> 00:06:38,548
+And ideally, all three of these
+
+179
+00:06:38,769 --> 00:06:40,850
+are generated automatically,
+
+180
+00:06:41,048 --> 00:06:42,189
+uh, and they're
+
+181
+00:06:42,769 --> 00:06:44,928
+verified at each stage of your
+
+182
+00:06:44,928 --> 00:06:46,809
+software delivery life cycle.
+
+183
+00:06:49,548 --> 00:06:51,790
+When these three work together in unison,
+
+184
+00:06:51,869 --> 00:06:54,230
+that's how you get a drift window,
+
+185
+00:06:54,389 --> 00:06:56,588
+uh, that doesn't rely on luck
+
+186
+00:06:57,028 --> 00:06:59,209
+to be safe. Uh, you're putting controls
+
+187
+00:06:59,209 --> 00:07:01,230
+in place to, to make it a
+
+188
+00:07:01,230 --> 00:07:02,028
+safe time.
+
+189
+00:07:03,639 --> 00:07:05,798
+So the Zero Trust pipeline only
+
+190
+00:07:05,798 --> 00:07:08,389
+works with a clear separation of duties
+
+191
+00:07:08,389 --> 00:07:10,439
+and a clear segregation
+
+192
+00:07:10,439 --> 00:07:12,019
+of responsibilities.
+
+193
+00:07:12,399 --> 00:07:14,519
+Um, so let's talk about who
+
+194
+00:07:14,519 --> 00:07:15,319
+does what.
+
+195
+00:07:16,149 --> 00:07:17,639
+On the left we have GitHub,
+
+196
+00:07:18,000 --> 00:07:20,149
+uh, exactly where it should be with
+
+197
+00:07:20,149 --> 00:07:22,519
+our code, uh, and that's
+
+198
+00:07:22,519 --> 00:07:24,759
+doing everything on the CI side of the house.
+
+199
+00:07:24,920 --> 00:07:26,720
+So, uh, we're building our code,
+
+200
+00:07:27,040 --> 00:07:29,238
+running our unit tests and scans,
+
+201
+00:07:29,879 --> 00:07:32,220
+generating our S-bomb and attestations,
+
+202
+00:07:33,000 --> 00:07:35,600
+scanning for vulnerabilities, and then ultimately
+
+203
+00:07:35,600 --> 00:07:37,838
+we're publishing our artifacts out to
+
+204
+00:07:37,838 --> 00:07:39,838
+our package repository, that
+
+205
+00:07:39,838 --> 00:07:41,238
+immutable artifacts.
+
+206
+00:07:42,108 --> 00:07:44,220
+Once the CI process is
+
+207
+00:07:44,220 --> 00:07:44,759
+complete,
+
+208
+00:07:45,019 --> 00:07:47,178
+uh, that's when Octopus
+
+209
+00:07:47,178 --> 00:07:48,139
+comes into play.
+
+210
+00:07:48,459 --> 00:07:50,699
+Now think of Octopus deploy as
+
+211
+00:07:50,699 --> 00:07:52,238
+your, uh,
+
+212
+00:07:52,569 --> 00:07:54,778
+single source of truth for everything deployment
+
+213
+00:07:54,778 --> 00:07:57,059
+related and kind of the final
+
+214
+00:07:57,059 --> 00:07:59,540
+gatekeeper when it comes to,
+
+215
+00:07:59,809 --> 00:08:02,298
+uh, deploying your
+
+216
+00:08:02,298 --> 00:08:03,358
+applications safely.
+
+217
+00:08:03,778 --> 00:08:05,879
+So octopus, what are you responsible for?
+
+218
+00:08:06,019 --> 00:08:07,579
+Verifying our S-bomb,
+
+219
+00:08:07,939 --> 00:08:10,040
+validating our attestations?
+
+220
+00:08:10,750 --> 00:08:12,798
+Enforcing any sort of policies
+
+221
+00:08:12,798 --> 00:08:14,160
+that your organization has,
+
+222
+00:08:14,439 --> 00:08:16,519
+uh, maybe around approvals
+
+223
+00:08:16,519 --> 00:08:18,639
+or vulnerability checks or
+
+224
+00:08:18,639 --> 00:08:20,298
+uh configuration drift.
+
+225
+00:08:21,259 --> 00:08:23,608
+Once those quality gates pass,
+
+226
+00:08:24,149 --> 00:08:26,149
+then Octopus carries on with the
+
+227
+00:08:26,149 --> 00:08:28,189
+rest of the deployment process out
+
+228
+00:08:28,189 --> 00:08:30,329
+to EKS or ECS
+
+229
+00:08:30,329 --> 00:08:30,988
+or,
+
+230
+00:08:31,350 --> 00:08:33,428
+you know, serverless, EC-2s, what
+
+231
+00:08:33,428 --> 00:08:33,940
+have you.
+
+232
+00:08:34,219 --> 00:08:36,369
+Um, on top of that, we kind of keep,
+
+233
+00:08:36,548 --> 00:08:38,710
+uh, a rolling audit of
+
+234
+00:08:38,710 --> 00:08:40,779
+everything that's happened, uh, leading up to the
+
+235
+00:08:40,779 --> 00:08:42,908
+deployment, uh, and Octopus makes
+
+236
+00:08:42,908 --> 00:08:45,219
+it easy to roll back when
+
+237
+00:08:45,219 --> 00:08:48,109
+necessary. Perfect.
+
+238
+00:08:48,320 --> 00:08:49,139
+Slides are done.
+
+239
+00:08:49,418 --> 00:08:51,719
+Uh, I've got a real pipeline
+
+240
+00:08:51,739 --> 00:08:53,019
+ready to roll here.
+
+241
+00:08:53,379 --> 00:08:55,580
+Uh, let's fire it off real quick and watch this
+
+242
+00:08:55,580 --> 00:08:57,580
+whole, uh, zero
+
+243
+00:08:57,580 --> 00:08:59,178
+trust flow in action.
+
+244
+00:09:03,389 --> 00:09:04,369
+Perfect. So
+
+245
+00:09:04,629 --> 00:09:06,668
+we're gonna start uh in
+
+246
+00:09:06,668 --> 00:09:08,869
+GitHub where our code lives.
+
+247
+00:09:09,190 --> 00:09:11,190
+Uh, the project that we're gonna be working with
+
+248
+00:09:11,190 --> 00:09:13,548
+today is our account registry
+
+249
+00:09:13,548 --> 00:09:16,190
+project. Um, it's a containerized
+
+250
+00:09:16,190 --> 00:09:18,750
+application that we're deploying out to EKS.
+
+251
+00:09:19,668 --> 00:09:21,989
+So I'll hop open, I'll hop over
+
+252
+00:09:21,989 --> 00:09:23,629
+to my actions tab
+
+253
+00:09:23,908 --> 00:09:24,609
+and
+
+254
+00:09:24,950 --> 00:09:25,590
+uh
+
+255
+00:09:28,538 --> 00:09:29,399
+We have 2
+
+256
+00:09:29,820 --> 00:09:31,820
+actions workflows ready. Uh, so
+
+257
+00:09:31,820 --> 00:09:34,080
+we're gonna be focused on the supply chain,
+
+258
+00:09:34,440 --> 00:09:36,418
+verified, build pipeline,
+
+259
+00:09:36,779 --> 00:09:38,859
+GitHub actions workflow. So I'm gonna click
+
+260
+00:09:38,859 --> 00:09:39,418
+on it.
+
+261
+00:09:39,690 --> 00:09:41,700
+Uh, this workflow is doing a
+
+262
+00:09:41,700 --> 00:09:43,739
+ton behind the scenes, and I'll kind of walk you
+
+263
+00:09:43,739 --> 00:09:46,119
+through that, but let's, let's kick it off and,
+
+264
+00:09:46,178 --> 00:09:47,759
+uh, get it going.
+
+265
+00:09:48,460 --> 00:09:50,619
+So we'll run the workflow, refresh
+
+266
+00:09:50,619 --> 00:09:51,759
+the page,
+
+267
+00:09:52,259 --> 00:09:54,759
+and take a look at this, uh,
+
+268
+00:09:54,979 --> 00:09:56,320
+this GitHub action
+
+269
+00:09:56,658 --> 00:09:57,538
+in action.
+
+270
+00:09:58,700 --> 00:10:00,769
+I'm not gonna walk through the YAML file, not a lot of
+
+271
+00:10:00,769 --> 00:10:01,399
+value there,
+
+272
+00:10:01,779 --> 00:10:04,090
+uh, but we will kind of look at this, uh,
+
+273
+00:10:04,259 --> 00:10:06,590
+GitHub graph around what's happening. So,
+
+274
+00:10:06,940 --> 00:10:08,428
+first piece to point out,
+
+275
+00:10:08,739 --> 00:10:10,979
+this pipeline's built for speed, right? We're
+
+276
+00:10:10,979 --> 00:10:13,418
+not, uh, we're trying to deploy software
+
+277
+00:10:13,418 --> 00:10:14,879
+faster while keeping it safe.
+
+278
+00:10:15,298 --> 00:10:17,399
+Um, after our pipeline initialization,
+
+279
+00:10:18,029 --> 00:10:20,298
+uh, we're running a couple of steps in parallel.
+
+280
+00:10:20,379 --> 00:10:22,000
+So we're scanning our repo,
+
+281
+00:10:22,340 --> 00:10:24,840
+uh, at the same time that we're building our image,
+
+282
+00:10:25,058 --> 00:10:27,580
+uh, and publishing our S-bomb.
+
+283
+00:10:28,418 --> 00:10:30,700
+So that, that repost
+
+284
+00:10:30,700 --> 00:10:32,700
+scan is a quality
+
+285
+00:10:32,700 --> 00:10:34,779
+gate that takes about 20 seconds,
+
+286
+00:10:34,859 --> 00:10:36,038
+not a huge time sync,
+
+287
+00:10:36,500 --> 00:10:38,918
+but it's running in parallel with our
+
+288
+00:10:38,918 --> 00:10:40,940
+docker container build anyway. So we're
+
+289
+00:10:40,940 --> 00:10:43,139
+not losing anything in our total
+
+290
+00:10:43,139 --> 00:10:45,038
+time, uh, of
+
+291
+00:10:45,340 --> 00:10:46,798
+the workflow running.
+
+292
+00:10:47,859 --> 00:10:50,139
+We're also building our container, we're scanning
+
+293
+00:10:50,139 --> 00:10:52,219
+it, uh, and we're publishing that S-bomb,
+
+294
+00:10:52,298 --> 00:10:54,308
+that list of ingredients, uh, that we'll
+
+295
+00:10:54,308 --> 00:10:56,428
+use later in the deployment process.
+
+296
+00:10:57,178 --> 00:10:59,379
+Once both of those quality gates pass,
+
+297
+00:10:59,509 --> 00:11:01,500
+uh, we're publishing our GitHub release,
+
+298
+00:11:01,779 --> 00:11:02,840
+uh, and then
+
+299
+00:11:03,379 --> 00:11:05,899
+we're signing and generating our attestation.
+
+300
+00:11:06,250 --> 00:11:07,928
+Uh, on the CI side of things,
+
+301
+00:11:08,259 --> 00:11:10,538
+this is kind of the, the critical
+
+302
+00:11:10,538 --> 00:11:12,779
+piece of this workflow.
+
+303
+00:11:13,590 --> 00:11:15,629
+So, uh, when we're signing and
+
+304
+00:11:15,629 --> 00:11:16,950
+generating the attestation,
+
+305
+00:11:17,229 --> 00:11:19,330
+uh, we're tying that S-bomb
+
+306
+00:11:19,330 --> 00:11:20,109
+and
+
+307
+00:11:20,460 --> 00:11:22,908
+uh our Docker container together,
+
+308
+00:11:23,190 --> 00:11:25,349
+uh, and we're essentially
+
+309
+00:11:25,349 --> 00:11:27,389
+getting signed metadata that
+
+310
+00:11:27,389 --> 00:11:29,469
+we'll use in the deployment process
+
+311
+00:11:29,469 --> 00:11:31,750
+to validate, hey.
+
+312
+00:11:33,239 --> 00:11:35,330
+The container that I'm about to deploy is the
+
+313
+00:11:35,330 --> 00:11:37,729
+exact one that I built earlier
+
+314
+00:11:37,729 --> 00:11:39,979
+in my, uh, pipeline.
+
+315
+00:11:40,489 --> 00:11:41,379
+And then finally,
+
+316
+00:11:41,649 --> 00:11:43,769
+uh, back to that separation of duties that we
+
+317
+00:11:43,769 --> 00:11:45,788
+talked about, uh, this is where we're handing
+
+318
+00:11:45,788 --> 00:11:47,889
+off the deployment to Octopus Deploy,
+
+319
+00:11:48,048 --> 00:11:50,369
+uh, to kind of continue with the CD
+
+320
+00:11:50,369 --> 00:11:53,029
+part of our CD CICD pipeline.
+
+321
+00:11:55,250 --> 00:11:57,359
+So let's hop over to Octopus now and,
+
+322
+00:11:57,408 --> 00:11:59,529
+and see what that looks like. So this is
+
+323
+00:11:59,529 --> 00:12:01,538
+the Octopus deployed dashboard for those
+
+324
+00:12:01,538 --> 00:12:02,840
+of you that haven't seen it.
+
+325
+00:12:03,168 --> 00:12:05,168
+Uh, it's a single control
+
+326
+00:12:05,168 --> 00:12:07,330
+plane, kind of like your air traffic control
+
+327
+00:12:07,330 --> 00:12:09,750
+tower for everything deployment related,
+
+328
+00:12:09,918 --> 00:12:11,330
+uh, in your organization.
+
+329
+00:12:11,609 --> 00:12:13,609
+We have a list of our projects
+
+330
+00:12:13,609 --> 00:12:15,769
+or our applications, our
+
+331
+00:12:15,769 --> 00:12:17,428
+services down the left side,
+
+332
+00:12:17,889 --> 00:12:19,889
+our environments across the top, and we
+
+333
+00:12:19,889 --> 00:12:20,668
+can see exactly
+
+334
+00:12:21,090 --> 00:12:23,129
+which version has been deployed out to
+
+335
+00:12:23,129 --> 00:12:24,139
+which environment.
+
+336
+00:12:24,820 --> 00:12:25,700
+So as you can see,
+
+337
+00:12:25,979 --> 00:12:28,259
+our uh account registry
+
+338
+00:12:28,259 --> 00:12:30,298
+project uh has already
+
+339
+00:12:30,298 --> 00:12:32,918
+started deploying to development that happened automatically
+
+340
+00:12:33,259 --> 00:12:35,668
+at the end of our GitHub actions workflow.
+
+341
+00:12:36,269 --> 00:12:37,139
+So I'm gonna click on,
+
+342
+00:12:37,460 --> 00:12:39,500
+click on this deployment, uh, and
+
+343
+00:12:39,500 --> 00:12:41,729
+it's gonna bring me to our task
+
+344
+00:12:41,729 --> 00:12:42,320
+log.
+
+345
+00:12:42,700 --> 00:12:44,719
+We'll take a look at the task summary screen.
+
+346
+00:12:45,830 --> 00:12:48,190
+So, there's a lot going on
+
+347
+00:12:48,190 --> 00:12:50,308
+as far as the Kubernete's deployment is
+
+348
+00:12:50,308 --> 00:12:51,168
+concerned, but,
+
+349
+00:12:51,548 --> 00:12:52,889
+uh, as far as
+
+350
+00:12:53,229 --> 00:12:54,168
+this presentation
+
+351
+00:12:55,158 --> 00:12:57,548
+is concerned, we're going to focus on the 1st 4
+
+352
+00:12:57,548 --> 00:12:59,928
+steps and how they relate to the zero
+
+353
+00:12:59,928 --> 00:13:00,908
+Trust pipeline.
+
+354
+00:13:01,269 --> 00:13:03,288
+So, uh, step one, we're
+
+355
+00:13:03,288 --> 00:13:05,710
+grabbing our packages, we're grabbing our S-bomb,
+
+356
+00:13:05,908 --> 00:13:08,149
+uh, grabbing our build information from GitHub
+
+357
+00:13:08,149 --> 00:13:10,210
+and, and kind of gathering that all
+
+358
+00:13:10,210 --> 00:13:12,009
+together for the subsequent steps.
+
+359
+00:13:12,629 --> 00:13:13,739
+Uh, step two,
+
+360
+00:13:14,678 --> 00:13:16,759
+we're verifying that S-bomb,
+
+361
+00:13:16,869 --> 00:13:19,200
+so we're looking through that list of ingredients,
+
+362
+00:13:19,558 --> 00:13:21,558
+uh, and cross-checking it
+
+363
+00:13:21,558 --> 00:13:23,479
+with what was in GitHub.
+
+364
+00:13:23,759 --> 00:13:25,960
+We're making sure that none of those ingredients have
+
+365
+00:13:25,960 --> 00:13:28,320
+changed, uh, and that, that software,
+
+366
+00:13:28,519 --> 00:13:30,519
+that software bill of materials is
+
+367
+00:13:30,519 --> 00:13:31,538
+still sound.
+
+368
+00:13:33,379 --> 00:13:34,210
+Now step 3,
+
+369
+00:13:35,219 --> 00:13:37,658
+talked about that critical stage in our GitHub actions
+
+370
+00:13:37,658 --> 00:13:38,320
+workflow.
+
+371
+00:13:38,580 --> 00:13:41,000
+This is that critical stage in our
+
+372
+00:13:41,460 --> 00:13:42,859
+deployment process.
+
+373
+00:13:43,950 --> 00:13:45,969
+So we are
+
+374
+00:13:46,548 --> 00:13:47,349
+taking
+
+375
+00:13:48,239 --> 00:13:50,529
+Our S-bomb, we're taking our container,
+
+376
+00:13:50,960 --> 00:13:52,460
+we're calculating
+
+377
+00:13:52,879 --> 00:13:55,279
+the SH 256 hashes
+
+378
+00:13:55,279 --> 00:13:56,279
+for each of those,
+
+379
+00:13:56,639 --> 00:13:59,149
+and then we're comparing them to what GitHub
+
+380
+00:13:59,558 --> 00:14:01,308
+says they should be in the Adi station.
+
+381
+00:14:02,239 --> 00:14:04,519
+If they match, uh, we know that the
+
+382
+00:14:04,519 --> 00:14:06,558
+container that we're about to deploy
+
+383
+00:14:06,558 --> 00:14:07,899
+is the exact one
+
+384
+00:14:08,840 --> 00:14:11,080
+that we built. Uh, if there is something
+
+385
+00:14:11,080 --> 00:14:13,279
+off between them, we know that there's been some
+
+386
+00:14:13,279 --> 00:14:15,399
+sort of tampering along the way
+
+387
+00:14:15,399 --> 00:14:16,519
+in our pipeline.
+
+388
+00:14:18,710 --> 00:14:20,808
+So I've mentioned attestations a few times.
+
+389
+00:14:21,509 --> 00:14:23,609
+Quick detour back to GitHub,
+
+390
+00:14:23,859 --> 00:14:25,830
+uh, and if we scroll down a little bit,
+
+391
+00:14:26,168 --> 00:14:27,109
+uh, for those of you,
+
+392
+00:14:27,428 --> 00:14:29,009
+of you that haven't seen,
+
+393
+00:14:29,389 --> 00:14:30,908
+uh, GitHub Advanced Security,
+
+394
+00:14:31,190 --> 00:14:33,450
+uh, we'll take a quick look at our attestation,
+
+395
+00:14:33,509 --> 00:14:36,509
+uh. Real
+
+396
+00:14:36,509 --> 00:14:37,440
+quick, so
+
+397
+00:14:38,058 --> 00:14:40,139
+top section, uh, we have our
+
+398
+00:14:40,139 --> 00:14:42,538
+provenance. Remember this is all the build
+
+399
+00:14:42,538 --> 00:14:44,658
+information, our commits, our workflow
+
+400
+00:14:44,658 --> 00:14:46,298
+file, so on and so forth.
+
+401
+00:14:46,619 --> 00:14:48,658
+Uh, the middle section has a number
+
+402
+00:14:48,658 --> 00:14:51,009
+of, uh, certificate keys
+
+403
+00:14:51,009 --> 00:14:53,109
+that are used to, to verify,
+
+404
+00:14:53,379 --> 00:14:54,019
+uh, but.
+
+405
+00:14:54,678 --> 00:14:56,739
+The key of this
+
+406
+00:14:56,739 --> 00:14:58,580
+attestation that we're working with
+
+407
+00:14:59,440 --> 00:15:01,639
+are subjects down at the bottom. So you can
+
+408
+00:15:01,639 --> 00:15:03,639
+see our Docker container in
+
+409
+00:15:03,639 --> 00:15:04,899
+our S-bomb file
+
+410
+00:15:05,629 --> 00:15:07,479
+along with their subject digest.
+
+411
+00:15:07,759 --> 00:15:09,918
+So when we calculate those in octopus, we're
+
+412
+00:15:09,918 --> 00:15:12,080
+comparing those to these values and
+
+413
+00:15:12,080 --> 00:15:13,558
+making sure that they match.
+
+414
+00:15:15,570 --> 00:15:17,139
+And then finally, step 4,
+
+415
+00:15:17,649 --> 00:15:20,288
+we're checking GitHub for open vulnerabilities
+
+416
+00:15:20,288 --> 00:15:21,788
+using the GitHub API.
+
+417
+00:15:23,058 --> 00:15:25,678
+Doesn't make a ton of sense on this automatic
+
+418
+00:15:25,940 --> 00:15:28,139
+deployment to development because we just
+
+419
+00:15:28,139 --> 00:15:30,139
+built it, you know, 3.5 minutes
+
+420
+00:15:30,139 --> 00:15:32,219
+ago, but if you remember that drift
+
+421
+00:15:32,219 --> 00:15:34,418
+window maybe that artifact's been
+
+422
+00:15:34,418 --> 00:15:36,639
+sitting there for 3 or 4 weeks.
+
+423
+00:15:37,340 --> 00:15:39,558
+Always a good idea to do a final scan,
+
+424
+00:15:40,019 --> 00:15:42,090
+uh, of our repo to make sure nothing's
+
+425
+00:15:42,090 --> 00:15:44,000
+been published, no 0 days exist,
+
+426
+00:15:44,408 --> 00:15:46,529
+uh, no vulnerabilities have
+
+427
+00:15:46,529 --> 00:15:48,538
+made their way into what we're about to
+
+428
+00:15:48,538 --> 00:15:50,440
+send out to our production environment.
+
+429
+00:15:51,450 --> 00:15:53,450
+From there, uh, we're kind of
+
+430
+00:15:53,450 --> 00:15:55,849
+continuing with the standard Kubernetes
+
+431
+00:15:55,849 --> 00:15:57,808
+deployment, creating our name space,
+
+432
+00:15:58,210 --> 00:16:00,389
+config maps, so on and so forth.
+
+433
+00:16:03,849 --> 00:16:05,849
+So that's what that zero trust pipeline
+
+434
+00:16:05,849 --> 00:16:06,609
+looks like.
+
+435
+00:16:07,009 --> 00:16:09,129
+Uh, a few other pieces that I'll, I'll key
+
+436
+00:16:09,129 --> 00:16:11,330
+in on just, uh, when we're talking about
+
+437
+00:16:11,330 --> 00:16:13,769
+deployments for regulated industries.
+
+438
+00:16:14,139 --> 00:16:15,428
+Uh, you notice this top,
+
+439
+00:16:15,820 --> 00:16:18,129
+uh, steps says apply compliance
+
+440
+00:16:18,129 --> 00:16:20,070
+policies. I clicked on that.
+
+441
+00:16:20,408 --> 00:16:22,869
+Um, in Octopus, we have the ability
+
+442
+00:16:22,869 --> 00:16:25,070
+to, uh, define.
+
+443
+00:16:25,869 --> 00:16:27,399
+Policies using Rego
+
+444
+00:16:27,950 --> 00:16:30,129
+uh that span across your entire
+
+445
+00:16:30,129 --> 00:16:32,149
+instance. So, uh, this allows
+
+446
+00:16:32,149 --> 00:16:33,928
+platform teams to
+
+447
+00:16:34,469 --> 00:16:35,210
+standardize,
+
+448
+00:16:35,668 --> 00:16:36,219
+uh.
+
+449
+00:16:36,969 --> 00:16:39,129
+The governance around all deployments
+
+450
+00:16:39,129 --> 00:16:41,210
+in their organization and
+
+451
+00:16:41,210 --> 00:16:43,509
+uh create standards, uh,
+
+452
+00:16:43,889 --> 00:16:45,950
+for any deployment that goes out.
+
+453
+00:16:47,330 --> 00:16:49,379
+Other piece that we'll key in on
+
+454
+00:16:49,379 --> 00:16:51,658
+is our Kubernetes tab over
+
+455
+00:16:51,658 --> 00:16:53,879
+here uh in the upper right. So,
+
+456
+00:16:54,139 --> 00:16:56,759
+uh, we're deploying to EKS,
+
+457
+00:16:57,048 --> 00:16:59,440
+uh, and at deploy time,
+
+458
+00:16:59,739 --> 00:17:01,239
+Octopus is
+
+459
+00:17:01,580 --> 00:17:03,940
+pulling back a snapshot of
+
+460
+00:17:03,940 --> 00:17:05,979
+all the different Kubernetes objects that
+
+461
+00:17:05,979 --> 00:17:07,318
+are getting deployed.
+
+462
+00:17:08,189 --> 00:17:09,670
+Along with their status,
+
+463
+00:17:09,979 --> 00:17:11,108
+uh, so,
+
+464
+00:17:11,400 --> 00:17:13,779
+uh, first off, if any of these were unhealthy,
+
+465
+00:17:13,828 --> 00:17:16,430
+we would see that here in our, our
+
+466
+00:17:16,430 --> 00:17:17,729
+object status screen,
+
+467
+00:17:18,108 --> 00:17:20,630
+uh, but as a developer, maybe I don't have
+
+468
+00:17:20,630 --> 00:17:22,670
+access to direct access to
+
+469
+00:17:22,670 --> 00:17:24,670
+my cluster. This is a great way for
+
+470
+00:17:24,670 --> 00:17:26,729
+me to figure out, hey, what is going on
+
+471
+00:17:26,729 --> 00:17:28,890
+in my cluster, uh, without having
+
+472
+00:17:29,709 --> 00:17:31,650
+to get into the, uh,
+
+473
+00:17:31,910 --> 00:17:34,029
+you know, the hardened environment or without
+
+474
+00:17:34,029 --> 00:17:36,170
+having to give out access to,
+
+475
+00:17:36,189 --> 00:17:38,400
+uh. To a wide array
+
+476
+00:17:38,400 --> 00:17:39,180
+of people.
+
+477
+00:17:43,828 --> 00:17:46,068
+Last piece we'll look at is our build
+
+478
+00:17:46,068 --> 00:17:48,390
+information. So we're pushing this build information
+
+479
+00:17:48,390 --> 00:17:48,969
+to
+
+480
+00:17:49,309 --> 00:17:50,750
+Octopus from GitHub,
+
+481
+00:17:51,068 --> 00:17:52,420
+and it's kind of a, a,
+
+482
+00:17:52,828 --> 00:17:54,868
+a sanity check, an extra length
+
+483
+00:17:54,868 --> 00:17:57,068
+that goes back to our build, uh, where
+
+484
+00:17:57,068 --> 00:17:59,618
+we can get at, uh, those S-bomb
+
+485
+00:17:59,618 --> 00:18:01,160
+files, our attestations,
+
+486
+00:18:01,469 --> 00:18:03,930
+uh, our provenance, and so on and so forth.
+
+487
+00:18:05,739 --> 00:18:07,699
+So back to the dashboard, uh,
+
+488
+00:18:08,630 --> 00:18:10,868
+That's our zero trust pipeline,
+
+489
+00:18:11,180 --> 00:18:13,348
+uh. Signed by
+
+490
+00:18:13,348 --> 00:18:15,689
+GitHub and verified and deployed
+
+491
+00:18:15,689 --> 00:18:17,689
+with governance through Octopus
+
+492
+00:18:17,689 --> 00:18:18,469
+Deeploy.
+
+493
+00:18:19,689 --> 00:18:21,259
+Head back here.
+
+494
+00:18:21,890 --> 00:18:23,910
+So, Kind of
+
+495
+00:18:24,170 --> 00:18:26,269
+things, uh, what did we
+
+496
+00:18:26,269 --> 00:18:27,519
+accomplish today?
+
+497
+00:18:27,799 --> 00:18:29,809
+Um, we established a chain of
+
+498
+00:18:29,809 --> 00:18:31,598
+trust from build to deploy.
+
+499
+00:18:31,969 --> 00:18:34,309
+Uh, GitHub generated the S-bomb, the Provenance,
+
+500
+00:18:34,358 --> 00:18:36,529
+and the attestation, uh, and Octopus
+
+501
+00:18:36,529 --> 00:18:38,568
+verified all of those before
+
+502
+00:18:38,568 --> 00:18:39,650
+anything was deployed.
+
+503
+00:18:40,500 --> 00:18:42,789
+Second, we enforce deployment governance.
+
+504
+00:18:43,049 --> 00:18:45,098
+Uh, so, uh, our deployment
+
+505
+00:18:45,098 --> 00:18:47,259
+went through policy evaluation,
+
+506
+00:18:47,299 --> 00:18:49,380
+it went through vulnerability checks, it
+
+507
+00:18:49,380 --> 00:18:50,239
+went through
+
+508
+00:18:50,660 --> 00:18:53,029
+validation of the attestation. Uh,
+
+509
+00:18:53,259 --> 00:18:55,259
+all these controls are
+
+510
+00:18:55,259 --> 00:18:57,449
+exactly what. Uh, regulated
+
+511
+00:18:57,449 --> 00:18:59,729
+financial organizations need when deploying
+
+512
+00:18:59,729 --> 00:19:00,650
+out to production,
+
+513
+00:19:01,049 --> 00:19:03,568
+uh, and then finally we verified our artifact
+
+514
+00:19:03,568 --> 00:19:05,930
+integrity. Um, we verified
+
+515
+00:19:05,930 --> 00:19:08,009
+that the artifacts that we deployed were the exact
+
+516
+00:19:08,009 --> 00:19:10,170
+ones that we built, uh, and
+
+517
+00:19:10,170 --> 00:19:12,029
+that they hadn't been tampered with.
+
+518
+00:19:13,598 --> 00:19:15,699
+So thank you for coming out. I, I really appreciate
+
+519
+00:19:15,699 --> 00:19:17,838
+you. 5 o'clock, end of the first day.
+
+520
+00:19:17,949 --> 00:19:19,539
+Thanks for coming out and joining me.
+
+521
+00:19:19,828 --> 00:19:21,809
+Uh, again, we're at booth 678,
+
+522
+00:19:22,390 --> 00:19:22,939
+kind of right
+
+523
+00:19:23,239 --> 00:19:25,338
+there, right in front of Q Qualcomm.
+
+524
+00:19:26,009 --> 00:19:28,229
+Happy to, uh, chat with you, answer
+
+525
+00:19:28,229 --> 00:19:30,358
+any questions, uh, yeah, and
+
+526
+00:19:30,358 --> 00:19:32,420
+continue the conversation. Thanks so much.
+

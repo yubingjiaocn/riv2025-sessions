@@ -88,7 +88,28 @@ def search_session(title):
                 if item.get("code") == expected_code:
                     logger.info(f"  ✓ Matched session code: {expected_code}")
                     return item
-            logger.warning(f"  ⚠ Session code {expected_code} not found in results, using first result")
+
+            # Fallback: If code doesn't already have a suffix, try adding "-S"
+            if not re.search(r'-[A-Z]+$', expected_code):
+                fallback_code = f"{expected_code}-S"
+                logger.info(f"  ⚠ Session code {expected_code} not found, trying {fallback_code}...")
+
+                # Search again with the -S suffix
+                fallback_title = title.replace(expected_code, fallback_code)
+                fallback_payload = f"search={urllib.parse.quote(fallback_title)}&type=session&browserTimezone=Asia%2FShanghai&catalogDisplay=list"
+                fallback_response = requests.post(CATALOG_API, data=fallback_payload, headers=headers)
+                fallback_data = fallback_response.json()
+
+                if fallback_data.get("responseCode") == "0" and fallback_data.get("sections"):
+                    fallback_items = fallback_data["sectionList"][0].get("items", [])
+                    for item in fallback_items:
+                        if item.get("code") == fallback_code:
+                            logger.info(f"  ✓ Matched fallback session code: {fallback_code}")
+                            return item
+
+                logger.warning(f"  ⚠ Fallback code {fallback_code} not found either, using first result from original search")
+            else:
+                logger.warning(f"  ⚠ Session code {expected_code} not found in results, using first result")
 
         return items[0] if items else None
     return None
