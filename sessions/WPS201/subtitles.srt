@@ -1,0 +1,3564 @@
+1
+00:00:00,529 --> 00:00:01,110
+Alright.
+
+2
+00:00:01,489 --> 00:00:04,049
+Welcome everybody to WPS 201
+
+3
+00:00:04,448 --> 00:00:06,448
+architecting larger scale migrations with Fannie Mae
+
+4
+00:00:06,448 --> 00:00:07,150
+and the NRO.
+
+5
+00:00:07,488 --> 00:00:09,528
+My name is Bobby Halihan, and I'm a solution architect here
+
+6
+00:00:09,528 --> 00:00:10,349
+at AWS.
+
+7
+00:00:11,130 --> 00:00:12,689
+All right, so what are we gonna speak about today?
+
+8
+00:00:13,380 --> 00:00:15,858
+Um, well this is a 200 level session, we,
+
+9
+00:00:16,100 --> 00:00:18,609
+uh, because we're not gonna make assumptions that you know everything about migrations
+
+10
+00:00:18,609 --> 00:00:20,000
+and modernization, so we're gonna take
+
+11
+00:00:20,539 --> 00:00:22,399
+just 2 minutes, a couple minutes, and we're gonna cover,
+
+12
+00:00:23,059 --> 00:00:25,100
+uh, migration and modernization patterns, right, just some of
+
+13
+00:00:25,100 --> 00:00:27,100
+the core common, you know, bread and butter
+
+14
+00:00:27,100 --> 00:00:29,260
+stuff, hopefully most of you know, but if you don't, you
+
+15
+00:00:29,260 --> 00:00:30,519
+know, you're gonna learn something right away,
+
+16
+00:00:31,019 --> 00:00:33,529
+uh, from then we're gonna go into the well
+
+17
+00:00:33,529 --> 00:00:35,539
+application of well architected principles, and we're gonna
+
+18
+00:00:35,539 --> 00:00:37,679
+talk a little bit about that and how it applies
+
+19
+00:00:37,679 --> 00:00:39,759
+to migration and modernization
+
+20
+00:00:40,139 --> 00:00:42,340
+and what you'll find throughout today's discussion is.
+
+21
+00:00:42,779 --> 00:00:44,819
+Um, there's gonna be a theme of well
+
+22
+00:00:44,819 --> 00:00:45,560
+architected,
+
+23
+00:00:45,859 --> 00:00:48,098
+uh, and it's something that I heavily wanted to speak about
+
+24
+00:00:48,098 --> 00:00:48,798
+today because,
+
+25
+00:00:49,219 --> 00:00:51,259
+um, you know, it's a kind of a unifying
+
+26
+00:00:51,259 --> 00:00:53,298
+or underlying principle, right? No matter how you
+
+27
+00:00:53,298 --> 00:00:54,649
+do migrations, um,
+
+28
+00:00:54,978 --> 00:00:56,079
+especially when they're large scale,
+
+29
+00:00:56,728 --> 00:00:58,859
+um, being able to fall back on those well architected
+
+30
+00:00:58,859 --> 00:00:59,639
+principles
+
+31
+00:00:59,899 --> 00:01:02,020
+of like like how we do distributed compute
+
+32
+00:01:02,020 --> 00:01:04,058
+well, um, is just core
+
+33
+00:01:04,058 --> 00:01:06,180
+to all of this, right? It, it almost underpins it,
+
+34
+00:01:06,540 --> 00:01:07,948
+um, and, and connects it all together.
+
+35
+00:01:08,569 --> 00:01:10,609
+Uh, so today we have two, also
+
+36
+00:01:10,609 --> 00:01:12,629
+two customer stories, right? The first from the National
+
+37
+00:01:12,629 --> 00:01:14,650
+Reconnaissance Office or the NRO. We'll talk about
+
+38
+00:01:14,650 --> 00:01:16,680
+a large scale migration for a, uh,
+
+39
+00:01:16,799 --> 00:01:17,870
+zero fail mission.
+
+40
+00:01:18,409 --> 00:01:20,198
+Next, we'll then speak with Fannie Mae,
+
+41
+00:01:20,569 --> 00:01:23,448
+who went and redefined and retransformed
+
+42
+00:01:23,448 --> 00:01:25,480
+how they do financial forecasting. They're able to
+
+43
+00:01:25,480 --> 00:01:26,549
+take a process that took
+
+44
+00:01:27,049 --> 00:01:29,319
+well over 80 days and bring that into
+
+45
+00:01:29,319 --> 00:01:31,329
+the realm of just, you know, a few
+
+46
+00:01:31,329 --> 00:01:33,650
+dozen hours, like 72 hours, like something
+
+47
+00:01:33,650 --> 00:01:34,469
+crazy compression
+
+48
+00:01:34,888 --> 00:01:37,019
+of that. Um, and then throughout
+
+49
+00:01:37,019 --> 00:01:39,180
+the session we're gonna talk about things that you can do
+
+50
+00:01:39,180 --> 00:01:41,209
+today, right? So during these, uh,
+
+51
+00:01:41,338 --> 00:01:43,579
+big migrations, right, obviously there's lessons
+
+52
+00:01:43,579 --> 00:01:45,400
+learned. This isn't just gonna be a, uh,
+
+53
+00:01:45,698 --> 00:01:48,099
+you know, that's all, you know, uh, rainbows
+
+54
+00:01:48,099 --> 00:01:50,019
+and sunshine, right? There's gonna be,
+
+55
+00:01:50,379 --> 00:01:51,480
+you know, things are hard.
+
+56
+00:01:52,058 --> 00:01:53,930
+There are challenges when doing these migrations,
+
+57
+00:01:54,260 --> 00:01:56,159
+um, and we're gonna speak about some of that today.
+
+58
+00:01:56,500 --> 00:01:58,609
+We're gonna speak about lessons learned and, you know, we're really gonna
+
+59
+00:01:58,609 --> 00:01:59,120
+get in there.
+
+60
+00:01:59,888 --> 00:02:01,959
+So, without further ado, let's talk about
+
+61
+00:02:01,959 --> 00:02:04,198
+some common migration and modernization patterns.
+
+62
+00:02:04,760 --> 00:02:06,760
+So maybe some of us may be
+
+63
+00:02:06,760 --> 00:02:08,118
+familiar with this type of graph.
+
+64
+00:02:08,639 --> 00:02:10,879
+Hopefully a few people have seen it before, right? We talk about like,
+
+65
+00:02:11,278 --> 00:02:13,349
+um, like why, why migrate,
+
+66
+00:02:13,360 --> 00:02:15,758
+right? And in terms of like the value proposition,
+
+67
+00:02:15,800 --> 00:02:16,419
+it's really,
+
+68
+00:02:16,719 --> 00:02:18,800
+you know, as you migrate and modernize, your cost
+
+69
+00:02:18,800 --> 00:02:19,819
+of compute goes down.
+
+70
+00:02:20,319 --> 00:02:22,639
+Um, however, the innovation velocity, how
+
+71
+00:02:22,639 --> 00:02:24,659
+fast you're able to move as an organization, how quickly
+
+72
+00:02:24,659 --> 00:02:26,419
+you can innovate is gonna go up.
+
+73
+00:02:27,000 --> 00:02:29,080
+Um, so generally speaking, right, if you think
+
+74
+00:02:29,080 --> 00:02:31,580
+about, you know, going from on-premises to re-hosting
+
+75
+00:02:31,838 --> 00:02:34,000
+Amazon EC2 optimize, maybe you're going into like
+
+76
+00:02:34,000 --> 00:02:35,710
+serverless computer, cloud native computing.
+
+77
+00:02:36,308 --> 00:02:38,308
+Um, because of that, you're able to, you're
+
+78
+00:02:38,308 --> 00:02:39,969
+gonna be able to move much faster, right?
+
+79
+00:02:40,550 --> 00:02:41,169
+However,
+
+80
+00:02:41,750 --> 00:02:44,038
+um, And then if we take this
+
+81
+00:02:44,038 --> 00:02:45,639
+like one level deeper, right,
+
+82
+00:02:46,038 --> 00:02:48,278
+and, um, another kind of common pattern
+
+83
+00:02:48,278 --> 00:02:49,409
+for, uh,
+
+84
+00:02:49,800 --> 00:02:52,080
+you know, just migration, modernization, you know, this
+
+85
+00:02:52,080 --> 00:02:53,000
+type of thing is,
+
+86
+00:02:53,360 --> 00:02:55,588
+and you may have heard this before, we call it the seven R's
+
+87
+00:02:55,588 --> 00:02:57,758
+of migration, right? So we'll cover them really quickly, which
+
+88
+00:02:57,758 --> 00:03:00,028
+is re-host, relocate, repurchase,
+
+89
+00:03:00,080 --> 00:03:02,778
+retain, retire, re-platform, and refactor.
+
+90
+00:03:03,389 --> 00:03:05,020
+In today's talk we're actually gonna cover
+
+91
+00:03:05,819 --> 00:03:07,919
+I think just about every one of these will be covered,
+
+92
+00:03:08,319 --> 00:03:10,330
+um, to, to some extent, right? So like
+
+93
+00:03:10,330 --> 00:03:11,338
+pay, pay attention for that,
+
+94
+00:03:12,169 --> 00:03:14,379
+uh, I, I, I would say maybe commit 7
+
+95
+00:03:14,379 --> 00:03:16,038
+things to memory for the next 60 minutes.
+
+96
+00:03:16,659 --> 00:03:19,038
+Maybe that's not, not a fair ask, but, um,
+
+97
+00:03:19,460 --> 00:03:21,500
+um, just note, right, we will be covering a
+
+98
+00:03:21,500 --> 00:03:22,038
+few of these.
+
+99
+00:03:23,020 --> 00:03:25,000
+Um, but let's say.
+
+100
+00:03:25,800 --> 00:03:28,199
+You know, what if we're just starting, right? Like I don't know
+
+101
+00:03:28,199 --> 00:03:30,229
+when, when should I re-platform, when should I
+
+102
+00:03:30,229 --> 00:03:31,419
+retain, when should I retire?
+
+103
+00:03:31,679 --> 00:03:33,020
+How do I make those decisions
+
+104
+00:03:33,860 --> 00:03:36,179
+is if anyone here is in the, in this room today
+
+105
+00:03:36,179 --> 00:03:37,199
+and you're
+
+106
+00:03:37,599 --> 00:03:40,300
+thinking about doing a migration, you're in the process of a migration,
+
+107
+00:03:40,800 --> 00:03:42,838
+um, and you're not doing it necessarily in a
+
+108
+00:03:42,838 --> 00:03:43,860
+very structured way
+
+109
+00:03:44,118 --> 00:03:46,008
+in terms of like how you're making decisions
+
+110
+00:03:46,360 --> 00:03:47,939
+and you don't necessarily know where to start.
+
+111
+00:03:48,618 --> 00:03:50,659
+Um, there is one thing I would suggest, right,
+
+112
+00:03:50,758 --> 00:03:53,069
+which is taking a look at a migration readiness
+
+113
+00:03:53,169 --> 00:03:55,179
+assessment or MRA. And what this
+
+114
+00:03:55,179 --> 00:03:56,349
+is, is a,
+
+115
+00:03:56,849 --> 00:03:57,580
+um,
+
+116
+00:03:59,088 --> 00:03:59,800
+Um,
+
+117
+00:04:00,419 --> 00:04:02,679
+a process, I guess is a fair way to say it,
+
+118
+00:04:02,979 --> 00:04:04,919
+uh, that is gonna give you preparation,
+
+119
+00:04:05,300 --> 00:04:07,360
+uh, understanding of the types of things you need to migrate.
+
+120
+00:04:07,740 --> 00:04:10,020
+There's gonna be workshops, assess assessment
+
+121
+00:04:10,020 --> 00:04:12,250
+and outcome-focused, essentially to give you a plan
+
+122
+00:04:12,250 --> 00:04:12,838
+so you know,
+
+123
+00:04:13,258 --> 00:04:15,300
+hey, of those seven R's, which ones should we really
+
+124
+00:04:15,300 --> 00:04:17,238
+look at and what's gonna be most impactful for us.
+
+125
+00:04:19,418 --> 00:04:21,598
+Um, and this is something your account team can help you deliver
+
+126
+00:04:21,598 --> 00:04:23,420
+today. Now
+
+127
+00:04:24,869 --> 00:04:27,298
+In terms of tooling for migration, right, and
+
+128
+00:04:27,709 --> 00:04:29,838
+we're still covering, you know, this is still kind of like bread
+
+129
+00:04:29,838 --> 00:04:31,879
+and butter basics, but let's, let's, we're still gonna
+
+130
+00:04:31,879 --> 00:04:33,338
+talk about it because it's, it's important
+
+131
+00:04:33,910 --> 00:04:36,980
+and we'll see that in our assess, mobilize
+
+132
+00:04:36,980 --> 00:04:39,439
+and then manage and modern migrate and modernize
+
+133
+00:04:39,439 --> 00:04:40,509
+what you'll find is,
+
+134
+00:04:40,920 --> 00:04:42,819
+you know, variety of different tooling here.
+
+135
+00:04:43,278 --> 00:04:44,139
+For example,
+
+136
+00:04:44,439 --> 00:04:46,480
+in assess you can see we have right there the
+
+137
+00:04:46,480 --> 00:04:47,819
+migration readiness assessment,
+
+138
+00:04:48,119 --> 00:04:49,949
+um, but a couple like callouts I'll make,
+
+139
+00:04:50,439 --> 00:04:52,660
+especially if you're like starting with your
+
+140
+00:04:52,660 --> 00:04:53,778
+like migration journey.
+
+141
+00:04:54,278 --> 00:04:55,608
+Um, is,
+
+142
+00:04:56,209 --> 00:04:58,209
+um, application discovery service is great,
+
+143
+00:04:58,290 --> 00:05:00,290
+you know, you need to understand what exists on premises.
+
+144
+00:05:00,329 --> 00:05:01,988
+You need to understand what's, what exists there,
+
+145
+00:05:02,488 --> 00:05:04,569
+um, but control tower or landing zones, right,
+
+146
+00:05:04,649 --> 00:05:06,189
+having some sort of,
+
+147
+00:05:06,730 --> 00:05:07,858
+essentially like, like, you know, we call them,
+
+148
+00:05:08,129 --> 00:05:10,649
+you know, call it account vending machines, um, some
+
+149
+00:05:10,649 --> 00:05:12,720
+way to be able to provision accounts in a structured
+
+150
+00:05:12,720 --> 00:05:13,230
+manner,
+
+151
+00:05:13,689 --> 00:05:15,720
+um. It's
+
+152
+00:05:15,720 --> 00:05:17,910
+like you just need that if you're gonna migrate, right?
+
+153
+00:05:18,040 --> 00:05:18,600
+IMS,
+
+154
+00:05:18,920 --> 00:05:21,040
+maybe I'll even do like a poll of the audience, right? Like how many
+
+155
+00:05:21,040 --> 00:05:22,660
+people use like automation for, you know,
+
+156
+00:05:22,920 --> 00:05:23,798
+account provisioning today.
+
+157
+00:05:24,608 --> 00:05:25,709
+A few? OK.
+
+158
+00:05:25,970 --> 00:05:28,009
+Uh, how many people in the room are actually in the process of
+
+159
+00:05:28,009 --> 00:05:28,809
+doing a migration?
+
+160
+00:05:30,160 --> 00:05:32,139
+OK, awesome. Alright, so we're in the right place.
+
+161
+00:05:32,798 --> 00:05:34,660
+It's really good, that's really good we're in the right place,
+
+162
+00:05:34,920 --> 00:05:35,858
+um, so,
+
+163
+00:05:36,238 --> 00:05:38,139
+um, the one thing I would say, right, is,
+
+164
+00:05:38,439 --> 00:05:40,559
+uh, to be successful in your migrations, um,
+
+165
+00:05:40,639 --> 00:05:42,838
+you need to have some sort of automation in place, right?
+
+166
+00:05:42,920 --> 00:05:45,119
+That's gonna help you enforce compliance, it's gonna help you enforce
+
+167
+00:05:45,119 --> 00:05:46,569
+and standardize governance in the,
+
+168
+00:05:46,920 --> 00:05:49,000
+in the long run, right? This is one of those things where,
+
+169
+00:05:49,338 --> 00:05:51,420
+you know, it's gonna be probably a little bit of work to set
+
+170
+00:05:51,420 --> 00:05:53,420
+up, but it's something that's gonna pay off in full
+
+171
+00:05:53,420 --> 00:05:55,379
+like tenfold later because you can just,
+
+172
+00:05:55,838 --> 00:05:57,920
+you know, push out these accounts as often
+
+173
+00:05:57,920 --> 00:05:59,119
+as fast as you'd like to.
+
+174
+00:05:59,660 --> 00:06:02,059
+And then it gives you that type of, um, you know,
+
+175
+00:06:02,459 --> 00:06:03,079
+uh,
+
+176
+00:06:03,699 --> 00:06:05,699
+delineation between different workloads, right? So it's,
+
+177
+00:06:06,100 --> 00:06:08,259
+you know, the question of how many accounts do we use
+
+178
+00:06:08,259 --> 00:06:10,259
+becomes a lot easier because it's not a, it's not a
+
+179
+00:06:10,259 --> 00:06:12,278
+huge lift to actually start provisioning new things.
+
+180
+00:06:13,699 --> 00:06:15,040
+And then on the
+
+181
+00:06:16,528 --> 00:06:18,689
+Migrate modernized standpoint, right, we have things like
+
+182
+00:06:18,689 --> 00:06:20,850
+Snowball, Kinesis Firehose, Direct Connect of
+
+183
+00:06:20,850 --> 00:06:23,069
+like, OK, how are we effectively able to connect,
+
+184
+00:06:23,809 --> 00:06:26,119
+um, our on-premises workloads into the cloud,
+
+185
+00:06:26,250 --> 00:06:28,048
+right, because a lot of times when we migrate,
+
+186
+00:06:28,449 --> 00:06:30,488
+um, there are things where it's like, hey,
+
+187
+00:06:30,608 --> 00:06:32,649
+some stuff's gonna work on AWS, but it still needs to be able to
+
+188
+00:06:32,649 --> 00:06:34,338
+talk to something in our data centers, right?
+
+189
+00:06:34,649 --> 00:06:37,108
+Um, so being able to have that well established,
+
+190
+00:06:37,689 --> 00:06:39,108
+um, communication is important.
+
+191
+00:06:40,608 --> 00:06:42,988
+So, right, this sounds, this all sounds pretty easy, right?
+
+192
+00:06:43,290 --> 00:06:45,028
+Uh, why doesn't everybody do it? Or
+
+193
+00:06:45,528 --> 00:06:47,809
+I guess obviously, right, there are some challenges here, right?
+
+194
+00:06:47,928 --> 00:06:49,670
+And a lot of times we see customer challenges
+
+195
+00:06:50,009 --> 00:06:52,088
+come out with things like having diverse infrastructure
+
+196
+00:06:52,088 --> 00:06:54,488
+and operating system types, right? Maybe even legacy operating
+
+197
+00:06:54,488 --> 00:06:56,678
+system types or legacy applications,
+
+198
+00:06:57,170 --> 00:06:58,108
+complex databases.
+
+199
+00:06:58,869 --> 00:07:00,949
+Um, compatibility issues, right? Or
+
+200
+00:07:00,949 --> 00:07:01,509
+even
+
+201
+00:07:01,790 --> 00:07:03,910
+thinking about like if we're an organization and
+
+202
+00:07:03,910 --> 00:07:05,369
+we don't operate in the cloud today.
+
+203
+00:07:06,379 --> 00:07:08,379
+Like, do I have a workforce? Is my workforce
+
+204
+00:07:08,379 --> 00:07:10,660
+even specialized or do we have that like that corpus
+
+205
+00:07:10,660 --> 00:07:13,009
+of knowledge within our employees or
+
+206
+00:07:13,009 --> 00:07:15,079
+organization to actually effectively,
+
+207
+00:07:15,338 --> 00:07:17,500
+um, migrate and and perform this
+
+208
+00:07:17,500 --> 00:07:18,209
+transformation?
+
+209
+00:07:19,298 --> 00:07:21,329
+And then of course, right, tight budgets and timelines,
+
+210
+00:07:21,410 --> 00:07:23,738
+right? We say, OK, we'll move to the cloud, great.
+
+211
+00:07:24,519 --> 00:07:25,199
+Um,
+
+212
+00:07:25,559 --> 00:07:27,338
+but you're probably not gonna get more budget to do it.
+
+213
+00:07:28,079 --> 00:07:30,278
+Um, so that's, that's always gonna be a constraint
+
+214
+00:07:30,278 --> 00:07:31,500
+and throughout today's talk,
+
+215
+00:07:32,040 --> 00:07:34,170
+um, we will, you know, once again that's something I'm
+
+216
+00:07:34,170 --> 00:07:36,559
+gonna ask you to kind of pay attention to, right? There's some challenges
+
+217
+00:07:36,559 --> 00:07:38,559
+here, but we're gonna cover some more challenges in our customer
+
+218
+00:07:38,559 --> 00:07:39,139
+stories,
+
+219
+00:07:39,678 --> 00:07:41,738
+um, and I'd really, really like us to really
+
+220
+00:07:41,738 --> 00:07:43,738
+focus on like what we did
+
+221
+00:07:43,738 --> 00:07:44,559
+to overcome them.
+
+222
+00:07:45,389 --> 00:07:45,949
+Um,
+
+223
+00:07:46,319 --> 00:07:48,338
+and like think about how you can apply that today,
+
+224
+00:07:48,480 --> 00:07:49,838
+right, because I think that's really,
+
+225
+00:07:50,238 --> 00:07:52,480
+um, if we think like what's like the real heart and
+
+226
+00:07:52,480 --> 00:07:54,178
+core and story of this session, it's,
+
+227
+00:07:54,600 --> 00:07:56,678
+um, you know, it's not just to tell a good story
+
+228
+00:07:56,678 --> 00:07:58,750
+that, OK, yeah, they migrated, great,
+
+229
+00:07:58,879 --> 00:08:00,519
+right, awesome outcomes,
+
+230
+00:08:00,790 --> 00:08:02,980
+but how can you apply those lessons learned today?
+
+231
+00:08:03,278 --> 00:08:05,238
+I think that's really what you're gonna get out of today's session.
+
+232
+00:08:06,829 --> 00:08:07,379
+So,
+
+233
+00:08:08,199 --> 00:08:10,639
+Outside of just the the uh migration
+
+234
+00:08:10,639 --> 00:08:12,019
+and modernization patterns,
+
+235
+00:08:12,459 --> 00:08:14,819
+um, next I wanna speak very briefly on,
+
+236
+00:08:14,869 --> 00:08:17,389
+uh, the application of well architected in
+
+237
+00:08:17,509 --> 00:08:19,019
+in this in this domain
+
+238
+00:08:19,629 --> 00:08:20,379
+right so we see.
+
+239
+00:08:21,069 --> 00:08:23,079
+Uh, how many pillars of the well architected roofie do we
+
+240
+00:08:23,079 --> 00:08:25,278
+have, right? We have operational excellence, security,
+
+241
+00:08:25,350 --> 00:08:26,278
+reliability,
+
+242
+00:08:26,769 --> 00:08:29,338
+performance efficiency, cost optimization, and sustainability.
+
+243
+00:08:30,230 --> 00:08:32,379
+And just when we went through those seminars,
+
+244
+00:08:32,389 --> 00:08:32,908
+right? Like,
+
+245
+00:08:33,798 --> 00:08:35,879
+Uh, well architected is just, it's like bread and
+
+246
+00:08:35,879 --> 00:08:37,119
+butter distributed compute,
+
+247
+00:08:37,597 --> 00:08:38,798
+right? And
+
+248
+00:08:39,837 --> 00:08:41,869
+Throughout this session you will also see that
+
+249
+00:08:42,369 --> 00:08:44,508
+in some cases even as a solution architect when I work
+
+250
+00:08:44,508 --> 00:08:46,577
+with my customers and we do well architectural reviews,
+
+251
+00:08:46,678 --> 00:08:48,148
+one of the first questions I ask is like,
+
+252
+00:08:48,518 --> 00:08:50,567
+OK, what are these pillars, right, not one is more important
+
+253
+00:08:50,567 --> 00:08:51,229
+than the other,
+
+254
+00:08:51,688 --> 00:08:53,869
+but which ones are more important to you as an organization.
+
+255
+00:08:54,489 --> 00:08:56,879
+Um, for this workload, for this
+
+256
+00:08:56,879 --> 00:08:59,048
+application, does it need to be reliable? Is that
+
+257
+00:08:59,048 --> 00:09:01,168
+super important? Or maybe it has to be very
+
+258
+00:09:01,168 --> 00:09:02,070
+cost effective.
+
+259
+00:09:02,570 --> 00:09:03,269
+Um,
+
+260
+00:09:03,690 --> 00:09:05,729
+and many of these stories will find
+
+261
+00:09:05,729 --> 00:09:08,090
+that operational excellence, right, reliability
+
+262
+00:09:08,090 --> 00:09:09,139
+is very important.
+
+263
+00:09:09,570 --> 00:09:11,808
+Of course we all see security as like job zero for
+
+264
+00:09:11,808 --> 00:09:13,849
+everybody, right? I would say even argue that it's
+
+265
+00:09:13,849 --> 00:09:14,469
+probably,
+
+266
+00:09:14,729 --> 00:09:15,548
+um,
+
+267
+00:09:16,090 --> 00:09:17,210
+you would elevate that,
+
+268
+00:09:17,529 --> 00:09:19,808
+uh, or at least personally I think I like to elevate security
+
+269
+00:09:19,808 --> 00:09:20,548
+to think it's.
+
+270
+00:09:21,000 --> 00:09:23,000
+Um, not necessarily more important than the other pillars, but
+
+271
+00:09:23,000 --> 00:09:25,250
+we all know security is of paramount importance.
+
+272
+00:09:25,719 --> 00:09:26,298
+However,
+
+273
+00:09:27,330 --> 00:09:29,529
+In some organizations they have a very mature
+
+274
+00:09:29,529 --> 00:09:30,450
+security posture,
+
+275
+00:09:30,808 --> 00:09:32,869
+right? Um, maybe there's,
+
+276
+00:09:32,889 --> 00:09:33,538
+uh,
+
+277
+00:09:33,808 --> 00:09:35,808
+a lot of stuff as maybe as an application team
+
+278
+00:09:35,808 --> 00:09:37,009
+I don't necessarily
+
+279
+00:09:37,330 --> 00:09:39,519
+need to worry about as much of security because a lot of it's
+
+280
+00:09:39,519 --> 00:09:41,649
+managed we're very advanced. I, there's not
+
+281
+00:09:41,649 --> 00:09:43,759
+as much help I'm gonna get out of it as I
+
+282
+00:09:43,759 --> 00:09:46,168
+would if we could then focus on like cost optimization
+
+283
+00:09:46,168 --> 00:09:47,070
+or reliability,
+
+284
+00:09:47,369 --> 00:09:49,048
+right? Um, so.
+
+285
+00:09:49,908 --> 00:09:51,950
+Never that you know one's more important than the other. What we
+
+286
+00:09:51,950 --> 00:09:54,288
+wanna think about is like where can we get the most outcomes
+
+287
+00:09:54,788 --> 00:09:56,989
+and then when we think about this in the lens of migration,
+
+288
+00:09:57,308 --> 00:09:59,389
+don't necessarily get caught up on the fact of like,
+
+289
+00:09:59,428 --> 00:10:01,700
+OK, are we, are we, um, you know, retiring,
+
+290
+00:10:01,750 --> 00:10:03,609
+retaining, re-platforming, or rehosting,
+
+291
+00:10:04,029 --> 00:10:06,489
+um, you also wanna make sure that you're focusing on,
+
+292
+00:10:06,830 --> 00:10:08,609
+um, you know, these core principles.
+
+293
+00:10:10,519 --> 00:10:12,759
+I wanna reflect back on this this specific slide
+
+294
+00:10:12,759 --> 00:10:14,500
+here right where we talk about
+
+295
+00:10:14,840 --> 00:10:15,779
+um you know
+
+296
+00:10:16,239 --> 00:10:18,320
+like ask the hypothetical what happens
+
+297
+00:10:18,320 --> 00:10:20,500
+right after we migrate and what happens after
+
+298
+00:10:20,500 --> 00:10:22,840
+we, you know, essentially almost fully modernize
+
+299
+00:10:22,840 --> 00:10:24,599
+and we're at the very end of that, you know,
+
+300
+00:10:24,918 --> 00:10:27,000
+um, you know, the very end of that axis
+
+301
+00:10:27,000 --> 00:10:29,479
+right where you have like big in uh
+
+302
+00:10:29,479 --> 00:10:30,000
+um
+
+303
+00:10:30,399 --> 00:10:32,399
+innovation velocity right like what does that look
+
+304
+00:10:32,399 --> 00:10:34,320
+like? Um,
+
+305
+00:10:34,678 --> 00:10:36,538
+but also, like, even after that,
+
+306
+00:10:36,798 --> 00:10:39,070
+you're still gonna have a similar set of challenges.
+
+307
+00:10:39,359 --> 00:10:40,519
+You're still, you know.
+
+308
+00:10:41,460 --> 00:10:43,379
+Like, maybe if you're a startup, right?
+
+309
+00:10:43,700 --> 00:10:45,779
+Like you won't have to deal with legacy tech, but
+
+310
+00:10:45,779 --> 00:10:47,359
+I imagine most people in this room,
+
+311
+00:10:47,779 --> 00:10:49,940
+um, there's gonna be tech debt, there always
+
+312
+00:10:49,940 --> 00:10:52,019
+will be, right? You're always gonna be dealing with some of these
+
+313
+00:10:52,019 --> 00:10:52,719
+challenges
+
+314
+00:10:53,099 --> 00:10:55,099
+and. Um
+
+315
+00:10:56,460 --> 00:10:58,840
+Something I guess I would say in terms of,
+
+316
+00:10:59,139 --> 00:11:01,178
+you know, what's one thing or like
+
+317
+00:11:01,178 --> 00:11:03,639
+the one, the single biggest thing that you could do
+
+318
+00:11:03,899 --> 00:11:04,418
+um
+
+319
+00:11:04,779 --> 00:11:05,859
+to make sure that.
+
+320
+00:11:07,029 --> 00:11:09,038
+I know you're successful in these migrations, right,
+
+321
+00:11:09,109 --> 00:11:10,538
+and like what's one good I guess
+
+322
+00:11:11,509 --> 00:11:12,210
+signal, right,
+
+323
+00:11:12,509 --> 00:11:14,590
+that you are actively modernizing and you're doing well
+
+324
+00:11:14,590 --> 00:11:15,168
+in this
+
+325
+00:11:15,750 --> 00:11:17,830
+is that you have estab established some sort of
+
+326
+00:11:17,830 --> 00:11:19,168
+like cloud center of excellence,
+
+327
+00:11:19,428 --> 00:11:20,009
+right? We,
+
+328
+00:11:20,269 --> 00:11:22,168
+you, you can call them whatever you want, right, but
+
+329
+00:11:22,469 --> 00:11:24,210
+essentially what it is, it's gonna be
+
+330
+00:11:24,519 --> 00:11:25,288
+a team
+
+331
+00:11:25,590 --> 00:11:28,139
+from across different dimensions of your
+
+332
+00:11:28,139 --> 00:11:29,649
+organization, right? So from.
+
+333
+00:11:30,178 --> 00:11:32,178
+Uh, lead cloud architects, infrastructure
+
+334
+00:11:32,178 --> 00:11:33,889
+cloud engineers, security engineers,
+
+335
+00:11:34,450 --> 00:11:36,580
+operations engineers, and then you see your software engineers,
+
+336
+00:11:36,658 --> 00:11:38,859
+right? So you're bringing in people from various
+
+337
+00:11:38,859 --> 00:11:40,308
+different parts of your organization
+
+338
+00:11:40,580 --> 00:11:42,658
+to build that center of excellence, and essentially what that
+
+339
+00:11:42,658 --> 00:11:44,279
+is doing is,
+
+340
+00:11:44,619 --> 00:11:47,210
+um, you're building that in-house,
+
+341
+00:11:47,460 --> 00:11:48,719
+uh, expertise,
+
+342
+00:11:49,259 --> 00:11:51,500
+um, where you can take lessons learned, apply
+
+343
+00:11:51,500 --> 00:11:52,479
+them across the organization.
+
+344
+00:11:53,830 --> 00:11:55,840
+Um, and of course I believe both
+
+345
+00:11:55,840 --> 00:11:58,219
+of our, both of our stories today have our customers
+
+346
+00:11:58,219 --> 00:12:00,308
+have, uh, implemented, uh,
+
+347
+00:12:00,320 --> 00:12:02,479
+CCLEs or cloud centers of excellence, and
+
+348
+00:12:02,479 --> 00:12:03,678
+I would, um,
+
+349
+00:12:03,960 --> 00:12:06,038
+I would go as far to argue is that having these
+
+350
+00:12:06,038 --> 00:12:08,019
+centers of excellence help accelerate
+
+351
+00:12:08,359 --> 00:12:09,379
+innovation velocity.
+
+352
+00:12:10,109 --> 00:12:12,808
+It's so if you don't have one established,
+
+353
+00:12:13,149 --> 00:12:15,210
+um, think, think about establishing that
+
+354
+00:12:15,500 --> 00:12:16,629
+within your own organization.
+
+355
+00:12:16,989 --> 00:12:19,029
+Now you may ask, it's like, OK, how formal do we wanna make
+
+356
+00:12:19,029 --> 00:12:21,099
+it, right? Um, that's really up to you,
+
+357
+00:12:21,269 --> 00:12:23,340
+right? These can be informal groups, they can be
+
+358
+00:12:23,340 --> 00:12:24,950
+very formalized, um,
+
+359
+00:12:25,330 --> 00:12:27,320
+it, it's really based on how you wanna do in your organization.
+
+360
+00:12:28,058 --> 00:12:30,099
+Um, like, personally, I don't think it should
+
+361
+00:12:30,099 --> 00:12:32,219
+be very formal, right, but there should be some sort of
+
+362
+00:12:32,219 --> 00:12:34,259
+structure around it to make sure that, you know, there's,
+
+363
+00:12:34,460 --> 00:12:36,460
+you can't just have like a bunch of people that care about the
+
+364
+00:12:36,460 --> 00:12:37,418
+cloud, right, because,
+
+365
+00:12:37,739 --> 00:12:40,359
+um, one of my favorite quotes is like good intentions
+
+366
+00:12:40,619 --> 00:12:42,700
+don't get things done like mechanisms do, so you
+
+367
+00:12:42,700 --> 00:12:44,908
+do have to have like some sort of process around that,
+
+368
+00:12:45,099 --> 00:12:46,418
+right? OK,
+
+369
+00:12:46,779 --> 00:12:47,320
+so
+
+370
+00:12:47,859 --> 00:12:49,200
+without further ado, I wanna introduce,
+
+371
+00:12:49,609 --> 00:12:51,820
+uh, Shri Devi on stage, uh, from Fannie
+
+372
+00:12:51,820 --> 00:12:52,918
+Mae who's gonna walk us through,
+
+373
+00:12:53,500 --> 00:12:55,658
+uh, this enterprise transformation that they're able to do.
+
+374
+00:13:02,048 --> 00:13:06,469
+down. Thanks,
+
+375
+00:13:06,548 --> 00:13:07,928
+Bobby. Um,
+
+376
+00:13:08,548 --> 00:13:10,149
+let me start off with a question.
+
+377
+00:13:11,158 --> 00:13:13,590
+How many of you here with a show of hands,
+
+378
+00:13:13,759 --> 00:13:15,759
+how many of you here had to modernize
+
+379
+00:13:15,759 --> 00:13:18,460
+a process that's been around for decades?
+
+380
+00:13:19,038 --> 00:13:19,899
+Don't be shy.
+
+381
+00:13:20,879 --> 00:13:23,019
+All right, that was us that Fannie Mae too.
+
+382
+00:13:24,379 --> 00:13:26,460
+Today I'm going to talk about our
+
+383
+00:13:26,460 --> 00:13:28,519
+unprecedented journey to
+
+384
+00:13:28,788 --> 00:13:30,700
+transform financial forecasting.
+
+385
+00:13:32,808 --> 00:13:35,210
+It wasn't about, for us, the modernization
+
+386
+00:13:35,210 --> 00:13:37,509
+wasn't just about upgrading
+
+387
+00:13:37,509 --> 00:13:39,609
+technology, it was reimagining
+
+388
+00:13:39,609 --> 00:13:40,849
+how we forecast,
+
+389
+00:13:41,139 --> 00:13:43,798
+collaborate differently, and make
+
+390
+00:13:43,798 --> 00:13:44,428
+decisions
+
+391
+00:13:45,109 --> 00:13:47,259
+with increased confidence in our data.
+
+392
+00:13:48,158 --> 00:13:50,359
+My name is Shridevi Mullapurdi. I'm the vice
+
+393
+00:13:50,359 --> 00:13:52,558
+president for finance technology at Fannie
+
+394
+00:13:52,558 --> 00:13:54,969
+Mae. When
+
+395
+00:13:54,969 --> 00:13:57,369
+I was first asked to lead this initiative,
+
+396
+00:13:57,609 --> 00:13:59,469
+the mandate was to build
+
+397
+00:13:59,729 --> 00:14:01,769
+a cost effective and scalable
+
+398
+00:14:01,769 --> 00:14:02,460
+platform
+
+399
+00:14:02,769 --> 00:14:04,769
+that can meet both the current and
+
+400
+00:14:04,769 --> 00:14:06,509
+future forecasting needs.
+
+401
+00:14:07,969 --> 00:14:10,048
+Sound is simple and straightforward, isn't
+
+402
+00:14:10,048 --> 00:14:12,308
+it? I thought so too,
+
+403
+00:14:12,849 --> 00:14:14,940
+but the more I learned about the program,
+
+404
+00:14:15,090 --> 00:14:17,408
+I realized that we didn't have to solve
+
+405
+00:14:17,408 --> 00:14:18,048
+for the
+
+406
+00:14:18,408 --> 00:14:20,428
+three typical dimensions people,
+
+407
+00:14:20,808 --> 00:14:21,879
+process, technology.
+
+408
+00:14:22,168 --> 00:14:24,210
+We also had to solve for 1/4
+
+409
+00:14:24,210 --> 00:14:25,769
+dimension, governance,
+
+410
+00:14:26,129 --> 00:14:27,450
+all in a single go.
+
+411
+00:14:28,558 --> 00:14:30,599
+So, over the next 20 minutes
+
+412
+00:14:30,599 --> 00:14:32,678
+or so, I'm going to talk about
+
+413
+00:14:32,678 --> 00:14:33,658
+our approach,
+
+414
+00:14:34,200 --> 00:14:36,359
+uh, the strategic choices we made,
+
+415
+00:14:36,519 --> 00:14:38,538
+the lessons we have learned, both
+
+416
+00:14:38,538 --> 00:14:40,019
+successes and stumbles,
+
+417
+00:14:40,320 --> 00:14:42,519
+and the tangible results we are already
+
+418
+00:14:42,519 --> 00:14:44,668
+seeing. But most
+
+419
+00:14:44,668 --> 00:14:46,788
+importantly, I also plan to
+
+420
+00:14:46,788 --> 00:14:48,629
+share with you some insights
+
+421
+00:14:48,908 --> 00:14:50,908
+that I hope are valuable
+
+422
+00:14:50,908 --> 00:14:52,859
+to your own transformation journeys.
+
+423
+00:14:53,229 --> 00:14:54,609
+So let's get started.
+
+424
+00:14:55,308 --> 00:14:57,190
+First, a little bit about Fannie Mae.
+
+425
+00:14:58,609 --> 00:15:01,389
+Fannie Mae was founded in 1938
+
+426
+00:15:01,389 --> 00:15:03,450
+and is chartered by US
+
+427
+00:15:03,450 --> 00:15:04,109
+Congress
+
+428
+00:15:04,489 --> 00:15:06,529
+to advance home ownership and
+
+429
+00:15:06,529 --> 00:15:08,649
+promote affordable housing all
+
+430
+00:15:08,649 --> 00:15:09,950
+across the United States.
+
+431
+00:15:11,558 --> 00:15:13,558
+We are headquartered in DC and
+
+432
+00:15:13,558 --> 00:15:16,080
+are considered as the single largest
+
+433
+00:15:16,558 --> 00:15:18,859
+player in the secondary mortgage market.
+
+434
+00:15:19,239 --> 00:15:20,558
+What does that really mean?
+
+435
+00:15:21,359 --> 00:15:23,428
+So consider us as the bank for
+
+436
+00:15:23,428 --> 00:15:24,349
+the banks.
+
+437
+00:15:24,719 --> 00:15:26,719
+So Fannie Mae purchases
+
+438
+00:15:26,719 --> 00:15:28,798
+home loans from lenders, that is
+
+439
+00:15:28,798 --> 00:15:29,389
+banks,
+
+440
+00:15:29,759 --> 00:15:32,359
+converts them into mortgage backed securities,
+
+441
+00:15:32,369 --> 00:15:34,239
+and sells those to investors,
+
+442
+00:15:34,639 --> 00:15:37,019
+and this process creates liquidity
+
+443
+00:15:37,558 --> 00:15:38,859
+for the lenders
+
+444
+00:15:39,119 --> 00:15:41,320
+to offer new home loans, thereby
+
+445
+00:15:41,320 --> 00:15:43,479
+increasing the home ownership and
+
+446
+00:15:43,479 --> 00:15:45,678
+rental housing again in in
+
+447
+00:15:45,678 --> 00:15:47,460
+all of the United States.
+
+448
+00:15:48,460 --> 00:15:50,538
+So just in the first nine months of
+
+449
+00:15:50,538 --> 00:15:52,019
+2025 alone,
+
+450
+00:15:52,418 --> 00:15:54,418
+Fannie Mae has provided
+
+451
+00:15:54,428 --> 00:15:56,739
+about $287
+
+452
+00:15:56,739 --> 00:15:59,000
+billion worth of liquidity
+
+453
+00:15:59,340 --> 00:16:01,500
+to support 1.1 million
+
+454
+00:16:01,500 --> 00:16:04,058
+households to either purchase,
+
+455
+00:16:04,298 --> 00:16:06,440
+rent, or refinance a home.
+
+456
+00:16:08,558 --> 00:16:10,719
+So you may also know that
+
+457
+00:16:10,719 --> 00:16:12,788
+US housing economy
+
+458
+00:16:12,788 --> 00:16:15,158
+contributes up to 16%
+
+459
+00:16:15,158 --> 00:16:16,538
+of the nation's GDP,
+
+460
+00:16:17,080 --> 00:16:19,479
+and with Fannie Mae being the cornerstone
+
+461
+00:16:19,479 --> 00:16:20,899
+of that housing market
+
+462
+00:16:21,440 --> 00:16:23,739
+to provide liquidity and stability,
+
+463
+00:16:24,399 --> 00:16:26,019
+it is vital that
+
+464
+00:16:26,440 --> 00:16:28,859
+we continue to assess and strengthen
+
+465
+00:16:29,320 --> 00:16:31,469
+the financial future of the
+
+466
+00:16:31,469 --> 00:16:32,960
+of the organization,
+
+467
+00:16:33,399 --> 00:16:35,639
+hence the need for financial forecasting.
+
+468
+00:16:37,048 --> 00:16:39,369
+But you might ask me what's financial
+
+469
+00:16:39,369 --> 00:16:40,048
+forecasting.
+
+470
+00:16:41,168 --> 00:16:43,450
+Um, in its simplest form,
+
+471
+00:16:43,570 --> 00:16:45,609
+it's the use of current and
+
+472
+00:16:45,609 --> 00:16:48,070
+past financial data to predict
+
+473
+00:16:48,279 --> 00:16:49,779
+the financial future.
+
+474
+00:16:50,330 --> 00:16:52,918
+This is how we guide our business,
+
+475
+00:16:53,450 --> 00:16:55,690
+um, plan our business,
+
+476
+00:16:55,808 --> 00:16:57,408
+guide our stakeholders,
+
+477
+00:16:57,769 --> 00:16:59,928
+and also meet the regulatory demand.
+
+478
+00:17:00,658 --> 00:17:02,759
+So as part of this process,
+
+479
+00:17:03,178 --> 00:17:05,209
+uh, we have to do tests
+
+480
+00:17:05,209 --> 00:17:07,779
+on a periodic basis to simulate
+
+481
+00:17:07,779 --> 00:17:09,939
+the micro and macroeconomic conditions
+
+482
+00:17:09,939 --> 00:17:12,019
+of the market, which are called
+
+483
+00:17:12,019 --> 00:17:12,838
+stress tests,
+
+484
+00:17:13,269 --> 00:17:15,759
+right? But unlike banks, our
+
+485
+00:17:15,759 --> 00:17:18,259
+stress tests are actually set by FHFA,
+
+486
+00:17:18,299 --> 00:17:20,759
+our regulator, and not the Federal Reserve.
+
+487
+00:17:21,039 --> 00:17:23,338
+So our process is unique and the stakes
+
+488
+00:17:23,338 --> 00:17:23,939
+are high.
+
+489
+00:17:26,307 --> 00:17:28,388
+But why was this a hard thing to do?
+
+490
+00:17:29,469 --> 00:17:31,539
+So let me paint a picture. Imagine
+
+491
+00:17:31,539 --> 00:17:32,519
+a world of
+
+492
+00:17:33,239 --> 00:17:33,969
+spreadsheets,
+
+493
+00:17:34,229 --> 00:17:36,750
+data silos, and manual processes.
+
+494
+00:17:37,219 --> 00:17:39,500
+That was our reality at Fannie
+
+495
+00:17:39,500 --> 00:17:40,598
+Mae. Right,
+
+496
+00:17:41,420 --> 00:17:43,539
+and, and for us this process
+
+497
+00:17:43,539 --> 00:17:45,939
+did work well for many years and
+
+498
+00:17:45,939 --> 00:17:47,969
+it let us prioritize on
+
+499
+00:17:47,969 --> 00:17:50,368
+other things that were important to us,
+
+500
+00:17:50,699 --> 00:17:53,160
+but we quickly realized that
+
+501
+00:17:53,459 --> 00:17:55,779
+it was limiting our ability
+
+502
+00:17:55,779 --> 00:17:58,098
+to provide forward looking insights
+
+503
+00:17:58,098 --> 00:17:59,439
+to our stakeholders
+
+504
+00:17:59,900 --> 00:18:01,939
+that is again critical
+
+505
+00:18:01,939 --> 00:18:04,098
+in an increasingly complex environment.
+
+506
+00:18:06,009 --> 00:18:08,250
+In addition to the manual processes,
+
+507
+00:18:08,410 --> 00:18:10,709
+we also had fragmented
+
+508
+00:18:10,709 --> 00:18:12,769
+technology and at one point too many
+
+509
+00:18:12,769 --> 00:18:13,799
+technologies,
+
+510
+00:18:14,130 --> 00:18:16,608
+which was increasing our maintenance costs.
+
+511
+00:18:17,449 --> 00:18:19,529
+We also had software that
+
+512
+00:18:19,529 --> 00:18:21,650
+was running on-prem data centers
+
+513
+00:18:21,650 --> 00:18:23,368
+with end of life infrastructure.
+
+514
+00:18:24,279 --> 00:18:26,479
+Our subject matter experts were spread
+
+515
+00:18:26,479 --> 00:18:29,068
+thin across the enterprise and siloed.
+
+516
+00:18:29,479 --> 00:18:31,799
+So as a result of all of these, we had
+
+517
+00:18:31,799 --> 00:18:34,140
+significant operational challenges
+
+518
+00:18:34,640 --> 00:18:36,709
+that were only amplified by heavy
+
+519
+00:18:36,709 --> 00:18:38,618
+custommisations that we've made.
+
+520
+00:18:40,750 --> 00:18:42,868
+So to solve for these
+
+521
+00:18:42,868 --> 00:18:45,029
+challenges, we initiated the
+
+522
+00:18:45,029 --> 00:18:47,049
+forecast transformation program
+
+523
+00:18:47,630 --> 00:18:48,209
+um
+
+524
+00:18:48,509 --> 00:18:51,328
+in back in September of 2023
+
+525
+00:18:51,750 --> 00:18:53,789
+and we set ourselves some very bold
+
+526
+00:18:53,789 --> 00:18:54,868
+goals, right?
+
+527
+00:18:55,229 --> 00:18:57,269
+The first and foremost being we needed
+
+528
+00:18:57,269 --> 00:18:58,930
+the platform to be fast.
+
+529
+00:18:59,229 --> 00:19:01,348
+We needed to reduce the forecasting
+
+530
+00:19:01,348 --> 00:19:03,670
+life cycle from about 80
+
+531
+00:19:03,670 --> 00:19:04,689
+to 10 days,
+
+532
+00:19:05,160 --> 00:19:07,279
+right? We also wanted to run
+
+533
+00:19:07,279 --> 00:19:09,239
+our stress tests in parallel.
+
+534
+00:19:09,559 --> 00:19:11,910
+Running them sequentially was no longer an
+
+535
+00:19:11,910 --> 00:19:13,920
+option. We
+
+536
+00:19:13,920 --> 00:19:15,949
+also had to co-locate about
+
+537
+00:19:15,949 --> 00:19:18,160
+2,000+ calculations
+
+538
+00:19:18,519 --> 00:19:20,680
+that were spread across 80 different
+
+539
+00:19:20,680 --> 00:19:21,500
+systems
+
+540
+00:19:21,959 --> 00:19:24,289
+into a single unified platform,
+
+541
+00:19:24,439 --> 00:19:27,029
+and we wanted to run our analytics
+
+542
+00:19:27,029 --> 00:19:29,219
+on top of that calculated output.
+
+543
+00:19:30,170 --> 00:19:32,519
+We knew to do these calculations,
+
+544
+00:19:32,529 --> 00:19:34,390
+we had to have compute
+
+545
+00:19:34,680 --> 00:19:36,689
+that could scale up and down based on
+
+546
+00:19:36,689 --> 00:19:37,588
+the demand
+
+547
+00:19:37,890 --> 00:19:40,328
+and accommodate complex workflows.
+
+548
+00:19:41,959 --> 00:19:44,209
+And we had to do all of this with cost
+
+549
+00:19:44,209 --> 00:19:44,910
+in mind.
+
+550
+00:19:45,328 --> 00:19:47,400
+As you can see, the work was clearly cut
+
+551
+00:19:47,400 --> 00:19:48,229
+out for us.
+
+552
+00:19:51,259 --> 00:19:51,799
+So,
+
+553
+00:19:52,140 --> 00:19:54,479
+to, to address these requirements,
+
+554
+00:19:54,699 --> 00:19:55,358
+um,
+
+555
+00:19:55,900 --> 00:19:58,180
+we first chose AWS as
+
+556
+00:19:58,180 --> 00:19:59,890
+our foundation,
+
+557
+00:20:00,180 --> 00:20:02,449
+mainly because it offered
+
+558
+00:20:02,449 --> 00:20:04,039
+a, a wide variety of
+
+559
+00:20:04,380 --> 00:20:06,390
+both storage and database options,
+
+560
+00:20:06,459 --> 00:20:07,209
+and they are,
+
+561
+00:20:07,509 --> 00:20:09,910
+they're one of the few vendors that could, um,
+
+562
+00:20:09,939 --> 00:20:12,000
+meet the Fannie Mae's strictest
+
+563
+00:20:12,539 --> 00:20:13,680
+security guidelines.
+
+564
+00:20:15,029 --> 00:20:17,009
+We also wanted to persist
+
+565
+00:20:17,348 --> 00:20:19,549
+all of the data into a single domain,
+
+566
+00:20:19,910 --> 00:20:21,410
+mainly because we were
+
+567
+00:20:21,949 --> 00:20:24,029
+struggling with the data silos that
+
+568
+00:20:24,029 --> 00:20:25,750
+was in the current ecosystem.
+
+569
+00:20:27,568 --> 00:20:30,259
+We knew that we had to do these calculations
+
+570
+00:20:30,259 --> 00:20:32,709
+on about 1.5 billion
+
+571
+00:20:33,049 --> 00:20:34,130
+loan records,
+
+572
+00:20:34,769 --> 00:20:35,989
+so we needed compute,
+
+573
+00:20:36,709 --> 00:20:39,529
+uh, and for that we chose EMR Elastic
+
+574
+00:20:39,529 --> 00:20:41,769
+Mapu, as our main
+
+575
+00:20:41,769 --> 00:20:42,608
+compute option.
+
+576
+00:20:44,618 --> 00:20:46,059
+For orchestration,
+
+577
+00:20:46,338 --> 00:20:48,660
+after a careful evaluation, we settled
+
+578
+00:20:48,660 --> 00:20:50,098
+on step functions
+
+579
+00:20:50,489 --> 00:20:53,019
+to stitch between the data services
+
+580
+00:20:53,019 --> 00:20:55,019
+models and the, both the
+
+581
+00:20:55,019 --> 00:20:57,059
+internal and external systems.
+
+582
+00:20:58,269 --> 00:21:00,489
+We also consciously decided
+
+583
+00:21:00,750 --> 00:21:02,949
+that we were going to integrate with upstream
+
+584
+00:21:02,949 --> 00:21:05,108
+and downstream systems with minimal
+
+585
+00:21:05,108 --> 00:21:05,670
+impact to them.
+
+586
+00:21:06,789 --> 00:21:07,789
+And finally,
+
+587
+00:21:08,150 --> 00:21:10,868
+we wanted to establish reusable
+
+588
+00:21:10,868 --> 00:21:12,969
+frameworks, not only to
+
+589
+00:21:13,390 --> 00:21:15,750
+um accelerate our own development,
+
+590
+00:21:16,029 --> 00:21:17,130
+but also
+
+591
+00:21:17,630 --> 00:21:19,759
+to give back to the enterprise.
+
+592
+00:21:21,039 --> 00:21:21,769
+Excuse me.
+
+593
+00:21:29,858 --> 00:21:32,279
+So our process is actually very simple.
+
+594
+00:21:33,180 --> 00:21:35,199
+We start off with the user interface.
+
+595
+00:21:35,338 --> 00:21:36,000
+This is where
+
+596
+00:21:36,818 --> 00:21:39,420
+our business community comes in, um,
+
+597
+00:21:39,598 --> 00:21:41,400
+enters any of the inputs,
+
+598
+00:21:41,739 --> 00:21:44,219
+and, um, submits the scenarios
+
+599
+00:21:44,219 --> 00:21:45,059
+for execution.
+
+600
+00:21:46,608 --> 00:21:48,769
+Based on the type of scenario that
+
+601
+00:21:48,769 --> 00:21:50,118
+they choose to execute,
+
+602
+00:21:50,559 --> 00:21:53,049
+we go and source relevant data from
+
+603
+00:21:53,410 --> 00:21:55,969
+um multiple systems of records,
+
+604
+00:21:56,049 --> 00:21:58,420
+and all of that is written to the data backbone.
+
+605
+00:21:59,989 --> 00:22:01,130
+We then call upon
+
+606
+00:22:01,588 --> 00:22:03,630
+the models, both existing and
+
+607
+00:22:03,630 --> 00:22:05,328
+new ones that we created
+
+608
+00:22:05,630 --> 00:22:07,410
+as part of this ecosystem,
+
+609
+00:22:07,949 --> 00:22:10,189
+and the model output is also written
+
+610
+00:22:10,189 --> 00:22:11,348
+to the data backbone.
+
+611
+00:22:12,269 --> 00:22:14,469
+We then initiate a bunch of
+
+612
+00:22:14,469 --> 00:22:16,049
+business calculations,
+
+613
+00:22:16,549 --> 00:22:18,709
+and all of the calculated output
+
+614
+00:22:18,709 --> 00:22:20,469
+is also returned to the backbone.
+
+615
+00:22:21,989 --> 00:22:24,318
+And then we send off whatever is needed
+
+616
+00:22:24,318 --> 00:22:25,848
+to the downstream systems.
+
+617
+00:22:26,799 --> 00:22:29,338
+And we further prep this outputs
+
+618
+00:22:29,750 --> 00:22:32,348
+into uh for analytics,
+
+619
+00:22:32,479 --> 00:22:34,559
+uh, both for regulatory and user,
+
+620
+00:22:34,598 --> 00:22:36,180
+um, user analytics.
+
+621
+00:22:37,699 --> 00:22:39,699
+And for those of you who are interested in
+
+622
+00:22:39,699 --> 00:22:40,920
+the tech details,
+
+623
+00:22:41,699 --> 00:22:43,779
+our user interface is made up
+
+624
+00:22:43,779 --> 00:22:45,939
+of Angular and uh
+
+625
+00:22:45,939 --> 00:22:46,719
+Fargate.
+
+626
+00:22:47,618 --> 00:22:49,618
+The orchestration, as I mentioned before,
+
+627
+00:22:49,699 --> 00:22:51,920
+is a is nothing but a series of
+
+628
+00:22:51,920 --> 00:22:52,959
+step functions
+
+629
+00:22:53,539 --> 00:22:55,699
+that um get initiated
+
+630
+00:22:55,699 --> 00:22:56,660
+through an API.
+
+631
+00:22:57,949 --> 00:23:00,250
+Whenever a job gets executed.
+
+632
+00:23:01,309 --> 00:23:03,689
+Our calculation framework uses
+
+633
+00:23:03,689 --> 00:23:06,088
+the EMR option that I talked about,
+
+634
+00:23:06,588 --> 00:23:07,130
+and
+
+635
+00:23:07,390 --> 00:23:09,469
+it uh and then
+
+636
+00:23:09,469 --> 00:23:10,818
+it uses um the
+
+637
+00:23:11,209 --> 00:23:13,799
+it it then initiates the calculations
+
+638
+00:23:13,799 --> 00:23:14,920
+that are written in Yamu,
+
+639
+00:23:15,309 --> 00:23:17,029
+yet another markup language.
+
+640
+00:23:17,549 --> 00:23:20,328
+For us, this was our way to decouple
+
+641
+00:23:20,630 --> 00:23:22,818
+the business logic from the
+
+642
+00:23:22,818 --> 00:23:23,568
+application logic.
+
+643
+00:23:25,358 --> 00:23:27,400
+And our backbone itself is made up
+
+644
+00:23:27,400 --> 00:23:28,420
+of S3,
+
+645
+00:23:28,979 --> 00:23:29,949
+and we used uh
+
+646
+00:23:30,759 --> 00:23:33,039
+Aurora and Dynamo DB for
+
+647
+00:23:33,039 --> 00:23:34,699
+all of the metadata management,
+
+648
+00:23:35,519 --> 00:23:37,559
+and the integrations were all done
+
+649
+00:23:37,559 --> 00:23:40,019
+through APIs and SNS
+
+650
+00:23:40,160 --> 00:23:42,439
+and for analytics we use Sage
+
+651
+00:23:42,439 --> 00:23:43,719
+Maker and Tableau.
+
+652
+00:23:47,259 --> 00:23:49,259
+So you've heard me, so far you've
+
+653
+00:23:49,259 --> 00:23:51,539
+heard me talk about the genesis
+
+654
+00:23:51,539 --> 00:23:53,059
+behind our transformation,
+
+655
+00:23:53,699 --> 00:23:55,920
+the objectives, the process.
+
+656
+00:23:56,779 --> 00:23:59,459
+So how did we do our, on our implementation?
+
+657
+00:24:00,969 --> 00:24:03,160
+Well, we had our own share of stumbles.
+
+658
+00:24:04,140 --> 00:24:05,000
+At one point,
+
+659
+00:24:05,299 --> 00:24:07,338
+at its most active phase of the
+
+660
+00:24:07,338 --> 00:24:09,500
+engagement, we had over 100
+
+661
+00:24:09,500 --> 00:24:10,239
+engineers
+
+662
+00:24:10,529 --> 00:24:12,039
+on this project,
+
+663
+00:24:12,380 --> 00:24:14,358
+and having them all
+
+664
+00:24:15,098 --> 00:24:17,229
+um consistently adhere
+
+665
+00:24:17,229 --> 00:24:19,959
+to the guardrails and the best practices
+
+666
+00:24:20,180 --> 00:24:22,338
+over a period of 2 years was, was
+
+667
+00:24:22,338 --> 00:24:23,420
+really challenging.
+
+668
+00:24:24,449 --> 00:24:26,529
+Consistency was also something
+
+669
+00:24:26,529 --> 00:24:27,750
+that we had to
+
+670
+00:24:28,088 --> 00:24:30,269
+deal with when we were integrating
+
+671
+00:24:30,769 --> 00:24:32,769
+with about 76 integration
+
+672
+00:24:32,769 --> 00:24:34,449
+points across the ecosystem.
+
+673
+00:24:35,868 --> 00:24:38,189
+As I mentioned to you before, this platform
+
+674
+00:24:38,189 --> 00:24:40,588
+was going to be used for both regulatory
+
+675
+00:24:40,588 --> 00:24:41,108
+demands,
+
+676
+00:24:41,509 --> 00:24:43,509
+but also for our data science
+
+677
+00:24:43,509 --> 00:24:45,729
+community that needed that flexibility.
+
+678
+00:24:46,068 --> 00:24:47,848
+So finding that balance
+
+679
+00:24:48,269 --> 00:24:49,088
+to support
+
+680
+00:24:49,670 --> 00:24:51,828
+two different ends of the
+
+681
+00:24:51,828 --> 00:24:53,949
+spectrum was also a challenge that we
+
+682
+00:24:53,949 --> 00:24:54,828
+had to overcome.
+
+683
+00:24:56,890 --> 00:24:59,519
+And every scenario that we were executing
+
+684
+00:24:59,660 --> 00:25:02,059
+was generating about 500 terabytes
+
+685
+00:25:02,059 --> 00:25:02,680
+of data.
+
+686
+00:25:03,910 --> 00:25:05,170
+So we had to find
+
+687
+00:25:05,549 --> 00:25:07,588
+very quickly the right archival
+
+688
+00:25:07,588 --> 00:25:08,848
+strategy because
+
+689
+00:25:09,150 --> 00:25:11,390
+our our storage costs
+
+690
+00:25:11,390 --> 00:25:13,529
+were going up if we couldn't solve for that
+
+691
+00:25:13,529 --> 00:25:15,660
+puzzle. And then
+
+692
+00:25:15,660 --> 00:25:18,539
+because we were doing these calculations
+
+693
+00:25:18,539 --> 00:25:20,358
+on big data volumes,
+
+694
+00:25:20,868 --> 00:25:23,180
+we knew we needed multiple EMR
+
+695
+00:25:23,180 --> 00:25:24,160
+clusters.
+
+696
+00:25:24,779 --> 00:25:25,439
+But then
+
+697
+00:25:25,989 --> 00:25:28,519
+we also had to find ways to minimize
+
+698
+00:25:28,519 --> 00:25:30,539
+the cross AZ traffic, cross
+
+699
+00:25:30,539 --> 00:25:32,529
+availability zone traffic,
+
+700
+00:25:32,979 --> 00:25:35,400
+to reduce the for latency
+
+701
+00:25:35,880 --> 00:25:38,000
+and also the cost optimization.
+
+702
+00:25:38,380 --> 00:25:39,880
+And for the same reason.
+
+703
+00:25:40,650 --> 00:25:42,059
+We also needed,
+
+704
+00:25:43,170 --> 00:25:44,509
+we also needed to
+
+705
+00:25:44,769 --> 00:25:46,358
+figure out how to
+
+706
+00:25:47,348 --> 00:25:49,299
+Solve for the limits,
+
+707
+00:25:49,588 --> 00:25:51,689
+you know, whether it's an S3 lambda,
+
+708
+00:25:51,868 --> 00:25:54,108
+account limits, we were running into these limits
+
+709
+00:25:54,108 --> 00:25:54,900
+all the time,
+
+710
+00:25:55,189 --> 00:25:57,469
+so we had to solve for those, for that
+
+711
+00:25:57,469 --> 00:25:58,449
+challenge as well.
+
+712
+00:26:01,969 --> 00:26:04,279
+So this is where our partnership with
+
+713
+00:26:04,279 --> 00:26:06,479
+the AWS became critical because
+
+714
+00:26:06,479 --> 00:26:08,559
+they helped us solve for many of
+
+715
+00:26:08,559 --> 00:26:10,818
+these challenges that I just talked about.
+
+716
+00:26:11,868 --> 00:26:14,549
+So we started our engagement with AWS
+
+717
+00:26:14,549 --> 00:26:17,068
+um in August of 2024,
+
+718
+00:26:17,509 --> 00:26:19,670
+and we had done a series of
+
+719
+00:26:19,670 --> 00:26:21,769
+deep dives and workshops with them.
+
+720
+00:26:22,578 --> 00:26:24,660
+Uh, AWS was able to bring
+
+721
+00:26:24,660 --> 00:26:26,608
+in, um, their specialists,
+
+722
+00:26:26,939 --> 00:26:29,140
+mainly for, um, uh,
+
+723
+00:26:29,150 --> 00:26:31,380
+compute and storage, sorry, compute
+
+724
+00:26:31,380 --> 00:26:32,519
+and databases.
+
+725
+00:26:33,358 --> 00:26:34,750
+And through the,
+
+726
+00:26:35,250 --> 00:26:37,568
+through the deep dives and workshops, we
+
+727
+00:26:37,568 --> 00:26:39,939
+have been able to iterate and refine
+
+728
+00:26:39,939 --> 00:26:41,009
+our solutions.
+
+729
+00:26:43,750 --> 00:26:45,939
+So in addition to the deep dives, we
+
+730
+00:26:45,939 --> 00:26:48,539
+also leveraged AWS well architected
+
+731
+00:26:48,539 --> 00:26:49,279
+framework
+
+732
+00:26:50,059 --> 00:26:51,618
+to SSR Foundation.
+
+733
+00:26:52,630 --> 00:26:54,630
+For us, we specifically focused
+
+734
+00:26:54,630 --> 00:26:55,588
+on cost,
+
+735
+00:26:56,108 --> 00:26:57,588
+performance and reliability.
+
+736
+00:26:58,699 --> 00:27:00,699
+For us, cost optimization was
+
+737
+00:27:00,699 --> 00:27:01,279
+not
+
+738
+00:27:01,578 --> 00:27:03,578
+just a technical goal, it was
+
+739
+00:27:03,578 --> 00:27:04,858
+a business imperative.
+
+740
+00:27:05,588 --> 00:27:08,068
+So we had to use um AWS
+
+741
+00:27:08,068 --> 00:27:10,250
+services like uh Redshift Spectrum
+
+742
+00:27:10,250 --> 00:27:11,828
+and S3 partitioning,
+
+743
+00:27:12,390 --> 00:27:14,430
+but also we created
+
+744
+00:27:14,430 --> 00:27:16,689
+our own real-time cost monitoring
+
+745
+00:27:16,689 --> 00:27:17,449
+framework.
+
+746
+00:27:18,318 --> 00:27:20,509
+But my personal favorite was to show
+
+747
+00:27:20,509 --> 00:27:22,509
+the cost of the scenario right on
+
+748
+00:27:22,509 --> 00:27:23,150
+the UI
+
+749
+00:27:23,709 --> 00:27:25,789
+before the user even clicks on the submit
+
+750
+00:27:25,789 --> 00:27:27,289
+button so that they know
+
+751
+00:27:27,750 --> 00:27:29,828
+what they're, you know, what, what kind of a
+
+752
+00:27:29,828 --> 00:27:31,890
+bill they would get at the end of that execution.
+
+753
+00:27:33,920 --> 00:27:36,039
+And to solve for flexibility
+
+754
+00:27:36,039 --> 00:27:37,420
+and high availability,
+
+755
+00:27:37,848 --> 00:27:39,930
+we leveraged EMR's
+
+756
+00:27:39,930 --> 00:27:42,289
+instance fleets, which gives you an
+
+757
+00:27:42,289 --> 00:27:44,650
+option of mix and match between different
+
+758
+00:27:44,650 --> 00:27:46,719
+instance types and different processors.
+
+759
+00:27:47,049 --> 00:27:49,049
+So you could choose between an Intel or an
+
+760
+00:27:49,049 --> 00:27:51,410
+AMD or a or a Graviton
+
+761
+00:27:51,410 --> 00:27:53,469
+processor based on the type of workload
+
+762
+00:27:53,469 --> 00:27:54,549
+you are dealing with.
+
+763
+00:27:56,189 --> 00:27:58,479
+And then, um, on proactive
+
+764
+00:27:58,479 --> 00:28:00,059
+capacity management,
+
+765
+00:28:00,559 --> 00:28:02,598
+uh, we raised account limits. We
+
+766
+00:28:02,598 --> 00:28:05,000
+worked with AWS to to
+
+767
+00:28:05,000 --> 00:28:07,380
+raise our account quotas,
+
+768
+00:28:07,759 --> 00:28:08,979
+and we had used
+
+769
+00:28:09,318 --> 00:28:11,479
+S3 pre-partitioning
+
+770
+00:28:11,479 --> 00:28:12,380
+to support our
+
+771
+00:28:12,799 --> 00:28:15,078
+throughput of 20 million transactions
+
+772
+00:28:15,078 --> 00:28:15,719
+per second.
+
+773
+00:28:17,049 --> 00:28:19,088
+So every bit of work that
+
+774
+00:28:19,088 --> 00:28:21,209
+we have done to refine our
+
+775
+00:28:21,209 --> 00:28:22,430
+architecture
+
+776
+00:28:22,890 --> 00:28:25,029
+was to make was to make
+
+777
+00:28:25,250 --> 00:28:27,489
+the lives of our business community
+
+778
+00:28:27,489 --> 00:28:28,430
+a bit easier.
+
+779
+00:28:32,299 --> 00:28:34,380
+So, as a result of the work
+
+780
+00:28:34,380 --> 00:28:36,650
+that we had done, we have been able
+
+781
+00:28:36,650 --> 00:28:37,680
+to reduce
+
+782
+00:28:38,299 --> 00:28:40,400
+the cost by 39%
+
+783
+00:28:40,739 --> 00:28:41,500
+and then
+
+784
+00:28:41,769 --> 00:28:43,818
+the execution time almost by
+
+785
+00:28:43,818 --> 00:28:44,838
+70%.
+
+786
+00:28:47,949 --> 00:28:49,439
+So as to recap,
+
+787
+00:28:49,789 --> 00:28:51,868
+so did we meet our objective
+
+788
+00:28:51,868 --> 00:28:54,170
+of accelerating the forecast
+
+789
+00:28:54,588 --> 00:28:57,088
+and also simplifying our ecosystem?
+
+790
+00:28:57,630 --> 00:28:59,449
+I would say absolutely yes,
+
+791
+00:28:59,989 --> 00:29:02,630
+because we have been able to reduce our manual
+
+792
+00:29:02,630 --> 00:29:03,769
+processes by about
+
+793
+00:29:04,029 --> 00:29:05,219
+60%.
+
+794
+00:29:05,588 --> 00:29:08,170
+We have reduced our system execution
+
+795
+00:29:08,568 --> 00:29:10,318
+from 20 to 3 days,
+
+796
+00:29:10,630 --> 00:29:12,709
+and we are now able to run.
+
+797
+00:29:13,108 --> 00:29:15,269
+Uh, a forecast that for
+
+798
+00:29:15,269 --> 00:29:17,689
+36 million loan records,
+
+799
+00:29:18,189 --> 00:29:20,219
+uh, for every scenario, and we
+
+800
+00:29:20,219 --> 00:29:22,588
+can run up to 20+ scenarios
+
+801
+00:29:22,588 --> 00:29:23,209
+in a month.
+
+802
+00:29:24,160 --> 00:29:26,568
+Prior to this, we could only run
+
+803
+00:29:26,568 --> 00:29:28,568
+our forecast for a book
+
+804
+00:29:28,568 --> 00:29:30,568
+of 1.4 million loans or
+
+805
+00:29:30,568 --> 00:29:32,858
+so. So
+
+806
+00:29:32,959 --> 00:29:36,059
+we have been able to provide a modular
+
+807
+00:29:36,059 --> 00:29:38,199
+and auditable platform that
+
+808
+00:29:38,199 --> 00:29:39,858
+supports rapid innovation.
+
+809
+00:29:40,519 --> 00:29:42,059
+While this platform
+
+810
+00:29:42,358 --> 00:29:44,400
+did take about 15 squads
+
+811
+00:29:44,400 --> 00:29:46,559
+to develop and design,
+
+812
+00:29:46,920 --> 00:29:48,920
+it now we only now need
+
+813
+00:29:48,920 --> 00:29:51,000
+about 2 squads to support it on an
+
+814
+00:29:51,000 --> 00:29:52,239
+ongoing basis.
+
+815
+00:29:52,519 --> 00:29:54,838
+And just for reference, uh, a squad
+
+816
+00:29:54,838 --> 00:29:57,039
+could have between 6
+
+817
+00:29:57,039 --> 00:29:58,939
+to 8 engineers.
+
+818
+00:30:01,568 --> 00:30:02,689
+So, um,
+
+819
+00:30:03,009 --> 00:30:05,088
+while we did deliver on the, the
+
+820
+00:30:05,088 --> 00:30:07,439
+initial phase of the program,
+
+821
+00:30:07,809 --> 00:30:10,269
+we are continuing to work to refine
+
+822
+00:30:10,449 --> 00:30:12,108
+our advanced analytics
+
+823
+00:30:12,410 --> 00:30:14,828
+and introduce Gen AI capabilities.
+
+824
+00:30:15,338 --> 00:30:17,739
+We also want to extend this platform
+
+825
+00:30:18,098 --> 00:30:18,608
+to
+
+826
+00:30:18,979 --> 00:30:21,598
+the two different business lines, um,
+
+827
+00:30:21,838 --> 00:30:24,250
+our multi-family and capital markets,
+
+828
+00:30:24,660 --> 00:30:26,858
+and of course we are actively
+
+829
+00:30:26,858 --> 00:30:27,640
+socializing
+
+830
+00:30:28,180 --> 00:30:30,680
+the reusable frameworks we created
+
+831
+00:30:30,989 --> 00:30:33,140
+for adoption across the enterprise.
+
+832
+00:30:34,250 --> 00:30:36,769
+So as I conclude today's session,
+
+833
+00:30:37,368 --> 00:30:39,489
+let me share with you a few insights
+
+834
+00:30:39,489 --> 00:30:41,250
+that transcend technology.
+
+835
+00:30:42,489 --> 00:30:44,838
+One The first one being,
+
+836
+00:30:45,000 --> 00:30:47,420
+you know, modernizations like these
+
+837
+00:30:47,420 --> 00:30:49,670
+are marathons, not just sprints.
+
+838
+00:30:50,039 --> 00:30:51,059
+So please
+
+839
+00:30:51,559 --> 00:30:52,420
+continue to
+
+840
+00:30:53,239 --> 00:30:55,400
+enjoy all the wins, right? Celebrate all
+
+841
+00:30:55,400 --> 00:30:57,559
+the wins, whether they are big and whether
+
+842
+00:30:57,559 --> 00:30:58,779
+they are big or small.
+
+843
+00:31:00,088 --> 00:31:02,568
+Technology is just an enabler. People
+
+844
+00:31:02,568 --> 00:31:03,588
+drive the success,
+
+845
+00:31:03,969 --> 00:31:06,108
+so continue to invest in your teams.
+
+846
+00:31:07,088 --> 00:31:08,969
+And data quality
+
+847
+00:31:10,108 --> 00:31:11,848
+should be non-negotiable.
+
+848
+00:31:12,469 --> 00:31:14,489
+We not only consolidated all of
+
+849
+00:31:14,489 --> 00:31:15,449
+the data
+
+850
+00:31:15,750 --> 00:31:18,150
+into a single domain, but we
+
+851
+00:31:18,150 --> 00:31:20,630
+applied data governance on top of
+
+852
+00:31:20,630 --> 00:31:22,068
+that data from day one.
+
+853
+00:31:22,509 --> 00:31:24,588
+So as a result, we are now quickly
+
+854
+00:31:24,588 --> 00:31:27,489
+able to build out our Gen AI capabilities.
+
+855
+00:31:28,430 --> 00:31:30,559
+And finally, I would also say that
+
+856
+00:31:30,880 --> 00:31:33,039
+always start with the business problem and
+
+857
+00:31:33,039 --> 00:31:34,500
+not just technology.
+
+858
+00:31:34,838 --> 00:31:37,358
+Um, for us, that, that was
+
+859
+00:31:37,358 --> 00:31:38,019
+a big,
+
+860
+00:31:38,318 --> 00:31:38,979
+um,
+
+861
+00:31:39,318 --> 00:31:39,939
+big theme.
+
+862
+00:31:40,680 --> 00:31:42,779
+Um, I forgot to add one thing,
+
+863
+00:31:43,000 --> 00:31:45,539
+um, is embracing agility.
+
+864
+00:31:46,199 --> 00:31:48,640
+That was the recipe for
+
+865
+00:31:48,640 --> 00:31:50,920
+success. So the iterative work that
+
+866
+00:31:50,920 --> 00:31:52,559
+we had done with AWS
+
+867
+00:31:53,000 --> 00:31:55,279
+or even with our product and business
+
+868
+00:31:55,279 --> 00:31:55,858
+teams
+
+869
+00:31:56,279 --> 00:31:58,328
+helped us, um, in, in,
+
+870
+00:31:58,358 --> 00:31:59,559
+in this engagement.
+
+871
+00:32:01,358 --> 00:32:03,519
+So, as you think about your own
+
+872
+00:32:03,519 --> 00:32:04,779
+transformations,
+
+873
+00:32:05,118 --> 00:32:07,509
+what are the outcomes you would like to achieve?
+
+874
+00:32:07,920 --> 00:32:10,199
+For us, it was not just about better
+
+875
+00:32:10,199 --> 00:32:11,000
+forecasts,
+
+876
+00:32:11,279 --> 00:32:13,719
+it was about better decision enabling.
+
+877
+00:32:14,660 --> 00:32:17,059
+And Fannie Mae's journey is obviously
+
+878
+00:32:17,059 --> 00:32:19,049
+not finished, it's ongoing,
+
+879
+00:32:19,420 --> 00:32:21,559
+but we have set the foundation
+
+880
+00:32:22,059 --> 00:32:24,920
+to forecast with greater accuracy
+
+881
+00:32:25,098 --> 00:32:27,519
+and lead with increasing confidence,
+
+882
+00:32:27,868 --> 00:32:29,939
+and that is going to serve us and
+
+883
+00:32:29,939 --> 00:32:32,199
+the housing market we support for years
+
+884
+00:32:32,199 --> 00:32:34,239
+to come. So thank you for
+
+885
+00:32:34,239 --> 00:32:35,140
+your time.
+
+886
+00:32:35,640 --> 00:32:37,140
+I, I hope, uh,
+
+887
+00:32:37,640 --> 00:32:39,709
+you found the information helpful.
+
+888
+00:32:40,078 --> 00:32:42,078
+Please do take a little bit of time
+
+889
+00:32:42,078 --> 00:32:44,430
+to, uh, complete the survey and, uh,
+
+890
+00:32:44,439 --> 00:32:46,059
+enjoy the rest of your conference.
+
+891
+00:32:46,439 --> 00:32:46,920
+Thank you.
+
